@@ -1,0 +1,45 @@
+<Project>
+
+	<PropertyGroup>
+		<Deterministic>true</Deterministic>
+		<Authors>Flakroup</Authors>
+		<Company>Flakroup</Company>
+		<Copyright>Copyright © Flakroup 2021</Copyright>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<PackageIcon>flakroup.png</PackageIcon>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<WarnOnPackingNonPackableProject>true</WarnOnPackingNonPackableProject>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://gitlab.com/flakroup/FEx</PackageProjectUrl>
+		<RepositoryUrl>https://gitlab.com/flakroup/FEx.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<WarningsAsErrors>$(WarningsAsErrors);CS0660</WarningsAsErrors>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<EmbedAllSources>true</EmbedAllSources>
+		<DeterministicSourcePaths>true</DeterministicSourcePaths>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EnableSourceLink>true</EnableSourceLink>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+		<PackageReference Include="Microsoft.SourceLink.GitLab" Version="1.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(MSBuildThisFileDirectory)\flakroup.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+</Project>

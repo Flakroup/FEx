@@ -1,9 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31515.178
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FEx.Extensions", "FEx.Extensions\FEx.Extensions.csproj", "{2B2BB7EE-3DB8-467D-9593-4E934206756E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FEx.Extensions", "FEx.Extensions\FEx.Extensions.csproj", "{2B2BB7EE-3DB8-467D-9593-4E934206756E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FEx.Abstractions", "FEx.Abstractions\FEx.Abstractions.csproj", "{361D8EB2-6FC5-419F-914C-1CC9B0F389B9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FEx.DependencyInjection", "FEx.DependencyInjection\FEx.DependencyInjection.csproj", "{01DEBBF8-6CA0-44FF-8B45-15BE0740CE05}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FEx.KeyVault", "FEx.KeyVault\FEx.KeyVault.csproj", "{EED1F5DB-87F9-4B1A-B8C1-80BAD40EB466}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FEx.OneDrv", "FEx.OneDrv\FEx.OneDrv.csproj", "{91DAF7B0-A58A-43D6-8816-45C5E0AE307D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FEx.Utilities", "FEx.Utilities\FEx.Utilities.csproj", "{B05E2697-ADE0-4494-9D3F-318BEF097DE7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FEx.WPFx", "FEx.WPFx\FEx.WPFx.csproj", "{F81175AB-8832-4F1B-9651-B62BA4490194}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +27,30 @@ Global
 		{2B2BB7EE-3DB8-467D-9593-4E934206756E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B2BB7EE-3DB8-467D-9593-4E934206756E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B2BB7EE-3DB8-467D-9593-4E934206756E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{361D8EB2-6FC5-419F-914C-1CC9B0F389B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{361D8EB2-6FC5-419F-914C-1CC9B0F389B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{361D8EB2-6FC5-419F-914C-1CC9B0F389B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{361D8EB2-6FC5-419F-914C-1CC9B0F389B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01DEBBF8-6CA0-44FF-8B45-15BE0740CE05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01DEBBF8-6CA0-44FF-8B45-15BE0740CE05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01DEBBF8-6CA0-44FF-8B45-15BE0740CE05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01DEBBF8-6CA0-44FF-8B45-15BE0740CE05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EED1F5DB-87F9-4B1A-B8C1-80BAD40EB466}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EED1F5DB-87F9-4B1A-B8C1-80BAD40EB466}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EED1F5DB-87F9-4B1A-B8C1-80BAD40EB466}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EED1F5DB-87F9-4B1A-B8C1-80BAD40EB466}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91DAF7B0-A58A-43D6-8816-45C5E0AE307D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91DAF7B0-A58A-43D6-8816-45C5E0AE307D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91DAF7B0-A58A-43D6-8816-45C5E0AE307D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91DAF7B0-A58A-43D6-8816-45C5E0AE307D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B05E2697-ADE0-4494-9D3F-318BEF097DE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B05E2697-ADE0-4494-9D3F-318BEF097DE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B05E2697-ADE0-4494-9D3F-318BEF097DE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B05E2697-ADE0-4494-9D3F-318BEF097DE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F81175AB-8832-4F1B-9651-B62BA4490194}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F81175AB-8832-4F1B-9651-B62BA4490194}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F81175AB-8832-4F1B-9651-B62BA4490194}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F81175AB-8832-4F1B-9651-B62BA4490194}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

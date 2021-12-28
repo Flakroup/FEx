@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFramework>$(TargetFrameworkId)</TargetFramework>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Azure.Storage.Blobs" Version="12.10.0" />
+		<PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.2.3" />
+		<PackageReference Include="Microsoft.Azure.Storage.File" Version="11.2.3" />
+		<PackageReference Include="System.Linq.Async" Version="5.1.0" />
+		<PackageReference Include="Microsoft.Azure.Storage.DataMovement" Version="2.0.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\FEx.Logging\FEx.Logging.csproj" />
+	</ItemGroup>
+
+</Project>

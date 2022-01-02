@@ -1,9 +1,12 @@
-﻿using System.Security.Cryptography;
+﻿using FEx.Extensions.Helpers;
+using System.Security.Cryptography;
 
 namespace FEx.Extensions.IO;
 
 public static class StreamExtensions
 {
+    private static int BufferSize { get; } = 81920;
+
     public static void CopyStreamToStream(this Stream sourceStream, Stream destStream, Action<double> progressMaximumSet = null, Action<double> progressValueSet = null)
     {
         var buffer = new byte[BufferSize];
@@ -38,8 +41,8 @@ public static class StreamExtensions
 
     public static async Task<byte[]> ReadFullyAsync(this Stream input)
     {
-        using (input)
-        using (MemoryStream ms = await input.ToMemoryStreamAsync())
+        await using (input)
+        await using (MemoryStream ms = await input.ToMemoryStreamAsync())
         {
             return ms.ToArray();
         }
@@ -47,7 +50,7 @@ public static class StreamExtensions
 
     public static async Task<MemoryStream> ToMemoryStreamAsync(this Stream input)
     {
-        using (input)
+        await using (input)
         {
             var ms = new MemoryStream();
             await input.CopyToAsync(ms);
@@ -67,6 +70,4 @@ public static class StreamExtensions
 
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }
-
-    private static int BufferSize { get; } = 81920;
 }

@@ -274,7 +274,7 @@ public static class EnumerableExtensions
     /// </returns>
     public static Collection<T> ToCollection<T>(this IEnumerable<T> source)
     {
-        return new(source.ToList());
+        return new Collection<T>(source.ToList());
     }
 
     public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int n)
@@ -305,7 +305,7 @@ public static class EnumerableExtensions
             {
                 foreach (IEnumerable<T> list in origin)
                 {
-                    var multipliedList = new List<T>(list) {item};
+                    var multipliedList = new List<T>(list) { item };
                     multipliedLists.Add(multipliedList);
                 }
             }
@@ -314,7 +314,7 @@ public static class EnumerableExtensions
         {
             foreach (T item in multiplier)
             {
-                var multipliedList = new List<T> {item};
+                var multipliedList = new List<T> { item };
                 multipliedLists.Add(multipliedList);
             }
         }
@@ -367,25 +367,5 @@ public static class EnumerableExtensions
         IEnumerable<T> children = getChildrenFunc(item);
 
         return children.IsNotNullOrEmptyEnumerable() ? children.Concat(children.SelectMany(x => GetAllItemChildren(x, getChildrenFunc))) : Enumerable.Empty<T>();
-    }
-
-    public static IOrderedEnumerable<string> OrderAlphanumBy(this IEnumerable<string> source)
-    {
-        return source.OrderAlphanumBy(x => x);
-    }
-
-    public static IOrderedEnumerable<TSource> OrderAlphanumBy<TSource>(this IEnumerable<TSource> source, Func<TSource, string> keySelector)
-    {
-        return source.OrderBy(keySelector, AlphanumComparatorFast.Instance);
-    }
-
-    public static IOrderedEnumerable<string> OrderAlphanumByDescending(this IEnumerable<string> source)
-    {
-        return source.OrderAlphanumByDescending(x => x);
-    }
-
-    public static IOrderedEnumerable<TSource> OrderAlphanumByDescending<TSource>(this IEnumerable<TSource> source, Func<TSource, string> keySelector)
-    {
-        return source.OrderByDescending(keySelector, AlphanumComparatorFast.Instance);
     }
 }

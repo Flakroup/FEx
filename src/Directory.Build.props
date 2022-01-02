@@ -5,7 +5,7 @@
 	<PropertyGroup>
 		<TargetFrameworkId>net6.0</TargetFrameworkId>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
+		<Nullable>disable</Nullable>
 	</PropertyGroup>
 
 </Project>

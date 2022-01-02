@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿using FEx.Extensions.Helpers;
+using System.IO.Compression;
 using System.Security.Cryptography;
 
 namespace FEx.Extensions.IO;
@@ -51,8 +52,8 @@ public static class FileInfoExtensions
         tempDirectory.Create();
         string targetFilePath = Path.Combine(tempDirectory.FullName, file.Name);
 
-        using (FileStream sourceStream = file.OpenRead())
-        using (FileStream targetStream = File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+        await using (FileStream sourceStream = file.OpenRead())
+        await using (FileStream targetStream = File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
         {
             await sourceStream.CopyToAsync(targetStream);
         }

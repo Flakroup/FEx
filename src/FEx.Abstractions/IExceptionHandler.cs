@@ -1,8 +1,7 @@
-﻿namespace FEx.Abstractions
+﻿namespace FEx.Abstractions;
+
+public interface IExceptionHandler
 {
-    public interface IExceptionHandler
-    {
-        bool CanHandle(Exception exception);
-        void Handle(Exception exception);
-    }
+    bool CanHandle(Exception exception);
+    void Handle(Exception exception);
 }

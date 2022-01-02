@@ -3,6 +3,9 @@
 public class Result<TError>
     where TError : IError, new()
 {
+    public static Result<TError> Success => new();
+    public static Result<TError> Failure => new(new TError());
+
     public static implicit operator Result<TError>(TError right)
     {
         return new Result<TError>(right);
@@ -14,9 +17,6 @@ public class Result<TError>
         error.Message = message;
         return new Result<TError>(error);
     }
-
-    public static Result<TError> Success => new();
-    public static Result<TError> Failure => new(new TError());
 
     public Result()
     {
@@ -36,6 +36,8 @@ public class Result<TError>
 public class Result<TData, TError> : Result<TError>
     where TError : Error, new()
 {
+    public new static Result<TData, TError> Failure => new(new TError());
+
     public static implicit operator Result<TData, TError>(TData data)
     {
         return new Result<TData, TError>(data);
@@ -45,8 +47,6 @@ public class Result<TData, TError> : Result<TError>
     {
         return new Result<TData, TError>(error);
     }
-
-    public new static Result<TData, TError> Failure => new(new TError());
 
     public Result(TData data)
     {

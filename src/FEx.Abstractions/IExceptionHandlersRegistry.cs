@@ -1,8 +1,7 @@
-﻿namespace FEx.Abstractions
+﻿namespace FEx.Abstractions;
+
+public interface IExceptionHandlersRegistry
 {
-    public interface IExceptionHandlersRegistry
-    {
-        void Handle(Exception exception);
-        void Register(IExceptionHandler handler);
-    }
+    void Handle(Exception exception);
+    void Register(IExceptionHandler handler);
 }

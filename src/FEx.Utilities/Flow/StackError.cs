@@ -1,10 +1,12 @@
-﻿namespace FEx.Utilities.Flow;
+﻿using FEx.Extensions;
+
+namespace FEx.Utilities.Flow;
 
 public class StackError : Error
 {
     public static implicit operator StackError(string message)
     {
-        return new StackError {Message = message};
+        return new StackError { Message = message };
     }
 
     public StackError()

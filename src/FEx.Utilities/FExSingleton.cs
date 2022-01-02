@@ -1,78 +1,77 @@
-﻿namespace FEx.Utilities
+﻿namespace FEx.Utilities;
+
+public abstract class FExSingleton
+    : IDisposable
 {
-    public abstract class FExSingleton
-        : IDisposable
+    private static readonly List<FExSingleton> Singletons = new();
+
+    public static void ClearAllSingletons()
     {
-        ~FExSingleton()
+        lock (Singletons)
         {
-            Dispose(false);
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected abstract void Dispose(bool isDisposing);
-
-        private static readonly List<FExSingleton> Singletons = new List<FExSingleton>();
-
-        protected FExSingleton()
-        {
-            lock (Singletons)
+            foreach (FExSingleton s in Singletons)
             {
-                Singletons.Add(this);
+                s.Dispose();
             }
-        }
 
-        public static void ClearAllSingletons()
-        {
-            lock (Singletons)
-            {
-                foreach (FExSingleton s in Singletons)
-                {
-                    s.Dispose();
-                }
-
-                Singletons.Clear();
-            }
+            Singletons.Clear();
         }
     }
 
-    public abstract class FExSingleton<T>
-        : FExSingleton
-        where T : class, new()
+    protected FExSingleton()
     {
-        private static object SyncRoot { get; } = new object();
-
-        private static volatile T _instance;
-
-        public static T Instance
+        lock (Singletons)
         {
-            get
+            Singletons.Add(this);
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected abstract void Dispose(bool isDisposing);
+
+    ~FExSingleton()
+    {
+        Dispose(false);
+    }
+}
+
+public abstract class FExSingleton<T>
+    : FExSingleton
+    where T : class, new()
+{
+    private static volatile T _instance;
+
+    public static T Instance
+    {
+        get
+        {
+            if (_instance == null)
             {
-                if (_instance == null)
+                lock (SyncRoot)
                 {
-                    lock (SyncRoot)
+                    if (_instance == null)
                     {
-                        if (_instance == null)
-                        {
-                            _instance = new T();
-                        }
+                        _instance = new T();
                     }
                 }
-
-                return _instance;
             }
+
+            return _instance;
         }
+    }
 
-        protected override void Dispose(bool isDisposing)
+    private static object SyncRoot { get; } = new();
+
+    protected override void Dispose(bool isDisposing)
+    {
+        if (isDisposing)
         {
-            if (isDisposing)
-            {
-                _instance = null;
-            }
+            _instance = null;
         }
     }
 }

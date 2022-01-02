@@ -1,12 +1,11 @@
-﻿using FEx.Logging.Abstractions;
+﻿using FEx.DependencyInjection;
+using FEx.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace FEx.Logging;
 
 public class LoggerService : ILoggerService
 {
-    private static ServiceProviderHelper Helper => ServiceProviderHelper.Instance;
-
     public LoggerService(ILogger<LoggerService> defaultLogger)
     {
         DefaultLogger = defaultLogger;
@@ -16,9 +15,9 @@ public class LoggerService : ILoggerService
 
     public ILoggable GetLogger<T>()
     {
-        ILogger logger = Helper.Provider == null
+        ILogger logger = FExIoCProvider.IoCProvider == null
             ? DefaultLogger
-            : Helper.GetRequiredService<ILogger<T>>();
+            : FExIoCProvider.IoCProvider.GetRequiredService<ILogger<T>>();
         return new Loggable(logger);
     }
 
@@ -29,9 +28,9 @@ public class LoggerService : ILoggerService
             senderType = sender.GetType();
         }
 
-        ILogger logger = Helper.Provider == null
+        ILogger logger = FExIoCProvider.IoCProvider == null
             ? DefaultLogger
-            : (ILogger) Helper.GetRequiredService(typeof(ILogger<>).MakeGenericType(senderType));
+            : (ILogger)FExIoCProvider.IoCProvider.GetRequiredService(typeof(ILogger<>).MakeGenericType(senderType));
 
         return new Loggable(logger);
     }

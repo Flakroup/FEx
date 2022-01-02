@@ -1,6 +1,4 @@
-﻿using FEx.Extensions.Collections.Concurrent;
-using FEx.Extensions.Collections.Enumerables;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.ObjectModel;
 
@@ -136,130 +134,6 @@ public static class ListExtensions
         return list;
     }
 
-    /// <summary>
-    ///     Synchronizes two lists in one way mode.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="sourceList">The source list.</param>
-    /// <param name="syncedList">The list which state will be reflected in source.</param>
-    /// <param name="equalityComparator">The equality comparator - must match unique objects.</param>
-    /// <param name="syncAction">Action to be invoked on equal objects.</param>
-    public static bool SyncWith<T>(this IList<T> sourceList, IList<T> syncedList, Func<T, T, bool> equalityComparator, Action<T, T> syncAction = null)
-    {
-        var t = sourceList as IBaseConcurrentCollection<IList<T>, T>;
-        if (t != null)
-        {
-            var hasChanged = false;
-            t.DoBulkOperation(coll => hasChanged = coll.SyncWith(syncedList, equalityComparator, syncAction), _ => hasChanged);
-            return hasChanged;
-        }
-        else
-        {
-            bool hasChanged = sourceList.RemoveWhere(x => syncedList.All(y => !equalityComparator(x, y)));
-
-            if (syncAction != null)
-            {
-                for (var i = 0; i < sourceList.Count; i++)
-                {
-                    T f = sourceList[i];
-                    int[] match = syncedList.IndexesWhere(x => equalityComparator(f, x)).ToArray();
-                    if (match.Length == 1)
-                    {
-                        syncAction(f, syncedList[match[0]]);
-
-                        if (!ReferenceEquals(f, sourceList[i]))
-                        {
-                            hasChanged = true;
-                        }
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException($"{nameof(equalityComparator)} function doesn't provide unique objects.");
-                    }
-                }
-            }
-
-            int c = sourceList.Count;
-            sourceList.AddRangeToList(syncedList.Where(x => sourceList.All(y => !equalityComparator(x, y))));
-
-            if (c != sourceList.Count)
-            {
-                hasChanged = true;
-            }
-
-            return hasChanged;
-        }
-    }
-
-    public static bool SyncWith<T>(this IList<T> sourceList, IList<T> syncedList, Action<T, T> syncAction = null)
-        where T : IEquatable<T>
-    {
-        var t = sourceList as IBaseConcurrentCollection<IList<T>, T>;
-        if (t != null)
-        {
-            var hasChanged = false;
-            t.DoBulkOperation(coll => hasChanged = coll.SyncWith(syncedList, syncAction), _ => hasChanged);
-            return hasChanged;
-        }
-        else
-        {
-            bool hasChanged = sourceList.RemoveWhere(x => syncedList.All(y => !x.Equals(y)));
-
-            if (syncAction != null)
-            {
-                for (var i = 0; i < sourceList.Count; i++)
-                {
-                    T f = sourceList[i];
-                    int[] match = syncedList.IndexesWhere(x => f.Equals(x)).ToArray();
-                    if (match.Length == 1)
-                    {
-                        syncAction(f, syncedList[match[0]]);
-
-                        if (!ReferenceEquals(f, sourceList[i]))
-                        {
-                            hasChanged = true;
-                        }
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException($"{nameof(Equals)} function doesn't provide unique objects.");
-                    }
-                }
-            }
-
-            int c = sourceList.Count;
-
-            sourceList.AddRangeToList(syncedList.Where(x => sourceList.All(y => !x.Equals(y))));
-
-            if (c != sourceList.Count)
-            {
-                hasChanged = true;
-            }
-
-            return hasChanged;
-        }
-    }
-
-    public static void SyncWithItem<T>(this IList<T> sourceList, T item, Action<T, T> syncAction = null)
-        where T : IEquatable<T>
-    {
-        var synced = false;
-
-        foreach (T f in sourceList)
-        {
-            if (f.Equals(item))
-            {
-                syncAction?.Invoke(f, item);
-                synced = true;
-            }
-        }
-
-        if (!synced)
-        {
-            sourceList.Add(item);
-        }
-    }
-
     public static int CountEqualItems<T>(this IList<T> listA, IList<T> listB)
         where T : IEquatable<T>
     {
@@ -305,20 +179,6 @@ public static class ListExtensions
         {
             source.AddRangeToCollection(items);
         }
-    }
-
-    public static PaginatedList<T> MakePaginatedList<T>(this IList<T> items, int itemsPerPage, int page)
-    {
-        int itemsToSkip = (page - 1) * itemsPerPage;
-
-        if (items?.Count > 0 && (itemsToSkip > items.Count || itemsToSkip < 0))
-        {
-            return null;
-        }
-
-        var totalPagesCount = (int) Math.Ceiling(items.Count / (double) itemsPerPage);
-        IList<T> itemsForThisPage = items.Skip(itemsToSkip).Take(itemsPerPage).ToArray();
-        return new PaginatedList<T>(itemsForThisPage, items.Count, page, totalPagesCount);
     }
 
     public static void Move<T>(this IList<T> source, int oldIndex, int newIndex)

@@ -26,12 +26,22 @@ public static class DirectoryInfoExtensions
 
     public static FileInfo GetDescendantFile(this DirectoryInfo dir, params string[] descendants)
     {
-        return GetDescendantFileSystemObject(dir, path => new FileInfo(path), descendants);
+        return GetDescendantFileSystemObject(dir, path =>
+        {
+            var file = new FileInfo(path);
+            file.Directory.Create();
+            return file;
+        }, descendants);
     }
 
     public static DirectoryInfo GetDescendantDirectory(this DirectoryInfo dir, params string[] descendants)
     {
-        return GetDescendantFileSystemObject(dir, path => new DirectoryInfo(path), descendants);
+        return GetDescendantFileSystemObject(dir, path =>
+        {
+            var directory = new DirectoryInfo(path);
+            directory.Create();
+            return directory;
+        }, descendants);
     }
 
     public static T GetDescendantFileSystemObject<T>(this string directoryPath, Func<string, T> activator, params string[] descendants)
@@ -42,16 +52,5 @@ public static class DirectoryInfoExtensions
     public static T GetDescendantFileSystemObject<T>(this DirectoryInfo dir, Func<string, T> activator, params string[] descendants)
     {
         return activator(GetDescendantPath(dir, descendants));
-    }
-
-    public static string GetSpecialDirectoryPathDescendants(this Environment.SpecialFolder folder, params string[] descendants)
-    {
-        SpecialDirectory dir = GetSpecialDirectory(folder);
-        return dir.Directory.GetDescendantPath(descendants);
-    }
-
-    public static SpecialDirectory GetSpecialDirectory(this Environment.SpecialFolder folder)
-    {
-        return SpecialDirectory.SpecialDirectories.TryGetKeyValue(folder);
     }
 }

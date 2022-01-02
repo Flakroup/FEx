@@ -1,34 +1,33 @@
 ﻿using FEx.Abstractions;
 
-namespace FEx.Utilities
+namespace FEx.Utilities;
+
+public class ExceptionHandlersRegistry : IExceptionHandlersRegistry
 {
-    public class ExceptionHandlersRegistry : IExceptionHandlersRegistry
+    private readonly List<IExceptionHandler> _registry;
+
+    public ExceptionHandlersRegistry()
     {
-        private readonly List<IExceptionHandler> _registry;
+        _registry = new List<IExceptionHandler>();
+    }
 
-        public ExceptionHandlersRegistry()
+    public void Register(IExceptionHandler handler)
+    {
+        Type type = handler.GetType();
+
+        if (_registry.Any(x => x.GetType() == type))
         {
-            _registry = new List<IExceptionHandler>();
+            throw new InvalidOperationException($"There is already registered handler of type: {type}");
         }
 
-        public void Register(IExceptionHandler handler)
+        _registry.Add(handler);
+    }
+
+    public void Handle(Exception exception)
+    {
+        foreach (IExceptionHandler handler in _registry.Where(x => x.CanHandle(exception)))
         {
-            Type type = handler.GetType();
-
-            if (_registry.Any(x => x.GetType() == type))
-            {
-                throw new InvalidOperationException($"There is already registered handler of type: {type}");
-            }
-
-            _registry.Add(handler);
-        }
-
-        public void Handle(Exception exception)
-        {
-            foreach (IExceptionHandler handler in _registry.Where(x => x.CanHandle(exception)))
-            {
-                handler.Handle(exception);
-            }
+            handler.Handle(exception);
         }
     }
 }

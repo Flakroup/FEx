@@ -19,7 +19,7 @@ public static class StringHelpers
             var i = 0;
             for (; i <= bytesRead - bytesAtTheTime; i += bytesAtTheTime)
             {
-                currentChar = (char) byteBuffer[i];
+                currentChar = (char)byteBuffer[i];
 
                 if (detectedEOL != null)
                 {
@@ -28,19 +28,19 @@ public static class StringHelpers
                         lineCount++;
                     }
 
-                    currentChar = (char) byteBuffer[i + 1];
+                    currentChar = (char)byteBuffer[i + 1];
                     if (currentChar == detectedEOL)
                     {
                         lineCount++;
                     }
 
-                    currentChar = (char) byteBuffer[i + 2];
+                    currentChar = (char)byteBuffer[i + 2];
                     if (currentChar == detectedEOL)
                     {
                         lineCount++;
                     }
 
-                    currentChar = (char) byteBuffer[i + 3];
+                    currentChar = (char)byteBuffer[i + 3];
                     if (currentChar == detectedEOL)
                     {
                         lineCount++;
@@ -60,7 +60,7 @@ public static class StringHelpers
 
             for (; i < bytesRead; i++)
             {
-                currentChar = (char) byteBuffer[i];
+                currentChar = (char)byteBuffer[i];
 
                 if (detectedEOL != null)
                 {

@@ -519,18 +519,6 @@ public static class StringExtensions
         }
     }
 
-    public static string ToProperCase(this string input)
-    {
-        if (input.IsAllUpperOrAllLower())
-        {
-            // fix the ALL UPPERCASE or all lowercase names
-            return string.Join(" ", input.Split(' ').Select(ProperCaseHelper.WordToProperCase));
-        }
-
-        // leave the CamelCase or Propercase names alone
-        return input;
-    }
-
     public static bool CompareOrdinalIgnoreCase(this string source, string value)
     {
         return string.Compare(source, value, StringComparison.OrdinalIgnoreCase) == 0;
@@ -593,7 +581,7 @@ public static class StringExtensions
         // Allow 10% as a rough guess of how much the string may grow.
         // If we're wrong we'll either waste space or have extra copies -
         // it will still work
-        var builder = new StringBuilder((int) (input.Length * 1.1));
+        var builder = new StringBuilder((int)(input.Length * 1.1));
 
         var lastWasCR = false;
 

@@ -1,15 +1,12 @@
 ﻿using System.ComponentModel;
 
-namespace FEx.AzureStorage
+namespace FEx.AzureStorage;
+
+public enum StorageOperation
 {
-    public enum StorageOperation
-    {
-        None,
+    None,
 
-        [Description("Downloaded")]
-        Download,
+    [Description("Downloaded")] Download,
 
-        [Description("Uploaded")]
-        Upload
-    }
+    [Description("Uploaded")] Upload
 }

@@ -178,7 +178,7 @@ public static class DictionaryExtensions
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
         if (cDic != null)
         {
-            return cDic.AddOrUpdate(key, _ => valueToAddOrUpdate(), (_, __) => valueToAddOrUpdate());
+            return cDic.AddOrUpdate(key, _ => valueToAddOrUpdate(), (_, _) => valueToAddOrUpdate());
         }
 
         if (dictionary.ContainsKey(key))

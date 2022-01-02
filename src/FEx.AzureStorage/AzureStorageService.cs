@@ -3,6 +3,8 @@ using Azure.Storage.Blobs.Models;
 using FEx.Extensions;
 using FEx.Extensions.Collections;
 using FEx.Extensions.Collections.Dictionaries;
+using FEx.Extensions.IO;
+using FEx.Json;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Storage.DataMovement;
@@ -21,7 +23,7 @@ public class AzureStorageService : IAzureStorageService
     ///     The latest version according to
     ///     https://docs.microsoft.com/en-us/rest/api/storageservices/versioning-for-the-azure-storage-services
     /// </summary>
-    public const string latestVersion = "2021-02-12";
+    public const string LatestVersion = "2021-02-12";
 
     private static string GetBlobName(string path, string fileName)
     {
@@ -34,9 +36,9 @@ public class AzureStorageService : IAzureStorageService
         CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
         ServiceProperties props = blobClient.GetServiceProperties();
 
-        if (props.DefaultServiceVersion == null)
+        if (props.DefaultServiceVersion == null) //todo - or earlier if configuration allows 
         {
-            props.DefaultServiceVersion = latestVersion;
+            props.DefaultServiceVersion = LatestVersion;
             blobClient.SetServiceProperties(props);
         }
     }
@@ -166,32 +168,6 @@ public class AzureStorageService : IAzureStorageService
         return result;
     }
 
-    public async Task<(FileInfo file, CloudBlockBlob blob)> UploadFileAsync(
-        string path,
-        bool overwrite,
-        FileInfo file,
-        string containerName = null,
-        CloudBlobContainer container = null)
-    {
-        container = container ?? GetCloudBlobContainer(containerName);
-        string blobName = GetBlobName(path, file.Name);
-        Log.LogInformation($"Preparing blob for container {containerName} and path {blobName}");
-        CloudBlockBlob destBlob = container.GetBlockBlobReference(blobName);
-        ProgressState state = GetBlobProgressState(blobName, StorageOperation.Upload);
-        state.Reset(blobName, Convert.ToDouble(file.Length));
-
-        var context = new SingleTransferContext
-        {
-            ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)),
-            ShouldOverwriteCallbackAsync = (_, __) => Task.FromResult(overwrite)
-        };
-
-        // Upload a local blob
-        await TransferManager.UploadAsync(file.FullName, destBlob, null, context, CancellationToken.None);
-        await destBlob.FetchAttributesAsync();
-        return (file, destBlob);
-    }
-
     public async Task<(string file, CloudBlockBlob blob)> UploadStreamAsync(
         string path,
         bool overwrite,
@@ -210,7 +186,7 @@ public class AzureStorageService : IAzureStorageService
         var context = new SingleTransferContext
         {
             ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)),
-            ShouldOverwriteCallbackAsync = (_, __) => Task.FromResult(overwrite)
+            ShouldOverwriteCallbackAsync = (_, _) => Task.FromResult(overwrite)
         };
 
         // Upload a local blob
@@ -319,7 +295,7 @@ public class AzureStorageService : IAzureStorageService
             var context = new SingleTransferContext
             {
                 ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)),
-                ShouldOverwriteCallbackAsync = (_, __) => Task.FromResult(overwrite)
+                ShouldOverwriteCallbackAsync = (_, _) => Task.FromResult(overwrite)
             };
 
             await TransferManager.CopyAsync(sourceBlob, destinationBlob, CopyMethod.ServiceSideAsyncCopy, null, context);
@@ -333,6 +309,32 @@ public class AzureStorageService : IAzureStorageService
         }
 
         return (null, false);
+    }
+
+    public async Task<(FileInfo file, CloudBlockBlob blob)> UploadFileAsync(
+        string path,
+        bool overwrite,
+        FileInfo file,
+        string containerName = null,
+        CloudBlobContainer container = null,
+        CancellationToken cancellationToken = default)
+    {
+        container = container ?? GetCloudBlobContainer(containerName);
+        string blobName = GetBlobName(path, file.Name);
+        Log.LogInformation($"Preparing blob for container {containerName} and path {blobName}");
+        CloudBlockBlob destBlob = container.GetBlockBlobReference(blobName);
+        ProgressState state = GetBlobProgressState(blobName, StorageOperation.Upload);
+        state.Reset(blobName, Convert.ToDouble(file.Length));
+
+        var context = new SingleTransferContext
+        {
+            ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)),
+            ShouldOverwriteCallbackAsync = (_, _) => Task.FromResult(overwrite)
+        };
+
+        await TransferManager.UploadAsync(file.FullName, destBlob, null, context, cancellationToken);
+        await destBlob.FetchAttributesAsync(cancellationToken);
+        return (file, destBlob);
     }
 
     private async Task<BlobContainerClient> GetBlobContainerClientAsync(string containerName)
@@ -400,9 +402,9 @@ public class AzureStorageService : IAzureStorageService
                 ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state))
             };
 
-            using (FileStream downloadFileStream = localFile.OpenWrite())
+            await using (FileStream downloadFileStream = localFile.OpenWrite())
             {
-                await TransferManager.DownloadAsync(sourceBlob, downloadFileStream, new DownloadOptions {DisableContentMD5Validation = true}, context);
+                await TransferManager.DownloadAsync(sourceBlob, downloadFileStream, new DownloadOptions { DisableContentMD5Validation = true }, context);
             }
         }
 

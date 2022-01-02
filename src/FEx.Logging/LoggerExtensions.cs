@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FEx.Extensions.Collections.Lists;
+using FEx.Extensions.Helpers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Configuration;
@@ -13,6 +15,19 @@ namespace FEx.Logging;
 
 public static class LoggerExtensions
 {
+    public static string DefaultConsoleOutputTemplate { get; set; } =
+        "[{Timestamp:HH:mm:ss}|{Level:u3}] <s:{SourceContext}>{NewLine}   {Message:lj}  {Exception}{NewLine}";
+
+    public static string DefaultFileOutputTemplate { get; set; } =
+        "[{Timestamp:yyyy-MM-dd HH:mm:ss}|{Level:u3}] <s:{SourceContext}>{NewLine}   {Message:lj} {Exception}{NewLine}    [Properties:{Properties}]{NewLine}";
+
+    public static IList<string> DefaultOverrides { get; set; } = new[]
+    {
+        "Microsoft",
+        "Microsoft.Hosting.Lifetime",
+        "System"
+    };
+
     public static LoggerConfiguration ConfigureSerilog(this LoggerConfiguration cfg, string logFilePath, bool forceConsole = false, LogEventLevel externalLoggingLevel = LogEventLevel.Warning, LogEventLevel externalDebugLoggingLevel = LogEventLevel.Information, Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null, params string[] overrides)
     {
         if (logFilePath == null)
@@ -95,20 +110,7 @@ public static class LoggerExtensions
             rollingInterval: RollingInterval.Hour,
             retainedFileCountLimit: 48,
             retainedFileTimeLimit: TimeSpan.FromDays(2),
-            fileSizeLimitBytes: (int) FileLengthConverter.ConvertFileLength(100, LengthType.Megabytes, LengthType.Bytes),
+            fileSizeLimitBytes: (int)FileLengthConverter.ConvertFileLength(100, LengthType.Megabytes, LengthType.Bytes),
             outputTemplate: DefaultFileOutputTemplate);
     }
-
-    public static string DefaultConsoleOutputTemplate { get; set; } =
-        "[{Timestamp:HH:mm:ss}|{Level:u3}] <s:{SourceContext}>{NewLine}   {Message:lj}  {Exception}{NewLine}";
-
-    public static string DefaultFileOutputTemplate { get; set; } =
-        "[{Timestamp:yyyy-MM-dd HH:mm:ss}|{Level:u3}] <s:{SourceContext}>{NewLine}   {Message:lj} {Exception}{NewLine}    [Properties:{Properties}]{NewLine}";
-
-    public static IList<string> DefaultOverrides { get; set; } = new[]
-    {
-        "Microsoft",
-        "Microsoft.Hosting.Lifetime",
-        "System"
-    };
 }

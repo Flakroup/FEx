@@ -2,6 +2,7 @@
 using Azure.Storage.Blobs.Models;
 using FEx.Extensions;
 using FEx.Extensions.Helpers;
+using FEx.Utilities.Flow;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 
@@ -61,7 +62,7 @@ public static class BlobExtensions
         return results;
     }
 
-    public static async Task<IList<IListBlobItem>> ListBlobsAsync(
+    public static async Task<Result<IList<IListBlobItem>, StackError>> ListBlobsAsync(
         this CloudBlobContainer client,
         string prefix,
         CancellationToken cancellationToken,
@@ -70,6 +71,13 @@ public static class BlobExtensions
         BlobRequestOptions options = null,
         OperationContext operationContext = null)
     {
+        CloudBlobDirectory directory = client.GetDirectoryReference(prefix);
+
+        if (!(await directory.ListBlobsAsync(cancellationToken)).Any())
+        {
+            return Result<IList<IListBlobItem>, StackError>.Failure;
+        }
+
         BlobContinuationToken continuationToken = null;
         var results = new List<IListBlobItem>();
         do

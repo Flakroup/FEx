@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+using FEx.Extensions;
+using System.Diagnostics;
 
 namespace FEx.Utilities.Flow;
 
@@ -8,10 +9,14 @@ public interface IError
     string Message { get; set; }
     string RootErrorStackTrace { get; }
     string StackTrace { get; }
+
+    void SetInnerError(Error innerError);
 }
 
 public abstract class Error : IError
 {
+    private Error _innerError;
+
     protected Error()
     {
         StackTrace = new StackTrace(true).ToString();
@@ -20,25 +25,45 @@ public abstract class Error : IError
     protected Error(Error innerError)
         : this()
     {
-        InnerError = innerError ?? throw new ArgumentNullException(nameof(innerError));
-        RootErrorStackTrace = InnerError.RootErrorStackTrace ?? InnerError.StackTrace;
+        InnerError = innerError;
     }
 
-    public Error InnerError { get; }
     public string Message { get; set; }
     public string StackTrace { get; }
-    public string RootErrorStackTrace { get; }
+    public IError RootError { get; private set; }
+
+    public Error InnerError
+    {
+        get => _innerError;
+        set
+        {
+            _innerError = value.Guard(nameof(InnerError));
+            RootError = InnerError.RootError ?? InnerError;
+        }
+    }
+
+    public string RootErrorStackTrace => RootError?.StackTrace;
+
+    public void SetInnerError(Error innerError)
+    {
+        if (InnerError != null)
+        {
+            throw new InvalidOperationException($"{nameof(InnerError)} is already set");
+        }
+
+        InnerError = innerError;
+    }
 }
 
 public abstract class Error<TErrorStatus> : Error
     where TErrorStatus : Enum
 {
-    protected Error(TErrorStatus status)
+    public Error(TErrorStatus status)
     {
         Status = status;
     }
 
-    protected Error(TErrorStatus status, Error innerError) : base(innerError)
+    public Error(TErrorStatus status, Error innerError) : base(innerError)
     {
         Status = status;
     }

@@ -31,6 +31,7 @@ public class Result<TError>
 
     public TError Error { get; }
     public bool IsSuccessful { get; }
+    public bool IsFailure => !IsSuccessful;
 }
 
 public class Result<TData, TError> : Result<TError>

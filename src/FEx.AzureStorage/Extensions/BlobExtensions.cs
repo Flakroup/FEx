@@ -1,8 +1,11 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using FEx.Extensions;
+using FEx.Extensions.Collections.Dictionaries;
 using FEx.Extensions.Helpers;
+using FEx.Extensions.IO;
 using FEx.Utilities.Flow;
+using FEx.Webx;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 
@@ -71,11 +74,16 @@ public static class BlobExtensions
         BlobRequestOptions options = null,
         OperationContext operationContext = null)
     {
-        CloudBlobDirectory directory = client.GetDirectoryReference(prefix);
-
-        if (!(await directory.ListBlobsAsync(cancellationToken)).Any())
+        if (prefix.IsNotNullOrEmptyString())
         {
-            return Result<IList<IListBlobItem>, StackError>.Failure;
+            string dir = FileSystemCommon.GetParentFolderFromPath(prefix, '/', true);
+            CloudBlobDirectory directory = client.GetDirectoryReference(dir);
+            IList<IListBlobItem> blobs = await directory.ListBlobsAsync(cancellationToken);
+
+            if (blobs.OfType<CloudBlobDirectory>().All(x => x.Prefix != prefix))
+            {
+                return Result<IList<IListBlobItem>, StackError>.Failure;
+            }
         }
 
         BlobContinuationToken continuationToken = null;
@@ -88,5 +96,16 @@ public static class BlobExtensions
         } while (continuationToken != null);
 
         return results;
+    }
+
+    public static async Task EnsureCorrectContentTypeAsync(this CloudBlockBlobInfo arg)
+    {
+        string contentType = MimeTypesUtility.Mappings.TryGetReadOnlyKeyValue(arg.Extension.TrimStart('.'));
+
+        if (contentType != null && arg.ContentType != contentType)
+        {
+            arg.ContentType = contentType;
+            await arg.Blob.SetPropertiesAsync();
+        }
     }
 }

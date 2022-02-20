@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	  <TargetFramework>$(TargetFrameworkId)</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Azure.Storage.Blobs" Version="12.10.0" />
+		<PackageReference Include="Azure.Storage.Blobs" Version="12.11.0" />
 		<PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.2.3" />
 		<PackageReference Include="Microsoft.Azure.Storage.File" Version="11.2.3" />
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
@@ -13,8 +13,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
-	  <ProjectReference Include="..\FEx.Logging\FEx.Logging.csproj" />
+		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+		<ProjectReference Include="..\FEx.Logging\FEx.Logging.csproj" />
+		<ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
 	</ItemGroup>
 
 </Project>

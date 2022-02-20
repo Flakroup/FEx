@@ -17,7 +17,7 @@ public interface IAzureStorageService
     Task<IList<CloudBlockBlob>> GetCloudBlockBlobsAsync(string containerName, string path, bool useFlatBlobListing = false);
     Task<IList<CloudBlockBlobInfo>> GetCloudBlockBlobsInfoAsync(string containerName, string path, bool useFlatBlobListing = false);
     Task<(string fileName, FileInfo localPath)> ProcessBlobAsync(string containerName, string downloadDir, string path);
-    Task<(FileInfo file, CloudBlockBlob blob)> UploadFileAsync(string path, bool overwrite, FileInfo file, string containerName = null, CloudBlobContainer container = null, CancellationToken cancellationToken = default);
-    Task<IDictionary<FileInfo, CloudBlockBlob>> UploadFilesAsync(string containerName, string path, bool overwrite = false, bool oneByOne = false, params FileInfo[] files);
+    Task<(FileInfo file, CloudBlockBlobInfo blob)> UploadFileAsync(string path, bool overwrite, FileInfo file, string containerName = null, CloudBlobContainer container = null, CancellationToken cancellationToken = default);
+    Task<IDictionary<FileInfo, CloudBlockBlobInfo>> UploadFilesAsync(string containerName, string path, bool overwrite = false, bool oneByOne = false, params FileInfo[] files);
     Task<(string file, CloudBlockBlob blob)> UploadStreamAsync(string path, bool overwrite, string fileName, Stream stream, string containerName = null, CloudBlobContainer container = null);
 }

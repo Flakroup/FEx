@@ -36,4 +36,10 @@ public static class FileSystemCommon
     {
         return new FileInfo(filePath).GenerateMd5OfFile();
     }
+
+    public static string GetParentFolderFromPath(string path, char pathSeparator, bool includeSeparatorAtEnd)
+    {
+        int pos = path.TrimEnd(pathSeparator).LastIndexOf(pathSeparator.ToString(), StringComparison.Ordinal);
+        return path[..(includeSeparatorAtEnd ? pos + 1 : pos)];
+    }
 }

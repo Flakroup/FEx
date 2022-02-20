@@ -1,11 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	  <TargetFramework>$(TargetFrameworkId)</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="MimeMapping" Version="1.0.1.37" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+	</ItemGroup>
 
 </Project>

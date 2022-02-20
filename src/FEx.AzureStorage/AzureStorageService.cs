@@ -1,5 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using FEx.AzureStorage.Extensions;
 using FEx.Extensions;
 using FEx.Extensions.Collections;
 using FEx.Extensions.Collections.Dictionaries;
@@ -140,32 +141,6 @@ public class AzureStorageService : IAzureStorageService
         }
 
         return true;
-    }
-
-    public async Task<IDictionary<FileInfo, CloudBlockBlob>> UploadFilesAsync(string containerName, string path, bool overwrite = false, bool oneByOne = false, params FileInfo[] files)
-    {
-        if (files.Length == 0)
-        {
-            throw new Exception("No files to upload");
-        }
-
-        CloudBlobContainer container = GetCloudBlobContainer(containerName);
-
-        if (!oneByOne)
-        {
-            return (await files.RunFuncTaskWithWhenAllAsync(file => UploadFileAsync(path, overwrite, file, containerName, container), true))
-                .ToDictionary(x => x.file, x => x.blob);
-        }
-
-        var result = new Dictionary<FileInfo, CloudBlockBlob>();
-
-        foreach (FileInfo f in files)
-        {
-            (FileInfo file, CloudBlockBlob destBlob) = await UploadFileAsync(path, overwrite, f, containerName, container);
-            result.Add(file, destBlob);
-        }
-
-        return result;
     }
 
     public async Task<(string file, CloudBlockBlob blob)> UploadStreamAsync(
@@ -311,7 +286,33 @@ public class AzureStorageService : IAzureStorageService
         return (null, false);
     }
 
-    public async Task<(FileInfo file, CloudBlockBlob blob)> UploadFileAsync(
+    public async Task<IDictionary<FileInfo, CloudBlockBlobInfo>> UploadFilesAsync(string containerName, string path, bool overwrite = false, bool oneByOne = false, params FileInfo[] files)
+    {
+        if (files.Length == 0)
+        {
+            throw new Exception("No files to upload");
+        }
+
+        CloudBlobContainer container = GetCloudBlobContainer(containerName);
+
+        if (!oneByOne)
+        {
+            return (await files.RunFuncTaskWithWhenAllAsync(file => UploadFileAsync(path, overwrite, file, containerName, container), true))
+                .ToDictionary(x => x.file, x => x.blob);
+        }
+
+        var result = new Dictionary<FileInfo, CloudBlockBlobInfo>();
+
+        foreach (FileInfo f in files)
+        {
+            (FileInfo file, CloudBlockBlobInfo destBlob) = await UploadFileAsync(path, overwrite, f, containerName, container);
+            result.Add(file, destBlob);
+        }
+
+        return result;
+    }
+
+    public async Task<(FileInfo file, CloudBlockBlobInfo blob)> UploadFileAsync(
         string path,
         bool overwrite,
         FileInfo file,
@@ -319,7 +320,7 @@ public class AzureStorageService : IAzureStorageService
         CloudBlobContainer container = null,
         CancellationToken cancellationToken = default)
     {
-        container = container ?? GetCloudBlobContainer(containerName);
+        container ??= GetCloudBlobContainer(containerName);
         string blobName = GetBlobName(path, file.Name);
         Log.LogInformation($"Preparing blob for container {containerName} and path {blobName}");
         CloudBlockBlob destBlob = container.GetBlockBlobReference(blobName);
@@ -334,7 +335,9 @@ public class AzureStorageService : IAzureStorageService
 
         await TransferManager.UploadAsync(file.FullName, destBlob, null, context, cancellationToken);
         await destBlob.FetchAttributesAsync(cancellationToken);
-        return (file, destBlob);
+        var blob = new CloudBlockBlobInfo(destBlob, true);
+        await blob.EnsureCorrectContentTypeAsync();
+        return (file, blob);
     }
 
     private async Task<BlobContainerClient> GetBlobContainerClientAsync(string containerName)

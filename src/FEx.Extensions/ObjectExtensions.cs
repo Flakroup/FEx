@@ -1,8 +1,11 @@
 ﻿using FEx.Extensions.Collections.Enumerables;
 using FEx.Extensions.Helpers;
 using JetBrains.Annotations;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -28,9 +31,7 @@ public static class ObjectExtensions
         // ReSharper restore UnusedParameter.Global
     {
         if (field == null)
-        {
             field = initializer();
-        }
 
         return field;
     }
@@ -56,9 +57,7 @@ public static class ObjectExtensions
     public static void IfNotNull<T>(this T value, Action action)
     {
         if (value != null)
-        {
             action();
-        }
     }
 
     /// <summary>
@@ -70,9 +69,7 @@ public static class ObjectExtensions
     public static void IfNotNull<T>(this T value, Action<T> action)
     {
         if (value != null)
-        {
             action(value);
-        }
     }
 
     /// <summary>
@@ -85,7 +82,9 @@ public static class ObjectExtensions
     /// <returns>If value not null, return the result of the Func; Otherwise return Default(TOut).</returns>
     public static TOut IfNotNull<T, TOut>(this T value, Func<T, TOut> fn)
     {
-        return value != null ? fn(value) : default;
+        return value != null
+            ? fn(value)
+            : default;
     }
 
     /// <summary>
@@ -97,9 +96,7 @@ public static class ObjectExtensions
     public static void IfNull<T>(this T value, Action action)
     {
         if (value == null)
-        {
             action();
-        }
     }
 
     /// <summary>
@@ -111,9 +108,7 @@ public static class ObjectExtensions
     public static void IfNull<T>(this T value, Action<T> action)
     {
         if (value == null)
-        {
             action(default);
-        }
     }
 
     /// <summary>
@@ -187,9 +182,7 @@ public static class ObjectExtensions
     public static TInput With<TInput>(this TInput value, params Action<TInput>[] actions) where TInput : class
     {
         if (value == null)
-        {
             return default;
-        }
 
         actions.ForEach(a => a(value));
         return value;
@@ -218,27 +211,42 @@ public static class ObjectExtensions
         if (obj != null)
         {
             var propertyString = new StringBuilder();
-            string objNameSegment = name != null ? name + " = " : string.Empty;
+            string objNameSegment = name != null
+                ? name + " = "
+                : string.Empty;
 
             if (Convert.GetTypeCode(obj) == TypeCode.Object
                 && !(obj is IEnumerable)
                 && type != typeof(Guid))
             {
                 // if object, get all properties
-                propertyString.Append("(").Append(type.FullName).Append(" ").Append(objNameSegment).Append(") Properties: ").Append(obj.ToPropertiesString());
+                propertyString.Append("(")
+                    .Append(type.FullName)
+                    .Append(" ")
+                    .Append(objNameSegment)
+                    .Append(") Properties: ")
+                    .Append(obj.ToPropertiesString());
             }
             else
             {
                 if (type == typeof(Guid))
-                {
-                    propertyString.Append("(").Append(type.Name).Append(" ").Append(name).Append(" = '").Append(type.GUID).Append("')");
-                }
+                    propertyString.Append("(")
+                        .Append(type.Name)
+                        .Append(" ")
+                        .Append(name)
+                        .Append(" = '")
+                        .Append(type.GUID)
+                        .Append("')");
                 else
-                {
                     // for primitive types, just show the type and value
                     // for collection types, just show the collection type and item type (e.g. [(List`1)  'System.Collections.Generic.List`1[JCDCHelper.CV.DDLDispValueCV]'])
-                    propertyString.Append("(").Append(type.Name).Append(" ").Append(objNameSegment).Append(" '").Append(obj).Append("')");
-                }
+                    propertyString.Append("(")
+                        .Append(type.Name)
+                        .Append(" ")
+                        .Append(objNameSegment)
+                        .Append(" '")
+                        .Append(obj)
+                        .Append("')");
             }
 
             return propertyString.ToString();
@@ -255,18 +263,25 @@ public static class ObjectExtensions
     public static string ToPropertiesString(this object obj)
     {
         var propertiesString = new StringBuilder();
-        foreach (PropertyInfo property in obj.GetType().GetProperties())
+        foreach (PropertyInfo property in obj.GetType()
+                     .GetProperties())
         {
             string name = property.Name;
             object value = property.GetValue(obj, null);
-            propertiesString.Append("(").Append(property.PropertyType.Name).Append(") ").Append(name).Append(" = '").Append(value == null ? "null" : value).Append("', ");
+            propertiesString.Append("(")
+                .Append(property.PropertyType.Name)
+                .Append(") ")
+                .Append(name)
+                .Append(" = '")
+                .Append(value == null
+                    ? "null"
+                    : value)
+                .Append("', ");
         }
 
         // remove last comma
         if (propertiesString.Length > 0)
-        {
             propertiesString.Remove(propertiesString.Length - 2, 2);
-        }
 
         return propertiesString.ToString();
     }
@@ -285,26 +300,31 @@ public static class ObjectExtensions
     /// <returns>Property</returns>
     public static T GetPropertyValueByName<T>(this object obj, string name, object[] index = null)
     {
-        return (T)obj.GetType().GetProperty(name)?.GetValue(obj, index);
+        return (T)obj.GetType()
+            .GetProperty(name)
+            ?.GetValue(obj, index);
     }
 
     public static T GetObject<T>(this object value)
     {
-        return value != null ? (T)value : default;
+        return value != null
+            ? (T)value
+            : default;
     }
 
     public static string GetTypeInstanceDescription(this object value)
     {
-        return value.GetType().GetTypeCustomAttribute<DescriptionAttribute>()?.Find()?.Description;
+        return value.GetType()
+            .GetTypeCustomAttribute<DescriptionAttribute>()
+            ?.Find()
+            ?.Description;
     }
 
     public static bool IsBetween<T>(this T item, T start, T end, bool inclusive = false)
     {
         return inclusive
-            ? Comparer<T>.Default.Compare(item, start) >= 0
-              && Comparer<T>.Default.Compare(item, end) <= 0
-            : Comparer<T>.Default.Compare(item, start) > 0
-              && Comparer<T>.Default.Compare(item, end) < 0;
+            ? Comparer<T>.Default.Compare(item, start) >= 0 && Comparer<T>.Default.Compare(item, end) <= 0
+            : Comparer<T>.Default.Compare(item, start) > 0 && Comparer<T>.Default.Compare(item, end) < 0;
     }
 
     /// <summary>
@@ -323,15 +343,12 @@ public static class ObjectExtensions
 
     public static bool IsIn<T>(this T item, IEnumerable<T> items)
     {
-        switch (items)
+        return items switch
         {
-            case ISet<T> iSet:
-                return iSet.Contains(item);
-            case ICollection<T> col:
-                return col.Contains(item);
-            default:
-                return items.Contains(item);
-        }
+            ISet<T> iSet => iSet.Contains(item),
+            ICollection<T> col => col.Contains(item),
+            _ => items.Contains(item)
+        };
     }
 
     public static bool IsNotIn<T>(this T item, params T[] items)
@@ -387,16 +404,14 @@ public static class ObjectExtensions
         return false;
     }
 
-    public static T ToObject<T>(this IDictionary<string, object> source)
-        where T : class, new()
+    public static T ToObject<T>(this IDictionary<string, object> source) where T : class, new()
     {
         var someObject = new T();
         Type someObjectType = someObject.GetType();
 
         foreach (KeyValuePair<string, object> item in source)
         {
-            someObjectType
-                .GetProperty(item.Key)
+            someObjectType.GetProperty(item.Key)
                 .SetValue(someObject, item.Value, null);
         }
 
@@ -405,10 +420,8 @@ public static class ObjectExtensions
 
     public static IDictionary<string, object> AsDictionary(this object source, BindingFlags bindingAttr = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
     {
-        return source.GetType().GetProperties(bindingAttr).ToDictionary
-        (
-            propInfo => propInfo.Name,
-            propInfo => propInfo.GetValue(source, null)
-        );
+        return source.GetType()
+            .GetProperties(bindingAttr)
+            .ToDictionary(propInfo => propInfo.Name, propInfo => propInfo.GetValue(source, null));
     }
 }

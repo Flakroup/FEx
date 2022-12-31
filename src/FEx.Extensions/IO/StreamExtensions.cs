@@ -1,5 +1,8 @@
 ﻿using FEx.Extensions.Helpers;
+using System;
+using System.IO;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace FEx.Extensions.IO;
 
@@ -15,9 +18,7 @@ public static class StreamExtensions
         using (sourceStream)
         {
             if (sourceStream == null)
-            {
                 return;
-            }
 
             progressMaximumSet?.BeginInvoke(sourceStream.Length, null, null);
 
@@ -43,9 +44,7 @@ public static class StreamExtensions
     {
         await using (input)
         await using (MemoryStream ms = await input.ToMemoryStreamAsync())
-        {
             return ms.ToArray();
-        }
     }
 
     public static async Task<MemoryStream> ToMemoryStreamAsync(this Stream input)
@@ -64,9 +63,7 @@ public static class StreamExtensions
         byte[] hash;
 
         using (var md5Algorithm = MD5.Create())
-        {
             hash = md5Algorithm.ComputeHash(data);
-        }
 
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }

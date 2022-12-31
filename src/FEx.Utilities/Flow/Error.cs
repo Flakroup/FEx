@@ -1,4 +1,5 @@
 using FEx.Extensions;
+using System;
 using System.Diagnostics;
 
 namespace FEx.Utilities.Flow;
@@ -17,17 +18,6 @@ public abstract class Error : IError
 {
     private Error _innerError;
 
-    protected Error()
-    {
-        StackTrace = new StackTrace(true).ToString();
-    }
-
-    protected Error(Error innerError)
-        : this()
-    {
-        InnerError = innerError;
-    }
-
     public string Message { get; set; }
     public string StackTrace { get; }
     public IError RootError { get; private set; }
@@ -44,29 +34,38 @@ public abstract class Error : IError
 
     public string RootErrorStackTrace => RootError?.StackTrace;
 
+    protected Error()
+    {
+        StackTrace = new StackTrace(true).ToString();
+    }
+
+    protected Error(Error innerError)
+        : this()
+    {
+        InnerError = innerError;
+    }
+
     public void SetInnerError(Error innerError)
     {
         if (InnerError != null)
-        {
             throw new InvalidOperationException($"{nameof(InnerError)} is already set");
-        }
 
         InnerError = innerError;
     }
 }
 
-public abstract class Error<TErrorStatus> : Error
-    where TErrorStatus : Enum
+public abstract class Error<TErrorStatus> : Error where TErrorStatus : Enum
 {
+    public TErrorStatus Status { get; }
+
     public Error(TErrorStatus status)
     {
         Status = status;
     }
 
-    public Error(TErrorStatus status, Error innerError) : base(innerError)
+    public Error(TErrorStatus status, Error innerError)
+        : base(innerError)
     {
         Status = status;
     }
-
-    public TErrorStatus Status { get; }
 }

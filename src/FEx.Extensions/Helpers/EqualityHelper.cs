@@ -1,4 +1,6 @@
-﻿namespace FEx.Extensions.Helpers;
+﻿using System.Collections.Generic;
+
+namespace FEx.Extensions.Helpers;
 
 public static class EqualityHelper
 {

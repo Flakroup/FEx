@@ -8,6 +8,11 @@ using FEx.Utilities.Flow;
 using FEx.Webx;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FEx.AzureStorage.Extensions;
 
@@ -16,7 +21,8 @@ public static class BlobExtensions
     public static string GetBlobChecksum(this CloudBlockBlob blob)
     {
         return blob?.Properties?.ContentMD5 != null
-            ? Convert.FromBase64String(blob.Properties.ContentMD5).GetHashString()
+            ? Convert.FromBase64String(blob.Properties.ContentMD5)
+                .GetHashString()
             : null;
     }
 
@@ -34,7 +40,7 @@ public static class BlobExtensions
     {
         BlobClient blobClient = blobContainerClient.GetBlobClient(blob.Name);
         Uri blobUri = blobClient.Uri;
-        return new Uri($"{blobUri.Scheme}://{blobUri.Host}{blobUri.LocalPath}");
+        return new($"{blobUri.Scheme}://{blobUri.Host}{blobUri.LocalPath}");
     }
 
     public static async Task<IList<IListBlobItem>> ListBlobsAsync(this CloudBlobDirectory directory, CancellationToken cancellationToken)
@@ -65,14 +71,7 @@ public static class BlobExtensions
         return results;
     }
 
-    public static async Task<Result<IList<IListBlobItem>, StackError>> ListBlobsAsync(
-        this CloudBlobContainer client,
-        string prefix,
-        CancellationToken cancellationToken,
-        bool useFlatBlobListing = false,
-        BlobListingDetails blobListingDetails = BlobListingDetails.None,
-        BlobRequestOptions options = null,
-        OperationContext operationContext = null)
+    public static async Task<Result<IList<IListBlobItem>, StackError>> ListBlobsAsync(this CloudBlobContainer client, string prefix, CancellationToken cancellationToken, bool useFlatBlobListing = false, BlobListingDetails blobListingDetails = BlobListingDetails.None, BlobRequestOptions options = null, OperationContext operationContext = null)
     {
         if (prefix.IsNotNullOrEmptyString())
         {
@@ -80,17 +79,16 @@ public static class BlobExtensions
             CloudBlobDirectory directory = client.GetDirectoryReference(dir);
             IList<IListBlobItem> blobs = await directory.ListBlobsAsync(cancellationToken);
 
-            if (blobs.OfType<CloudBlobDirectory>().All(x => x.Prefix != prefix))
-            {
+            if (blobs.OfType<CloudBlobDirectory>()
+                .All(x => x.Prefix != prefix))
                 return Result<IList<IListBlobItem>, StackError>.Failure;
-            }
         }
 
         BlobContinuationToken continuationToken = null;
         var results = new List<IListBlobItem>();
         do
         {
-            BlobResultSegment response = await client.ListBlobsSegmentedAsync(prefix, useFlatBlobListing, blobListingDetails, new int?(), continuationToken, options, operationContext, cancellationToken);
+            BlobResultSegment response = await client.ListBlobsSegmentedAsync(prefix, useFlatBlobListing, blobListingDetails, new(), continuationToken, options, operationContext, cancellationToken);
             continuationToken = response.ContinuationToken;
             results.AddRange(response.Results);
         } while (continuationToken != null);
@@ -102,7 +100,8 @@ public static class BlobExtensions
     {
         string contentType = MimeTypesUtility.Mappings.TryGetReadOnlyKeyValue(arg.Extension.TrimStart('.'));
 
-        if (contentType != null && arg.ContentType != contentType)
+        if (contentType != null
+            && arg.ContentType != contentType)
         {
             arg.ContentType = contentType;
             await arg.Blob.SetPropertiesAsync();

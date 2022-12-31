@@ -1,20 +1,19 @@
-﻿namespace FEx.Extensions.IO;
+﻿using System.IO;
+
+namespace FEx.Extensions.IO;
 
 public static class FileSystemInfoExtensions
 {
     public static DirectoryInfo GetDirectory(this FileSystemInfo fileSystemInfo)
     {
-        switch (fileSystemInfo)
+        return fileSystemInfo switch
         {
-            case DirectoryInfo info:
-                return info;
-            case FileInfo fileInfo:
-                return fileInfo.Directory;
-            default:
-                return fileSystemInfo.IsPathFile()
-                    ? new FileInfo(fileSystemInfo.FullName).Directory
-                    : new DirectoryInfo(fileSystemInfo.FullName);
-        }
+            DirectoryInfo info => info,
+            FileInfo fileInfo => fileInfo.Directory,
+            _ => fileSystemInfo.IsPathFile()
+                ? new FileInfo(fileSystemInfo.FullName).Directory
+                : new(fileSystemInfo.FullName)
+        };
     }
 
     public static bool IsPathFile(this FileSystemInfo fileSystemInfo)

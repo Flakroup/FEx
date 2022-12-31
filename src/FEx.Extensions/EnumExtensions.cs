@@ -1,5 +1,7 @@
 ﻿using FEx.Extensions.Collections.Enumerables;
+using System;
 using System.ComponentModel;
+using System.Linq;
 
 namespace FEx.Extensions;
 
@@ -12,7 +14,8 @@ public static class EnumExtensions
     /// <returns></returns>
     public static string GetEnumValueDescription(this Enum enumValue)
     {
-        return enumValue.GetEnumValueAttribute<DescriptionAttribute>()?.Description;
+        return enumValue.GetEnumValueAttribute<DescriptionAttribute>()
+            ?.Description;
     }
 
     /// <summary>
@@ -21,10 +24,10 @@ public static class EnumExtensions
     /// <typeparam name="TAttributeType">Attribute type.</typeparam>
     /// <param name="enumValue">Enumerator type.</param>
     /// <returns>Attribute object.</returns>
-    public static TAttributeType GetEnumValueAttribute<TAttributeType>(this Enum enumValue)
-        where TAttributeType : Attribute
+    public static TAttributeType GetEnumValueAttribute<TAttributeType>(this Enum enumValue) where TAttributeType : Attribute
     {
-        return GetEnumValueAttributes<TAttributeType>(enumValue).Find();
+        return GetEnumValueAttributes<TAttributeType>(enumValue)
+            .Find();
     }
 
     /// <summary>
@@ -33,30 +36,34 @@ public static class EnumExtensions
     /// <typeparam name="TAttributeType">Attribute type.</typeparam>
     /// <param name="enumValue">Enumerator value.</param>
     /// <returns>Attribute object.</returns>
-    public static TAttributeType[] GetEnumValueAttributes<TAttributeType>(this Enum enumValue)
-        where TAttributeType : Attribute
+    public static TAttributeType[] GetEnumValueAttributes<TAttributeType>(this Enum enumValue) where TAttributeType : Attribute
     {
         return Enum.IsDefined(enumValue.GetType(), enumValue)
-            ? (TAttributeType[])enumValue.GetType().GetField(enumValue.ToString()).GetCustomAttributes(typeof(TAttributeType), true)
+            ? (TAttributeType[])enumValue.GetType()
+                .GetField(enumValue.ToString())
+                .GetCustomAttributes(typeof(TAttributeType), true)
             : null;
     }
 
-    public static TEnum? TryParse<TEnum>(this string value, bool ignoreCase = false)
-        where TEnum : struct
+    public static TEnum? TryParse<TEnum>(this string value, bool ignoreCase = false) where TEnum : struct
     {
         bool isSuccess = Enum.TryParse(value, ignoreCase, out TEnum result);
-        return isSuccess ? result : null;
+        return isSuccess
+            ? result
+            : null;
     }
 
-    public static TEnum[] GetEnumValues<TEnum>(this TEnum value)
-        where TEnum : struct
+    public static TEnum[] GetEnumValues<TEnum>(this TEnum value) where TEnum : struct
     {
-        return Enum.GetValues(value.GetType()).Cast<TEnum>().ToArray();
+        return Enum.GetValues(value.GetType())
+            .Cast<TEnum>()
+            .ToArray();
     }
 
-    public static TEnum[] GetEnumValues<TEnum>()
-        where TEnum : struct
+    public static TEnum[] GetEnumValues<TEnum>() where TEnum : struct
     {
-        return Enum.GetValues(typeof(TEnum)).Cast<TEnum>().ToArray();
+        return Enum.GetValues(typeof(TEnum))
+            .Cast<TEnum>()
+            .ToArray();
     }
 }

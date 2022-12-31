@@ -1,4 +1,7 @@
-﻿namespace FEx.Extensions.IO;
+﻿using System;
+using System.IO;
+
+namespace FEx.Extensions.IO;
 
 public static class DirectoryInfoExtensions
 {
@@ -13,10 +16,9 @@ public static class DirectoryInfoExtensions
 
         foreach (string d in descendants)
         {
-            if (!path.StartsWith(@"\\?\") && path.Length + d.Length > 260)
-            {
+            if (!path.StartsWith(@"\\?\")
+                && path.Length + d.Length > 260)
                 path = $@"\\?\{path}";
-            }
 
             path = Path.Combine(path, d);
         }

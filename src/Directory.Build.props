@@ -3,9 +3,11 @@
 	<Import Project="..\Directory.Build.props" />
 
 	<PropertyGroup>
-		<TargetFrameworkId>net6.0</TargetFrameworkId>
-		<ImplicitUsings>enable</ImplicitUsings>
+		<TargetFrameworkId>net7.0</TargetFrameworkId>
+		<TargetWindowsFrameworkId>net7.0-windows</TargetWindowsFrameworkId>
+		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 </Project>

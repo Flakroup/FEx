@@ -1,7 +1,11 @@
 ﻿using JetBrains.Annotations;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -62,7 +66,8 @@ public static class StringExtensions
     /// <returns>A string.</returns>
     public static string Remove(this string source, IEnumerable<char> chars)
     {
-        return new string(source.Where(c => !chars.Contains(c)).ToArray());
+        return new(source.Where(c => !chars.Contains(c))
+            .ToArray());
     }
 
     /// <summary>
@@ -120,12 +125,18 @@ public static class StringExtensions
     /// <remarks></remarks>
     public static int ToInt(this string value)
     {
-        return int.TryParse(value, out int result) ? result : -1;
+        return int.TryParse(value, out int result)
+            ? result
+            : -1;
     }
 
     public static int? ToNullableInt(this string value)
     {
-        return value != null ? int.TryParse(value, out int result) ? result : null : null;
+        return value != null
+            ? int.TryParse(value, out int result)
+                ? result
+                : null
+            : null;
     }
 
     /// <summary>
@@ -137,7 +148,9 @@ public static class StringExtensions
     /// <remarks></remarks>
     public static int ToInt(this string value, int defaultResult)
     {
-        return int.TryParse(value, out int result) ? result : defaultResult;
+        return int.TryParse(value, out int result)
+            ? result
+            : defaultResult;
     }
 
     /// <summary>
@@ -177,7 +190,8 @@ public static class StringExtensions
     /// <returns>String with replaced wild cards.</returns>
     public static string ReplaceStandardWildCardsBySql(this string value)
     {
-        return value.Replace(StandardWildCardAnyValue, SqlWildCardAnyValue).Replace(StandardWildCardOneCharacter, SqlWildCardOneCharacter);
+        return value.Replace(StandardWildCardAnyValue, SqlWildCardAnyValue)
+            .Replace(StandardWildCardOneCharacter, SqlWildCardOneCharacter);
     }
 
     /// <summary>
@@ -187,7 +201,8 @@ public static class StringExtensions
     /// <returns>String with escaped wild card characters.</returns>
     public static string EscapeSqlWildCards(this string value)
     {
-        return value.Replace(SqlWildCardAnyValue.ToString(), SqlWildCardAnyValueEscaped).Replace(SqlWildCardOneCharacter.ToString(), SqlWildCardOneCharacterEscaped);
+        return value.Replace(SqlWildCardAnyValue.ToString(), SqlWildCardAnyValueEscaped)
+            .Replace(SqlWildCardOneCharacter.ToString(), SqlWildCardOneCharacterEscaped);
     }
 
     /// <summary>
@@ -203,9 +218,7 @@ public static class StringExtensions
         for (var startIndex = 0; startIndex < value.Length; startIndex += elementLength)
         {
             if (startIndex + elementLength > fullLength)
-            {
                 elementLength = fullLength - startIndex;
-            }
 
             elements.Add(value.Substring(startIndex, elementLength));
         }
@@ -222,7 +235,9 @@ public static class StringExtensions
     /// <returns>The splited element.</returns>
     public static string GetSplitedElement(this string value, char separator, int index)
     {
-        return !string.IsNullOrWhiteSpace(value) ? value.Split(separator)[index] : string.Empty;
+        return !string.IsNullOrWhiteSpace(value)
+            ? value.Split(separator)[index]
+            : string.Empty;
     }
 
     /// <summary>
@@ -248,7 +263,8 @@ public static class StringExtensions
     /// <returns>Value divided by capital letter.</returns>
     public static string DivideByCapital(this string value)
     {
-        return Regex.Replace(value, "([A-Z])", " $1").TrimStart(' ');
+        return Regex.Replace(value, "([A-Z])", " $1")
+            .TrimStart(' ');
     }
 
     /// <summary>
@@ -323,33 +339,34 @@ public static class StringExtensions
 
     public static IEnumerable<string> GetPathParts(this string path)
     {
-        return path.Split(Path.DirectorySeparatorChar).SelectMany(x => x.Split(Path.AltDirectorySeparatorChar));
+        return path.Split(Path.DirectorySeparatorChar)
+            .SelectMany(x => x.Split(Path.AltDirectorySeparatorChar));
     }
 
     public static string FirstCharToUpper(this string input)
     {
-        switch (input)
+        return input switch
         {
-            case null:
-                throw new ArgumentNullException(nameof(input));
-            case "":
-                throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input));
-            default:
-                return input[0].ToString().ToUpper() + input.Substring(1);
-        }
+            null => throw new ArgumentNullException(nameof(input)),
+            "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
+            _ => input[0]
+                     .ToString()
+                     .ToUpper()
+                 + input.Substring(1)
+        };
     }
 
     public static string FirstCharToLower(this string input)
     {
-        switch (input)
+        return input switch
         {
-            case null:
-                throw new ArgumentNullException(nameof(input));
-            case "":
-                throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input));
-            default:
-                return input[0].ToString().ToLower() + input.Substring(1);
-        }
+            null => throw new ArgumentNullException(nameof(input)),
+            "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
+            _ => input[0]
+                     .ToString()
+                     .ToLower()
+                 + input.Substring(1)
+        };
     }
 
     /// <summary>Returns a string containing a specified number of characters from the left side of a string.</summary>
@@ -367,9 +384,7 @@ public static class StringExtensions
     public static string Left(this string str, int length, bool trim = false)
     {
         if (trim)
-        {
             str = str.Trim();
-        }
 
         return str.Substring(0, length);
     }
@@ -389,9 +404,7 @@ public static class StringExtensions
     public static string Mid(this string str, int start, bool trim = false)
     {
         if (trim)
-        {
             str = str.Trim();
-        }
 
         return str.Substring(start);
     }
@@ -422,9 +435,7 @@ public static class StringExtensions
     public static string Mid(this string str, int start, int length, bool trim = false)
     {
         if (trim)
-        {
             str = str.Trim();
-        }
 
         return str.Substring(start, length);
     }
@@ -444,9 +455,7 @@ public static class StringExtensions
     public static string Right(this string str, int length, bool trim = false)
     {
         if (trim)
-        {
             str = str.Trim();
-        }
 
         return str.Substring(str.Length - length, length);
     }
@@ -454,9 +463,7 @@ public static class StringExtensions
     public static int Length(this string value, bool trim = true)
     {
         if (trim)
-        {
             value = value.Trim();
-        }
 
         return value.Length;
     }
@@ -464,9 +471,7 @@ public static class StringExtensions
     public static string ToBase64(this string str, Encoding enc = null)
     {
         if (enc == null)
-        {
             enc = Encoding.UTF8;
-        }
 
         return Convert.ToBase64String(enc.GetBytes(str));
     }
@@ -474,9 +479,7 @@ public static class StringExtensions
     public static string FromBase64(this string base64EncodedData, Encoding enc = null)
     {
         if (enc == null)
-        {
             enc = Encoding.UTF8;
-        }
 
         return enc.GetString(Convert.FromBase64String(base64EncodedData));
     }
@@ -488,9 +491,7 @@ public static class StringExtensions
         int cnt;
 
         while ((cnt = src.Read(bytes, 0, bytes.Length)) != 0)
-        {
             dest.Write(bytes, 0, cnt);
-        }
     }
 
     public static string Zip(this string str)
@@ -532,11 +533,9 @@ public static class StringExtensions
     public static Uri ToUri(this string source, Uri baseUri = null, UriKind kind = UriKind.Absolute)
     {
         if (source?.IsNotNullOrEmptyOrWhiteSpace() == true)
-        {
             return baseUri != null
-                ? new Uri(baseUri, source)
+                ? new(baseUri, source)
                 : new Uri(source, kind);
-        }
 
         return null;
     }
@@ -546,9 +545,7 @@ public static class StringExtensions
         var hex = new StringBuilder(ba.Length * 2);
 
         foreach (byte b in ba)
-        {
             hex.Append($"{b:x2}");
-        }
 
         return hex.ToString();
     }
@@ -559,16 +556,16 @@ public static class StringExtensions
         var bytes = new byte[numberChars / 2];
 
         for (var i = 0; i < numberChars; i += 2)
-        {
             bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
-        }
 
         return bytes;
     }
 
     public static string GetGuidString(this Guid? guid)
     {
-        return guid.HasValue ? GetGuidString(guid.Value) : null;
+        return guid.HasValue
+            ? GetGuidString(guid.Value)
+            : null;
     }
 
     public static string GetGuidString(this Guid guid)
@@ -591,9 +588,7 @@ public static class StringExtensions
             {
                 lastWasCR = false;
                 if (c == '\n')
-                {
                     continue; // Already written \r\n
-                }
             }
 
             switch (c)
@@ -618,18 +613,19 @@ public static class StringExtensions
     {
         using (var sha256Hash = SHA256.Create())
         {
-            return sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData)).ByteArrayToString();
+            return sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData))
+                .ByteArrayToString();
         }
     }
 
     public static string TrimLength(this string value, int length, bool trim = false)
     {
         if (trim)
-        {
             value = value.Trim();
-        }
 
-        return value.Length <= length ? value : value.Substring(0, length);
+        return value.Length <= length
+            ? value
+            : value.Substring(0, length);
     }
 
     /// <summary>
@@ -640,13 +636,13 @@ public static class StringExtensions
     public static string GenerateMd5OfString(this string value)
     {
         if (value != null)
-        {
             using (var md5 = MD5.Create())
             using (var stream = value.ToStream())
             {
-                return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty).ToLower();
+                return BitConverter.ToString(md5.ComputeHash(stream))
+                    .Replace("-", string.Empty)
+                    .ToLower();
             }
-        }
 
         return null;
     }

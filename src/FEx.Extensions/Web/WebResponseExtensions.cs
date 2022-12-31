@@ -1,8 +1,13 @@
 ﻿using FEx.Abstractions;
 using FEx.Extensions.Collections.Dictionaries;
 using FEx.Extensions.Helpers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace FEx.Extensions.Web;
 
@@ -53,15 +58,17 @@ public static class WebResponseExtensions
 
     public static ContentRangeHeaderValue GetContentRange(this string rangeHeader)
     {
-        if (rangeHeader?.Trim()?.IsNullOrEmptyString() ?? true)
-        {
+        if (rangeHeader?.Trim()
+                ?.IsNullOrEmptyString()
+            ?? true)
             return null;
-        }
 
-        string[] split = rangeHeader.Split(' ')[1].Split('/')[0].Split('-');
-        long from = long.Parse(split[0]);
-        long to = long.Parse(split[1]);
-        return new ContentRangeHeaderValue(from, to);
+        string[] split = rangeHeader.Split(' ')[1]
+            .Split('/')[0]
+            .Split('-');
+        var from = long.Parse(split[0]);
+        var to = long.Parse(split[1]);
+        return new(from, to);
     }
 
     public static Dictionary<string, string[]> GetAllHeaders(this HttpResponseMessage resp)

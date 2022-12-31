@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace FEx.Logging.Abstractions;

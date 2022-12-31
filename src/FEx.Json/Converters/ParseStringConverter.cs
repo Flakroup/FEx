@@ -1,5 +1,6 @@
 ﻿using FEx.Extensions.Numericals;
 using Newtonsoft.Json;
+using System;
 
 namespace FEx.Json.Converters;
 
@@ -15,11 +16,9 @@ public class ParseStringConverter : JsonConverter
     public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
     {
         if (reader.TokenType == JsonToken.Null)
-        {
             return null;
-        }
 
-        var value = serializer.Deserialize<string>(reader);
+        string value = serializer.Deserialize<string>(reader);
         return value.FromString();
     }
 

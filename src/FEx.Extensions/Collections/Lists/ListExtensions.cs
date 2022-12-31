@@ -1,6 +1,9 @@
 ﻿using JetBrains.Annotations;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace FEx.Extensions.Collections.Lists;
 
@@ -56,15 +59,12 @@ public static class ListExtensions
     /// <returns>A ReadOnlyCollection{T} instance.</returns>
     public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> source)
     {
-        return new ReadOnlyCollection<T>(source);
+        return new(source);
     }
 
     public static bool RemoveWhere<T>(this ICollection<T> source, Func<T, bool> predicate)
     {
-        bool Predicate(T i)
-        {
-            return predicate(i);
-        }
+        bool Predicate(T i) => predicate(i);
 
         var anyItemHasMatched = false;
         switch (source)
@@ -106,14 +106,15 @@ public static class ListExtensions
 
     public static List<T> GetRange<T>(this IList<T> sourceList, int index, int count)
     {
-        if (index > 0 && count > 0 && sourceList.IsNotNullOrEmptyList() && sourceList.Count - index > count)
+        if (index > 0
+            && count > 0
+            && sourceList.IsNotNullOrEmptyList()
+            && sourceList.Count - index > count)
         {
             var list = new List<T>(count);
 
             for (int i = index; i < index + count; i++)
-            {
                 list.Add(sourceList[i]);
-            }
 
             return list;
         }
@@ -124,21 +125,22 @@ public static class ListExtensions
     public static IList<IList<T>> SplitList<T>(this IList<T> sourceList, int chunkSize)
     {
         var list = new List<IList<T>>();
-        List<T> sourceListCast = sourceList.ToList();
+        var sourceListCast = sourceList.ToList();
 
         for (var i = 0; i < sourceListCast.Count; i += chunkSize)
-        {
             list.Add(sourceListCast.GetRange(i, Math.Min(chunkSize, sourceList.Count - i)));
-        }
 
         return list;
     }
 
-    public static int CountEqualItems<T>(this IList<T> listA, IList<T> listB)
-        where T : IEquatable<T>
+    public static int CountEqualItems<T>(this IList<T> listA, IList<T> listB) where T : IEquatable<T>
     {
-        IList<T> shorter = listA.Count <= listB.Count ? listA : listB;
-        IList<T> longer = listA.Count <= listB.Count ? listB : listA;
+        IList<T> shorter = listA.Count <= listB.Count
+            ? listA
+            : listB;
+        IList<T> longer = listA.Count <= listB.Count
+            ? listB
+            : listA;
 
         int shorterCount = shorter.Count;
         int longerCount = longer.Count;
@@ -167,18 +169,13 @@ public static class ListExtensions
         return count;
     }
 
-    public static void AddRangeToList<T, TColl>(this TColl source, IEnumerable<T> items)
-        where TColl : IList<T>
+    public static void AddRangeToList<T, TColl>(this TColl source, IEnumerable<T> items) where TColl : IList<T>
     {
         var list = source as List<T>;
         if (list != null)
-        {
             list.AddRange(items);
-        }
         else
-        {
             source.AddRangeToCollection(items);
-        }
     }
 
     public static void Move<T>(this IList<T> source, int oldIndex, int newIndex)

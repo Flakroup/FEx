@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using System.IO;
 
 namespace FEx.Extensions.Helpers;
 
@@ -24,31 +25,24 @@ public static class StringHelpers
                 if (detectedEOL != null)
                 {
                     if (currentChar == detectedEOL)
-                    {
                         lineCount++;
-                    }
 
                     currentChar = (char)byteBuffer[i + 1];
                     if (currentChar == detectedEOL)
-                    {
                         lineCount++;
-                    }
 
                     currentChar = (char)byteBuffer[i + 2];
                     if (currentChar == detectedEOL)
-                    {
                         lineCount++;
-                    }
 
                     currentChar = (char)byteBuffer[i + 3];
                     if (currentChar == detectedEOL)
-                    {
                         lineCount++;
-                    }
                 }
                 else
                 {
-                    if (currentChar == '\n' || currentChar == '\r')
+                    if (currentChar == '\n'
+                        || currentChar == '\r')
                     {
                         detectedEOL = currentChar;
                         lineCount++;
@@ -65,13 +59,12 @@ public static class StringHelpers
                 if (detectedEOL != null)
                 {
                     if (currentChar == detectedEOL)
-                    {
                         lineCount++;
-                    }
                 }
                 else
                 {
-                    if (currentChar == '\n' || currentChar == '\r')
+                    if (currentChar == '\n'
+                        || currentChar == '\r')
                     {
                         detectedEOL = currentChar;
                         lineCount++;
@@ -80,10 +73,10 @@ public static class StringHelpers
             }
         }
 
-        if (currentChar != '\n' && currentChar != '\r' && currentChar != null)
-        {
+        if (currentChar != '\n'
+            && currentChar != '\r'
+            && currentChar != null)
             lineCount++;
-        }
 
         return lineCount;
     }

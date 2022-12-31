@@ -1,16 +1,16 @@
-﻿using FEx.Abstractions;
+﻿using System;
 using System.Diagnostics;
 
 namespace FEx.Utilities;
 
-public class DebugExceptionHandler : IExceptionHandler
+public class DebugExceptionHandler : ExceptionHandlerBase
 {
-    public bool CanHandle(Exception exception)
+    public override bool CanHandle(Exception exception)
     {
         return true;
     }
 
-    public void Handle(Exception exception)
+    protected override void HandleException(Exception exception)
     {
         Debug.WriteLine(exception.ToString());
     }

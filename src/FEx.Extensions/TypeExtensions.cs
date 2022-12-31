@@ -1,5 +1,8 @@
 ﻿using FEx.Extensions.Collections.Enumerables;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace FEx.Extensions;
 
@@ -12,7 +15,8 @@ public static class TypeExtensions
     /// <returns></returns>
     public static IEnumerable<Type> GetImplementedInterfaces(this Type interfaceType)
     {
-        return GetAllNotSealedClasses().Where(type => type.GetInterface(interfaceType.Name) != null);
+        return GetAllNotSealedClasses()
+            .Where(type => type.GetInterface(interfaceType.Name) != null);
     }
 
     /// <summary>
@@ -22,7 +26,9 @@ public static class TypeExtensions
     /// <returns></returns>
     public static IEnumerable<Type> GetImplementedClasses(this Type baseType)
     {
-        return GetAllNotSealedClasses().Where(type => type.GetBaseTypes().Contains(baseType));
+        return GetAllNotSealedClasses()
+            .Where(type => type.GetBaseTypes()
+                .Contains(baseType));
     }
 
     /// <summary>
@@ -34,9 +40,7 @@ public static class TypeExtensions
     public static List<Type> GetBaseTypes(this Type baseType, List<Type> baseTypes = null)
     {
         if (baseTypes == null)
-        {
-            baseTypes = new List<Type>();
-        }
+            baseTypes = new();
 
         if (baseType.BaseType != null)
         {
@@ -49,11 +53,12 @@ public static class TypeExtensions
 
     public static string GetTypeDescription(this Type value)
     {
-        return GetTypeCustomAttribute<DescriptionAttribute>(value)?.Find()?.Description;
+        return GetTypeCustomAttribute<DescriptionAttribute>(value)
+            ?.Find()
+            ?.Description;
     }
 
-    public static TAttributeType[] GetTypeCustomAttribute<TAttributeType>(this Type value)
-        where TAttributeType : Attribute
+    public static TAttributeType[] GetTypeCustomAttribute<TAttributeType>(this Type value) where TAttributeType : Attribute
     {
         return (TAttributeType[])value.GetCustomAttributes(typeof(TAttributeType), false);
     }
@@ -64,6 +69,8 @@ public static class TypeExtensions
     /// <returns></returns>
     private static IEnumerable<Type> GetAllNotSealedClasses()
     {
-        return AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes()).Where(t => t.IsClass && !t.IsSealed);
+        return AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(assembly => assembly.GetTypes())
+            .Where(t => t.IsClass && !t.IsSealed);
     }
 }

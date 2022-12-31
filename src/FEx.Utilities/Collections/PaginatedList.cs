@@ -1,8 +1,17 @@
-﻿namespace FEx.Utilities.Collections;
+﻿using System.Collections.Generic;
+
+namespace FEx.Utilities.Collections;
 
 public class PaginatedList<T>
 {
     public static PaginatedList<T> Empty => new(new List<T>(), 0, 0, 0);
+
+    public IList<T> Items { get; }
+    public int PageIndex { get; }
+    public int TotalPages { get; }
+    public int TotalItemsCount { get; }
+    public bool HasPreviousPage => PageIndex > 1;
+    public bool HasNextPage => PageIndex < TotalPages;
 
     public PaginatedList(IList<T> items, int totalItemsCount, int pageIndex, int totalPages)
     {
@@ -11,15 +20,6 @@ public class PaginatedList<T>
         TotalPages = totalPages;
 
         if (items != null)
-        {
             Items = items;
-        }
     }
-
-    public IList<T> Items { get; }
-    public int PageIndex { get; }
-    public int TotalPages { get; }
-    public int TotalItemsCount { get; }
-    public bool HasPreviousPage => PageIndex > 1;
-    public bool HasNextPage => PageIndex < TotalPages;
 }

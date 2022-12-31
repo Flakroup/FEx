@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 
 namespace FEx.Extensions.DateTimes;
@@ -25,7 +26,7 @@ public static class TimeSpanExtensions
     /// <returns>A TimeSpan.</returns>
     public static TimeSpan Days(this int number)
     {
-        return new TimeSpan(number, 0, 0, 0);
+        return new(number, 0, 0, 0);
     }
 
     /// <summary>
@@ -35,7 +36,7 @@ public static class TimeSpanExtensions
     /// <returns>A TimeSpan.</returns>
     public static TimeSpan Hours(this int number)
     {
-        return new TimeSpan(0, number, 0, 0);
+        return new(0, number, 0, 0);
     }
 
     /// <summary>
@@ -45,7 +46,7 @@ public static class TimeSpanExtensions
     /// <returns>A TimeSpan.</returns>
     public static TimeSpan Minutes(this int number)
     {
-        return new TimeSpan(0, number, 0);
+        return new(0, number, 0);
     }
 
     /// <summary>
@@ -55,7 +56,7 @@ public static class TimeSpanExtensions
     /// <returns>A TimeSpan.</returns>
     public static TimeSpan Seconds(this int number)
     {
-        return new TimeSpan(0, 0, number);
+        return new(0, 0, number);
     }
 
     /// <summary>
@@ -68,7 +69,8 @@ public static class TimeSpanExtensions
         if (value.HasValue)
         {
             DateTime localDateTime = DateTime.Today + value.Value;
-            return localDateTime.ToUniversalTime().TimeOfDay;
+            return localDateTime.ToUniversalTime()
+                .TimeOfDay;
         }
 
         return null;
@@ -84,7 +86,8 @@ public static class TimeSpanExtensions
         if (value.HasValue)
         {
             DateTime localDateTime = DateTime.UtcNow.Date + value.Value;
-            return localDateTime.ToLocalTime().TimeOfDay;
+            return localDateTime.ToLocalTime()
+                .TimeOfDay;
         }
 
         return null;
@@ -107,12 +110,14 @@ public static class TimeSpanExtensions
     /// <returns>System.String.</returns>
     public static string GetTime(this long milliseconds)
     {
-        return TimeSpan.FromMilliseconds(milliseconds).GetTime();
+        return TimeSpan.FromMilliseconds(milliseconds)
+            .GetTime();
     }
 
     public static string GetTime(this double milliseconds)
     {
-        return TimeSpan.FromMilliseconds(milliseconds).GetTime();
+        return TimeSpan.FromMilliseconds(milliseconds)
+            .GetTime();
     }
 
     /// <summary>
@@ -124,14 +129,10 @@ public static class TimeSpanExtensions
     public static string GetTime(this TimeSpan timespan, int decimals = 0)
     {
         if (timespan.TotalMilliseconds < 1000)
-        {
             return $"{FillZeros(RoundDown(timespan.TotalMilliseconds, decimals), decimals)} ms.";
-        }
 
         if (timespan.TotalSeconds < 60)
-        {
             return $"{timespan.Seconds} sec. {FillZeros(RoundDown(timespan.TotalMilliseconds - timespan.Seconds * 1000, decimals), decimals)} ms.";
-        }
 
         return timespan.TotalMinutes < 60
             ? $"{timespan.Minutes} min. {FillZeros(RoundDown(timespan.TotalSeconds - timespan.Minutes * 60, decimals), decimals)} sec."
@@ -154,6 +155,7 @@ public static class TimeSpanExtensions
     {
         return decimals <= 0
             ? toFill.ToString(CultureInfo.InvariantCulture)
-            : toFill.ToString(CultureInfo.InvariantCulture).PadRight(decimals, '0');
+            : toFill.ToString(CultureInfo.InvariantCulture)
+                .PadRight(decimals, '0');
     }
 }

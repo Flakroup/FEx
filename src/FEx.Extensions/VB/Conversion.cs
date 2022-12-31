@@ -1,4 +1,6 @@
-﻿namespace FEx.Extensions.VB;
+﻿using System;
+
+namespace FEx.Extensions.VB;
 
 public static class Conversion
 {
@@ -12,6 +14,8 @@ public static class Conversion
     /// <exception cref="T:System.ArgumentException">Number is not a numeric type.</exception>
     public static double Fix(double number)
     {
-        return number < 0.0 ? -Math.Floor(-number) : Math.Floor(number);
+        return number < 0.0
+            ? -Math.Floor(-number)
+            : Math.Floor(number);
     }
 }

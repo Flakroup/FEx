@@ -1,5 +1,7 @@
 ﻿using FEx.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
 
 namespace FEx.Logging;
 
@@ -7,13 +9,13 @@ public class Loggable : ILoggable
 {
     private readonly ILogger _logger;
 
+    protected IDisposable Scope { get; private set; }
+    protected object State { get; private set; }
+
     public Loggable(ILogger logger)
     {
         _logger = logger;
     }
-
-    protected IDisposable Scope { get; private set; }
-    protected object State { get; private set; }
 
     public void LogCritical(string message, Exception exception = null)
     {
@@ -108,15 +110,15 @@ public class Loggable : ILoggable
     public void EndScope()
     {
         if (State != null)
-        {
             State = null;
-        }
 
         Scope?.Dispose();
     }
 
     private string Combine(string message)
     {
-        return State == null ? message : $"[State:{State}]   {message}";
+        return State == null
+            ? message
+            : $"[State:{State}]   {message}";
     }
 }

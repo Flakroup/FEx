@@ -1,4 +1,6 @@
-﻿namespace FEx.Abstractions;
+﻿using System;
+
+namespace FEx.Abstractions;
 
 public interface IExceptionHandler
 {

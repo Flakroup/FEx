@@ -1,7 +1,11 @@
-﻿namespace FEx.Utilities.Flow;
+﻿using System.Collections.Generic;
+
+namespace FEx.Utilities.Flow;
 
 public class AggregateError : Error
 {
+    public ICollection<Error> InnerErrors { get; }
+
     public AggregateError()
         : this(new List<Error>())
     {
@@ -12,6 +16,4 @@ public class AggregateError : Error
         InnerErrors = innerErrors;
         Message = message;
     }
-
-    public ICollection<Error> InnerErrors { get; }
 }

@@ -1,6 +1,9 @@
 ﻿using JetBrains.Annotations;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace FEx.Extensions.Collections.Enumerables;
 
@@ -47,11 +50,9 @@ public static class EnumerableExtensions
     public static string AggregateSafe(this IEnumerable<string> source)
     {
         IEnumerable<string> enumerable = source as string[] ?? source.ToArray();
-        var result = string.Empty;
+        string result = string.Empty;
         if (enumerable.Any())
-        {
             result = string.Join(", ", enumerable);
-        }
 
         return result;
     }
@@ -66,9 +67,7 @@ public static class EnumerableExtensions
     public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
     {
         foreach (T item in source)
-        {
             action(item);
-        }
     }
 
     /// <summary>
@@ -81,20 +80,14 @@ public static class EnumerableExtensions
     /// <returns>If found, an element of type T; otherwise default(T).</returns>
     public static T Find<T>(this IEnumerable<T> source, Func<T, bool> predicate = null)
     {
-        bool Predicate(T i)
-        {
-            return predicate?.Invoke(i) ?? true;
-        }
+        bool Predicate(T i) => predicate?.Invoke(i) ?? true;
 
-        switch (source)
+        return source switch
         {
-            case T[] array:
-                return Array.Find(array, Predicate);
-            case List<T> list:
-                return list.Find(Predicate);
-            default:
-                return source.FirstOrDefault(Predicate);
-        }
+            T[] array => Array.Find(array, Predicate),
+            List<T> list => list.Find(Predicate),
+            _ => source.FirstOrDefault(Predicate)
+        };
     }
 
     /// <summary>
@@ -108,9 +101,7 @@ public static class EnumerableExtensions
     {
         var multipliedItems = new List<T>();
         for (var i = 0; i < multiplier; i++)
-        {
             multipliedItems.AddRange(items);
-        }
 
         return multipliedItems;
     }
@@ -130,7 +121,8 @@ public static class EnumerableExtensions
 
         foreach (T item in items)
         {
-            if (counter == 0 || counter % maxNumberOfItems == 0)
+            if (counter == 0
+                || counter % maxNumberOfItems == 0)
             {
                 partialList = new List<T>();
                 dividedLists.Add(partialList);
@@ -153,7 +145,9 @@ public static class EnumerableExtensions
     /// <returns></returns>
     public static TResult MaxOrDefault<TItem, TResult>(this IEnumerable<TItem> items, Func<TItem, TResult> selector)
     {
-        return items.Any() ? items.Max(selector) : default;
+        return items.Any()
+            ? items.Max(selector)
+            : default;
     }
 
     /// <summary>
@@ -164,7 +158,8 @@ public static class EnumerableExtensions
     /// <returns>The joined string.</returns>
     public static string ToJoinedString<TItem>(this IEnumerable<TItem> items)
     {
-        return string.Join(", ", items.Select(i => i.ToString()).ToArray());
+        return string.Join(", ", items.Select(i => i.ToString())
+            .ToArray());
     }
 
     /// <summary>
@@ -177,7 +172,7 @@ public static class EnumerableExtensions
     /// </returns>
     public static ObservableCollection<T> ToObservableCollection<T>(this IEnumerable<T> source)
     {
-        return new ObservableCollection<T>(source);
+        return new(source);
     }
 
     /// <summary>
@@ -210,9 +205,7 @@ public static class EnumerableExtensions
         foreach (T element in source)
         {
             if (predicate(element))
-            {
                 return index;
-            }
 
             index++;
         }
@@ -235,9 +228,7 @@ public static class EnumerableExtensions
         foreach (T element in source)
         {
             if (predicate(element))
-            {
                 yield return index;
-            }
 
             index++;
         }
@@ -250,7 +241,8 @@ public static class EnumerableExtensions
     /// <returns></returns>
     public static Type GetItemType(this IEnumerable enumerable)
     {
-        return enumerable.GetType().GetElementType();
+        return enumerable.GetType()
+            .GetElementType();
     }
 
     /// <summary>
@@ -261,7 +253,10 @@ public static class EnumerableExtensions
     /// <returns><c>true</c> if sequences contain the same elements; otherwise, <c>false</c>.</returns>
     public static bool UnorderedSequenceEqual(this IEnumerable first, IEnumerable second)
     {
-        return first.Cast<object>().OrderBy(t => t).SequenceEqual(second.Cast<object>().OrderBy(t => t));
+        return first.Cast<object>()
+            .OrderBy(t => t)
+            .SequenceEqual(second.Cast<object>()
+                .OrderBy(t => t));
     }
 
     /// <summary>
@@ -274,7 +269,7 @@ public static class EnumerableExtensions
     /// </returns>
     public static Collection<T> ToCollection<T>(this IEnumerable<T> source)
     {
-        return new Collection<T>(source.ToList());
+        return new(source.ToList());
     }
 
     public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int n)
@@ -284,8 +279,7 @@ public static class EnumerableExtensions
 
     public static IEnumerable<T> DistinctBy<T>(this IEnumerable<T> enumerable, Func<T, object> propertySelector)
     {
-        return enumerable
-            .GroupBy(propertySelector)
+        return enumerable.GroupBy(propertySelector)
             .Select(g => g.First());
     }
 
@@ -300,7 +294,6 @@ public static class EnumerableExtensions
     {
         IList<IEnumerable<T>> multipliedLists = new List<IEnumerable<T>>();
         if (origin.Any())
-        {
             foreach (T item in multiplier)
             {
                 foreach (IEnumerable<T> list in origin)
@@ -309,26 +302,26 @@ public static class EnumerableExtensions
                     multipliedLists.Add(multipliedList);
                 }
             }
-        }
         else
-        {
             foreach (T item in multiplier)
             {
                 var multipliedList = new List<T> { item };
                 multipliedLists.Add(multipliedList);
             }
-        }
 
         return multipliedLists;
     }
 
-    public static int CountEqualItems<T>(this IEnumerable<T> listA, IEnumerable<T> listB)
-        where T : IEquatable<T>
+    public static int CountEqualItems<T>(this IEnumerable<T> listA, IEnumerable<T> listB) where T : IEquatable<T>
     {
         int listACount = listA.Count();
         int listBCount = listB.Count();
-        IEnumerable<T> shorter = listACount <= listBCount ? listA : listB;
-        IEnumerable<T> longer = listACount <= listBCount ? listB : listA;
+        IEnumerable<T> shorter = listACount <= listBCount
+            ? listA
+            : listB;
+        IEnumerable<T> longer = listACount <= listBCount
+            ? listB
+            : listA;
 
         int shorterCount = shorter.Count();
         int longerCount = longer.Count();
@@ -359,13 +352,16 @@ public static class EnumerableExtensions
 
     public static IEnumerable<T> GetAllItemsChildren<T>(this IEnumerable<T> items, Func<T, IEnumerable<T>> getChildrenFunc)
     {
-        return items?.SelectMany(item => item.Yield().Concat(GetAllItemChildren(item, getChildrenFunc)));
+        return items?.SelectMany(item => item.Yield()
+            .Concat(GetAllItemChildren(item, getChildrenFunc)));
     }
 
     public static IEnumerable<T> GetAllItemChildren<T>(this T item, Func<T, IEnumerable<T>> getChildrenFunc)
     {
         IEnumerable<T> children = getChildrenFunc(item);
 
-        return children.IsNotNullOrEmptyEnumerable() ? children.Concat(children.SelectMany(x => GetAllItemChildren(x, getChildrenFunc))) : Enumerable.Empty<T>();
+        return children.IsNotNullOrEmptyEnumerable()
+            ? children.Concat(children.SelectMany(x => GetAllItemChildren(x, getChildrenFunc)))
+            : Enumerable.Empty<T>();
     }
 }

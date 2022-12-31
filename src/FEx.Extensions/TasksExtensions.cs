@@ -1,14 +1,16 @@
-﻿namespace FEx.Extensions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace FEx.Extensions;
 
 public static class TasksExtensions
 {
     public static bool IsRunning(this Task task)
     {
-        return task != null
-               && (task.Status == TaskStatus.WaitingForActivation
-                   || task.Status == TaskStatus.WaitingToRun
-                   || task.Status == TaskStatus.Running
-                   || task.Status == TaskStatus.WaitingForChildrenToComplete);
+        return task != null && (task.Status == TaskStatus.WaitingForActivation || task.Status == TaskStatus.WaitingToRun || task.Status == TaskStatus.Running || task.Status == TaskStatus.WaitingForChildrenToComplete);
     }
 
     public static bool IsNotStarted(this Task task)
@@ -18,17 +20,12 @@ public static class TasksExtensions
 
     public static bool IsFinished(this Task task)
     {
-        return task != null
-               && (task.Status == TaskStatus.RanToCompletion
-                   || task.Status == TaskStatus.Canceled
-                   || task.Status == TaskStatus.Faulted);
+        return task != null && (task.Status == TaskStatus.RanToCompletion || task.Status == TaskStatus.Canceled || task.Status == TaskStatus.Faulted);
     }
 
     public static bool IsFailed(this Task task)
     {
-        return task != null
-               && (task.Status == TaskStatus.Canceled
-                   || task.Status == TaskStatus.Faulted);
+        return task != null && (task.Status == TaskStatus.Canceled || task.Status == TaskStatus.Faulted);
     }
 
     public static async Task WhenAllAsync(this IEnumerable<Task> tasksToBeStarted)
@@ -133,12 +130,16 @@ public static class TasksExtensions
 
     private static async Task WhenAllAsync(bool immediateStart, IEnumerable<Task> tasks)
     {
-        await (immediateStart ? Task.WhenAll(Start(tasks)) : Task.WhenAll(tasks));
+        await (immediateStart
+            ? Task.WhenAll(Start(tasks))
+            : Task.WhenAll(tasks));
     }
 
     private static async Task<TRes[]> WhenAllAsync<TRes>(bool immediateStart, IEnumerable<Task<TRes>> tasks)
     {
-        return await (immediateStart ? Task.WhenAll(Start(tasks)) : Task.WhenAll(tasks));
+        return await (immediateStart
+            ? Task.WhenAll(Start(tasks))
+            : Task.WhenAll(tasks));
     }
 
     private static T[] Start<T>(IEnumerable<T> tasks)

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<UseMaui>true</UseMaui>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
+		<ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
+	</ItemGroup>
+
+</Project>

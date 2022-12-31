@@ -1,4 +1,6 @@
-﻿namespace FEx.Extensions.Numericals;
+﻿using System;
+
+namespace FEx.Extensions.Numericals;
 
 public static class IntegerExtensions
 {
@@ -55,7 +57,9 @@ public static class IntegerExtensions
     /// <returns>True if in Minimum - Maximum range; otherwise False.</returns>
     public static bool InRange(this int value, int min, int max, bool includeMinMaxValues)
     {
-        return includeMinMaxValues ? value.InRange(min, max) : value > min && value < max;
+        return includeMinMaxValues
+            ? value.InRange(min, max)
+            : value > min && value < max;
     }
 
     /// <summary>
@@ -96,7 +100,9 @@ public static class IntegerExtensions
     /// <returns>The value as byte it not null; Otherwise zero.</returns>
     public static byte ToByteSafe(this int? value)
     {
-        return value.HasValue ? (byte)value.Value : (byte)0;
+        return value.HasValue
+            ? (byte)value.Value
+            : (byte)0;
     }
 
     /// <summary>
@@ -107,15 +113,16 @@ public static class IntegerExtensions
     /// <returns>The value as byte it not null; Otherwise default value.</returns>
     public static byte ToByteSafe(this int? value, byte defaultValue)
     {
-        return value.HasValue ? (byte)value.Value : defaultValue;
+        return value.HasValue
+            ? (byte)value.Value
+            : defaultValue;
     }
 
     public static short ToShort(this int value)
     {
-        if (value > short.MaxValue || value < short.MinValue)
-        {
+        if (value > short.MaxValue
+            || value < short.MinValue)
             throw new ArgumentOutOfRangeException(nameof(value), "Provided argument value is outside of short type values range");
-        }
 
         return Convert.ToInt16(value);
     }

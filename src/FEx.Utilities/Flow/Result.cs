@@ -1,22 +1,15 @@
-﻿namespace FEx.Utilities.Flow;
+﻿using System;
 
-public class Result<TError>
-    where TError : IError, new()
+namespace FEx.Utilities.Flow;
+
+public class Result<TError> where TError : IError, new()
 {
     public static Result<TError> Success => new();
-    public static Result<TError> Failure => new(new TError());
+    public static Result<TError> Failure => new(new());
 
-    public static implicit operator Result<TError>(TError right)
-    {
-        return new Result<TError>(right);
-    }
-
-    public static implicit operator Result<TError>(string message)
-    {
-        var error = Activator.CreateInstance<TError>();
-        error.Message = message;
-        return new Result<TError>(error);
-    }
+    public TError Error { get; }
+    public bool IsSuccessful { get; }
+    public bool IsFailure => !IsSuccessful;
 
     public Result()
     {
@@ -29,34 +22,42 @@ public class Result<TError>
         IsSuccessful = false;
     }
 
-    public TError Error { get; }
-    public bool IsSuccessful { get; }
-    public bool IsFailure => !IsSuccessful;
+    public static implicit operator Result<TError>(TError right)
+    {
+        return new(right);
+    }
+
+    public static implicit operator Result<TError>(string message)
+    {
+        TError error = Activator.CreateInstance<TError>();
+        error.Message = message;
+        return new(error);
+    }
 }
 
-public class Result<TData, TError> : Result<TError>
-    where TError : Error, new()
+public class Result<TData, TError> : Result<TError> where TError : Error, new()
 {
     public new static Result<TData, TError> Failure => new(new TError());
 
-    public static implicit operator Result<TData, TError>(TData data)
-    {
-        return new Result<TData, TError>(data);
-    }
-
-    public static implicit operator Result<TData, TError>(TError error)
-    {
-        return new Result<TData, TError>(error);
-    }
+    public TData Data { get; }
 
     public Result(TData data)
     {
         Data = data;
     }
 
-    public Result(TError error) : base(error)
+    public Result(TError error)
+        : base(error)
     {
     }
 
-    public TData Data { get; }
+    public static implicit operator Result<TData, TError>(TData data)
+    {
+        return new(data);
+    }
+
+    public static implicit operator Result<TData, TError>(TError error)
+    {
+        return new(error);
+    }
 }

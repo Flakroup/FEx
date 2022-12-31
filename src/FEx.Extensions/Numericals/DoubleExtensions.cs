@@ -1,4 +1,7 @@
-﻿namespace FEx.Extensions.Numericals;
+﻿using System;
+using System.Threading;
+
+namespace FEx.Extensions.Numericals;
 
 public static class DoubleExtensions
 {
@@ -12,10 +15,9 @@ public static class DoubleExtensions
 
     public static bool PreciseEquals(this double left, double right, int floatDigits = 7)
     {
-        if (floatDigits < 1 || floatDigits > 7)
-        {
+        if (floatDigits < 1
+            || floatDigits > 7)
             throw new ArgumentOutOfRangeException(nameof(floatDigits), floatDigits, "Only values between 1 and 7 are supported");
-        }
 
         double floatComparison = GetFloatComparison(floatDigits);
         return Math.Abs(left - right) < floatComparison;
@@ -25,21 +27,17 @@ public static class DoubleExtensions
     {
         string numberDecimalSeparator = Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 
-        if (value.Contains(".") && "." != numberDecimalSeparator)
-        {
+        if (value.Contains(".")
+            && "." != numberDecimalSeparator)
             value = value.Replace(".", numberDecimalSeparator);
-        }
-        else if (value.Contains(",") && "," != numberDecimalSeparator)
-        {
+        else if (value.Contains(",")
+                 && "," != numberDecimalSeparator)
             value = value.Replace(",", numberDecimalSeparator);
-        }
 
         if (double.TryParse(value, out double l))
-        {
             return l;
-        }
 
-        throw new Exception("Cannot unmarshal type double");
+        throw new("Cannot unmarshal type double");
     }
 
     private static double GetFloatComparison(int floatDigits)

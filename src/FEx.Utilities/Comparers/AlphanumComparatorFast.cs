@@ -1,14 +1,27 @@
+using System;
+using System.Collections.Generic;
+
 namespace FEx.Utilities.Comparers;
 
 public sealed class AlphanumComparatorFast : IComparer<string>
 {
     private static volatile AlphanumComparatorFast _instance;
 
-    public static AlphanumComparatorFast Instance => _instance ?? (_instance = new AlphanumComparatorFast());
+    public static AlphanumComparatorFast Instance => _instance ?? (_instance = new());
+
+    private AlphanumComparatorFast()
+    {
+    }
+
+    public int Compare(string s1, string s2)
+    {
+        return Compare(s1, s2, StringComparison.CurrentCulture);
+    }
 
     public static int Compare(string s1, string s2, StringComparison comparisonType)
     {
-        if (s1 != null && s2 != null)
+        if (s1 != null
+            && s2 != null)
         {
             int len1 = s1.Length;
             int len2 = s2.Length;
@@ -16,7 +29,8 @@ public sealed class AlphanumComparatorFast : IComparer<string>
             var marker2 = 0;
 
             // Walk through two the strings with two markers.
-            while (marker1 < len1 && marker2 < len2)
+            while (marker1 < len1
+                   && marker2 < len2)
             {
                 char ch1 = s1[marker1];
                 char ch2 = s2[marker2];
@@ -36,13 +50,9 @@ public sealed class AlphanumComparatorFast : IComparer<string>
                     marker1++;
 
                     if (marker1 < len1)
-                    {
                         ch1 = s1[marker1];
-                    }
                     else
-                    {
                         break;
-                    }
                 } while (char.IsDigit(ch1) == char.IsDigit(space1[0]));
 
                 do
@@ -51,13 +61,9 @@ public sealed class AlphanumComparatorFast : IComparer<string>
                     marker2++;
 
                     if (marker2 < len2)
-                    {
                         ch2 = s2[marker2];
-                    }
                     else
-                    {
                         break;
-                    }
                 } while (char.IsDigit(ch2) == char.IsDigit(space2[0]));
 
                 // If we have collected numbers, compare them numerically.
@@ -67,10 +73,11 @@ public sealed class AlphanumComparatorFast : IComparer<string>
 
                 int result;
 
-                if (char.IsDigit(space1[0]) && char.IsDigit(space2[0]))
+                if (char.IsDigit(space1[0])
+                    && char.IsDigit(space2[0]))
                 {
-                    int thisNumericChunk = int.Parse(str1);
-                    int thatNumericChunk = int.Parse(str2);
+                    var thisNumericChunk = int.Parse(str1);
+                    var thatNumericChunk = int.Parse(str2);
                     result = thisNumericChunk.CompareTo(thatNumericChunk);
                 }
                 else
@@ -79,23 +86,12 @@ public sealed class AlphanumComparatorFast : IComparer<string>
                 }
 
                 if (result != 0)
-                {
                     return result;
-                }
             }
 
             return len1 - len2;
         }
 
         return 0;
-    }
-
-    private AlphanumComparatorFast()
-    {
-    }
-
-    public int Compare(string s1, string s2)
-    {
-        return Compare(s1, s2, StringComparison.CurrentCulture);
     }
 }

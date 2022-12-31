@@ -2,7 +2,10 @@ using FEx.Json.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace FEx.Json;
@@ -18,19 +21,18 @@ public static class JsonExtensions
         {
             if (_defaultSettings == null)
             {
-                _defaultSettings = new JsonSerializerSettings
+                _defaultSettings = new()
                 {
                     MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
                     DateParseHandling = DateParseHandling.None,
                     NullValueHandling = NullValueHandling.Ignore,
                     DateFormatHandling = DateFormatHandling.IsoDateFormat
                 };
-                ((List<JsonConverter>)_defaultSettings.Converters)
-                    .AddRange(new JsonConverter[]
-                    {
-                        ParseStringConverter.Singleton,
-                        new VersionConverter()
-                    });
+                ((List<JsonConverter>)_defaultSettings.Converters).AddRange(new JsonConverter[]
+                {
+                    ParseStringConverter.Singleton,
+                    new VersionConverter()
+                });
             }
 
             return _defaultSettings;
@@ -53,18 +55,14 @@ public static class JsonExtensions
         try
         {
             if (json == NullString)
-            {
                 return fallback;
-            }
 
             return JsonConvert.DeserializeObject<T>(json, settings ?? DefaultSettings);
         }
         catch // (Exception ex)
         {
             if (Debugger.IsAttached)
-            {
                 File.WriteAllText(Path.Combine(Path.GetTempPath(), "error.json"), json);
-            }
 
             throw;
         }
@@ -81,9 +79,7 @@ public static class JsonExtensions
 
         using (var sr = new StreamReader(stream))
         using (var jsonTextReader = new JsonTextReader(sr))
-        {
             return serializer.Deserialize(jsonTextReader);
-        }
     }
 
     public static T DeserializeFromStream<T>(this Stream stream, JsonSerializerSettings settings = null)
@@ -92,9 +88,7 @@ public static class JsonExtensions
 
         using (var sr = new StreamReader(stream))
         using (var jsonTextReader = new JsonTextReader(sr))
-        {
             return serializer.Deserialize<T>(jsonTextReader);
-        }
     }
 
     /// <summary>
@@ -121,7 +115,8 @@ public static class JsonExtensions
     /// </returns>
     public static T DeserializeToken<T>(this JToken jToken, JsonSerializerSettings settings = null)
     {
-        return jToken.ToString().FromJson<T>(settings);
+        return jToken.ToString()
+            .FromJson<T>(settings);
     }
 
     public static string TrimJsonString(this string jsonValue)
@@ -129,9 +124,8 @@ public static class JsonExtensions
         jsonValue = jsonValue?.Trim();
 
         if (jsonValue?.StartsWith("\"{") ?? false)
-        {
-            jsonValue = Regex.Unescape(jsonValue).Trim('"');
-        }
+            jsonValue = Regex.Unescape(jsonValue)
+                .Trim('"');
 
         return jsonValue;
     }
@@ -155,13 +149,10 @@ public static class JsonExtensions
         }
     }
 
-    public static string PrettyPrintJson(
-        this string json,
-        JsonLoadSettings loadSettings = null,
-        JsonSerializerSettings saveSettings = null,
-        Formatting formatting = Formatting.Indented)
+    public static string PrettyPrintJson(this string json, JsonLoadSettings loadSettings = null, JsonSerializerSettings saveSettings = null, Formatting formatting = Formatting.Indented)
     {
-        return JObject.Parse(json, loadSettings).ToJson(saveSettings ?? DefaultSettings, formatting);
+        return JObject.Parse(json, loadSettings)
+            .ToJson(saveSettings ?? DefaultSettings, formatting);
     }
 
     public static T DeserializeFromFile<T>(this FileInfo file, JsonSerializerSettings settings = null)

@@ -1,14 +1,10 @@
 ﻿using FEx.Extensions;
+using System;
 
 namespace FEx.Utilities.Flow;
 
 public class StackError : Error
 {
-    public static implicit operator StackError(string message)
-    {
-        return new StackError { Message = message };
-    }
-
     public StackError()
     {
     }
@@ -24,12 +20,15 @@ public class StackError : Error
         Message = message;
     }
 
+    public static implicit operator StackError(string message)
+    {
+        return new() { Message = message };
+    }
+
     public override string ToString()
     {
         if (Message.IsNotNullOrEmptyString())
-        {
             return Message + Environment.NewLine + StackTrace;
-        }
 
         return StackTrace;
     }

@@ -1,5 +1,8 @@
 ﻿using FEx.Extensions.Collections.Lists;
 using JetBrains.Annotations;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FEx.Extensions.Collections;
 
@@ -14,9 +17,7 @@ public static class CollectionExtensions
     public static void AddRangeToCollection<T>(this ICollection<T> source, IEnumerable<T> items)
     {
         if (items != null)
-        {
             source.AddRangeToCollection(items as T[] ?? items.ToArray());
-        }
     }
 
     /// <summary>
@@ -28,18 +29,13 @@ public static class CollectionExtensions
     public static void AddRangeToCollection<T>(this ICollection<T> source, IList<T> items)
     {
         if (items.IsNotNullOrEmptyList())
-        {
             foreach (T item in items)
-            {
                 source.Add(item);
-            }
-        }
     }
 
-    public static void Remove<T>(this ICollection<T> items, T item)
-        where T : class
+    public static void Remove<T>(this ICollection<T> items, T item) where T : class
     {
-        items.Remove(item);
+        Remove(items, item);
     }
 
     /// <summary>
@@ -50,12 +46,13 @@ public static class CollectionExtensions
     /// <param name="item">The item.</param>
     /// <param name="count">The count.</param>
     /// <param name="creator">The creator.</param>
-    public static void Add<T>(this ICollection<T> items, T item, int count = 1, Func<T, T> creator = null)
-        where T : class
+    public static void Add<T>(this ICollection<T> items, T item, int count = 1, Func<T, T> creator = null) where T : class
     {
         for (var i = 0; i < count; i++)
         {
-            items.Add(creator != null ? creator(item) : item);
+            items.Add(creator != null
+                ? creator(item)
+                : item);
         }
     }
 

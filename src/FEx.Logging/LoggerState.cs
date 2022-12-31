@@ -2,6 +2,8 @@
 using FEx.Extensions.Collections.Dictionaries;
 using FEx.Json;
 using FEx.Logging.Abstractions;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FEx.Logging;
 
@@ -29,6 +31,8 @@ public class LoggerState : Dictionary<string, object>, ILoggerState
 
     public override string ToString()
     {
-        return this.IsNotNullOrEmptyCollection() ? this.ToJson() : string.Empty;
+        return this.IsNotNullOrEmptyCollection()
+            ? this.ToJson()
+            : string.Empty;
     }
 }

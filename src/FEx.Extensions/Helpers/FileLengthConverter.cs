@@ -1,4 +1,7 @@
-﻿namespace FEx.Extensions.Helpers;
+﻿using System;
+using System.IO;
+
+namespace FEx.Extensions.Helpers;
 
 public static class FileLengthConverter
 {
@@ -13,9 +16,7 @@ public static class FileLengthConverter
     public static (double length, LengthType output) ConvertFileLength(double length, LengthType input, LengthType output, int digits = 3)
     {
         if (output == LengthType.AutoDetect)
-        {
             output = GetOutputLenghtType(length);
-        }
 
         if (input != output)
         {
@@ -36,7 +37,8 @@ public static class FileLengthConverter
     /// <returns></returns>
     public static double ConvertFileLength(long size, LengthType input, LengthType output, int digits = 3)
     {
-        return ConvertFileLength(Convert.ToDouble(size), input, output, digits).length;
+        return ConvertFileLength(Convert.ToDouble(size), input, output, digits)
+            .length;
     }
 
     /// <summary>
@@ -54,12 +56,13 @@ public static class FileLengthConverter
     public static string ConvertFileLengthToString(double size, LengthType input, LengthType output, int digits = 3)
     {
         if (output == LengthType.AutoDetect)
-        {
             output = GetOutputLenghtType(size);
-        }
 
-        double roundedLength = ConvertFileLength(size, input, output, digits).length;
-        string lenghtString = digits > 0 ? string.Format($"{{0:0.{new string('0', digits)}}}", roundedLength) : roundedLength.ToString();
+        double roundedLength = ConvertFileLength(size, input, output, digits)
+            .length;
+        string lenghtString = digits > 0
+            ? string.Format($"{{0:0.{new string('0', digits)}}}", roundedLength)
+            : roundedLength.ToString();
 
         return $"{lenghtString} {GetUnitShortcut(output)}";
     }
@@ -72,15 +75,7 @@ public static class FileLengthConverter
     public static LengthType GetOutputLenghtType(double size)
     {
         double pow = Math.Log10(size);
-        return pow >= 12
-            ? LengthType.Terabytes
-            : pow >= 9
-                ? LengthType.Gigabytes
-                : pow >= 6
-                    ? LengthType.Megabytes
-                    : pow >= 3
-                        ? LengthType.Kilobytes
-                        : LengthType.Bytes;
+        return pow >= 12 ? LengthType.Terabytes : pow >= 9 ? LengthType.Gigabytes : pow >= 6 ? LengthType.Megabytes : pow >= 3 ? LengthType.Kilobytes : LengthType.Bytes;
     }
 
     public static double GetLength(LengthType lengthType)
@@ -90,22 +85,15 @@ public static class FileLengthConverter
 
     private static string GetUnitShortcut(LengthType lengthType, double size = 0)
     {
-        switch (lengthType)
+        return lengthType switch
         {
-            case LengthType.Bytes:
-                return "B";
-            case LengthType.Kilobytes:
-                return "KB";
-            case LengthType.Megabytes:
-                return "MB";
-            case LengthType.Gigabytes:
-                return "GB";
-            case LengthType.Terabytes:
-                return "TB";
-            case LengthType.AutoDetect:
-                return GetUnitShortcut(GetOutputLenghtType(size));
-            default:
-                return null;
-        }
+            LengthType.Bytes => "B",
+            LengthType.Kilobytes => "KB",
+            LengthType.Megabytes => "MB",
+            LengthType.Gigabytes => "GB",
+            LengthType.Terabytes => "TB",
+            LengthType.AutoDetect => GetUnitShortcut(GetOutputLenghtType(size)),
+            _ => null
+        };
     }
 }

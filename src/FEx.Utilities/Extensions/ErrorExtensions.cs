@@ -1,5 +1,7 @@
 ﻿using FEx.Extensions;
 using FEx.Utilities.Flow;
+using System;
+using System.Threading.Tasks;
 
 namespace FEx.Utilities.Extensions;
 
@@ -10,9 +12,7 @@ public static class ErrorExtensions
         action.Guard(nameof(action));
 
         if (error.InnerError is TError typedError)
-        {
             return action.Invoke(typedError);
-        }
 
         return false;
     }
@@ -22,9 +22,7 @@ public static class ErrorExtensions
         action.Guard(nameof(action));
 
         if (error.InnerError is TError typedError)
-        {
             return await action.Invoke(typedError);
-        }
 
         return false;
     }
@@ -32,15 +30,12 @@ public static class ErrorExtensions
     public static Error GetErrorRoot(this Error error)
     {
         if (error.InnerError is null)
-        {
             return error;
-        }
 
         return error.InnerError.GetErrorRoot();
     }
 
-    public static bool TryGetError<TError>(this Error error, out TError foundError)
-        where TError : Error
+    public static bool TryGetError<TError>(this Error error, out TError foundError) where TError : Error
     {
         if (error is TError innerError)
         {
@@ -57,8 +52,7 @@ public static class ErrorExtensions
         return TryGetError(error.InnerError, out foundError);
     }
 
-    public static TError Wrap<TError>(this Error errorToWrap)
-        where TError : Error, new()
+    public static TError Wrap<TError>(this Error errorToWrap) where TError : Error, new()
     {
         var error = new TError();
         error.SetInnerError(errorToWrap);

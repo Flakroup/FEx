@@ -1,4 +1,6 @@
-﻿namespace FEx.Extensions.Helpers;
+﻿using System;
+
+namespace FEx.Extensions.Helpers;
 
 public static class HashHelper
 {
@@ -17,14 +19,10 @@ public static class HashHelper
                 hashString = BitConverter.ToString(hash);
 
                 if (removeDashes)
-                {
                     hashString = hashString.Replace("-", string.Empty);
-                }
 
                 if (toLower)
-                {
                     hashString = hashString.ToLower();
-                }
             }
         }
 

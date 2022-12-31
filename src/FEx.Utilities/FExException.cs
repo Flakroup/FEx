@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System;
+using System.Runtime.Serialization;
 
 namespace FEx.Utilities;
 
@@ -14,11 +15,13 @@ public class FExException : Exception
     {
     }
 
-    public FExException(string message, Exception innerException) : base(message, innerException)
+    public FExException(string message, Exception innerException)
+        : base(message, innerException)
     {
     }
 
-    protected FExException(SerializationInfo info, StreamingContext context) : base(info, context)
+    protected FExException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
     {
     }
 }

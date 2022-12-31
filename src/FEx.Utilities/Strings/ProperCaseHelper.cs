@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace FEx.Utilities.Strings;
 
@@ -7,15 +8,16 @@ public static class ProperCaseHelper
 {
     public static bool IsAllUpperOrAllLower(this string input)
     {
-        return input.ToLower().Equals(input) || input.ToUpper().Equals(input);
+        return input.ToLower()
+                   .Equals(input)
+               || input.ToUpper()
+                   .Equals(input);
     }
 
     public static string WordToProperCase(string word)
     {
         if (string.IsNullOrEmpty(word))
-        {
             return word;
-        }
 
         // Standard case
         string ret = CapitaliseFirstLetter(word);
@@ -53,42 +55,35 @@ public static class ProperCaseHelper
     private static string ProperSuffix(string word, string prefix)
     {
         if (string.IsNullOrEmpty(word))
-        {
             return word;
-        }
 
         string lowerWord = word.ToLower();
         string lowerPrefix = prefix.ToLower();
 
         if (!lowerWord.Contains(lowerPrefix))
-        {
             return word;
-        }
 
         int index = lowerWord.IndexOf(lowerPrefix, StringComparison.Ordinal);
 
         // If the search string is at the end of the word ignore.
         if (index + prefix.Length == word.Length)
-        {
             return word;
-        }
 
-        return word.Substring(0, index) + prefix +
-               CapitaliseFirstLetter(word.Substring(index + prefix.Length));
+        return word.Substring(0, index) + prefix + CapitaliseFirstLetter(word.Substring(index + prefix.Length));
     }
 
     private static string SpecialWords(string word, string specialWord)
     {
         if (word.Equals(specialWord, StringComparison.InvariantCultureIgnoreCase))
-        {
             return specialWord;
-        }
 
         return word;
     }
 
     private static string CapitaliseFirstLetter(string word)
     {
-        return char.ToUpper(word[0]) + word.Substring(1).ToLower();
+        return char.ToUpper(word[0])
+               + word.Substring(1)
+                   .ToLower();
     }
 }

@@ -1,4 +1,7 @@
 ﻿using FEx.Utilities.Collections;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FEx.Utilities.Extensions;
 
@@ -8,13 +11,14 @@ public static class ListExtensions
     {
         int itemsToSkip = (page - 1) * itemsPerPage;
 
-        if (items?.Count > 0 && (itemsToSkip > items.Count || itemsToSkip < 0))
-        {
+        if (items?.Count > 0
+            && (itemsToSkip > items.Count || itemsToSkip < 0))
             return null;
-        }
 
         var totalPagesCount = (int)Math.Ceiling(items.Count / (double)itemsPerPage);
-        IList<T> itemsForThisPage = items.Skip(itemsToSkip).Take(itemsPerPage).ToArray();
-        return new PaginatedList<T>(itemsForThisPage, items.Count, page, totalPagesCount);
+        IList<T> itemsForThisPage = items.Skip(itemsToSkip)
+            .Take(itemsPerPage)
+            .ToArray();
+        return new(itemsForThisPage, items.Count, page, totalPagesCount);
     }
 }

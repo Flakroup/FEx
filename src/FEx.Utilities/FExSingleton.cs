@@ -1,35 +1,33 @@
-﻿namespace FEx.Utilities;
+﻿using System;
+using System.Collections.Generic;
 
-public abstract class FExSingleton
-    : IDisposable
+namespace FEx.Utilities;
+
+public abstract class FExSingleton : IDisposable
 {
     private static readonly List<FExSingleton> Singletons = new();
-
-    public static void ClearAllSingletons()
-    {
-        lock (Singletons)
-        {
-            foreach (FExSingleton s in Singletons)
-            {
-                s.Dispose();
-            }
-
-            Singletons.Clear();
-        }
-    }
 
     protected FExSingleton()
     {
         lock (Singletons)
-        {
             Singletons.Add(this);
-        }
     }
 
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    public static void ClearAllSingletons()
+    {
+        lock (Singletons)
+        {
+            foreach (FExSingleton s in Singletons)
+                s.Dispose();
+
+            Singletons.Clear();
+        }
     }
 
     protected abstract void Dispose(bool isDisposing);
@@ -40,9 +38,7 @@ public abstract class FExSingleton
     }
 }
 
-public abstract class FExSingleton<T>
-    : FExSingleton
-    where T : class, new()
+public abstract class FExSingleton<T> : FExSingleton where T : class, new()
 {
     private static volatile T _instance;
 
@@ -51,15 +47,11 @@ public abstract class FExSingleton<T>
         get
         {
             if (_instance == null)
-            {
                 lock (SyncRoot)
                 {
                     if (_instance == null)
-                    {
-                        _instance = new T();
-                    }
+                        _instance = new();
                 }
-            }
 
             return _instance;
         }
@@ -70,8 +62,6 @@ public abstract class FExSingleton<T>
     protected override void Dispose(bool isDisposing)
     {
         if (isDisposing)
-        {
             _instance = null;
-        }
     }
 }

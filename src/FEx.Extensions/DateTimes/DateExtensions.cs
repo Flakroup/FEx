@@ -1,5 +1,8 @@
 ﻿using FEx.Extensions.VB;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
 namespace FEx.Extensions.DateTimes;
 
@@ -124,7 +127,8 @@ public static class DateExtensions
     public static int GetCountDaysOfMonth(this DateTime current)
     {
         DateTime nextMonth = current.AddMonths(1);
-        return new DateTime(nextMonth.Year, nextMonth.Month, 1).AddDays(-1).Day;
+        return new DateTime(nextMonth.Year, nextMonth.Month, 1).AddDays(-1)
+            .Day;
     }
 
     /// <summary>
@@ -151,8 +155,9 @@ public static class DateExtensions
     /// <remarks></remarks>
     public static string ToA4DValidTimeString(this DateTime current)
     {
-        string datePart =
-            current.Date.Date.Equals(DateTimeDefaults.Default.Date) ? " " : current.Date.ToShortDateString();
+        string datePart = current.Date.Date.Equals(DateTimeDefaults.Default.Date)
+            ? " "
+            : current.Date.ToShortDateString();
 
         string timePart = current.TimeOfDay.Equals(DateTimeDefaults.Default.TimeOfDay)
             ? string.Empty
@@ -170,7 +175,9 @@ public static class DateExtensions
     public static DateTime StartOfWeek(this DateTime value)
     {
         DayOfWeek fdow = DateTimeDefaults.DefaultCulture.DateTimeFormat.FirstDayOfWeek;
-        int offset = value.DayOfWeek - fdow < 0 ? 7 : 0;
+        int offset = value.DayOfWeek - fdow < 0
+            ? 7
+            : 0;
         int numberOfDaysSinceBeginningOfTheWeek = value.DayOfWeek + offset - fdow;
         return value.AddDays(-numberOfDaysSinceBeginningOfTheWeek);
     }
@@ -183,7 +190,9 @@ public static class DateExtensions
     /// <remarks>the beginning of the week is controlled by the current Culture</remarks>
     public static DateTime? StartOfWeek(this DateTime? dateTime)
     {
-        return dateTime == null ? null : StartOfWeek(dateTime.Value);
+        return dateTime == null
+            ? null
+            : StartOfWeek(dateTime.Value);
     }
 
     /// <summary>
@@ -194,7 +203,8 @@ public static class DateExtensions
     /// <remarks>the end of the week is controlled by the current Culture.</remarks>
     public static DateTime LastDayOfWeek(this DateTime dateTime)
     {
-        return dateTime.StartOfWeek().AddDays(6);
+        return dateTime.StartOfWeek()
+            .AddDays(6);
     }
 
     /// <summary>
@@ -205,7 +215,10 @@ public static class DateExtensions
     /// <remarks>the end of the week is controlled by the current Culture.</remarks>
     public static DateTime? LastDayOfWeek(this DateTime? dateTime)
     {
-        return dateTime != null ? dateTime.StartOfWeek()?.AddDays(6) : null;
+        return dateTime != null
+            ? dateTime.StartOfWeek()
+                ?.AddDays(6)
+            : null;
     }
 
     /// <summary>
@@ -216,7 +229,7 @@ public static class DateExtensions
     /// <returns>DateTime</returns>
     public static DateTime Combine(this DateTime date, TimeSpan time)
     {
-        return new DateTime(date.Year, date.Month, date.Day, int.Parse(time.Hours.ToString()), int.Parse(time.Minutes.ToString()), int.Parse(time.Seconds.ToString()), int.Parse(time.Milliseconds.ToString()));
+        return new(date.Year, date.Month, date.Day, int.Parse(time.Hours.ToString()), int.Parse(time.Minutes.ToString()), int.Parse(time.Seconds.ToString()), int.Parse(time.Milliseconds.ToString()));
     }
 
     /// <summary>
@@ -227,7 +240,7 @@ public static class DateExtensions
     /// <returns>DateTime</returns>
     public static DateTime Combine(this DateTime date, DateTime time)
     {
-        return new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+        return new(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
     }
 
     /// <summary>
@@ -239,7 +252,8 @@ public static class DateExtensions
     /// <returns>A DateTime</returns>
     public static DateTime GetDateFromYearWeek(this int year, int weekOfYear, DayOfWeek weekday)
     {
-        return FirstDateOfWeekIso8601(year, weekOfYear).AddDays(GetDay(weekday));
+        return FirstDateOfWeekIso8601(year, weekOfYear)
+            .AddDays(GetDay(weekday));
     }
 
     /// <summary>
@@ -267,15 +281,20 @@ public static class DateExtensions
     {
         var isValid = true;
 
-        string[] parsed = separator.HasValue ? source.Remove(new List<char> { 'w', 'W', 'd', 'D' }).Split(separator.Value) : source.Split(4).ToArray();
+        string[] parsed = separator.HasValue
+            ? source.Remove(new List<char> { 'w', 'W', 'd', 'D' })
+                .Split(separator.Value)
+            : source.Split(4)
+                .ToArray();
 
-        int year = parsed[0].ToInt();
-        int week = parsed[1].ToInt();
+        int year = parsed[0]
+            .ToInt();
+        int week = parsed[1]
+            .ToInt();
 
-        if (year == -1 || week == -1)
-        {
+        if (year == -1
+            || week == -1)
             isValid = false;
-        }
 
         date = FirstDateOfWeekIso8601(year, week);
         return isValid;
@@ -305,29 +324,30 @@ public static class DateExtensions
     public static bool TryGetDateFromYearWeekDay(this string source, char separator, out DateTime date)
     {
         var ok = true;
-        string[] parsed = source.Remove(new List<char> { 'w', 'W', 'd', 'D' }).Split(separator);
-        int year = parsed[0].ToInt();
+        string[] parsed = source.Remove(new List<char> { 'w', 'W', 'd', 'D' })
+            .Split(separator);
+        int year = parsed[0]
+            .ToInt();
         if (year == -1)
-        {
             ok = false;
-        }
 
-        int week = parsed[1].ToInt();
+        int week = parsed[1]
+            .ToInt();
         if (week == -1)
-        {
             ok = false;
-        }
 
-        int dayresult = parsed[2].ToInt();
+        int dayresult = parsed[2]
+            .ToInt();
         if (dayresult == -1)
-        {
             ok = false;
-        }
 
-        int day = dayresult == 0 ? dayresult : dayresult - 1;
+        int day = dayresult == 0
+            ? dayresult
+            : dayresult - 1;
         // For ex: D2 where 2 is the weekday (Tuesday) and FirstDateOfWeekISO8601 returns Monday
         // and we only want to add 1 to get date for Tuesday so reduce with 1
-        date = FirstDateOfWeekIso8601(year, week).AddDays(day);
+        date = FirstDateOfWeekIso8601(year, week)
+            .AddDays(day);
         return ok;
     }
 
@@ -338,7 +358,7 @@ public static class DateExtensions
     /// <returns>Truncated datetime.</returns>
     public static DateTime ClearMilliseconds(this DateTime dateTime)
     {
-        return new DateTime(dateTime.Ticks - dateTime.Ticks % TimeSpan.TicksPerSecond, dateTime.Kind);
+        return new(dateTime.Ticks - dateTime.Ticks % TimeSpan.TicksPerSecond, dateTime.Kind);
     }
 
     public static bool IsEarlierThan(this DateTime firstDateTime, DateTime secondDateTime)
@@ -393,7 +413,8 @@ public static class DateExtensions
 
     public static bool DateDiffIsBetween(this DateTime date1, DateTime date2, DateInterval interval, double min, double max, bool inclusive = false, DayOfWeek? dayOfWeek = null)
     {
-        return date1.DateDiff(date2, interval, dayOfWeek).IsBetween(min, max, inclusive);
+        return date1.DateDiff(date2, interval, dayOfWeek)
+            .IsBetween(min, max, inclusive);
     }
 
     /// <summary>
@@ -497,7 +518,8 @@ public static class DateExtensions
 
     public static string GetLocalizedDayOfWeek(this DayOfWeek dayOfWeek, CultureInfo culture)
     {
-        return culture.DateTimeFormat.GetDayName(dayOfWeek).FirstCharToUpper();
+        return culture.DateTimeFormat.GetDayName(dayOfWeek)
+            .FirstCharToUpper();
     }
 
     /// <summary>
@@ -517,9 +539,7 @@ public static class DateExtensions
 
         int weekNum = weekOfYear;
         if (firstWeek <= 1)
-        {
             weekNum--;
-        }
 
         DateTime result = firstThursday.AddDays(weekNum * 7);
         return result.AddDays(-3);
@@ -527,20 +547,19 @@ public static class DateExtensions
 
     private static double GetDay(DayOfWeek weekday)
     {
-        return weekday == DayOfWeek.Sunday ? 6 : (double)weekday - 1;
+        return weekday == DayOfWeek.Sunday
+            ? 6
+            : (double)weekday - 1;
     }
 
     private static DayOfWeek GetDayOfWeek(this DateTime dt, DayOfWeek? weekdayFirst = null)
     {
-        if (weekdayFirst < 0 || weekdayFirst > DayOfWeek.Saturday)
-        {
+        if (weekdayFirst < 0
+            || weekdayFirst > DayOfWeek.Saturday)
             throw new ArgumentException("Invalid argument", nameof(weekdayFirst));
-        }
 
         if (weekdayFirst == null)
-        {
             weekdayFirst = DateTimeDefaults.CurrentDateTimeFormat.FirstDayOfWeek + 1;
-        }
 
         return (DayOfWeek)(((int)dt.DayOfWeek - (int)weekdayFirst + 8) % 7 + 1);
     }

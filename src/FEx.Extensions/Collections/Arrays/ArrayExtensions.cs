@@ -1,4 +1,6 @@
-﻿namespace FEx.Extensions.Collections.Arrays;
+﻿using System;
+
+namespace FEx.Extensions.Collections.Arrays;
 
 public static class ArrayExtensions
 {
@@ -26,9 +28,7 @@ public static class ArrayExtensions
         for (var i = 0; i < source.Length; i++)
         {
             if (source.GetValue(i) == value)
-            {
                 return i;
-            }
         }
 
         return -1;

@@ -1,6 +1,9 @@
 ﻿using FEx.Extensions.Helpers;
+using System;
+using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace FEx.Extensions.IO;
 
@@ -36,32 +39,30 @@ public static class FileInfoExtensions
     /// <returns></returns>
     public static async Task<FileInfo> ZipAsync(this FileInfo file, string zipFilePath = null, bool deleteTempDirectory = false, bool overwrite = false)
     {
-        return await file.ZipAsync(zipFilePath != null ? new FileInfo(zipFilePath) : null, deleteTempDirectory, overwrite);
+        return await file.ZipAsync(zipFilePath != null
+            ? new FileInfo(zipFilePath)
+            : null, deleteTempDirectory, overwrite);
     }
 
     public static async Task<FileInfo> ZipAsync(this FileInfo file, FileInfo zipFile = null, bool deleteTempDirectory = false, bool overwrite = false)
     {
-        DirectoryInfo parentDirectory = zipFile == null ? file.Directory : zipFile.Directory;
+        DirectoryInfo parentDirectory = zipFile == null
+            ? file.Directory
+            : zipFile.Directory;
         var tempDirectory = new DirectoryInfo(Path.Combine(parentDirectory?.FullName, Path.GetFileNameWithoutExtension(file.Name)));
 
         if (tempDirectory.Exists && deleteTempDirectory)
-        {
             tempDirectory.Delete(true);
-        }
 
         tempDirectory.Create();
         string targetFilePath = Path.Combine(tempDirectory.FullName, file.Name);
 
         await using (FileStream sourceStream = file.OpenRead())
         await using (FileStream targetStream = File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
-        {
             await sourceStream.CopyToAsync(targetStream);
-        }
 
         if (zipFile == null)
-        {
-            zipFile = new FileInfo(Path.Combine(parentDirectory?.FullName, $"{file.Name}.zip"));
-        }
+            zipFile = new(Path.Combine(parentDirectory?.FullName, $"{file.Name}.zip"));
 
         if (zipFile.Exists && overwrite)
         {
@@ -82,18 +83,9 @@ public static class FileInfoExtensions
         byte[] hash = null;
 
         if (file.Exists)
-        {
-            using (var stream = new FileStream(
-                       file.FullName,
-                       FileMode.Open,
-                       FileAccess.Read,
-                       FileShare.ReadWrite,
-                       DefBufferSize))
+            using (var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefBufferSize))
             using (var md5 = MD5.Create())
-            {
                 hash = md5.ComputeHash(stream);
-            }
-        }
 
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }
@@ -115,9 +107,7 @@ public static class FileInfoExtensions
         byte[] hash;
 
         using (var md5Algorithm = MD5.Create())
-        {
             hash = md5Algorithm.ComputeHash(data);
-        }
 
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }
@@ -127,15 +117,8 @@ public static class FileInfoExtensions
         file.Refresh();
 
         if (!file.Exists)
-        {
             return null;
-        }
 
-        return await new FileStream(
-            file.FullName,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.ReadWrite,
-            DefBufferSize).ToMemoryStreamAsync();
+        return await new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefBufferSize).ToMemoryStreamAsync();
     }
 }

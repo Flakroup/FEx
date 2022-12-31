@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
+		<PackageReference Include="ReactiveUI" Version="18.4.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
+		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

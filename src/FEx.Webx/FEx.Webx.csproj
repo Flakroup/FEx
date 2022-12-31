@@ -5,7 +5,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MimeMapping" Version="1.0.1.37" />
+		<PackageReference Include="MimeMapping" Version="1.0.1.50" />
 	</ItemGroup>
 
 	<ItemGroup>

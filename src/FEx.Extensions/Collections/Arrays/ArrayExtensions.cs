@@ -10,8 +10,6 @@ public static class ArrayExtensions
     /// <param name="source"></param>
     /// <param name="index"></param>
     /// <returns></returns>
-    /// <remarks>
-    /// </remarks>
     public static bool WithinIndex(this Array source, int index)
     {
         return source != null && index >= 0 && index < source.Length;

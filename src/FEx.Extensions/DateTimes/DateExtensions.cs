@@ -136,7 +136,6 @@ public static class DateExtensions
     /// </summary>
     /// <param name="current">The current date.</param>
     /// <returns>A date string with format HH:mm.</returns>
-    /// <remarks></remarks>
     public static string ToA4DTimeString(this DateTime current)
     {
         return current.ToString(DateTimeDefaults.A4DtimeMask, DateTimeDefaults.DefaultCulture);
@@ -152,7 +151,6 @@ public static class DateExtensions
     /// </summary>
     /// <param name="current">The current date.</param>
     /// <returns>A valid A4D DateTime string</returns>
-    /// <remarks></remarks>
     public static string ToA4DValidTimeString(this DateTime current)
     {
         string datePart = current.Date.Date.Equals(DateTimeDefaults.Default.Date)

@@ -1,19 +1,14 @@
 <Project>
 
+	<Import Project="$(MSBuildThisFileDirectory)\DevConfigs\Directory.Build.props" />
+
 	<PropertyGroup>
-		<Deterministic>true</Deterministic>
-		<Authors>Flakroup</Authors>
-		<Company>Flakroup</Company>
-		<Copyright>Copyright © Flakroup 2023</Copyright>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<PackageIcon>flakroup.png</PackageIcon>
-		<GenerateDocumentationFile>false</GenerateDocumentationFile>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<WarnOnPackingNonPackableProject>true</WarnOnPackingNonPackableProject>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://gitlab.com/flakroup/FEx</PackageProjectUrl>
 		<RepositoryUrl>https://gitlab.com/flakroup/FEx.git</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
 		<WarningsAsErrors>$(WarningsAsErrors);CS0660</WarningsAsErrors>
 	</PropertyGroup>
 
@@ -27,17 +22,6 @@
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<None Include="$(MSBuildThisFileDirectory)\.editorconfig" Link=".editorconfig"/>
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.4.27">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
 
 	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
 		<PackageReference Include="Microsoft.SourceLink.GitLab" Version="1.1.1">

@@ -34,12 +34,10 @@ public static class WebResponseExtensions
                 HttpWebRequest myHttpWebRequest = responseUri.GetHttpRequest(pars);
                 myHttpWebRequest.AddRange(rangeFrom, rangeTo);
 
-                using (WebResponse res = await myHttpWebRequest.GetResponseAsync())
-                using (var resp = (HttpWebResponse)res)
-                {
-                    responseHeaders = resp.GetAllHeaders();
-                    return (responseHeaders.ContainsKey(ContentRangeHeaderName), LengthType.Bytes);
-                }
+                using WebResponse res = await myHttpWebRequest.GetResponseAsync();
+                using var resp = (HttpWebResponse)res;
+                responseHeaders = resp.GetAllHeaders();
+                return (responseHeaders.ContainsKey(ContentRangeHeaderName), LengthType.Bytes);
             }
         }
         catch (Exception ex) when (exceptionHandler is not null)

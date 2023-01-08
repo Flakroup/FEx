@@ -38,8 +38,8 @@ public static class UriExtensions
         try
         {
             var request = WebRequest.Create(url);
-            using (WebResponse _ = await request.GetResponseAsync())
-                return true;
+            using WebResponse _ = await request.GetResponseAsync();
+            return true;
         }
         catch
         {
@@ -144,8 +144,8 @@ public static class UriExtensions
 
     public static async Task<(bool, LengthType)> TryGetRangeAsync(this Uri url, int rangeFrom, int rangeTo, IExceptionHandler exceptionHandler = null, WebRequestParams pars = null)
     {
-        using (WebResponse resp = await url.GetUriResponseAsync(pars))
-            return await resp.TryGetRangeAsync(rangeFrom, rangeTo, exceptionHandler, pars);
+        using WebResponse resp = await url.GetUriResponseAsync(pars);
+        return await resp.TryGetRangeAsync(rangeFrom, rangeTo, exceptionHandler, pars);
     }
 
     public static async Task<bool> CheckIfLinkIsExpiredAsync(this Uri link, WebRequestParams pars = null)
@@ -184,20 +184,18 @@ public static class UriExtensions
 
             request.Method = "HEAD"; //Get only the header information -- no need to download any content
 
-            using (WebResponse response = await request.GetResponseAsync())
-            using (var httpResponse = (HttpWebResponse)response)
-            {
-                var statusCode = (int)httpResponse.StatusCode;
-                if (statusCode >= 100
-                    && statusCode < 400) //Good requests
-                    return true;
+            using WebResponse response = await request.GetResponseAsync();
+            using var httpResponse = (HttpWebResponse)response;
+            var statusCode = (int)httpResponse.StatusCode;
+            if (statusCode >= 100
+                && statusCode < 400) //Good requests
+                return true;
 
-                if (statusCode >= 500
-                    && statusCode <= 510) //Server Errors
-                {
-                    Debug.WriteLine($"The remote server has thrown an internal error. Url is not valid: {url}");
-                    return false;
-                }
+            if (statusCode >= 500
+                && statusCode <= 510) //Server Errors
+            {
+                Debug.WriteLine($"The remote server has thrown an internal error. Url is not valid: {url}");
+                return false;
             }
         }
         catch (WebException ex)
@@ -220,12 +218,10 @@ public static class UriExtensions
         HttpWebRequest req = url.GetHttpRequest(pars);
         stopwatch?.Restart();
 
-        using (WebResponse response = await req.GetResponseAsync())
-        {
-            stopwatch?.Stop();
-            using (var resp = (HttpWebResponse)response)
-                return await func(resp, req);
-        }
+        using WebResponse response = await req.GetResponseAsync();
+        stopwatch?.Stop();
+        using var resp = (HttpWebResponse)response;
+        return await func(resp, req);
     }
 
     private static async Task<T> InternalDoHttpResponseFuncAsync<T>(Uri url, Func<HttpWebResponse, HttpWebRequest, T> func, WebRequestParams pars = null, Stopwatch stopwatch = null)
@@ -233,12 +229,10 @@ public static class UriExtensions
         HttpWebRequest req = url.GetHttpRequest(pars);
         stopwatch?.Restart();
 
-        using (WebResponse response = await req.GetResponseAsync())
-        {
-            stopwatch?.Stop();
-            using (var resp = (HttpWebResponse)response)
-                return func(resp, req);
-        }
+        using WebResponse response = await req.GetResponseAsync();
+        stopwatch?.Stop();
+        using var resp = (HttpWebResponse)response;
+        return func(resp, req);
     }
 
     private static async Task InternalDoHttpResponseActionAsync(Uri url, Action<HttpWebResponse, HttpWebRequest> action, WebRequestParams pars = null, Stopwatch stopwatch = null)
@@ -246,12 +240,10 @@ public static class UriExtensions
         HttpWebRequest req = url.GetHttpRequest(pars);
         stopwatch?.Restart();
 
-        using (WebResponse response = await req.GetResponseAsync())
-        {
-            stopwatch?.Stop();
-            using (var resp = (HttpWebResponse)response)
-                action(resp, req);
-        }
+        using WebResponse response = await req.GetResponseAsync();
+        stopwatch?.Stop();
+        using var resp = (HttpWebResponse)response;
+        action(resp, req);
     }
 
     private static async Task<T> InternalDoHttpClientResponseFuncTaskAsync<T>(this Uri url, Func<HttpResponseMessage, HttpClient, Task<T>> func, WebRequestParams pars = null, Stopwatch stopwatch = null)

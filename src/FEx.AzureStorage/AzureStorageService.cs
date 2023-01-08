@@ -344,8 +344,8 @@ public class AzureStorageService : IAzureStorageService
 
             var context = new SingleTransferContext { ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)) };
 
-            await using (FileStream downloadFileStream = localFile.OpenWrite())
-                await TransferManager.DownloadAsync(sourceBlob, downloadFileStream, new() { DisableContentMD5Validation = true }, context);
+            await using FileStream downloadFileStream = localFile.OpenWrite();
+            await TransferManager.DownloadAsync(sourceBlob, downloadFileStream, new() { DisableContentMD5Validation = true }, context);
         }
 
         Log.LogInformation($"Finished download of blob {sourceBlob.Name} in {state.ElapsedTime} to: {localFile.FullName}");
@@ -390,7 +390,7 @@ public class AzureStorageService : IAzureStorageService
 
                 Log.LogInformation($"Generated MD5 of {localFile.FullName} in {state.ElapsedTime}");
 
-                result = localMD5.EqualsIgnoreCase(remoteMD5);
+                result = localMD5.IsEqual(remoteMD5);
 
                 log += result
                     ? $"and its checksum is equal to blob {sourceBlob.Name} hash"

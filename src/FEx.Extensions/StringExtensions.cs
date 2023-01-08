@@ -71,15 +71,31 @@ public static class StringExtensions
     }
 
     /// <summary>
-    ///     Compare 2 strings, ignoring case.
+    /// Compare 2 strings, ignoring case.
     /// </summary>
     /// <param name="source">First value to compare with.</param>
     /// <param name="value">Second value to compare with.</param>
-    /// <returns>True if equal otherwise False.</returns>
-    /// <remarks></remarks>
-    public static bool EqualsIgnoreCase(this string source, string value)
+    /// <param name="comparisonType">Type of the comparison.</param>
+    /// <returns>
+    /// True if equal otherwise False.
+    /// </returns>
+    public static bool IsEqual(this string source, string value, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
     {
-        return string.Equals(source, value, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(source, value, comparisonType);
+    }
+
+    /// <summary>
+    /// Determines whether string is not equal to the specified value.
+    /// </summary>
+    /// <param name="source">The source.</param>
+    /// <param name="value">The value.</param>
+    /// <param name="comparisonType">Type of the comparison.</param>
+    /// <returns>
+    ///   <c>true</c> if it is not equal to the specified value; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool IsNotEqual(this string source, string value, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
+    {
+        return !source.IsEqual(value, comparisonType);
     }
 
     /// <summary>
@@ -87,7 +103,6 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">string to test.</param>
     /// <returns>True if string is Null or Empty otherwise False.</returns>
-    /// <remarks></remarks>
     [ContractAnnotation("null => true")]
     public static bool IsNullOrEmptyString(this string value)
     {
@@ -99,7 +114,6 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">string to test.</param>
     /// <returns>True if string is Null or Empty otherwise False.</returns>
-    /// <remarks></remarks>
     [ContractAnnotation("null => false")]
     public static bool IsNotNullOrEmptyString(this string value)
     {
@@ -111,7 +125,6 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The input string.</param>
     /// <param name="parameters">The parameters.</param>
-    /// <returns></returns>
     public static string FormatWith(this string value, params object[] parameters)
     {
         return string.Format(value, parameters);
@@ -122,7 +135,6 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">string with number.</param>
     /// <returns>-1 if value is (Null or Empty or not Numeric) otherwise the number.</returns>
-    /// <remarks></remarks>
     public static int ToInt(this string value)
     {
         return int.TryParse(value, out int result)
@@ -145,7 +157,6 @@ public static class StringExtensions
     /// <param name="value">string with number.</param>
     /// <param name="defaultResult">Number to return if parse fail.</param>
     /// <returns>defaultResult if value is (Null or Empty or not Numeric) otherwise the number.</returns>
-    /// <remarks></remarks>
     public static int ToInt(this string value, int defaultResult)
     {
         return int.TryParse(value, out int result)
@@ -498,26 +509,22 @@ public static class StringExtensions
     {
         byte[] bytes = Encoding.UTF8.GetBytes(str);
 
-        using (var msi = new MemoryStream(bytes))
-        using (var mso = new MemoryStream())
-        using (var gs = new GZipStream(mso, CompressionMode.Compress))
-        {
-            CopyTo(msi, gs);
+        using var msi = new MemoryStream(bytes);
+        using var mso = new MemoryStream();
+        using var gs = new GZipStream(mso, CompressionMode.Compress);
+        CopyTo(msi, gs);
 
-            return Convert.ToBase64String(mso.ToArray());
-        }
+        return Convert.ToBase64String(mso.ToArray());
     }
 
     public static string Unzip(this string bytes)
     {
-        using (var msi = new MemoryStream(Convert.FromBase64String(bytes)))
-        using (var mso = new MemoryStream())
-        using (var gs = new GZipStream(msi, CompressionMode.Decompress))
-        {
-            CopyTo(gs, mso);
+        using var msi = new MemoryStream(Convert.FromBase64String(bytes));
+        using var mso = new MemoryStream();
+        using var gs = new GZipStream(msi, CompressionMode.Decompress);
+        CopyTo(gs, mso);
 
-            return Encoding.UTF8.GetString(mso.ToArray());
-        }
+        return Encoding.UTF8.GetString(mso.ToArray());
     }
 
     public static bool CompareOrdinalIgnoreCase(this string source, string value)
@@ -611,11 +618,9 @@ public static class StringExtensions
 
     public static string ComputeSha256Hash(this string rawData)
     {
-        using (var sha256Hash = SHA256.Create())
-        {
-            return sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData))
-                .ByteArrayToString();
-        }
+        using var sha256Hash = SHA256.Create();
+        return sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData))
+            .ByteArrayToString();
     }
 
     public static string TrimLength(this string value, int length, bool trim = false)

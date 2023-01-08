@@ -18,7 +18,6 @@ public static class ListExtensions
     /// <typeparam name="T">Sequence element type.</typeparam>
     /// <param name="source">The list itself.</param>
     /// <returns>True if collection has rows otherwise False.</returns>
-    /// <remarks></remarks>
     public static bool IsNotEmpty<T>(this IList<T> source)
     {
         return (source?.Count ?? 0) > 0;
@@ -30,7 +29,6 @@ public static class ListExtensions
     /// <typeparam name="T">Sequence element type.</typeparam>
     /// <param name="source">The list itself.</param>
     /// <returns>True if collection has rows otherwise False.</returns>
-    /// <remarks></remarks>
     [ContractAnnotation("null => true")]
     public static bool IsNullOrEmptyList<T>(this IList<T> source)
     {

@@ -21,29 +21,21 @@ public static class JsonExtensions
         {
             if (url.Scheme == "http"
                 || url.Scheme == "https")
-                using (var client = new HttpClient()) // todo handler))
-                {
-                    using (HttpResponseMessage response = await client.GetAsync(url, cancellationToken))
-                    {
-                        using (HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode())
-                        {
-                            await using (Stream jsonStream = await ensuredResponse.Content.ReadAsStreamAsync(cancellationToken))
-                            {
-                                if (jsonStream != null)
-                                    res = jsonStream.DeserializeFromStream<T>(settings);
-                            }
-                        }
-                    }
-                }
+            {
+                using var client = new HttpClient();
+                using HttpResponseMessage response = await client.GetAsync(url, cancellationToken);
+                using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
+                await using Stream jsonStream = await ensuredResponse.Content.ReadAsStreamAsync(cancellationToken);
+                if (jsonStream != null)
+                    res = jsonStream.DeserializeFromStream<T>(settings);
+            }
             else
-                using (WebResponse response = await url.GetUriResponseAsync())
-                {
-                    await using (Stream jsonStream = response.GetResponseStream())
-                    {
-                        if (jsonStream != null)
-                            res = jsonStream.DeserializeFromStream<T>(settings);
-                    }
-                }
+            {
+                using WebResponse response = await url.GetUriResponseAsync();
+                await using Stream jsonStream = response.GetResponseStream();
+                if (jsonStream != null)
+                    res = jsonStream.DeserializeFromStream<T>(settings);
+            }
         }
 
         return res;

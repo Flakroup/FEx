@@ -77,18 +77,18 @@ public static class JsonExtensions
     {
         var serializer = JsonSerializer.Create(settings ?? DefaultSettings);
 
-        using (var sr = new StreamReader(stream))
-        using (var jsonTextReader = new JsonTextReader(sr))
-            return serializer.Deserialize(jsonTextReader);
+        using var sr = new StreamReader(stream);
+        using var jsonTextReader = new JsonTextReader(sr);
+        return serializer.Deserialize(jsonTextReader);
     }
 
     public static T DeserializeFromStream<T>(this Stream stream, JsonSerializerSettings settings = null)
     {
         var serializer = JsonSerializer.Create(settings ?? DefaultSettings);
 
-        using (var sr = new StreamReader(stream))
-        using (var jsonTextReader = new JsonTextReader(sr))
-            return serializer.Deserialize<T>(jsonTextReader);
+        using var sr = new StreamReader(stream);
+        using var jsonTextReader = new JsonTextReader(sr);
+        return serializer.Deserialize<T>(jsonTextReader);
     }
 
     /// <summary>
@@ -132,21 +132,15 @@ public static class JsonExtensions
 
     public static void PrettyPrintFile(string orgPath, string destPath)
     {
-        using (StreamReader file = File.OpenText(orgPath))
-        using (var reader = new JsonTextReader(file))
-        {
-            using (FileStream destFile = File.OpenWrite(destPath))
-            {
-                destFile.SetLength(0);
-                using (var destFileWriter = new StreamWriter(destFile))
-                using (var destWriter = new JsonTextWriter(destFileWriter))
-                {
-                    destWriter.Formatting = Formatting.Indented;
-                    var obj = (JObject)JToken.ReadFrom(reader);
-                    obj.WriteTo(destWriter);
-                }
-            }
-        }
+        using StreamReader file = File.OpenText(orgPath);
+        using var reader = new JsonTextReader(file);
+        using FileStream destFile = File.OpenWrite(destPath);
+        destFile.SetLength(0);
+        using var destFileWriter = new StreamWriter(destFile);
+        using var destWriter = new JsonTextWriter(destFileWriter);
+        destWriter.Formatting = Formatting.Indented;
+        var obj = (JObject)JToken.ReadFrom(reader);
+        obj.WriteTo(destWriter);
     }
 
     public static string PrettyPrintJson(this string json, JsonLoadSettings loadSettings = null, JsonSerializerSettings saveSettings = null, Formatting formatting = Formatting.Indented)

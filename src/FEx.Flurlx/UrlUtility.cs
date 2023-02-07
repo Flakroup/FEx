@@ -1,7 +1,11 @@
 ﻿using FEx.Extensions.Helpers;
+using FEx.Extensions.IO;
 using FEx.Extensions.Numericals;
+using FEx.Extensions.Web;
 using Flurl;
 using Flurl.Http;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace FEx.Flurlx;
@@ -10,7 +14,6 @@ public static class UrlUtility
 {
     public static async Task<double> CalculateSizeAsync(this Url url, LengthType unit = LengthType.Megabytes, IFlurlClient client = null)
     {
-        const string contentLenthKey = "Content-Length";
         var dispose = false;
 
         try
@@ -21,10 +24,9 @@ public static class UrlUtility
                 dispose = true;
             }
 
-            IFlurlResponse r = await client.Request(url)
+            IFlurlResponse response = await client.Request(url)
                 .HeadAsync();
-            string contentLength = r.Headers.FirstOrDefault(contentLenthKey);
-            double bytesTotal = contentLength.FromString();
+            double bytesTotal = GetContentLength(response);
             if (unit == LengthType.Bytes)
                 return bytesTotal;
 
@@ -36,5 +38,63 @@ public static class UrlUtility
             if (dispose)
                 client?.Dispose();
         }
+    }
+
+    public static async Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client = null, SeekOrigin origin = SeekOrigin.Begin, long offset = 0, long? length = null)
+    {
+        const string acceptRangesHeader = "Accept-Ranges";
+        var dispose = false;
+
+        try
+        {
+            if (client is null)
+            {
+                client = new FlurlClient();
+                dispose = true;
+            }
+
+            var ms = new MemoryStream();
+            IFlurlRequest request = client.Request(url);
+            if (length.HasValue)
+            {
+                IFlurlResponse response = await request.HeadAsync();
+
+                Dictionary<string, string[]> headers = response.ResponseMessage.GetAllHeaders();
+                if (headers.ContainsKey(acceptRangesHeader))
+                {
+                    double bytesTotal = GetContentLength(response);
+                    double fromBytes = origin == SeekOrigin.Begin
+                        ? offset
+                        : bytesTotal - offset;
+                    double? toBytes = fromBytes + length;
+                    request = request.WithHeader("Range", $"bytes={fromBytes}-{toBytes}");
+
+                    await using Stream rangedStream = await request.GetStreamAsync();
+                    await rangedStream.CopyToAsync(ms);
+                    return ms;
+                }
+
+                await using Stream seekableStream = await request.GetStreamAsync();
+                seekableStream.Seek(offset, origin);
+                await seekableStream.CopyStreamToStreamAsync(ms, length: length);
+                return ms;
+            }
+
+            await using Stream stream = await request.GetStreamAsync();
+            await stream.CopyToAsync(ms);
+            return ms;
+        }
+        finally
+        {
+            if (dispose)
+                client?.Dispose();
+        }
+    }
+
+    private static double GetContentLength(IFlurlResponse response)
+    {
+        const string contentLengthKey = "Content-Length";
+        string contentLength = response.Headers.FirstOrDefault(contentLengthKey);
+        return contentLength.FromString();
     }
 }

@@ -10,12 +10,12 @@ public static class StreamExtensions
 {
     private static int BufferSize { get; } = 81920;
 
-    public static void CopyStreamToStream(this Stream sourceStream, Stream destStream, Action<double> progressMaximumSet = null, Action<double> progressValueSet = null)
+    public static async Task CopyStreamToStreamAsync(this Stream sourceStream, Stream destStream, Action<double> progressMaximumSet = null, Action<double> progressValueSet = null, long? length = null)
     {
         var buffer = new byte[BufferSize];
         var writtenBytes = 0;
 
-        using (sourceStream)
+        await using (sourceStream)
         {
             if (sourceStream == null)
                 return;
@@ -24,13 +24,15 @@ public static class StreamExtensions
 
             while (true)
             {
-                int num = sourceStream.Read(buffer, 0, buffer.Length);
+                int num = await sourceStream.ReadAsync(buffer, 0, buffer.Length);
                 int bytesRead;
                 if ((bytesRead = num) != 0)
                 {
-                    destStream.Write(buffer, 0, bytesRead);
+                    await destStream.WriteAsync(buffer, 0, bytesRead);
                     writtenBytes += num;
                     progressValueSet?.BeginInvoke(writtenBytes, null, null);
+                    if (writtenBytes == length)
+                        break;
                 }
                 else
                 {
@@ -42,7 +44,7 @@ public static class StreamExtensions
 
     public static async Task<byte[]> ReadFullyAsync(this Stream input)
     {
-        await using (input)
+        await using (input) //todo refactor it
         await using (MemoryStream ms = await input.ToMemoryStreamAsync())
             return ms.ToArray();
     }

@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>$(TargetWindowsFrameworkId)</TargetFramework>
 		<UseWPF>true</UseWPF>
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -4,6 +4,7 @@ namespace FEx.Utilities.Interfaces;
 
 public interface ILogger
 {
-    void Log(Exception ex);
-    void LogInfo(string message);
+    void LogInformation(string message);
+    void LogError(string message, Exception exception = null);
+    void LogError(Exception exception);
 }

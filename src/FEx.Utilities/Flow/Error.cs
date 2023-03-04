@@ -1,6 +1,5 @@
 using FEx.Extensions;
 using System;
-using System.Diagnostics;
 
 namespace FEx.Utilities.Flow;
 
@@ -36,7 +35,8 @@ public abstract class Error : IError
 
     protected Error()
     {
-        StackTrace = new StackTrace(true).ToString();
+        StackTrace = Fundamentals.StackTraceGenerator.GetCachedStackTrace()
+            .ToString();
     }
 
     protected Error(Error innerError)
@@ -54,7 +54,7 @@ public abstract class Error : IError
     }
 }
 
-public abstract class Error<TErrorStatus> : Error where TErrorStatus : Enum
+public abstract class Error<TErrorStatus> : Error
 {
     public TErrorStatus Status { get; }
 

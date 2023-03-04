@@ -322,6 +322,9 @@ public static class ObjectExtensions
 
     public static bool IsBetween<T>(this T item, T start, T end, bool inclusive = false)
     {
+        if (Comparer<T>.Default.Compare(start, end) > 0)
+            throw new ArgumentException("Given parameters create no range");
+
         return inclusive
             ? Comparer<T>.Default.Compare(item, start) >= 0 && Comparer<T>.Default.Compare(item, end) <= 0
             : Comparer<T>.Default.Compare(item, start) > 0 && Comparer<T>.Default.Compare(item, end) < 0;

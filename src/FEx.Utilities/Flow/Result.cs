@@ -8,18 +8,18 @@ public class Result<TError> where TError : IError, new()
     public static Result<TError> Failure => new(new());
 
     public TError Error { get; }
-    public bool IsSuccessful { get; }
-    public bool IsFailure => !IsSuccessful;
+    public bool IsSuccess { get; }
+    public bool IsFailure => !IsSuccess;
 
     public Result()
     {
-        IsSuccessful = true;
+        IsSuccess = true;
     }
 
     public Result(TError error)
     {
         Error = error;
-        IsSuccessful = false;
+        IsSuccess = false;
     }
 
     public static implicit operator Result<TError>(TError right)

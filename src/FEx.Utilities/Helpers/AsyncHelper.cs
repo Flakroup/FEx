@@ -5,7 +5,6 @@ using FEx.Utilities.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,13 +39,13 @@ public class AsyncHelper
         };
     }
 
-    public TaskCompletionSource<object> FireAndForget(Action action, CancellationToken cancellationToken, AsyncMode asyncMode = AsyncMode.Default, [CallerMemberName] string member = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+    public TaskCompletionSource<object> FireAndForget(Action action, CancellationToken cancellationToken, AsyncMode asyncMode = AsyncMode.Default)
     {
         action.Guard(nameof(action));
         return FireAndForget(Wrap(action), cancellationToken, asyncMode);
     }
 
-    public TaskCompletionSource<T> FireAndForget<T>(Func<T> func, CancellationToken cancellationToken, AsyncMode asyncMode = AsyncMode.Default, [CallerMemberName] string member = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+    public TaskCompletionSource<T> FireAndForget<T>(Func<T> func, CancellationToken cancellationToken, AsyncMode asyncMode = AsyncMode.Default)
     {
         func.Guard(nameof(func));
         var taskCompletionSource = new TaskCompletionSource<T>();
@@ -54,13 +53,13 @@ public class AsyncHelper
         return taskCompletionSource;
     }
 
-    public TaskCompletionSource<object> FireTaskAndForget(Func<Task> task, AsyncMode asyncMode = AsyncMode.Default, [CallerMemberName] string member = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+    public TaskCompletionSource<object> FireTaskAndForget(Func<Task> task, AsyncMode asyncMode = AsyncMode.Default)
     {
         task.Guard(nameof(task));
         return FireTaskAndForget(WrapTask(task), asyncMode);
     }
 
-    public TaskCompletionSource<T> FireTaskAndForget<T>(Func<Task<T>> task, AsyncMode asyncMode = AsyncMode.Default, [CallerMemberName] string member = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+    public TaskCompletionSource<T> FireTaskAndForget<T>(Func<Task<T>> task, AsyncMode asyncMode = AsyncMode.Default)
     {
         task.Guard(nameof(task));
         var taskCompletionSource = new TaskCompletionSource<T>();
@@ -68,7 +67,7 @@ public class AsyncHelper
         return taskCompletionSource;
     }
 
-    public IReadOnlyList<TaskCompletionSource<object>> FireTasksAndForget(IEnumerable<Func<Task>> tasks, AsyncMode asyncMode = AsyncMode.Default, [CallerMemberName] string member = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+    public IReadOnlyList<TaskCompletionSource<object>> FireTasksAndForget(IEnumerable<Func<Task>> tasks, AsyncMode asyncMode = AsyncMode.Default)
     {
         tasks.Guard(nameof(tasks));
         return tasks.Select(x => FireTaskAndForget(x, asyncMode))
@@ -76,7 +75,7 @@ public class AsyncHelper
             .AsReadOnly();
     }
 
-    public IReadOnlyList<TaskCompletionSource<T>> FireTasksAndForget<T>(IEnumerable<Func<Task<T>>> tasks, AsyncMode asyncMode = AsyncMode.Default, [CallerMemberName] string member = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+    public IReadOnlyList<TaskCompletionSource<T>> FireTasksAndForget<T>(IEnumerable<Func<Task<T>>> tasks, AsyncMode asyncMode = AsyncMode.Default)
     {
         tasks.Guard(nameof(tasks));
         return tasks.Select(x => FireTaskAndForget(x, asyncMode))
@@ -84,7 +83,7 @@ public class AsyncHelper
             .AsReadOnly();
     }
 
-    public async Task ExecuteTaskOnThreadPoolAsync(Func<Task> task, [CallerMemberName] string member = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+    public async Task ExecuteTaskOnThreadPoolAsync(Func<Task> task)
     {
         await ExecuteTaskOnThreadPoolAsync(WrapTask(task));
     }
@@ -99,12 +98,12 @@ public class AsyncHelper
         }
         catch (Exception ex) when (logException)
         {
-            _logger.Log(ex);
+            _logger.LogError(ex);
             throw;
         }
     }
 
-    public async Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func, CancellationToken cancellationToken, [CallerMemberName] string member = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0, bool logException = true)
+    public async Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func, CancellationToken cancellationToken, bool logException = true)
     {
         if (Thread.CurrentThread.IsThreadPoolThread)
             return func();
@@ -115,7 +114,7 @@ public class AsyncHelper
         }
         catch (Exception ex) when (logException)
         {
-            _logger.Log(ex);
+            _logger.LogError(ex);
             throw;
         }
     }
@@ -148,7 +147,7 @@ public class AsyncHelper
             T result = asyncMode switch
             {
                 AsyncMode.MainThread => await ExecuteTaskOnThreadPoolAsync(() => _dispatcher.InvokeOnMainThreadAsync(func), false),
-                AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(func, cancellationToken, logException: false),
+                AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(func, cancellationToken, false),
                 _ => func()
             };
 
@@ -156,7 +155,7 @@ public class AsyncHelper
         }
         catch (Exception ex)
         {
-            _logger.Log(ex);
+            _logger.LogError(ex);
             taskCompletionSource.SetException(ex);
         }
     }
@@ -176,7 +175,7 @@ public class AsyncHelper
         }
         catch (Exception ex)
         {
-            _logger.Log(ex);
+            _logger.LogError(ex);
             taskCompletionSource.SetException(ex);
         }
     }

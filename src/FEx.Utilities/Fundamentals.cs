@@ -2,6 +2,7 @@
 using FEx.Extensions;
 using FEx.Utilities.Helpers;
 using FEx.Utilities.Interfaces;
+using FEx.Utilities.StackTraces;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -13,6 +14,13 @@ public class Fundamentals
     public static ILogger Logger { get; private set; }
     public static AsyncHelper AsyncHelper { get; private set; }
     public static IFExServiceProvider ServiceProvider { get; private set; }
+
+    public static StackTraceGenerator StackTraceGenerator { get; }
+
+    static Fundamentals()
+    {
+        StackTraceGenerator = new StackTraceGenerator();
+    }
 
     public Fundamentals(IFExDispatcher dispatcher, ILogger logger, AsyncHelper asyncHelper)
     {

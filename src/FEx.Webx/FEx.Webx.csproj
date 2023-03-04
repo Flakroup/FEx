@@ -10,6 +10,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+		<ProjectReference Include="..\FEx.Utilities\FEx.Utilities.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -72,18 +72,18 @@ public static class DbContextExtensions
 
         if (entities.Any(x => x.State != EntityState.Deleted))
         {
-            var failedValidations = new List<EntityValidationFail>();
-            var failedValidation = new List<ValidationResult>();
+            var allFailedValidations = new List<EntityValidationFail>();
+            var failedValidations = new List<ValidationResult>();
 
             foreach ((EntityEntry entry, int counter) in entities.Select((entry, counter) => (entry, counter))
                          .Where(x => x.entry.State != EntityState.Deleted))
             {
                 var validationContext = new ValidationContext(entry.Entity);
-                failedValidation.Clear();
+                failedValidations.Clear();
 
-                if (!Validator.TryValidateObject(entry.Entity, validationContext, failedValidation, validateAllProperties))
+                if (!Validator.TryValidateObject(entry.Entity, validationContext, failedValidations, validateAllProperties))
                 {
-                    ReadOnlyCollection<ValidationResult> fails = failedValidation.ToList()
+                    ReadOnlyCollection<ValidationResult> fails = failedValidations.ToList()
                         .AsReadOnly();
 
                     if (isSuccess)
@@ -93,24 +93,24 @@ public static class DbContextExtensions
                     }
 
                     var fail = new EntityValidationFail(entry, fails, counter);
-                    failedValidations.Add(fail);
+                    allFailedValidations.Add(fail);
                     onFaultyEntity?.Invoke(id, fail); //todo convert to Rx
                 }
             }
 
-            if (failedValidations.Count != 0)
+            if (allFailedValidations.Count != 0)
             {
                 var sb = new StringBuilder();
                 sb.Append('[')
                     .Append(id)
                     .AppendLine("]");
-                foreach (string message in failedValidations.Select(res => GetValidationResultInfo(res, Debugger.IsAttached))
+                foreach (string message in allFailedValidations.Select(res => GetValidationResultInfo(res, Debugger.IsAttached))
                              .Distinct())
                     sb.Append(message);
 
                 var ex = new InvalidDataException(sb.ToString());
-                LogError($"[{id}]\tValidation of {failedValidations.Count} {(entities.Count > 1 ? "entities" : "entity")} failed", ex);
-                onValidationFail?.Invoke(id, failedValidations); //todo convert to Rx
+                LogError($"[{id}]\tValidation of {allFailedValidations.Count} {(entities.Count > 1 ? "entities" : "entity")} failed", ex);
+                onValidationFail?.Invoke(id, allFailedValidations); //todo convert to Rx
                 throw ex;
             }
         }

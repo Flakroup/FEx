@@ -8,7 +8,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 
 namespace FEx.Utilities.Collections.Concurrent;
 
@@ -16,7 +15,7 @@ namespace FEx.Utilities.Collections.Concurrent;
 [Serializable]
 public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEvents
 {
-    [NonSerialized] protected readonly ReaderWriterLockSlim _lock;
+    [NonSerialized] protected readonly ExtendedReaderWriterLockSlim _lock;
 
     public int SuppressedEvents { get; set; }
 
@@ -51,7 +50,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     public ConcurrentList(IEnumerable<T> collection = null)
     {
         Items = new List<T>();
-        _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        _lock = new ExtendedReaderWriterLockSlim();
 
         var items = collection?.ToList();
         if (items?.Any() == true)
@@ -267,12 +266,16 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
     public void ReplaceWith(IEnumerable<T> collection)
     {
+        var items = collection.ToList();
         Write(() =>
         {
+            if (items.SequenceEqual(Items))
+                return;
+
             using (SuppressEvents())
             {
                 Clear();
-                InternalAddRange(collection);
+                InternalAddRange(items);
             }
 
             OnCountPropertyChanged();
@@ -440,54 +443,22 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
     protected void Read(Action action)
     {
-        _lock.EnterReadLock();
-        try
-        {
-            action();
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
+        _lock.Read(action);
     }
 
     protected TResult Read<TResult>(Func<TResult> action)
     {
-        _lock.EnterReadLock();
-        try
-        {
-            return action();
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
+        return _lock.Read(action);
     }
 
     protected void Write(Action action)
     {
-        _lock.EnterWriteLock();
-        try
-        {
-            action();
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
-        }
+        _lock.Write(action);
     }
 
     protected TResult Write<TResult>(Func<TResult> action)
     {
-        _lock.EnterWriteLock();
-        try
-        {
-            return action();
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
-        }
+        return _lock.Write(action);
     }
 
     protected T SetItem(int index, T item)

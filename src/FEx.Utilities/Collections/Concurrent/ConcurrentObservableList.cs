@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Threading;
 
 namespace FEx.Utilities.Collections.Concurrent;
@@ -13,13 +15,27 @@ namespace FEx.Utilities.Collections.Concurrent;
 [Serializable]
 public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionChanged, INotifyPropertyChanged
 {
-    private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current ?? Dispatcher.MainThreadSynchronizationContext;
-
+    private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
+    private readonly bool _sendEventsInCreationContext;
     private static IFExDispatcher Dispatcher => Fundamentals.Dispatcher;
 
-    public ConcurrentObservableList(IEnumerable<T> collection = null)
+    public IObservable<EventPattern<NotifyCollectionChangedEventArgs>> CollectionChangedObservable =>
+        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(ev => CollectionChanged += ev, ev => CollectionChanged -= ev);
+
+    /// <summary>
+    ///     Initializes a new instance of the ConcurrentObservableList class that contains
+    ///     elements copied from the specified collection and has sufficient capacity
+    ///     to accommodate the number of elements copied.
+    /// </summary>
+    /// <param name="collection">The collection whose elements are copied to the new list.</param>
+    /// <param name="sendEventsInCreationContext">
+    ///     Overrides setting from Fundamentals.SendEventsInCreationContext.
+    ///     If true sends all events using SynchronizationContext of thread in which was this constructor executed.
+    /// </param>
+    public ConcurrentObservableList(IEnumerable<T> collection = null, bool? sendEventsInCreationContext = null)
         : base(collection)
     {
+        _sendEventsInCreationContext = sendEventsInCreationContext ?? Fundamentals.SendEventsInCreationContext;
     }
 
     /// <summary>
@@ -113,6 +129,9 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
 
     private void Dispatch(Action action)
     {
-        _synchronizationContext.Send(_ => action(), default);
+        if (_sendEventsInCreationContext)
+            Dispatcher.SendInThisOrMainThreadContext(action, _synchronizationContext);
+        else
+            action();
     }
 }

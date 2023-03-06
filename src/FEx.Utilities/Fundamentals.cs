@@ -16,6 +16,7 @@ public class Fundamentals
     public static IFExServiceProvider ServiceProvider { get; private set; }
 
     public static StackTraceGenerator StackTraceGenerator { get; }
+    public static bool SendEventsInCreationContext { get; set; }
 
     static Fundamentals()
     {

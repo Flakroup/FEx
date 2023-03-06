@@ -7,7 +7,7 @@ namespace FEx.Abstractions;
 
 public interface IFExDispatcher
 {
-    SynchronizationContext MainThreadSynchronizationContext { get; }
+    bool IsDeadlockMonitoringEnabled { get; }
 
     void BeginInvokeOnMainThread(Action action);
     Task<T> InvokeOnMainThreadAsync<T>(Func<T> func);
@@ -15,5 +15,6 @@ public interface IFExDispatcher
     Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask);
     Task InvokeOnMainThreadAsync(Func<Task> funcTask);
     void EnableCollectionSynchronization(IEnumerable collection, object context, Action<IEnumerable, object, Action, bool> callback);
-    void ExecuteHereOrOnMainThread(Action action);
+    void SendInThisOrMainThreadContext(Action action, SynchronizationContext synchronizationContext = null, int? timeout = 3000);
+    void SetDeadlockMonitoring(bool isEnabled);
 }

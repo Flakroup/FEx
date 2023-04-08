@@ -37,7 +37,7 @@ public class NotifyPropertyChanged : INotifyPropertyChanged
     {
         if (propertyName != null
             && PropertyChanged != null)
-            _dispatcher.ExecuteHereOrOnMainThread(() => PropertyChanged(this, new(propertyName)));
+            _dispatcher.SendInThisOrMainThreadContext(() => PropertyChanged(this, new(propertyName)));
     }
 
     public void OnPropertiesChanged(params string[] propertyNames)

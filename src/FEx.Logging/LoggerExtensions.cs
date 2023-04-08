@@ -39,7 +39,7 @@ public static class LoggerExtensions
 
         if (Debugger.IsAttached)
         {
-            cfg = cfg.MinimumLevel.Verbose()
+            cfg = cfg.MinimumLevel.Debug()
                 .AddOverrides(overrides, externalDebugLoggingLevel)
                 .Enrich.FromLogContext()
                 .WriteTo.SetFileLogger(logFilePath)

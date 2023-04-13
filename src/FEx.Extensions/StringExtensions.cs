@@ -71,13 +71,13 @@ public static class StringExtensions
     }
 
     /// <summary>
-    /// Compare 2 strings, ignoring case.
+    ///     Compare 2 strings, ignoring case.
     /// </summary>
     /// <param name="source">First value to compare with.</param>
     /// <param name="value">Second value to compare with.</param>
     /// <param name="comparisonType">Type of the comparison.</param>
     /// <returns>
-    /// True if equal otherwise False.
+    ///     True if equal otherwise False.
     /// </returns>
     public static bool IsEqual(this string source, string value, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
     {
@@ -85,13 +85,13 @@ public static class StringExtensions
     }
 
     /// <summary>
-    /// Determines whether string is not equal to the specified value.
+    ///     Determines whether string is not equal to the specified value.
     /// </summary>
     /// <param name="source">The source.</param>
     /// <param name="value">The value.</param>
     /// <param name="comparisonType">Type of the comparison.</param>
     /// <returns>
-    ///   <c>true</c> if it is not equal to the specified value; otherwise, <c>false</c>.
+    ///     <c>true</c> if it is not equal to the specified value; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsNotEqual(this string source, string value, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
     {

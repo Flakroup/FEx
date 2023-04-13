@@ -20,7 +20,7 @@ public class Fundamentals
 
     static Fundamentals()
     {
-        StackTraceGenerator = new StackTraceGenerator();
+        StackTraceGenerator = new();
     }
 
     public Fundamentals(IFExDispatcher dispatcher, ILogger logger, AsyncHelper asyncHelper)

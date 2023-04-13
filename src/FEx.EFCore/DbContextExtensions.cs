@@ -23,7 +23,7 @@ public static class DbContextExtensions
 
     static DbContextExtensions()
     {
-        Settings = new JsonSerializerSettings
+        Settings = new()
         {
             MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
             DateParseHandling = DateParseHandling.None,

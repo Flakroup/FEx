@@ -14,6 +14,8 @@ public class FExDispatcher : BindableObject, IFExDispatcher
 {
     public SynchronizationContext MainThreadSynchronizationContext { get; private set; }
 
+    public bool IsDeadlockMonitoringEnabled { get; private set; }
+
     public FExDispatcher()
     {
         if (MainThread.IsMainThread)
@@ -52,9 +54,14 @@ public class FExDispatcher : BindableObject, IFExDispatcher
         throw new NotImplementedException();
     }
 
-    public void ExecuteHereOrOnMainThread(Action action)
+    public void SendInThisOrMainThreadContext(Action action, SynchronizationContext synchronizationContext = null, int? timeout = 3000)
     {
-        SynchronizationContext context = SynchronizationContext.Current ?? MainThreadSynchronizationContext;
+        SynchronizationContext context = synchronizationContext ?? SynchronizationContext.Current ?? MainThreadSynchronizationContext;
         context.Send(_ => action(), null);
+    }
+
+    public void SetDeadlockMonitoring(bool isEnabled)
+    {
+        IsDeadlockMonitoringEnabled = isEnabled;
     }
 }

@@ -28,11 +28,7 @@ public static class JsonExtensions
                     NullValueHandling = NullValueHandling.Ignore,
                     DateFormatHandling = DateFormatHandling.IsoDateFormat
                 };
-                ((List<JsonConverter>)_defaultSettings.Converters).AddRange(new JsonConverter[]
-                {
-                    ParseStringConverter.Singleton,
-                    new VersionConverter()
-                });
+                ((List<JsonConverter>)_defaultSettings.Converters).AddRange(new JsonConverter[] { ParseStringConverter.Singleton, new VersionConverter() });
             }
 
             return _defaultSettings;

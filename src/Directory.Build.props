@@ -1,13 +1,24 @@
 ﻿<Project>
 
-	<Import Project="..\Directory.Build.props" />
+  <Import Project="..\Directory.Build.props" />
 
-	<PropertyGroup>
-		<TargetFrameworkId>net7.0</TargetFrameworkId>
-		<TargetWindowsFrameworkId>net7.0-windows</TargetWindowsFrameworkId>
-		<ImplicitUsings>disable</ImplicitUsings>
-		<Nullable>disable</Nullable>
-		<LangVersion>latest</LangVersion>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworkId>net7.0</TargetFrameworkId>
+    <TargetFrameworkIds>$(TargetFrameworkId);netstandard2.0</TargetFrameworkIds>
+    <TargetWindowsFrameworkId>net7.0-windows</TargetWindowsFrameworkId>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net7.0'">
+    <DefineConstants>NET</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>NETSTANDARD</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net7.0-windows'">
+    <DefineConstants>NETWINDOWS</DefineConstants>
+  </PropertyGroup>
 
 </Project>

@@ -1,4 +1,7 @@
-﻿using FEx.Json;
+﻿#if NETSTANDARD
+using FEx.Extensions.Collections.Lists;
+#endif
+using FEx.Json;
 using FEx.Json.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -60,7 +63,11 @@ public static class DbContextExtensions
     public static bool? ValidateChangedEntities<TDbContext>(this TDbContext dbContext, string id, bool validateAllProperties = true, Action<string, IReadOnlyCollection<EntityEntry>> onValidationStart = null, Action<string, EntityValidationFail> onFaultyEntity = null, Action<string, IReadOnlyCollection<EntityValidationFail>> onValidationFail = null, Action<string, IReadOnlyCollection<EntityEntry>> onValidationSuccess = null) where TDbContext : DbContext
     {
         ReadOnlyCollection<EntityEntry> entities = dbContext.GetChangedEntities()
+#if NETSTANDARD
+            .ToReadOnly();
+#else
             .AsReadOnly();
+#endif
 
         if (entities.Count == 0)
             return null;

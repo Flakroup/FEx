@@ -43,8 +43,14 @@ public static class FileSystemCommon
     {
         int pos = path.TrimEnd(pathSeparator)
             .LastIndexOf(pathSeparator.ToString(), StringComparison.Ordinal);
+#if NETSTANDARD
+        return path.Substring(includeSeparatorAtEnd
+            ? pos + 1
+            : pos);
+#else
         return path[..(includeSeparatorAtEnd
             ? pos + 1
             : pos)];
+#endif
     }
 }

@@ -1,16 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>$(TargetFrameworkId)</TargetFramework>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>$(TargetFrameworkIds)</TargetFrameworks>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
-        <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
-    </ItemGroup>
+  <ItemGroup Condition="$(DefineConstants.Contains('NETSTANDARD'))">
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
+    <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+  </ItemGroup>
 
 </Project>

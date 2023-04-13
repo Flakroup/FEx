@@ -57,8 +57,14 @@ public static class FileInfoExtensions
         tempDirectory.Create();
         string targetFilePath = Path.Combine(tempDirectory.FullName, file.Name);
 
+#if NETSTANDARD
+        using (FileStream sourceStream = file.OpenRead())
+        using (FileStream targetStream = File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+#else
         await using (FileStream sourceStream = file.OpenRead())
         await using (FileStream targetStream = File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+#endif
+
             await sourceStream.CopyToAsync(targetStream);
 
         if (zipFile == null)

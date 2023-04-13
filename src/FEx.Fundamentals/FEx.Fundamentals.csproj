@@ -1,16 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>$(TargetFrameworkIds)</TargetFrameworks>
+  </PropertyGroup>
 
-	<ItemGroup>
-	  <PackageReference Include="StrongInject" Version="1.4.4" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="StrongInject" Version="1.4.4" />
+  </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
-		<ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
+    <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+  </ItemGroup>
 
 </Project>

@@ -298,14 +298,20 @@ public static class EnumerableExtensions
             {
                 foreach (IEnumerable<T> list in origin)
                 {
-                    var multipliedList = new List<T>(list) { item };
+                    var multipliedList = new List<T>(list)
+                    {
+                        item
+                    };
                     multipliedLists.Add(multipliedList);
                 }
             }
         else
             foreach (T item in multiplier)
             {
-                var multipliedList = new List<T> { item };
+                var multipliedList = new List<T>
+                {
+                    item
+                };
                 multipliedLists.Add(multipliedList);
             }
 

@@ -135,7 +135,11 @@ public class AzureStorageService : IAzureStorageService
         ProgressState state = GetBlobProgressState(blobName, StorageOperation.Upload);
         state.Reset(blobName, Convert.ToDouble(stream.Length));
 
-        var context = new SingleTransferContext { ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)), ShouldOverwriteCallbackAsync = (_, _) => Task.FromResult(overwrite) };
+        var context = new SingleTransferContext
+        {
+            ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)),
+            ShouldOverwriteCallbackAsync = (_, _) => Task.FromResult(overwrite)
+        };
 
         // Upload a local blob
         await TransferManager.UploadAsync(stream, destBlob, null, context, CancellationToken.None);
@@ -205,7 +209,11 @@ public class AzureStorageService : IAzureStorageService
             ProgressState state = GetBlobProgressState(destBlob, StorageOperation.Upload);
             state.Reset(destBlob, Convert.ToDouble(srcBlob.Length));
 
-            var context = new SingleTransferContext { ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)), ShouldOverwriteCallbackAsync = (_, _) => Task.FromResult(overwrite) };
+            var context = new SingleTransferContext
+            {
+                ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)),
+                ShouldOverwriteCallbackAsync = (_, _) => Task.FromResult(overwrite)
+            };
 
             await TransferManager.CopyAsync(sourceBlob, destinationBlob, CopyMethod.ServiceSideAsyncCopy, null, context);
 
@@ -248,7 +256,11 @@ public class AzureStorageService : IAzureStorageService
         ProgressState state = GetBlobProgressState(blobName, StorageOperation.Upload);
         state.Reset(blobName, Convert.ToDouble(file.Length));
 
-        var context = new SingleTransferContext { ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)), ShouldOverwriteCallbackAsync = (_, _) => Task.FromResult(overwrite) };
+        var context = new SingleTransferContext
+        {
+            ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)),
+            ShouldOverwriteCallbackAsync = (_, _) => Task.FromResult(overwrite)
+        };
 
         await TransferManager.UploadAsync(file.FullName, destBlob, null, context, cancellationToken);
         await destBlob.FetchAttributesAsync(cancellationToken);
@@ -342,10 +354,16 @@ public class AzureStorageService : IAzureStorageService
             Log.LogInformation($"Downloading blob {sourceBlob.Name} to: {localFile.FullName} {ProgressState.GetProgress(totalSize)}");
             state.Reset(sourceBlob.Name, totalSize);
 
-            var context = new SingleTransferContext { ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state)) };
+            var context = new SingleTransferContext
+            {
+                ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state))
+            };
 
             await using FileStream downloadFileStream = localFile.OpenWrite();
-            await TransferManager.DownloadAsync(sourceBlob, downloadFileStream, new() { DisableContentMD5Validation = true }, context);
+            await TransferManager.DownloadAsync(sourceBlob, downloadFileStream, new()
+            {
+                DisableContentMD5Validation = true
+            }, context);
         }
 
         Log.LogInformation($"Finished download of blob {sourceBlob.Name} in {state.ElapsedTime} to: {localFile.FullName}");

@@ -22,7 +22,7 @@ public class StackError : Error
 
     public static implicit operator StackError(string message)
     {
-        return new StackError
+        return new()
         {
             Message = message
         };

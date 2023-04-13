@@ -280,7 +280,13 @@ public static class DateExtensions
         var isValid = true;
 
         string[] parsed = separator.HasValue
-            ? source.Remove(new List<char> { 'w', 'W', 'd', 'D' })
+            ? source.Remove(new List<char>
+                {
+                    'w',
+                    'W',
+                    'd',
+                    'D'
+                })
                 .Split(separator.Value)
             : source.Split(4)
                 .ToArray();
@@ -322,7 +328,13 @@ public static class DateExtensions
     public static bool TryGetDateFromYearWeekDay(this string source, char separator, out DateTime date)
     {
         var ok = true;
-        string[] parsed = source.Remove(new List<char> { 'w', 'W', 'd', 'D' })
+        string[] parsed = source.Remove(new List<char>
+            {
+                'w',
+                'W',
+                'd',
+                'D'
+            })
             .Split(separator);
         int year = parsed[0]
             .ToInt();

@@ -23,12 +23,7 @@ public static class LoggerExtensions
 
     public static string DefaultFileOutputTemplate { get; set; } = "[{Timestamp:yyyy-MM-dd HH:mm:ss}|{Level:u3}] <s:{SourceContext}>{NewLine}   {Message:lj} {Exception}{NewLine}    [Properties:{Properties}]{NewLine}";
 
-    public static IList<string> DefaultOverrides { get; set; } = new[]
-    {
-        "Microsoft",
-        "Microsoft.Hosting.Lifetime",
-        "System"
-    };
+    public static IList<string> DefaultOverrides { get; set; } = new[] { "Microsoft", "Microsoft.Hosting.Lifetime", "System" };
 
     public static LoggerConfiguration ConfigureSerilog(this LoggerConfiguration cfg, string logFilePath, bool forceConsole = false, LogEventLevel externalLoggingLevel = LogEventLevel.Warning, LogEventLevel externalDebugLoggingLevel = LogEventLevel.Information, Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null, params string[] overrides)
     {

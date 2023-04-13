@@ -1,9 +1,8 @@
-﻿namespace FEx.Utilities.Enums
+﻿namespace FEx.Utilities.Enums;
+
+public enum AsyncMode
 {
-    public enum AsyncMode
-    {
-        Default,
-        MainThread,
-        ThreadPool
-    }
+    Default,
+    MainThread,
+    ThreadPool
 }

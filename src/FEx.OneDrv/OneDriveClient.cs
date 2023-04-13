@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +18,7 @@ public class OneDriveClient
     public OneDriveClient()
     {
         _scopes = new[] { "User.Read", "Files.Read", "Files.Read.All" };
-        _appConfiguration = new PublicClientApplicationOptions
+        _appConfiguration = new()
         {
             Instance = "https://login.microsoftonline.com/",
             ClientId = Environment.GetEnvironmentVariable("OneDriveAppClientId", EnvironmentVariableTarget.User),
@@ -55,13 +54,13 @@ public class OneDriveClient
     {
         const string msGraphURL = "https://graph.microsoft.com/v1.0/";
         var authenticationProvider = new DelegateAuthenticationProvider(AuthenticateRequestAsyncDelegate);
-        return new GraphServiceClient(msGraphURL, authenticationProvider);
+        return new(msGraphURL, authenticationProvider);
     }
 
     private async Task AuthenticateRequestAsyncDelegate(HttpRequestMessage requestMessage)
     {
         string parameter = await SignInUserAndGetTokenUsingMSAL(_appConfiguration, _scopes);
-        requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", parameter);
+        requestMessage.Headers.Authorization = new("bearer", parameter);
     }
 
     private async Task<string> SignInUserAndGetTokenUsingMSAL(PublicClientApplicationOptions configuration, string[] scopes)

@@ -56,7 +56,7 @@ public class StackTraceGenerator
             Type declaringType = stackFrame.GetMethod()
                 .DeclaringType;
             if (declaringType != null)
-                stackTraceFrames.Add(new StackTraceFrame
+                stackTraceFrames.Add(new()
                 {
                     Column = stackFrame.GetFileColumnNumber(),
                     Line = stackFrame.GetFileLineNumber(),
@@ -68,7 +68,7 @@ public class StackTraceGenerator
                 });
         }
 
-        return new StackTraceInfo
+        return new()
         {
             Frames = stackTraceFrames.ToArray()
         };
@@ -113,7 +113,7 @@ public class StackTraceGenerator
         lGenerator.Emit(OpCodes.Call, typeof(MethodHandleAndILOffset).GetMethod("Create"));
         lGenerator.Emit(OpCodes.Ret);
         var getMethodRuntimeHandle = (GetMethodRuntimeHandles)dynamicMethod.CreateDelegate(typeof(GetMethodRuntimeHandles));
-        _stackTraceCache = new StackTraceCache(() => new Key(getMethodRuntimeHandle()));
+        _stackTraceCache = new StackTraceCache(() => new(getMethodRuntimeHandle()));
     }
 
     private bool RequiresStackTrace(string logger, string message)
@@ -139,18 +139,18 @@ public class StackTraceGenerator
         {
             StackFrame[] frames = new StackTrace(false).GetFrames();
             if (frames == null)
-                return new Key(new MethodHandleAndILOffset[0]);
+                return new(new MethodHandleAndILOffset[0]);
 
             var methodHandleAndIlOffset = new MethodHandleAndILOffset[frames.Length];
             for (var i = 0; i < methodHandleAndIlOffset.Length; i++)
             {
-                methodHandleAndIlOffset[i] = new MethodHandleAndILOffset(frames[i]
+                methodHandleAndIlOffset[i] = new(frames[i]
                     .GetMethod()
                     .MethodHandle.Value, frames[i]
                     .GetILOffset());
             }
 
-            return new Key(methodHandleAndIlOffset);
+            return new(methodHandleAndIlOffset);
         });
     }
 
@@ -237,7 +237,7 @@ public class StackTraceGenerator
         {
             var methodHandleAndILOffset = new MethodHandleAndILOffset[methods.Length];
             for (var i = 0; i < methods.Length; i++)
-                methodHandleAndILOffset[i] = new MethodHandleAndILOffset(methods[i], offsets[i]);
+                methodHandleAndILOffset[i] = new(methods[i], offsets[i]);
 
             return methodHandleAndILOffset;
         }
@@ -281,7 +281,7 @@ public class StackTraceGenerator
         public StackTraceCache(GetKey createKey)
         {
             _createKey = createKey;
-            _rwLock = new ReaderWriterLockSlim();
+            _rwLock = new();
             _cachedTraces = new ConcurrentDictionary<Key, StackTrace>();
         }
 

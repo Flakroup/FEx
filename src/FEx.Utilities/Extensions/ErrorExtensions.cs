@@ -43,7 +43,7 @@ public static class ErrorExtensions
             return true;
         }
 
-        if (error.InnerError == null)
+        if (error.InnerError is null)
         {
             foundError = null;
             return false;

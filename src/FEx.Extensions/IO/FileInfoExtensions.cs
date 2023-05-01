@@ -39,14 +39,14 @@ public static class FileInfoExtensions
     /// <returns></returns>
     public static async Task<FileInfo> ZipAsync(this FileInfo file, string zipFilePath = null, bool deleteTempDirectory = false, bool overwrite = false)
     {
-        return await file.ZipAsync(zipFilePath != null
+        return await file.ZipAsync(zipFilePath is not null
             ? new FileInfo(zipFilePath)
             : null, deleteTempDirectory, overwrite);
     }
 
     public static async Task<FileInfo> ZipAsync(this FileInfo file, FileInfo zipFile = null, bool deleteTempDirectory = false, bool overwrite = false)
     {
-        DirectoryInfo parentDirectory = zipFile == null
+        DirectoryInfo parentDirectory = zipFile is null
             ? file.Directory
             : zipFile.Directory;
         var tempDirectory = new DirectoryInfo(Path.Combine(parentDirectory?.FullName, Path.GetFileNameWithoutExtension(file.Name)));
@@ -59,7 +59,8 @@ public static class FileInfoExtensions
 
 #if NETSTANDARD
         using (FileStream sourceStream = file.OpenRead())
-        using (FileStream targetStream = File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+        using (FileStream targetStream =
+ File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
 #else
         await using (FileStream sourceStream = file.OpenRead())
         await using (FileStream targetStream = File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
@@ -67,7 +68,7 @@ public static class FileInfoExtensions
 
             await sourceStream.CopyToAsync(targetStream);
 
-        if (zipFile == null)
+        if (zipFile is null)
             zipFile = new(Path.Combine(parentDirectory?.FullName, $"{file.Name}.zip"));
 
         if (zipFile.Exists && overwrite)

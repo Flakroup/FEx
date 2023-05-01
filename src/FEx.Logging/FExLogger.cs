@@ -4,7 +4,7 @@ using System.Text;
 
 namespace FEx.Logging;
 
-public class Logger : ILogger
+public class FExLogger : IFExLogger
 {
     public void LogInformation(string message)
     {

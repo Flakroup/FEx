@@ -1,4 +1,5 @@
 using FEx.Extensions;
+using FEx.Fundamentals;
 using System;
 
 namespace FEx.Utilities.Flow;
@@ -26,7 +27,7 @@ public abstract class Error : IError
         get => _innerError;
         set
         {
-            _innerError = value.Guard(nameof(InnerError));
+            _innerError = value.Guard();
             RootError = InnerError.RootError ?? InnerError;
         }
     }
@@ -35,7 +36,7 @@ public abstract class Error : IError
 
     protected Error()
     {
-        StackTrace = Fundamentals.StackTraceGenerator.GetCachedStackTrace()
+        StackTrace = Foundation.StackTraceGenerator.GetCachedStackTrace()
             .ToString();
     }
 
@@ -47,7 +48,7 @@ public abstract class Error : IError
 
     public void SetInnerError(Error innerError)
     {
-        if (InnerError != null)
+        if (InnerError is not null)
             throw new InvalidOperationException($"{nameof(InnerError)} is already set");
 
         InnerError = innerError;

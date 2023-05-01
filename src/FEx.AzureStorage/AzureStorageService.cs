@@ -359,7 +359,11 @@ public class AzureStorageService : IAzureStorageService
                 ProgressHandler = new Progress<TransferStatus>(prg => LogProgress(prg, state))
             };
 
+#if NETSTANDARD
+            using FileStream downloadFileStream = localFile.OpenWrite();
+#else
             await using FileStream downloadFileStream = localFile.OpenWrite();
+#endif
             await TransferManager.DownloadAsync(sourceBlob, downloadFileStream, new()
             {
                 DisableContentMD5Validation = true

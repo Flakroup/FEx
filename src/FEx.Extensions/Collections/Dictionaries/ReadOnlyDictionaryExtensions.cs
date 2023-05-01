@@ -9,7 +9,7 @@ public static class ReadOnlyDictionaryExtensions
 {
     public static TValue TryGetReadOnlyKeyValue<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary, TKey key, TValue fallback = default)
     {
-        if (key != null
+        if (key is not null
             && dictionary.IsNotNullOrEmptyReadOnlyCollection()
             && dictionary.ContainsKey(key))
         {

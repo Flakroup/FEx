@@ -21,7 +21,7 @@ public static class DictionaryExtensions
     public static void AddRangeToDictionary<TK, TV>(this IDictionary<TK, TV> dictionary, IEnumerable<KeyValuePair<TK, TV>> merged)
     {
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
-        if (cDic != null)
+        if (cDic is not null)
             merged?.ForEach(pair => cDic.TryAdd(pair.Key, pair.Value));
         else
             merged?.ForEach(pair => dictionary.Add(pair.Key, pair.Value));
@@ -91,12 +91,12 @@ public static class DictionaryExtensions
     public static TValue TryGetKeyValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue fallback = default)
     {
         var cDic = dictionary as ConcurrentDictionary<TKey, TValue>;
-        if (cDic != null)
+        if (cDic is not null)
             return cDic.TryGetValue(key, out TValue value)
                 ? value
                 : fallback;
 
-        if (key != null
+        if (key is not null
             && dictionary.IsNotNullOrEmptyCollection()
             && dictionary.ContainsKey(key))
         {
@@ -122,7 +122,7 @@ public static class DictionaryExtensions
     public static TV GetOrAddValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> createValueToAdd)
     {
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
-        if (cDic != null)
+        if (cDic is not null)
             return cDic.GetOrAdd(key, _ => createValueToAdd());
 
         if (!dictionary.TryGetValue(key, out TV v))
@@ -168,7 +168,7 @@ public static class DictionaryExtensions
     public static TV AddOrUpdateValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> valueToAddOrUpdate)
     {
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
-        if (cDic != null)
+        if (cDic is not null)
             return cDic.AddOrUpdate(key, _ => valueToAddOrUpdate(), (_, _) => valueToAddOrUpdate());
 
         if (dictionary.ContainsKey(key))
@@ -213,7 +213,7 @@ public static class DictionaryExtensions
 
         bool hasBeenRemoved;
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
-        if (cDic != null)
+        if (cDic is not null)
         {
             hasBeenRemoved = cDic.TryRemove(key, out v);
         }

@@ -15,9 +15,9 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
         Execute(action, LockType.Read);
     }
 
-    public TResult Read<TResult>(Func<TResult> action)
+    public TResult ReadWithResult<TResult>(Func<TResult> action)
     {
-        return Execute(action, LockType.Read);
+        return ExecuteWithResult(action, LockType.Read);
     }
 
     public void Write(Action action)
@@ -25,9 +25,9 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
         Execute(action, LockType.Write);
     }
 
-    public TResult Write<TResult>(Func<TResult> action)
+    public TResult WriteWithResult<TResult>(Func<TResult> action)
     {
-        return Execute(action, LockType.Write);
+        return ExecuteWithResult(action, LockType.Write);
     }
 
     private void Execute(Action action, LockType type)
@@ -43,7 +43,7 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
         }
     }
 
-    private TResult Execute<TResult>(Func<TResult> action, LockType type)
+    private TResult ExecuteWithResult<TResult>(Func<TResult> action, LockType type)
     {
         EnterLock(type);
         try

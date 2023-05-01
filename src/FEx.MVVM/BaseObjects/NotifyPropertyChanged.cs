@@ -35,8 +35,8 @@ public class NotifyPropertyChanged : INotifyPropertyChanged
     [NotifyPropertyChangedInvocator]
     public virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
-        if (propertyName != null
-            && PropertyChanged != null)
+        if (propertyName is not null
+            && PropertyChanged is not null)
             _dispatcher.SendInThisOrMainThreadContext(() => PropertyChanged(this, new(propertyName)));
     }
 

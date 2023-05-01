@@ -1,4 +1,4 @@
-﻿///https://github.com/kpreisser/AsyncReaderWriterLockSlim
+﻿//https://github.com/kpreisser/AsyncReaderWriterLockSlim
 
 using System;
 using System.Diagnostics;
@@ -436,7 +436,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         {
             lock (_syncRoot)
             {
-                if (_currentWriteLockState != null)
+                if (_currentWriteLockState is not null)
                     throw new InvalidOperationException("A write lock was still active while trying to " + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
                 if ((Volatile.Read(ref _currentReadLockCount) & 0x7FFFFFFF) > 0)
                     throw new InvalidOperationException("At least one read lock was still active while trying to " + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
@@ -474,7 +474,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         lock (_syncRoot)
         {
             existingWriteLockState = _currentWriteLockState;
-            if (existingWriteLockState == null)
+            if (existingWriteLockState is null)
                 // There was a write lock state but it has already been released,
                 // so we don't need to do anything.
                 return true;
@@ -485,7 +485,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
             ExitReadLockCore(false);
 
             // Ensure that there exists a semaphore on which we can wait.
-            if (existingWriteLockState.WaitingReadLocksSemaphore == null)
+            if (existingWriteLockState.WaitingReadLocksSemaphore is null)
                 existingWriteLockState.WaitingReadLocksSemaphore = new(0);
 
             // Announce that we will wait on the semaphore.
@@ -530,7 +530,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
             try
             {
                 WriteLockState lockState = _currentWriteLockState;
-                if (lockState != null
+                if (lockState is not null
                     && !lockState.ReadLockReleaseSemaphoreReleased)
                 {
                     _readLockReleaseSemaphore.Release();
@@ -582,7 +582,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
             {
                 // If there's already a write lock state from a previous write lock,
                 // we simply use it. Otherwise, create a new one.
-                if (_currentWriteLockState == null)
+                if (_currentWriteLockState is null)
                 {
                     _currentWriteLockState = new();
 
@@ -635,7 +635,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
 
         lock (_syncRoot)
         {
-            if (_currentWriteLockState == null)
+            if (_currentWriteLockState is null)
                 throw new InvalidOperationException();
 
             ExitWriteLockCore(downgradeLock);
@@ -689,7 +689,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         // Clear the MSB on the read lock count.
         Interlocked.Add(ref _currentReadLockCount, -0x80000000);
 
-        if (writeLockState.WaitingReadLocksSemaphore != null)
+        if (writeLockState.WaitingReadLocksSemaphore is not null)
         {
             // If there is currently no other task or thread waiting on the semaphore, we can
             // dispose it here. Otherwise, the last waiting task or thread must dispose the

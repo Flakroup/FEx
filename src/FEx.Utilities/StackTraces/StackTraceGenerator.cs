@@ -28,7 +28,7 @@ public class StackTraceGenerator
         catch (Exception exception1)
         {
             Exception exception = exception1;
-            if (exception != null)
+            if (exception is not null)
                 str = exception.ToString();
             else
                 str = null;
@@ -46,7 +46,7 @@ public class StackTraceGenerator
         var stackTraceFrames = new List<StackTraceFrame>();
         StackFrame[] frames = GetCachedStackTrace()
             .GetFrames();
-        if (frames == null)
+        if (frames is null)
             return null;
 
         StackFrame[] stackFrameArray = frames;
@@ -55,7 +55,7 @@ public class StackTraceGenerator
             StackFrame stackFrame = stackFrameArray[i];
             Type declaringType = stackFrame.GetMethod()
                 .DeclaringType;
-            if (declaringType != null)
+            if (declaringType is not null)
                 stackTraceFrames.Add(new()
                 {
                     Column = stackFrame.GetFileColumnNumber(),
@@ -138,7 +138,7 @@ public class StackTraceGenerator
         _stackTraceCache = new StackTraceCache(() =>
         {
             StackFrame[] frames = new StackTrace(false).GetFrames();
-            if (frames == null)
+            if (frames is null)
                 return new(new MethodHandleAndILOffset[0]);
 
             var methodHandleAndIlOffset = new MethodHandleAndILOffset[frames.Length];
@@ -174,7 +174,7 @@ public class StackTraceGenerator
 
         public override bool Equals(object obj)
         {
-            if (obj == null)
+            if (obj is null)
                 return false;
 
             if (this == obj)
@@ -199,7 +199,7 @@ public class StackTraceGenerator
 
         private bool Equals(Key other)
         {
-            if (other == null)
+            if (other is null)
                 return false;
 
             if (this == other)
@@ -244,7 +244,7 @@ public class StackTraceGenerator
 
         public override bool Equals(object obj)
         {
-            if (obj == null)
+            if (obj is null)
                 return false;
 
             if (this == obj)
@@ -261,7 +261,7 @@ public class StackTraceGenerator
 
         public bool Equals(MethodHandleAndILOffset other)
         {
-            if (other == null)
+            if (other is null)
                 return false;
 
             if (this == other)

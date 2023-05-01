@@ -4,7 +4,7 @@ namespace FEx.Logging;
 
 public class GlobalLogger
 {
-    private static readonly Logger Logger;
+    private static readonly FExLogger Logger;
 
     static GlobalLogger()
     {

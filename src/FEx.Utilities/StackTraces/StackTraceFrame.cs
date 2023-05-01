@@ -31,7 +31,7 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
             if (_fileExists.HasValue)
                 return _fileExists.Value;
 
-            if (_fullFilename == null)
+            if (_fullFilename is null)
                 return false;
 
             return File.Exists(FullFilename);
@@ -60,7 +60,7 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
 
     public bool Equals(StackTraceFrame other)
     {
-        if (other == null)
+        if (other is null)
             return false;
 
         if (this == other)
@@ -79,14 +79,14 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
 
     public override bool Equals(object obj)
     {
-        if (obj == null)
+        if (obj is null)
             return false;
 
         if (this == obj)
             return true;
 
         var stackTraceFrame = obj as StackTraceFrame;
-        if (stackTraceFrame == null)
+        if (stackTraceFrame is null)
             return false;
 
         return Equals(stackTraceFrame);
@@ -94,11 +94,11 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
 
     public override int GetHashCode()
     {
-        return ((((((_fullFilename != null
+        return ((((((_fullFilename is not null
                         ? _fullFilename.GetHashCode()
                         : 0)
                     * 397
-                    ^ (Type != null
+                    ^ (Type is not null
                         ? Type.GetHashCode()
                         : 0))
                    * 397
@@ -106,15 +106,15 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
                   * 397
                   ^ Column)
                  * 397
-                 ^ (Filename != null
+                 ^ (Filename is not null
                      ? Filename.GetHashCode()
                      : 0))
                 * 397
-                ^ (Method != null
+                ^ (Method is not null
                     ? Method.GetHashCode()
                     : 0))
                * 397
-               ^ (Namespace != null
+               ^ (Namespace is not null
                    ? Namespace.GetHashCode()
                    : 0);
     }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
 
@@ -10,36 +9,35 @@ public static class WebClientExtensions
 {
     public static void PrepareWebClient(this WebClient client, WebRequestParams pars)
     {
-        if (pars?.Credentials != null)
+        if (pars?.Credentials is not null)
             client.Credentials = pars.Credentials;
 
-        if (pars?.UserAgent != null)
+        if (pars?.UserAgent is not null)
             client.Headers.Add("User-Agent", pars.UserAgent);
 
-        if (pars?.Headers != null)
+        if (pars?.Headers is not null)
             foreach (KeyValuePair<string, string> header in pars.Headers)
                 client.Headers.Add(header.Key, header.Value);
     }
 
-    [SuppressMessage("Wrong Usage", "DF0010:Marks undisposed local variables.")]
     public static void PrepareHttpClient(out HttpClient client, WebRequestParams pars, bool resultAsJson = false)
     {
         HttpClientHandler handler = pars.GetHttpClientHandler();
 
-        client = handler != null
+        client = handler is not null
             ? new(handler)
             : new HttpClient();
 
         if (resultAsJson)
             client.DefaultRequestHeaders.Accept.Add(new(MediaTypes.ApplicationJson.GetEnumValueDescription()));
 
-        if (pars?.Timeout != null)
+        if (pars?.Timeout is not null)
             client.Timeout = TimeSpan.FromMilliseconds(pars.Timeout.Value);
 
-        if (pars?.UserAgent != null)
+        if (pars?.UserAgent is not null)
             client.DefaultRequestHeaders.Add("User-Agent", pars.UserAgent);
 
-        if (pars?.Headers != null)
+        if (pars?.Headers is not null)
             foreach (KeyValuePair<string, string> header in pars.Headers)
                 client.DefaultRequestHeaders.Add(header.Key, header.Value);
 

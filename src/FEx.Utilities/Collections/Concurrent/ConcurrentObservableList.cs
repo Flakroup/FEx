@@ -1,4 +1,5 @@
 ﻿using FEx.Abstractions;
+using FEx.Fundamentals;
 using FEx.Utilities.Basics;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
 {
     private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
     private readonly bool _sendEventsInCreationContext;
-    private static IFExDispatcher Dispatcher => Fundamentals.Dispatcher;
+    private static IFExDispatcher Dispatcher => Foundation.Dispatcher;
 
     public IObservable<EventPattern<NotifyCollectionChangedEventArgs>> CollectionChangedObservable =>
         Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(ev => CollectionChanged += ev, ev => CollectionChanged -= ev);
@@ -29,13 +30,13 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     /// </summary>
     /// <param name="collection">The collection whose elements are copied to the new list.</param>
     /// <param name="sendEventsInCreationContext">
-    ///     Overrides setting from Fundamentals.SendEventsInCreationContext.
+    ///     Overrides setting from Foundation.SendEventsInCreationContext.
     ///     If true sends all events using SynchronizationContext of thread in which was this constructor executed.
     /// </param>
     public ConcurrentObservableList(IEnumerable<T> collection = null, bool? sendEventsInCreationContext = null)
         : base(collection)
     {
-        _sendEventsInCreationContext = sendEventsInCreationContext ?? Fundamentals.SendEventsInCreationContext;
+        _sendEventsInCreationContext = sendEventsInCreationContext ?? Foundation.SendEventsInCreationContext;
     }
 
     /// <summary>

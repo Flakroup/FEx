@@ -34,7 +34,7 @@ public class SpecialDirectory
 
     private static void EnsureSpecialDirectories()
     {
-        if (SpecialDirectories == null)
+        if (SpecialDirectories is null)
             SpecialDirectories = new ConcurrentDictionary<Environment.SpecialFolder, SpecialDirectory>();
 
         SpecialDirectories.SyncWith(EnumExtensions.GetEnumValues<Environment.SpecialFolder>()

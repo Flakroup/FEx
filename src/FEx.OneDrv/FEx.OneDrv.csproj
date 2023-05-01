@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <TargetFramework>$(TargetFrameworkId)</TargetFramework>
+	  <TargetFrameworks>$(TargetFrameworkIds)</TargetFrameworks>
 	  <UserSecretsId>a02b56ea-923b-45ca-9153-95c5b63981e4</UserSecretsId>
   </PropertyGroup>
 

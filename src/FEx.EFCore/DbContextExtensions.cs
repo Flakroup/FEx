@@ -45,9 +45,9 @@ public static class DbContextExtensions
         };
     }
 
-    public static async Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext, bool validateAllProperties = true, bool acceptAllChangesOnSuccess = true, Action<string, IReadOnlyCollection<EntityEntry>> onValidationStart = null, Action<string, EntityValidationFail> onFaultyEntity = null, Action<string, IReadOnlyCollection<EntityValidationFail>> onValidationFail = null, Action<string, IReadOnlyCollection<EntityEntry>> onValidationSuccess = null) where TDbContext : DbContext
+    public static async Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext, string id = null, bool validateAllProperties = true, bool acceptAllChangesOnSuccess = true, Action<string, IReadOnlyCollection<EntityEntry>> onValidationStart = null, Action<string, EntityValidationFail> onFaultyEntity = null, Action<string, IReadOnlyCollection<EntityValidationFail>> onValidationFail = null, Action<string, IReadOnlyCollection<EntityEntry>> onValidationSuccess = null) where TDbContext : DbContext
     {
-        var id = Guid.NewGuid()
+        id ??= Guid.NewGuid()
             .ToString();
 
         bool? isSuccess = dbContext.ValidateChangedEntities(id, validateAllProperties, onValidationStart, onFaultyEntity, onValidationFail, onValidationSuccess);
@@ -60,8 +60,11 @@ public static class DbContextExtensions
         LogInformation($"[{id}]\t{res} rows affected");
     }
 
-    public static bool? ValidateChangedEntities<TDbContext>(this TDbContext dbContext, string id, bool validateAllProperties = true, Action<string, IReadOnlyCollection<EntityEntry>> onValidationStart = null, Action<string, EntityValidationFail> onFaultyEntity = null, Action<string, IReadOnlyCollection<EntityValidationFail>> onValidationFail = null, Action<string, IReadOnlyCollection<EntityEntry>> onValidationSuccess = null) where TDbContext : DbContext
+    public static bool? ValidateChangedEntities<TDbContext>(this TDbContext dbContext, string id = null, bool validateAllProperties = true, Action<string, IReadOnlyCollection<EntityEntry>> onValidationStart = null, Action<string, EntityValidationFail> onFaultyEntity = null, Action<string, IReadOnlyCollection<EntityValidationFail>> onValidationFail = null, Action<string, IReadOnlyCollection<EntityEntry>> onValidationSuccess = null) where TDbContext : DbContext
     {
+        id ??= Guid.NewGuid()
+            .ToString();
+
         ReadOnlyCollection<EntityEntry> entities = dbContext.GetChangedEntities()
 #if NETSTANDARD
             .ToReadOnly();

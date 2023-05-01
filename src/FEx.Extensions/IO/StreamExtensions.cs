@@ -15,7 +15,7 @@ public static class StreamExtensions
         var buffer = new byte[BufferSize];
         var writtenBytes = 0;
 
-        if (sourceStream == null)
+        if (sourceStream is null)
             return;
 
 #if NETSTANDARD

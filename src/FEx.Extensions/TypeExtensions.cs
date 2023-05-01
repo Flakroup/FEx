@@ -16,7 +16,7 @@ public static class TypeExtensions
     public static IEnumerable<Type> GetImplementedInterfaces(this Type interfaceType)
     {
         return GetAllNotSealedClasses()
-            .Where(type => type.GetInterface(interfaceType.Name) != null);
+            .Where(type => type.GetInterface(interfaceType.Name) is not null);
     }
 
     /// <summary>
@@ -39,10 +39,10 @@ public static class TypeExtensions
     /// <returns></returns>
     public static List<Type> GetBaseTypes(this Type baseType, List<Type> baseTypes = null)
     {
-        if (baseTypes == null)
+        if (baseTypes is null)
             baseTypes = new();
 
-        if (baseType.BaseType != null)
+        if (baseType.BaseType is not null)
         {
             baseTypes.Add(baseType.BaseType);
             baseTypes = baseType.BaseType.GetBaseTypes(baseTypes);

@@ -19,7 +19,7 @@ public class PaginatedList<T>
         TotalItemsCount = totalItemsCount;
         TotalPages = totalPages;
 
-        if (items != null)
+        if (items is not null)
             Items = items;
     }
 }

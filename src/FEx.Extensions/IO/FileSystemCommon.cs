@@ -19,7 +19,7 @@ public static class FileSystemCommon
     {
         string pathRoot = Path.GetPathRoot(absolutePath);
 
-        if (pathRoot != null)
+        if (pathRoot is not null)
         {
             DriveInfo[] allDrives = DriveInfo.GetDrives();
             DriveInfo driveBasedOnPath = allDrives.Find(d => d.RootDirectory.Name == pathRoot);

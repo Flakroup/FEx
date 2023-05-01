@@ -3,7 +3,6 @@ using FEx.Extensions.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -32,7 +31,7 @@ public static class UriExtensions
 
     public static async Task<bool> CheckForInternetConnectionAsync(this Uri url)
     {
-        if (url == null)
+        if (url is null)
             url = new("http://clients3.google.com/generate_204");
 
         try
@@ -54,7 +53,7 @@ public static class UriExtensions
 
     public static async Task<T> DoHttpResponseFuncTaskAsync<T>(this Uri url, Func<HttpWebResponse, HttpWebRequest, Task<T>> func, WebRequestParams pars = null, Stopwatch stopwatch = null)
     {
-        if (SynchronizationContext.Current != null)
+        if (SynchronizationContext.Current is not null)
             return await Task.Run(() => InternalDoHttpResponseFuncTaskAsync(url, func, pars, stopwatch));
 
         return await InternalDoHttpResponseFuncTaskAsync(url, func, pars, stopwatch);
@@ -62,7 +61,7 @@ public static class UriExtensions
 
     public static async Task<T> DoHttpResponseFuncAsync<T>(this Uri url, Func<HttpWebResponse, HttpWebRequest, T> func, WebRequestParams pars = null, Stopwatch stopwatch = null)
     {
-        if (SynchronizationContext.Current != null)
+        if (SynchronizationContext.Current is not null)
             return await Task.Run(() => InternalDoHttpResponseFuncAsync(url, func, pars, stopwatch));
 
         return await InternalDoHttpResponseFuncAsync(url, func, pars, stopwatch);
@@ -70,7 +69,7 @@ public static class UriExtensions
 
     public static async Task DoHttpResponseActionAsync(this Uri url, Action<HttpWebResponse, HttpWebRequest> action, WebRequestParams pars = null, Stopwatch stopwatch = null)
     {
-        if (SynchronizationContext.Current != null)
+        if (SynchronizationContext.Current is not null)
             await Task.Run(() => InternalDoHttpResponseActionAsync(url, action, pars, stopwatch));
         else
             await InternalDoHttpResponseActionAsync(url, action, pars, stopwatch);
@@ -78,7 +77,7 @@ public static class UriExtensions
 
     public static async Task<T> DoHttpClientResponseFuncTaskAsync<T>(this Uri url, Func<HttpResponseMessage, HttpClient, Task<T>> func, WebRequestParams pars = null, Stopwatch stopwatch = null)
     {
-        if (SynchronizationContext.Current != null)
+        if (SynchronizationContext.Current is not null)
             return await Task.Run(() => InternalDoHttpClientResponseFuncTaskAsync(url, func, pars, stopwatch));
 
         return await InternalDoHttpClientResponseFuncTaskAsync(url, func, pars, stopwatch);
@@ -86,7 +85,7 @@ public static class UriExtensions
 
     public static async Task<T> DoHttpClientResponseFuncAsync<T>(this Uri url, Func<HttpResponseMessage, HttpClient, T> func, WebRequestParams pars = null, Stopwatch stopwatch = null)
     {
-        if (SynchronizationContext.Current != null)
+        if (SynchronizationContext.Current is not null)
             return await Task.Run(() => InternalDoHttpClientResponseFuncAsync(url, func, pars, stopwatch));
 
         return await InternalDoHttpClientResponseFuncAsync(url, func, pars, stopwatch);
@@ -94,7 +93,7 @@ public static class UriExtensions
 
     public static async Task DoHttpClientResponseActionAsync(this Uri url, Action<HttpResponseMessage, HttpClient> action, WebRequestParams pars = null, Stopwatch stopwatch = null)
     {
-        if (SynchronizationContext.Current != null)
+        if (SynchronizationContext.Current is not null)
             await Task.Run(() => InternalDoHttpClientResponseActionAsync(url, action, pars, stopwatch));
         else
             await InternalDoHttpClientResponseActionAsync(url, action, pars, stopwatch);
@@ -105,7 +104,6 @@ public static class UriExtensions
         return (FileWebResponse)await url.GetUriResponseAsync(pars, stopwatch);
     }
 
-    [SuppressMessage("Wrong Usage", "DF0001:Marks undisposed anonymous objects from method invocations.")]
     public static async Task<HttpWebResponse> GetUriHttpResponseAsync(this Uri url, WebRequestParams pars = null, Stopwatch stopwatch = null)
     {
         HttpWebRequest req = url.GetHttpRequest(pars);
@@ -127,7 +125,7 @@ public static class UriExtensions
     public static HttpWebRequest GetHttpRequest(this Uri url, WebRequestParams pars = null)
     {
         HttpWebRequest myWebRequest = WebRequest.CreateHttp(url);
-        if (pars != null)
+        if (pars is not null)
             myWebRequest.PrepareRequest(pars);
 
         return myWebRequest;
@@ -136,7 +134,7 @@ public static class UriExtensions
     public static WebRequest GetWebRequest(this Uri url, WebRequestParams pars = null)
     {
         var myWebRequest = WebRequest.Create(url);
-        if (pars != null)
+        if (pars is not null)
             myWebRequest.PrepareRequest(pars);
 
         return myWebRequest;
@@ -150,7 +148,7 @@ public static class UriExtensions
 
     public static async Task<bool> CheckIfLinkIsExpiredAsync(this Uri link, WebRequestParams pars = null)
     {
-        if (link != null)
+        if (link is not null)
             try
             {
                 return await link.DoHttpResponseFuncAsync((response, _) => response.ContentLength <= 0, pars);
@@ -167,7 +165,7 @@ public static class UriExtensions
     {
         if (uri.IsNotNullOrEmptyString()
             && Uri.TryCreate(uri, UriKind.Absolute, out Uri uriResult)
-            && uriResult != null)
+            && uriResult is not null)
             return uriResult;
 
         return null;
@@ -179,7 +177,7 @@ public static class UriExtensions
         {
             HttpWebRequest request = WebRequest.CreateHttp(url);
 
-            if (pars != null)
+            if (pars is not null)
                 request.PrepareRequest(pars);
 
             request.Method = "HEAD"; //Get only the header information -- no need to download any content
@@ -248,8 +246,7 @@ public static class UriExtensions
 
     private static async Task<T> InternalDoHttpClientResponseFuncTaskAsync<T>(this Uri url, Func<HttpResponseMessage, HttpClient, Task<T>> func, WebRequestParams pars = null, Stopwatch stopwatch = null)
     {
-        HttpClient client;
-        WebClientExtensions.PrepareHttpClient(out client, pars);
+        WebClientExtensions.PrepareHttpClient(out HttpClient client, pars);
         using (client)
         {
             stopwatch?.Restart();
@@ -264,8 +261,7 @@ public static class UriExtensions
 
     private static async Task<T> InternalDoHttpClientResponseFuncAsync<T>(this Uri url, Func<HttpResponseMessage, HttpClient, T> func, WebRequestParams pars = null, Stopwatch stopwatch = null)
     {
-        HttpClient client;
-        WebClientExtensions.PrepareHttpClient(out client, pars);
+        WebClientExtensions.PrepareHttpClient(out HttpClient client, pars);
         using (client)
         {
             stopwatch?.Restart();
@@ -280,8 +276,7 @@ public static class UriExtensions
 
     private static async Task InternalDoHttpClientResponseActionAsync(this Uri url, Action<HttpResponseMessage, HttpClient> action, WebRequestParams pars = null, Stopwatch stopwatch = null)
     {
-        HttpClient client;
-        WebClientExtensions.PrepareHttpClient(out client, pars);
+        WebClientExtensions.PrepareHttpClient(out HttpClient client, pars);
         using (client)
         {
             stopwatch?.Restart();

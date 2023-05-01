@@ -22,7 +22,7 @@ public static class StringHelpers
             {
                 currentChar = (char)byteBuffer[i];
 
-                if (detectedEOL != null)
+                if (detectedEOL is not null)
                 {
                     if (currentChar == detectedEOL)
                         lineCount++;
@@ -56,7 +56,7 @@ public static class StringHelpers
             {
                 currentChar = (char)byteBuffer[i];
 
-                if (detectedEOL != null)
+                if (detectedEOL is not null)
                 {
                     if (currentChar == detectedEOL)
                         lineCount++;
@@ -75,7 +75,7 @@ public static class StringHelpers
 
         if (currentChar != '\n'
             && currentChar != '\r'
-            && currentChar != null)
+            && currentChar is not null)
             lineCount++;
 
         return lineCount;

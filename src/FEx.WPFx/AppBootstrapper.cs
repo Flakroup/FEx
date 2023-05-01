@@ -1,6 +1,5 @@
 ﻿using FEx.Abstractions;
-using FEx.DependencyInjection;
-using StrongInject;
+using FEx.Fundamentals;
 using System;
 using System.Windows;
 using System.Windows.Threading;
@@ -8,15 +7,14 @@ using WpfBindingErrors;
 
 namespace FEx.WPFx;
 
-public abstract class AppBootstrapper<TContainer> : Application where TContainer : class, IContainer<IExceptionHandler>, new()
+public abstract class AppBootstrapper : Application
 {
     private readonly IExceptionHandler _exceptionHandler;
 
-    protected IFExServiceProvider IoCProvider { get; }
+    protected IFExServiceProvider IoCProvider => Foundation.ServiceProvider;
 
     protected AppBootstrapper()
     {
-        IoCProvider = FExServiceProvider.Instance;
         ConfigureServiceProvider();
 
         _exceptionHandler = IoCProvider.GetRequiredService<IExceptionHandler>();
@@ -47,11 +45,9 @@ public abstract class AppBootstrapper<TContainer> : Application where TContainer
             Environment.Exit(1);
     }
 
-    protected virtual bool HasInitializationFailed()
-    {
+    protected virtual bool HasInitializationFailed() =>
         //return !HasBeenInitialized || ExceptionHandler.LastException != null;
-        return false;
-    }
+        false;
 
     protected virtual void AfterStartup(StartupEventArgs e)
     {
@@ -99,7 +95,6 @@ public abstract class AppBootstrapper<TContainer> : Application where TContainer
 
     private void ConfigureServiceProvider()
     {
-        IoCProvider.ConfigureServiceProvider<TContainer>();
     }
 
     private void OnAppDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

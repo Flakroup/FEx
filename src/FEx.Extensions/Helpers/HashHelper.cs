@@ -8,7 +8,7 @@ public static class HashHelper
     {
         string hashString = null;
 
-        if (hash != null)
+        if (hash is not null)
         {
             if (asBase64String)
             {

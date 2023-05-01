@@ -109,7 +109,7 @@ public class Loggable : ILoggable
 
     public void EndScope()
     {
-        if (State != null)
+        if (State is not null)
             State = null;
 
         Scope?.Dispose();
@@ -117,7 +117,7 @@ public class Loggable : ILoggable
 
     private string Combine(string message)
     {
-        return State == null
+        return State is null
             ? message
             : $"[State:{State}]   {message}";
     }

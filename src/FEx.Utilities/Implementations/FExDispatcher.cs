@@ -1,8 +1,8 @@
 ﻿using FEx.Abstractions;
+using FEx.Fundamentals;
 using FEx.Utilities.Exceptions;
-using FEx.Utilities.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Collections;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +16,7 @@ public abstract class FExDispatcher : IFExDispatcher
 
     public bool IsDeadlockMonitoringEnabled { get; private set; }
 
-    public FExDispatcher(ILogger logger)
+    protected FExDispatcher(ILogger logger)
     {
         _logger = logger;
         _mainThreadSynchronizationContext = SynchronizationContext.Current;
@@ -30,15 +30,15 @@ public abstract class FExDispatcher : IFExDispatcher
 
     public abstract Task InvokeOnMainThreadAsync(Func<Task> funcTask);
 
-    public abstract void EnableCollectionSynchronization(IEnumerable collection, object context, Action<IEnumerable, object, Action, bool> callback);
-
     public abstract void BeginInvokeOnMainThread(Action action);
 
-    public void SendInThisOrMainThreadContext(Action action, SynchronizationContext synchronizationContext = null, int? timeout = 3000)
+    public void SendInThisOrMainThreadContext(Action action,
+                                              SynchronizationContext synchronizationContext = null,
+                                              int? timeout = 3000)
     {
         SynchronizationContext syncContext = synchronizationContext ?? _mainThreadSynchronizationContext;
         Timer timer = IsDeadlockMonitoringEnabled && timeout.HasValue
-            ? new Timer(Callback, Fundamentals.StackTraceGenerator.GetCachedStackTrace(), timeout.Value, Timeout.Infinite)
+            ? new Timer(Callback, Foundation.StackTraceGenerator.GetCachedStackTrace(), timeout.Value, Timeout.Infinite)
             : null;
         try
         {
@@ -59,8 +59,9 @@ public abstract class FExDispatcher : IFExDispatcher
     private void Callback(object state)
     {
         var stackTrace = (StackTrace)state;
-        var ex = new AttachedException("Deadlock assumed, as no action could've been performed during timeout.", stackTrace);
-        _logger.LogError(ex);
+        var ex = new AttachedException("Deadlock assumed, as no action could've been performed during timeout.",
+            stackTrace);
+        _logger.LogError(ex, ex.Message);
         throw ex;
     }
 }

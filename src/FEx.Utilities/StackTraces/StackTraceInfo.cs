@@ -9,7 +9,7 @@ public class StackTraceInfo : IEquatable<StackTraceInfo>
 
     public bool Equals(StackTraceInfo other)
     {
-        if (other == null)
+        if (other is null)
             return false;
 
         if (this == other)
@@ -29,7 +29,7 @@ public class StackTraceInfo : IEquatable<StackTraceInfo>
 
     public override bool Equals(object obj)
     {
-        if (obj == null)
+        if (obj is null)
             return false;
 
         if (this == obj)
@@ -43,7 +43,7 @@ public class StackTraceInfo : IEquatable<StackTraceInfo>
 
     public override int GetHashCode()
     {
-        if (Frames == null)
+        if (Frames is null)
             return 0;
 
         return Frames.GetHashCode();

@@ -196,11 +196,11 @@ public static class AsyncReaderWriterLockSlimExtension
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
     public static void DowngradeWriteLockToReadLock(this AsyncReaderWriterLockSlim lockInstance, IDisposableLock readLock)
     {
-        if (readLock == null)
+        if (readLock is null)
             throw new ArgumentNullException(nameof(readLock));
 
         var myReadLock = readLock as ActionDisposableLock;
-        if (myReadLock == null
+        if (myReadLock is null
             || myReadLock.LockOrigin != lockInstance
             || !myReadLock.IsWriteLock
             || myReadLock.IsDisposed)

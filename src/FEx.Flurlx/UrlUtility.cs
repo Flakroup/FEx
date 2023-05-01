@@ -68,19 +68,30 @@ public static class UrlUtility
                         : bytesTotal - offset;
                     double? toBytes = fromBytes + length;
                     request = request.WithHeader("Range", $"bytes={fromBytes}-{toBytes}");
-
+#if NETSTANDARD
+                    using Stream rangedStream = await request.GetStreamAsync();
+#else
                     await using Stream rangedStream = await request.GetStreamAsync();
+#endif
                     await rangedStream.CopyToAsync(ms);
                     return ms;
                 }
 
+#if NETSTANDARD
+                using Stream seekableStream = await request.GetStreamAsync();
+#else
                 await using Stream seekableStream = await request.GetStreamAsync();
+#endif
                 seekableStream.Seek(offset, origin);
                 await seekableStream.CopyStreamToStreamAsync(ms, length: length);
                 return ms;
             }
 
+#if NETSTANDARD
+            using Stream stream = await request.GetStreamAsync();
+#else
             await using Stream stream = await request.GetStreamAsync();
+#endif
             await stream.CopyToAsync(ms);
             return ms;
         }

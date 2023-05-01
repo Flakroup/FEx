@@ -7,15 +7,15 @@ public static class WebRequestParamsExtensions
     public static HttpClientHandler GetHttpClientHandler(this WebRequestParams pars)
     {
         var handler = new HttpClientHandler();
-        if (pars != null)
+        if (pars is not null)
         {
-            if (pars.Credentials != null)
+            if (pars.Credentials is not null)
                 handler.Credentials = pars.Credentials;
 
-            if (pars.Cookies != null)
+            if (pars.Cookies is not null)
                 handler.CookieContainer = pars.Cookies;
 
-            if (pars.Proxy != null)
+            if (pars.Proxy is not null)
                 handler.Proxy = pars.Proxy;
 
             if (pars.IsProxyNull)
@@ -29,30 +29,30 @@ public static class WebRequestParamsExtensions
 
     public static WebRequestParams Merge(this WebRequestParams pars, WebRequestParams other)
     {
-        if (pars != null)
+        if (pars is not null)
         {
-            if (other.Credentials != null)
+            if (other.Credentials is not null)
                 pars.Credentials = other.Credentials;
 
-            if (other.Cookies != null)
+            if (other.Cookies is not null)
                 pars.Cookies = other.Cookies;
 
-            if (other.Proxy != null)
+            if (other.Proxy is not null)
                 pars.Proxy = other.Proxy;
 
             if (other.IsProxyNull)
                 pars.Proxy = null;
 
-            if (other.Headers != null)
+            if (other.Headers is not null)
                 pars.Headers = other.Headers;
 
-            if (other.UserAgent != null)
+            if (other.UserAgent is not null)
                 pars.UserAgent = other.UserAgent;
 
-            if (other.Method != null)
+            if (other.Method is not null)
                 pars.Method = other.Method;
 
-            if (other.Timeout != null)
+            if (other.Timeout is not null)
                 pars.Timeout = other.Timeout.Value;
 
             if (other.Pipelined.HasValue)

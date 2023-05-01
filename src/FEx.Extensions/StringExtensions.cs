@@ -1,8 +1,8 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -106,7 +106,7 @@ public static class StringExtensions
     [ContractAnnotation("null => true")]
     public static bool IsNullOrEmptyString(this string value)
     {
-        return value == null || string.IsNullOrEmpty(value);
+        return value is null || string.IsNullOrEmpty(value);
     }
 
     /// <summary>
@@ -117,7 +117,7 @@ public static class StringExtensions
     [ContractAnnotation("null => false")]
     public static bool IsNotNullOrEmptyString(this string value)
     {
-        return value != null && !string.IsNullOrEmpty(value);
+        return value is not null && !string.IsNullOrEmpty(value);
     }
 
     /// <summary>
@@ -144,7 +144,7 @@ public static class StringExtensions
 
     public static int? ToNullableInt(this string value)
     {
-        return value != null
+        return value is not null
             ? int.TryParse(value, out int result)
                 ? result
                 : null
@@ -256,7 +256,6 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>The stream.</returns>
-    [SuppressMessage("Wrong Usage", "DF0010:Marks undisposed local variables.")]
     public static Stream ToStream(this string value)
     {
         var stream = new MemoryStream();
@@ -481,7 +480,7 @@ public static class StringExtensions
 
     public static string ToBase64(this string str, Encoding enc = null)
     {
-        if (enc == null)
+        if (enc is null)
             enc = Encoding.UTF8;
 
         return Convert.ToBase64String(enc.GetBytes(str));
@@ -489,7 +488,7 @@ public static class StringExtensions
 
     public static string FromBase64(this string base64EncodedData, Encoding enc = null)
     {
-        if (enc == null)
+        if (enc is null)
             enc = Encoding.UTF8;
 
         return enc.GetString(Convert.FromBase64String(base64EncodedData));
@@ -534,13 +533,13 @@ public static class StringExtensions
 
     public static bool IsBothNullOrEqual(this string source, string value, StringComparison comparisonType = StringComparison.Ordinal)
     {
-        return source == null && value == null || source?.Equals(value, comparisonType) == true;
+        return source is null && value is null || source?.Equals(value, comparisonType) == true;
     }
 
     public static Uri ToUri(this string source, Uri baseUri = null, UriKind kind = UriKind.Absolute)
     {
         if (source?.IsNotNullOrEmptyOrWhiteSpace() == true)
-            return baseUri != null
+            return baseUri is not null
                 ? new(baseUri, source)
                 : new Uri(source, kind);
 
@@ -640,7 +639,7 @@ public static class StringExtensions
     /// <returns>MD5 of string</returns>
     public static string GenerateMd5OfString(this string value)
     {
-        if (value != null)
+        if (value is not null)
             using (var md5 = MD5.Create())
             using (var stream = value.ToStream())
             {
@@ -650,5 +649,23 @@ public static class StringExtensions
             }
 
         return null;
+    }
+
+    public static string RemoveDiacritics(this string text)
+    {
+        string formD = text.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder();
+
+        foreach (char ch in formD.Select(ch => new
+                     {
+                         ch,
+                         uc = CharUnicodeInfo.GetUnicodeCategory(ch)
+                     })
+                     .Where(t => t.uc != UnicodeCategory.NonSpacingMark)
+                     .Select(t => t.ch))
+            sb.Append(ch);
+
+        return sb.ToString()
+            .Normalize(NormalizationForm.FormC);
     }
 }

@@ -19,7 +19,7 @@ public static class JsonExtensions
     {
         get
         {
-            if (_defaultSettings == null)
+            if (_defaultSettings is null)
             {
                 _defaultSettings = new()
                 {

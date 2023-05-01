@@ -16,7 +16,7 @@ public static class CollectionExtensions
     /// <param name="items">The sequence of items to add to the list.</param>
     public static void AddRangeToCollection<T>(this ICollection<T> source, IEnumerable<T> items)
     {
-        if (items != null)
+        if (items is not null)
             source.AddRangeToCollection(items as T[] ?? items.ToArray());
     }
 
@@ -50,7 +50,7 @@ public static class CollectionExtensions
     {
         for (var i = 0; i < count; i++)
         {
-            items.Add(creator != null
+            items.Add(creator is not null
                 ? creator(item)
                 : item);
         }
@@ -65,7 +65,7 @@ public static class CollectionExtensions
     [ContractAnnotation("null => true")]
     public static bool IsNullOrEmptyCollection<T>(this ICollection<T> source)
     {
-        return source == null || source.Count == 0;
+        return source is null || source.Count == 0;
     }
 
     [ContractAnnotation("null => false")]
@@ -77,6 +77,6 @@ public static class CollectionExtensions
     [ContractAnnotation("null => true")]
     public static bool IsNullOrEmptyReadOnlyCollection<T>(this IReadOnlyCollection<T> source)
     {
-        return source == null || source.Count == 0;
+        return source is null || source.Count == 0;
     }
 }

@@ -32,7 +32,7 @@ public static class ListExtensions
     [ContractAnnotation("null => true")]
     public static bool IsNullOrEmptyList<T>(this IList<T> source)
     {
-        return source == null || source.Count == 0;
+        return source is null || source.Count == 0;
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ public static class ListExtensions
     public static void AddRangeToList<T, TColl>(this TColl source, IEnumerable<T> items) where TColl : IList<T>
     {
         var list = source as List<T>;
-        if (list != null)
+        if (list is not null)
             list.AddRange(items);
         else
             source.AddRangeToCollection(items);

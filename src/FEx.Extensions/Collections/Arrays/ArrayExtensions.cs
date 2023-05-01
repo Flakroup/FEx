@@ -12,7 +12,7 @@ public static class ArrayExtensions
     /// <returns></returns>
     public static bool WithinIndex(this Array source, int index)
     {
-        return source != null && index >= 0 && index < source.Length;
+        return source is not null && index >= 0 && index < source.Length;
     }
 
     /// <summary>

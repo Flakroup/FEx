@@ -10,7 +10,6 @@ using Serilog.Sinks.SystemConsole.Themes;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -27,7 +26,7 @@ public static class LoggerExtensions
 
     public static LoggerConfiguration ConfigureSerilog(this LoggerConfiguration cfg, string logFilePath, bool forceConsole = false, LogEventLevel externalLoggingLevel = LogEventLevel.Warning, LogEventLevel externalDebugLoggingLevel = LogEventLevel.Information, Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null, params string[] overrides)
     {
-        if (logFilePath == null)
+        if (logFilePath is null)
             logFilePath = Path.GetFullPath($@".\_Logs\{Assembly.GetEntryAssembly()?.GetName().Name}.log");
 
         Directory.CreateDirectory(Path.GetDirectoryName(logFilePath));
@@ -62,7 +61,6 @@ public static class LoggerExtensions
         return overrides.Aggregate(cfg, (current, o) => current.MinimumLevel.Override(o, level));
     }
 
-    [SuppressMessage("Wrong Usage", "DF0010:Marks undisposed local variables.")]
     public static IServiceCollection ConfigureLogging(this IServiceCollection services)
     {
         // Creating a `LoggerProviderCollection` lets Serilog optionally write
@@ -83,7 +81,6 @@ public static class LoggerExtensions
             .AddLogging(loggingBuilder => loggingBuilder.AddSerilog());
     }
 
-    [SuppressMessage("Wrong Usage", "DF0037:Marks undisposed objects assinged to a property, originated from a method invocation.")]
     public static void SetLogger(string logFilePath = null, bool forceConsole = false, LogEventLevel externalLoggingLevel = LogEventLevel.Warning, LogEventLevel externalDebugLoggingLevel = LogEventLevel.Information, Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null, params string[] overrides)
     {
         Log.Logger = new LoggerConfiguration().ConfigureSerilog(logFilePath, forceConsole, externalLoggingLevel, externalDebugLoggingLevel, cfgFunc, overrides)

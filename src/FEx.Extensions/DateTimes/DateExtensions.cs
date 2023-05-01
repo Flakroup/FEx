@@ -25,7 +25,7 @@ public static class DateExtensions
     /// <returns>True if in 1753-01-01 - 9999-12-31 range; otherwise False.</returns>
     public static bool InSqlRangeOrNull(this DateTime? value)
     {
-        return value == null || InSqlRange(value.Value);
+        return value is null || InSqlRange(value.Value);
     }
 
     /// <summary>
@@ -188,7 +188,7 @@ public static class DateExtensions
     /// <remarks>the beginning of the week is controlled by the current Culture</remarks>
     public static DateTime? StartOfWeek(this DateTime? dateTime)
     {
-        return dateTime == null
+        return dateTime is null
             ? null
             : StartOfWeek(dateTime.Value);
     }
@@ -213,7 +213,7 @@ public static class DateExtensions
     /// <remarks>the end of the week is controlled by the current Culture.</remarks>
     public static DateTime? LastDayOfWeek(this DateTime? dateTime)
     {
-        return dateTime != null
+        return dateTime is not null
             ? dateTime.StartOfWeek()
                 ?.AddDays(6)
             : null;
@@ -568,7 +568,7 @@ public static class DateExtensions
             || weekdayFirst > DayOfWeek.Saturday)
             throw new ArgumentException("Invalid argument", nameof(weekdayFirst));
 
-        if (weekdayFirst == null)
+        if (weekdayFirst is null)
             weekdayFirst = DateTimeDefaults.CurrentDateTimeFormat.FirstDayOfWeek + 1;
 
         return (DayOfWeek)(((int)dt.DayOfWeek - (int)weekdayFirst + 8) % 7 + 1);

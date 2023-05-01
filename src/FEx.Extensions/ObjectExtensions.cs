@@ -1,4 +1,4 @@
-﻿using FEx.Extensions.Collections.Enumerables;
+using FEx.Extensions.Collections.Enumerables;
 using FEx.Extensions.Helpers;
 using JetBrains.Annotations;
 using System;
@@ -28,10 +28,9 @@ public static class ObjectExtensions
     /// <returns>Field value.</returns>
     // ReSharper disable UnusedParameter.Global
     public static TField Get<TField>(this object value, ref TField field, Func<TField> initializer)
-        // ReSharper restore UnusedParameter.Global
+    // ReSharper restore UnusedParameter.Global
     {
-        if (field == null)
-            field = initializer();
+        field ??= initializer();
 
         return field;
     }
@@ -56,7 +55,7 @@ public static class ObjectExtensions
     /// <param name="action">Action to execute if value Not null.</param>
     public static void IfNotNull<T>(this T value, Action action)
     {
-        if (value != null)
+        if (value is not null)
             action();
     }
 
@@ -68,7 +67,7 @@ public static class ObjectExtensions
     /// <param name="action">Action to execute if value Not null.</param>
     public static void IfNotNull<T>(this T value, Action<T> action)
     {
-        if (value != null)
+        if (value is not null)
             action(value);
     }
 
@@ -82,7 +81,7 @@ public static class ObjectExtensions
     /// <returns>If value not null, return the result of the Func; Otherwise return Default(TOut).</returns>
     public static TOut IfNotNull<T, TOut>(this T value, Func<T, TOut> fn)
     {
-        return value != null
+        return value is not null
             ? fn(value)
             : default;
     }
@@ -95,7 +94,7 @@ public static class ObjectExtensions
     /// <param name="action">Action to execute if value Not null.</param>
     public static void IfNull<T>(this T value, Action action)
     {
-        if (value == null)
+        if (value is null)
             action();
     }
 
@@ -107,7 +106,7 @@ public static class ObjectExtensions
     /// <param name="action">Action to execute if value Not null.</param>
     public static void IfNull<T>(this T value, Action<T> action)
     {
-        if (value == null)
+        if (value is null)
             action(default);
     }
 
@@ -143,9 +142,8 @@ public static class ObjectExtensions
     /// <returns>
     ///     The value itself.
     /// </returns>
-    /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="ArgumentNullException"><paramref name="value" /> is a null reference.</exception>
-    public static T Guard<T>(this T value, string paramName, string message = null)
+    public static T Guard<T>(this T value, [CallerMemberName] string paramName = null, string message = null)
     {
         return value.Guard(v => v is null, paramName, message);
     }
@@ -178,10 +176,10 @@ public static class ObjectExtensions
     /// <typeparam name="TInput">Current type.</typeparam>
     /// <param name="value">The actual instance.</param>
     /// <param name="actions">Actions to execute.</param>
-    /// <returns>TInput If TInput != null; otherwise default(TInput).</returns>
+    /// <returns>TInput If TInput is not null; otherwise default(TInput).</returns>
     public static TInput With<TInput>(this TInput value, params Action<TInput>[] actions) where TInput : class
     {
-        if (value == null)
+        if (value is null)
             return default;
 
         actions.ForEach(a => a(value));
@@ -208,15 +206,15 @@ public static class ObjectExtensions
     /// <returns>A string of properties.</returns>
     public static string ToPropertiesString(this object obj, Type type, string name)
     {
-        if (obj != null)
+        if (obj is not null)
         {
             var propertyString = new StringBuilder();
-            string objNameSegment = name != null
+            string objNameSegment = name is not null
                 ? name + " = "
                 : string.Empty;
 
             if (Convert.GetTypeCode(obj) == TypeCode.Object
-                && !(obj is IEnumerable)
+                && obj is not IEnumerable
                 && type != typeof(Guid))
             {
                 // if object, get all properties
@@ -273,7 +271,7 @@ public static class ObjectExtensions
                 .Append(") ")
                 .Append(name)
                 .Append(" = '")
-                .Append(value == null
+                .Append(value is null
                     ? "null"
                     : value)
                 .Append("', ");
@@ -307,7 +305,7 @@ public static class ObjectExtensions
 
     public static T GetObject<T>(this object value)
     {
-        return value != null
+        return value is not null
             ? (T)value
             : default;
     }
@@ -388,14 +386,14 @@ public static class ObjectExtensions
 
     // ReSharper disable UnusedParameter.Global
     public static bool SetObjectProperty<TSender, T>(this TSender sender, ref T backingField, T newValue, Action<T> onPropertyChanged = null, [CallerMemberName] string propertyName = null)
-        // ReSharper restore UnusedParameter.Global
+    // ReSharper restore UnusedParameter.Global
     {
         return SetObjectProperty(ref backingField, newValue, onPropertyChanged, sender, propertyName);
     }
 
     // ReSharper disable UnusedParameter.Global
     public static bool SetObjectProperty<T>(ref T backingField, T newValue, Action<T> onPropertyChanged = null, object sender = null, [CallerMemberName] string propertyName = null)
-        // ReSharper restore UnusedParameter.Global
+    // ReSharper restore UnusedParameter.Global
     {
         if (IsNotEqual(ref backingField, newValue))
         {

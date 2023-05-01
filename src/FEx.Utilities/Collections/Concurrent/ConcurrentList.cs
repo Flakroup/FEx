@@ -35,7 +35,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     public T this[int index]
     {
         get => Read(() => Items[index]);
-        set => Write(() => SetItem(index, value));
+        set => WriteWithResult(() => SetItem(index, value));
     }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -113,7 +113,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     /// <param name="item">The item.</param>
     public bool Remove(T item)
     {
-        return Write(() =>
+        return WriteWithResult(() =>
         {
             int index = Items.IndexOf(item);
             if (index < 0)
@@ -138,7 +138,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     {
         var item = (T)value;
 
-        return Write(() =>
+        return WriteWithResult(() =>
         {
             Add(item);
             return Items.Count;
@@ -206,7 +206,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     /// <param name="range">The items collection to add</param>
     public void AddRange(IEnumerable<T> range)
     {
-        Write(() => InternalAddRange(range));
+        WriteWithResult(() => InternalAddRange(range));
     }
 
     public ReadOnlyCollection<T> AsReadOnly()
@@ -223,7 +223,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     /// </param>
     public bool AddUnique(T item)
     {
-        return Write(() =>
+        return WriteWithResult(() =>
         {
             if (Items.Contains(item))
                 return false;
@@ -235,7 +235,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
     public void AddUniqueRange(IEnumerable<T> range)
     {
-        Write(() => InternalAddRange(range.Distinct()
+        WriteWithResult(() => InternalAddRange(range.Distinct()
             .Where(x => !Items.Contains(x))));
     }
 
@@ -261,7 +261,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
     public void Replace(int index, T item)
     {
-        Write(() => SetItem(index, item));
+        WriteWithResult(() => SetItem(index, item));
     }
 
     public void ReplaceWith(IEnumerable<T> collection)
@@ -448,7 +448,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
     protected TResult Read<TResult>(Func<TResult> action)
     {
-        return _lock.Read(action);
+        return _lock.ReadWithResult(action);
     }
 
     protected void Write(Action action)
@@ -456,9 +456,9 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         _lock.Write(action);
     }
 
-    protected TResult Write<TResult>(Func<TResult> action)
+    protected TResult WriteWithResult<TResult>(Func<TResult> action)
     {
-        return _lock.Write(action);
+        return _lock.WriteWithResult(action);
     }
 
     protected T SetItem(int index, T item)

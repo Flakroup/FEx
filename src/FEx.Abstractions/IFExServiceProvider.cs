@@ -1,13 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace FEx.Abstractions;
 
-public interface IFExServiceProvider
+public interface IFExServiceProvider : IServiceProvider, IScopeProvider
 {
-    void ConfigureServiceProvider<TContainer>(Func<IServiceCollection, IServiceCollection> configuration = null) where TContainer : class, new();
-
     /// <summary>
     ///     Get service of type <typeparamref name="T" /> from the <see cref="IServiceProvider" />.
     /// </summary>
@@ -16,6 +12,9 @@ public interface IFExServiceProvider
     /// <exception cref="System.InvalidOperationException">There is no service of type <typeparamref name="T" />.</exception>
     T GetRequiredService<T>();
 
-    Task<T> GetRequiredServiceAsync<T>();
     T TryResolveService<T>();
+
+    T GetRequiredService<T>(Type serviceType);
+
+    object GetRequiredService(Type serviceType);
 }

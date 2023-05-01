@@ -7,7 +7,7 @@ public sealed class AlphanumComparatorFast : IComparer<string>
 {
     private static volatile AlphanumComparatorFast _instance;
 
-    public static AlphanumComparatorFast Instance => _instance ?? (_instance = new());
+    public static AlphanumComparatorFast Instance => _instance ??= new();
 
     private AlphanumComparatorFast()
     {
@@ -20,8 +20,8 @@ public sealed class AlphanumComparatorFast : IComparer<string>
 
     public static int Compare(string s1, string s2, StringComparison comparisonType)
     {
-        if (s1 != null
-            && s2 != null)
+        if (s1 is not null
+            && s2 is not null)
         {
             int len1 = s1.Length;
             int len2 = s2.Length;

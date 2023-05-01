@@ -46,10 +46,10 @@ public abstract class FExSingleton<T> : FExSingleton where T : class, new()
     {
         get
         {
-            if (_instance == null)
+            if (_instance is null)
                 lock (SyncRoot)
                 {
-                    if (_instance == null)
+                    if (_instance is null)
                         _instance = new();
                 }
 

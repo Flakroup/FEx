@@ -37,7 +37,7 @@ public class WebRequestParams
         UserAgent = null;
         Credentials = null;
 
-        if (cookies != null)
+        if (cookies is not null)
         {
             Cookies = new();
             foreach (Cookie c in cookies)

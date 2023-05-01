@@ -10,7 +10,7 @@ public static class TasksExtensions
 {
     public static bool IsRunning(this Task task)
     {
-        return task != null && (task.Status == TaskStatus.WaitingForActivation || task.Status == TaskStatus.WaitingToRun || task.Status == TaskStatus.Running || task.Status == TaskStatus.WaitingForChildrenToComplete);
+        return task is not null && (task.Status == TaskStatus.WaitingForActivation || task.Status == TaskStatus.WaitingToRun || task.Status == TaskStatus.Running || task.Status == TaskStatus.WaitingForChildrenToComplete);
     }
 
     public static bool IsNotStarted(this Task task)
@@ -20,12 +20,12 @@ public static class TasksExtensions
 
     public static bool IsFinished(this Task task)
     {
-        return task != null && (task.Status == TaskStatus.RanToCompletion || task.Status == TaskStatus.Canceled || task.Status == TaskStatus.Faulted);
+        return task is not null && (task.Status == TaskStatus.RanToCompletion || task.Status == TaskStatus.Canceled || task.Status == TaskStatus.Faulted);
     }
 
     public static bool IsFailed(this Task task)
     {
-        return task != null && (task.Status == TaskStatus.Canceled || task.Status == TaskStatus.Faulted);
+        return task is not null && (task.Status == TaskStatus.Canceled || task.Status == TaskStatus.Faulted);
     }
 
     public static async Task WhenAllAsync(this IEnumerable<Task> tasksToBeStarted)

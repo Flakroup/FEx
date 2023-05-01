@@ -295,15 +295,13 @@ public static class EnumerableExtensions
         IList<IEnumerable<T>> multipliedLists = new List<IEnumerable<T>>();
         if (origin.Any())
             foreach (T item in multiplier)
+            foreach (IEnumerable<T> list in origin)
             {
-                foreach (IEnumerable<T> list in origin)
+                var multipliedList = new List<T>(list)
                 {
-                    var multipliedList = new List<T>(list)
-                    {
-                        item
-                    };
-                    multipliedLists.Add(multipliedList);
-                }
+                    item
+                };
+                multipliedLists.Add(multipliedList);
             }
         else
             foreach (T item in multiplier)

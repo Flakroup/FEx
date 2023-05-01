@@ -25,15 +25,23 @@ public static class JsonExtensions
                 using var client = new HttpClient();
                 using HttpResponseMessage response = await client.GetAsync(url, cancellationToken);
                 using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
+#if NETSTANDARD
+                using Stream jsonStream = await ensuredResponse.Content.ReadAsStreamAsync();
+#else
                 await using Stream jsonStream = await ensuredResponse.Content.ReadAsStreamAsync(cancellationToken);
-                if (jsonStream != null)
+#endif
+                if (jsonStream is not null)
                     res = jsonStream.DeserializeFromStream<T>(settings);
             }
             else
             {
                 using WebResponse response = await url.GetUriResponseAsync();
+#if NETSTANDARD
+                using Stream jsonStream = response.GetResponseStream();
+#else
                 await using Stream jsonStream = response.GetResponseStream();
-                if (jsonStream != null)
+#endif
+                if (jsonStream is not null)
                     res = jsonStream.DeserializeFromStream<T>(settings);
             }
         }

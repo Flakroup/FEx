@@ -18,10 +18,7 @@ public static class ListExtensions
     /// <typeparam name="T">Sequence element type.</typeparam>
     /// <param name="source">The list itself.</param>
     /// <returns>True if collection has rows otherwise False.</returns>
-    public static bool IsNotEmpty<T>(this IList<T> source)
-    {
-        return (source?.Count ?? 0) > 0;
-    }
+    public static bool IsNotEmpty<T>(this IList<T> source) => (source?.Count ?? 0) > 0;
 
     /// <summary>
     ///     Gets a value indicating if the collection contains data.
@@ -30,10 +27,7 @@ public static class ListExtensions
     /// <param name="source">The list itself.</param>
     /// <returns>True if collection has rows otherwise False.</returns>
     [ContractAnnotation("null => true")]
-    public static bool IsNullOrEmptyList<T>(this IList<T> source)
-    {
-        return source is null || source.Count == 0;
-    }
+    public static bool IsNullOrEmptyList<T>(this IList<T> source) => source is null || source.Count == 0;
 
     /// <summary>
     ///     Determines whether [is not null neither is empty].
@@ -44,10 +38,7 @@ public static class ListExtensions
     ///     <c>true</c> if [is not null neither is empty] [the specified source]; otherwise, <c>false</c>.
     /// </returns>
     [ContractAnnotation("null => false")]
-    public static bool IsNotNullOrEmptyList<T>(this IList<T> source)
-    {
-        return source?.Count > 0;
-    }
+    public static bool IsNotNullOrEmptyList<T>(this IList<T> source) => source?.Count > 0;
 
     /// <summary>
     ///     Converts to a readonly collection.
@@ -55,10 +46,7 @@ public static class ListExtensions
     /// <typeparam name="T">The type of source.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>A ReadOnlyCollection{T} instance.</returns>
-    public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> source)
-    {
-        return new(source);
-    }
+    public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> source) => new(source);
 
     public static bool RemoveWhere<T>(this ICollection<T> source, Func<T, bool> predicate)
     {

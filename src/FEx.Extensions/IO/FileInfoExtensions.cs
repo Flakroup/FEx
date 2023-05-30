@@ -9,7 +9,8 @@ namespace FEx.Extensions.IO;
 
 public static class FileInfoExtensions
 {
-    private static readonly int DefBufferSize = Convert.ToInt32(FileLengthConverter.ConvertFileLength(128, LengthType.Kilobytes, LengthType.Bytes, 0));
+    private static readonly int DefBufferSize =
+        Convert.ToInt32(FileLengthConverter.ConvertFileLength(128, LengthType.Kilobytes, LengthType.Bytes, 0));
 
     /// <summary>
     ///     Compares the size.
@@ -21,10 +22,8 @@ public static class FileInfoExtensions
     ///     <para>Zero - This instance is equal by size to the other.</para>
     ///     <para>Greater than zero - This instance is bigger than the other.</para>
     /// </returns>
-    public static int CompareSize(this FileInfo file, long otherFileSize)
-    {
-        return file.Length < otherFileSize ? -1 : file.Length > otherFileSize ? 1 : 0;
-    }
+    public static int CompareSize(this FileInfo file, long otherFileSize) =>
+        file.Length < otherFileSize ? -1 : file.Length > otherFileSize ? 1 : 0;
 
     /// <summary>
     ///     Creates ZIP archive from file.
@@ -37,19 +36,24 @@ public static class FileInfoExtensions
     /// <param name="deleteTempDirectory">if set to <c>true</c> [delete temporary directory].</param>
     /// <param name="overwrite">if set to <c>true</c> [overwrite].</param>
     /// <returns></returns>
-    public static async Task<FileInfo> ZipAsync(this FileInfo file, string zipFilePath = null, bool deleteTempDirectory = false, bool overwrite = false)
-    {
-        return await file.ZipAsync(zipFilePath is not null
+    public static async Task<FileInfo> ZipAsync(this FileInfo file,
+                                                string zipFilePath = null,
+                                                bool deleteTempDirectory = false,
+                                                bool overwrite = false) =>
+        await file.ZipAsync(zipFilePath is not null
             ? new FileInfo(zipFilePath)
             : null, deleteTempDirectory, overwrite);
-    }
 
-    public static async Task<FileInfo> ZipAsync(this FileInfo file, FileInfo zipFile = null, bool deleteTempDirectory = false, bool overwrite = false)
+    public static async Task<FileInfo> ZipAsync(this FileInfo file,
+                                                FileInfo zipFile = null,
+                                                bool deleteTempDirectory = false,
+                                                bool overwrite = false)
     {
         DirectoryInfo parentDirectory = zipFile is null
             ? file.Directory
             : zipFile.Directory;
-        var tempDirectory = new DirectoryInfo(Path.Combine(parentDirectory?.FullName, Path.GetFileNameWithoutExtension(file.Name)));
+        var tempDirectory =
+            new DirectoryInfo(Path.Combine(parentDirectory?.FullName, Path.GetFileNameWithoutExtension(file.Name)));
 
         if (tempDirectory.Exists && deleteTempDirectory)
             tempDirectory.Delete(true);
@@ -60,16 +64,16 @@ public static class FileInfoExtensions
 #if NETSTANDARD
         using (FileStream sourceStream = file.OpenRead())
         using (FileStream targetStream =
- File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+               File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
 #else
         await using (FileStream sourceStream = file.OpenRead())
-        await using (FileStream targetStream = File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+        await using (FileStream targetStream =
+ File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
 #endif
 
             await sourceStream.CopyToAsync(targetStream);
 
-        if (zipFile is null)
-            zipFile = new(Path.Combine(parentDirectory?.FullName, $"{file.Name}.zip"));
+        zipFile ??= new(Path.Combine(parentDirectory?.FullName, $"{file.Name}.zip"));
 
         if (zipFile.Exists && overwrite)
         {
@@ -83,24 +87,25 @@ public static class FileInfoExtensions
         return zipFile;
     }
 
-    public static string GenerateMd5OfFile(this FileInfo file, bool removeDashes = true, bool toLower = true, bool asBase64String = false)
+    public static string GenerateMd5OfFile(this FileInfo file,
+                                           bool removeDashes = true,
+                                           bool toLower = true,
+                                           bool asBase64String = false)
     {
         file.Refresh();
 
         byte[] hash = null;
 
         if (file.Exists)
-            using (var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefBufferSize))
+            using (var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite,
+                       DefBufferSize))
             using (var md5 = MD5.Create())
                 hash = md5.ComputeHash(stream);
 
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }
 
-    public static bool IsNtfs(this FileInfo file)
-    {
-        return FileSystemCommon.IsPathNtfs(file.FullName);
-    }
+    public static bool IsNtfs(this FileInfo file) => FileSystemCommon.IsPathNtfs(file.FullName);
 
     /// <summary>
     ///     Computes the md5 hash.
@@ -109,7 +114,10 @@ public static class FileInfoExtensions
     /// <param name="removeDashes">if set to <c>true</c> [remove dashes].</param>
     /// <param name="toLower">if set to <c>true</c> [to lower].</param>
     /// <param name="asBase64String">if set to <c>true</c> [as base64 string].</param>
-    public static string ComputeMd5Hash(this byte[] data, bool removeDashes = true, bool toLower = true, bool asBase64String = false)
+    public static string ComputeMd5Hash(this byte[] data,
+                                        bool removeDashes = true,
+                                        bool toLower = true,
+                                        bool asBase64String = false)
     {
         byte[] hash;
 
@@ -123,9 +131,9 @@ public static class FileInfoExtensions
     {
         file.Refresh();
 
-        if (!file.Exists)
-            return null;
-
-        return await new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefBufferSize).ToMemoryStreamAsync();
+        return !file.Exists
+            ? null
+            : await new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefBufferSize)
+                .ToMemoryStreamAsync();
     }
 }

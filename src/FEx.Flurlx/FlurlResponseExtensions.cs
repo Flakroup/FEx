@@ -10,8 +10,6 @@ public static class FlurlResponseExtensions
     ///     <see langword="true" /> if <see cref="P:Flurl.Http.IFlurlResponse.StatusCode" /> was in the range
     ///     200-299; otherwise, <see langword="false" />.
     /// </returns>
-    public static bool IsSuccessStatusCode(this IFlurlResponse response)
-    {
-        return response.StatusCode is >= (int)HttpStatusCode.OK and <= 299;
-    }
+    public static bool IsSuccessStatusCode(this IFlurlResponse response) =>
+        response.StatusCode is >= (int)HttpStatusCode.OK and <= 299;
 }

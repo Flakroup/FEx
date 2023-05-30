@@ -16,6 +16,7 @@ public class WPFUtilities
     public static void OverrideFormattingOnUI(CultureInfo culture = null)
     {
         culture ??= CultureInfo.CurrentCulture;
-        FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
+        FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement),
+            new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
     }
 }

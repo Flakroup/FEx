@@ -20,13 +20,11 @@ public static class EnumerableExtensions
         return source.OrderAlphanumByDescending(x => x);
     }
 
-    public static IOrderedEnumerable<TSource> OrderAlphanumBy<TSource>(this IEnumerable<TSource> source, Func<TSource, string> keySelector)
-    {
-        return source.OrderBy(keySelector, AlphanumComparatorFast.Instance);
-    }
+    public static IOrderedEnumerable<TSource> OrderAlphanumBy<TSource>(this IEnumerable<TSource> source,
+                                                                       Func<TSource, string> keySelector) =>
+        source.OrderBy(keySelector, AlphanumComparatorFast.Instance);
 
-    public static IOrderedEnumerable<TSource> OrderAlphanumByDescending<TSource>(this IEnumerable<TSource> source, Func<TSource, string> keySelector)
-    {
-        return source.OrderByDescending(keySelector, AlphanumComparatorFast.Instance);
-    }
+    public static IOrderedEnumerable<TSource> OrderAlphanumByDescending<TSource>(
+        this IEnumerable<TSource> source,
+        Func<TSource, string> keySelector) => source.OrderByDescending(keySelector, AlphanumComparatorFast.Instance);
 }

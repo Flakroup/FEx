@@ -7,7 +7,7 @@ using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.EFCore;
+namespace FEx.EFCore.Helpers;
 
 /// <summary>
 ///     Use of an EF Core resiliency strategy when using multiple DbContexts within an explicit BeginTransaction():
@@ -22,23 +22,33 @@ public class ResilientTransaction
         _logger = logger;
     }
 
-    public async Task<T> ExecuteAsync<T>(DbContext context, Func<Task<T>> action, IsolationLevel isolationLevel = IsolationLevel.Unspecified, int? delayOnTimeout = null)
+    public async Task<T> ExecuteAsync<T>(DbContext context,
+                                         Func<Task<T>> action,
+                                         IsolationLevel isolationLevel = IsolationLevel.Unspecified,
+                                         int? delayOnTimeout = null)
     {
         IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(() => RunTransactionAsync(context, action, isolationLevel, delayOnTimeout));
     }
 
-    public T Execute<T>(DbContext context, Func<T> action, IsolationLevel isolationLevel = IsolationLevel.Unspecified, int? delayOnTimeout = null)
+    public T Execute<T>(DbContext context,
+                        Func<T> action,
+                        IsolationLevel isolationLevel = IsolationLevel.Unspecified,
+                        int? delayOnTimeout = null)
     {
         IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
         return strategy.Execute(() => RunTransaction(context, action, isolationLevel, delayOnTimeout));
     }
 
-    private async Task<T> RunTransactionAsync<T>(DbContext context, Func<Task<T>> action, IsolationLevel isolationLevel = IsolationLevel.Unspecified, int? delayOnTimeout = null)
+    private async Task<T> RunTransactionAsync<T>(DbContext context,
+                                                 Func<Task<T>> action,
+                                                 IsolationLevel isolationLevel = IsolationLevel.Unspecified,
+                                                 int? delayOnTimeout = null)
     {
         T res;
 
-        await using IDbContextTransaction transaction = await GetTransactionAsync(context, isolationLevel, delayOnTimeout);
+        await using IDbContextTransaction transaction =
+            await GetTransactionAsync(context, isolationLevel, delayOnTimeout);
         try
         {
             res = await action();
@@ -53,7 +63,10 @@ public class ResilientTransaction
         return res;
     }
 
-    private T RunTransaction<T>(DbContext context, Func<T> action, IsolationLevel isolationLevel = IsolationLevel.Unspecified, int? delayOnTimeout = null)
+    private T RunTransaction<T>(DbContext context,
+                                Func<T> action,
+                                IsolationLevel isolationLevel = IsolationLevel.Unspecified,
+                                int? delayOnTimeout = null)
     {
         T res;
 
@@ -72,7 +85,10 @@ public class ResilientTransaction
         return res;
     }
 
-    private async Task<IDbContextTransaction> GetTransactionAsync(DbContext context, IsolationLevel isolationLevel = IsolationLevel.Unspecified, int? delayOnTimeout = null)
+    private async Task<IDbContextTransaction> GetTransactionAsync(DbContext context,
+                                                                  IsolationLevel isolationLevel =
+                                                                      IsolationLevel.Unspecified,
+                                                                  int? delayOnTimeout = null)
     {
         do
         {
@@ -91,7 +107,9 @@ public class ResilientTransaction
         } while (true);
     }
 
-    private IDbContextTransaction GetTransaction(DbContext context, IsolationLevel isolationLevel = IsolationLevel.Unspecified, int? delayOnTimeout = null)
+    private IDbContextTransaction GetTransaction(DbContext context,
+                                                 IsolationLevel isolationLevel = IsolationLevel.Unspecified,
+                                                 int? delayOnTimeout = null)
     {
         do
         {

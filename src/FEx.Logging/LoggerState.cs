@@ -29,10 +29,8 @@ public class LoggerState : Dictionary<string, object>, ILoggerState
         this.RemoveValue(key);
     }
 
-    public override string ToString()
-    {
-        return this.IsNotNullOrEmptyCollection()
+    public override string ToString() =>
+        this.IsNotNullOrEmptyCollection()
             ? this.ToJson()
             : string.Empty;
-    }
 }

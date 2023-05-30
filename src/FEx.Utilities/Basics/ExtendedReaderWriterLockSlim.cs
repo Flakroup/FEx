@@ -15,20 +15,14 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
         Execute(action, LockType.Read);
     }
 
-    public TResult ReadWithResult<TResult>(Func<TResult> action)
-    {
-        return ExecuteWithResult(action, LockType.Read);
-    }
+    public TResult ReadWithResult<TResult>(Func<TResult> action) => ExecuteWithResult(action, LockType.Read);
 
     public void Write(Action action)
     {
         Execute(action, LockType.Write);
     }
 
-    public TResult WriteWithResult<TResult>(Func<TResult> action)
-    {
-        return ExecuteWithResult(action, LockType.Write);
-    }
+    public TResult WriteWithResult<TResult>(Func<TResult> action) => ExecuteWithResult(action, LockType.Write);
 
     private void Execute(Action action, LockType type)
     {

@@ -12,7 +12,9 @@ namespace FEx.Flurlx;
 
 public static class UrlUtility
 {
-    public static async Task<double> CalculateSizeAsync(this Url url, LengthType unit = LengthType.Megabytes, IFlurlClient client = null)
+    public static async Task<double> CalculateSizeAsync(this Url url,
+                                                        LengthType unit = LengthType.Megabytes,
+                                                        IFlurlClient client = null)
     {
         var dispose = false;
 
@@ -24,14 +26,11 @@ public static class UrlUtility
                 dispose = true;
             }
 
-            IFlurlResponse response = await client.Request(url)
-                .HeadAsync();
+            IFlurlResponse response = await client.Request(url).HeadAsync();
             double bytesTotal = GetContentLength(response);
-            if (unit == LengthType.Bytes)
-                return bytesTotal;
-
-            return FileLengthConverter.ConvertFileLength(bytesTotal, LengthType.Bytes, unit)
-                .length;
+            return unit == LengthType.Bytes
+                ? bytesTotal
+                : FileLengthConverter.ConvertFileLength(bytesTotal, LengthType.Bytes, unit).length;
         }
         finally
         {
@@ -40,7 +39,11 @@ public static class UrlUtility
         }
     }
 
-    public static async Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client = null, SeekOrigin origin = SeekOrigin.Begin, long offset = 0, long? length = null)
+    public static async Task<MemoryStream> GetBytesAsync(this Url url,
+                                                         IFlurlClient client = null,
+                                                         SeekOrigin origin = SeekOrigin.Begin,
+                                                         long offset = 0,
+                                                         long? length = null)
     {
         const string acceptRangesHeader = "Accept-Ranges";
         var dispose = false;

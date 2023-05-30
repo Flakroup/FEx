@@ -18,7 +18,8 @@ public static class DictionaryExtensions
     /// <typeparam name="TV">The type of the element.</typeparam>
     /// <param name="dictionary">The dictionary.</param>
     /// <param name="merged">The merged.</param>
-    public static void AddRangeToDictionary<TK, TV>(this IDictionary<TK, TV> dictionary, IEnumerable<KeyValuePair<TK, TV>> merged)
+    public static void AddRangeToDictionary<TK, TV>(this IDictionary<TK, TV> dictionary,
+                                                    IEnumerable<KeyValuePair<TK, TV>> merged)
     {
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
         if (cDic is not null)
@@ -38,7 +39,11 @@ public static class DictionaryExtensions
     /// <param name="keySelector">The key selector.</param>
     /// <param name="valuesSelector">The values selector.</param>
     /// <returns>Merged dictionary.</returns>
-    public static IDictionary<TOutKey, IEnumerable<TOutElement>> ToMergedDictionary<TKey, TElement, TOutKey, TOutElement>(this IDictionary<TKey, IList<TElement>> source, Func<TKey, TOutKey> keySelector, Func<IEnumerable<TElement>, IEnumerable<TOutElement>> valuesSelector)
+    public static IDictionary<TOutKey, IEnumerable<TOutElement>>
+        ToMergedDictionary<TKey, TElement, TOutKey, TOutElement>(this IDictionary<TKey, IList<TElement>> source,
+                                                                 Func<TKey, TOutKey> keySelector,
+                                                                 Func<IEnumerable<TElement>, IEnumerable<TOutElement>>
+                                                                     valuesSelector)
     {
         IDictionary<TOutKey, IEnumerable<TOutElement>> result = new Dictionary<TOutKey, IEnumerable<TOutElement>>();
         foreach (KeyValuePair<TKey, IList<TElement>> item in source)
@@ -64,7 +69,9 @@ public static class DictionaryExtensions
     /// <param name="source">The source.</param>
     /// <param name="merged">The merged.</param>
     /// <returns>Merged dictionaries.</returns>
-    public static IDictionary<TKey, IEnumerable<TElement>> Merge<TKey, TElement>(this IDictionary<TKey, IEnumerable<TElement>> source, IDictionary<TKey, IEnumerable<TElement>> merged)
+    public static IDictionary<TKey, IEnumerable<TElement>> Merge<TKey, TElement>(
+        this IDictionary<TKey, IEnumerable<TElement>> source,
+        IDictionary<TKey, IEnumerable<TElement>> merged)
     {
         foreach (KeyValuePair<TKey, IEnumerable<TElement>> pair in merged)
         {
@@ -88,7 +95,9 @@ public static class DictionaryExtensions
     /// <returns>
     ///     TValue
     /// </returns>
-    public static TValue TryGetKeyValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue fallback = default)
+    public static TValue TryGetKeyValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary,
+                                                      TKey key,
+                                                      TValue fallback = default)
     {
         var cDic = dictionary as ConcurrentDictionary<TKey, TValue>;
         if (cDic is not null)
@@ -188,7 +197,10 @@ public static class DictionaryExtensions
     /// <param name="key">The key to be added or whose value should be updated</param>
     /// <param name="valueToAddOrUpdate">The function used to generate a new value</param>
     /// <returns>The (true, old value) tuple for the key if it was present, else (false, new value).</returns>
-    public static (bool hasBeenReplaced, TV removedValue, TV newValue) AddOrReplaceValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> valueToAddOrUpdate)
+    public static (bool hasBeenReplaced, TV removedValue, TV newValue) AddOrReplaceValue<TK, TV>(
+        this IDictionary<TK, TV> dictionary,
+        TK key,
+        Func<TV> valueToAddOrUpdate)
     {
         (bool hadValue, TV oldValue) = dictionary.GetValue(key);
         TV added = dictionary.AddOrUpdateValue(key, valueToAddOrUpdate);
@@ -207,7 +219,9 @@ public static class DictionaryExtensions
         return false;
     }
 
-    public static (bool hasBeenRemoved, TV removedValue) RemoveValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key)
+    public static (bool hasBeenRemoved, TV removedValue) RemoveValue<TK, TV>(
+        this IDictionary<TK, TV> dictionary,
+        TK key)
     {
         TV v;
 
@@ -226,7 +240,8 @@ public static class DictionaryExtensions
         return (hasBeenRemoved, v);
     }
 
-    public static bool ReplaceAndDisposeOldValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> func) where TV : IDisposable
+    public static bool ReplaceAndDisposeOldValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> func)
+        where TV : IDisposable
     {
         (bool hasBeenReplaced, TV removedValue, TV _) = dictionary.AddOrReplaceValue(key, func);
 
@@ -236,7 +251,9 @@ public static class DictionaryExtensions
         return hasBeenReplaced;
     }
 
-    public static (bool anyItemHasMatched, IDictionary<TK, TV> removedEntries) RemoveWhere<TK, TV>(this IDictionary<TK, TV> dictionary, Func<TK, TV, bool> predicate)
+    public static (bool anyItemHasMatched, IDictionary<TK, TV> removedEntries) RemoveWhere<TK, TV>(
+        this IDictionary<TK, TV> dictionary,
+        Func<TK, TV, bool> predicate)
     {
         var anyItemHasMatched = false;
         IDictionary<TK, TV> removedEntries = null;
@@ -262,7 +279,8 @@ public static class DictionaryExtensions
         return (anyItemHasMatched, removedEntries);
     }
 
-    public static void SyncWith<TKey, TValue>(this IDictionary<TKey, TValue> sourceDictionary, IDictionary<TKey, TValue> syncedDictionary)
+    public static void SyncWith<TKey, TValue>(this IDictionary<TKey, TValue> sourceDictionary,
+                                              IDictionary<TKey, TValue> syncedDictionary)
     {
         if (sourceDictionary.Count > 0)
             sourceDictionary.RemoveWhere((key, _) => !syncedDictionary.ContainsKey(key));

@@ -13,10 +13,7 @@ public sealed class AlphanumComparatorFast : IComparer<string>
     {
     }
 
-    public int Compare(string s1, string s2)
-    {
-        return Compare(s1, s2, StringComparison.CurrentCulture);
-    }
+    public int Compare(string s1, string s2) => Compare(s1, s2, StringComparison.CurrentCulture);
 
     public static int Compare(string s1, string s2, StringComparison comparisonType)
     {

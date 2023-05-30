@@ -21,15 +21,10 @@ public class WidthAndHeight : IComparable<WidthAndHeight>, IEquatable<WidthAndHe
             || Height > other?.Height)
             return -1;
 
-        if (Width == other?.Width
-            && Height == other.Height)
-            return 0;
-
-        return 1;
+        return Width == other?.Width && Height == other.Height
+            ? 0
+            : 1;
     }
 
-    public bool Equals(WidthAndHeight other)
-    {
-        return Width == other?.Width && Height == other.Height;
-    }
+    public bool Equals(WidthAndHeight other) => Width == other?.Width && Height == other.Height;
 }

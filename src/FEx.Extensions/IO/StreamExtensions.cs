@@ -10,7 +10,11 @@ public static class StreamExtensions
 {
     private static int BufferSize { get; } = 81920;
 
-    public static async Task CopyStreamToStreamAsync(this Stream sourceStream, Stream destStream, Action<double> progressMaximumSet = null, Action<double> progressValueSet = null, long? length = null)
+    public static async Task CopyStreamToStreamAsync(this Stream sourceStream,
+                                                     Stream destStream,
+                                                     Action<double> progressMaximumSet = null,
+                                                     Action<double> progressValueSet = null,
+                                                     long? length = null)
     {
         var buffer = new byte[BufferSize];
         var writtenBytes = 0;
@@ -69,7 +73,10 @@ public static class StreamExtensions
         return ms;
     }
 
-    public static string ComputeMd5Hash(this Stream data, bool removeDashes = true, bool toLower = true, bool asBase64String = false)
+    public static string ComputeMd5Hash(this Stream data,
+                                        bool removeDashes = true,
+                                        bool toLower = true,
+                                        bool asBase64String = false)
     {
         byte[] hash;
 

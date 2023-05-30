@@ -31,10 +31,9 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
             if (_fileExists.HasValue)
                 return _fileExists.Value;
 
-            if (_fullFilename is null)
-                return false;
-
-            return File.Exists(FullFilename);
+            return _fullFilename is null
+                ? false
+                : File.Exists(FullFilename);
         }
         set => _fileExists = value;
     }
@@ -66,15 +65,14 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
         if (this == other)
             return true;
 
-        if (!Equals(other._fullFilename, _fullFilename)
-            || !Equals(other.Type, Type)
-            || other.Line != Line
-            || other.Column != Column
-            || !Equals(other.Filename, Filename)
-            || !Equals(other.Method, Method))
-            return false;
-
-        return Equals(other.Namespace, Namespace);
+        return !Equals(other._fullFilename, _fullFilename)
+               || !Equals(other.Type, Type)
+               || other.Line != Line
+               || other.Column != Column
+               || !Equals(other.Filename, Filename)
+               || !Equals(other.Method, Method)
+            ? false
+            : Equals(other.Namespace, Namespace);
     }
 
     public override bool Equals(object obj)
@@ -86,36 +84,33 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
             return true;
 
         var stackTraceFrame = obj as StackTraceFrame;
-        if (stackTraceFrame is null)
-            return false;
-
-        return Equals(stackTraceFrame);
+        return stackTraceFrame is null
+            ? false
+            : Equals(stackTraceFrame);
     }
 
-    public override int GetHashCode()
-    {
-        return ((((((_fullFilename is not null
-                        ? _fullFilename.GetHashCode()
-                        : 0)
-                    * 397
-                    ^ (Type is not null
-                        ? Type.GetHashCode()
-                        : 0))
-                   * 397
-                   ^ Line)
-                  * 397
-                  ^ Column)
-                 * 397
-                 ^ (Filename is not null
-                     ? Filename.GetHashCode()
-                     : 0))
-                * 397
-                ^ (Method is not null
-                    ? Method.GetHashCode()
-                    : 0))
-               * 397
-               ^ (Namespace is not null
-                   ? Namespace.GetHashCode()
-                   : 0);
-    }
+    public override int GetHashCode() =>
+        ((((((_fullFilename is not null
+                 ? _fullFilename.GetHashCode()
+                 : 0)
+             * 397
+             ^ (Type is not null
+                 ? Type.GetHashCode()
+                 : 0))
+            * 397
+            ^ Line)
+           * 397
+           ^ Column)
+          * 397
+          ^ (Filename is not null
+              ? Filename.GetHashCode()
+              : 0))
+         * 397
+         ^ (Method is not null
+             ? Method.GetHashCode()
+             : 0))
+        * 397
+        ^ (Namespace is not null
+            ? Namespace.GetHashCode()
+            : 0);
 }

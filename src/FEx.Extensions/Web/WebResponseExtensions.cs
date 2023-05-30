@@ -20,12 +20,20 @@ public static class WebResponseExtensions
         return resp?.Headers.AllKeys.ToDictionary(x => x, x => resp.Headers[x]);
     }
 
-    public static async Task<(bool, LengthType)> TryGetRangeAsync(this WebResponse response, int rangeFrom, int rangeTo, IExceptionHandler exceptionHandler = null, WebRequestParams pars = null)
-    {
-        return await TryGetRangeAsync(response.ResponseUri, response.GetAllHeaders(), rangeFrom, rangeTo, exceptionHandler, pars);
-    }
+    public static async Task<(bool, LengthType)> TryGetRangeAsync(this WebResponse response,
+                                                                  int rangeFrom,
+                                                                  int rangeTo,
+                                                                  IExceptionHandler exceptionHandler = null,
+                                                                  WebRequestParams pars = null) =>
+        await TryGetRangeAsync(response.ResponseUri, response.GetAllHeaders(), rangeFrom, rangeTo, exceptionHandler,
+            pars);
 
-    public static async Task<(bool, LengthType)> TryGetRangeAsync(this Uri responseUri, Dictionary<string, string> responseHeaders, int rangeFrom, int rangeTo, IExceptionHandler exceptionHandler = null, WebRequestParams pars = null)
+    public static async Task<(bool, LengthType)> TryGetRangeAsync(this Uri responseUri,
+                                                                  Dictionary<string, string> responseHeaders,
+                                                                  int rangeFrom,
+                                                                  int rangeTo,
+                                                                  IExceptionHandler exceptionHandler = null,
+                                                                  WebRequestParams pars = null)
     {
         try
         {
@@ -56,14 +64,10 @@ public static class WebResponseExtensions
 
     public static ContentRangeHeaderValue GetContentRange(this string rangeHeader)
     {
-        if (rangeHeader?.Trim()
-                ?.IsNullOrEmptyString()
-            ?? true)
+        if (rangeHeader?.Trim()?.IsNullOrEmptyString() ?? true)
             return null;
 
-        string[] split = rangeHeader.Split(' ')[1]
-            .Split('/')[0]
-            .Split('-');
+        string[] split = rangeHeader.Split(' ')[1].Split('/')[0].Split('-');
         var from = long.Parse(split[0]);
         var to = long.Parse(split[1]);
         return new(from, to);

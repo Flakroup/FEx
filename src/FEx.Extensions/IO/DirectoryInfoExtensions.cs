@@ -5,10 +5,7 @@ namespace FEx.Extensions.IO;
 
 public static class DirectoryInfoExtensions
 {
-    public static bool IsNtfs(this DirectoryInfo dir)
-    {
-        return FileSystemCommon.IsPathNtfs(dir.FullName);
-    }
+    public static bool IsNtfs(this DirectoryInfo dir) => FileSystemCommon.IsPathNtfs(dir.FullName);
 
     public static string GetDescendantPath(this DirectoryInfo dir, params string[] descendants)
     {
@@ -46,13 +43,13 @@ public static class DirectoryInfoExtensions
         }, descendants);
     }
 
-    public static T GetDescendantFileSystemObject<T>(this string directoryPath, Func<string, T> activator, params string[] descendants)
-    {
-        return GetDescendantFileSystemObject(new DirectoryInfo(directoryPath), activator, descendants);
-    }
+    public static T GetDescendantFileSystemObject<T>(this string directoryPath,
+                                                     Func<string, T> activator,
+                                                     params string[] descendants) =>
+        GetDescendantFileSystemObject(new DirectoryInfo(directoryPath), activator, descendants);
 
-    public static T GetDescendantFileSystemObject<T>(this DirectoryInfo dir, Func<string, T> activator, params string[] descendants)
-    {
-        return activator(GetDescendantPath(dir, descendants));
-    }
+    public static T GetDescendantFileSystemObject<T>(this DirectoryInfo dir,
+                                                     Func<string, T> activator,
+                                                     params string[] descendants) =>
+        activator(GetDescendantPath(dir, descendants));
 }

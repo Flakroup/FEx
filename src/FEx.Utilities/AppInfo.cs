@@ -21,8 +21,7 @@ public static class AppInfo
         EntryAssemblyLocation = EntryAssembly?.Location is not null
             ? new FileInfo(EntryAssembly.Location)
             : null;
-        EntryAssemblyName = EntryAssembly?.GetName()
-            .Name;
+        EntryAssemblyName = EntryAssembly?.GetName().Name;
         ProductVersionInfo = EntryAssemblyLocation is not null
             ? FileVersionInfo.GetVersionInfo(EntryAssemblyLocation.FullName)
             : null;

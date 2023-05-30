@@ -41,8 +41,7 @@ public static class StringHelpers
                 }
                 else
                 {
-                    if (currentChar == '\n'
-                        || currentChar == '\r')
+                    if (currentChar is '\n' or '\r')
                     {
                         detectedEOL = currentChar;
                         lineCount++;
@@ -63,8 +62,7 @@ public static class StringHelpers
                 }
                 else
                 {
-                    if (currentChar == '\n'
-                        || currentChar == '\r')
+                    if (currentChar is '\n' or '\r')
                     {
                         detectedEOL = currentChar;
                         lineCount++;

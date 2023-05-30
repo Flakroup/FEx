@@ -5,7 +5,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
+	  <PackageReference Include="System.Reactive.Linq" Version="6.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\FEx.Utilities\FEx.Utilities.csproj" />
 	</ItemGroup>
 
 </Project>

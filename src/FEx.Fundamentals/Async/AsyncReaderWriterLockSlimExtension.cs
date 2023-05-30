@@ -17,7 +17,8 @@ public static class AsyncReaderWriterLockSlimExtension
     /// <returns>A <see cref="IDisposableLock" /> that will release the lock when disposed.</returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public static IDisposableLock GetReadLock(this AsyncReaderWriterLockSlim lockInstance, CancellationToken cancellationToken = default)
+    public static IDisposableLock GetReadLock(this AsyncReaderWriterLockSlim lockInstance,
+                                              CancellationToken cancellationToken = default)
     {
         lockInstance.EnterReadLock(cancellationToken);
 
@@ -36,7 +37,8 @@ public static class AsyncReaderWriterLockSlimExtension
     /// </returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public static async Task<IDisposableLock> GetReadLockAsync(this AsyncReaderWriterLockSlim lockInstance, CancellationToken cancellationToken = default)
+    public static async Task<IDisposableLock> GetReadLockAsync(this AsyncReaderWriterLockSlim lockInstance,
+                                                               CancellationToken cancellationToken = default)
     {
         await lockInstance.EnterReadLockAsync(cancellationToken);
 
@@ -62,13 +64,15 @@ public static class AsyncReaderWriterLockSlimExtension
     /// </exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public static IDisposableLock TryGetReadLock(this AsyncReaderWriterLockSlim lockInstance, int millisecondsTimeout, CancellationToken cancellationToken = default)
+    public static IDisposableLock TryGetReadLock(this AsyncReaderWriterLockSlim lockInstance,
+                                                 int millisecondsTimeout,
+                                                 CancellationToken cancellationToken = default)
     {
         bool returnValue = lockInstance.TryEnterReadLock(millisecondsTimeout, cancellationToken);
 
-        if (returnValue)
-            return new ActionDisposableLock(lockInstance.ExitReadLock, lockInstance, false);
-        return null;
+        return returnValue
+            ? new ActionDisposableLock(lockInstance.ExitReadLock, lockInstance, false)
+            : (IDisposableLock)null;
     }
 
     /// <summary>
@@ -90,13 +94,15 @@ public static class AsyncReaderWriterLockSlimExtension
     /// </exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public static async Task<IDisposableLock> TryGetReadLockAsync(this AsyncReaderWriterLockSlim lockInstance, int millisecondsTimeout, CancellationToken cancellationToken = default)
+    public static async Task<IDisposableLock> TryGetReadLockAsync(this AsyncReaderWriterLockSlim lockInstance,
+                                                                  int millisecondsTimeout,
+                                                                  CancellationToken cancellationToken = default)
     {
         bool returnValue = await lockInstance.TryEnterReadLockAsync(millisecondsTimeout, cancellationToken);
 
-        if (returnValue)
-            return new ActionDisposableLock(lockInstance.ExitReadLock, lockInstance, false);
-        return null;
+        return returnValue
+            ? new ActionDisposableLock(lockInstance.ExitReadLock, lockInstance, false)
+            : (IDisposableLock)null;
     }
 
     /// <summary>
@@ -107,7 +113,8 @@ public static class AsyncReaderWriterLockSlimExtension
     /// <returns>A <see cref="IDisposableLock" /> that will release the lock when disposed.</returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public static IDisposableLock GetWriteLock(this AsyncReaderWriterLockSlim lockInstance, CancellationToken cancellationToken = default)
+    public static IDisposableLock GetWriteLock(this AsyncReaderWriterLockSlim lockInstance,
+                                               CancellationToken cancellationToken = default)
     {
         lockInstance.EnterWriteLock(cancellationToken);
 
@@ -125,7 +132,8 @@ public static class AsyncReaderWriterLockSlimExtension
     /// </returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public static async Task<IDisposableLock> GetWriteLockAsync(this AsyncReaderWriterLockSlim lockInstance, CancellationToken cancellationToken = default)
+    public static async Task<IDisposableLock> GetWriteLockAsync(this AsyncReaderWriterLockSlim lockInstance,
+                                                                CancellationToken cancellationToken = default)
     {
         await lockInstance.EnterWriteLockAsync(cancellationToken);
 
@@ -151,13 +159,15 @@ public static class AsyncReaderWriterLockSlimExtension
     /// </exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public static IDisposableLock TryGetWriteLock(this AsyncReaderWriterLockSlim lockInstance, int millisecondsTimeout, CancellationToken cancellationToken = default)
+    public static IDisposableLock TryGetWriteLock(this AsyncReaderWriterLockSlim lockInstance,
+                                                  int millisecondsTimeout,
+                                                  CancellationToken cancellationToken = default)
     {
         bool returnValue = lockInstance.TryEnterWriteLock(millisecondsTimeout, cancellationToken);
 
-        if (returnValue)
-            return new ActionDisposableLock(lockInstance.ExitWriteLock, lockInstance, true);
-        return null;
+        return returnValue
+            ? new ActionDisposableLock(lockInstance.ExitWriteLock, lockInstance, true)
+            : (IDisposableLock)null;
     }
 
     /// <summary>
@@ -179,13 +189,15 @@ public static class AsyncReaderWriterLockSlimExtension
     /// </exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public static async Task<IDisposableLock> TryGetWriteLockAsync(this AsyncReaderWriterLockSlim lockInstance, int millisecondsTimeout, CancellationToken cancellationToken = default)
+    public static async Task<IDisposableLock> TryGetWriteLockAsync(this AsyncReaderWriterLockSlim lockInstance,
+                                                                   int millisecondsTimeout,
+                                                                   CancellationToken cancellationToken = default)
     {
         bool returnValue = await lockInstance.TryEnterWriteLockAsync(millisecondsTimeout, cancellationToken);
 
-        if (returnValue)
-            return new ActionDisposableLock(lockInstance.ExitWriteLock, lockInstance, true);
-        return null;
+        return returnValue
+            ? new ActionDisposableLock(lockInstance.ExitWriteLock, lockInstance, true)
+            : (IDisposableLock)null;
     }
 
     /// <summary>
@@ -194,7 +206,8 @@ public static class AsyncReaderWriterLockSlimExtension
     /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
     /// <param name="readLock">The <see cref="IDisposableLock" /> which should be downgraded.</param>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public static void DowngradeWriteLockToReadLock(this AsyncReaderWriterLockSlim lockInstance, IDisposableLock readLock)
+    public static void DowngradeWriteLockToReadLock(this AsyncReaderWriterLockSlim lockInstance,
+                                                    IDisposableLock readLock)
     {
         if (readLock is null)
             throw new ArgumentNullException(nameof(readLock));

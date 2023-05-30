@@ -15,9 +15,9 @@ public static class DoubleExtensions
 
     public static bool PreciseEquals(this double left, double right, int floatDigits = 7)
     {
-        if (floatDigits < 1
-            || floatDigits > 7)
-            throw new ArgumentOutOfRangeException(nameof(floatDigits), floatDigits, "Only values between 1 and 7 are supported");
+        if (floatDigits is < 1 or > 7)
+            throw new ArgumentOutOfRangeException(nameof(floatDigits), floatDigits,
+                "Only values between 1 and 7 are supported");
 
         double floatComparison = GetFloatComparison(floatDigits);
         return Math.Abs(left - right) < floatComparison;
@@ -34,10 +34,9 @@ public static class DoubleExtensions
                  && "," != numberDecimalSeparator)
             value = value.Replace(",", numberDecimalSeparator);
 
-        if (double.TryParse(value, out double l))
-            return l;
-
-        throw new("Cannot unmarshal type double");
+        return double.TryParse(value, out double l)
+            ? l
+            : throw new("Cannot unmarshal type double");
     }
 
     private static double GetFloatComparison(int floatDigits)

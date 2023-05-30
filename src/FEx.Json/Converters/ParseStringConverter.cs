@@ -8,10 +8,7 @@ public class ParseStringConverter : JsonConverter
 {
     public static ParseStringConverter Singleton { get; } = new();
 
-    public override bool CanConvert(Type t)
-    {
-        return t == typeof(double) || t == typeof(double?);
-    }
+    public override bool CanConvert(Type t) => t == typeof(double) || t == typeof(double?);
 
     public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
     {

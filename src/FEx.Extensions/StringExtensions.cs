@@ -66,8 +66,7 @@ public static class StringExtensions
     /// <returns>A string.</returns>
     public static string Remove(this string source, IEnumerable<char> chars)
     {
-        return new(source.Where(c => !chars.Contains(c))
-            .ToArray());
+        return new(source.Where(c => !chars.Contains(c)).ToArray());
     }
 
     /// <summary>
@@ -79,10 +78,10 @@ public static class StringExtensions
     /// <returns>
     ///     True if equal otherwise False.
     /// </returns>
-    public static bool IsEqual(this string source, string value, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
-    {
-        return string.Equals(source, value, comparisonType);
-    }
+    public static bool IsEqual(this string source,
+                               string value,
+                               StringComparison comparisonType = StringComparison.OrdinalIgnoreCase) =>
+        string.Equals(source, value, comparisonType);
 
     /// <summary>
     ///     Determines whether string is not equal to the specified value.
@@ -93,10 +92,10 @@ public static class StringExtensions
     /// <returns>
     ///     <c>true</c> if it is not equal to the specified value; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsNotEqual(this string source, string value, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
-    {
-        return !source.IsEqual(value, comparisonType);
-    }
+    public static bool IsNotEqual(this string source,
+                                  string value,
+                                  StringComparison comparisonType = StringComparison.OrdinalIgnoreCase) =>
+        !source.IsEqual(value, comparisonType);
 
     /// <summary>
     ///     Gets a value indicating if the string is Null or Empty.
@@ -104,10 +103,7 @@ public static class StringExtensions
     /// <param name="value">string to test.</param>
     /// <returns>True if string is Null or Empty otherwise False.</returns>
     [ContractAnnotation("null => true")]
-    public static bool IsNullOrEmptyString(this string value)
-    {
-        return value is null || string.IsNullOrEmpty(value);
-    }
+    public static bool IsNullOrEmptyString(this string value) => value is null || string.IsNullOrEmpty(value);
 
     /// <summary>
     ///     Gets a value indicating if the string is NOT Null or Empty.
@@ -115,41 +111,31 @@ public static class StringExtensions
     /// <param name="value">string to test.</param>
     /// <returns>True if string is Null or Empty otherwise False.</returns>
     [ContractAnnotation("null => false")]
-    public static bool IsNotNullOrEmptyString(this string value)
-    {
-        return value is not null && !string.IsNullOrEmpty(value);
-    }
+    public static bool IsNotNullOrEmptyString(this string value) => value is not null && !string.IsNullOrEmpty(value);
 
     /// <summary>
     ///     Formats the value with the parameters using string.Format.
     /// </summary>
     /// <param name="value">The input string.</param>
     /// <param name="parameters">The parameters.</param>
-    public static string FormatWith(this string value, params object[] parameters)
-    {
-        return string.Format(value, parameters);
-    }
+    public static string FormatWith(this string value, params object[] parameters) => string.Format(value, parameters);
 
     /// <summary>
     ///     Gets a int from a string.
     /// </summary>
     /// <param name="value">string with number.</param>
     /// <returns>-1 if value is (Null or Empty or not Numeric) otherwise the number.</returns>
-    public static int ToInt(this string value)
-    {
-        return int.TryParse(value, out int result)
+    public static int ToInt(this string value) =>
+        int.TryParse(value, out int result)
             ? result
             : -1;
-    }
 
-    public static int? ToNullableInt(this string value)
-    {
-        return value is not null
+    public static int? ToNullableInt(this string value) =>
+        value is not null
             ? int.TryParse(value, out int result)
                 ? result
                 : null
             : null;
-    }
 
     /// <summary>
     ///     Gets a int from a string.
@@ -157,12 +143,10 @@ public static class StringExtensions
     /// <param name="value">string with number.</param>
     /// <param name="defaultResult">Number to return if parse fail.</param>
     /// <returns>defaultResult if value is (Null or Empty or not Numeric) otherwise the number.</returns>
-    public static int ToInt(this string value, int defaultResult)
-    {
-        return int.TryParse(value, out int result)
+    public static int ToInt(this string value, int defaultResult) =>
+        int.TryParse(value, out int result)
             ? result
             : defaultResult;
-    }
 
     /// <summary>
     ///     Writes an unformatted string to the Trace output.
@@ -179,42 +163,34 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>True if string contains wild cards; otherwise false.</returns>
-    public static bool HasNoWildCards(this string value)
-    {
-        return !value.Contains(StandardWildCardAnyValue) && !value.Contains(StandardWildCardOneCharacter);
-    }
+    public static bool HasNoWildCards(this string value) =>
+        !value.Contains(StandardWildCardAnyValue) && !value.Contains(StandardWildCardOneCharacter);
 
     /// <summary>
     ///     Determines whether given string has no SQL wild cards.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>True if string contains SQL wild cards; otherwise false.</returns>
-    public static bool HasNoSqlWildCards(this string value)
-    {
-        return !value.Contains(SqlWildCardAnyValue) && !value.Contains(SqlWildCardOneCharacter);
-    }
+    public static bool HasNoSqlWildCards(this string value) =>
+        !value.Contains(SqlWildCardAnyValue) && !value.Contains(SqlWildCardOneCharacter);
 
     /// <summary>
     ///     Replaces the standard wild cards by SQL ones.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>String with replaced wild cards.</returns>
-    public static string ReplaceStandardWildCardsBySql(this string value)
-    {
-        return value.Replace(StandardWildCardAnyValue, SqlWildCardAnyValue)
+    public static string ReplaceStandardWildCardsBySql(this string value) =>
+        value.Replace(StandardWildCardAnyValue, SqlWildCardAnyValue)
             .Replace(StandardWildCardOneCharacter, SqlWildCardOneCharacter);
-    }
 
     /// <summary>
     ///     Escape SQL wild cards characters.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>String with escaped wild card characters.</returns>
-    public static string EscapeSqlWildCards(this string value)
-    {
-        return value.Replace(SqlWildCardAnyValue.ToString(), SqlWildCardAnyValueEscaped)
+    public static string EscapeSqlWildCards(this string value) =>
+        value.Replace(SqlWildCardAnyValue.ToString(), SqlWildCardAnyValueEscaped)
             .Replace(SqlWildCardOneCharacter.ToString(), SqlWildCardOneCharacterEscaped);
-    }
 
     /// <summary>
     ///     Splits the specified string into parts.
@@ -244,12 +220,10 @@ public static class StringExtensions
     /// <param name="separator">The separator.</param>
     /// <param name="index">The index.</param>
     /// <returns>The splited element.</returns>
-    public static string GetSplitedElement(this string value, char separator, int index)
-    {
-        return !string.IsNullOrWhiteSpace(value)
+    public static string GetSplitedElement(this string value, char separator, int index) =>
+        !string.IsNullOrWhiteSpace(value)
             ? value.Split(separator)[index]
             : string.Empty;
-    }
 
     /// <summary>
     ///     Creates stream from the string.
@@ -271,11 +245,8 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>Value divided by capital letter.</returns>
-    public static string DivideByCapital(this string value)
-    {
-        return Regex.Replace(value, "([A-Z])", " $1")
-            .TrimStart(' ');
-    }
+    public static string DivideByCapital(this string value) =>
+        Regex.Replace(value, "([A-Z])", " $1").TrimStart(' ');
 
     /// <summary>
     ///     Determines whether the specified string is null or white space.
@@ -283,10 +254,7 @@ public static class StringExtensions
     /// <param name="value">The value.</param>
     /// <returns><c>true</c> if the specified string is null or white space; otherwise, <c>false</c>.</returns>
     [ContractAnnotation("null => true")]
-    public static bool IsNullOrWhiteSpace(this string value)
-    {
-        return string.IsNullOrWhiteSpace(value);
-    }
+    public static bool IsNullOrWhiteSpace(this string value) => string.IsNullOrWhiteSpace(value);
 
     /// <summary>
     ///     Determines whether the specified string is not null or white space.
@@ -294,27 +262,18 @@ public static class StringExtensions
     /// <param name="value">The value.</param>
     /// <returns><c>true</c> if the specified string is not null or white space; otherwise, <c>false</c>.</returns>
     [ContractAnnotation("null => false")]
-    public static bool IsNotNullOrWhiteSpace(this string value)
-    {
-        return !string.IsNullOrWhiteSpace(value);
-    }
+    public static bool IsNotNullOrWhiteSpace(this string value) => !string.IsNullOrWhiteSpace(value);
 
     [ContractAnnotation("null => false")]
-    public static bool IsNotNullOrEmptyOrWhiteSpace(this string value)
-    {
-        return value.IsNotNullOrEmptyString() && value.IsNotNullOrWhiteSpace();
-    }
+    public static bool IsNotNullOrEmptyOrWhiteSpace(this string value) =>
+        value.IsNotNullOrEmptyString() && value.IsNotNullOrWhiteSpace();
 
     [ContractAnnotation("null => true")]
-    public static bool IsNullOrEmptyOrWhiteSpace(this string value)
-    {
-        return value.IsNullOrEmptyString() || value.IsNullOrWhiteSpace();
-    }
+    public static bool IsNullOrEmptyOrWhiteSpace(this string value) =>
+        value.IsNullOrEmptyString() || value.IsNullOrWhiteSpace();
 
-    public static bool MatchesRegex(this string text, string regexPattern)
-    {
-        return MatchesRegex(text, new Regex(regexPattern));
-    }
+    public static bool MatchesRegex(this string text, string regexPattern) =>
+        MatchesRegex(text, new Regex(regexPattern));
 
     public static bool MatchesRegex(this string text, Regex regex)
     {
@@ -322,35 +281,22 @@ public static class StringExtensions
         return match.Value.Equals(text);
     }
 
-    public static bool IsAWord(this string text)
-    {
-        return text.MatchesRegex(new Regex(@"\b[\w']+\b"));
-    }
+    public static bool IsAWord(this string text) => text.MatchesRegex(new Regex(@"\b[\w']+\b"));
 
-    public static bool ContainsOnlyLetters(this string text)
-    {
-        return text.MatchesRegex(new Regex("^[a-zA-Z]+$"));
-    }
+    public static bool ContainsOnlyLetters(this string text) => text.MatchesRegex(new Regex("^[a-zA-Z]+$"));
 
-    public static bool ContainsOnlyLettersAndNumbers(this string text)
-    {
-        return text.MatchesRegex(new Regex("^[a-zA-Z0-9]+$"));
-    }
+    public static bool ContainsOnlyLettersAndNumbers(this string text) =>
+        text.MatchesRegex(new Regex("^[a-zA-Z0-9]+$"));
 
-    public static bool ContainsOnlyLettersNumbersAndUnderscore(this string text)
-    {
-        return text.MatchesRegex(new Regex("^[a-zA-Z0-9_]+$"));
-    }
+    public static bool ContainsOnlyLettersNumbersAndUnderscore(this string text) =>
+        text.MatchesRegex(new Regex("^[a-zA-Z0-9_]+$"));
 
-    public static bool Contains(this string source, string toCheck, StringComparison comp)
-    {
-        return source?.IndexOf(toCheck, comp) >= 0;
-    }
+    public static bool Contains(this string source, string toCheck, StringComparison comp) =>
+        source?.IndexOf(toCheck, comp) >= 0;
 
     public static IEnumerable<string> GetPathParts(this string path)
     {
-        return path.Split(Path.DirectorySeparatorChar)
-            .SelectMany(x => x.Split(Path.AltDirectorySeparatorChar));
+        return path.Split(Path.DirectorySeparatorChar).SelectMany(x => x.Split(Path.AltDirectorySeparatorChar));
     }
 
     public static string FirstCharToUpper(this string input)
@@ -359,10 +305,7 @@ public static class StringExtensions
         {
             null => throw new ArgumentNullException(nameof(input)),
             "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
-            _ => input[0]
-                     .ToString()
-                     .ToUpper()
-                 + input.Substring(1)
+            _ => input[0].ToString().ToUpper() + input.Substring(1)
         };
     }
 
@@ -372,10 +315,7 @@ public static class StringExtensions
         {
             null => throw new ArgumentNullException(nameof(input)),
             "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
-            _ => input[0]
-                     .ToString()
-                     .ToLower()
-                 + input.Substring(1)
+            _ => input[0].ToString().ToLower() + input.Substring(1)
         };
     }
 
@@ -480,16 +420,14 @@ public static class StringExtensions
 
     public static string ToBase64(this string str, Encoding enc = null)
     {
-        if (enc is null)
-            enc = Encoding.UTF8;
+        enc ??= Encoding.UTF8;
 
         return Convert.ToBase64String(enc.GetBytes(str));
     }
 
     public static string FromBase64(this string base64EncodedData, Encoding enc = null)
     {
-        if (enc is null)
-            enc = Encoding.UTF8;
+        enc ??= Encoding.UTF8;
 
         return enc.GetString(Convert.FromBase64String(base64EncodedData));
     }
@@ -526,25 +464,20 @@ public static class StringExtensions
         return Encoding.UTF8.GetString(mso.ToArray());
     }
 
-    public static bool CompareOrdinalIgnoreCase(this string source, string value)
-    {
-        return string.Compare(source, value, StringComparison.OrdinalIgnoreCase) == 0;
-    }
+    public static bool CompareOrdinalIgnoreCase(this string source, string value) =>
+        string.Compare(source, value, StringComparison.OrdinalIgnoreCase) == 0;
 
-    public static bool IsBothNullOrEqual(this string source, string value, StringComparison comparisonType = StringComparison.Ordinal)
-    {
-        return source is null && value is null || source?.Equals(value, comparisonType) == true;
-    }
+    public static bool IsBothNullOrEqual(this string source,
+                                         string value,
+                                         StringComparison comparisonType = StringComparison.Ordinal) =>
+        source is null && value is null || source?.Equals(value, comparisonType) == true;
 
-    public static Uri ToUri(this string source, Uri baseUri = null, UriKind kind = UriKind.Absolute)
-    {
-        if (source?.IsNotNullOrEmptyOrWhiteSpace() == true)
-            return baseUri is not null
+    public static Uri ToUri(this string source, Uri baseUri = null, UriKind kind = UriKind.Absolute) =>
+        source?.IsNotNullOrEmptyOrWhiteSpace() == true
+            ? baseUri is not null
                 ? new(baseUri, source)
-                : new Uri(source, kind);
-
-        return null;
-    }
+                : new Uri(source, kind)
+            : null;
 
     public static string ByteArrayToString(this byte[] ba)
     {
@@ -567,17 +500,12 @@ public static class StringExtensions
         return bytes;
     }
 
-    public static string GetGuidString(this Guid? guid)
-    {
-        return guid.HasValue
+    public static string GetGuidString(this Guid? guid) =>
+        guid.HasValue
             ? GetGuidString(guid.Value)
             : null;
-    }
 
-    public static string GetGuidString(this Guid guid)
-    {
-        return $"{{{guid.ToString().ToUpper()}}}";
-    }
+    public static string GetGuidString(this Guid guid) => $"{{{guid.ToString().ToUpper()}}}";
 
     public static string NormalizeLineBreaks(this string input)
     {
@@ -618,8 +546,7 @@ public static class StringExtensions
     public static string ComputeSha256Hash(this string rawData)
     {
         using var sha256Hash = SHA256.Create();
-        return sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData))
-            .ByteArrayToString();
+        return sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData)).ByteArrayToString();
     }
 
     public static string TrimLength(this string value, int length, bool trim = false)
@@ -643,9 +570,7 @@ public static class StringExtensions
             using (var md5 = MD5.Create())
             using (var stream = value.ToStream())
             {
-                return BitConverter.ToString(md5.ComputeHash(stream))
-                    .Replace("-", string.Empty)
-                    .ToLower();
+                return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty).ToLower();
             }
 
         return null;
@@ -665,7 +590,6 @@ public static class StringExtensions
                      .Select(t => t.ch))
             sb.Append(ch);
 
-        return sb.ToString()
-            .Normalize(NormalizationForm.FormC);
+        return sb.ToString().Normalize(NormalizationForm.FormC);
     }
 }

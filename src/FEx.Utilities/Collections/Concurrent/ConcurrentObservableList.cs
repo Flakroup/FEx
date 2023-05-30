@@ -21,7 +21,8 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     private static IFExDispatcher Dispatcher => Foundation.Dispatcher;
 
     public IObservable<EventPattern<NotifyCollectionChangedEventArgs>> CollectionChangedObservable =>
-        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(ev => CollectionChanged += ev, ev => CollectionChanged -= ev);
+        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+            ev => CollectionChanged += ev, ev => CollectionChanged -= ev);
 
     /// <summary>
     ///     Initializes a new instance of the ConcurrentObservableList class that contains

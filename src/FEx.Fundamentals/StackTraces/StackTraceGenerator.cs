@@ -33,7 +33,8 @@ public class StackTraceGenerator
             else
                 str = null;
 
-            Trace.WriteLine(string.Concat("Could not create fast stack trace cache, falling back to old supported way, failure because: ", str));
+            Trace.WriteLine(string.Concat(
+                "Could not create fast stack trace cache, falling back to old supported way, failure because: ", str));
             SlowAndSafeApproachToGetStackTrace();
         }
     }
@@ -44,8 +45,7 @@ public class StackTraceGenerator
             return null;
 
         var stackTraceFrames = new List<StackTraceFrame>();
-        StackFrame[] frames = GetCachedStackTrace()
-            .GetFrames();
+        StackFrame[] frames = GetCachedStackTrace().GetFrames();
         if (frames is null)
             return null;
 
@@ -53,16 +53,14 @@ public class StackTraceGenerator
         for (var i = 0; i < stackFrameArray.Length; i++)
         {
             StackFrame stackFrame = stackFrameArray[i];
-            Type declaringType = stackFrame.GetMethod()
-                .DeclaringType;
+            Type declaringType = stackFrame.GetMethod().DeclaringType;
             if (declaringType is not null)
                 stackTraceFrames.Add(new()
                 {
                     Column = stackFrame.GetFileColumnNumber(),
                     Line = stackFrame.GetFileLineNumber(),
                     FullFilename = stackFrame.GetFileName(),
-                    Method = stackFrame.GetMethod()
-                        .Name,
+                    Method = stackFrame.GetMethod().Name,
                     Type = declaringType.FullName,
                     Namespace = declaringType.Namespace ?? ""
                 });
@@ -74,10 +72,7 @@ public class StackTraceGenerator
         };
     }
 
-    public StackTrace GetCachedStackTrace()
-    {
-        return _stackTraceCache.GetStackTrace();
-    }
+    public StackTrace GetCachedStackTrace() => _stackTraceCache.GetStackTrace();
 
     private void CheatClrAndUseDynamicMethodsToGetStackTraceFast()
     {
@@ -86,11 +81,10 @@ public class StackTraceGenerator
         FieldInfo fieldInfo = type.GetField("rgiILOffset", BindingFlags.Instance | BindingFlags.NonPublic);
         MethodInfo method = Type.GetType("System.Diagnostics.StackTrace, mscorlib")
             .GetMethod("GetStackFramesInternal", BindingFlags.Static | BindingFlags.NonPublic);
-        var dynamicMethod = new DynamicMethod("GetStackTraceFast", typeof(MethodHandleAndILOffset[]), Type.EmptyTypes, type, true);
+        var dynamicMethod = new DynamicMethod("GetStackTraceFast", typeof(MethodHandleAndILOffset[]), Type.EmptyTypes,
+            type, true);
         ConstructorInfo constructors = type.GetConstructors()[0];
-        bool length = constructors.GetParameters()
-                          .Length
-                      == 2;
+        bool length = constructors.GetParameters().Length == 2;
         ILGenerator lGenerator = dynamicMethod.GetILGenerator();
         lGenerator.DeclareLocal(type);
         if (length)
@@ -112,7 +106,8 @@ public class StackTraceGenerator
         lGenerator.Emit(OpCodes.Ldfld, fieldInfo);
         lGenerator.Emit(OpCodes.Call, typeof(MethodHandleAndILOffset).GetMethod("Create"));
         lGenerator.Emit(OpCodes.Ret);
-        var getMethodRuntimeHandle = (GetMethodRuntimeHandles)dynamicMethod.CreateDelegate(typeof(GetMethodRuntimeHandles));
+        var getMethodRuntimeHandle =
+            (GetMethodRuntimeHandles)dynamicMethod.CreateDelegate(typeof(GetMethodRuntimeHandles));
         _stackTraceCache = new StackTraceCache(() => new(getMethodRuntimeHandle()));
     }
 
@@ -125,8 +120,7 @@ public class StackTraceGenerator
 
         for (var i = 0; i < stackTraceFilterArray.Length; i++)
         {
-            if (stackTraceFilterArray[i]
-                .Applies(logger, message))
+            if (stackTraceFilterArray[i].Applies(logger, message))
                 return true;
         }
 
@@ -144,10 +138,7 @@ public class StackTraceGenerator
             var methodHandleAndIlOffset = new MethodHandleAndILOffset[frames.Length];
             for (var i = 0; i < methodHandleAndIlOffset.Length; i++)
             {
-                methodHandleAndIlOffset[i] = new(frames[i]
-                    .GetMethod()
-                    .MethodHandle.Value, frames[i]
-                    .GetILOffset());
+                methodHandleAndIlOffset[i] = new(frames[i].GetMethod().MethodHandle.Value, frames[i].GetILOffset());
             }
 
             return new(methodHandleAndIlOffset);
@@ -177,10 +168,9 @@ public class StackTraceGenerator
             if (obj is null)
                 return false;
 
-            if (this == obj)
-                return true;
-
-            return Equals(obj as Key);
+            return this == obj
+                ? true
+                : Equals(obj as Key);
         }
 
         public override int GetHashCode()
@@ -188,10 +178,7 @@ public class StackTraceGenerator
             var hashCode = 0;
             for (var i = 0; i < _items.Length; i++)
             {
-                hashCode = _items[i]
-                               .GetHashCode()
-                           * 397
-                           ^ hashCode;
+                hashCode = _items[i].GetHashCode() * 397 ^ hashCode;
             }
 
             return hashCode;
@@ -210,8 +197,7 @@ public class StackTraceGenerator
 
             for (var i = 0; i < _items.Length; i++)
             {
-                if (!other._items[i]
-                        .Equals(_items[i]))
+                if (!other._items[i].Equals(_items[i]))
                     return false;
             }
 
@@ -247,10 +233,9 @@ public class StackTraceGenerator
             if (obj is null)
                 return false;
 
-            if (this == obj)
-                return true;
-
-            return Equals(obj as MethodHandleAndILOffset);
+            return this == obj
+                ? true
+                : Equals(obj as MethodHandleAndILOffset);
         }
 
         public override int GetHashCode()
@@ -267,10 +252,9 @@ public class StackTraceGenerator
             if (this == other)
                 return true;
 
-            if (!other._methodHandle.Equals(_methodHandle))
-                return false;
-
-            return other._offset == _offset;
+            return !other._methodHandle.Equals(_methodHandle)
+                ? false
+                : other._offset == _offset;
         }
     }
 

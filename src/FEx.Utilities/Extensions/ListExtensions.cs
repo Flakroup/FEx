@@ -16,9 +16,7 @@ public static class ListExtensions
             return null;
 
         var totalPagesCount = (int)Math.Ceiling(items.Count / (double)itemsPerPage);
-        IList<T> itemsForThisPage = items.Skip(itemsToSkip)
-            .Take(itemsPerPage)
-            .ToArray();
+        IList<T> itemsForThisPage = items.Skip(itemsToSkip).Take(itemsPerPage).ToArray();
         return new(itemsForThisPage, items.Count, page, totalPagesCount);
     }
 }

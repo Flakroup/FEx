@@ -10,10 +10,8 @@ public static class ArrayExtensions
     /// <param name="source"></param>
     /// <param name="index"></param>
     /// <returns></returns>
-    public static bool WithinIndex(this Array source, int index)
-    {
-        return source is not null && index >= 0 && index < source.Length;
-    }
+    public static bool WithinIndex(this Array source, int index) =>
+        source is not null && index >= 0 && index < source.Length;
 
     /// <summary>
     ///     Indexes the of.

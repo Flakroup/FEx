@@ -23,23 +23,20 @@ public abstract class FExSubject<T> : IDisposable
             _disposable.Add(disposable);
     }
 
-    public IObservable<T> GetObservable()
-    {
-        return _subject;
-    }
+    public IObservable<T> GetObservable() => _subject;
 
     public void SynchronizedOnNext(T value)
     {
-        Subject.Synchronize(_subject)
-            .OnNext(value);
+        Subject.Synchronize(_subject).OnNext(value);
     }
 
-    public async Task<T> GetResultAsync(CancellationToken cancellationToken, Func<IObservable<T>, IObservable<T>> observableConfiguration = null)
-    {
-        return await GetResultAsync<T>(cancellationToken, observableConfiguration);
-    }
+    public async Task<T> GetResultAsync(CancellationToken cancellationToken,
+                                        Func<IObservable<T>, IObservable<T>> observableConfiguration = null) =>
+        await GetResultAsync<T>(cancellationToken, observableConfiguration);
 
-    public async Task<TResult> GetResultAsync<TResult>(CancellationToken cancellationToken, Func<IObservable<T>, IObservable<TResult>> observableConfiguration = null)
+    public async Task<TResult> GetResultAsync<TResult>(CancellationToken cancellationToken,
+                                                       Func<IObservable<T>, IObservable<TResult>>
+                                                           observableConfiguration = null)
     {
         IObservable<TResult> observable = observableConfiguration?.Invoke(_subject) ?? (IObservable<TResult>)_subject;
 

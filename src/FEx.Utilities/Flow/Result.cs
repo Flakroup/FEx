@@ -22,10 +22,7 @@ public class Result<TError> where TError : IError, new()
         IsSuccess = false;
     }
 
-    public static implicit operator Result<TError>(TError right)
-    {
-        return new(right);
-    }
+    public static implicit operator Result<TError>(TError right) => new(right);
 
     public static implicit operator Result<TError>(string message)
     {
@@ -51,13 +48,7 @@ public class Result<TData, TError> : Result<TError> where TError : Error, new()
     {
     }
 
-    public static implicit operator Result<TData, TError>(TData data)
-    {
-        return new(data);
-    }
+    public static implicit operator Result<TData, TError>(TData data) => new(data);
 
-    public static implicit operator Result<TData, TError>(TError error)
-    {
-        return new(error);
-    }
+    public static implicit operator Result<TData, TError>(TError error) => new(error);
 }

@@ -1,6 +1,7 @@
 ﻿#if NETSTANDARD
 using FEx.Extensions.Collections.Lists;
 #endif
+using FEx.EFCore.Models;
 using FEx.Json;
 using FEx.Json.Converters;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static FEx.Logging.GlobalLogger;
 
-namespace FEx.EFCore;
+namespace FEx.EFCore.Extensions;
 
 public static class DbContextExtensions
 {
@@ -36,7 +37,10 @@ public static class DbContextExtensions
             MaxDepth = 1
         };
 
-        ((List<JsonConverter>)Settings.Converters).AddRange(new JsonConverter[] { ParseStringConverter.Singleton, new VersionConverter(), new StringEnumConverter() });
+        ((List<JsonConverter>)Settings.Converters).AddRange(new JsonConverter[]
+        {
+            ParseStringConverter.Singleton, new VersionConverter(), new StringEnumConverter()
+        });
 
         Settings.Error = (_, e) =>
         {
@@ -45,12 +49,24 @@ public static class DbContextExtensions
         };
     }
 
-    public static async Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext, string id = null, bool validateAllProperties = true, bool acceptAllChangesOnSuccess = true, Action<string, IReadOnlyCollection<EntityEntry>> onValidationStart = null, Action<string, EntityValidationFail> onFaultyEntity = null, Action<string, IReadOnlyCollection<EntityValidationFail>> onValidationFail = null, Action<string, IReadOnlyCollection<EntityEntry>> onValidationSuccess = null) where TDbContext : DbContext
+    public static async Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext,
+                                                                     string id = null,
+                                                                     bool validateAllProperties = true,
+                                                                     bool acceptAllChangesOnSuccess = true,
+                                                                     Action<string, IReadOnlyCollection<EntityEntry>>
+                                                                         onValidationStart = null,
+                                                                     Action<string, EntityValidationFail>
+                                                                         onFaultyEntity = null,
+                                                                     Action<string, IReadOnlyCollection<
+                                                                         EntityValidationFail>> onValidationFail = null,
+                                                                     Action<string, IReadOnlyCollection<EntityEntry>>
+                                                                         onValidationSuccess = null)
+        where TDbContext : DbContext
     {
-        id ??= Guid.NewGuid()
-            .ToString();
+        id ??= Guid.NewGuid().ToString();
 
-        bool? isSuccess = dbContext.ValidateChangedEntities(id, validateAllProperties, onValidationStart, onFaultyEntity, onValidationFail, onValidationSuccess);
+        bool? isSuccess = dbContext.ValidateChangedEntities(id, validateAllProperties, onValidationStart,
+            onFaultyEntity, onValidationFail, onValidationSuccess);
 
         if (isSuccess is not true)
             return;
@@ -60,10 +76,18 @@ public static class DbContextExtensions
         LogInformation($"[{id}]\t{res} rows affected");
     }
 
-    public static bool? ValidateChangedEntities<TDbContext>(this TDbContext dbContext, string id = null, bool validateAllProperties = true, Action<string, IReadOnlyCollection<EntityEntry>> onValidationStart = null, Action<string, EntityValidationFail> onFaultyEntity = null, Action<string, IReadOnlyCollection<EntityValidationFail>> onValidationFail = null, Action<string, IReadOnlyCollection<EntityEntry>> onValidationSuccess = null) where TDbContext : DbContext
+    public static bool? ValidateChangedEntities<TDbContext>(this TDbContext dbContext,
+                                                            string id = null,
+                                                            bool validateAllProperties = true,
+                                                            Action<string, IReadOnlyCollection<EntityEntry>>
+                                                                onValidationStart = null,
+                                                            Action<string, EntityValidationFail> onFaultyEntity = null,
+                                                            Action<string, IReadOnlyCollection<EntityValidationFail>>
+                                                                onValidationFail = null,
+                                                            Action<string, IReadOnlyCollection<EntityEntry>>
+                                                                onValidationSuccess = null) where TDbContext : DbContext
     {
-        id ??= Guid.NewGuid()
-            .ToString();
+        id ??= Guid.NewGuid().ToString();
 
         ReadOnlyCollection<EntityEntry> entities = dbContext.GetChangedEntities()
 #if NETSTANDARD
@@ -91,10 +115,10 @@ public static class DbContextExtensions
                 var validationContext = new ValidationContext(entry.Entity);
                 failedValidations.Clear();
 
-                if (!Validator.TryValidateObject(entry.Entity, validationContext, failedValidations, validateAllProperties))
+                if (!Validator.TryValidateObject(entry.Entity, validationContext, failedValidations,
+                        validateAllProperties))
                 {
-                    ReadOnlyCollection<ValidationResult> fails = failedValidations.ToList()
-                        .AsReadOnly();
+                    ReadOnlyCollection<ValidationResult> fails = failedValidations.ToList().AsReadOnly();
 
                     if (isSuccess)
                     {
@@ -111,15 +135,16 @@ public static class DbContextExtensions
             if (allFailedValidations.Count != 0)
             {
                 var sb = new StringBuilder();
-                sb.Append('[')
-                    .Append(id)
-                    .AppendLine("]");
-                foreach (string message in allFailedValidations.Select(res => GetValidationResultInfo(res, Debugger.IsAttached))
+                sb.Append('[').Append(id).AppendLine("]");
+                foreach (string message in allFailedValidations
+                             .Select(res => GetValidationResultInfo(res, Debugger.IsAttached))
                              .Distinct())
                     sb.Append(message);
 
                 var ex = new InvalidDataException(sb.ToString());
-                LogError($"[{id}]\tValidation of {allFailedValidations.Count} {(entities.Count > 1 ? "entities" : "entity")} failed", ex);
+                LogError(
+                    $"[{id}]\tValidation of {allFailedValidations.Count} {(entities.Count > 1 ? "entities" : "entity")} failed",
+                    ex);
                 onValidationFail?.Invoke(id, allFailedValidations); //todo convert to Rx
                 throw ex;
             }
@@ -127,14 +152,16 @@ public static class DbContextExtensions
 
         if (isSuccess)
         {
-            LogInformation($"[{id}]\tValidation of {entities.Count} {(entities.Count > 1 ? "entities" : "entity")} finished successfully");
+            LogInformation(
+                $"[{id}]\tValidation of {entities.Count} {(entities.Count > 1 ? "entities" : "entity")} finished successfully");
             onValidationSuccess?.Invoke(id, entities); //todo convert to Rx
         }
 
         return isSuccess;
     }
 
-    public static IList<EntityEntry> GetChangedEntities<TDbContext>(this TDbContext dbContext) where TDbContext : DbContext
+    public static IList<EntityEntry> GetChangedEntities<TDbContext>(this TDbContext dbContext)
+        where TDbContext : DbContext
     {
         return dbContext.ChangeTracker.Entries()
             .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
@@ -150,18 +177,12 @@ public static class DbContextExtensions
         var sb = new StringBuilder();
 
         if (detailedInfo)
-            sb.Append('[')
-                .Append(counter)
-                .Append("] ");
+            sb.Append('[').Append(counter).Append("] ");
 
-        sb.Append("Entity of type ")
-            .Append(entry.Entity.GetType()
-                .Name)
-            .Append(' ');
+        sb.Append("Entity of type ").Append(entry.Entity.GetType().Name).Append(' ');
 
         if (Debugger.IsAttached && detailedInfo)
-            sb.AppendLine()
-                .AppendLine(entry.Entity.ToJson(Settings));
+            sb.AppendLine().AppendLine(entry.Entity.ToJson(Settings));
 
         sb.AppendLine("has failed validation with following errors:");
 

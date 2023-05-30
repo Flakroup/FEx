@@ -14,7 +14,7 @@ public interface IError
     void SetInnerError(Error innerError);
 }
 
-public abstract class Error : IError
+public class Error : IError
 {
     private Error _innerError;
 
@@ -34,10 +34,9 @@ public abstract class Error : IError
 
     public string RootErrorStackTrace => RootError?.StackTrace;
 
-    protected Error()
+    public Error()
     {
-        StackTrace = Foundation.StackTraceGenerator.GetCachedStackTrace()
-            .ToString();
+        StackTrace = Foundation.StackTraceGenerator.GetCachedStackTrace().ToString();
     }
 
     protected Error(Error innerError)
@@ -55,7 +54,7 @@ public abstract class Error : IError
     }
 }
 
-public abstract class Error<TErrorStatus> : Error
+public class Error<TErrorStatus> : Error
 {
     public TErrorStatus Status { get; }
 

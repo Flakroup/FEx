@@ -4,6 +4,5 @@ namespace FEx.Abstractions;
 
 public interface IExceptionHandler
 {
-    bool CanHandle(Exception exception);
-    void Handle(Exception exception);
+    void Handle(Exception exception, object options = null);
 }

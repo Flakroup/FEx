@@ -16,8 +16,6 @@ public static class FileSystemInfoExtensions
         };
     }
 
-    public static bool IsPathFile(this FileSystemInfo fileSystemInfo)
-    {
-        return !fileSystemInfo.Attributes.HasFlag(FileAttributes.Directory);
-    }
+    public static bool IsPathFile(this FileSystemInfo fileSystemInfo) =>
+        !fileSystemInfo.Attributes.HasFlag(FileAttributes.Directory);
 }

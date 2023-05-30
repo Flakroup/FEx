@@ -124,10 +124,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         });
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public IEnumerator<T> GetEnumerator()
     {
@@ -145,15 +142,9 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         });
     }
 
-    public bool Contains(object value)
-    {
-        return Contains((T)value);
-    }
+    public bool Contains(object value) => Contains((T)value);
 
-    public int IndexOf(object value)
-    {
-        return IndexOf((T)value);
-    }
+    public int IndexOf(object value) => IndexOf((T)value);
 
     public void Insert(int index, object value)
     {
@@ -195,10 +186,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         });
     }
 
-    public SuppressEventsDisposable SuppressEvents()
-    {
-        return new(this);
-    }
+    public SuppressEventsDisposable SuppressEvents() => new(this);
 
     /// <summary>
     ///     Adds the specified items to this collection.
@@ -235,8 +223,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
     public void AddUniqueRange(IEnumerable<T> range)
     {
-        WriteWithResult(() => InternalAddRange(range.Distinct()
-            .Where(x => !Items.Contains(x))));
+        WriteWithResult(() => InternalAddRange(range.Distinct().Where(x => !Items.Contains(x))));
     }
 
     public bool RemoveWhere(Func<T, bool> predicate)
@@ -388,7 +375,9 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         });
     }
 
-    public void SortBy<TKey>(Func<T, TKey> selector, ListSortDirection order = ListSortDirection.Ascending, IComparer<TKey> comparer = null)
+    public void SortBy<TKey>(Func<T, TKey> selector,
+                             ListSortDirection order = ListSortDirection.Ascending,
+                             IComparer<TKey> comparer = null)
     {
         Write(() =>
         {
@@ -446,20 +435,14 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         _lock.Read(action);
     }
 
-    protected TResult Read<TResult>(Func<TResult> action)
-    {
-        return _lock.ReadWithResult(action);
-    }
+    protected TResult Read<TResult>(Func<TResult> action) => _lock.ReadWithResult(action);
 
     protected void Write(Action action)
     {
         _lock.Write(action);
     }
 
-    protected TResult WriteWithResult<TResult>(Func<TResult> action)
-    {
-        return _lock.WriteWithResult(action);
-    }
+    protected TResult WriteWithResult<TResult>(Func<TResult> action) => _lock.WriteWithResult(action);
 
     protected T SetItem(int index, T item)
     {

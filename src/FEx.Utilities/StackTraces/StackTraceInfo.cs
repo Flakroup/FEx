@@ -35,17 +35,12 @@ public class StackTraceInfo : IEquatable<StackTraceInfo>
         if (this == obj)
             return true;
 
-        if (obj.GetType() != typeof(StackTraceInfo))
-            return false;
-
-        return Equals((StackTraceInfo)obj);
+        return obj.GetType() != typeof(StackTraceInfo)
+            ? false
+            : Equals((StackTraceInfo)obj);
     }
 
-    public override int GetHashCode()
-    {
-        if (Frames is null)
-            return 0;
-
-        return Frames.GetHashCode();
-    }
+    public override int GetHashCode() => Frames is null
+        ? 0
+        : Frames.GetHashCode();
 }

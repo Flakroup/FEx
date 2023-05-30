@@ -5,7 +5,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="ReactiveUI" Version="18.4.26" />
+		<PackageReference Include="DynamicData" Version="7.14.2" />
+		<PackageReference Include="ReactiveUI" Version="18.4.44" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -15,8 +15,7 @@ public static class TypeExtensions
     /// <returns></returns>
     public static IEnumerable<Type> GetImplementedInterfaces(this Type interfaceType)
     {
-        return GetAllNotSealedClasses()
-            .Where(type => type.GetInterface(interfaceType.Name) is not null);
+        return GetAllNotSealedClasses().Where(type => type.GetInterface(interfaceType.Name) is not null);
     }
 
     /// <summary>
@@ -26,9 +25,7 @@ public static class TypeExtensions
     /// <returns></returns>
     public static IEnumerable<Type> GetImplementedClasses(this Type baseType)
     {
-        return GetAllNotSealedClasses()
-            .Where(type => type.GetBaseTypes()
-                .Contains(baseType));
+        return GetAllNotSealedClasses().Where(type => type.GetBaseTypes().Contains(baseType));
     }
 
     /// <summary>
@@ -39,8 +36,7 @@ public static class TypeExtensions
     /// <returns></returns>
     public static List<Type> GetBaseTypes(this Type baseType, List<Type> baseTypes = null)
     {
-        if (baseTypes is null)
-            baseTypes = new();
+        baseTypes ??= new();
 
         if (baseType.BaseType is not null)
         {
@@ -51,17 +47,11 @@ public static class TypeExtensions
         return baseTypes;
     }
 
-    public static string GetTypeDescription(this Type value)
-    {
-        return GetTypeCustomAttribute<DescriptionAttribute>(value)
-            ?.Find()
-            ?.Description;
-    }
+    public static string GetTypeDescription(this Type value) =>
+        GetTypeCustomAttribute<DescriptionAttribute>(value)?.Find()?.Description;
 
-    public static TAttributeType[] GetTypeCustomAttribute<TAttributeType>(this Type value) where TAttributeType : Attribute
-    {
-        return (TAttributeType[])value.GetCustomAttributes(typeof(TAttributeType), false);
-    }
+    public static TAttributeType[] GetTypeCustomAttribute<TAttributeType>(this Type value)
+        where TAttributeType : Attribute => (TAttributeType[])value.GetCustomAttributes(typeof(TAttributeType), false);
 
     /// <summary>
     ///     Gets all not sealed classes.

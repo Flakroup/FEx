@@ -10,13 +10,10 @@ public class FExStrongInjectServiceProvider : IFExServiceProvider
 {
     private object _provider;
 
-    public T GetRequiredService<T>()
-    {
-        if (_provider is not IContainer<T> container)
-            throw new InvalidOperationException($"Couldn't resolve type: {typeof(T).FullName}");
-
-        return container.Resolve<T>().Value;
-    }
+    public T GetRequiredService<T>() =>
+        _provider is not IContainer<T> container
+            ? throw new InvalidOperationException($"Couldn't resolve type: {typeof(T).FullName}")
+            : container.Resolve<T>().Value;
 
     public T TryResolveService<T>() =>
         _provider is IContainer<T> container

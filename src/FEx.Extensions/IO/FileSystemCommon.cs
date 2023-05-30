@@ -23,7 +23,8 @@ public static class FileSystemCommon
         {
             DriveInfo[] allDrives = DriveInfo.GetDrives();
             DriveInfo driveBasedOnPath = allDrives.Find(d => d.RootDirectory.Name == pathRoot);
-            return driveBasedOnPath?.DriveFormat.IsEqual(Ntfs) == true && driveBasedOnPath.DriveType.IsIn(DriveType.Fixed, DriveType.Removable);
+            return driveBasedOnPath?.DriveFormat.IsEqual(Ntfs) == true
+                   && driveBasedOnPath.DriveType.IsIn(DriveType.Fixed, DriveType.Removable);
         }
 
         return false;
@@ -34,15 +35,11 @@ public static class FileSystemCommon
     /// </summary>
     /// <param name="filePath">The file path.</param>
     /// <returns></returns>
-    public static string GenerateMd5OfFile(string filePath)
-    {
-        return new FileInfo(filePath).GenerateMd5OfFile();
-    }
+    public static string GenerateMd5OfFile(string filePath) => new FileInfo(filePath).GenerateMd5OfFile();
 
     public static string GetParentFolderFromPath(string path, char pathSeparator, bool includeSeparatorAtEnd)
     {
-        int pos = path.TrimEnd(pathSeparator)
-            .LastIndexOf(pathSeparator.ToString(), StringComparison.Ordinal);
+        int pos = path.TrimEnd(pathSeparator).LastIndexOf(pathSeparator.ToString(), StringComparison.Ordinal);
 #if NETSTANDARD
         return path.Substring(includeSeparatorAtEnd
             ? pos + 1

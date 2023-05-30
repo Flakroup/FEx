@@ -106,8 +106,7 @@ public abstract class LiteDBService : IDisposable
                 return true;
 
             //LiteDB issue workaround https://github.com/mbdavid/LiteDB/issues/1940#issuecomment-961784366
-            int documentsCount = _context.Database.GetCollection<T>()
-                .Count();
+            int documentsCount = _context.Database.GetCollection<T>().Count();
 
             predicate ??= GetTrueExpression<T>();
             return WrapInTransaction(() => _context.Database.GetCollection<T>()
@@ -156,9 +155,7 @@ public abstract class LiteDBService : IDisposable
         catch
         {
             Delete<T>();
-            return Enumerable.Empty<T>()
-                .ToList()
-                .AsReadOnly();
+            return Enumerable.Empty<T>().ToList().AsReadOnly();
         }
     }
 

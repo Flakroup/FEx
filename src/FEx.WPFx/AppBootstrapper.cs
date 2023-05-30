@@ -26,8 +26,7 @@ public abstract class AppBootstrapper : Application
 
     protected virtual void HandleAppException(Exception exception)
     {
-        if (_exceptionHandler.CanHandle(exception))
-            _exceptionHandler.Handle(exception);
+        _exceptionHandler.Handle(exception);
     }
 
     protected virtual void BeforeStartup(StartupEventArgs e)

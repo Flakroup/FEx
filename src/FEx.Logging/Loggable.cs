@@ -115,10 +115,8 @@ public class Loggable : ILoggable
         Scope?.Dispose();
     }
 
-    private string Combine(string message)
-    {
-        return State is null
+    private string Combine(string message) =>
+        State is null
             ? message
             : $"[State:{State}]   {message}";
-    }
 }

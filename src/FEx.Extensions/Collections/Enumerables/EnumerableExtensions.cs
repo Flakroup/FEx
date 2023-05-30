@@ -19,16 +19,10 @@ public static class EnumerableExtensions
     /// <param name="source">The source.</param>
     /// <returns>True, if source is null or contains no data; Otherwise false.</returns>
     [ContractAnnotation("null => true")]
-    public static bool IsNullOrEmptyEnumerable<T>(this IEnumerable<T> source)
-    {
-        return source?.Any() != true;
-    }
+    public static bool IsNullOrEmptyEnumerable<T>(this IEnumerable<T> source) => source?.Any() != true;
 
     [ContractAnnotation("null => false")]
-    public static bool IsNotNullOrEmptyEnumerable<T>(this IEnumerable<T> source)
-    {
-        return source?.Any() == true;
-    }
+    public static bool IsNotNullOrEmptyEnumerable<T>(this IEnumerable<T> source) => source?.Any() == true;
 
     /// <summary>
     ///     Appends a sequence of items to an existing list
@@ -143,12 +137,10 @@ public static class EnumerableExtensions
     /// <param name="items">The items.</param>
     /// <param name="selector">The selector.</param>
     /// <returns></returns>
-    public static TResult MaxOrDefault<TItem, TResult>(this IEnumerable<TItem> items, Func<TItem, TResult> selector)
-    {
-        return items.Any()
+    public static TResult MaxOrDefault<TItem, TResult>(this IEnumerable<TItem> items, Func<TItem, TResult> selector) =>
+        items.Any()
             ? items.Max(selector)
             : default;
-    }
 
     /// <summary>
     ///     Builds the joined string.
@@ -158,8 +150,7 @@ public static class EnumerableExtensions
     /// <returns>The joined string.</returns>
     public static string ToJoinedString<TItem>(this IEnumerable<TItem> items)
     {
-        return string.Join(", ", items.Select(i => i.ToString())
-            .ToArray());
+        return string.Join(", ", items.Select(i => i.ToString()).ToArray());
     }
 
     /// <summary>
@@ -170,10 +161,7 @@ public static class EnumerableExtensions
     /// <returns>
     ///     <see cref="ObservableCollection{T}" />
     /// </returns>
-    public static ObservableCollection<T> ToObservableCollection<T>(this IEnumerable<T> source)
-    {
-        return new(source);
-    }
+    public static ObservableCollection<T> ToObservableCollection<T>(this IEnumerable<T> source) => new(source);
 
     /// <summary>
     ///     Finds the index of the first occurrence of an item in an enumerable.
@@ -239,11 +227,8 @@ public static class EnumerableExtensions
     /// </summary>
     /// <param name="enumerable">The enumerable.</param>
     /// <returns></returns>
-    public static Type GetItemType(this IEnumerable enumerable)
-    {
-        return enumerable.GetType()
-            .GetElementType();
-    }
+    public static Type GetItemType(this IEnumerable enumerable) =>
+        enumerable.GetType().GetElementType();
 
     /// <summary>
     ///     Checks if two sequences contain the same elements without checking their order
@@ -253,10 +238,7 @@ public static class EnumerableExtensions
     /// <returns><c>true</c> if sequences contain the same elements; otherwise, <c>false</c>.</returns>
     public static bool UnorderedSequenceEqual(this IEnumerable first, IEnumerable second)
     {
-        return first.Cast<object>()
-            .OrderBy(t => t)
-            .SequenceEqual(second.Cast<object>()
-                .OrderBy(t => t));
+        return first.Cast<object>().OrderBy(t => t).SequenceEqual(second.Cast<object>().OrderBy(t => t));
     }
 
     /// <summary>
@@ -267,20 +249,14 @@ public static class EnumerableExtensions
     /// <returns>
     ///     Collection{T}
     /// </returns>
-    public static Collection<T> ToCollection<T>(this IEnumerable<T> source)
-    {
-        return new(source.ToList());
-    }
+    public static Collection<T> ToCollection<T>(this IEnumerable<T> source) => new(source.ToList());
 
-    public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int n)
-    {
-        return source.Skip(Math.Max(0, source.Count() - n));
-    }
+    public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int n) =>
+        source.Skip(Math.Max(0, source.Count() - n));
 
     public static IEnumerable<T> DistinctBy<T>(this IEnumerable<T> enumerable, Func<T, object> propertySelector)
     {
-        return enumerable.GroupBy(propertySelector)
-            .Select(g => g.First());
+        return enumerable.GroupBy(propertySelector).Select(g => g.First());
     }
 
     /// <summary>
@@ -290,7 +266,8 @@ public static class EnumerableExtensions
     /// <param name="origin">The origin.</param>
     /// <param name="multiplier">The multiplier.</param>
     /// <returns>IEnumerables multiplied by the give one.</returns>
-    public static IList<IEnumerable<T>> MulitplyBy<T>(this IEnumerable<IEnumerable<T>> origin, IEnumerable<T> multiplier)
+    public static IList<IEnumerable<T>> MulitplyBy<T>(this IEnumerable<IEnumerable<T>> origin,
+                                                      IEnumerable<T> multiplier)
     {
         IList<IEnumerable<T>> multipliedLists = new List<IEnumerable<T>>();
         if (origin.Any())
@@ -354,10 +331,10 @@ public static class EnumerableExtensions
         return count;
     }
 
-    public static IEnumerable<T> GetAllItemsChildren<T>(this IEnumerable<T> items, Func<T, IEnumerable<T>> getChildrenFunc)
+    public static IEnumerable<T> GetAllItemsChildren<T>(this IEnumerable<T> items,
+                                                        Func<T, IEnumerable<T>> getChildrenFunc)
     {
-        return items?.SelectMany(item => item.Yield()
-            .Concat(GetAllItemChildren(item, getChildrenFunc)));
+        return items?.SelectMany(item => item.Yield().Concat(GetAllItemChildren(item, getChildrenFunc)));
     }
 
     public static IEnumerable<T> GetAllItemChildren<T>(this T item, Func<T, IEnumerable<T>> getChildrenFunc)

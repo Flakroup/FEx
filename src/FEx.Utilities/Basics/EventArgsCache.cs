@@ -11,5 +11,6 @@ public static class EventArgsCache
 
     public static readonly PropertyChangedEventArgs IndexerPropertyChanged = new("Item[]");
 
-    public static readonly NotifyCollectionChangedEventArgs ResetCollectionChanged = new(NotifyCollectionChangedAction.Reset);
+    public static readonly NotifyCollectionChangedEventArgs ResetCollectionChanged =
+        new(NotifyCollectionChangedAction.Reset);
 }

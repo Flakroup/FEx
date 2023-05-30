@@ -27,36 +27,37 @@ public static class ConfigurationExtensions
 
         if (keys.IsNotNullOrEmptyList())
         {
-            missingProps = keys.Where(x => !properties.ContainsKey(x))
-                .ToArray();
+            missingProps = keys.Where(x => !properties.ContainsKey(x)).ToArray();
 
             if (missingProps.IsNotNullOrEmptyList())
-                throw new ArgumentNullException($"{string.Join(", ", missingProps)} {(missingProps.Length == 1 ? "has" : "have")} no settings");
+                throw new ArgumentNullException(
+                    $"{string.Join(", ", missingProps)} {(missingProps.Length == 1 ? "has" : "have")} no settings");
         }
 
-        missingProps = properties.Where(p => (keys.IsNullOrEmptyList() || keys.Contains(p.Key)) && p.Value.ReferenceIsNull())
+        missingProps = properties
+            .Where(p => (keys.IsNullOrEmptyList() || keys.Contains(p.Key)) && p.Value.ReferenceIsNull())
             .Select(x => x.Key)
             .ToArray();
 
-        if (missingProps.IsNotNullOrEmptyList())
-            throw new ArgumentNullException($"{string.Join(", ", missingProps)} {(missingProps.Length == 1 ? "has" : "have")} no settings");
-
-        return appSettings;
+        return missingProps.IsNotNullOrEmptyList()
+            ? throw new ArgumentNullException(
+                $"{string.Join(", ", missingProps)} {(missingProps.Length == 1 ? "has" : "have")} no settings")
+            : appSettings;
     }
 
-    public static TConf GetBindedConfiguration<TConf>(string sectionKey = null, string basePath = null, string settingsFilePath = "appsettings.json")
+    public static TConf GetBindedConfiguration<TConf>(string sectionKey = null,
+                                                      string basePath = null,
+                                                      string settingsFilePath = "appsettings.json")
     {
         var builder = new ConfigurationBuilder();
-        builder.SetBasePath(basePath ?? Directory.GetCurrentDirectory())
-            .AddJsonFile(settingsFilePath, false);
+        builder.SetBasePath(basePath ?? Directory.GetCurrentDirectory()).AddJsonFile(settingsFilePath, false);
 
         IConfigurationRoot configuration = builder.Build();
 
         TConf appConfiguration = Activator.CreateInstance<TConf>();
 
         if (sectionKey is not null)
-            configuration.GetSection(sectionKey)
-                .Bind(appConfiguration);
+            configuration.GetSection(sectionKey).Bind(appConfiguration);
         else
             configuration.Bind(appConfiguration);
 

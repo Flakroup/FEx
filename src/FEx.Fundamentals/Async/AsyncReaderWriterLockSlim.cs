@@ -98,17 +98,12 @@ public class AsyncReaderWriterLockSlim : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private static int GetRemainingTimeout(int millisecondsTimeout, long initialTicks)
-    {
-        return millisecondsTimeout == Timeout.Infinite
+    private static int GetRemainingTimeout(int millisecondsTimeout, long initialTicks) =>
+        millisecondsTimeout == Timeout.Infinite
             ? Timeout.Infinite
             : (int)Math.Max(0, millisecondsTimeout - (GetTimestampTicks() - initialTicks) / 10000);
-    }
 
-    private static long GetTimestampTicks()
-    {
-        return DateTime.Now.Ticks;
-    }
+    private static long GetTimestampTicks() => DateTime.Now.Ticks;
 
     /// <summary>
     ///     Enters the lock in read mode.
@@ -128,10 +123,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
     /// <returns>A task that will complete when the lock has been entered.</returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public Task EnterReadLockAsync(CancellationToken cancellationToken = default)
-    {
-        return TryEnterReadLockAsync(Timeout.Infinite, cancellationToken);
-    }
+    public Task EnterReadLockAsync(CancellationToken cancellationToken = default) =>
+        TryEnterReadLockAsync(Timeout.Infinite, cancellationToken);
 
     /// <summary>
     ///     Tries to enter the lock in read mode, with an optional integer time-out.
@@ -193,7 +186,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
     /// </exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public async Task<bool> TryEnterReadLockAsync(int millisecondsTimeout = 0, CancellationToken cancellationToken = default)
+    public async Task<bool> TryEnterReadLockAsync(int millisecondsTimeout = 0,
+                                                  CancellationToken cancellationToken = default)
     {
         DenyIfDisposed();
         if (millisecondsTimeout < Timeout.Infinite)
@@ -210,7 +204,9 @@ public class AsyncReaderWriterLockSlim : IDisposable
         {
             // Need to wait until the existing write lock is released.
             // This may throw an OperationCanceledException.
-            waitResult = await existingWriteLockState.WaitingReadLocksSemaphore.WaitAsync(millisecondsTimeout, cancellationToken);
+            waitResult =
+                await existingWriteLockState.WaitingReadLocksSemaphore.WaitAsync(millisecondsTimeout,
+                    cancellationToken);
         }
         finally
         {
@@ -238,10 +234,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
     /// <returns>A task that will complete when the lock has been entered.</returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public Task EnterWriteLockAsync(CancellationToken cancellationToken = default)
-    {
-        return TryEnterWriteLockAsync(Timeout.Infinite, cancellationToken);
-    }
+    public Task EnterWriteLockAsync(CancellationToken cancellationToken = default) =>
+        TryEnterWriteLockAsync(Timeout.Infinite, cancellationToken);
 
     /// <summary>
     ///     Tries to enter the lock in write mode, with an optional integer time-out.
@@ -299,7 +293,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
             try
             {
                 // This may throw an OperationCanceledException.
-                waitResult = _readLockReleaseSemaphore.Wait(GetRemainingTimeout(millisecondsTimeout, initialTicks), cancellationToken);
+                waitResult = _readLockReleaseSemaphore.Wait(GetRemainingTimeout(millisecondsTimeout, initialTicks),
+                    cancellationToken);
             }
             finally
             {
@@ -334,7 +329,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
     /// </exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public async Task<bool> TryEnterWriteLockAsync(int millisecondsTimeout = 0, CancellationToken cancellationToken = default)
+    public async Task<bool> TryEnterWriteLockAsync(int millisecondsTimeout = 0,
+                                                   CancellationToken cancellationToken = default)
     {
         DenyIfDisposed();
         if (millisecondsTimeout < Timeout.Infinite)
@@ -375,7 +371,9 @@ public class AsyncReaderWriterLockSlim : IDisposable
             try
             {
                 // This may throw an OperationCanceledException.
-                waitResult = await _readLockReleaseSemaphore.WaitAsync(GetRemainingTimeout(millisecondsTimeout, initialTicks), cancellationToken);
+                waitResult =
+                    await _readLockReleaseSemaphore.WaitAsync(GetRemainingTimeout(millisecondsTimeout, initialTicks),
+                        cancellationToken);
             }
             finally
             {
@@ -437,9 +435,11 @@ public class AsyncReaderWriterLockSlim : IDisposable
             lock (_syncRoot)
             {
                 if (_currentWriteLockState is not null)
-                    throw new InvalidOperationException("A write lock was still active while trying to " + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
+                    throw new InvalidOperationException("A write lock was still active while trying to "
+                                                        + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
                 if ((Volatile.Read(ref _currentReadLockCount) & 0x7FFFFFFF) > 0)
-                    throw new InvalidOperationException("At least one read lock was still active while trying to " + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
+                    throw new InvalidOperationException("At least one read lock was still active while trying to "
+                                                        + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
             }
 
             _writeLockSemaphore.Dispose();
@@ -485,8 +485,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
             ExitReadLockCore(false);
 
             // Ensure that there exists a semaphore on which we can wait.
-            if (existingWriteLockState.WaitingReadLocksSemaphore is null)
-                existingWriteLockState.WaitingReadLocksSemaphore = new(0);
+            existingWriteLockState.WaitingReadLocksSemaphore ??= new(0);
 
             // Announce that we will wait on the semaphore.
             existingWriteLockState.WaitingReadLocksCount++;

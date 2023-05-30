@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace FEx.EFCore;
+namespace FEx.EFCore.Models;
 
 public class EntityValidationFail
 {

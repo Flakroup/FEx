@@ -7,7 +7,9 @@ namespace FEx.Extensions.Collections.Dictionaries;
 /// </summary>
 public static class ReadOnlyDictionaryExtensions
 {
-    public static TValue TryGetReadOnlyKeyValue<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary, TKey key, TValue fallback = default)
+    public static TValue TryGetReadOnlyKeyValue<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary,
+                                                              TKey key,
+                                                              TValue fallback = default)
     {
         if (key is not null
             && dictionary.IsNotNullOrEmptyReadOnlyCollection()
@@ -22,7 +24,8 @@ public static class ReadOnlyDictionaryExtensions
         return fallback;
     }
 
-    public static (bool isSuccess, TV value) GetReadOnlyValue<TK, TV>(this IReadOnlyDictionary<TK, TV> dictionary, TK key)
+    public static (bool isSuccess, TV value) GetReadOnlyValue<TK, TV>(this IReadOnlyDictionary<TK, TV> dictionary,
+                                                                      TK key)
     {
         bool res = dictionary.TryGetValue(key, out TV v);
 

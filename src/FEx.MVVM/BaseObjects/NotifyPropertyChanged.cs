@@ -50,7 +50,10 @@ public class NotifyPropertyChanged : INotifyPropertyChanged
     }
 
     [NotifyPropertyChangedInvocator]
-    protected virtual bool SetProperty<TRet>(ref TRet backingField, TRet newValue, Action<TRet> onPropertyChanged = null, [CallerMemberName] string propertyName = null)
+    protected virtual bool SetProperty<TRet>(ref TRet backingField,
+                                             TRet newValue,
+                                             Action<TRet> onPropertyChanged = null,
+                                             [CallerMemberName] string propertyName = null)
     {
         return SetPropertyStatic(ref backingField, newValue, x => OnPropertySet(x, propertyName, onPropertyChanged));
     }

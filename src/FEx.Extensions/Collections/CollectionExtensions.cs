@@ -46,7 +46,8 @@ public static class CollectionExtensions
     /// <param name="item">The item.</param>
     /// <param name="count">The count.</param>
     /// <param name="creator">The creator.</param>
-    public static void Add<T>(this ICollection<T> items, T item, int count = 1, Func<T, T> creator = null) where T : class
+    public static void Add<T>(this ICollection<T> items, T item, int count = 1, Func<T, T> creator = null)
+        where T : class
     {
         for (var i = 0; i < count; i++)
         {
@@ -57,26 +58,15 @@ public static class CollectionExtensions
     }
 
     [ContractAnnotation("null => false")]
-    public static bool IsNotNullOrEmptyCollection<T>(this ICollection<T> source)
-    {
-        return source?.Count > 0;
-    }
+    public static bool IsNotNullOrEmptyCollection<T>(this ICollection<T> source) => source?.Count > 0;
 
     [ContractAnnotation("null => true")]
-    public static bool IsNullOrEmptyCollection<T>(this ICollection<T> source)
-    {
-        return source is null || source.Count == 0;
-    }
+    public static bool IsNullOrEmptyCollection<T>(this ICollection<T> source) => source is null || source.Count == 0;
 
     [ContractAnnotation("null => false")]
-    public static bool IsNotNullOrEmptyReadOnlyCollection<T>(this IReadOnlyCollection<T> source)
-    {
-        return source?.Count > 0;
-    }
+    public static bool IsNotNullOrEmptyReadOnlyCollection<T>(this IReadOnlyCollection<T> source) => source?.Count > 0;
 
     [ContractAnnotation("null => true")]
-    public static bool IsNullOrEmptyReadOnlyCollection<T>(this IReadOnlyCollection<T> source)
-    {
-        return source is null || source.Count == 0;
-    }
+    public static bool IsNullOrEmptyReadOnlyCollection<T>(this IReadOnlyCollection<T> source) =>
+        source is null || source.Count == 0;
 }

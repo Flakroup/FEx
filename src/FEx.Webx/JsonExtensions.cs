@@ -12,15 +12,17 @@ namespace FEx.Webx;
 
 public static class JsonExtensions
 {
-    public static async Task<T> DeserializeRemoteJsonAsync<T>(this Uri url, JsonSerializerSettings settings = null, bool checkNetAvailability = false, CancellationToken cancellationToken = default)
+    public static async Task<T> DeserializeRemoteJsonAsync<T>(this Uri url,
+                                                              JsonSerializerSettings settings = null,
+                                                              bool checkNetAvailability = false,
+                                                              CancellationToken cancellationToken = default)
     {
         T res = default;
 
         if (!checkNetAvailability
             || await UriExtensions.CheckForInternetConnectionAsync(null))
         {
-            if (url.Scheme == "http"
-                || url.Scheme == "https")
+            if (url.Scheme is "http" or "https")
             {
                 using var client = new HttpClient();
                 using HttpResponseMessage response = await client.GetAsync(url, cancellationToken);

@@ -20,21 +20,15 @@ public class StackError : Error
         Message = message;
     }
 
-    public static implicit operator StackError(string message)
-    {
-        return new()
+    public static implicit operator StackError(string message) =>
+        new()
         {
             Message = message
         };
-    }
 
-    public override string ToString()
-    {
-        if (Message.IsNotNullOrEmptyString())
-            return Message + Environment.NewLine + StackTrace;
-
-        return StackTrace;
-    }
+    public override string ToString() => Message.IsNotNullOrEmptyString()
+        ? Message + Environment.NewLine + StackTrace
+        : StackTrace;
 }
 
 public class StackError<TErrorStatus> : Error<TErrorStatus>
@@ -56,11 +50,7 @@ public class StackError<TErrorStatus> : Error<TErrorStatus>
         Message = message;
     }
 
-    public override string ToString()
-    {
-        if (Message.IsNotNullOrEmptyString())
-            return Message + Environment.NewLine + StackTrace;
-
-        return StackTrace;
-    }
+    public override string ToString() => Message.IsNotNullOrEmptyString()
+        ? Message + Environment.NewLine + StackTrace
+        : StackTrace;
 }

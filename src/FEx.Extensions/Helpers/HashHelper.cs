@@ -4,7 +4,10 @@ namespace FEx.Extensions.Helpers;
 
 public static class HashHelper
 {
-    public static string GetHashString(this byte[] hash, bool removeDashes = true, bool toLower = true, bool asBase64String = false)
+    public static string GetHashString(this byte[] hash,
+                                       bool removeDashes = true,
+                                       bool toLower = true,
+                                       bool asBase64String = false)
     {
         string hashString = null;
 

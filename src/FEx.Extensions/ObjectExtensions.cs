@@ -28,7 +28,7 @@ public static class ObjectExtensions
     /// <returns>Field value.</returns>
     // ReSharper disable UnusedParameter.Global
     public static TField Get<TField>(this object value, ref TField field, Func<TField> initializer)
-    // ReSharper restore UnusedParameter.Global
+        // ReSharper restore UnusedParameter.Global
     {
         field ??= initializer();
 
@@ -42,10 +42,7 @@ public static class ObjectExtensions
     /// <param name="value">Reference to be tested</param>
     /// <returns>True, if specified value is not a null reference; Otherwise False.</returns>
     [ContractAnnotation("null => false")]
-    public static bool ReferenceIsNotNull<T>(this T value)
-    {
-        return !ReferenceEquals(value, null);
-    }
+    public static bool ReferenceIsNotNull<T>(this T value) => !ReferenceEquals(value, null);
 
     /// <summary>
     ///     Execute a action if T Not null.
@@ -79,12 +76,10 @@ public static class ObjectExtensions
     /// <param name="value">Reference to be tested</param>
     /// <param name="fn">Func to execute if value Not null.</param>
     /// <returns>If value not null, return the result of the Func; Otherwise return Default(TOut).</returns>
-    public static TOut IfNotNull<T, TOut>(this T value, Func<T, TOut> fn)
-    {
-        return value is not null
+    public static TOut IfNotNull<T, TOut>(this T value, Func<T, TOut> fn) =>
+        value is not null
             ? fn(value)
             : default;
-    }
 
     /// <summary>
     ///     Execute a action if T isnull.
@@ -127,10 +122,7 @@ public static class ObjectExtensions
     /// <param name="value">Reference to be tested</param>
     /// <returns>True, if specified value is a null reference; Otherwise False.</returns>
     [ContractAnnotation("null => true")]
-    public static bool ReferenceIsNull<T>(this T value)
-    {
-        return ReferenceEquals(value, null);
-    }
+    public static bool ReferenceIsNull<T>(this T value) => ReferenceEquals(value, null);
 
     /// <summary>
     ///     Checks an value to ensure it isn't null.
@@ -192,10 +184,8 @@ public static class ObjectExtensions
     /// <param name="source">The object for the string representation.</param>
     /// <param name="name">The name of the object.</param>
     /// <returns>A string of properties.</returns>
-    public static string ToPropertiesString(this object source, string name)
-    {
-        return source.ToPropertiesString(source.GetType(), name);
-    }
+    public static string ToPropertiesString(this object source, string name) =>
+        source.ToPropertiesString(source.GetType(), name);
 
     /// <summary>
     ///     Gets a string representation of the objects property values, with a delimiter between values.
@@ -261,8 +251,7 @@ public static class ObjectExtensions
     public static string ToPropertiesString(this object obj)
     {
         var propertiesString = new StringBuilder();
-        foreach (PropertyInfo property in obj.GetType()
-                     .GetProperties())
+        foreach (PropertyInfo property in obj.GetType().GetProperties())
         {
             string name = property.Name;
             object value = property.GetValue(obj, null);
@@ -296,37 +285,21 @@ public static class ObjectExtensions
     ///     This value should be null for non-indexed properties.
     /// </param>
     /// <returns>Property</returns>
-    public static T GetPropertyValueByName<T>(this object obj, string name, object[] index = null)
-    {
-        return (T)obj.GetType()
-            .GetProperty(name)
-            ?.GetValue(obj, index);
-    }
+    public static T GetPropertyValueByName<T>(this object obj, string name, object[] index = null) =>
+        (T)obj.GetType().GetProperty(name)?.GetValue(obj, index);
 
-    public static T GetObject<T>(this object value)
-    {
-        return value is not null
+    public static T GetObject<T>(this object value) =>
+        value is not null
             ? (T)value
             : default;
-    }
 
-    public static string GetTypeInstanceDescription(this object value)
-    {
-        return value.GetType()
-            .GetTypeCustomAttribute<DescriptionAttribute>()
-            ?.Find()
-            ?.Description;
-    }
+    public static string GetTypeInstanceDescription(this object value) =>
+        value.GetType().GetTypeCustomAttribute<DescriptionAttribute>()?.Find()?.Description;
 
-    public static bool IsBetween<T>(this T item, T start, T end, bool inclusive = false)
-    {
-        if (Comparer<T>.Default.Compare(start, end) > 0)
-            throw new ArgumentException("Given parameters create no range");
-
-        return inclusive
-            ? Comparer<T>.Default.Compare(item, start) >= 0 && Comparer<T>.Default.Compare(item, end) <= 0
-            : Comparer<T>.Default.Compare(item, start) > 0 && Comparer<T>.Default.Compare(item, end) < 0;
-    }
+    public static bool IsBetween<T>(this T item, T start, T end, bool inclusive = false) =>
+        Comparer<T>.Default.Compare(start, end) > 0 ? throw new ArgumentException("Given parameters create no range") :
+        inclusive ? Comparer<T>.Default.Compare(item, start) >= 0 && Comparer<T>.Default.Compare(item, end) <= 0 :
+        Comparer<T>.Default.Compare(item, start) > 0 && Comparer<T>.Default.Compare(item, end) < 0;
 
     /// <summary>
     ///     Determines whether the specified instance is in given instances set.
@@ -337,10 +310,7 @@ public static class ObjectExtensions
     /// <returns>
     ///     true if the specified instance is in given set; otherwise, false.
     /// </returns>
-    public static bool IsIn<T>(this T item, params T[] items)
-    {
-        return item.IsIn((IEnumerable<T>)items);
-    }
+    public static bool IsIn<T>(this T item, params T[] items) => item.IsIn((IEnumerable<T>)items);
 
     public static bool IsIn<T>(this T item, IEnumerable<T> items)
     {
@@ -352,15 +322,9 @@ public static class ObjectExtensions
         };
     }
 
-    public static bool IsNotIn<T>(this T item, params T[] items)
-    {
-        return item.IsNotIn((IEnumerable<T>)items);
-    }
+    public static bool IsNotIn<T>(this T item, params T[] items) => item.IsNotIn((IEnumerable<T>)items);
 
-    public static bool IsNotIn<T>(this T item, IEnumerable<T> items)
-    {
-        return !item.IsIn(items);
-    }
+    public static bool IsNotIn<T>(this T item, IEnumerable<T> items) => !item.IsIn(items);
 
     /// <summary>
     ///     Wraps this object instance into an IEnumerable{T}
@@ -374,26 +338,27 @@ public static class ObjectExtensions
         yield return item;
     }
 
-    public static bool IsEqual<T>(ref T field, T value)
-    {
-        return EqualityHelper.IsEqual(ref field, value);
-    }
+    public static bool IsEqual<T>(ref T field, T value) => EqualityHelper.IsEqual(ref field, value);
 
-    public static bool IsNotEqual<T>(ref T field, T value)
-    {
-        return EqualityHelper.IsNotEqual(ref field, value);
-    }
+    public static bool IsNotEqual<T>(ref T field, T value) => EqualityHelper.IsNotEqual(ref field, value);
 
     // ReSharper disable UnusedParameter.Global
-    public static bool SetObjectProperty<TSender, T>(this TSender sender, ref T backingField, T newValue, Action<T> onPropertyChanged = null, [CallerMemberName] string propertyName = null)
-    // ReSharper restore UnusedParameter.Global
-    {
-        return SetObjectProperty(ref backingField, newValue, onPropertyChanged, sender, propertyName);
-    }
+    public static bool SetObjectProperty<TSender, T>(this TSender sender,
+                                                     ref T backingField,
+                                                     T newValue,
+                                                     Action<T> onPropertyChanged = null,
+                                                     [CallerMemberName] string propertyName = null)
+        // ReSharper restore UnusedParameter.Global
+        =>
+            SetObjectProperty(ref backingField, newValue, onPropertyChanged, sender, propertyName);
 
     // ReSharper disable UnusedParameter.Global
-    public static bool SetObjectProperty<T>(ref T backingField, T newValue, Action<T> onPropertyChanged = null, object sender = null, [CallerMemberName] string propertyName = null)
-    // ReSharper restore UnusedParameter.Global
+    public static bool SetObjectProperty<T>(ref T backingField,
+                                            T newValue,
+                                            Action<T> onPropertyChanged = null,
+                                            object sender = null,
+                                            [CallerMemberName] string propertyName = null)
+        // ReSharper restore UnusedParameter.Global
     {
         if (IsNotEqual(ref backingField, newValue))
         {
@@ -411,15 +376,16 @@ public static class ObjectExtensions
         Type someObjectType = someObject.GetType();
 
         foreach (KeyValuePair<string, object> item in source)
-        {
-            someObjectType.GetProperty(item.Key)
-                .SetValue(someObject, item.Value, null);
-        }
+            someObjectType.GetProperty(item.Key).SetValue(someObject, item.Value, null);
 
         return someObject;
     }
 
-    public static IDictionary<string, object> AsDictionary(this object source, BindingFlags bindingAttr = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
+    public static IDictionary<string, object> AsDictionary(this object source,
+                                                           BindingFlags bindingAttr =
+                                                               BindingFlags.DeclaredOnly
+                                                               | BindingFlags.Public
+                                                               | BindingFlags.Instance)
     {
         return source.GetType()
             .GetProperties(bindingAttr)

@@ -11,29 +11,24 @@ public static class ErrorExtensions
     {
         action.Guard(nameof(action));
 
-        if (error.InnerError is TError typedError)
-            return action.Invoke(typedError);
-
-        return false;
+        return error.InnerError is TError typedError
+            ? action.Invoke(typedError)
+            : false;
     }
 
-    public static async Task<bool> MatchAsync<TError>(this Error error, Func<TError, Task<bool>> action) where TError : Error
+    public static async Task<bool> MatchAsync<TError>(this Error error, Func<TError, Task<bool>> action)
+        where TError : Error
     {
         action.Guard(nameof(action));
 
-        if (error.InnerError is TError typedError)
-            return await action.Invoke(typedError);
-
-        return false;
+        return error.InnerError is TError typedError
+            ? await action.Invoke(typedError)
+            : false;
     }
 
-    public static Error GetErrorRoot(this Error error)
-    {
-        if (error.InnerError is null)
-            return error;
-
-        return error.InnerError.GetErrorRoot();
-    }
+    public static Error GetErrorRoot(this Error error) => error.InnerError is null
+        ? error
+        : error.InnerError.GetErrorRoot();
 
     public static bool TryGetError<TError>(this Error error, out TError foundError) where TError : Error
     {

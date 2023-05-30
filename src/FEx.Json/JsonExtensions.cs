@@ -28,7 +28,8 @@ public static class JsonExtensions
                     NullValueHandling = NullValueHandling.Ignore,
                     DateFormatHandling = DateFormatHandling.IsoDateFormat
                 };
-                ((List<JsonConverter>)_defaultSettings.Converters).AddRange(new JsonConverter[] { ParseStringConverter.Singleton, new VersionConverter() });
+                ((List<JsonConverter>)_defaultSettings.Converters).AddRange(
+                    new JsonConverter[] { ParseStringConverter.Singleton, new VersionConverter() });
             }
 
             return _defaultSettings;
@@ -41,19 +42,18 @@ public static class JsonExtensions
         configuration(DefaultSettings);
     }
 
-    public static string ToJson(this object self, JsonSerializerSettings settings = null, Formatting formatting = Formatting.None)
-    {
-        return JsonConvert.SerializeObject(self, formatting, settings ?? DefaultSettings);
-    }
+    public static string ToJson(this object self,
+                                JsonSerializerSettings settings = null,
+                                Formatting formatting = Formatting.None) =>
+        JsonConvert.SerializeObject(self, formatting, settings ?? DefaultSettings);
 
     public static T FromJson<T>(this string json, JsonSerializerSettings settings = null, T fallback = default)
     {
         try
         {
-            if (json == NullString)
-                return fallback;
-
-            return JsonConvert.DeserializeObject<T>(json, settings ?? DefaultSettings);
+            return json == NullString
+                ? fallback
+                : JsonConvert.DeserializeObject<T>(json, settings ?? DefaultSettings);
         }
         catch // (Exception ex)
         {
@@ -64,10 +64,8 @@ public static class JsonExtensions
         }
     }
 
-    public static object FromJson(this string json, JsonSerializerSettings settings = null)
-    {
-        return JsonConvert.DeserializeObject(json, settings ?? DefaultSettings);
-    }
+    public static object FromJson(this string json, JsonSerializerSettings settings = null) =>
+        JsonConvert.DeserializeObject(json, settings ?? DefaultSettings);
 
     public static object DeserializeFromStream(this Stream stream, JsonSerializerSettings settings = null)
     {
@@ -109,19 +107,15 @@ public static class JsonExtensions
     /// <returns>
     ///     T
     /// </returns>
-    public static T DeserializeToken<T>(this JToken jToken, JsonSerializerSettings settings = null)
-    {
-        return jToken.ToString()
-            .FromJson<T>(settings);
-    }
+    public static T DeserializeToken<T>(this JToken jToken, JsonSerializerSettings settings = null) =>
+        jToken.ToString().FromJson<T>(settings);
 
     public static string TrimJsonString(this string jsonValue)
     {
         jsonValue = jsonValue?.Trim();
 
         if (jsonValue?.StartsWith("\"{") ?? false)
-            jsonValue = Regex.Unescape(jsonValue)
-                .Trim('"');
+            jsonValue = Regex.Unescape(jsonValue).Trim('"');
 
         return jsonValue;
     }
@@ -139,11 +133,11 @@ public static class JsonExtensions
         obj.WriteTo(destWriter);
     }
 
-    public static string PrettyPrintJson(this string json, JsonLoadSettings loadSettings = null, JsonSerializerSettings saveSettings = null, Formatting formatting = Formatting.Indented)
-    {
-        return JObject.Parse(json, loadSettings)
-            .ToJson(saveSettings ?? DefaultSettings, formatting);
-    }
+    public static string PrettyPrintJson(this string json,
+                                         JsonLoadSettings loadSettings = null,
+                                         JsonSerializerSettings saveSettings = null,
+                                         Formatting formatting = Formatting.Indented) =>
+        JObject.Parse(json, loadSettings).ToJson(saveSettings ?? DefaultSettings, formatting);
 
     public static T DeserializeFromFile<T>(this FileInfo file, JsonSerializerSettings settings = null)
     {
@@ -159,7 +153,10 @@ public static class JsonExtensions
         }
     }
 
-    public static void SerializeToFile(this FileInfo file, object self, JsonSerializerSettings settings = null, Formatting formatting = Formatting.None)
+    public static void SerializeToFile(this FileInfo file,
+                                       object self,
+                                       JsonSerializerSettings settings = null,
+                                       Formatting formatting = Formatting.None)
     {
         File.WriteAllText(file.FullName, self.ToJson(settings, formatting));
     }

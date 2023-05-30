@@ -14,50 +14,35 @@ public static class TimeSpanExtensions
     /// </summary>
     /// <param name="value">Current Timespan.</param>
     /// <returns>True if midnight; otherwise False.</returns>
-    public static bool IsMidnight(this TimeSpan value)
-    {
-        return value.Hours == 0 && value.Minutes == 0 && value.Seconds == 0;
-    }
+    public static bool IsMidnight(this TimeSpan value) => value.Hours == 0 && value.Minutes == 0 && value.Seconds == 0;
 
     /// <summary>
     ///     Gets a TimeSpan for n number of Days.
     /// </summary>
     /// <param name="number">Number of days.</param>
     /// <returns>A TimeSpan.</returns>
-    public static TimeSpan Days(this int number)
-    {
-        return new(number, 0, 0, 0);
-    }
+    public static TimeSpan Days(this int number) => new(number, 0, 0, 0);
 
     /// <summary>
     ///     Gets a TimeSpan for n number of Hours.
     /// </summary>
     /// <param name="number">Number of hours.</param>
     /// <returns>A TimeSpan.</returns>
-    public static TimeSpan Hours(this int number)
-    {
-        return new(0, number, 0, 0);
-    }
+    public static TimeSpan Hours(this int number) => new(0, number, 0, 0);
 
     /// <summary>
     ///     Gets a TimeSpan for n number of Minutes.
     /// </summary>
     /// <param name="number">Number of minutes.</param>
     /// <returns>A TimeSpan.</returns>
-    public static TimeSpan Minutes(this int number)
-    {
-        return new(0, number, 0);
-    }
+    public static TimeSpan Minutes(this int number) => new(0, number, 0);
 
     /// <summary>
     ///     Gets a TimeSpan for n number of Seconds.
     /// </summary>
     /// <param name="number">Number of seconds.</param>
     /// <returns>A TimeSpan.</returns>
-    public static TimeSpan Seconds(this int number)
-    {
-        return new(0, 0, number);
-    }
+    public static TimeSpan Seconds(this int number) => new(0, 0, number);
 
     /// <summary>
     ///     Converts to the universal time.
@@ -69,8 +54,7 @@ public static class TimeSpanExtensions
         if (value.HasValue)
         {
             DateTime localDateTime = DateTime.Today + value.Value;
-            return localDateTime.ToUniversalTime()
-                .TimeOfDay;
+            return localDateTime.ToUniversalTime().TimeOfDay;
         }
 
         return null;
@@ -86,8 +70,7 @@ public static class TimeSpanExtensions
         if (value.HasValue)
         {
             DateTime localDateTime = DateTime.UtcNow.Date + value.Value;
-            return localDateTime.ToLocalTime()
-                .TimeOfDay;
+            return localDateTime.ToLocalTime().TimeOfDay;
         }
 
         return null;
@@ -98,27 +81,18 @@ public static class TimeSpanExtensions
     /// </summary>
     /// <param name="stopwatch">The stopwatch.</param>
     /// <returns><see cref="System.String" />. with time.</returns>
-    public static string GetTime(this Stopwatch stopwatch)
-    {
-        return GetTime(stopwatch.Elapsed);
-    }
+    public static string GetTime(this Stopwatch stopwatch) => GetTime(stopwatch.Elapsed);
 
     /// <summary>
     ///     Gets the time.
     /// </summary>
     /// <param name="milliseconds">The milliseconds.</param>
     /// <returns>System.String.</returns>
-    public static string GetTime(this long milliseconds)
-    {
-        return TimeSpan.FromMilliseconds(milliseconds)
-            .GetTime();
-    }
+    public static string GetTime(this long milliseconds) =>
+        TimeSpan.FromMilliseconds(milliseconds).GetTime();
 
-    public static string GetTime(this double milliseconds)
-    {
-        return TimeSpan.FromMilliseconds(milliseconds)
-            .GetTime();
-    }
+    public static string GetTime(this double milliseconds) =>
+        TimeSpan.FromMilliseconds(milliseconds).GetTime();
 
     /// <summary>
     ///     Gets the time from <see cref="TimeSpan" />.
@@ -131,12 +105,12 @@ public static class TimeSpanExtensions
         if (timespan.TotalMilliseconds < 1000)
             return $"{FillZeros(RoundDown(timespan.TotalMilliseconds, decimals), decimals)} ms.";
 
-        if (timespan.TotalSeconds < 60)
-            return $"{timespan.Seconds} sec. {FillZeros(RoundDown(timespan.TotalMilliseconds - timespan.Seconds * 1000, decimals), decimals)} ms.";
-
-        return timespan.TotalMinutes < 60
-            ? $"{timespan.Minutes} min. {FillZeros(RoundDown(timespan.TotalSeconds - timespan.Minutes * 60, decimals), decimals)} sec."
-            : $"{timespan.Hours} h. {FillZeros(RoundDown(timespan.TotalMinutes - timespan.Hours * 60, decimals), decimals)} min.";
+        return timespan.TotalSeconds < 60
+            ?
+            $"{timespan.Seconds} sec. {FillZeros(RoundDown(timespan.TotalMilliseconds - timespan.Seconds * 1000, decimals), decimals)} ms."
+            : timespan.TotalMinutes < 60
+                ? $"{timespan.Minutes} min. {FillZeros(RoundDown(timespan.TotalSeconds - timespan.Minutes * 60, decimals), decimals)} sec."
+                : $"{timespan.Hours} h. {FillZeros(RoundDown(timespan.TotalMinutes - timespan.Hours * 60, decimals), decimals)} min.";
     }
 
     public static double RoundDown(this double i, double decimalPlaces)
@@ -151,11 +125,8 @@ public static class TimeSpanExtensions
     /// <param name="toFill">To fill.</param>
     /// <param name="decimals">The decimals.</param>
     /// <returns>System.String.</returns>
-    private static string FillZeros(double toFill, int decimals)
-    {
-        return decimals <= 0
+    private static string FillZeros(double toFill, int decimals) =>
+        decimals <= 0
             ? toFill.ToString(CultureInfo.InvariantCulture)
-            : toFill.ToString(CultureInfo.InvariantCulture)
-                .PadRight(decimals, '0');
-    }
+            : toFill.ToString(CultureInfo.InvariantCulture).PadRight(decimals, '0');
 }

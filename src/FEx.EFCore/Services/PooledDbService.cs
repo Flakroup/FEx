@@ -1,4 +1,8 @@
 ﻿using FEx.Abstractions;
+using FEx.EFCore.Extensions;
+using FEx.EFCore.Helpers;
+using FEx.EFCore.Interfaces;
+using FEx.EFCore.Models;
 using FEx.Extensions;
 using FEx.Extensions.Collections.Enumerables;
 using FEx.Utilities.Collections;
@@ -13,7 +17,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace FEx.EFCore;
+namespace FEx.EFCore.Services;
 
 public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext> where TDbContext : DbContext
 {
@@ -34,14 +38,16 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
         //DelayOnTimeout = dbConfig.DelayOnTimeout;
     }
 
-    public async Task InitializeAsync(Func<TDbContext, Task> afterAppliedMigration = null, bool dropIfMigrationFailed = false)
+    public async Task InitializeAsync(Func<TDbContext, Task> afterAppliedMigration = null,
+                                      bool dropIfMigrationFailed = false)
     {
         await RunMigrationsAsync(afterAppliedMigration, dropIfMigrationFailed);
 
         EnsureMappingSnapshot();
     }
 
-    public async Task RunMigrationsAsync(Func<TDbContext, Task> afterAppliedMigration = null, bool dropIfMigrationFailed = false)
+    public async Task RunMigrationsAsync(Func<TDbContext, Task> afterAppliedMigration = null,
+                                         bool dropIfMigrationFailed = false)
     {
         try
         {
@@ -69,7 +75,10 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
             throw new($"Applying migrations for {typeof(TDbContext).FullName} failed.");
     }
 
-    public void RunActionInDbContext(Action<TDbContext> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)
+    public void RunActionInDbContext(Action<TDbContext> func,
+                                     string errorMessage = null,
+                                     bool saveChanges = true,
+                                     bool useTransaction = true)
     {
         RunFuncInDbContext(dbContext =>
         {
@@ -78,24 +87,33 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
         }, errorMessage, saveChanges, useTransaction);
     }
 
-    public T RunFuncInDbContext<T>(Func<TDbContext, T> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)
-    {
-        return RunWithinTransaction(func, errorMessage, saveChanges, useTransaction);
-    }
+    public T RunFuncInDbContext<T>(Func<TDbContext, T> func,
+                                   string errorMessage = null,
+                                   bool saveChanges = true,
+                                   bool useTransaction = true) =>
+        RunWithinTransaction(func, errorMessage, saveChanges, useTransaction);
 
-    public async Task RunTaskInDbContextAsync(Func<TDbContext, Task> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)
+    public async Task RunTaskInDbContextAsync(Func<TDbContext, Task> func,
+                                              string errorMessage = null,
+                                              bool saveChanges = true,
+                                              bool useTransaction = true)
     {
         await RunTaskInDbContextAsync(func.WrapTask, errorMessage, saveChanges, useTransaction);
     }
 
-    public async Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Task<T>> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)
-    {
-        return await RunWithinTransactionAsync(func, errorMessage, saveChanges, useTransaction);
-    }
+    public async Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Task<T>> func,
+                                                    string errorMessage = null,
+                                                    bool saveChanges = true,
+                                                    bool useTransaction = true) => await RunWithinTransactionAsync(func,
+        errorMessage, saveChanges, useTransaction);
 
-    public async Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Func<Task<T>>> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)
+    public async Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Func<Task<T>>> func,
+                                                    string errorMessage = null,
+                                                    bool saveChanges = true,
+                                                    bool useTransaction = true)
     {
-        return await RunWithinTransactionAsync(dbContext => func(dbContext)(), errorMessage, saveChanges, useTransaction);
+        return await RunWithinTransactionAsync(dbContext => func(dbContext)(), errorMessage, saveChanges,
+            useTransaction);
     }
 
     protected virtual void OnValidationSuccess(string id, IReadOnlyCollection<EntityEntry> entities)
@@ -123,26 +141,27 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
 
         RunActionInDbContext(dbContext =>
         {
-            foreach (IEntityType type in dbContext.Model.GetEntityTypes()
-                         .ToList())
-            {
-                Mappings.Add(type.ClrType.Name, dbContext.Model.FindEntityType(type.Name)
-                    .GetTableName());
-            }
+            foreach (IEntityType type in dbContext.Model.GetEntityTypes().ToList())
+                Mappings.Add(type.ClrType.Name, dbContext.Model.FindEntityType(type.Name).GetTableName());
         });
     }
 
-    protected T RunWithinTransaction<T>(Func<TDbContext, T> func, string errorMessage, bool saveChanges, bool useTransaction = true, IsolationLevel isolationLevel = IsolationLevel.Unspecified, int? delayOnTimeout = null)
+    protected T RunWithinTransaction<T>(Func<TDbContext, T> func,
+                                        string errorMessage,
+                                        bool saveChanges,
+                                        bool useTransaction = true,
+                                        IsolationLevel isolationLevel = IsolationLevel.Unspecified,
+                                        int? delayOnTimeout = null)
     {
         using IServiceScope scope = _scopeProvider.CreateScope();
         TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
 
         try
         {
-            if (useTransaction && dbContext.Database.CurrentTransaction is null)
-                return _transaction.Execute(dbContext, () => Execute(dbContext, func, saveChanges), isolationLevel, delayOnTimeout);
-
-            return Execute(dbContext, func, saveChanges);
+            return useTransaction && dbContext.Database.CurrentTransaction is null
+                ? _transaction.Execute(dbContext, () => Execute(dbContext, func, saveChanges), isolationLevel,
+                    delayOnTimeout)
+                : Execute(dbContext, func, saveChanges);
         }
         catch (Exception e)
         {
@@ -151,17 +170,22 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
         }
     }
 
-    protected async Task<T> RunWithinTransactionAsync<T>(Func<TDbContext, Task<T>> func, string errorMessage, bool saveChanges, bool useTransaction = true, IsolationLevel isolationLevel = IsolationLevel.Unspecified, int? delayOnTimeout = null)
+    protected async Task<T> RunWithinTransactionAsync<T>(Func<TDbContext, Task<T>> func,
+                                                         string errorMessage,
+                                                         bool saveChanges,
+                                                         bool useTransaction = true,
+                                                         IsolationLevel isolationLevel = IsolationLevel.Unspecified,
+                                                         int? delayOnTimeout = null)
     {
         using IServiceScope scope = _scopeProvider.CreateScope();
         TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
 
         try
         {
-            if (useTransaction && dbContext.Database.CurrentTransaction is null)
-                return await _transaction.ExecuteAsync(dbContext, () => ExecuteAsync(dbContext, func, saveChanges), isolationLevel, delayOnTimeout);
-
-            return await ExecuteAsync(dbContext, func, saveChanges);
+            return useTransaction && dbContext.Database.CurrentTransaction is null
+                ? await _transaction.ExecuteAsync(dbContext, () => ExecuteAsync(dbContext, func, saveChanges),
+                    isolationLevel, delayOnTimeout)
+                : await ExecuteAsync(dbContext, func, saveChanges);
         }
         catch (Exception e)
         {
@@ -170,9 +194,12 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
         }
     }
 
-    protected bool? ValidateAndSaveChanges(TDbContext dbContext, bool validateAllProperties = true, bool acceptAllChangesOnSuccess = true)
+    protected bool? ValidateAndSaveChanges(TDbContext dbContext,
+                                           bool validateAllProperties = true,
+                                           bool acceptAllChangesOnSuccess = true)
     {
-        bool? isSuccess = dbContext.ValidateChangedEntities(null, validateAllProperties, OnValidationStart, OnFaultyEntity, OnValidationFail, OnValidationSuccess);
+        bool? isSuccess = dbContext.ValidateChangedEntities(null, validateAllProperties, OnValidationStart,
+            OnFaultyEntity, OnValidationFail, OnValidationSuccess);
 
         if (isSuccess != true)
             return isSuccess;
@@ -219,9 +246,12 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
         return true;
     }
 
-    protected async Task<bool?> ValidateAndSaveChangesAsync(TDbContext dbContext, bool validateAllProperties = true, bool acceptAllChangesOnSuccess = true)
+    protected async Task<bool?> ValidateAndSaveChangesAsync(TDbContext dbContext,
+                                                            bool validateAllProperties = true,
+                                                            bool acceptAllChangesOnSuccess = true)
     {
-        bool? isSuccess = dbContext.ValidateChangedEntities(null, validateAllProperties, OnValidationStart, OnFaultyEntity, OnValidationFail, OnValidationSuccess);
+        bool? isSuccess = dbContext.ValidateChangedEntities(null, validateAllProperties, OnValidationStart,
+            OnFaultyEntity, OnValidationFail, OnValidationSuccess);
 
         if (isSuccess != true)
             return isSuccess;
@@ -276,12 +306,9 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
     {
         return RunFuncInDbContext(dbContext =>
         {
-            string[] migs = dbContext.Database.GetMigrations()
-                .ToArray();
-            string[] aMigs = dbContext.Database.GetAppliedMigrations()
-                .ToArray();
-            string[] pMigs = dbContext.Database.GetPendingMigrations()
-                .ToArray();
+            string[] migs = dbContext.Database.GetMigrations().ToArray();
+            string[] aMigs = dbContext.Database.GetAppliedMigrations().ToArray();
+            string[] pMigs = dbContext.Database.GetPendingMigrations().ToArray();
 
             return migs.UnorderedSequenceEqual(aMigs) && pMigs.Length == 0;
         }, null, false, false);

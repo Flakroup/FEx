@@ -58,7 +58,7 @@ public static class EnumerableExtensions
     /// <param name="source">The list itself.</param>
     /// <param name="action">Action to take on each item</param>
     /// <returns>The list itself.</returns>
-    public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
+    public static void ForEachInEnumerable<T>(this IEnumerable<T> source, Action<T> action)
     {
         foreach (T item in source)
             action(item);
@@ -72,7 +72,7 @@ public static class EnumerableExtensions
     /// <param name="source">The list itself.</param>
     /// <param name="predicate">Condition of the element to search for.</param>
     /// <returns>If found, an element of type T; otherwise default(T).</returns>
-    public static T Find<T>(this IEnumerable<T> source, Func<T, bool> predicate = null)
+    public static T FindInEnumerable<T>(this IEnumerable<T> source, Func<T, bool> predicate = null)
     {
         bool Predicate(T i) => predicate?.Invoke(i) ?? true;
 
@@ -242,6 +242,17 @@ public static class EnumerableExtensions
     }
 
     /// <summary>
+    ///     Checks if two sequences contain the same elements without checking their order
+    /// </summary>
+    /// <param name="first">The first sequence.</param>
+    /// <param name="second">The second sequence.</param>
+    /// <returns><c>true</c> if sequences contain the same elements; otherwise, <c>false</c>.</returns>
+    public static bool UnorderedSequenceEqual<T>(this IEnumerable<T> first, IEnumerable<T> second)
+    {
+        return first.OrderBy(t => t).SequenceEqual(second.OrderBy(t => t));
+    }
+
+    /// <summary>
     ///     To the collection.
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -272,13 +283,15 @@ public static class EnumerableExtensions
         IList<IEnumerable<T>> multipliedLists = new List<IEnumerable<T>>();
         if (origin.Any())
             foreach (T item in multiplier)
-            foreach (IEnumerable<T> list in origin)
             {
-                var multipliedList = new List<T>(list)
+                foreach (IEnumerable<T> list in origin)
                 {
-                    item
-                };
-                multipliedLists.Add(multipliedList);
+                    var multipliedList = new List<T>(list)
+                    {
+                        item
+                    };
+                    multipliedLists.Add(multipliedList);
+                }
             }
         else
             foreach (T item in multiplier)

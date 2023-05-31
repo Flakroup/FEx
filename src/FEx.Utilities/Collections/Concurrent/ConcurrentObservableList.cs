@@ -16,9 +16,9 @@ namespace FEx.Utilities.Collections.Concurrent;
 [Serializable]
 public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionChanged, INotifyPropertyChanged
 {
+    private static IFExDispatcher Dispatcher => Foundation.Dispatcher;
     private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
     private readonly bool _sendEventsInCreationContext;
-    private static IFExDispatcher Dispatcher => Foundation.Dispatcher;
 
     public IObservable<EventPattern<NotifyCollectionChangedEventArgs>> CollectionChangedObservable =>
         Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(

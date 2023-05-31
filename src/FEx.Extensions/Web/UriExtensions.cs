@@ -206,15 +206,15 @@ public static class UriExtensions
             using WebResponse response = await request.GetResponseAsync();
             using var httpResponse = (HttpWebResponse)response;
             var statusCode = (int)httpResponse.StatusCode;
-            if (statusCode >= 100
-                && statusCode < 400) //Good requests
-                return true;
-
-            if (statusCode >= 500
-                && statusCode <= 510) //Server Errors
+            switch (statusCode)
             {
-                Debug.WriteLine($"The remote server has thrown an internal error. Url is not valid: {url}");
-                return false;
+                //Good requests
+                case >= 100 and < 400:
+                    return true;
+                //Server Errors
+                case >= 500 and <= 510:
+                    Debug.WriteLine($"The remote server has thrown an internal error. Url is not valid: {url}");
+                    return false;
             }
         }
         catch (WebException ex)
@@ -285,12 +285,10 @@ public static class UriExtensions
         using (client)
         {
             stopwatch?.Restart();
-            using (HttpResponseMessage response = await client.GetAsync(url))
-            {
-                stopwatch?.Stop();
-                using (HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode())
-                    return await func(ensuredResponse, client);
-            }
+            using HttpResponseMessage response = await client.GetAsync(url);
+            stopwatch?.Stop();
+            using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
+            return await func(ensuredResponse, client);
         }
     }
 
@@ -304,12 +302,10 @@ public static class UriExtensions
         using (client)
         {
             stopwatch?.Restart();
-            using (HttpResponseMessage response = await client.GetAsync(url))
-            {
-                stopwatch?.Stop();
-                using (HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode())
-                    return func(ensuredResponse, client);
-            }
+            using HttpResponseMessage response = await client.GetAsync(url);
+            stopwatch?.Stop();
+            using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
+            return func(ensuredResponse, client);
         }
     }
 
@@ -322,12 +318,10 @@ public static class UriExtensions
         using (client)
         {
             stopwatch?.Restart();
-            using (HttpResponseMessage response = await client.GetAsync(url))
-            {
-                stopwatch?.Stop();
-                using (HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode())
-                    action(ensuredResponse, client);
-            }
+            using HttpResponseMessage response = await client.GetAsync(url);
+            stopwatch?.Stop();
+            using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
+            action(ensuredResponse, client);
         }
     }
 }

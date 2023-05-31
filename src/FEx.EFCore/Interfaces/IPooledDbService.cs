@@ -1,11 +1,14 @@
-﻿using FEx.Utilities.Collections;
+﻿using FEx.Asyncx.Abstractions.Interfaces;
+using FEx.EFCore.Models;
+using FEx.Utilities.Collections;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace FEx.EFCore.Interfaces;
 
-public interface IPooledDbService<out TDbContext> where TDbContext : DbContext
+public interface IPooledDbService<out TDbContext> : IAsyncInitialize where TDbContext : DbContext
 {
     /// <summary>
     ///     Map of model to DB mappings.
@@ -15,21 +18,22 @@ public interface IPooledDbService<out TDbContext> where TDbContext : DbContext
     /// <value>
     ///     The mappings.
     /// </value>
-    Map<string, string> Mappings { get; }
+    Map<string, string> TableMappings { get; }
 
-    Task InitializeAsync(Func<TDbContext, Task> afterAppliedMigration = null, bool dropIfMigrationFailed = false);
-    Task RunMigrationsAsync(Func<TDbContext, Task> afterAppliedMigration = null, bool dropIfMigrationFailed = false);
-    Task MigrateAsync(Func<TDbContext, Task> afterAppliedMigration = null);
+    IReadOnlyDictionary<string, Mapping> Mappings { get; }
 
-    void RunActionInDbContext(Action<TDbContext> func,
-                              string errorMessage = null,
-                              bool saveChanges = true,
-                              bool useTransaction = true);
+    Task RunMigrationsAsync();
+    Task MigrateAsync();
 
-    T RunFuncInDbContext<T>(Func<TDbContext, T> func,
-                            string errorMessage = null,
-                            bool saveChanges = true,
-                            bool useTransaction = true);
+    Task RunActionInDbContextAsync(Action<TDbContext> func,
+                                   string errorMessage = null,
+                                   bool saveChanges = true,
+                                   bool useTransaction = true);
+
+    Task<T> RunFuncInDbContextAsync<T>(Func<TDbContext, T> func,
+                                       string errorMessage = null,
+                                       bool saveChanges = true,
+                                       bool useTransaction = true);
 
     Task RunTaskInDbContextAsync(Func<TDbContext, Task> func,
                                  string errorMessage = null,

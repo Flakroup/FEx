@@ -29,36 +29,6 @@ public static class StringExtensions
     }
 
     /// <summary>
-    ///     The standard wild card 'any value'.
-    /// </summary>
-    public const char StandardWildCardAnyValue = '*';
-
-    /// <summary>
-    ///     The SQL wild card 'any value'.
-    /// </summary>
-    public const char SqlWildCardAnyValue = '%';
-
-    /// <summary>
-    ///     The SQL wild card 'any value'.
-    /// </summary>
-    public const string SqlWildCardAnyValueEscaped = "[%]";
-
-    /// <summary>
-    ///     The standard wild card 'any value'.
-    /// </summary>
-    public const char StandardWildCardOneCharacter = '?';
-
-    /// <summary>
-    ///     The SQL wild card 'any value'.
-    /// </summary>
-    public const char SqlWildCardOneCharacter = '_';
-
-    /// <summary>
-    ///     The SQL wild card 'any value'.
-    /// </summary>
-    public const string SqlWildCardOneCharacterEscaped = "[_]";
-
-    /// <summary>
     ///     Removes the specified chars from current string.
     /// </summary>
     /// <param name="source">Current string.</param>
@@ -569,9 +539,7 @@ public static class StringExtensions
         if (value is not null)
             using (var md5 = MD5.Create())
             using (var stream = value.ToStream())
-            {
                 return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty).ToLower();
-            }
 
         return null;
     }
@@ -592,4 +560,34 @@ public static class StringExtensions
 
         return sb.ToString().Normalize(NormalizationForm.FormC);
     }
+
+    /// <summary>
+    ///     The standard wild card 'any value'.
+    /// </summary>
+    public const char StandardWildCardAnyValue = '*';
+
+    /// <summary>
+    ///     The SQL wild card 'any value'.
+    /// </summary>
+    public const char SqlWildCardAnyValue = '%';
+
+    /// <summary>
+    ///     The SQL wild card 'any value'.
+    /// </summary>
+    public const string SqlWildCardAnyValueEscaped = "[%]";
+
+    /// <summary>
+    ///     The standard wild card 'any value'.
+    /// </summary>
+    public const char StandardWildCardOneCharacter = '?';
+
+    /// <summary>
+    ///     The SQL wild card 'any value'.
+    /// </summary>
+    public const char SqlWildCardOneCharacter = '_';
+
+    /// <summary>
+    ///     The SQL wild card 'any value'.
+    /// </summary>
+    public const string SqlWildCardOneCharacterEscaped = "[_]";
 }

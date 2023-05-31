@@ -14,7 +14,7 @@ public static class TimeSpanExtensions
     /// </summary>
     /// <param name="value">Current Timespan.</param>
     /// <returns>True if midnight; otherwise False.</returns>
-    public static bool IsMidnight(this TimeSpan value) => value.Hours == 0 && value.Minutes == 0 && value.Seconds == 0;
+    public static bool IsMidnight(this TimeSpan value) => value.Hours == 0 && value is { Minutes: 0, Seconds: 0 };
 
     /// <summary>
     ///     Gets a TimeSpan for n number of Days.

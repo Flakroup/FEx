@@ -1,4 +1,4 @@
-using FEx.Async;
+using FEx.Asyncx.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
@@ -15,7 +15,7 @@ namespace FEx.EFCore.Helpers;
 /// </summary>
 public class ResilientTransaction
 {
-    private readonly ILogger _logger;
+    private readonly ILogger<ResilientTransaction> _logger;
 
     public ResilientTransaction(ILogger<ResilientTransaction> logger)
     {
@@ -24,31 +24,46 @@ public class ResilientTransaction
 
     public async Task<T> ExecuteAsync<T>(DbContext context,
                                          Func<Task<T>> action,
+                                         string id,
                                          IsolationLevel isolationLevel = IsolationLevel.Unspecified,
                                          int? delayOnTimeout = null)
     {
         IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
-        return await strategy.ExecuteAsync(() => RunTransactionAsync(context, action, isolationLevel, delayOnTimeout));
+        return await strategy.ExecuteAsync(() =>
+            RunTransactionAsync(context, action, id, isolationLevel, delayOnTimeout));
+    }
+
+    public async Task<T> ExecuteAsync<T>(DbContext context,
+                                         Func<T> action,
+                                         string id,
+                                         IsolationLevel isolationLevel = IsolationLevel.Unspecified,
+                                         int? delayOnTimeout = null)
+    {
+        IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(() =>
+            RunTransactionAsync(context, action, id, isolationLevel, delayOnTimeout));
     }
 
     public T Execute<T>(DbContext context,
                         Func<T> action,
+                        string id,
                         IsolationLevel isolationLevel = IsolationLevel.Unspecified,
                         int? delayOnTimeout = null)
     {
         IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
-        return strategy.Execute(() => RunTransaction(context, action, isolationLevel, delayOnTimeout));
+        return strategy.Execute(() => RunTransaction(context, action, id, isolationLevel, delayOnTimeout));
     }
 
     private async Task<T> RunTransactionAsync<T>(DbContext context,
                                                  Func<Task<T>> action,
+                                                 string id,
                                                  IsolationLevel isolationLevel = IsolationLevel.Unspecified,
                                                  int? delayOnTimeout = null)
     {
         T res;
 
         await using IDbContextTransaction transaction =
-            await GetTransactionAsync(context, isolationLevel, delayOnTimeout);
+            await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout);
         try
         {
             res = await action();
@@ -63,14 +78,39 @@ public class ResilientTransaction
         return res;
     }
 
+    private async Task<T> RunTransactionAsync<T>(DbContext context,
+                                                 Func<T> action,
+                                                 string id,
+                                                 IsolationLevel isolationLevel = IsolationLevel.Unspecified,
+                                                 int? delayOnTimeout = null)
+    {
+        T res;
+
+        await using IDbContextTransaction transaction =
+            await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout);
+        try
+        {
+            res = action();
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+
+        return res;
+    }
+
     private T RunTransaction<T>(DbContext context,
                                 Func<T> action,
+                                string id,
                                 IsolationLevel isolationLevel = IsolationLevel.Unspecified,
                                 int? delayOnTimeout = null)
     {
         T res;
 
-        using IDbContextTransaction transaction = GetTransaction(context, isolationLevel, delayOnTimeout);
+        using IDbContextTransaction transaction = GetTransaction(context, id, isolationLevel, delayOnTimeout);
         try
         {
             res = action();
@@ -86,6 +126,7 @@ public class ResilientTransaction
     }
 
     private async Task<IDbContextTransaction> GetTransactionAsync(DbContext context,
+                                                                  string id,
                                                                   IsolationLevel isolationLevel =
                                                                       IsolationLevel.Unspecified,
                                                                   int? delayOnTimeout = null)
@@ -98,7 +139,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex.Message, ex);
+                _logger.LogError($"[{id}]\t{ex.Message}", ex);
                 //ignored
             }
 
@@ -108,6 +149,7 @@ public class ResilientTransaction
     }
 
     private IDbContextTransaction GetTransaction(DbContext context,
+                                                 string id,
                                                  IsolationLevel isolationLevel = IsolationLevel.Unspecified,
                                                  int? delayOnTimeout = null)
     {
@@ -119,7 +161,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex.Message, ex);
+                _logger.LogError($"[{id}]\t{ex.Message}", ex);
                 //ignored
             }
 

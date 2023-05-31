@@ -1,3 +1,4 @@
+using FEx.Basics;
 using FEx.Extensions.Collections.Lists;
 using System;
 using System.Collections.Concurrent;
@@ -9,7 +10,7 @@ using System.Threading;
 
 namespace FEx.Fundamentals.StackTraces;
 
-public class StackTraceGenerator
+public class StackTraceGenerator : IStackTraceProvider
 {
     private readonly IStackTraceFilter[] _stackTraceFilters;
     private IStackTraceCache _stackTraceCache;
@@ -45,7 +46,7 @@ public class StackTraceGenerator
             return null;
 
         var stackTraceFrames = new List<StackTraceFrame>();
-        StackFrame[] frames = GetCachedStackTrace().GetFrames();
+        StackFrame[] frames = GetStackTrace().GetFrames();
         if (frames is null)
             return null;
 
@@ -72,7 +73,7 @@ public class StackTraceGenerator
         };
     }
 
-    public StackTrace GetCachedStackTrace() => _stackTraceCache.GetStackTrace();
+    public StackTrace GetStackTrace() => _stackTraceCache.GetStackTrace();
 
     private void CheatClrAndUseDynamicMethodsToGetStackTraceFast()
     {
@@ -137,9 +138,7 @@ public class StackTraceGenerator
 
             var methodHandleAndIlOffset = new MethodHandleAndILOffset[frames.Length];
             for (var i = 0; i < methodHandleAndIlOffset.Length; i++)
-            {
                 methodHandleAndIlOffset[i] = new(frames[i].GetMethod().MethodHandle.Value, frames[i].GetILOffset());
-            }
 
             return new(methodHandleAndIlOffset);
         });
@@ -168,18 +167,14 @@ public class StackTraceGenerator
             if (obj is null)
                 return false;
 
-            return this == obj
-                ? true
-                : Equals(obj as Key);
+            return this == obj || Equals(obj as Key);
         }
 
         public override int GetHashCode()
         {
             var hashCode = 0;
             for (var i = 0; i < _items.Length; i++)
-            {
                 hashCode = _items[i].GetHashCode() * 397 ^ hashCode;
-            }
 
             return hashCode;
         }
@@ -207,6 +202,17 @@ public class StackTraceGenerator
 
     private class MethodHandleAndILOffset
     {
+        // ReSharper disable UnusedMember.Local
+        public static MethodHandleAndILOffset[] Create(IntPtr[] methods, int[] offsets)
+        // ReSharper restore UnusedMember.Local
+        {
+            var methodHandleAndILOffset = new MethodHandleAndILOffset[methods.Length];
+            for (var i = 0; i < methods.Length; i++)
+                methodHandleAndILOffset[i] = new(methods[i], offsets[i]);
+
+            return methodHandleAndILOffset;
+        }
+
         private readonly IntPtr _methodHandle;
 
         private readonly int _offset;
@@ -217,25 +223,12 @@ public class StackTraceGenerator
             _offset = offset;
         }
 
-        // ReSharper disable UnusedMember.Local
-        public static MethodHandleAndILOffset[] Create(IntPtr[] methods, int[] offsets)
-            // ReSharper restore UnusedMember.Local
-        {
-            var methodHandleAndILOffset = new MethodHandleAndILOffset[methods.Length];
-            for (var i = 0; i < methods.Length; i++)
-                methodHandleAndILOffset[i] = new(methods[i], offsets[i]);
-
-            return methodHandleAndILOffset;
-        }
-
         public override bool Equals(object obj)
         {
             if (obj is null)
                 return false;
 
-            return this == obj
-                ? true
-                : Equals(obj as MethodHandleAndILOffset);
+            return this == obj || Equals(obj as MethodHandleAndILOffset);
         }
 
         public override int GetHashCode()
@@ -252,9 +245,7 @@ public class StackTraceGenerator
             if (this == other)
                 return true;
 
-            return !other._methodHandle.Equals(_methodHandle)
-                ? false
-                : other._offset == _offset;
+            return other._methodHandle.Equals(_methodHandle) && other._offset == _offset;
         }
     }
 

@@ -28,7 +28,7 @@ public static class ObjectExtensions
     /// <returns>Field value.</returns>
     // ReSharper disable UnusedParameter.Global
     public static TField Get<TField>(this object value, ref TField field, Func<TField> initializer)
-        // ReSharper restore UnusedParameter.Global
+    // ReSharper restore UnusedParameter.Global
     {
         field ??= initializer();
 
@@ -157,7 +157,12 @@ public static class ObjectExtensions
     /// </remarks>
     public static T Guard<T>(this T value, Func<T, bool> func, string paramName, string message = null)
     {
-        Guardian.For(() => func(value), new ArgumentNullException(paramName, message));
+        Guardian.For(() =>
+        {
+            if (func(value))
+                return true;
+            return false;
+        }, new ArgumentNullException(paramName, message));
 
         return value;
     }
@@ -174,7 +179,7 @@ public static class ObjectExtensions
         if (value is null)
             return default;
 
-        actions.ForEach(a => a(value));
+        actions.ForEachInEnumerable(a => a(value));
         return value;
     }
 
@@ -294,7 +299,7 @@ public static class ObjectExtensions
             : default;
 
     public static string GetTypeInstanceDescription(this object value) =>
-        value.GetType().GetTypeCustomAttribute<DescriptionAttribute>()?.Find()?.Description;
+        value.GetType().GetTypeCustomAttribute<DescriptionAttribute>()?.FindInEnumerable()?.Description;
 
     public static bool IsBetween<T>(this T item, T start, T end, bool inclusive = false) =>
         Comparer<T>.Default.Compare(start, end) > 0 ? throw new ArgumentException("Given parameters create no range") :
@@ -358,7 +363,7 @@ public static class ObjectExtensions
                                             Action<T> onPropertyChanged = null,
                                             object sender = null,
                                             [CallerMemberName] string propertyName = null)
-        // ReSharper restore UnusedParameter.Global
+    // ReSharper restore UnusedParameter.Global
     {
         if (IsNotEqual(ref backingField, newValue))
         {

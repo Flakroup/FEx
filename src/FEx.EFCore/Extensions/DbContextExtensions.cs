@@ -1,20 +1,26 @@
 ﻿#if NETSTANDARD
 using FEx.Extensions.Collections.Lists;
 #endif
+using FEx.Basics.Flow;
+using FEx.EFCore.Enums;
 using FEx.EFCore.Models;
+using FEx.Extensions;
 using FEx.Json;
 using FEx.Json.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using static FEx.Logging.GlobalLogger;
@@ -65,10 +71,10 @@ public static class DbContextExtensions
     {
         id ??= Guid.NewGuid().ToString();
 
-        bool? isSuccess = dbContext.ValidateChangedEntities(id, validateAllProperties, onValidationStart,
+        Result<Error> result = dbContext.ValidateChangedEntities(id, validateAllProperties, onValidationStart,
             onFaultyEntity, onValidationFail, onValidationSuccess);
 
-        if (isSuccess is not true)
+        if (result.IsFailure)
             return;
 
         LogInformation($"[{id}]\tSaving changes to database");
@@ -76,16 +82,18 @@ public static class DbContextExtensions
         LogInformation($"[{id}]\t{res} rows affected");
     }
 
-    public static bool? ValidateChangedEntities<TDbContext>(this TDbContext dbContext,
-                                                            string id = null,
-                                                            bool validateAllProperties = true,
-                                                            Action<string, IReadOnlyCollection<EntityEntry>>
-                                                                onValidationStart = null,
-                                                            Action<string, EntityValidationFail> onFaultyEntity = null,
-                                                            Action<string, IReadOnlyCollection<EntityValidationFail>>
-                                                                onValidationFail = null,
-                                                            Action<string, IReadOnlyCollection<EntityEntry>>
-                                                                onValidationSuccess = null) where TDbContext : DbContext
+    public static Result<Error> ValidateChangedEntities<TDbContext>(this TDbContext dbContext,
+                                                                    string id = null,
+                                                                    bool validateAllProperties = true,
+                                                                    Action<string, IReadOnlyCollection<EntityEntry>>
+                                                                        onValidationStart = null,
+                                                                    Action<string, EntityValidationFail>
+                                                                        onFaultyEntity = null,
+                                                                    Action<string, IReadOnlyCollection<
+                                                                        EntityValidationFail>> onValidationFail = null,
+                                                                    Action<string, IReadOnlyCollection<EntityEntry>>
+                                                                        onValidationSuccess = null)
+        where TDbContext : DbContext
     {
         id ??= Guid.NewGuid().ToString();
 
@@ -97,7 +105,7 @@ public static class DbContextExtensions
 #endif
 
         if (entities.Count == 0)
-            return null;
+            return Result<Error>.Failure;
 
         var isSuccess = true;
 
@@ -157,7 +165,20 @@ public static class DbContextExtensions
             onValidationSuccess?.Invoke(id, entities); //todo convert to Rx
         }
 
-        return isSuccess;
+        return isSuccess
+            ? Result<Error>.Success
+            : Result<Error>.Failure;
+    }
+
+    public static async Task AddOrUpdateAsync<T>(this DbSet<T> dbSet, T data, Expression<Func<T, bool>> existenceFunc)
+        where T : class
+    {
+        bool exists = await dbSet.AsNoTracking().AnyAsync(existenceFunc);
+
+        if (exists)
+            dbSet.Update(data);
+        else
+            dbSet.Add(data);
     }
 
     public static IList<EntityEntry> GetChangedEntities<TDbContext>(this TDbContext dbContext)
@@ -166,6 +187,75 @@ public static class DbContextExtensions
         return dbContext.ChangeTracker.Entries()
             .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
             .ToList();
+    }
+
+    public static bool IsSqlite<TDbContext>(this TDbContext context) where TDbContext : DbContext =>
+        context.Database.ProviderName?.EndsWith(nameof(SqlDialect.Sqlite)) == true;
+
+    public static bool IsMySql<TDbContext>(this TDbContext context) where TDbContext : DbContext =>
+        context.Database.ProviderName?.EndsWith(nameof(SqlDialect.MySql)) == true;
+
+    public static bool IsPostrgeSql<TDbContext>(this TDbContext context) where TDbContext : DbContext =>
+        context.Database.ProviderName?.EndsWith(nameof(SqlDialect.PostrgeSql)) == true;
+
+    public static bool IsSqlServer<TDbContext>(this TDbContext context) where TDbContext : DbContext =>
+        context.Database.ProviderName?.EndsWith(nameof(SqlDialect.SqlServer)) == true;
+
+    public static SqlDialect? GetProvider<TDbContext>(this TDbContext context) where TDbContext : DbContext =>
+        context.IsMySql() ? SqlDialect.MySql :
+        context.IsSqlServer() ? SqlDialect.SqlServer :
+        context.IsPostrgeSql() ? SqlDialect.PostrgeSql :
+        context.IsSqlite() ? SqlDialect.Sqlite : null;
+
+    public static string ExecuteReader<TDbContext>(this TDbContext db, string commandText) where TDbContext : DbContext
+    {
+        using DbCommand command = db.Database.GetDbConnection().CreateCommand();
+        command.CommandText = commandText;
+        db.Database.OpenConnection();
+        using DbDataReader reader = command.ExecuteReader();
+        var sb = new StringBuilder();
+
+        while (reader.Read())
+            sb.Append(reader.GetString(0));
+
+        var result = sb.ToString();
+
+        return result;
+    }
+
+    public static string GetJsonCommand<TDbContext, T>(this TDbContext context) where TDbContext : DbContext
+    {
+        (string tableName, string properties) = context.GetSerializedPropertiesString<TDbContext, T>();
+
+        return context.IsSqlite()
+            ? "SELECT\r\n"
+              + "json_group_array(\r\n"
+              + $"json_object({properties})\r\n"
+              + ") AS json_result\r\n"
+              + $"FROM (SELECT * FROM {tableName});"
+            : $"SELECT * FROM {tableName} FOR JSON AUTO";
+    }
+
+    private static (string tableName, string properties)
+        GetSerializedPropertiesString<TDbContext, T>(this TDbContext dbContext) where TDbContext : DbContext
+    {
+        string entityName = typeof(T).FullName;
+        IEntityType entityType = dbContext.Model.GetEntityTypes().First(x => x.Name == entityName);
+        string tableName = entityType.GetTableName();
+        string[] columnNames = entityType.GetProperties()
+            .Select(propertyType => propertyType.GetColumnName())
+            .ToArray();
+
+        var sb = new StringBuilder();
+        for (var index = 0; index < columnNames.Length; index++)
+        {
+            sb.Append('\'').Append(columnNames[index].FirstCharToLower()).Append("', ").Append(columnNames[index]);
+
+            if (index < columnNames.Length - 1)
+                sb.Append(',');
+        }
+
+        return (tableName, sb.ToString());
     }
 
     private static string GetValidationResultInfo(EntityValidationFail fail, bool detailedInfo = false)

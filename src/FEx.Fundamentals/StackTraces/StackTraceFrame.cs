@@ -31,9 +31,7 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
             if (_fileExists.HasValue)
                 return _fileExists.Value;
 
-            return _fullFilename is null
-                ? false
-                : File.Exists(FullFilename);
+            return _fullFilename is not null && File.Exists(FullFilename);
         }
         set => _fileExists = value;
     }
@@ -65,14 +63,13 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
         if (this == other)
             return true;
 
-        return !Equals(other._fullFilename, _fullFilename)
-               || !Equals(other.Type, Type)
-               || other.Line != Line
-               || other.Column != Column
-               || !Equals(other.Filename, Filename)
-               || !Equals(other.Method, Method)
-            ? false
-            : Equals(other.Namespace, Namespace);
+        return Equals(other._fullFilename, _fullFilename)
+               && Equals(other.Type, Type)
+               && other.Line == Line
+               && other.Column == Column
+               && Equals(other.Filename, Filename)
+               && Equals(other.Method, Method)
+               && Equals(other.Namespace, Namespace);
     }
 
     public override bool Equals(object obj)
@@ -83,10 +80,7 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
         if (this == obj)
             return true;
 
-        var stackTraceFrame = obj as StackTraceFrame;
-        return stackTraceFrame is null
-            ? false
-            : Equals(stackTraceFrame);
+        return obj is StackTraceFrame stackTraceFrame && Equals(stackTraceFrame);
     }
 
     public override int GetHashCode() =>

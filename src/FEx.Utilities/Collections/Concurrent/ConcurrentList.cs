@@ -126,10 +126,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public IEnumerator<T> GetEnumerator()
-    {
-        return Read(() => Items.GetEnumerator());
-    }
+    public IEnumerator<T> GetEnumerator() => Read(Items.GetEnumerator);
 
     public int Add(object value)
     {
@@ -197,10 +194,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         WriteWithResult(() => InternalAddRange(range));
     }
 
-    public ReadOnlyCollection<T> AsReadOnly()
-    {
-        return Read(() => Items.AsReadOnly());
-    }
+    public ReadOnlyCollection<T> AsReadOnly() => Read(Items.AsReadOnly);
 
     /// <summary>
     ///     Adds an object to the end of the <see cref="ConcurrentList{T}" /> if it not exists in it yet.

@@ -23,9 +23,9 @@ public static class DictionaryExtensions
     {
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
         if (cDic is not null)
-            merged?.ForEach(pair => cDic.TryAdd(pair.Key, pair.Value));
+            merged?.ForEachInEnumerable(pair => cDic.TryAdd(pair.Key, pair.Value));
         else
-            merged?.ForEach(pair => dictionary.Add(pair.Key, pair.Value));
+            merged?.ForEachInEnumerable(pair => dictionary.Add(pair.Key, pair.Value));
     }
 
     /// <summary>
@@ -251,7 +251,7 @@ public static class DictionaryExtensions
         return hasBeenReplaced;
     }
 
-    public static (bool anyItemHasMatched, IDictionary<TK, TV> removedEntries) RemoveWhere<TK, TV>(
+    public static (bool anyItemHasMatched, IDictionary<TK, TV> removedEntries) RemoveFromDictionaryWhere<TK, TV>(
         this IDictionary<TK, TV> dictionary,
         Func<TK, TV, bool> predicate)
     {
@@ -283,7 +283,7 @@ public static class DictionaryExtensions
                                               IDictionary<TKey, TValue> syncedDictionary)
     {
         if (sourceDictionary.Count > 0)
-            sourceDictionary.RemoveWhere((key, _) => !syncedDictionary.ContainsKey(key));
+            sourceDictionary.RemoveFromDictionaryWhere((key, _) => !syncedDictionary.ContainsKey(key));
 
         if (sourceDictionary.Count == 0)
             sourceDictionary.AddRangeToDictionary(syncedDictionary);

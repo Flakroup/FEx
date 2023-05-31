@@ -48,7 +48,7 @@ public static class ListExtensions
     /// <returns>A ReadOnlyCollection{T} instance.</returns>
     public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> source) => new(source);
 
-    public static bool RemoveWhere<T>(this ICollection<T> source, Func<T, bool> predicate)
+    public static bool RemoveFromListWhere<T>(this ICollection<T> source, Func<T, bool> predicate)
     {
         bool Predicate(T i) => predicate(i);
 
@@ -117,6 +117,24 @@ public static class ListExtensions
             list.Add(sourceListCast.GetRange(i, Math.Min(chunkSize, sourceList.Count - i)));
 
         return list;
+    }
+
+    public static void SyncWithItem<T>(this IList<T> sourceList, T item, Action<T, T> syncAction = null)
+        where T : IEquatable<T>
+    {
+        var synced = false;
+
+        foreach (T f in sourceList)
+        {
+            if (f.Equals(item))
+            {
+                syncAction?.Invoke(f, item);
+                synced = true;
+            }
+        }
+
+        if (!synced)
+            sourceList.Add(item);
     }
 
     public static int CountEqualItems<T>(this IList<T> listA, IList<T> listB) where T : IEquatable<T>

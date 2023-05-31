@@ -9,12 +9,25 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Fundamentals;
+namespace FEx.Fundamentals.Helpers;
 
 public class AsyncHelper
 {
+    private static object Wrap(Action action)
+    {
+        action();
+        return null;
+    }
+
+    private static async Task<object> WrapTaskAsync(Func<Task> task)
+    {
+        await task();
+        return null;
+    }
+
+    //todo use stacktracegen
     private readonly IFExDispatcher _dispatcher;
-    private readonly ILogger _logger;
+    private readonly ILogger<AsyncHelper> _logger;
 
     public AsyncHelper(IFExDispatcher dispatcher, ILogger<AsyncHelper> logger)
     {
@@ -22,53 +35,44 @@ public class AsyncHelper
         _logger = logger;
     }
 
-    private static object Wrap(Action action)
-    {
-        action();
-        return null;
-    }
-
-    private static async Task<object> WrapTask(Func<Task> task)
-    {
-        await task();
-        return null;
-    }
-
-    public TaskCompletionSource<object> FireAndForget(Action action,
-                                                      CancellationToken cancellationToken = default,
-                                                      AsyncMode asyncMode = AsyncMode.Default)
+    public TaskWrapper FireAndForget(Action action,
+                                     CancellationToken cancellationToken = default,
+                                     AsyncMode asyncMode = AsyncMode.Default)
     {
         action.Guard(nameof(action));
-        return FireAndForget(() => Wrap(action), cancellationToken, asyncMode);
+        var taskWrapper = new TaskWrapper();
+        taskWrapper.SetTask(() => ExecuteAndCatchAsync(() => Wrap(action), taskWrapper, cancellationToken, asyncMode));
+        return taskWrapper;
     }
 
-    public TaskCompletionSource<T> FireAndForget<T>(Func<T> func,
-                                                    CancellationToken cancellationToken = default,
-                                                    AsyncMode asyncMode = AsyncMode.Default)
+    public TaskWrapper<T> FireAndForget<T>(Func<T> func,
+                                           CancellationToken cancellationToken = default,
+                                           AsyncMode asyncMode = AsyncMode.Default)
     {
         func.Guard(nameof(func));
-        var taskCompletionSource = new TaskCompletionSource<T>();
-        _ = ExecuteAndCatchAsync(func, taskCompletionSource, cancellationToken, asyncMode);
-        return taskCompletionSource;
+        var taskWrapper = new TaskWrapper<T>();
+        taskWrapper.SetTask(() => ExecuteAndCatchAsync(func, taskWrapper, cancellationToken, asyncMode));
+        return taskWrapper;
     }
 
-    public TaskCompletionSource<object> FireTaskAndForget(Func<Task> task, AsyncMode asyncMode = AsyncMode.Default)
+    public TaskWrapper FireTaskAndForget(Func<Task> task, AsyncMode asyncMode = AsyncMode.Default)
     {
         task.Guard(nameof(task));
-        return FireTaskAndForget(() => WrapTask(task), asyncMode);
+        var taskWrapper = new TaskWrapper();
+        taskWrapper.SetTask(() => ExecuteTaskAndCatchAsync(() => WrapTaskAsync(task), taskWrapper, asyncMode));
+        return taskWrapper;
     }
 
-    public TaskCompletionSource<T> FireTaskAndForget<T>(Func<Task<T>> task, AsyncMode asyncMode = AsyncMode.Default)
+    public TaskWrapper<T> FireTaskAndForget<T>(Func<Task<T>> task, AsyncMode asyncMode = AsyncMode.Default)
     {
         task.Guard(nameof(task));
-        var taskCompletionSource = new TaskCompletionSource<T>();
-        _ = ExecuteTaskAndCatchAsync(task, taskCompletionSource, asyncMode);
-        return taskCompletionSource;
+        var taskWrapper = new TaskWrapper<T>();
+        taskWrapper.SetTask(() => ExecuteTaskAndCatchAsync(task, taskWrapper, asyncMode));
+        return taskWrapper;
     }
 
-    public IReadOnlyList<TaskCompletionSource<object>> FireTasksAndForget(
-        IEnumerable<Func<Task>> tasks,
-        AsyncMode asyncMode = AsyncMode.Default)
+    public IReadOnlyList<TaskWrapper> FireTasksAndForget(IEnumerable<Func<Task>> tasks,
+                                                         AsyncMode asyncMode = AsyncMode.Default)
     {
         Guard.For(() => tasks?.Any() != true,
             new ArgumentNullException(nameof(tasks), $"The {nameof(tasks)} cannot be null or empty."));
@@ -76,8 +80,8 @@ public class AsyncHelper
         return tasks.Select(x => FireTaskAndForget(x, asyncMode)).ToList().AsReadOnly();
     }
 
-    public IReadOnlyList<TaskCompletionSource<T>> FireTasksAndForget<T>(IEnumerable<Func<Task<T>>> tasks,
-                                                                        AsyncMode asyncMode = AsyncMode.Default)
+    public IReadOnlyList<TaskWrapper<T>> FireTasksAndForget<T>(IEnumerable<Func<Task<T>>> tasks,
+                                                               AsyncMode asyncMode = AsyncMode.Default)
     {
         tasks.Guard(nameof(tasks));
         return tasks.Select(x => FireTaskAndForget(x, asyncMode)).ToList().AsReadOnly();
@@ -85,7 +89,7 @@ public class AsyncHelper
 
     public async Task ExecuteTaskOnThreadPoolAsync(Func<Task> task)
     {
-        await ExecuteTaskOnThreadPoolAsync(() => WrapTask(task));
+        await ExecuteTaskOnThreadPoolAsync(() => WrapTaskAsync(task));
     }
 
     public async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> taskFunc, bool logException = true)
@@ -167,37 +171,41 @@ public class AsyncHelper
         await ExecuteTaskOnThreadPoolAsync(() => Task.Delay(delay, cancellationToken));
     }
 
-    private async Task ExecuteAndCatchAsync<T>(Func<T> func,
-                                               TaskCompletionSource<T> taskCompletionSource,
-                                               CancellationToken cancellationToken,
-                                               AsyncMode asyncMode)
+    private async Task<T> ExecuteAndCatchAsync<T>(Func<T> func,
+                                                  ITaskWrapper taskWrapper,
+                                                  CancellationToken cancellationToken,
+                                                  AsyncMode asyncMode)
     {
+        T result = default;
+
         try
         {
-            T result = asyncMode switch
+            result = asyncMode switch
             {
                 AsyncMode.MainThread => await ExecuteTaskOnThreadPoolAsync(
                     () => _dispatcher.InvokeOnMainThreadAsync(func), false),
                 AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(func, cancellationToken, false),
-                _ => func()
+                _ => await Task.Run(func, cancellationToken)
             };
 
-            taskCompletionSource.SetResult(result);
+            taskWrapper.SetResult(result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex);
-            taskCompletionSource.SetException(ex);
+            taskWrapper.SetException(ex);
         }
+
+        return result;
     }
 
-    private async Task ExecuteTaskAndCatchAsync<T>(Func<Task<T>> task,
-                                                   TaskCompletionSource<T> taskCompletionSource,
-                                                   AsyncMode asyncMode)
+    private async Task<T> ExecuteTaskAndCatchAsync<T>(Func<Task<T>> task, ITaskWrapper taskWrapper, AsyncMode asyncMode)
     {
+        T result = default;
+
         try
         {
-            T result = asyncMode switch
+            result = asyncMode switch
             {
                 AsyncMode.MainThread => await ExecuteTaskOnThreadPoolAsync(
                     () => _dispatcher.InvokeOnMainThreadAsync(task), false),
@@ -205,12 +213,14 @@ public class AsyncHelper
                 _ => await task()
             };
 
-            taskCompletionSource.SetResult(result);
+            taskWrapper.SetResult(result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex);
-            taskCompletionSource.SetException(ex);
+            taskWrapper.SetException(ex);
         }
+
+        return result;
     }
 }

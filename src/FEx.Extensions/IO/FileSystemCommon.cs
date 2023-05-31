@@ -6,8 +6,6 @@ namespace FEx.Extensions.IO;
 
 public static class FileSystemCommon
 {
-    private const string Ntfs = "NTFS";
-
     /// <summary>
     ///     Determines whether [is path NTFS] [the specified absolute file path].
     /// </summary>
@@ -22,7 +20,7 @@ public static class FileSystemCommon
         if (pathRoot is not null)
         {
             DriveInfo[] allDrives = DriveInfo.GetDrives();
-            DriveInfo driveBasedOnPath = allDrives.Find(d => d.RootDirectory.Name == pathRoot);
+            DriveInfo driveBasedOnPath = allDrives.FindInEnumerable(d => d.RootDirectory.Name == pathRoot);
             return driveBasedOnPath?.DriveFormat.IsEqual(Ntfs) == true
                    && driveBasedOnPath.DriveType.IsIn(DriveType.Fixed, DriveType.Removable);
         }
@@ -50,4 +48,6 @@ public static class FileSystemCommon
             : pos)];
 #endif
     }
+
+    private const string Ntfs = "NTFS";
 }

@@ -35,7 +35,7 @@ public static class CollectionExtensions
 
     public static void Remove<T>(this ICollection<T> items, T item) where T : class
     {
-        Remove(items, item);
+        items.Remove(item);
     }
 
     /// <summary>

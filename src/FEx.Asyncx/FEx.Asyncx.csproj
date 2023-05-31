@@ -8,4 +8,9 @@
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.6.40" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+    <ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
+  </ItemGroup>
+
 </Project>

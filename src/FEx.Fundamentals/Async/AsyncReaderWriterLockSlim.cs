@@ -45,6 +45,12 @@ namespace FEx.Fundamentals.Async;
 /// </remarks>
 public class AsyncReaderWriterLockSlim : IDisposable
 {
+    private static int GetRemainingTimeout(int millisecondsTimeout, long initialTicks) =>
+        millisecondsTimeout == Timeout.Infinite
+            ? Timeout.Infinite
+            : (int)Math.Max(0, millisecondsTimeout - (GetTimestampTicks() - initialTicks) / 10000);
+
+    private static long GetTimestampTicks() => DateTime.Now.Ticks;
     private readonly object _syncRoot = new();
 
     /// <summary>
@@ -97,13 +103,6 @@ public class AsyncReaderWriterLockSlim : IDisposable
         Dispose(true);
         GC.SuppressFinalize(this);
     }
-
-    private static int GetRemainingTimeout(int millisecondsTimeout, long initialTicks) =>
-        millisecondsTimeout == Timeout.Infinite
-            ? Timeout.Infinite
-            : (int)Math.Max(0, millisecondsTimeout - (GetTimestampTicks() - initialTicks) / 10000);
-
-    private static long GetTimestampTicks() => DateTime.Now.Ticks;
 
     /// <summary>
     ///     Enters the lock in read mode.

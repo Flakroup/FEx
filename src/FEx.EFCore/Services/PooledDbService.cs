@@ -1,4 +1,6 @@
 ﻿using FEx.Abstractions;
+using FEx.Asyncx.Abstractions;
+using FEx.Basics.Flow;
 using FEx.EFCore.Extensions;
 using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
@@ -8,90 +10,46 @@ using FEx.Extensions.Collections.Enumerables;
 using FEx.Utilities.Collections;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace FEx.EFCore.Services;
 
-public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext> where TDbContext : DbContext
+public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledDbService<TDbContext>
+    where TDbContext : DbContext
 {
-    protected readonly ILogger _logger;
+    private static async Task ShrinkDbAsync(TDbContext context)
+    {
+        if (context.IsSqlite())
+            await context.Database.ExecuteSqlRawAsync("VACUUM;");
+    }
+
+    protected readonly ILogger<PooledDbService<TDbContext>> _logger;
+    protected readonly IFExDbConfig _dbConfig;
     private readonly IScopeProvider _scopeProvider;
     private readonly ResilientTransaction _transaction;
 
-    //public int DelayOnTimeout { get; }
+    public int? DelayOnTimeout => _dbConfig.DelayOnTimeout;
 
-    public Map<string, string> Mappings { get; private set; }
+    public IReadOnlyDictionary<string, Mapping> Mappings { get; private set; }
+    public Map<string, string> TableMappings { get; private set; }
 
-    protected PooledDbService(IScopeProvider scopeProvider, ILogger logger, ResilientTransaction transaction)
+    protected PooledDbService(IScopeProvider scopeProvider,
+                              ILogger<PooledDbService<TDbContext>> logger,
+                              ResilientTransaction transaction,
+                              IFExDbConfig dbConfig)
     {
         _scopeProvider = scopeProvider;
         _logger = logger;
         _transaction = transaction;
-
-        //DelayOnTimeout = dbConfig.DelayOnTimeout;
+        _dbConfig = dbConfig;
     }
-
-    public async Task InitializeAsync(Func<TDbContext, Task> afterAppliedMigration = null,
-                                      bool dropIfMigrationFailed = false)
-    {
-        await RunMigrationsAsync(afterAppliedMigration, dropIfMigrationFailed);
-
-        EnsureMappingSnapshot();
-    }
-
-    public async Task RunMigrationsAsync(Func<TDbContext, Task> afterAppliedMigration = null,
-                                         bool dropIfMigrationFailed = false)
-    {
-        try
-        {
-            await MigrateAsync(afterAppliedMigration);
-        }
-        catch when (dropIfMigrationFailed && Drop())
-        {
-            await MigrateAsync(afterAppliedMigration);
-        }
-    }
-
-    public async Task MigrateAsync(Func<TDbContext, Task> afterAppliedMigration = null)
-    {
-        bool hasNoPendingMigrations = HasNoPendingMigrations();
-
-        if (!hasNoPendingMigrations)
-        {
-            RunActionInDbContext(dbContext => dbContext.Database.Migrate(), null, false, false);
-            await RunTaskInDbContextAsync(afterAppliedMigration);
-        }
-
-        hasNoPendingMigrations = HasNoPendingMigrations();
-
-        if (!hasNoPendingMigrations)
-            throw new($"Applying migrations for {typeof(TDbContext).FullName} failed.");
-    }
-
-    public void RunActionInDbContext(Action<TDbContext> func,
-                                     string errorMessage = null,
-                                     bool saveChanges = true,
-                                     bool useTransaction = true)
-    {
-        RunFuncInDbContext(dbContext =>
-        {
-            func(dbContext);
-            return (object)null;
-        }, errorMessage, saveChanges, useTransaction);
-    }
-
-    public T RunFuncInDbContext<T>(Func<TDbContext, T> func,
-                                   string errorMessage = null,
-                                   bool saveChanges = true,
-                                   bool useTransaction = true) =>
-        RunWithinTransaction(func, errorMessage, saveChanges, useTransaction);
 
     public async Task RunTaskInDbContextAsync(Func<TDbContext, Task> func,
                                               string errorMessage = null,
@@ -116,6 +74,59 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
             useTransaction);
     }
 
+    public async Task RunMigrationsAsync()
+    {
+        try
+        {
+            await MigrateAsync();
+        }
+        catch when (_dbConfig.DropIfMigrationFailed)
+        {
+            if (await DropAsync())
+                await MigrateAsync();
+            else
+                throw;
+        }
+    }
+
+    public async Task MigrateAsync()
+    {
+        bool hasNoPendingMigrations = await HasNoPendingMigrationsAsync();
+
+        if (!hasNoPendingMigrations)
+        {
+            await RunActionInDbContextAsync(dbContext => dbContext.Database.Migrate(), null, false, false);
+            await AfterAppliedMigrationAsync();
+            hasNoPendingMigrations = await HasNoPendingMigrationsAsync();
+        }
+
+        if (!hasNoPendingMigrations)
+            throw new($"Applying migrations for {typeof(TDbContext).FullName} failed.");
+    }
+
+    public async Task RunActionInDbContextAsync(Action<TDbContext> func,
+                                                string errorMessage = null,
+                                                bool saveChanges = true,
+                                                bool useTransaction = true)
+    {
+        await RunFuncInDbContextAsync(dbContext =>
+        {
+            func(dbContext);
+            return (object)null;
+        }, errorMessage, saveChanges, useTransaction);
+    }
+
+    public async Task<T> RunFuncInDbContextAsync<T>(Func<TDbContext, T> func,
+                                                    string errorMessage = null,
+                                                    bool saveChanges = true,
+                                                    bool useTransaction = true) =>
+        await RunWithinTransactionAsync(func, errorMessage, saveChanges, useTransaction);
+
+    protected virtual async Task AfterAppliedMigrationAsync()
+    {
+        await Task.CompletedTask;
+    }
+
     protected virtual void OnValidationSuccess(string id, IReadOnlyCollection<EntityEntry> entities)
     {
     }
@@ -132,17 +143,32 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
     {
     }
 
-    protected void EnsureMappingSnapshot()
+    protected override async Task<bool> OnInitializationAsync(bool reInitialize)
     {
-        if (Mappings is null)
-            Mappings = new();
-        else
-            Mappings.Clear();
+        if (_dbConfig.RunMigrations)
+            await RunMigrationsAsync();
 
-        RunActionInDbContext(dbContext =>
+        if (_dbConfig.GetMappings)
+            await EnsureMappingSnapshotAsync();
+
+        return true;
+    }
+
+    protected async Task EnsureMappingSnapshotAsync()
+    {
+        await RunActionInDbContextAsync(dbContext =>
         {
-            foreach (IEntityType type in dbContext.Model.GetEntityTypes().ToList())
-                Mappings.Add(type.ClrType.Name, dbContext.Model.FindEntityType(type.Name).GetTableName());
+            var mappings = dbContext.Model.GetEntityTypes()
+                .Select(t => new Mapping
+                {
+                    ClrTypeName = t.ClrType.FullName.Guard("ClrTypeName"),
+                    TableName = t.GetTableName(),
+                    Properties = t.GetMappedProperties()
+                })
+                .ToDictionary(mapping => mapping.ClrTypeName);
+
+            Mappings = new ReadOnlyDictionary<string, Mapping>(mappings);
+            TableMappings = new(Mappings.ToDictionary(x => x.Key, x => x.Value.TableName));
         });
     }
 
@@ -150,22 +176,46 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
                                         string errorMessage,
                                         bool saveChanges,
                                         bool useTransaction = true,
-                                        IsolationLevel isolationLevel = IsolationLevel.Unspecified,
-                                        int? delayOnTimeout = null)
+                                        IsolationLevel isolationLevel = IsolationLevel.Unspecified)
     {
         using IServiceScope scope = _scopeProvider.CreateScope();
         TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        var id = Guid.NewGuid().ToString();
 
         try
         {
             return useTransaction && dbContext.Database.CurrentTransaction is null
-                ? _transaction.Execute(dbContext, () => Execute(dbContext, func, saveChanges), isolationLevel,
-                    delayOnTimeout)
-                : Execute(dbContext, func, saveChanges);
+                ? _transaction.Execute(dbContext, () => Execute(dbContext, func, saveChanges, id), id, isolationLevel,
+                    DelayOnTimeout)
+                : Execute(dbContext, func, saveChanges, id);
         }
         catch (Exception e)
         {
-            _logger.LogError($"{errorMessage ?? ""} {e.Message}", e);
+            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
+            throw;
+        }
+    }
+
+    protected async Task<T> RunWithinTransactionAsync<T>(Func<TDbContext, T> func,
+                                                         string errorMessage,
+                                                         bool saveChanges,
+                                                         bool useTransaction = true,
+                                                         IsolationLevel isolationLevel = IsolationLevel.Unspecified)
+    {
+        using IServiceScope scope = _scopeProvider.CreateScope();
+        TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        var id = Guid.NewGuid().ToString();
+
+        try
+        {
+            return useTransaction && dbContext.Database.CurrentTransaction is null
+                ? await _transaction.ExecuteAsync(dbContext, () => Execute(dbContext, func, saveChanges, id), id,
+                    isolationLevel, DelayOnTimeout)
+                : Execute(dbContext, func, saveChanges, id);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
             throw;
         }
     }
@@ -174,37 +224,38 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
                                                          string errorMessage,
                                                          bool saveChanges,
                                                          bool useTransaction = true,
-                                                         IsolationLevel isolationLevel = IsolationLevel.Unspecified,
-                                                         int? delayOnTimeout = null)
+                                                         IsolationLevel isolationLevel = IsolationLevel.Unspecified)
     {
         using IServiceScope scope = _scopeProvider.CreateScope();
         TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        var id = Guid.NewGuid().ToString();
 
         try
         {
             return useTransaction && dbContext.Database.CurrentTransaction is null
-                ? await _transaction.ExecuteAsync(dbContext, () => ExecuteAsync(dbContext, func, saveChanges),
-                    isolationLevel, delayOnTimeout)
-                : await ExecuteAsync(dbContext, func, saveChanges);
+                ? await _transaction.ExecuteAsync(dbContext, () => ExecuteAsync(dbContext, func, saveChanges, id), id,
+                    isolationLevel, DelayOnTimeout)
+                : await ExecuteAsync(dbContext, func, saveChanges, id);
         }
         catch (Exception e)
         {
-            _logger.LogError($"{errorMessage ?? ""} {e.Message}", e);
+            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
             throw;
         }
     }
 
-    protected bool? ValidateAndSaveChanges(TDbContext dbContext,
-                                           bool validateAllProperties = true,
-                                           bool acceptAllChangesOnSuccess = true)
+    protected Result<Error> ValidateAndSaveChanges(TDbContext dbContext,
+                                                   string id,
+                                                   bool validateAllProperties = true,
+                                                   bool acceptAllChangesOnSuccess = true)
     {
-        bool? isSuccess = dbContext.ValidateChangedEntities(null, validateAllProperties, OnValidationStart,
+        Result<Error> result = dbContext.ValidateChangedEntities(null, validateAllProperties, OnValidationStart,
             OnFaultyEntity, OnValidationFail, OnValidationSuccess);
 
-        if (isSuccess != true)
-            return isSuccess;
+        if (result.IsFailure)
+            return result;
 
-        _logger.LogInformation("Saving changes to database");
+        _logger.LogInformation($"[{id}]\tSaving changes to database");
 
         var res = 0;
         var saved = false;
@@ -224,38 +275,41 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
                     PropertyValues databaseValues = entry.GetDatabaseValues();
 
                     if (databaseValues is not null)
-                    {
                         entry.OriginalValues.SetValues(databaseValues);
-                    }
                     else
-                    {
-                        if (entry.State == EntityState.Deleted)
-                            entry.State = EntityState.Detached;
-                        else if (entry.State == EntityState.Modified)
-                            entry.State = EntityState.Added;
-                        else
-                            throw;
-                    }
+                        switch (entry.State)
+                        {
+                            case EntityState.Deleted:
+                                entry.State = EntityState.Detached;
+                                break;
+                            case EntityState.Modified:
+                                entry.State = EntityState.Added;
+                                break;
+                            default:
+                                throw;
+                        }
                 }
 
                 retries--;
             }
         }
 
-        _logger.LogInformation($"{res} rows affected");
-        return true;
+        _logger.LogInformation($"[{id}]\t{res} rows affected");
+        return result;
     }
 
-    protected async Task<bool?> ValidateAndSaveChangesAsync(TDbContext dbContext,
-                                                            bool validateAllProperties = true,
-                                                            bool acceptAllChangesOnSuccess = true)
+    protected async Task<Result<Error>> ValidateAndSaveChangesAsync(TDbContext dbContext,
+                                                                    string id,
+                                                                    bool validateAllProperties = true,
+                                                                    bool acceptAllChangesOnSuccess = true)
     {
-        bool? isSuccess = dbContext.ValidateChangedEntities(null, validateAllProperties, OnValidationStart,
+        Result<Error> result = dbContext.ValidateChangedEntities(id, validateAllProperties, OnValidationStart,
             OnFaultyEntity, OnValidationFail, OnValidationSuccess);
 
-        if (isSuccess != true)
-            return isSuccess;
-        _logger.LogInformation("Saving changes to database");
+        if (result.IsFailure)
+            return result;
+
+        _logger.LogInformation($"[{id}]\tSaving changes to database");
 
         var res = 0;
         var saved = false;
@@ -275,61 +329,70 @@ public abstract class PooledDbService<TDbContext> : IPooledDbService<TDbContext>
                     PropertyValues databaseValues = await entry.GetDatabaseValuesAsync();
 
                     if (databaseValues is not null)
-                    {
                         entry.OriginalValues.SetValues(databaseValues);
-                    }
                     else
-                    {
-                        if (entry.State == EntityState.Deleted)
-                            entry.State = EntityState.Detached;
-                        else if (entry.State == EntityState.Modified)
-                            entry.State = EntityState.Added;
-                        else
-                            throw;
-                    }
+                        switch (entry.State)
+                        {
+                            case EntityState.Deleted:
+                                entry.State = EntityState.Detached;
+                                break;
+                            case EntityState.Modified:
+                                entry.State = EntityState.Added;
+                                break;
+                            default:
+                                throw;
+                        }
                 }
 
                 retries--;
             }
         }
 
-        _logger.LogInformation($"{res} rows affected");
-        return true;
+        _logger.LogInformation($"[{id}]\t{res} rows affected");
+        return result;
     }
 
-    private bool Drop()
+    protected async Task ShrinkDbAsync()
     {
-        return RunFuncInDbContext(dbContext => dbContext.Database.EnsureDeleted(), null, false, false);
+        await RunTaskInDbContextAsync(ShrinkDbAsync, null, false, false);
     }
 
-    private bool HasNoPendingMigrations()
+    private async Task<bool> DropAsync()
     {
-        return RunFuncInDbContext(dbContext =>
+        return await RunFuncInDbContextAsync(dbContext => dbContext.Database.EnsureDeleted(), null, false, false);
+    }
+
+    private async Task<bool> HasNoPendingMigrationsAsync()
+    {
+        return await RunFuncInDbContextAsync(dbContext =>
         {
-            string[] migs = dbContext.Database.GetMigrations().ToArray();
-            string[] aMigs = dbContext.Database.GetAppliedMigrations().ToArray();
-            string[] pMigs = dbContext.Database.GetPendingMigrations().ToArray();
+            var migs = dbContext.Database.GetMigrations().ToList();
+            var aMigs = dbContext.Database.GetAppliedMigrations().ToList();
+            var pMigs = dbContext.Database.GetPendingMigrations().ToList();
 
-            return migs.UnorderedSequenceEqual(aMigs) && pMigs.Length == 0;
+            return migs.UnorderedSequenceEqual(aMigs) && pMigs.Count == 0;
         }, null, false, false);
     }
 
-    private T Execute<T>(TDbContext dbContext, Func<TDbContext, T> func, bool saveChanges)
+    private T Execute<T>(TDbContext dbContext, Func<TDbContext, T> func, bool saveChanges, string id)
     {
         T res = func(dbContext);
 
         if (saveChanges)
-            ValidateAndSaveChanges(dbContext);
+            ValidateAndSaveChanges(dbContext, id);
 
         return res;
     }
 
-    private async Task<T> ExecuteAsync<T>(TDbContext dbContext, Func<TDbContext, Task<T>> func, bool saveChanges)
+    private async Task<T> ExecuteAsync<T>(TDbContext dbContext,
+                                          Func<TDbContext, Task<T>> func,
+                                          bool saveChanges,
+                                          string id)
     {
         T res = await func(dbContext);
 
         if (saveChanges)
-            await ValidateAndSaveChangesAsync(dbContext);
+            await ValidateAndSaveChangesAsync(dbContext, id);
 
         return res;
     }

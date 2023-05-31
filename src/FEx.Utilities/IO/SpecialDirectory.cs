@@ -12,24 +12,9 @@ public class SpecialDirectory
 {
     public static IDictionary<Environment.SpecialFolder, SpecialDirectory> SpecialDirectories { get; private set; }
 
-    public Environment.SpecialFolder DirectoryType { get; }
-    public DirectoryInfo Directory { get; }
-    public string FullName => Directory?.FullName;
-
     static SpecialDirectory()
     {
         EnsureSpecialDirectories();
-    }
-
-    public SpecialDirectory(Environment.SpecialFolder directoryType, DirectoryInfo directory)
-    {
-        DirectoryType = directoryType;
-        Directory = directory;
-    }
-
-    public SpecialDirectory(Environment.SpecialFolder directoryType, string directory)
-        : this(directoryType, new DirectoryInfo(directory))
-    {
     }
 
     private static void EnsureSpecialDirectories()
@@ -57,5 +42,20 @@ public class SpecialDirectory
         }
 
         return null;
+    }
+
+    public Environment.SpecialFolder DirectoryType { get; }
+    public DirectoryInfo Directory { get; }
+    public string FullName => Directory?.FullName;
+
+    public SpecialDirectory(Environment.SpecialFolder directoryType, DirectoryInfo directory)
+    {
+        DirectoryType = directoryType;
+        Directory = directory;
+    }
+
+    public SpecialDirectory(Environment.SpecialFolder directoryType, string directory)
+        : this(directoryType, new DirectoryInfo(directory))
+    {
     }
 }

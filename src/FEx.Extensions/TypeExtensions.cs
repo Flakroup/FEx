@@ -48,7 +48,7 @@ public static class TypeExtensions
     }
 
     public static string GetTypeDescription(this Type value) =>
-        GetTypeCustomAttribute<DescriptionAttribute>(value)?.Find()?.Description;
+        GetTypeCustomAttribute<DescriptionAttribute>(value)?.FindInEnumerable()?.Description;
 
     public static TAttributeType[] GetTypeCustomAttribute<TAttributeType>(this Type value)
         where TAttributeType : Attribute => (TAttributeType[])value.GetCustomAttributes(typeof(TAttributeType), false);

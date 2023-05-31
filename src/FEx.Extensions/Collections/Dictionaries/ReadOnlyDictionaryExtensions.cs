@@ -3,7 +3,7 @@
 namespace FEx.Extensions.Collections.Dictionaries;
 
 /// <summary>
-///     IDictionary extensions class.
+///     IReadOnlyDictionary extensions class.
 /// </summary>
 public static class ReadOnlyDictionaryExtensions
 {

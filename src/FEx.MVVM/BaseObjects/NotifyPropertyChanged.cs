@@ -11,15 +11,6 @@ namespace FEx.MVVM.BaseObjects;
 
 public class NotifyPropertyChanged : INotifyPropertyChanged
 {
-    private readonly IFExDispatcher _dispatcher;
-
-    public NotifyPropertyChanged()
-    {
-        _dispatcher = Foundation.Dispatcher;
-    }
-
-    public event PropertyChangedEventHandler PropertyChanged;
-
     private static bool SetPropertyStatic<T>(ref T backingField, T newValue, Action<T> onPropertyChanged = null)
     {
         if (!EqualityComparer<T>.Default.Equals(backingField, newValue))
@@ -31,6 +22,15 @@ public class NotifyPropertyChanged : INotifyPropertyChanged
 
         return false;
     }
+
+    private readonly IFExDispatcher _dispatcher;
+
+    public NotifyPropertyChanged()
+    {
+        _dispatcher = Foundation.Dispatcher;
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
 
     [NotifyPropertyChangedInvocator]
     public virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

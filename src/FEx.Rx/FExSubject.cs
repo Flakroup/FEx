@@ -1,59 +1,50 @@
 ﻿using System;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Reactive.Threading.Tasks;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace FEx.Rx;
 
-public abstract class FExSubject<T> : IDisposable
+public class FExArgumentlessSubject : FExSubject<bool>
 {
-    protected readonly CompositeDisposable _disposable;
-    private readonly ISubject<T> _subject;
+    public void OnNext()
+    {
+        base.OnNext(false);
+    }
+}
+
+public class FExSubject<T> : IDisposable, IObservable<T>
+{
+    protected readonly ISubject<T> _subject;
+
     private bool _isDisposed;
 
-    protected FExSubject(ISubject<T> subject = null)
+    public FExSubject(ISubject<T> subject = null)
     {
         _subject = subject ?? new Subject<T>();
-        _disposable = new();
-
-        if (_subject is IDisposable disposable)
-            _disposable.Add(disposable);
     }
 
-    public IObservable<T> GetObservable() => _subject;
+    public IDisposable Subscribe(IObserver<T> observer) => _subject.Subscribe(observer);
 
-    public void SynchronizedOnNext(T value)
+    public virtual void OnNext(T value)
+    {
+        SynchronizedOnNext(value);
+    }
+
+    protected void SynchronizedOnNext(T value)
     {
         Subject.Synchronize(_subject).OnNext(value);
-    }
-
-    public async Task<T> GetResultAsync(CancellationToken cancellationToken,
-                                        Func<IObservable<T>, IObservable<T>> observableConfiguration = null) =>
-        await GetResultAsync<T>(cancellationToken, observableConfiguration);
-
-    public async Task<TResult> GetResultAsync<TResult>(CancellationToken cancellationToken,
-                                                       Func<IObservable<T>, IObservable<TResult>>
-                                                           observableConfiguration = null)
-    {
-        IObservable<TResult> observable = observableConfiguration?.Invoke(_subject) ?? (IObservable<TResult>)_subject;
-
-        return await observable.ToTask(cancellationToken, null, Scheduler.Default);
     }
 
     #region IDisposable
 
     protected virtual void Dispose(bool isDisposing)
     {
-        if (!_isDisposed)
-        {
-            if (isDisposing)
-                _disposable.Dispose();
+        if (_isDisposed)
+            return;
 
-            _isDisposed = true;
-        }
+        if (isDisposing && _subject is IDisposable disposable)
+            disposable.Dispose();
+
+        _isDisposed = true;
     }
 
     public void Dispose()

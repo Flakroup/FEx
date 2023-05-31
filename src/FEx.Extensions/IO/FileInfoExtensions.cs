@@ -68,7 +68,7 @@ public static class FileInfoExtensions
 #else
         await using (FileStream sourceStream = file.OpenRead())
         await using (FileStream targetStream =
- File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+                     File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
 #endif
 
             await sourceStream.CopyToAsync(targetStream);

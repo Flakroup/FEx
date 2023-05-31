@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace FEx.Utilities.Collections;
 
@@ -6,6 +7,7 @@ public class Map<TKey1, TKey2>
 {
     private readonly Dictionary<TKey1, TKey2> _forwardDictionary = new();
     private readonly Dictionary<TKey2, TKey1> _reverseDictionary = new();
+    private bool _isReadOnly;
 
     public Index<TKey1, TKey2> ForwardIndex { get; }
 
@@ -26,6 +28,9 @@ public class Map<TKey1, TKey2>
 
     public void Add(TKey1 t1, TKey2 t2)
     {
+        if (_isReadOnly)
+            throw new InvalidOperationException("Map is read-only");
+
         _forwardDictionary.Add(t1, t2);
 
         try
@@ -49,7 +54,16 @@ public class Map<TKey1, TKey2>
 
     public void Clear()
     {
+        if (_isReadOnly)
+            throw new InvalidOperationException("Map is read-only");
+
         _forwardDictionary.Clear();
         _reverseDictionary.Clear();
+    }
+
+
+    public void SetReadOnly()
+    {
+        _isReadOnly = true;
     }
 }

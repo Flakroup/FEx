@@ -1,4 +1,4 @@
-﻿using FEx.Utilities.Flow;
+﻿using FEx.Basics.Flow;
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -7,14 +7,50 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace FEx.Rx.Extensions;
 
 public static class ObservableExtensions
 {
+    public static IDisposable SubscribeWithoutOverlap<T>(this IObservable<T> source, Action<T> action)
+    {
+        var sampler = new Subject<Unit>();
+
+        IDisposable sub = source.Sample(sampler)
+            .Subscribe(l =>
+            {
+                action(l);
+                sampler.OnNext(Unit.Default);
+            });
+
+        // start sampling when we have a first value
+        source.Take(1).Subscribe(_ => sampler.OnNext(Unit.Default));
+
+        return sub;
+    }
+
+    public static IObservable<TResult> FromTdf<T, TResult>(this IObservable<T> source,
+                                                           Func<IPropagatorBlock<T, TResult>> blockFactory)
+    {
+        return Observable.Defer(() =>
+        {
+            IPropagatorBlock<T, TResult> block = blockFactory();
+            source.Subscribe(block.AsObserver());
+            return block.AsObservable();
+        });
+    }
+
+    public static IObservable<TResult> FromTdf<T, TResult>(this IObservable<T> source,
+                                                           Func<T, Task<TResult>> transformFunc)
+    {
+        return source.FromTdf(() => new TransformBlock<T, TResult>(transformFunc));
+    }
+
     public static IObservable<TResult> SelectTask<TSource, TResult>(this IObservable<TSource> source,
                                                                     Func<TSource, CancellationToken, Task<TResult>>
                                                                         func,
@@ -57,7 +93,8 @@ public static class ObservableExtensions
         this INotifyPropertyChanged notifyPropertyChanged)
     {
         return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
-            ev => notifyPropertyChanged.PropertyChanged += ev, ev => notifyPropertyChanged.PropertyChanged -= ev);
+                ev => notifyPropertyChanged.PropertyChanged += ev, ev => notifyPropertyChanged.PropertyChanged -= ev)
+            .Where(y => y?.EventArgs?.PropertyName is not null && y.Sender is not null);
     }
 
     public static IObservable<EventPattern<PropertyChangedEventArgs>> GetPropertyChangedObservable(
@@ -72,8 +109,9 @@ public static class ObservableExtensions
         this INotifyCollectionChanged notifyCollectionChanged)
     {
         return Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
-            ev => notifyCollectionChanged.CollectionChanged += ev,
-            ev => notifyCollectionChanged.CollectionChanged -= ev);
+                ev => notifyCollectionChanged.CollectionChanged += ev,
+                ev => notifyCollectionChanged.CollectionChanged -= ev)
+            .Where(y => y?.EventArgs is not null);
     }
 
     public static void TryGetLastValue<TResult>(this IObservable<TResult> source, out TResult value)

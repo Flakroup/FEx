@@ -23,7 +23,7 @@ public static class EnumExtensions
     /// <returns>Attribute object.</returns>
     public static TAttributeType GetEnumValueAttribute<TAttributeType>(this Enum enumValue)
         where TAttributeType : Attribute =>
-        GetEnumValueAttributes<TAttributeType>(enumValue).Find();
+        GetEnumValueAttributes<TAttributeType>(enumValue).FindInEnumerable();
 
     /// <summary>
     ///     Generic method getting attribute objects of the given type from enumerated value.

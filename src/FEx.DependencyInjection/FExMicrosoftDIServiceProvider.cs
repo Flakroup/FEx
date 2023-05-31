@@ -1,7 +1,11 @@
 ﻿using FEx.Abstractions;
 using FEx.Fundamentals;
+using FEx.Fundamentals.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
 
 namespace FEx.DependencyInjection;
 
@@ -26,10 +30,25 @@ public class FExMicrosoftDIServiceProvider : IFExServiceProvider
     {
         services = ConfigureServices(configuration, services);
 
-        _provider = services.BuildServiceProvider(new ServiceProviderOptions
+        try
         {
-            ValidateOnBuild = true
-        });
+            _provider = services.BuildServiceProvider(new ServiceProviderOptions
+            {
+                ValidateOnBuild = true
+            });
+        }
+        catch (AggregateException ex) when (Debugger.IsAttached)
+        {
+            var sb = new StringBuilder();
+            foreach (string m in ex.InnerExceptions.Select(e => e.Message.Split(':')[4])
+                         .Distinct()
+                         .OrderBy(x => x)
+                         .ToList())
+                sb.AppendLine(m);
+
+            Debug.WriteLine(sb.ToString());
+            throw;
+        }
     }
 
 

@@ -7,6 +7,17 @@ public abstract class FExSingleton : IDisposable
 {
     private static readonly List<FExSingleton> Singletons = new();
 
+    public static void ClearAllSingletons()
+    {
+        lock (Singletons)
+        {
+            foreach (FExSingleton s in Singletons)
+                s.Dispose();
+
+            Singletons.Clear();
+        }
+    }
+
     protected FExSingleton()
     {
         lock (Singletons)
@@ -17,17 +28,6 @@ public abstract class FExSingleton : IDisposable
     {
         Dispose(true);
         GC.SuppressFinalize(this);
-    }
-
-    public static void ClearAllSingletons()
-    {
-        lock (Singletons)
-        {
-            foreach (FExSingleton s in Singletons)
-                s.Dispose();
-
-            Singletons.Clear();
-        }
     }
 
     protected abstract void Dispose(bool isDisposing);

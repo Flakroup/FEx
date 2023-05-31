@@ -15,14 +15,14 @@ public static class EnumerableExtensions
         return source.OrderAlphanumBy(x => x);
     }
 
+    public static IOrderedEnumerable<TSource> OrderAlphanumBy<TSource>(this IEnumerable<TSource> source,
+                                                                       Func<TSource, string> keySelector) =>
+        source.OrderBy(keySelector, AlphanumComparatorFast.Instance);
+
     public static IOrderedEnumerable<string> OrderAlphanumByDescending(this IEnumerable<string> source)
     {
         return source.OrderAlphanumByDescending(x => x);
     }
-
-    public static IOrderedEnumerable<TSource> OrderAlphanumBy<TSource>(this IEnumerable<TSource> source,
-                                                                       Func<TSource, string> keySelector) =>
-        source.OrderBy(keySelector, AlphanumComparatorFast.Instance);
 
     public static IOrderedEnumerable<TSource> OrderAlphanumByDescending<TSource>(
         this IEnumerable<TSource> source,

@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace FEx.MVVM.BaseObjects;
@@ -17,7 +18,7 @@ public class ViewModelBase : ReactiveObject
         if (!EqualityComparer<TRet>.Default.Equals(backingField, newValue))
         {
             backingField = newValue;
-            ((IReactiveObject)this).RaisePropertyChanged(new(propertyName));
+            ((IReactiveObject)this).RaisePropertyChanged(new PropertyChangedEventArgs(propertyName));
             onPropertyChanged?.Invoke(newValue);
             return true;
         }

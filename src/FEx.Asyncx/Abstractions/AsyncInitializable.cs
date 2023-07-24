@@ -1,4 +1,5 @@
 ﻿using FEx.Asyncx.Abstractions.Interfaces;
+using FEx.Basics;
 using FEx.Fundamentals;
 using FEx.Fundamentals.Extensions;
 using FEx.Fundamentals.Helpers;
@@ -22,7 +23,7 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
     protected AsyncInitializable()
     {
         _asyncHelper = Foundation.AsyncHelper;
-        _semaphore = new(1, 1);
+        _semaphore = new SemaphoreSlim(1, 1);
     }
 
     public virtual void Initialize()
@@ -38,7 +39,7 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
 
         if (IsInitialized && !reInitialize)
         {
-            Foundation.Logger.LogWarning($"{GetType().FullName} has been already initialized");
+            FExBasics.Logger.LogWarning($"{GetType().FullName} has been already initialized");
             return true;
         }
 

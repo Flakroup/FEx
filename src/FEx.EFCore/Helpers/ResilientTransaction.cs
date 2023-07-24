@@ -67,7 +67,16 @@ public class ResilientTransaction
         try
         {
             res = await action();
-            await transaction.CommitAsync();
+
+            try
+            {
+                await transaction.CommitAsync();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                //ignored
+            }
         }
         catch
         {
@@ -91,9 +100,17 @@ public class ResilientTransaction
         try
         {
             res = action();
-            await transaction.CommitAsync();
+            try
+            {
+                await transaction.CommitAsync();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                //ignored
+            }
         }
-        catch (Exception ex)
+        catch
         {
             await transaction.RollbackAsync();
             throw;
@@ -114,7 +131,15 @@ public class ResilientTransaction
         try
         {
             res = action();
-            transaction.Commit();
+            try
+            {
+                transaction.Commit();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                //ignored
+            }
         }
         catch
         {

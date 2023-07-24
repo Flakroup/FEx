@@ -1,8 +1,8 @@
 ﻿using FEx.Abstractions;
 using FEx.Basics;
+using FEx.Basics.Interfaces;
 using FEx.Extensions;
 using FEx.Fundamentals.Helpers;
-using FEx.Fundamentals.StackTraces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
@@ -15,7 +15,6 @@ public class Foundation
     private static IExceptionHandler _exceptionHandler;
     private static IFExServiceProvider _serviceProvider;
     private static IFExServiceProvider _strongInjectServiceProvider;
-    private static ILogger _logger;
     private static IFExDispatcher _dispatcher;
     private static Thread _mainThread;
     private static SynchronizationContext _mainSynchronizationContext;
@@ -24,12 +23,6 @@ public class Foundation
     {
         get => _dispatcher.Guard();
         private set => _dispatcher = value;
-    }
-
-    public static ILogger Logger
-    {
-        get => _logger.Guard();
-        private set => _logger = value;
     }
 
     public static AsyncHelper AsyncHelper
@@ -64,19 +57,37 @@ public class Foundation
         private set => _mainThread = value;
     }
 
-    public static SynchronizationContext MainSynchronizationContext =>
-        _mainSynchronizationContext ??= MainThread.GetThreadSynchronizationContext();
-
-    static Foundation()
+    public static SynchronizationContext MainSynchronizationContext
     {
-        FExBasics.Init(new StackTraceGenerator());
+        get
+        {
+            if (IsDispatcherContext)
+                return _mainSynchronizationContext;
+
+            SynchronizationContext context = MainThread.GetThreadSynchronizationContext();
+
+            if (context is not null)
+            {
+                _mainSynchronizationContext = context;
+
+                if (_mainSynchronizationContext.GetType().Name == "DispatcherSynchronizationContext")
+                    IsDispatcherContext = true;
+            }
+
+            return _mainSynchronizationContext;
+        }
     }
+
+    public static bool IsInitialized { get; private set; }
+
+    private static bool IsDispatcherContext { get; set; }
 
     public static void Init<T>(T strongInjectServiceProvider) where T : class, IFExServiceProvider
     {
         StrongInjectServiceProvider = strongInjectServiceProvider;
         StrongInjectServiceProvider.GetRequiredService<Foundation>().Guard();
         ServiceProvider = StrongInjectServiceProvider;
+        IsInitialized = true;
     }
 
     public static void RegisterDependencies(Func<IFExServiceProvider> serviceProviderConfiguration)
@@ -87,9 +98,6 @@ public class Foundation
 
     public static void SetMainThread(bool ensureSyncContextExists = false)
     {
-        if (_mainThread is not null)
-            return;
-
         Thread currentThread = Thread.CurrentThread;
         bool isMainThread = currentThread.GetApartmentState() == ApartmentState.STA
                             && !currentThread.IsBackground
@@ -106,15 +114,17 @@ public class Foundation
     }
 
     public Foundation(IFExDispatcher dispatcher,
-                      ILogger<Foundation> logger,
+                      ILogger<FExBasics> logger,
                       AsyncHelper asyncHelper,
-                      IExceptionHandler exceptionHandler)
+                      IExceptionHandler exceptionHandler,
+                      IStackTraceProvider stackTraceProvider,
+                      IEventDeliverer eventDeliverer)
     {
         Dispatcher = dispatcher;
-        Logger = logger;
         AsyncHelper = asyncHelper;
         ExceptionHandler = exceptionHandler;
         SetMainThread();
+        FExBasics.Init(stackTraceProvider, eventDeliverer, logger);
     }
 
     public Thread GetMainThread() => MainThread;

@@ -187,8 +187,8 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
         int expandedItemChildIndex = InternalChildren.IndexOf(_expandedItemChild);
         if (expandedItemChildIndex != -1
             && childIndex > expandedItemChildIndex)
-            return new(childIndex - 1, 0);
-        return new(childIndex, 0);
+            return new GeneratorPosition(childIndex - 1, 0);
+        return new GeneratorPosition(childIndex, 0);
     }
 
     protected override void VirtualizeItems()

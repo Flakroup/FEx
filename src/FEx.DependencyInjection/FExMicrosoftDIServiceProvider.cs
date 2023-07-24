@@ -1,6 +1,5 @@
 ﻿using FEx.Abstractions;
 using FEx.Fundamentals;
-using FEx.Fundamentals.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics;
@@ -46,7 +45,7 @@ public class FExMicrosoftDIServiceProvider : IFExServiceProvider
                          .ToList())
                 sb.AppendLine(m);
 
-            Debug.WriteLine(sb.ToString());
+            Console.WriteLine(sb.ToString()); //todo logger
             throw;
         }
     }
@@ -60,10 +59,11 @@ public class FExMicrosoftDIServiceProvider : IFExServiceProvider
         if (configuration is not null)
             services = configuration(services);
 
-        services.AddSingleton<IScopeProvider>(this);
-        services.AddSingleton<IFExServiceProvider>(this);
-        services.AddSingleton<Foundation>();
-        services.AddSingleton<AsyncHelper>();
+        services.AddSingleton<IScopeProvider>(this)
+            .AddSingleton<IFExServiceProvider>(this)
+            .AddSingleton(Foundation.StrongInjectServiceProvider.GetRequiredService<Foundation>())
+            .AddSingleton(Foundation.AsyncHelper)
+            .AddSingleton(Foundation.StrongInjectServiceProvider.GetRequiredService<ITasksInfoSubject>());
 
         return services;
     }

@@ -34,7 +34,7 @@ public class SpecialDirectory
             string path = Environment.GetFolderPath(value);
 
             if (path.IsNotNullOrEmptyString())
-                return new(value, path);
+                return new SpecialDirectory(value, path);
         }
         catch
         {

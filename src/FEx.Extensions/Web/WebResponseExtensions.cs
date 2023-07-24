@@ -70,7 +70,7 @@ public static class WebResponseExtensions
         string[] split = rangeHeader.Split(' ')[1].Split('/')[0].Split('-');
         var from = long.Parse(split[0]);
         var to = long.Parse(split[1]);
-        return new(from, to);
+        return new ContentRangeHeaderValue(from, to);
     }
 
     public static Dictionary<string, string[]> GetAllHeaders(this HttpResponseMessage resp)

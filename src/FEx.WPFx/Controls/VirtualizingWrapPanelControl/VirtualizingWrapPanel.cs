@@ -148,7 +148,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
         {
             if (_model is null)
             {
-                _model = new(ItemContainerManager, _internalChildrenWrapper);
+                _model = new VirtualizingWrapPanelModel(ItemContainerManager, _internalChildrenWrapper);
                 _model.ScrollInfoInvalidated += Model_ScrollInfoInvalidated;
                 _model.MeasureInvalidated += Model_MeasureInvalidated;
             }
@@ -159,7 +159,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
 
     public VirtualizingWrapPanel()
     {
-        _internalChildrenWrapper = new(AddInternalChild,
+        _internalChildrenWrapper = new VirtualizingPanelWrapper(AddInternalChild,
             child => RemoveInternalChildRange(InternalChildren.IndexOf(child), 1));
     }
 
@@ -186,7 +186,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
 
             var viewportSize = new Size(viewportWidth, viewporteHeight);
 
-            Margin = new(-HorizontalGroupOffset, 0, 0, 0);
+            Margin = new Thickness(-HorizontalGroupOffset, 0, 0, 0);
 
             Model.CacheLength = groupItem.Constraints.CacheLength;
             Model.CacheLengthUnit = groupItem.Constraints.CacheLengthUnit;

@@ -15,8 +15,8 @@ public class Map<TKey1, TKey2>
 
     public Map()
     {
-        ForwardIndex = new(_forwardDictionary);
-        ReverseIndex = new(_reverseDictionary);
+        ForwardIndex = new Index<TKey1, TKey2>(_forwardDictionary);
+        ReverseIndex = new Index<TKey2, TKey1>(_reverseDictionary);
     }
 
     public Map(IDictionary<TKey1, TKey2> dictionary)

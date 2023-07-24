@@ -1,10 +1,9 @@
 ﻿using FEx.Abstractions;
 using FEx.Basics;
+using FEx.Basics.Helpers;
 using FEx.Fundamentals;
-using FEx.Utilities.Exceptions;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,7 +16,6 @@ public abstract class FExDispatcher : IFExDispatcher
 
     private readonly ILogger _logger;
 
-    public bool IsDeadlockMonitoringEnabled { get; private set; }
 
     protected FExDispatcher(ILogger logger)
     {
@@ -36,34 +34,10 @@ public abstract class FExDispatcher : IFExDispatcher
 
     public void SendInThisOrMainThreadContext(Action action,
                                               SynchronizationContext synchronizationContext = null,
-                                              int? timeout = 3000)
+                                              uint timeout = 10000)
     {
         SynchronizationContext syncContext = synchronizationContext ?? MainThreadSynchronizationContext;
-        Timer timer = IsDeadlockMonitoringEnabled && timeout.HasValue
-            ? new Timer(Callback, FExBasics.StackTraceProvider.GetStackTrace(), timeout.Value, Timeout.Infinite)
-            : null;
-        try
-        {
-            syncContext.Send(_ => action(), default);
-        }
-        finally
-        {
-            timer?.Change(Timeout.Infinite, Timeout.Infinite);
-            timer?.Dispose();
-        }
-    }
-
-    public void SetDeadlockMonitoring(bool isEnabled)
-    {
-        IsDeadlockMonitoringEnabled = isEnabled;
-    }
-
-    private void Callback(object state)
-    {
-        var stackTrace = (StackTrace)state;
-        var ex = new AttachedException("Deadlock assumed, as no action could've been performed during timeout.",
-            stackTrace);
-        _logger.LogError(ex, ex.Message);
-        throw ex;
+        DeadlockMonitor.Execute(() => syncContext.Send(_ => action(), default),
+            FExBasics.StackTraceProvider.GetStackTrace(), timeout);
     }
 }

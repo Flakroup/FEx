@@ -22,7 +22,7 @@ public abstract class LiteDBService : IDisposable
 
     protected LiteDBService(ILiteRepository context)
     {
-        _lock = new();
+        _lock = new ExtendedReaderWriterLockSlim();
         _context = context;
     }
 

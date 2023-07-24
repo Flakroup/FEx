@@ -1,7 +1,7 @@
 ﻿namespace FEx.Basics.Flow;
 
-public interface IStackError
+public interface IStackError : IError
 {
-    string StackTrace { get; }
-    string RootErrorStackTrace { get; }
+    string StackTraceString { get; }
+    string RootErrorStackTraceString { get; }
 }

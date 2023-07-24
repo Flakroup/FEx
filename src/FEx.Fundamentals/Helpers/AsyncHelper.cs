@@ -25,14 +25,30 @@ public class AsyncHelper
         return null;
     }
 
-    //todo use stacktracegen
+    private static void SetResult<T>(T result, ITaskWrapper taskWrapper)
+    {
+        switch (taskWrapper)
+        {
+            case TaskWrapper<T> typedWrapper:
+                typedWrapper.SetResult(result);
+                break;
+            case TaskWrapper wrapper:
+                wrapper.SetResult();
+                break;
+            default:
+                throw new InvalidOperationException($"{taskWrapper.GetType().FullName} is not handled");
+        }
+    }
+
+    private readonly ITasksInfoSubject _tasksInfoSubject;
     private readonly IFExDispatcher _dispatcher;
     private readonly ILogger<AsyncHelper> _logger;
 
-    public AsyncHelper(IFExDispatcher dispatcher, ILogger<AsyncHelper> logger)
+    public AsyncHelper(IFExDispatcher dispatcher, ILogger<AsyncHelper> logger, ITasksInfoSubject tasksInfoSubject)
     {
         _dispatcher = dispatcher;
         _logger = logger;
+        _tasksInfoSubject = tasksInfoSubject;
     }
 
     public TaskWrapper FireAndForget(Action action,
@@ -176,6 +192,7 @@ public class AsyncHelper
                                                   CancellationToken cancellationToken,
                                                   AsyncMode asyncMode)
     {
+        _tasksInfoSubject.AddTask(taskWrapper);
         T result = default;
 
         try
@@ -188,7 +205,7 @@ public class AsyncHelper
                 _ => await Task.Run(func, cancellationToken)
             };
 
-            taskWrapper.SetResult(result);
+            SetResult(result, taskWrapper);
         }
         catch (Exception ex)
         {
@@ -196,11 +213,13 @@ public class AsyncHelper
             taskWrapper.SetException(ex);
         }
 
+        _tasksInfoSubject.RemoveTask(taskWrapper);
         return result;
     }
 
     private async Task<T> ExecuteTaskAndCatchAsync<T>(Func<Task<T>> task, ITaskWrapper taskWrapper, AsyncMode asyncMode)
     {
+        _tasksInfoSubject.AddTask(taskWrapper);
         T result = default;
 
         try
@@ -213,7 +232,7 @@ public class AsyncHelper
                 _ => await task()
             };
 
-            taskWrapper.SetResult(result);
+            SetResult(result, taskWrapper);
         }
         catch (Exception ex)
         {
@@ -221,6 +240,7 @@ public class AsyncHelper
             taskWrapper.SetException(ex);
         }
 
+        _tasksInfoSubject.RemoveTask(taskWrapper);
         return result;
     }
 }

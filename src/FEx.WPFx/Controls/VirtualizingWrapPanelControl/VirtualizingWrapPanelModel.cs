@@ -46,7 +46,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         _itemContainerManager = itemContainerManager;
         _childrenCollection = childrenCollection;
         itemContainerManager.ItemsChanged += ItemContainerManager_ItemsChanged;
-        _items = new(itemContainerManager.Items);
+        _items = new List<object>(itemContainerManager.Items);
     }
 
     public Size OnMeasure(Size availableSize) => OnMeasure(availableSize, availableSize, ScrollOffset);
@@ -75,7 +75,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     public Size OnArrange(Size finalSize, bool hierarchical)
     {
         foreach (IItemContainerInfo cachedContainer in _itemContainerManager.CachedContainers)
-            cachedContainer.Arrange(new(0, 0, 0, 0));
+            cachedContainer.Arrange(new Rect(0, 0, 0, 0));
 
         double x = _startItemOffsetX + GetX(ScrollOffset);
         double y = hierarchical
@@ -567,7 +567,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     private Size CalculateAverageSize(ICollection<Size> sizes)
     {
         if (sizes.Any())
-            return new(sizes.Average(size => size.Width), sizes.Average(size => size.Height));
+            return new Size(sizes.Average(size => size.Width), sizes.Average(size => size.Height));
         return Size.Empty;
     }
 
@@ -628,15 +628,15 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         : size.Width;
 
     protected Point CreatePoint(double x, double y) => Orientation == Orientation.Horizontal
-        ? new(x, y)
+        ? new Point(x, y)
         : new Point(y, x);
 
     protected Size CreateSize(double width, double height) => Orientation == Orientation.Horizontal
-        ? new(width, height)
+        ? new Size(width, height)
         : new Size(height, width);
 
     protected Rect CreateRect(double x, double y, double width, double height) => Orientation == Orientation.Horizontal
-        ? new(x, y, width, height)
+        ? new Rect(x, y, width, height)
         : new Rect(y, x, height, width);
 
     #endregion

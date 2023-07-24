@@ -1,4 +1,4 @@
-using FEx.Basics;
+using FEx.Basics.Interfaces;
 using FEx.Extensions.Collections.Lists;
 using System;
 using System.Collections.Concurrent;
@@ -40,6 +40,8 @@ public class StackTraceGenerator : IStackTraceProvider
         }
     }
 
+    public StackTrace GetStackTrace() => _stackTraceCache.GetStackTrace();
+
     public StackTraceInfo GetStackTraceInfo(string logger = null, string message = null)
     {
         if (!RequiresStackTrace(logger, message))
@@ -56,7 +58,7 @@ public class StackTraceGenerator : IStackTraceProvider
             StackFrame stackFrame = stackFrameArray[i];
             Type declaringType = stackFrame.GetMethod().DeclaringType;
             if (declaringType is not null)
-                stackTraceFrames.Add(new()
+                stackTraceFrames.Add(new StackTraceFrame
                 {
                     Column = stackFrame.GetFileColumnNumber(),
                     Line = stackFrame.GetFileLineNumber(),
@@ -67,13 +69,11 @@ public class StackTraceGenerator : IStackTraceProvider
                 });
         }
 
-        return new()
+        return new StackTraceInfo
         {
             Frames = stackTraceFrames.ToArray()
         };
     }
-
-    public StackTrace GetStackTrace() => _stackTraceCache.GetStackTrace();
 
     private void CheatClrAndUseDynamicMethodsToGetStackTraceFast()
     {
@@ -109,7 +109,7 @@ public class StackTraceGenerator : IStackTraceProvider
         lGenerator.Emit(OpCodes.Ret);
         var getMethodRuntimeHandle =
             (GetMethodRuntimeHandles)dynamicMethod.CreateDelegate(typeof(GetMethodRuntimeHandles));
-        _stackTraceCache = new StackTraceCache(() => new(getMethodRuntimeHandle()));
+        _stackTraceCache = new StackTraceCache(() => new Key(getMethodRuntimeHandle()));
     }
 
     private bool RequiresStackTrace(string logger, string message)
@@ -134,13 +134,16 @@ public class StackTraceGenerator : IStackTraceProvider
         {
             StackFrame[] frames = new StackTrace(false).GetFrames();
             if (frames is null)
-                return new(new MethodHandleAndILOffset[0]);
+                return new Key(new MethodHandleAndILOffset[0]);
 
             var methodHandleAndIlOffset = new MethodHandleAndILOffset[frames.Length];
             for (var i = 0; i < methodHandleAndIlOffset.Length; i++)
-                methodHandleAndIlOffset[i] = new(frames[i].GetMethod().MethodHandle.Value, frames[i].GetILOffset());
+            {
+                methodHandleAndIlOffset[i] = new MethodHandleAndILOffset(frames[i].GetMethod().MethodHandle.Value,
+                    frames[i].GetILOffset());
+            }
 
-            return new(methodHandleAndIlOffset);
+            return new Key(methodHandleAndIlOffset);
         });
     }
 
@@ -208,7 +211,7 @@ public class StackTraceGenerator : IStackTraceProvider
         {
             var methodHandleAndILOffset = new MethodHandleAndILOffset[methods.Length];
             for (var i = 0; i < methods.Length; i++)
-                methodHandleAndILOffset[i] = new(methods[i], offsets[i]);
+                methodHandleAndILOffset[i] = new MethodHandleAndILOffset(methods[i], offsets[i]);
 
             return methodHandleAndILOffset;
         }
@@ -256,7 +259,7 @@ public class StackTraceGenerator : IStackTraceProvider
         public StackTraceCache(GetKey createKey)
         {
             _createKey = createKey;
-            _rwLock = new();
+            _rwLock = new ReaderWriterLockSlim();
             _cachedTraces = new ConcurrentDictionary<Key, StackTrace>();
         }
 

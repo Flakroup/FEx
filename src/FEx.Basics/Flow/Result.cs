@@ -1,53 +1,52 @@
 ﻿using FEx.Extensions;
 
-namespace FEx.Basics.Flow
+namespace FEx.Basics.Flow;
+
+public class Result<TError> where TError : class, IError, new()
 {
-    public class Result<TError> where TError : class, IError, new()
+    public static Result<TError> Success => new();
+
+    public static Result<TError> Failure => new(new TError());
+
+    public static implicit operator Result<TError>(TError error) => new(error);
+
+    public TError Error { get; }
+    public bool IsSuccess => !IsFailure;
+    public bool IsFailure { get; }
+
+    public Result()
     {
-        public static Result<TError> Success => new();
-
-        public static Result<TError> Failure => new(new());
-
-        public static implicit operator Result<TError>(TError error) => new(error);
-
-        public TError Error { get; }
-        public bool IsSuccess => !IsFailure;
-        public bool IsFailure { get; }
-
-        public Result()
-        {
-        }
-
-        public Result(TError error)
-        {
-            Error = error.Guard(nameof(Error));
-            IsFailure = true;
-        }
     }
 
-    public class Result<TData, TError> where TError : class, IError, new()
+    public Result(TError error)
     {
-        public static Result<TData, TError> Failure => new(new TError());
+        Error = error.Guard(nameof(Error));
+        IsFailure = true;
+    }
+}
 
-        public static implicit operator Result<TData, TError>(TData data) => new(data);
+public class Result<TData, TError> where TError : class, IError, new()
+{
+    public static Result<TData, TError> Failure => new(new TError());
 
-        public static implicit operator Result<TData, TError>(TError error) => new(error);
+    public static implicit operator Result<TData, TError>(TData data) => new(data);
 
-        public TError Error { get; }
-        public bool IsSuccess => !IsFailure;
-        public bool IsFailure { get; }
+    public static implicit operator Result<TData, TError>(TError error) => new(error);
 
-        public TData Data { get; }
+    public TError Error { get; }
+    public bool IsSuccess => !IsFailure;
+    public bool IsFailure { get; }
 
-        public Result(TData data)
-        {
-            Data = data;
-        }
+    public TData Data { get; }
 
-        public Result(TError error)
-        {
-            Error = error.Guard(nameof(Error));
-            IsFailure = true;
-        }
+    public Result(TData data)
+    {
+        Data = data;
+    }
+
+    public Result(TError error)
+    {
+        Error = error.Guard(nameof(Error));
+        IsFailure = true;
     }
 }

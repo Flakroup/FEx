@@ -29,7 +29,7 @@ internal abstract class VirtualizingPanelModelBase
             offset = Extent.Height - ViewportSize.Height;
         if (offset != ScrollOffset.Y)
         {
-            ScrollOffset = new(ScrollOffset.X, offset);
+            ScrollOffset = new Point(ScrollOffset.X, offset);
             InvalidateScrollInfo();
             InvalidateMeasure();
         }
@@ -44,7 +44,7 @@ internal abstract class VirtualizingPanelModelBase
             offset = Extent.Width - ViewportSize.Width;
         if (offset != ScrollOffset.X)
         {
-            ScrollOffset = new(offset, ScrollOffset.Y);
+            ScrollOffset = new Point(offset, ScrollOffset.Y);
             InvalidateScrollInfo();
             InvalidateMeasure();
         }

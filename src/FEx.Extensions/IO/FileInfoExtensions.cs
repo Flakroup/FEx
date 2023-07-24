@@ -73,7 +73,7 @@ public static class FileInfoExtensions
 
             await sourceStream.CopyToAsync(targetStream);
 
-        zipFile ??= new(Path.Combine(parentDirectory?.FullName, $"{file.Name}.zip"));
+        zipFile ??= new FileInfo(Path.Combine(parentDirectory?.FullName, $"{file.Name}.zip"));
 
         if (zipFile.Exists && overwrite)
         {

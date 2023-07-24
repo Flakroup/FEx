@@ -1,34 +1,18 @@
-﻿using FEx.Basics.Flow;
-using FEx.Extensions;
+using FEx.Basics.Flow;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace FEx.Basics.Extensions;
 
 public static class ErrorExtensions
 {
-    public static bool Match<TError>(this IError error, Func<TError, bool> action) where TError : IError
-    {
-        action.Guard(nameof(action));
+    public static IError GetErrorRoot(this IError error) =>
+        error.InnerError is null
+            ? error
+            : error.InnerError.GetErrorRoot();
 
-        return error.InnerError is TError typedError && action.Invoke(typedError);
-    }
-
-    public static async Task<bool> MatchAsync<TError>(this IError error, Func<TError, Task<bool>> action)
-        where TError : IError
-    {
-        action.Guard(nameof(action));
-
-        return error.InnerError is TError typedError && await action.Invoke(typedError);
-    }
-
-    public static IError GetErrorRoot(this IError error) => error.InnerError is null
-        ? error
-        : error.InnerError.GetErrorRoot();
-
-    public static bool TryGetError<TError>(this IError error, out TError foundError) where TError : class, IError
+    public static bool TryGetError<TError>(this IError error, out TError foundError) where TError : IError
     {
         if (error is TError innerError)
         {
@@ -38,14 +22,14 @@ public static class ErrorExtensions
 
         if (error.InnerError is null)
         {
-            foundError = null;
+            foundError = default;
             return false;
         }
 
         return TryGetError(error.InnerError, out foundError);
     }
 
-    public static TError Wrap<TError>(this Error errorToWrap) where TError : Error, new()
+    public static TError Wrap<TError>(this IError errorToWrap) where TError : class, IError, new()
     {
         var error = new TError();
         error.SetInnerError(errorToWrap);
@@ -59,5 +43,5 @@ public static class ErrorExtensions
         }.AsReadOnly());
 
     public static AggregateException ToAggregateException(this AggregatedError error) =>
-        new(error.InnerErrors.OfType<ExceptionError>().Select(x => x.Exception));
+        new(error.InnerErrors.OfType<IExceptionError>().Select(x => x.Exception));
 }

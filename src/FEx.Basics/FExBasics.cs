@@ -1,18 +1,25 @@
-﻿using FEx.Extensions;
+﻿using FEx.Abstractions;
+using FEx.Basics.Interfaces;
+using FEx.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace FEx.Basics;
 
-public static class FExBasics
+public class FExBasics
 {
-    public static IStackTraceProvider StackTraceProvider { get; set; }
+    public static IStackTraceProvider StackTraceProvider { get; private set; }
+    public static IEventDeliverer EventDeliverer { get; private set; }
+    public static ILogger Logger { get; private set; }
 
     static FExBasics()
     {
         StackTraceProvider = new DefaultStackTraceProvider();
     }
 
-    public static void Init(IStackTraceProvider stackTraceProvider)
+    public static void Init(IStackTraceProvider stackTraceProvider, IEventDeliverer eventDeliverer, ILogger logger)
     {
-        StackTraceProvider = stackTraceProvider.Guard();
+        StackTraceProvider = stackTraceProvider.Guard(nameof(stackTraceProvider));
+        EventDeliverer = eventDeliverer.Guard(nameof(eventDeliverer));
+        Logger = logger.Guard(nameof(logger));
     }
 }

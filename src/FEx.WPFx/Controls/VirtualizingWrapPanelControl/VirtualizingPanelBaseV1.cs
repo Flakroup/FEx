@@ -205,7 +205,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
         double visibleRectWidth = Math.Min(rectangle.Width, ViewportSize.Width);
         double visibleRectHeight = Math.Min(rectangle.Height, ViewportSize.Height);
 
-        return new(scrollAmountX, scrollAmountY, visibleRectWidth, visibleRectHeight);
+        return new Rect(scrollAmountX, scrollAmountY, visibleRectWidth, visibleRectHeight);
     }
 
     public void SetVerticalOffset(double offset)
@@ -215,7 +215,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             offset = 0;
         else if (offset + ViewportSize.Height >= Extent.Height)
             offset = Extent.Height - ViewportSize.Height;
-        Offset = new(Offset.X, offset);
+        Offset = new Point(Offset.X, offset);
         ScrollOwner?.InvalidateScrollInfo();
         InvalidateMeasure();
     }
@@ -227,7 +227,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             offset = 0;
         else if (offset + ViewportSize.Width >= Extent.Width)
             offset = Extent.Width - ViewportSize.Width;
-        Offset = new(offset, Offset.Y);
+        Offset = new Point(offset, Offset.Y);
         ScrollOwner?.InvalidateScrollInfo();
         InvalidateMeasure();
     }
@@ -337,7 +337,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             && VerticalOffset != 0
             && VerticalOffset + ViewportHeight + 1 >= ExtentHeight)
         {
-            Offset = new(Offset.X, extent.Height - availableSize.Height);
+            Offset = new Point(Offset.X, extent.Height - availableSize.Height);
             invalidateScrollInfo = true;
         }
 
@@ -345,7 +345,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             && HorizontalOffset != 0
             && HorizontalOffset + ViewportWidth + 1 >= ExtentWidth)
         {
-            Offset = new(extent.Width - availableSize.Width, Offset.Y);
+            Offset = new Point(extent.Width - availableSize.Width, Offset.Y);
             invalidateScrollInfo = true;
         }
 
@@ -379,14 +379,14 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
                         InsertInternalChild(childIndex, child);
                     ItemContainerGenerator.PrepareItemContainer(child);
 
-                    child.Measure(new(double.PositiveInfinity, double.PositiveInfinity));
+                    child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                 }
 
                 if (child is IHierarchicalVirtualizationAndScrollInfo groupItem)
                 {
-                    groupItem.Constraints = new(new(0), VirtualizationCacheLengthUnit.Item,
-                        new(0, 0, ViewportWidth, ViewportHeight));
-                    child.Measure(new(ViewportWidth, ViewportHeight));
+                    groupItem.Constraints = new HierarchicalVirtualizationConstraints(new VirtualizationCacheLength(0), VirtualizationCacheLengthUnit.Item,
+                        new Rect(0, 0, ViewportWidth, ViewportHeight));
+                    child.Measure(new Size(ViewportWidth, ViewportHeight));
                 }
             }
         }
@@ -471,11 +471,11 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             Size headerSize = groupItem.HeaderDesiredSizes.PixelSize;
             double availableWidth = Math.Max(viewportSize.Width - 5, 0); // left margin of 5 dp
             double availableHeight = Math.Max(viewportSize.Height - headerSize.Height, 0);
-            availableSize = new(availableWidth, availableHeight);
+            availableSize = new Size(availableWidth, availableHeight);
 
             extent = CalculateExtent(availableSize);
 
-            desiredSize = new(extent.Width, extent.Height);
+            desiredSize = new Size(extent.Width, extent.Height);
 
             Extent = extent;
             Offset = groupItem.Constraints.Viewport.Location;
@@ -488,7 +488,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             extent = CalculateExtent(availableSize);
             double desiredWidth = Math.Min(availableSize.Width, extent.Width);
             double desiredHeight = Math.Min(availableSize.Height, extent.Height);
-            desiredSize = new(desiredWidth, desiredHeight);
+            desiredSize = new Size(desiredWidth, desiredHeight);
 
             UpdateScrollInfo(desiredSize, extent);
             CacheLength = GetCacheLength(ItemsOwner);

@@ -28,7 +28,7 @@ public static class DoubleExtensions
 
         return double.TryParse(value, out double l)
             ? l
-            : throw new("Cannot unmarshal type double");
+            : throw new Exception("Cannot unmarshal type double");
     }
 
     private static double GetFloatComparison(int floatDigits)

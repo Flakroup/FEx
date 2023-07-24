@@ -65,6 +65,6 @@ public static class JoinableAsyncHelper
             ? SynchronizationContext.Current
             : thread.GetThreadSynchronizationContext();
         thread ??= Thread.CurrentThread;
-        return new(new JoinableTaskContext(thread, syncCtx));
+        return new JoinableTaskFactory(new JoinableTaskContext(thread, syncCtx));
     }
 }

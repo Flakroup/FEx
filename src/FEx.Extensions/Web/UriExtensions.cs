@@ -33,7 +33,7 @@ public static class UriExtensions
 
     public static async Task<bool> CheckForInternetConnectionAsync(this Uri url)
     {
-        url ??= new("http://clients3.google.com/generate_204");
+        url ??= new Uri("http://clients3.google.com/generate_204");
 
         try
         {

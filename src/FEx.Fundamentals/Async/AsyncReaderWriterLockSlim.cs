@@ -484,7 +484,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
             ExitReadLockCore(false);
 
             // Ensure that there exists a semaphore on which we can wait.
-            existingWriteLockState.WaitingReadLocksSemaphore ??= new(0);
+            existingWriteLockState.WaitingReadLocksSemaphore ??= new SemaphoreSlim(0);
 
             // Announce that we will wait on the semaphore.
             existingWriteLockState.WaitingReadLocksCount++;
@@ -582,7 +582,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
                 // we simply use it. Otherwise, create a new one.
                 if (_currentWriteLockState is null)
                 {
-                    _currentWriteLockState = new();
+                    _currentWriteLockState = new WriteLockState();
 
                     // Set the MSB on the current read lock count, so that other
                     // threads that want to enter the lock know that they need to

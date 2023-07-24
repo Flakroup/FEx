@@ -192,7 +192,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
         double visibleRectWidth = Math.Min(rectangle.Width, ViewportWidth);
         double visibleRectHeight = Math.Min(rectangle.Height, ViewportHeight);
 
-        return new(scrollAmountX, scrollAmountY, visibleRectWidth, visibleRectHeight);
+        return new Rect(scrollAmountX, scrollAmountY, visibleRectWidth, visibleRectHeight);
     }
 
     public void LineUp() => BaseModel.LineUp();

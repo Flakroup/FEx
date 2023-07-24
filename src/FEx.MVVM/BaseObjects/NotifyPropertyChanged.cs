@@ -1,45 +1,16 @@
-﻿using FEx.Abstractions;
-using FEx.Fundamentals;
+﻿using FEx.Basics;
+using FEx.Extensions.Helpers;
+using FEx.MVVM.Abstractions;
 using JetBrains.Annotations;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace FEx.MVVM.BaseObjects;
 
-public class NotifyPropertyChanged : INotifyPropertyChanged
+public class NotifyPropertyChanged : IFExNotifyPropertyChanged
 {
-    private static bool SetPropertyStatic<T>(ref T backingField, T newValue, Action<T> onPropertyChanged = null)
-    {
-        if (!EqualityComparer<T>.Default.Equals(backingField, newValue))
-        {
-            backingField = newValue;
-            onPropertyChanged?.Invoke(newValue);
-            return true;
-        }
-
-        return false;
-    }
-
-    private readonly IFExDispatcher _dispatcher;
-
-    public NotifyPropertyChanged()
-    {
-        _dispatcher = Foundation.Dispatcher;
-    }
-
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    [NotifyPropertyChangedInvocator]
-    public virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-    {
-        if (propertyName is not null
-            && PropertyChanged is not null)
-            _dispatcher.SendInThisOrMainThreadContext(() => PropertyChanged(this, new(propertyName)));
-    }
-
     public void OnPropertiesChanged(params string[] propertyNames)
     {
         if (propertyNames?.Any() != true)
@@ -49,18 +20,45 @@ public class NotifyPropertyChanged : INotifyPropertyChanged
             OnPropertyChanged(propertyName);
     }
 
-    [NotifyPropertyChangedInvocator]
-    protected virtual bool SetProperty<TRet>(ref TRet backingField,
-                                             TRet newValue,
-                                             Action<TRet> onPropertyChanged = null,
-                                             [CallerMemberName] string propertyName = null)
+    public virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
-        return SetPropertyStatic(ref backingField, newValue, x => OnPropertySet(x, propertyName, onPropertyChanged));
+        if (propertyName is null
+            || PropertyChanged is null)
+            return;
+
+        void EventDelegate() => NotifyChanged(propertyName);
+        FExBasics.EventDeliverer.DeliverEvent(EventDelegate, this);
     }
 
-    private void OnPropertySet<TRet>(TRet newValue, string propertyName, Action<TRet> onPropertyChanged)
+    public virtual bool SetProperty<TRet>(ref TRet backingField,
+                                          TRet newValue,
+                                          Action<TRet> onPropertyChanged = null,
+                                          [CallerMemberName] string propertyName = null)
     {
+        if (EqualityHelper.IsEqual(ref backingField, newValue))
+            return false;
+        TRet oldValue = backingField;
+        backingField = newValue;
+        OnPropertySet(oldValue, newValue, propertyName);
         OnPropertyChanged(propertyName);
         onPropertyChanged?.Invoke(newValue);
+
+        return true;
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected virtual void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
+    {
+    }
+
+    [NotifyPropertyChangedInvocator]
+    private void NotifyChanged([CallerMemberName] string propertyName = null)
+    {
+        if (propertyName is null
+            || PropertyChanged is null)
+            return;
+
+        PropertyChanged(PropertyChanged, new PropertyChangedEventArgs(propertyName));
     }
 }

@@ -45,7 +45,7 @@ internal class ItemContainerInfo : IItemContainerInfo
         Item = item;
 
         if (uiElement is FrameworkElement fe)
-            MaxSize = new(fe.MaxWidth, fe.MaxHeight);
+            MaxSize = new Size(fe.MaxWidth, fe.MaxHeight);
         Item = item;
     }
 

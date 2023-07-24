@@ -42,7 +42,7 @@ public static class ObjectExtensions
     /// <param name="value">Reference to be tested</param>
     /// <returns>True, if specified value is not a null reference; Otherwise False.</returns>
     [ContractAnnotation("null => false")]
-    public static bool ReferenceIsNotNull<T>(this T value) => !ReferenceEquals(value, null);
+    public static bool ReferenceIsNotNull<T>(this T value) => value is not null;
 
     /// <summary>
     ///     Execute a action if T Not null.
@@ -122,7 +122,7 @@ public static class ObjectExtensions
     /// <param name="value">Reference to be tested</param>
     /// <returns>True, if specified value is a null reference; Otherwise False.</returns>
     [ContractAnnotation("null => true")]
-    public static bool ReferenceIsNull<T>(this T value) => ReferenceEquals(value, null);
+    public static bool ReferenceIsNull<T>(this T value) => value is null;
 
     /// <summary>
     ///     Checks an value to ensure it isn't null.
@@ -347,53 +347,16 @@ public static class ObjectExtensions
 
     public static bool IsNotEqual<T>(ref T field, T value) => EqualityHelper.IsNotEqual(ref field, value);
 
-    // ReSharper disable UnusedParameter.Global
     public static bool SetObjectProperty<TSender, T>(this TSender sender,
                                                      ref T backingField,
                                                      T newValue,
-                                                     Action<T> onPropertyChanged = null,
+                                                     Action<TSender, string, T> onPropertyChanged,
                                                      [CallerMemberName] string propertyName = null)
-        // ReSharper restore UnusedParameter.Global
-        =>
-            SetObjectProperty(ref backingField, newValue, onPropertyChanged, sender, propertyName);
-
-    // ReSharper disable UnusedParameter.Global
-    public static bool SetObjectProperty<T>(ref T backingField,
-                                            T newValue,
-                                            Action<T> onPropertyChanged = null,
-                                            object sender = null,
-                                            [CallerMemberName] string propertyName = null)
-    // ReSharper restore UnusedParameter.Global
     {
-        if (IsNotEqual(ref backingField, newValue))
-        {
-            backingField = newValue;
-            onPropertyChanged?.Invoke(newValue);
-            return true;
-        }
+        if (!EqualityHelper.SetObjectProperty(ref backingField, newValue))
+            return false;
 
-        return false;
-    }
-
-    public static T ToObject<T>(this IDictionary<string, object> source) where T : class, new()
-    {
-        var someObject = new T();
-        Type someObjectType = someObject.GetType();
-
-        foreach (KeyValuePair<string, object> item in source)
-            someObjectType.GetProperty(item.Key).SetValue(someObject, item.Value, null);
-
-        return someObject;
-    }
-
-    public static IDictionary<string, object> AsDictionary(this object source,
-                                                           BindingFlags bindingAttr =
-                                                               BindingFlags.DeclaredOnly
-                                                               | BindingFlags.Public
-                                                               | BindingFlags.Instance)
-    {
-        return source.GetType()
-            .GetProperties(bindingAttr)
-            .ToDictionary(propInfo => propInfo.Name, propInfo => propInfo.GetValue(source, null));
+        onPropertyChanged?.Invoke(sender, propertyName, newValue);
+        return true;
     }
 }

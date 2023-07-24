@@ -36,7 +36,7 @@ public static class StringExtensions
     /// <returns>A string.</returns>
     public static string Remove(this string source, IEnumerable<char> chars)
     {
-        return new(source.Where(c => !chars.Contains(c)).ToArray());
+        return new string(source.Where(c => !chars.Contains(c)).ToArray());
     }
 
     /// <summary>
@@ -445,7 +445,7 @@ public static class StringExtensions
     public static Uri ToUri(this string source, Uri baseUri = null, UriKind kind = UriKind.Absolute) =>
         source?.IsNotNullOrEmptyOrWhiteSpace() == true
             ? baseUri is not null
-                ? new(baseUri, source)
+                ? new Uri(baseUri, source)
                 : new Uri(source, kind)
             : null;
 

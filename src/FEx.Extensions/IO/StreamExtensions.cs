@@ -48,6 +48,40 @@ public static class StreamExtensions
         }
     }
 
+    public static void CopyStreamToStream(this Stream sourceStream,
+                                                     Stream destStream,
+                                                     Action<double> progressMaximumSet = null,
+                                                     Action<double> progressValueSet = null,
+                                                     long? length = null)
+    {
+        var buffer = new byte[BufferSize];
+        var writtenBytes = 0;
+
+        if (sourceStream is null)
+            return;
+
+        using Stream stream = sourceStream;
+        progressMaximumSet?.BeginInvoke(stream.Length, null, null);
+
+        while (true)
+        {
+            int num = stream.Read(buffer, 0, buffer.Length);
+            int bytesRead;
+            if ((bytesRead = num) != 0)
+            {
+                destStream.Write(buffer, 0, bytesRead);
+                writtenBytes += num;
+                progressValueSet?.BeginInvoke(writtenBytes, null, null);
+                if (writtenBytes == length)
+                    break;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
     public static async Task<byte[]> ReadFullyAsync(this Stream input)
     {
 #if NETSTANDARD

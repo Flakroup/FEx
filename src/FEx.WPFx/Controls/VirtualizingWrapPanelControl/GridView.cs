@@ -106,25 +106,25 @@ public class GridView : ListView
         factory.SetBinding(VirtualizingWrapPanel.OrientationProperty, new Binding
         {
             Source = this,
-            Path = new(nameof(Orientation)),
+            Path = new PropertyPath(nameof(Orientation)),
             Mode = BindingMode.OneWay
         });
         factory.SetBinding(VirtualizingWrapPanel.SpacingModeProperty, new Binding
         {
             Source = this,
-            Path = new(nameof(SpacingMode)),
+            Path = new PropertyPath(nameof(SpacingMode)),
             Mode = BindingMode.OneWay
         });
         factory.SetBinding(VirtualizingWrapPanel.StretchItemsProperty, new Binding
         {
             Source = this,
-            Path = new(nameof(StretchItems)),
+            Path = new PropertyPath(nameof(StretchItems)),
             Mode = BindingMode.OneWay
         });
-        ItemsPanel = new(factory);
+        ItemsPanel = new ItemsPanelTemplate(factory);
 
         VirtualizingPanel.SetCacheLengthUnit(this, VirtualizationCacheLengthUnit.Page);
-        VirtualizingPanel.SetCacheLength(this, new(1));
+        VirtualizingPanel.SetCacheLength(this, new VirtualizationCacheLength(1));
 
         VirtualizingPanel.SetIsVirtualizingWhenGrouping(this, true);
 

@@ -17,7 +17,7 @@ public static class MimeTypesUtility
             if (!typeMap.ContainsKey(".*"))
                 typeMap.Add(".*", "application/octet-stream");
 
-            Mappings = new(typeMap);
+            Mappings = new ReadOnlyDictionary<string, string>(typeMap);
         }
         catch
         {

@@ -12,7 +12,7 @@ public static class FileSystemInfoExtensions
             FileInfo fileInfo => fileInfo.Directory,
             _ => fileSystemInfo.IsPathFile()
                 ? new FileInfo(fileSystemInfo.FullName).Directory
-                : new(fileSystemInfo.FullName)
+                : new DirectoryInfo(fileSystemInfo.FullName)
         };
     }
 

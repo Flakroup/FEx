@@ -8,7 +8,7 @@ public class GlobalLogger
 
     static GlobalLogger()
     {
-        Logger = new();
+        Logger = new FExLogger();
     }
 
     public static void LogInformation(string message)

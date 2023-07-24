@@ -7,7 +7,7 @@ public sealed class AlphanumComparatorFast : IComparer<string>
 {
     private static volatile AlphanumComparatorFast _instance;
 
-    public static AlphanumComparatorFast Instance => _instance ??= new();
+    public static AlphanumComparatorFast Instance => _instance ??= new AlphanumComparatorFast();
 
     public static int Compare(string s1, string s2, StringComparison comparisonType)
     {

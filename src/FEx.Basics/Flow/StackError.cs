@@ -1,57 +1,71 @@
-﻿using System;
+﻿using FEx.Basics.Extensions;
+using System.Diagnostics;
+using System.Text;
 
-namespace FEx.Basics.Flow
+namespace FEx.Basics.Flow;
+
+public class StackError : Error, IStackError
 {
-    public class StackError : Error, IStackError
+    private static StackTrace GetStackTrace() => FExBasics.StackTraceProvider.GetStackTrace();
+
+    private string _stackTraceString;
+    public StackTrace StackTrace { get; }
+    public string StackTraceString => _stackTraceString ??= StackTrace.ToString();
+
+    public string RootErrorStackTraceString => InnerError.TryGetError(out IStackError innerStackError)
+        ? innerStackError.StackTraceString
+        : StackTraceString;
+
+    public StackError()
     {
-        public string StackTrace { get; }
-
-        public string RootErrorStackTrace => (RootError as IStackError)?.StackTrace;
-
-        public StackError()
-        {
-            StackTrace = FExBasics.StackTraceProvider.GetStackTrace().ToString();
-        }
-
-        public StackError(string message)
-            : base(message)
-        {
-            StackTrace = FExBasics.StackTraceProvider.GetStackTrace().ToString();
-        }
-
-        public StackError(IError innerError, string message = null)
-            : base(innerError, message)
-        {
-            StackTrace = FExBasics.StackTraceProvider.GetStackTrace().ToString();
-        }
-
-        public override string ToString() =>
-            !string.IsNullOrEmpty(Message)
-                ? Message + Environment.NewLine + StackTrace
-                : StackTrace;
+        StackTrace = GetStackTrace();
     }
 
-    public class StackError<TErrorStatus> : Error<TErrorStatus>
+
+    public StackError(string message)
+        : base(message)
     {
-        public string StackTrace { get; }
-
-        public string RootErrorStackTrace => (RootError as IStackError)?.StackTrace;
-
-        public StackError(TErrorStatus status, string message = null)
-            : base(status, message)
-        {
-            StackTrace = FExBasics.StackTraceProvider.GetStackTrace().ToString();
-        }
-
-        public StackError(TErrorStatus status, IError innerError, string message = null)
-            : base(status, innerError, message)
-        {
-            StackTrace = FExBasics.StackTraceProvider.GetStackTrace().ToString();
-        }
-
-        public override string ToString() =>
-            !string.IsNullOrEmpty(Message)
-                ? Message + Environment.NewLine + StackTrace
-                : StackTrace;
+        StackTrace = GetStackTrace();
     }
+
+    public StackError(IError innerError, string message = null)
+        : base(innerError, message)
+    {
+        StackTrace = GetStackTrace();
+    }
+
+    public override string ToString() =>
+        !string.IsNullOrEmpty(Message)
+            ? new StringBuilder(Message).AppendLine(StackTrace.ToString()).ToString()
+            : StackTrace.ToString();
+}
+
+public class StackError<TErrorStatus> : Error<TErrorStatus>, IStackError
+{
+    private static StackTrace GetStackTrace() => FExBasics.StackTraceProvider.GetStackTrace();
+
+    private string _stackTraceString;
+    public StackTrace StackTrace { get; }
+    public string StackTraceString => _stackTraceString ??= StackTrace.ToString();
+
+    public string RootErrorStackTraceString => InnerError.TryGetError(out IStackError innerStackError)
+        ? innerStackError.StackTraceString
+        : StackTraceString;
+
+    public StackError(TErrorStatus status, string message = null)
+        : base(status, message)
+    {
+        StackTrace = GetStackTrace();
+    }
+
+    public StackError(TErrorStatus status, IError innerError, string message = null)
+        : base(status, innerError, message)
+    {
+        StackTrace = GetStackTrace();
+    }
+
+    public override string ToString() =>
+        !string.IsNullOrEmpty(Message)
+            ? new StringBuilder(Message).AppendLine(StackTrace.ToString()).ToString()
+            : StackTrace.ToString();
 }

@@ -132,7 +132,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
                  * in the viewport it has no valid arrangement. That means that the 
                  * height/width is 0. Therefore the items should not be visible so 
                  * that they are not falsely displayed. */
-                child.Arrange(new(0, 0, 0, 0));
+                child.Arrange(new Rect(0, 0, 0, 0));
             else
                 child.Arrange(CreateRect(x - offsetX, y - offsetY, childSize.Width, childSize.Height));
         }
@@ -143,7 +143,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     protected override ItemRange UpdateItemRange()
     {
         if (!IsVirtualizing)
-            return new(0, Items.Count - 1);
+            return new ItemRange(0, Items.Count - 1);
 
         int startIndex;
         int endIndex;
@@ -151,7 +151,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
         if (ItemsOwner is IHierarchicalVirtualizationAndScrollInfo groupItem)
         {
             if (!GetIsVirtualizingWhenGrouping(ItemsControl))
-                return new(0, Items.Count - 1);
+                return new ItemRange(0, Items.Count - 1);
 
             var offset = new Point(Offset.X, groupItem.Constraints.Viewport.Location.Y);
 
@@ -230,7 +230,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
             }
         }
 
-        return new(startIndex, endIndex);
+        return new ItemRange(startIndex, endIndex);
     }
 
     protected override void BringIndexIntoView(int index)
@@ -329,13 +329,13 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
                 double childMaxWidth = ReadItemContainerStyle(MaxWidthProperty, double.PositiveInfinity);
                 double maxPossibleChildWith = finalSize.Width / _itemsPerRowCount;
                 double childWidth = Math.Min(maxPossibleChildWith, childMaxWidth);
-                return new(childWidth, _childSize.Height);
+                return new Size(childWidth, _childSize.Height);
             }
 
             double childMaxHeight = ReadItemContainerStyle(MaxHeightProperty, double.PositiveInfinity);
             double maxPossibleChildHeight = finalSize.Height / _itemsPerRowCount;
             double childHeight = Math.Min(maxPossibleChildHeight, childMaxHeight);
-            return new(_childSize.Width, childHeight);
+            return new Size(_childSize.Width, childHeight);
         }
 
         return _childSize;
@@ -360,11 +360,11 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
         : size.Width;
 
     protected Size CreateSize(double width, double height) => Orientation == Orientation.Horizontal
-        ? new(width, height)
+        ? new Size(width, height)
         : new Size(height, width);
 
     protected Rect CreateRect(double x, double y, double width, double height) => Orientation == Orientation.Horizontal
-        ? new(x, y, width, height)
+        ? new Rect(x, y, width, height)
         : new Rect(y, x, width, height);
 
     private void Orientation_Changed()
@@ -408,14 +408,14 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     private Size CalculateChildSize()
     {
         if (Items.Count == 0)
-            return new(0, 0);
+            return new Size(0, 0);
         GeneratorPosition startPosition = ItemContainerGenerator.GeneratorPositionFromIndex(0);
         using (ItemContainerGenerator.StartAt(startPosition, GeneratorDirection.Forward, true))
         {
             var child = (UIElement)ItemContainerGenerator.GenerateNext();
             AddInternalChild(child);
             ItemContainerGenerator.PrepareItemContainer(child);
-            child.Measure(new(double.PositiveInfinity, double.PositiveInfinity));
+            child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             return child.DesiredSize;
         }
     }

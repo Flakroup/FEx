@@ -101,7 +101,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         }
 
         if (!hasNoPendingMigrations)
-            throw new($"Applying migrations for {typeof(TDbContext).FullName} failed.");
+            throw new Exception($"Applying migrations for {typeof(TDbContext).FullName} failed.");
     }
 
     public async Task RunActionInDbContextAsync(Action<TDbContext> func,
@@ -121,6 +121,78 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                                                     bool saveChanges = true,
                                                     bool useTransaction = true) =>
         await RunWithinTransactionAsync(func, errorMessage, saveChanges, useTransaction);
+
+    public T RunWithinTransaction<T>(Func<TDbContext, T> func,
+                                     string errorMessage = null,
+                                     bool saveChanges = true,
+                                     bool useTransaction = true,
+                                     IsolationLevel isolationLevel = IsolationLevel.Unspecified)
+    {
+        using IServiceScope scope = _scopeProvider.CreateScope();
+        TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        var id = Guid.NewGuid().ToString();
+
+        try
+        {
+            return useTransaction && dbContext.Database.CurrentTransaction is null
+                ? _transaction.Execute(dbContext, () => Execute(dbContext, func, saveChanges, id), id, isolationLevel,
+                    DelayOnTimeout)
+                : Execute(dbContext, func, saveChanges, id);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
+            throw;
+        }
+    }
+
+    public async Task<T> RunWithinTransactionAsync<T>(Func<TDbContext, T> func,
+                                                      string errorMessage = null,
+                                                      bool saveChanges = true,
+                                                      bool useTransaction = true,
+                                                      IsolationLevel isolationLevel = IsolationLevel.Unspecified)
+    {
+        using IServiceScope scope = _scopeProvider.CreateScope();
+        TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        var id = Guid.NewGuid().ToString();
+
+        try
+        {
+            return useTransaction && dbContext.Database.CurrentTransaction is null
+                ? await _transaction.ExecuteAsync(dbContext, () => Execute(dbContext, func, saveChanges, id), id,
+                    isolationLevel, DelayOnTimeout)
+                : Execute(dbContext, func, saveChanges, id);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
+            throw;
+        }
+    }
+
+    public async Task<T> RunWithinTransactionAsync<T>(Func<TDbContext, Task<T>> func,
+                                                      string errorMessage = null,
+                                                      bool saveChanges = true,
+                                                      bool useTransaction = true,
+                                                      IsolationLevel isolationLevel = IsolationLevel.Unspecified)
+    {
+        using IServiceScope scope = _scopeProvider.CreateScope();
+        TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        var id = Guid.NewGuid().ToString();
+
+        try
+        {
+            return useTransaction && dbContext.Database.CurrentTransaction is null
+                ? await _transaction.ExecuteAsync(dbContext, () => ExecuteAsync(dbContext, func, saveChanges, id), id,
+                    isolationLevel, DelayOnTimeout)
+                : await ExecuteAsync(dbContext, func, saveChanges, id);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
+            throw;
+        }
+    }
 
     protected virtual async Task AfterAppliedMigrationAsync()
     {
@@ -168,80 +240,8 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                 .ToDictionary(mapping => mapping.ClrTypeName);
 
             Mappings = new ReadOnlyDictionary<string, Mapping>(mappings);
-            TableMappings = new(Mappings.ToDictionary(x => x.Key, x => x.Value.TableName));
+            TableMappings = new Map<string, string>(Mappings.ToDictionary(x => x.Key, x => x.Value.TableName));
         });
-    }
-
-    protected T RunWithinTransaction<T>(Func<TDbContext, T> func,
-                                        string errorMessage,
-                                        bool saveChanges,
-                                        bool useTransaction = true,
-                                        IsolationLevel isolationLevel = IsolationLevel.Unspecified)
-    {
-        using IServiceScope scope = _scopeProvider.CreateScope();
-        TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
-        var id = Guid.NewGuid().ToString();
-
-        try
-        {
-            return useTransaction && dbContext.Database.CurrentTransaction is null
-                ? _transaction.Execute(dbContext, () => Execute(dbContext, func, saveChanges, id), id, isolationLevel,
-                    DelayOnTimeout)
-                : Execute(dbContext, func, saveChanges, id);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
-            throw;
-        }
-    }
-
-    protected async Task<T> RunWithinTransactionAsync<T>(Func<TDbContext, T> func,
-                                                         string errorMessage,
-                                                         bool saveChanges,
-                                                         bool useTransaction = true,
-                                                         IsolationLevel isolationLevel = IsolationLevel.Unspecified)
-    {
-        using IServiceScope scope = _scopeProvider.CreateScope();
-        TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
-        var id = Guid.NewGuid().ToString();
-
-        try
-        {
-            return useTransaction && dbContext.Database.CurrentTransaction is null
-                ? await _transaction.ExecuteAsync(dbContext, () => Execute(dbContext, func, saveChanges, id), id,
-                    isolationLevel, DelayOnTimeout)
-                : Execute(dbContext, func, saveChanges, id);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
-            throw;
-        }
-    }
-
-    protected async Task<T> RunWithinTransactionAsync<T>(Func<TDbContext, Task<T>> func,
-                                                         string errorMessage,
-                                                         bool saveChanges,
-                                                         bool useTransaction = true,
-                                                         IsolationLevel isolationLevel = IsolationLevel.Unspecified)
-    {
-        using IServiceScope scope = _scopeProvider.CreateScope();
-        TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
-        var id = Guid.NewGuid().ToString();
-
-        try
-        {
-            return useTransaction && dbContext.Database.CurrentTransaction is null
-                ? await _transaction.ExecuteAsync(dbContext, () => ExecuteAsync(dbContext, func, saveChanges, id), id,
-                    isolationLevel, DelayOnTimeout)
-                : await ExecuteAsync(dbContext, func, saveChanges, id);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
-            throw;
-        }
     }
 
     protected Result<Error> ValidateAndSaveChanges(TDbContext dbContext,

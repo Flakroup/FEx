@@ -21,7 +21,7 @@ public static class JsonExtensions
         {
             if (_defaultSettings is null)
             {
-                _defaultSettings = new()
+                _defaultSettings = new JsonSerializerSettings
                 {
                     MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
                     DateParseHandling = DateParseHandling.None,

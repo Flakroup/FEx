@@ -28,7 +28,7 @@ public static class DirectoryInfoExtensions
         return GetDescendantFileSystemObject(dir, path =>
         {
             var file = new FileInfo(path);
-            file.Directory.Create();
+            file.Directory?.Create();
             return file;
         }, descendants);
     }

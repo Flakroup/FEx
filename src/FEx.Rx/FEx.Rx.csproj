@@ -5,13 +5,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="DynamicData" Version="7.14.2" />
-	  <PackageReference Include="System.Reactive.Linq" Version="6.0.0" />
-	  <PackageReference Include="System.Threading.Tasks.Dataflow" Version="7.0.0" />
+		<PackageReference Include="DynamicData" Version="7.14.2" />
+		<PackageReference Include="ReactiveUI" Version="19.4.1" />
+		<PackageReference Include="System.Reactive.Linq" Version="6.0.0" />
+		<PackageReference Include="System.Threading.Tasks.Dataflow" Version="7.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FEx.Utilities\FEx.Utilities.csproj" />
+	  <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
+	  <ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

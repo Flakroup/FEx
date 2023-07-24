@@ -38,5 +38,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FEx.DependencyInjection\FEx.DependencyInjection.csproj" />
+    <ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
   </ItemGroup>
 </Project>

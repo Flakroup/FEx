@@ -1,5 +1,6 @@
 ﻿using FEx.Extensions.Collections.Enumerables;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,8 +11,7 @@ public static class ReflectionHelper
 {
     public static object GetPropertyValue(this object obj, string propertyName)
     {
-        if (obj is null)
-            throw new ArgumentNullException(nameof(obj));
+        obj.Guard(nameof(obj));
 
         Type objType = obj.GetType();
         PropertyInfo propInfo = GetPropertyInfo(objType, propertyName);
@@ -66,7 +66,7 @@ public static class ReflectionHelper
             return true;
 
         return throwIfMissing
-            ? throw new($"There is no resource named {resourceName} in {assembly.FullName}")
+            ? throw new Exception($"There is no resource named {resourceName} in {assembly.FullName}")
             : false;
     }
 
@@ -119,5 +119,27 @@ public static class ReflectionHelper
                  && type is not null);
 
         return fieldInfo;
+    }
+
+    public static T ToObject<T>(this IDictionary<string, object> source) where T : class, new()
+    {
+        var someObject = new T();
+        Type someObjectType = someObject.GetType();
+
+        foreach (KeyValuePair<string, object> item in source)
+            someObjectType.GetProperty(item.Key).SetValue(someObject, item.Value, null);
+
+        return someObject;
+    }
+
+    public static IDictionary<string, object> AsDictionary(this object source,
+                                                           BindingFlags bindingAttr =
+                                                               BindingFlags.DeclaredOnly
+                                                               | BindingFlags.Public
+                                                               | BindingFlags.Instance)
+    {
+        return source.GetType()
+            .GetProperties(bindingAttr)
+            .ToDictionary(propInfo => propInfo.Name, propInfo => propInfo.GetValue(source, null));
     }
 }

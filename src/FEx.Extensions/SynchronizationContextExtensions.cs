@@ -18,7 +18,7 @@ public static class SynchronizationContextExtensions
     public static SynchronizationContext Get(bool createNew = false)
     {
         if (SynchronizationContext.Current is null && createNew)
-            SynchronizationContext.SetSynchronizationContext(new());
+            SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
 
         return SynchronizationContext.Current;
     }

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Fundamentals.Helpers;
 
-public class TaskWrapper : ITaskWrapper
+public class TaskWrapper : TaskWrapperBase
 {
     private Task _task;
     private Result<ExceptionError> _result;
@@ -19,8 +19,6 @@ public class TaskWrapper : ITaskWrapper
         }
     }
 
-    public bool IsFinished { get; private set; }
-
     public Task Task
     {
         get => _task;
@@ -32,14 +30,15 @@ public class TaskWrapper : ITaskWrapper
         }
     }
 
-    public void SetResult(object result)
-    {
-        Result = Result<ExceptionError>.Success;
-    }
 
-    public void SetException(Exception exception)
+    public override void SetException(Exception exception)
     {
         Result = new ExceptionError(exception);
+    }
+
+    public void SetResult()
+    {
+        Result = Result<ExceptionError>.Success;
     }
 
     public void SetTask(Func<Task> task)
@@ -56,7 +55,7 @@ public class TaskWrapper : ITaskWrapper
     }
 }
 
-public class TaskWrapper<T> : ITaskWrapper
+public class TaskWrapper<T> : TaskWrapperBase
 {
     private Task<T> _task;
     private Result<T, ExceptionError> _result;
@@ -71,8 +70,6 @@ public class TaskWrapper<T> : ITaskWrapper
         }
     }
 
-    public bool IsFinished { get; private set; }
-
     public Task<T> Task
     {
         get => _task;
@@ -84,14 +81,14 @@ public class TaskWrapper<T> : ITaskWrapper
         }
     }
 
-    public void SetResult(object result)
-    {
-        Result = new((T)result);
-    }
-
-    public void SetException(Exception exception)
+    public override void SetException(Exception exception)
     {
         Result = new ExceptionError(exception);
+    }
+
+    public void SetResult(T result)
+    {
+        Result = new Result<T, ExceptionError>(result);
     }
 
     public void SetTask(Func<Task<T>> task)
@@ -108,10 +105,4 @@ public class TaskWrapper<T> : ITaskWrapper
 
         return Result.Data;
     }
-}
-
-public interface ITaskWrapper
-{
-    void SetResult(object result);
-    void SetException(Exception exception);
 }

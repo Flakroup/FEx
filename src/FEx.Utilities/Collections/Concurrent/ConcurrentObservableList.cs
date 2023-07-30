@@ -1,4 +1,5 @@
 ﻿using FEx.Abstractions;
+using FEx.Extensions;
 using FEx.Fundamentals;
 using FEx.Utilities.Basics;
 using System;
@@ -23,6 +24,12 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     public IObservable<EventPattern<NotifyCollectionChangedEventArgs>> CollectionChangedObservable =>
         Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
             ev => CollectionChanged += ev, ev => CollectionChanged -= ev);
+
+    /// <summary>
+    ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    /// </summary>
+    [field: NonSerialized]
+    protected virtual event PropertyChangedEventHandler PropertyChanged;
 
     /// <summary>
     ///     Initializes a new instance of the ConcurrentObservableList class that contains
@@ -64,12 +71,6 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     }
 
     /// <summary>
-    ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
-    /// </summary>
-    [field: NonSerialized]
-    protected virtual event PropertyChangedEventHandler PropertyChanged;
-
-    /// <summary>
     ///     Called by base class ObservableCollection&lt;T&gt; when an item is to be moved within the list;
     ///     raises a CollectionChanged event to any listeners.
     /// </summary>
@@ -86,7 +87,8 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
             }
 
             OnIndexerPropertyChanged();
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, removedItem, newIndex, oldIndex));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, removedItem,
+                newIndex, oldIndex));
         });
     }
 
@@ -95,14 +97,16 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     /// </summary>
     protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
     {
-        if (!EventsAreSuppressed)
-            Dispatch(() => PropertyChanged?.Invoke(this, e));
+        if (!EventsAreSuppressed
+            && PropertyChanged is not null)
+            Dispatch(() => PropertyChanged.HandlePropertyChanged(this, e));
     }
 
     protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
     {
-        if (!EventsAreSuppressed)
-            Dispatch(() => CollectionChanged?.Invoke(this, e));
+        if (!EventsAreSuppressed
+            && CollectionChanged is not null)
+            Dispatch(() => CollectionChanged.Invoke(this, e));
     }
 
     /// <summary>

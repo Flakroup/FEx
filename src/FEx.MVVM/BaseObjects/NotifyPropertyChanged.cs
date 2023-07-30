@@ -1,4 +1,5 @@
 ﻿using FEx.Basics;
+using FEx.Extensions;
 using FEx.Extensions.Helpers;
 using FEx.MVVM.Abstractions;
 using JetBrains.Annotations;
@@ -59,6 +60,6 @@ public class NotifyPropertyChanged : IFExNotifyPropertyChanged
             || PropertyChanged is null)
             return;
 
-        PropertyChanged(PropertyChanged, new PropertyChangedEventArgs(propertyName));
+        PropertyChanged.HandlePropertyChanged(this, propertyName);
     }
 }

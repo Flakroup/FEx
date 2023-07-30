@@ -1,5 +1,4 @@
 ﻿using FEx.Abstractions;
-using FEx.Basics;
 using FEx.Basics.Helpers;
 using FEx.Fundamentals;
 using Microsoft.Extensions.Logging;
@@ -37,7 +36,6 @@ public abstract class FExDispatcher : IFExDispatcher
                                               uint timeout = 10000)
     {
         SynchronizationContext syncContext = synchronizationContext ?? MainThreadSynchronizationContext;
-        DeadlockMonitor.Execute(() => syncContext.Send(_ => action(), default),
-            FExBasics.StackTraceProvider.GetStackTrace(), timeout);
+        DeadlockMonitor.Execute(() => syncContext.Send(_ => action(), default), timeout);
     }
 }

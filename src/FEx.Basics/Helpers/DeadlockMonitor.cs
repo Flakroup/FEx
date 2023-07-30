@@ -8,8 +8,10 @@ namespace FEx.Basics.Helpers;
 
 public static class DeadlockMonitor
 {
-    public static void Execute(Action action, StackTrace stackTrace, uint timeout = 10000)
+    public static void Execute(Action action, uint timeout = 10000)
     {
+        StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
+
         var timer = new Timer(Callback, stackTrace, timeout, Timeout.Infinite);
         try
         {

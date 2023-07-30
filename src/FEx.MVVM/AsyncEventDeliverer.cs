@@ -1,9 +1,7 @@
 ﻿using FEx.Abstractions;
-using FEx.Basics;
 using FEx.Basics.Helpers;
 using FEx.Fundamentals.Extensions;
 using System;
-using System.Diagnostics;
 using System.Threading;
 
 namespace FEx.MVVM;
@@ -20,18 +18,9 @@ public class AsyncEventDeliverer : IEventDeliverer
 
     public void DeliverEvent(Action eventDelegate, object sender, SynchronizationContext context = null)
     {
-        StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
-
         void EventDelegate() =>
             InternalDeliverEvent(eventDelegate, sender, context);
 
-        DeadlockMonitor.Execute(EventDelegate, stackTrace);
-
-
-        //context ??= SynchronizationContext.Current ?? Foundation.MainSynchronizationContext;
-        //if (context is not null)
-        //    context.PostInContext(() => DeliverMonitoringDeadlock(eventDelegate, stackTrace), sender);
-        //else
-        //    DeliverMonitoringDeadlock(eventDelegate, stackTrace);
+        DeadlockMonitor.Execute(EventDelegate);
     }
 }

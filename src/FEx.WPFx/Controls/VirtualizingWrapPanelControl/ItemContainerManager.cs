@@ -112,7 +112,8 @@ internal class ItemContainerManager : IItemContainerManager
         }
         else
         {
-            ItemsChanged?.Invoke(this, new ItemContainerManagerItemsChangedEventArgs(e.Action, new IItemContainerInfo[0]));
+            ItemsChanged?.Invoke(this,
+                new ItemContainerManagerItemsChangedEventArgs(e.Action, new IItemContainerInfo[0]));
         }
     }
 

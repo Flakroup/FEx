@@ -253,6 +253,13 @@ public static class AsyncReaderWriterLockSlimExtension
             GC.SuppressFinalize(this);
         }
 
+        ~ActionDisposableLock()
+        {
+            Dispose(false);
+        }
+
+        #region IDisposable
+
         protected virtual void Dispose(bool disposing)
         {
             if (!IsDisposed)
@@ -264,9 +271,6 @@ public static class AsyncReaderWriterLockSlimExtension
             }
         }
 
-        ~ActionDisposableLock()
-        {
-            Dispose(false);
-        }
+        #endregion
     }
 }

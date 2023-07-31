@@ -30,12 +30,16 @@ public abstract class FExSingleton : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected abstract void Dispose(bool isDisposing);
-
     ~FExSingleton()
     {
         Dispose(false);
     }
+
+    #region IDisposable
+
+    protected abstract void Dispose(bool isDisposing);
+
+    #endregion
 }
 
 public abstract class FExSingleton<T> : FExSingleton where T : class, new()
@@ -56,9 +60,13 @@ public abstract class FExSingleton<T> : FExSingleton where T : class, new()
 
     private static object SyncRoot { get; } = new();
 
+    #region IDisposable
+
     protected override void Dispose(bool isDisposing)
     {
         if (isDisposing)
             _instance = null;
     }
+
+    #endregion
 }

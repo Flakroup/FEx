@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using FEx.Basics.Interfaces;
+﻿using FEx.Basics.Interfaces;
+using System.Diagnostics;
 
 namespace FEx.Basics;
 

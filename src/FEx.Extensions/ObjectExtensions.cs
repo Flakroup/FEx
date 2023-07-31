@@ -28,7 +28,7 @@ public static class ObjectExtensions
     /// <returns>Field value.</returns>
     // ReSharper disable UnusedParameter.Global
     public static TField Get<TField>(this object value, ref TField field, Func<TField> initializer)
-    // ReSharper restore UnusedParameter.Global
+        // ReSharper restore UnusedParameter.Global
     {
         field ??= initializer();
 

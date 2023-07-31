@@ -384,8 +384,8 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
 
                 if (child is IHierarchicalVirtualizationAndScrollInfo groupItem)
                 {
-                    groupItem.Constraints = new HierarchicalVirtualizationConstraints(new VirtualizationCacheLength(0), VirtualizationCacheLengthUnit.Item,
-                        new Rect(0, 0, ViewportWidth, ViewportHeight));
+                    groupItem.Constraints = new HierarchicalVirtualizationConstraints(new VirtualizationCacheLength(0),
+                        VirtualizationCacheLengthUnit.Item, new Rect(0, 0, ViewportWidth, ViewportHeight));
                     child.Measure(new Size(ViewportWidth, ViewportHeight));
                 }
             }

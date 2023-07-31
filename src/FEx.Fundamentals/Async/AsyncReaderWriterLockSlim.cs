@@ -422,36 +422,6 @@ public class AsyncReaderWriterLockSlim : IDisposable
         ExitWriteLockInternal(false);
     }
 
-    /// <summary>
-    ///     Releases the unmanaged resources used by the <see cref="AsyncReaderWriterLockSlim" /> and
-    ///     optionally releases the managed resources.
-    /// </summary>
-    /// <param name="disposing"></param>
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            lock (_syncRoot)
-            {
-                if (_currentWriteLockState is not null)
-                    throw new InvalidOperationException("A write lock was still active while trying to "
-                                                        + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
-                if ((Volatile.Read(ref _currentReadLockCount) & 0x7FFFFFFF) > 0)
-                    throw new InvalidOperationException("At least one read lock was still active while trying to "
-                                                        + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
-            }
-
-            _writeLockSemaphore.Dispose();
-            _readLockReleaseSemaphore.Dispose();
-        }
-
-        // The access to isDisposed is not volatile because that might be
-        // expensive; however we still call MemoryBarrier to ensure the value is
-        // now actually written.
-        _isDisposed = true;
-        Thread.MemoryBarrier();
-    }
-
     private void DenyIfDisposed()
     {
         if (_isDisposed)
@@ -711,6 +681,40 @@ public class AsyncReaderWriterLockSlim : IDisposable
         // Clear the write lock state.
         _currentWriteLockState = null;
     }
+
+    #region IDisposable
+
+    /// <summary>
+    ///     Releases the unmanaged resources used by the <see cref="AsyncReaderWriterLockSlim" /> and
+    ///     optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing"></param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            lock (_syncRoot)
+            {
+                if (_currentWriteLockState is not null)
+                    throw new InvalidOperationException("A write lock was still active while trying to "
+                                                        + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
+                if ((Volatile.Read(ref _currentReadLockCount) & 0x7FFFFFFF) > 0)
+                    throw new InvalidOperationException("At least one read lock was still active while trying to "
+                                                        + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
+            }
+
+            _writeLockSemaphore.Dispose();
+            _readLockReleaseSemaphore.Dispose();
+        }
+
+        // The access to isDisposed is not volatile because that might be
+        // expensive; however we still call MemoryBarrier to ensure the value is
+        // now actually written.
+        _isDisposed = true;
+        Thread.MemoryBarrier();
+    }
+
+    #endregion
 
     private class WriteLockState
     {

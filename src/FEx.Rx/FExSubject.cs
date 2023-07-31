@@ -22,6 +22,12 @@ public class FExSubject<T> : IDisposable, IObservable<T>
         _subject = subject ?? new Subject<T>();
     }
 
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
     public IDisposable Subscribe(IObserver<T> observer) => _subject.Subscribe(observer);
 
     public virtual void OnNext(T value)
@@ -45,12 +51,6 @@ public class FExSubject<T> : IDisposable, IObservable<T>
             disposable.Dispose();
 
         _isDisposed = true;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     #endregion

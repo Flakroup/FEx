@@ -26,6 +26,11 @@ public abstract class LiteDBService : IDisposable
         _context = context;
     }
 
+    public void Dispose()
+    {
+        Dispose(true);
+    }
+
     /// <summary>
     ///     Caches object
     /// </summary>
@@ -201,11 +206,6 @@ public abstract class LiteDBService : IDisposable
             _context.Dispose();
 
         _isDisposed = true;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
     }
 
     #endregion

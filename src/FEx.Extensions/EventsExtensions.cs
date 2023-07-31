@@ -46,8 +46,8 @@ public static class EventsExtensions
     }
 
     public static void HandleCollectionChanged(this NotifyCollectionChangedEventHandler handler,
-                                             object sender,
-                                             NotifyCollectionChangedEventArgs e)
+                                               object sender,
+                                               NotifyCollectionChangedEventArgs e)
     {
         if (e is null
             || handler is null)

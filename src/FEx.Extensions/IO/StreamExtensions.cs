@@ -49,10 +49,10 @@ public static class StreamExtensions
     }
 
     public static void CopyStreamToStream(this Stream sourceStream,
-                                                     Stream destStream,
-                                                     Action<double> progressMaximumSet = null,
-                                                     Action<double> progressValueSet = null,
-                                                     long? length = null)
+                                          Stream destStream,
+                                          Action<double> progressMaximumSet = null,
+                                          Action<double> progressValueSet = null,
+                                          long? length = null)
     {
         var buffer = new byte[BufferSize];
         var writtenBytes = 0;

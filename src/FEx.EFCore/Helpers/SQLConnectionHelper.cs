@@ -12,7 +12,7 @@ public static class SQLConnectionHelper
         try
         {
 #if NETSTANDARD
-                 using var connection = new SqlConnection(connectionString);
+            using var connection = new SqlConnection(connectionString);
 #else
             await using var connection = new SqlConnection(connectionString);
 #endif

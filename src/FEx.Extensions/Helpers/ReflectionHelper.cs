@@ -94,6 +94,28 @@ public static class ReflectionHelper
         where T : Attribute =>
         func((T)assembly?.GetCustomAttributes(typeof(T), false)?.FindInEnumerable());
 
+    public static T ToObject<T>(this IDictionary<string, object> source) where T : class, new()
+    {
+        var someObject = new T();
+        Type someObjectType = someObject.GetType();
+
+        foreach (KeyValuePair<string, object> item in source)
+            someObjectType.GetProperty(item.Key).SetValue(someObject, item.Value, null);
+
+        return someObject;
+    }
+
+    public static IDictionary<string, object> AsDictionary(this object source,
+                                                           BindingFlags bindingAttr =
+                                                               BindingFlags.DeclaredOnly
+                                                               | BindingFlags.Public
+                                                               | BindingFlags.Instance)
+    {
+        return source.GetType()
+            .GetProperties(bindingAttr)
+            .ToDictionary(propInfo => propInfo.Name, propInfo => propInfo.GetValue(source, null));
+    }
+
     private static PropertyInfo GetPropertyInfo(Type type, string propertyName)
     {
         PropertyInfo propInfo;
@@ -119,27 +141,5 @@ public static class ReflectionHelper
                  && type is not null);
 
         return fieldInfo;
-    }
-
-    public static T ToObject<T>(this IDictionary<string, object> source) where T : class, new()
-    {
-        var someObject = new T();
-        Type someObjectType = someObject.GetType();
-
-        foreach (KeyValuePair<string, object> item in source)
-            someObjectType.GetProperty(item.Key).SetValue(someObject, item.Value, null);
-
-        return someObject;
-    }
-
-    public static IDictionary<string, object> AsDictionary(this object source,
-                                                           BindingFlags bindingAttr =
-                                                               BindingFlags.DeclaredOnly
-                                                               | BindingFlags.Public
-                                                               | BindingFlags.Instance)
-    {
-        return source.GetType()
-            .GetProperties(bindingAttr)
-            .ToDictionary(propInfo => propInfo.Name, propInfo => propInfo.GetValue(source, null));
     }
 }

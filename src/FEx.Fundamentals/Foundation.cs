@@ -15,15 +15,8 @@ public class Foundation
     private static IExceptionHandler _exceptionHandler;
     private static IFExServiceProvider _serviceProvider;
     private static IFExServiceProvider _strongInjectServiceProvider;
-    private static IFExDispatcher _dispatcher;
     private static Thread _mainThread;
     private static SynchronizationContext _mainSynchronizationContext;
-
-    public static IFExDispatcher Dispatcher
-    {
-        get => _dispatcher.Guard();
-        private set => _dispatcher = value;
-    }
 
     public static AsyncHelper AsyncHelper
     {
@@ -113,17 +106,14 @@ public class Foundation
             MainThread.GetThreadSynchronizationContext(true);
     }
 
-    public Foundation(IFExDispatcher dispatcher,
-                      ILogger<FExBasics> logger,
+    public Foundation(ILogger<FExBasics> logger,
                       AsyncHelper asyncHelper,
                       IExceptionHandler exceptionHandler,
                       IStackTraceProvider stackTraceProvider,
                       IEventDeliverer eventDeliverer)
     {
-        Dispatcher = dispatcher;
         AsyncHelper = asyncHelper;
         ExceptionHandler = exceptionHandler;
-        SetMainThread();
         FExBasics.Init(stackTraceProvider, eventDeliverer, logger);
     }
 

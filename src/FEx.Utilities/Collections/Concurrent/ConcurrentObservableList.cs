@@ -1,4 +1,5 @@
 ﻿using FEx.Abstractions;
+using FEx.Basics;
 using FEx.Extensions;
 using FEx.Fundamentals;
 using FEx.Utilities.Basics;
@@ -17,7 +18,7 @@ namespace FEx.Utilities.Collections.Concurrent;
 [Serializable]
 public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionChanged, INotifyPropertyChanged
 {
-    private static IFExDispatcher Dispatcher => Foundation.Dispatcher;
+    private static IEventDeliverer EventDeliverer => FExBasics.EventDeliverer;
     private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
     private readonly bool _sendEventsInCreationContext;
 
@@ -135,9 +136,8 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
 
     private void Dispatch(Action action)
     {
-        if (_sendEventsInCreationContext)
-            Dispatcher.SendInThisOrMainThreadContext(action, _synchronizationContext);
-        else
-            action();
+        EventDeliverer.DeliverEvent(action, this, _sendEventsInCreationContext
+            ? _synchronizationContext
+            : null);
     }
 }

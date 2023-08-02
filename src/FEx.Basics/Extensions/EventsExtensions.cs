@@ -16,10 +16,10 @@ public static class EventsExtensions
                                                      SynchronizationContext context = null)
         where TObj : INotifyPropertyChanged
     {
-        return sender.SetObjectProperty(ref backingField, newValue,
-            propertyChanged is not null && propertyName is not null
-                ? (s, p, _) => s.OnPropertyChangedStatic(propertyChanged, p, context)
-                : null, propertyName);
+        Action<TObj, string, TRet> action = propertyChanged is not null && propertyName is not null
+            ? (s, p, _) => s.OnPropertyChangedStatic(propertyChanged, p, context)
+            : null;
+        return sender.SetObjectProperty(ref backingField, newValue, action, propertyName);
     }
 
     public static void OnPropertyChangedStatic<TObj>(this TObj sender,
@@ -32,6 +32,6 @@ public static class EventsExtensions
         propertyName.Guard(nameof(propertyName));
 
         void EventDelegate() => propertyChanged(propertyName);
-        FExBasics.EventDeliverer.DeliverEvent(EventDelegate, sender);
+        FExBasics.EventDeliverer.DeliverEvent(EventDelegate, sender, context);
     }
 }

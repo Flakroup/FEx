@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
@@ -18,56 +18,45 @@ public static class EventsExtensions
         handler.HandlePropertyChanged(sender, e);
     }
 
-    public static void HandlePropertyChanged(this PropertyChangedEventHandler handler,
+    public static void HandlePropertyChanged(this PropertyChangedEventHandler propertyChangedEventHandler,
                                              object sender,
-                                             PropertyChangedEventArgs e)
+                                             PropertyChangedEventArgs eventArgs)
     {
-        if (e is null
-            || handler is null)
-            return;
-
-        foreach (Delegate h in handler.GetInvocationList())
-        {
-            if (h.Target is ISynchronizeInvoke { InvokeRequired: true } synch)
-                synch.Invoke(h, new[] { sender, e });
-            else
-                switch (h)
-                {
-                    case PropertyChangedEventHandler propertyChangedEventHandler:
-                        propertyChangedEventHandler(sender, e);
-                        break;
-                    case EventHandler eventHandler:
-                        eventHandler(sender, e);
-                        break;
-                    default:
-                        throw new Exception($"{h.GetType().FullName} delegate type is not handled");
-                }
-        }
+        propertyChangedEventHandler.HandleMulticastEvent(sender, eventArgs, handler => handler(sender, eventArgs));
     }
 
-    public static void HandleCollectionChanged(this NotifyCollectionChangedEventHandler handler,
+    public static void HandleCollectionChanged(this NotifyCollectionChangedEventHandler collectionChangedEventHandler,
                                                object sender,
-                                               NotifyCollectionChangedEventArgs e)
+                                               NotifyCollectionChangedEventArgs eventArgs)
     {
-        if (e is null
+        collectionChangedEventHandler.HandleMulticastEvent(sender, eventArgs, handler => handler(sender, eventArgs));
+    }
+
+    public static void HandleMulticastEvent<THandler, TArgs>(this THandler handler,
+                                                             object sender,
+                                                             TArgs eventArgs,
+                                                             Action<THandler> defaultInvocation)
+        where THandler : MulticastDelegate where TArgs : EventArgs
+    {
+        if (eventArgs is null
             || handler is null)
             return;
 
-        foreach (Delegate h in handler.GetInvocationList())
+        foreach (Delegate invocation in handler.GetInvocationList())
         {
-            if (h.Target is ISynchronizeInvoke { InvokeRequired: true } synch)
-                synch.Invoke(h, new[] { sender, e });
+            if (invocation.Target is ISynchronizeInvoke { InvokeRequired: true } synchronizeInvoke)
+                synchronizeInvoke.Invoke(invocation, new[] { sender, eventArgs });
             else
-                switch (h)
+                switch (invocation)
                 {
-                    case NotifyCollectionChangedEventHandler collectionChangedEventHandler:
-                        collectionChangedEventHandler(sender, e);
+                    case THandler collectionChangedEventHandler:
+                        defaultInvocation(collectionChangedEventHandler);
                         break;
                     case EventHandler eventHandler:
-                        eventHandler(sender, e);
+                        eventHandler(sender, eventArgs);
                         break;
                     default:
-                        throw new Exception($"{h.GetType().FullName} delegate type is not handled");
+                        throw new Exception($"{invocation.GetType().FullName} delegate type is not handled");
                 }
         }
     }

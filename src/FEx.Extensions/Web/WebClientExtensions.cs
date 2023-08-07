@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using FEx.Extensions.Base.Enums;
+using FEx.Extensions.Base.Models;
 
 namespace FEx.Extensions.Web;
 

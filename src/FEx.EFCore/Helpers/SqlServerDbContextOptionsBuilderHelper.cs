@@ -1,6 +1,5 @@
 ﻿using FEx.EFCore.Interfaces;
 using FEx.Extensions;
-using FEx.Fundamentals.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Text;

@@ -7,8 +7,9 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using FExUriExtensions = FEx.Extensions.Web.UriExtensions;
 
-namespace FEx.Webx;
+namespace FEx.Webx.Extensions;
 
 public static class JsonExtensions
 {
@@ -20,7 +21,7 @@ public static class JsonExtensions
         T res = default;
 
         if (!checkNetAvailability
-            || await UriExtensions.CheckForInternetConnectionAsync(null))
+            || await FExUriExtensions.CheckForInternetConnectionAsync(null))
         {
             if (url.Scheme is "http" or "https")
             {

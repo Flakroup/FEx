@@ -1,4 +1,6 @@
+using FEx.Basics;
 using FEx.Json.Converters;
+using FEx.Logging.Abstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -12,29 +14,23 @@ namespace FEx.Json;
 
 public static class JsonExtensions
 {
-    private static JsonSerializerSettings _defaultSettings;
     public static string NullString { get; } = "\"null\"";
 
-    public static JsonSerializerSettings DefaultSettings
-    {
-        get
-        {
-            if (_defaultSettings is null)
-            {
-                _defaultSettings = new JsonSerializerSettings
-                {
-                    MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
-                    DateParseHandling = DateParseHandling.None,
-                    NullValueHandling = NullValueHandling.Ignore,
-                    DateFormatHandling = DateFormatHandling.IsoDateFormat
-                };
-                ((List<JsonConverter>)_defaultSettings.Converters).AddRange(
-                    new JsonConverter[] { ParseStringConverter.Singleton, new VersionConverter() });
-            }
+    public static JsonSerializerSettings DefaultSettings { get; }
 
-            return _defaultSettings;
-        }
-        set => _defaultSettings = value;
+    static JsonExtensions()
+    {
+        DefaultSettings = new JsonSerializerSettings
+        {
+            MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
+            DateParseHandling = DateParseHandling.None,
+            NullValueHandling = NullValueHandling.Ignore,
+            DateFormatHandling = DateFormatHandling.IsoDateFormat
+        };
+        ((List<JsonConverter>)DefaultSettings.Converters).AddRange(new JsonConverter[]
+        {
+            ParseStringConverter.Singleton, new VersionConverter()
+        });
     }
 
     public static void ConfigureDefaultSettings(Action<JsonSerializerSettings> configuration)
@@ -55,8 +51,10 @@ public static class JsonExtensions
                 ? fallback
                 : JsonConvert.DeserializeObject<T>(json, settings ?? DefaultSettings);
         }
-        catch // (Exception ex)
+        catch (Exception ex)
         {
+            FExBasics.Logger.LogError(ex);
+
             if (Debugger.IsAttached)
                 File.WriteAllText(Path.Combine(Path.GetTempPath(), "error.json"), json);
 
@@ -141,16 +139,8 @@ public static class JsonExtensions
 
     public static T DeserializeFromFile<T>(this FileInfo file, JsonSerializerSettings settings = null)
     {
-        FileStream fStream = file.OpenRead();
-
-        try
-        {
-            return fStream.DeserializeFromStream<T>(settings);
-        }
-        finally
-        {
-            fStream.Dispose();
-        }
+        using FileStream fStream = file.OpenRead();
+        return fStream.DeserializeFromStream<T>(settings);
     }
 
     public static void SerializeToFile(this FileInfo file,

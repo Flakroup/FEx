@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Threading;
 
-namespace FEx.Extensions.DateTimes;
+namespace FEx.Extensions.Base;
 
 /// <summary>
 ///     Provides set of default datetime values.

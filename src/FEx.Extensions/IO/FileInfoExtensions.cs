@@ -1,4 +1,7 @@
-﻿using FEx.Extensions.Helpers;
+﻿using FEx.Extensions.Base;
+using FEx.Extensions.Base.Converters;
+using FEx.Extensions.Base.Enums;
+using FEx.Extensions.Base.Helpers;
 using System;
 using System.IO;
 using System.IO.Compression;

@@ -1,4 +1,6 @@
-﻿using FEx.Extensions.VB;
+﻿using FEx.Extensions.Base;
+using FEx.Extensions.Base.Enums;
+using FEx.Extensions.Base.VB;
 using System;
 using System.Collections.Generic;
 using System.Globalization;

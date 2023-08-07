@@ -1,7 +1,8 @@
-﻿using System;
+﻿using FEx.Abstractions;
+using System;
 using System.Diagnostics;
 
-namespace FEx.Utilities;
+namespace FEx.Extensions.Base.Implementations;
 
 public class DebugExceptionHandler : ExceptionHandlerBase
 {

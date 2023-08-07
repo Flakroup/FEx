@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FEx.Extensions.VB;
+namespace FEx.Extensions.Base.VB;
 
 public static class Conversion
 {

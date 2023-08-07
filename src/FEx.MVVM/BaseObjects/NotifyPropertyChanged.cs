@@ -1,6 +1,6 @@
 ﻿using FEx.Basics;
 using FEx.Extensions;
-using FEx.Extensions.Helpers;
+using FEx.Extensions.Base.Helpers;
 using FEx.MVVM.Abstractions;
 using JetBrains.Annotations;
 using System;

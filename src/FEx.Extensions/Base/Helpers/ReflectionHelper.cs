@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace FEx.Extensions.Helpers;
+namespace FEx.Extensions.Base.Helpers;
 
 public static class ReflectionHelper
 {

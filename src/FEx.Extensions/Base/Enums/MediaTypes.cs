@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace FEx.Extensions.Web;
+namespace FEx.Extensions.Base.Enums;
 
 public enum MediaTypes
 {

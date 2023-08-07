@@ -1,7 +1,7 @@
 ﻿using FEx.Asyncx.Abstractions.Interfaces;
 using FEx.Basics;
+using FEx.Extensions;
 using FEx.Fundamentals;
-using FEx.Fundamentals.Extensions;
 using FEx.Fundamentals.Helpers;
 using Microsoft.Extensions.Logging;
 using StrongInject;

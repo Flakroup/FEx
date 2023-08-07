@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
     <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
   </ItemGroup>
 

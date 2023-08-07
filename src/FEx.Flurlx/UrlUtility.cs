@@ -1,4 +1,5 @@
-﻿using FEx.Extensions.Helpers;
+﻿using FEx.Extensions.Base.Converters;
+using FEx.Extensions.Base.Enums;
 using FEx.Extensions.IO;
 using FEx.Extensions.Numericals;
 using FEx.Extensions.Web;

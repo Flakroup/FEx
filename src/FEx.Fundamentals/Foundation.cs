@@ -2,6 +2,7 @@
 using FEx.Basics;
 using FEx.Basics.Interfaces;
 using FEx.Extensions;
+using FEx.Extensions.Base;
 using FEx.Fundamentals.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
@@ -12,7 +13,6 @@ namespace FEx.Fundamentals;
 public class Foundation
 {
     private static AsyncHelper _asyncHelper;
-    private static IExceptionHandler _exceptionHandler;
     private static IFExServiceProvider _serviceProvider;
     private static IFExServiceProvider _strongInjectServiceProvider;
     private static Thread _mainThread;
@@ -34,12 +34,6 @@ public class Foundation
     {
         get => _strongInjectServiceProvider.Guard();
         private set => _strongInjectServiceProvider = value;
-    }
-
-    public static IExceptionHandler ExceptionHandler
-    {
-        get => _exceptionHandler.Guard();
-        private set => _exceptionHandler = value;
     }
 
     public static bool SendEventsInCreationContext { get; set; }
@@ -113,7 +107,7 @@ public class Foundation
                       IEventDeliverer eventDeliverer)
     {
         AsyncHelper = asyncHelper;
-        ExceptionHandler = exceptionHandler;
+        FExExtensionsCommon.Initialize(exceptionHandler.Guard(nameof(exceptionHandler)));
         FExBasics.Init(stackTraceProvider, eventDeliverer, logger);
     }
 

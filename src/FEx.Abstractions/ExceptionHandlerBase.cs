@@ -1,7 +1,6 @@
-﻿using FEx.Abstractions;
-using System;
+﻿using System;
 
-namespace FEx.Utilities;
+namespace FEx.Abstractions;
 
 public abstract class ExceptionHandlerBase : IExceptionHandler
 {

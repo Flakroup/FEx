@@ -12,8 +12,6 @@ using Xunit.Abstractions;
 
 namespace FEx.Rx.Tests;
 
-[SuppressMessage("ReSharper", "UnusedMember.Local")]
-[SuppressMessage("ReSharper", "UnusedVariable")]
 public class DTests
 {
     private readonly ITestOutputHelper _output;
@@ -51,15 +49,18 @@ public class DTests
         testerA.Value = false;
     }
 
-    private IObservable<IChangeSet<TValue, TKey>> ApplyObservable<TKey, TValue, TObject>(
-        IObservable<IChangeSet<TValue, TKey>> observable,
-        Delegate delegateFunc) where TObject : INotifyPropertyChanged
-    {
-        var c = (Func<TValue, TObject>)delegateFunc;
-        observable = observable.AutoRefreshOnObservable(x => c(x).WhenAnyPropertyChanged());
-        return observable;
-    }
+    /*
+        private IObservable<IChangeSet<TValue, TKey>> ApplyObservable<TKey, TValue, TObject>(
+            IObservable<IChangeSet<TValue, TKey>> observable,
+            Delegate delegateFunc) where TObject : INotifyPropertyChanged
+        {
+            var c = (Func<TValue, TObject>)delegateFunc;
+            observable = observable.AutoRefreshOnObservable(x => c(x).WhenAnyPropertyChanged());
+            return observable;
+        }
+    */
 
+    [SuppressMessage("ReSharper", "UnusedVariable")]
     private IObservable<IChangeSet<Tester, string>> AddMappedProps(IObservable<IChangeSet<Tester, string>> observable,
                                                                    string[] props)
     {

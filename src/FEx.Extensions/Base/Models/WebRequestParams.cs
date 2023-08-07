@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Security;
 
-namespace FEx.Extensions.Web;
+namespace FEx.Extensions.Base.Models;
 
 public class WebRequestParams
 {

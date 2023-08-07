@@ -1,4 +1,5 @@
 ﻿using System.Net.Http;
+using FEx.Extensions.Base.Models;
 
 namespace FEx.Extensions.Web;
 

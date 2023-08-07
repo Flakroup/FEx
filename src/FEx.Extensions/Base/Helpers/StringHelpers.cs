@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using System.IO;
 
-namespace FEx.Extensions.Helpers;
+namespace FEx.Extensions.Base.Helpers;
 
 public static class StringHelpers
 {

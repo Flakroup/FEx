@@ -1,8 +1,9 @@
 ﻿using FEx.Extensions.Collections.Enumerables;
+using FEx.Extensions.IO;
 using System;
 using System.IO;
 
-namespace FEx.Extensions.IO;
+namespace FEx.Extensions.Base;
 
 public static class FileSystemCommon
 {

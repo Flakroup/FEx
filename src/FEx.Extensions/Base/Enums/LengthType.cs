@@ -1,4 +1,4 @@
-﻿namespace FEx.Extensions.Helpers;
+﻿namespace FEx.Extensions.Base.Enums;
 
 public enum LengthType
 {

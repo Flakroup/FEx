@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using FEx.Extensions.Base;
 
 namespace FEx.Extensions.IO;
 

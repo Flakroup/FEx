@@ -1,4 +1,4 @@
-﻿using FEx.Fundamentals.Extensions;
+﻿using FEx.Extensions;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Threading.Tasks;

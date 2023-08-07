@@ -1,6 +1,6 @@
-﻿using FEx.Abstractions;
+﻿using FEx.Extensions.Base.Enums;
+using FEx.Extensions.Base.Models;
 using FEx.Extensions.Collections.Dictionaries;
-using FEx.Extensions.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +13,8 @@ namespace FEx.Extensions.Web;
 
 public static class WebResponseExtensions
 {
-    public static string ContentRangeHeaderName { get; } = "Content-Range";
+    public const string ContentRangeHeaderName = "Content-Range";
+    public const string AcceptRangesHeaderName = "Accept-Ranges";
 
     public static Dictionary<string, string> GetAllHeaders(this WebResponse resp)
     {
@@ -23,21 +24,18 @@ public static class WebResponseExtensions
     public static async Task<(bool, LengthType)> TryGetRangeAsync(this WebResponse response,
                                                                   int rangeFrom,
                                                                   int rangeTo,
-                                                                  IExceptionHandler exceptionHandler = null,
                                                                   WebRequestParams pars = null) =>
-        await TryGetRangeAsync(response.ResponseUri, response.GetAllHeaders(), rangeFrom, rangeTo, exceptionHandler,
-            pars);
+        await TryGetRangeAsync(response.ResponseUri, response.GetAllHeaders(), rangeFrom, rangeTo, pars);
 
     public static async Task<(bool, LengthType)> TryGetRangeAsync(this Uri responseUri,
                                                                   Dictionary<string, string> responseHeaders,
                                                                   int rangeFrom,
                                                                   int rangeTo,
-                                                                  IExceptionHandler exceptionHandler = null,
                                                                   WebRequestParams pars = null)
     {
         try
         {
-            if (responseHeaders.ContainsKey("Accept-Ranges"))
+            if (responseHeaders.ContainsKey(AcceptRangesHeaderName))
             {
                 HttpWebRequest myHttpWebRequest = responseUri.GetHttpRequest(pars);
                 myHttpWebRequest.AddRange(rangeFrom, rangeTo);
@@ -48,9 +46,9 @@ public static class WebResponseExtensions
                 return (responseHeaders.ContainsKey(ContentRangeHeaderName), LengthType.Bytes);
             }
         }
-        catch (Exception ex) when (exceptionHandler is not null)
+        catch (Exception ex)
         {
-            exceptionHandler.Handle(ex);
+            ex.HandleException();
         }
 
         return (false, LengthType.AutoDetect);

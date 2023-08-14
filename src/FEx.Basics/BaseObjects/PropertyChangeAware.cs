@@ -2,7 +2,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace FEx.Toolbox.BaseObjects;
+namespace FEx.Basics.BaseObjects;
 
 public class PropertyChangeAware
 {

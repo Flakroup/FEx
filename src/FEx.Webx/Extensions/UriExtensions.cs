@@ -1,8 +1,10 @@
+using FEx.Basics;
 using FEx.Extensions;
 using FEx.Extensions.Base.Models;
 using FEx.Extensions.Web;
 using FEx.Fundamentals;
 using FEx.Fundamentals.Helpers;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,6 +16,13 @@ namespace FEx.Webx.Extensions;
 
 public static class UriExtensions
 {
+    private const string HttpScheme = "http";
+    private const string HttpsScheme = "https";
+    private const string HeadMethod = "HEAD";
+    private const string GetMethod = "GET";
+    private const string AdditionalInfoKey = "additionalInfo";
+    private const int DefaultTimeout = 100000000;
+
     private static AsyncHelper AsyncHelper => Foundation.AsyncHelper;
 
     /// <summary>
@@ -43,14 +52,14 @@ public static class UriExtensions
         {
             pars ??= new WebRequestParams();
 
-            pars.Method ??= "GET";
+            pars.Method ??= GetMethod;
 
-            pars.Timeout ??= 100000000;
+            pars.Timeout ??= DefaultTimeout;
 
             var sw = new Stopwatch();
             try
             {
-                if (url.Scheme is "http" or "https")
+                if (url.Scheme is HttpScheme or HttpsScheme)
                     return await url.DoHttpResponseFuncAsync((response, _) =>
                     {
                         bool result = response?.StatusCode is HttpStatusCode.OK
@@ -68,7 +77,7 @@ public static class UriExtensions
             catch (Exception ex)
             {
                 sw.Stop();
-                ex.HandleException(false, custom: ("additionalInfo", url.AbsoluteUri));
+                ex.HandleException(custom: (AdditionalInfoKey, url.AbsoluteUri));
             }
         }
 
@@ -150,7 +159,7 @@ public static class UriExtensions
             try
             {
                 pars ??= new WebRequestParams();
-                pars.Method = "HEAD";
+                pars.Method = HeadMethod;
                 return await link.DoHttpResponseFuncAsync((response, _) => response.ContentLength <= 0, pars);
             }
             catch
@@ -165,6 +174,47 @@ public static class UriExtensions
         uri.IsNotNullOrEmptyString() && Uri.TryCreate(uri, UriKind.Absolute, out Uri uriResult) && uriResult is not null
             ? uriResult
             : null;
+
+    public static async Task<bool> UrlIsValidAsync(this Uri url, WebRequestParams pars = null)
+    {
+        try
+        {
+            HttpWebRequest request = WebRequest.CreateHttp(url);
+
+            if (pars is not null)
+                request.PrepareRequest(pars);
+
+            request.Method = HeadMethod; //Get only the header information -- no need to download any content
+
+            using WebResponse response = await request.GetResponseAsync();
+            using var httpResponse = (HttpWebResponse)response;
+            var statusCode = (int)httpResponse.StatusCode;
+            switch (statusCode)
+            {
+                //Good requests
+                case >= 100 and < 400:
+                    return true;
+                //Server Errors
+                case >= 500 and <= 510:
+                    FExBasics.Logger.LogDebug(
+                        $"The remote server has thrown an internal error. Url is not valid: {url}");
+                    return false;
+            }
+        }
+        catch (WebException ex)
+        {
+            if (ex.Status == WebExceptionStatus.ProtocolError) //400 errors
+                return false;
+
+            FExBasics.Logger.LogDebug($"Unhandled status [{ex.Status}] returned for url: {url}", ex);
+        }
+        catch (Exception ex)
+        {
+            FExBasics.Logger.LogDebug($"Could not test url {url}.", ex);
+        }
+
+        return false;
+    }
 
     private static async Task<T> InternalDoHttpResponseFuncTaskAsync<T>(
         Uri url,

@@ -16,26 +16,30 @@ public static class JsonExtensions
 {
     public static string NullString { get; } = "\"null\"";
 
-    public static JsonSerializerSettings DefaultSettings { get; }
+    public static JsonSerializerSettings DefaultSettings => JsonConvert.DefaultSettings?.Invoke();
+
+    private static JsonSerializerSettings DefaultSettingsInstance { get; set; }
 
     static JsonExtensions()
     {
-        DefaultSettings = new JsonSerializerSettings
+        DefaultSettingsInstance = new JsonSerializerSettings
         {
             MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
             DateParseHandling = DateParseHandling.None,
             NullValueHandling = NullValueHandling.Ignore,
             DateFormatHandling = DateFormatHandling.IsoDateFormat
         };
-        ((List<JsonConverter>)DefaultSettings.Converters).AddRange(new JsonConverter[]
+        ((List<JsonConverter>)DefaultSettingsInstance.Converters).AddRange(new JsonConverter[]
         {
             ParseStringConverter.Singleton, new VersionConverter()
         });
+        JsonConvert.DefaultSettings = () => DefaultSettingsInstance;
     }
 
     public static void ConfigureDefaultSettings(Action<JsonSerializerSettings> configuration)
     {
-        configuration(DefaultSettings);
+        DefaultSettingsInstance = DefaultSettings;
+        configuration(DefaultSettingsInstance);
     }
 
     public static string ToJson(this object self,
@@ -135,7 +139,7 @@ public static class JsonExtensions
                                          JsonLoadSettings loadSettings = null,
                                          JsonSerializerSettings saveSettings = null,
                                          Formatting formatting = Formatting.Indented) =>
-        JObject.Parse(json, loadSettings).ToJson(saveSettings ?? DefaultSettings, formatting);
+        JObject.Parse(json, loadSettings).ToJson(saveSettings, formatting);
 
     public static T DeserializeFromFile<T>(this FileInfo file, JsonSerializerSettings settings = null)
     {

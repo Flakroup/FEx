@@ -4,10 +4,10 @@ namespace FEx.Abstractions;
 
 public abstract class ExceptionHandlerBase : IExceptionHandler
 {
-    public void Handle(Exception exception, object options)
+    public virtual void Handle(Exception exception, IExceptionHandlerOptions options = null)
     {
-        HandleException(exception);
+        HandleException(exception, options);
     }
 
-    protected abstract void HandleException(Exception exception);
+    protected abstract void HandleException(Exception exception, IExceptionHandlerOptions options);
 }

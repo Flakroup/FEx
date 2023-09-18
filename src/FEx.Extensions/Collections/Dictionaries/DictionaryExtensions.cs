@@ -291,4 +291,10 @@ public static class DictionaryExtensions
             foreach (TKey key in syncedDictionary.Keys)
                 sourceDictionary.AddOrUpdateValue(key, () => syncedDictionary[key]);
     }
+
+    public static bool IsNotNullOrEmptyDictionary<TKey, TValue>(this IDictionary<TKey, TValue> dictionary) =>
+        dictionary?.Count > 0;
+
+    public static bool IsNullOrEmptyDictionary<TKey, TValue>(this IDictionary<TKey, TValue> dictionary) =>
+        dictionary is null || dictionary.Count == 0;
 }

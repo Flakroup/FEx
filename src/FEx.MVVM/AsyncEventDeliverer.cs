@@ -8,19 +8,19 @@ namespace FEx.MVVM;
 
 public class AsyncEventDeliverer : IEventDeliverer
 {
-    private static void InternalDeliverEvent(Action eventDelegate, object sender, SynchronizationContext context)
-    {
-        if (context is not null)
-            context.SendInContext(sender, eventDelegate);
-        else
-            eventDelegate();
-    }
-
     public void DeliverEvent(Action eventDelegate, object sender, SynchronizationContext context = null)
     {
         void EventDelegate() =>
             InternalDeliverEvent(eventDelegate, sender, context);
 
         DeadlockMonitor.Execute(EventDelegate);
+    }
+
+    private static void InternalDeliverEvent(Action eventDelegate, object sender, SynchronizationContext context)
+    {
+        if (context is not null)
+            context.SendInContext(sender, eventDelegate);
+        else
+            eventDelegate();
     }
 }

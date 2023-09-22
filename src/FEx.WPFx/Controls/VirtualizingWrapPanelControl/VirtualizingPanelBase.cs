@@ -126,8 +126,8 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
         {
             if (_itemsOwner is null)
             {
-                /* Use reflection to access internal method because the public 
-                 * GetItemsOwner method does always return the itmes control instead 
+                /* Use reflection to access internal method because the public
+                 * GetItemsOwner method does always return the itmes control instead
                  * of the real items owner for example the group item when grouping */
                 MethodInfo getItemsOwnerInternalMethod = typeof(ItemsControl).GetMethod("GetItemsOwnerInternal",
                     BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(DependencyObject) }, null)!;
@@ -215,8 +215,8 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
 
     protected bool ShouldIgnoreMeasure()
     {
-        /* Sometimes when scrolling the scrollbar gets hidden without any reason. In this case the "IsMeasureValid" 
-        * property of the ScrollOwner is false. To prevent a infinite circle the mesasure call is ignored. */
+        /* Sometimes when scrolling the scrollbar gets hidden without any reason. In this case the "IsMeasureValid"
+         * property of the ScrollOwner is false. To prevent a infinite circle the mesasure call is ignored. */
         if (ScrollOwner != null)
         {
             bool verticalScrollBarGotHidden = ScrollOwner.VerticalScrollBarVisibility == ScrollBarVisibility.Auto

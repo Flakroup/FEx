@@ -205,6 +205,16 @@ public class StackTraceGenerator : IStackTraceProvider
 
     private class MethodHandleAndILOffset
     {
+        private readonly IntPtr _methodHandle;
+
+        private readonly int _offset;
+
+        public MethodHandleAndILOffset(IntPtr methodHandle, int offset)
+        {
+            _methodHandle = methodHandle;
+            _offset = offset;
+        }
+
         // ReSharper disable UnusedMember.Local
         public static MethodHandleAndILOffset[] Create(IntPtr[] methods, int[] offsets)
             // ReSharper restore UnusedMember.Local
@@ -214,16 +224,6 @@ public class StackTraceGenerator : IStackTraceProvider
                 methodHandleAndILOffset[i] = new MethodHandleAndILOffset(methods[i], offsets[i]);
 
             return methodHandleAndILOffset;
-        }
-
-        private readonly IntPtr _methodHandle;
-
-        private readonly int _offset;
-
-        public MethodHandleAndILOffset(IntPtr methodHandle, int offset)
-        {
-            _methodHandle = methodHandle;
-            _offset = offset;
         }
 
         public override bool Equals(object obj)

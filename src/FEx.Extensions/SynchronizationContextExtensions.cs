@@ -17,7 +17,6 @@ public static class SynchronizationContextExtensions
         const string fieldName = "_synchronizationContext";
         return thread.GetFieldValue(fieldName) as SynchronizationContext;
 #endif
-
     }
 
     public static SynchronizationContext Get(bool createNew = false)

@@ -87,6 +87,23 @@ public class ChildInfo : LinkableNotifyPropertyChanged
 
 public class SingleParent : LinkableNotifyPropertyChanged
 {
+    private Child _child;
+
+    public Child Child
+    {
+        get => _child;
+        set => SetProperty(ref _child, value);
+    }
+
+    public int ChildAge { get; private set; }
+    public string ChildName { get; private set; }
+
+    public SingleParent(bool link)
+    {
+        if (link)
+            Link(this);
+    }
+
     public static void Link(SingleParent p)
     {
         p.Link(x => x.Child, (l, c) =>
@@ -103,22 +120,5 @@ public class SingleParent : LinkableNotifyPropertyChanged
                 }, l);
             });
         });
-    }
-
-    private Child _child;
-
-    public Child Child
-    {
-        get => _child;
-        set => SetProperty(ref _child, value);
-    }
-
-    public int ChildAge { get; private set; }
-    public string ChildName { get; private set; }
-
-    public SingleParent(bool link)
-    {
-        if (link)
-            Link(this);
     }
 }

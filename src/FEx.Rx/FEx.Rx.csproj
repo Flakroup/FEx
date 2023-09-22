@@ -5,7 +5,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DynamicData" Version="7.14.2" />
+		<PackageReference Include="DynamicData" Version="8.0.2" />
 		<PackageReference Include="ReactiveUI" Version="19.4.1" />
 		<PackageReference Include="System.Reactive.Linq" Version="6.0.0" />
 		<PackageReference Include="System.Threading.Tasks.Dataflow" Version="7.0.0" />

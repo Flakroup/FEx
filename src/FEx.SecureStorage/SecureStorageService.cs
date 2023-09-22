@@ -17,7 +17,8 @@ public class SecureStorageService
     public SecureStorageService()
     {
         _cipher = $"{Environment.UserName}@{Environment.MachineName}".GenerateMd5OfString();
-        _storage = SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile].Directory.GetDescendantDirectory(".fexStorage");
+        _storage = SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile]
+            .Directory.GetDescendantDirectory(".fexStorage");
     }
 
     public T Get<T>(string key)

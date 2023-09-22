@@ -6,8 +6,6 @@ namespace FEx.Basics.Flow;
 
 public class StackError : Error, IStackError
 {
-    private static StackTrace GetStackTrace() => FExBasics.StackTraceProvider.GetStackTrace();
-
     private string _stackTraceString;
     public StackTrace StackTrace { get; }
     public string StackTraceString => _stackTraceString ??= StackTrace.ToString();
@@ -38,12 +36,12 @@ public class StackError : Error, IStackError
         !string.IsNullOrEmpty(Message)
             ? new StringBuilder(Message).AppendLine(StackTrace.ToString()).ToString()
             : StackTrace.ToString();
+
+    private static StackTrace GetStackTrace() => FExBasics.StackTraceProvider.GetStackTrace();
 }
 
 public class StackError<TErrorStatus> : Error<TErrorStatus>, IStackError
 {
-    private static StackTrace GetStackTrace() => FExBasics.StackTraceProvider.GetStackTrace();
-
     private string _stackTraceString;
     public StackTrace StackTrace { get; }
     public string StackTraceString => _stackTraceString ??= StackTrace.ToString();
@@ -68,4 +66,6 @@ public class StackError<TErrorStatus> : Error<TErrorStatus>, IStackError
         !string.IsNullOrEmpty(Message)
             ? new StringBuilder(Message).AppendLine(StackTrace.ToString()).ToString()
             : StackTrace.ToString();
+
+    private static StackTrace GetStackTrace() => FExBasics.StackTraceProvider.GetStackTrace();
 }

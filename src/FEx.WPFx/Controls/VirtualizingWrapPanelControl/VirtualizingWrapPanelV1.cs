@@ -128,9 +128,9 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
             double y = rowIndex * GetHeight(childSize);
 
             if (GetHeight(finalSize) == 0.0)
-                /* When the parent panel is grouping and a cached group item is not 
-                 * in the viewport it has no valid arrangement. That means that the 
-                 * height/width is 0. Therefore the items should not be visible so 
+                /* When the parent panel is grouping and a cached group item is not
+                 * in the viewport it has no valid arrangement. That means that the
+                 * height/width is 0. Therefore the items should not be visible so
                  * that they are not falsely displayed. */
                 child.Arrange(new Rect(0, 0, 0, 0));
             else

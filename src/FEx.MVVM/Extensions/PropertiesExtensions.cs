@@ -10,6 +10,12 @@ namespace FEx.MVVM.Extensions;
 
 public static class PropertiesExtensions
 {
+    public const string WrongExpressionMessage =
+        "Wrong expression\nshould be called with expression like\n() => PropertyName";
+
+    private const string WrongUnaryExpressionMessage =
+        "Wrong unary expression\nshould be called with expression like\n() => PropertyName";
+
     public static bool SetPropertyFromExpression<T>(this object target,
                                                     Expression<Func<T>> expression,
                                                     T value,
@@ -144,10 +150,4 @@ public static class PropertiesExtensions
 
         sender.AddLink(link);
     }
-
-    public const string WrongExpressionMessage =
-        "Wrong expression\nshould be called with expression like\n() => PropertyName";
-
-    private const string WrongUnaryExpressionMessage =
-        "Wrong unary expression\nshould be called with expression like\n() => PropertyName";
 }

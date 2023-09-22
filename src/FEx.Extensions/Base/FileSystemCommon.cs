@@ -7,6 +7,8 @@ namespace FEx.Extensions.Base;
 
 public static class FileSystemCommon
 {
+    private const string Ntfs = "NTFS";
+
     /// <summary>
     ///     Determines whether [is path NTFS] [the specified absolute file path].
     /// </summary>
@@ -49,6 +51,4 @@ public static class FileSystemCommon
             : pos)];
 #endif
     }
-
-    private const string Ntfs = "NTFS";
 }

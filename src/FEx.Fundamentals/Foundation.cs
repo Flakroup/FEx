@@ -69,6 +69,17 @@ public class Foundation
 
     private static bool IsDispatcherContext { get; set; }
 
+    public Foundation(ILogger<FExBasics> logger,
+                      AsyncHelper asyncHelper,
+                      IExceptionHandler exceptionHandler,
+                      IStackTraceProvider stackTraceProvider,
+                      IEventDeliverer eventDeliverer)
+    {
+        AsyncHelper = asyncHelper;
+        FExExtensionsCommon.Initialize(exceptionHandler.Guard(nameof(exceptionHandler)));
+        FExBasics.Init(stackTraceProvider, eventDeliverer, logger);
+    }
+
     public static void Init<T>(T strongInjectServiceProvider) where T : class, IFExServiceProvider
     {
         StrongInjectServiceProvider = strongInjectServiceProvider;
@@ -98,17 +109,6 @@ public class Foundation
 
         if (ensureSyncContextExists)
             MainThread.GetThreadSynchronizationContext(true);
-    }
-
-    public Foundation(ILogger<FExBasics> logger,
-                      AsyncHelper asyncHelper,
-                      IExceptionHandler exceptionHandler,
-                      IStackTraceProvider stackTraceProvider,
-                      IEventDeliverer eventDeliverer)
-    {
-        AsyncHelper = asyncHelper;
-        FExExtensionsCommon.Initialize(exceptionHandler.Guard(nameof(exceptionHandler)));
-        FExBasics.Init(stackTraceProvider, eventDeliverer, logger);
     }
 
     public Thread GetMainThread() => MainThread;

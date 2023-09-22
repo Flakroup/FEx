@@ -24,12 +24,6 @@ namespace FEx.EFCore.Services;
 public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledDbService<TDbContext>
     where TDbContext : DbContext
 {
-    private static async Task ShrinkDbAsync(TDbContext context)
-    {
-        if (context.IsSqlite())
-            await context.Database.ExecuteSqlRawAsync("VACUUM;");
-    }
-
     protected readonly ILogger<PooledDbService<TDbContext>> _logger;
     protected readonly IFExDbConfig _dbConfig;
     private readonly IScopeProvider _scopeProvider;
@@ -355,6 +349,12 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     protected async Task ShrinkDbAsync()
     {
         await RunTaskInDbContextAsync(ShrinkDbAsync, null, false, false);
+    }
+
+    private static async Task ShrinkDbAsync(TDbContext context)
+    {
+        if (context.IsSqlite())
+            await context.Database.ExecuteSqlRawAsync("VACUUM;");
     }
 
     private async Task<bool> DropAsync()

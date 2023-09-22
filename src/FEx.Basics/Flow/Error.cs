@@ -5,7 +5,6 @@ namespace FEx.Basics.Flow;
 
 public class Error : IError
 {
-    public static implicit operator Error(string message) => new(message);
     private IError _innerError;
 
     public string Message { get; }
@@ -43,6 +42,8 @@ public class Error : IError
 
         InnerError = innerError;
     }
+
+    public static implicit operator Error(string message) => new(message);
 }
 
 public class Error<TErrorStatus> : Error

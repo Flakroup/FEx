@@ -8,8 +8,6 @@ public class Result<TError> where TError : class, IError, new()
 
     public static Result<TError> Failure => new(new TError());
 
-    public static implicit operator Result<TError>(TError error) => new(error);
-
     public TError Error { get; }
     public bool IsSuccess => !IsFailure;
     public bool IsFailure { get; }
@@ -23,15 +21,13 @@ public class Result<TError> where TError : class, IError, new()
         Error = error.Guard(nameof(Error));
         IsFailure = true;
     }
+
+    public static implicit operator Result<TError>(TError error) => new(error);
 }
 
 public class Result<TData, TError> where TError : class, IError, new()
 {
     public static Result<TData, TError> Failure => new(new TError());
-
-    public static implicit operator Result<TData, TError>(TData data) => new(data);
-
-    public static implicit operator Result<TData, TError>(TError error) => new(error);
 
     public TError Error { get; }
     public bool IsSuccess => !IsFailure;
@@ -49,4 +45,8 @@ public class Result<TData, TError> where TError : class, IError, new()
         Error = error.Guard(nameof(Error));
         IsFailure = true;
     }
+
+    public static implicit operator Result<TData, TError>(TData data) => new(data);
+
+    public static implicit operator Result<TData, TError>(TError error) => new(error);
 }

@@ -6,6 +6,8 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 internal abstract class VirtualizingPanelModelBase
 {
+    public event EventHandler<EventArgs> ScrollInfoInvalidated;
+    public event EventHandler<EventArgs> MeasureInvalidated;
     public Size Extent { get; protected set; } = new(0, 0);
     public Size ViewportSize { get; protected set; } = new(0, 0);
     public Point ScrollOffset { get; protected set; } = new(0, 0);
@@ -17,8 +19,6 @@ internal abstract class VirtualizingPanelModelBase
     public int ScrollLineDeltaItem { get; set; } = 1;
     public int MouseWheelDeltaItem { get; set; } = 3;
     protected ScrollDirection MouseWheelScrollDirection { get; set; } = ScrollDirection.Vertical;
-    public event EventHandler<EventArgs> ScrollInfoInvalidated;
-    public event EventHandler<EventArgs> MeasureInvalidated;
 
     public void SetVerticalOffset(double offset)
     {

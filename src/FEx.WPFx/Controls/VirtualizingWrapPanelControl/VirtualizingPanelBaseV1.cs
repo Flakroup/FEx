@@ -131,8 +131,8 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
         {
             if (_itemsOwner is null)
             {
-                /* Use reflection to access internal method because the public 
-                 * GetItemsOwner method does always return the itmes control instead 
+                /* Use reflection to access internal method because the public
+                 * GetItemsOwner method does always return the itmes control instead
                  * of the real items owner for example the group item when grouping */
                 MethodInfo getItemsOwnerInternalMethod = typeof(ItemsControl).GetMethod("GetItemsOwnerInternal",
                     BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(DependencyObject) }, null)!;
@@ -151,7 +151,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
         {
             if (_itemContainerGenerator is null)
             {
-                /* Because of a bug in the framework the ItemContainerGenerator 
+                /* Because of a bug in the framework the ItemContainerGenerator
                  * is null until InternalChildren accessed at least one time. */
                 _ = InternalChildren;
                 _itemContainerGenerator = (IRecyclingItemContainerGenerator)base.ItemContainerGenerator;
@@ -436,7 +436,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        /* Sometimes when scrolling the scrollbar gets hidden without any reason. In this case the "IsMeasureValid" 
+        /* Sometimes when scrolling the scrollbar gets hidden without any reason. In this case the "IsMeasureValid"
          * property of the ScrollOwner is false. To prevent a infinite circle the mesasure call is ignored. */
         if (ScrollOwner != null)
         {
@@ -465,7 +465,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
 
         if (groupItem != null)
         {
-            /* If the ItemsOwner is a group item the availableSize is ifinity. 
+            /* If the ItemsOwner is a group item the availableSize is ifinity.
              * Therfore the vieport size provided by the group item is used. */
             Size viewportSize = groupItem.Constraints.Viewport.Size;
             Size headerSize = groupItem.HeaderDesiredSizes.PixelSize;

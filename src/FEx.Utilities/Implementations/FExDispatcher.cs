@@ -10,10 +10,10 @@ namespace FEx.Utilities.Implementations;
 
 public abstract class FExDispatcher : IFExDispatcher
 {
+    private readonly ILogger _logger;
+
     protected static SynchronizationContext MainThreadSynchronizationContext =>
         Foundation.MainSynchronizationContext;
-
-    private readonly ILogger _logger;
 
 
     protected FExDispatcher(ILogger logger)

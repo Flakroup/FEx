@@ -247,18 +247,18 @@ public static class AsyncReaderWriterLockSlimExtension
             IsWriteLock = isWriteLock;
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
         ~ActionDisposableLock()
         {
             Dispose(false);
         }
 
         #region IDisposable
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         protected virtual void Dispose(bool disposing)
         {

@@ -5,6 +5,14 @@ namespace FEx.Extensions.Numericals;
 
 public static class DoubleExtensions
 {
+    private const double D1 = 0.1;
+    private const double D2 = 0.01;
+    private const double D3 = 0.001;
+    private const double D4 = 0.0001;
+    private const double D5 = 0.00001;
+    private const double D6 = 0.000001;
+    private const double D7 = 0.0000001;
+
     public static bool PreciseEquals(this double left, double right, int floatDigits = 7)
     {
         if (floatDigits is < 1 or > 7)
@@ -45,12 +53,4 @@ public static class DoubleExtensions
             _ => 0
         };
     }
-
-    private const double D1 = 0.1;
-    private const double D2 = 0.01;
-    private const double D3 = 0.001;
-    private const double D4 = 0.0001;
-    private const double D5 = 0.00001;
-    private const double D6 = 0.000001;
-    private const double D7 = 0.0000001;
 }

@@ -27,36 +27,6 @@ public class GridView : ListView
         DependencyProperty.Register(nameof(IsWrappingKeyboardNavigationEnabled), typeof(bool), typeof(GridView),
             new FrameworkPropertyMetadata(false));
 
-    static GridView()
-    {
-        ItemContainerStyleProperty.OverrideMetadata(typeof(GridView), new FrameworkPropertyMetadata(new Style
-        {
-            Setters =
-            {
-                new Setter
-                {
-                    Property = MarginProperty,
-                    Value = new Thickness(0)
-                },
-                new Setter
-                {
-                    Property = PaddingProperty,
-                    Value = new Thickness(4)
-                },
-                new Setter
-                {
-                    Property = HorizontalContentAlignmentProperty,
-                    Value = HorizontalAlignment.Stretch
-                },
-                new Setter
-                {
-                    Property = VerticalContentAlignmentProperty,
-                    Value = VerticalAlignment.Stretch
-                }
-            }
-        }));
-    }
-
     /// <summary>
     ///     Gets or sets a value that specifies the orientation in which items are arranged. The default value is
     ///     <see cref="Orientation.Horizontal" />.
@@ -129,6 +99,36 @@ public class GridView : ListView
         VirtualizingPanel.SetIsVirtualizingWhenGrouping(this, true);
 
         PreviewKeyDown += GridView_PreviewKeyDown;
+    }
+
+    static GridView()
+    {
+        ItemContainerStyleProperty.OverrideMetadata(typeof(GridView), new FrameworkPropertyMetadata(new Style
+        {
+            Setters =
+            {
+                new Setter
+                {
+                    Property = MarginProperty,
+                    Value = new Thickness(0)
+                },
+                new Setter
+                {
+                    Property = PaddingProperty,
+                    Value = new Thickness(4)
+                },
+                new Setter
+                {
+                    Property = HorizontalContentAlignmentProperty,
+                    Value = HorizontalAlignment.Stretch
+                },
+                new Setter
+                {
+                    Property = VerticalContentAlignmentProperty,
+                    Value = VerticalAlignment.Stretch
+                }
+            }
+        }));
     }
 
     private void GridView_PreviewKeyDown(object sender, KeyEventArgs e)

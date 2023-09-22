@@ -1,5 +1,5 @@
-﻿using System.Net.Http;
-using FEx.Extensions.Base.Models;
+﻿using FEx.Extensions.Base.Models;
+using System.Net.Http;
 
 namespace FEx.Extensions.Web;
 

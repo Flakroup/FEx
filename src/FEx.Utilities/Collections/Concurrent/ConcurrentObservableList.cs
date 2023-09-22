@@ -18,19 +18,35 @@ namespace FEx.Utilities.Collections.Concurrent;
 [Serializable]
 public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionChanged, INotifyPropertyChanged
 {
-    private static IEventDeliverer EventDeliverer => FExBasics.EventDeliverer;
     private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
     private readonly bool _sendEventsInCreationContext;
 
-    public IObservable<EventPattern<NotifyCollectionChangedEventArgs>> CollectionChangedObservable =>
-        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
-            ev => CollectionChanged += ev, ev => CollectionChanged -= ev);
+    /// <summary>
+    ///     Occurs when the collection changes, either by adding or removing an item.
+    /// </summary>
+    [field: NonSerialized]
+    public virtual event NotifyCollectionChangedEventHandler CollectionChanged;
 
     /// <summary>
     ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
     [field: NonSerialized]
     protected virtual event PropertyChangedEventHandler PropertyChanged;
+
+    /// <summary>
+    ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    /// </summary>
+    event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+    {
+        add => PropertyChanged += value;
+        remove => PropertyChanged -= value;
+    }
+
+    public IObservable<EventPattern<NotifyCollectionChangedEventArgs>> CollectionChangedObservable =>
+        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+            ev => CollectionChanged += ev, ev => CollectionChanged -= ev);
+
+    private static IEventDeliverer EventDeliverer => FExBasics.EventDeliverer;
 
     /// <summary>
     ///     Initializes a new instance of the ConcurrentObservableList class that contains
@@ -46,21 +62,6 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
         : base(collection)
     {
         _sendEventsInCreationContext = sendEventsInCreationContext ?? Foundation.SendEventsInCreationContext;
-    }
-
-    /// <summary>
-    ///     Occurs when the collection changes, either by adding or removing an item.
-    /// </summary>
-    [field: NonSerialized]
-    public virtual event NotifyCollectionChangedEventHandler CollectionChanged;
-
-    /// <summary>
-    ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
-    /// </summary>
-    event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
-    {
-        add => PropertyChanged += value;
-        remove => PropertyChanged -= value;
     }
 
     /// <summary>

@@ -11,12 +11,6 @@ namespace FEx.MVVM.BaseObjects;
 
 public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILinkableNotifyPropertyChanged
 {
-    private static void TriggerLinks(IEnumerable<ILink> propertyLinks, object oldValue, object newValue)
-    {
-        foreach (ILink link in propertyLinks)
-            link.OnPropertyChange(oldValue, newValue);
-    }
-
     protected ConcurrentDictionary<string, ConcurrentDictionary<Guid, ILink>> Links { get; }
 
     protected LinkableNotifyPropertyChanged()
@@ -60,5 +54,11 @@ public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILi
 
         if (Links.TryGetValue(propertyName, out ConcurrentDictionary<Guid, ILink> links))
             TriggerLinks(links.Values.ToList(), oldValue, newValue);
+    }
+
+    private static void TriggerLinks(IEnumerable<ILink> propertyLinks, object oldValue, object newValue)
+    {
+        foreach (ILink link in propertyLinks)
+            link.OnPropertyChange(oldValue, newValue);
     }
 }

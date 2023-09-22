@@ -12,6 +12,8 @@ namespace FEx.MVVM.BaseObjects;
 
 public class NotifyPropertyChanged : IFExNotifyPropertyChanged
 {
+    public event PropertyChangedEventHandler PropertyChanged;
+
     public void OnPropertiesChanged(params string[] propertyNames)
     {
         if (propertyNames?.Any() != true)
@@ -46,8 +48,6 @@ public class NotifyPropertyChanged : IFExNotifyPropertyChanged
 
         return true;
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 
     protected virtual void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
     {

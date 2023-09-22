@@ -26,12 +26,6 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
         _semaphore = new SemaphoreSlim(1, 1);
     }
 
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
     public virtual void Initialize()
     {
         RunInitialize();
@@ -74,6 +68,12 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
     }
 
     #region IDisposable
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 
     protected virtual void Dispose(bool disposing)
     {

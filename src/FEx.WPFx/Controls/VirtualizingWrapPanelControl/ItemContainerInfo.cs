@@ -21,14 +21,6 @@ internal interface IItemContainerInfo
 
 internal class ItemContainerInfo : IItemContainerInfo
 {
-    public static IItemContainerInfo For(UIElement uiElement, object item) => new ItemContainerInfo(uiElement, item);
-
-    public static bool operator ==(ItemContainerInfo obj1, ItemContainerInfo obj2) =>
-        ReferenceEquals(obj1?.UIElement, obj2?.UIElement);
-
-    public static bool operator !=(ItemContainerInfo obj1, ItemContainerInfo obj2) =>
-        !ReferenceEquals(obj1?.UIElement, obj2?.UIElement);
-
     public UIElement UIElement { get; }
 
     public Size DesiredSize => UIElement.DesiredSize;
@@ -59,6 +51,14 @@ internal class ItemContainerInfo : IItemContainerInfo
     {
         UIElement.Arrange(rect);
     }
+
+    public static IItemContainerInfo For(UIElement uiElement, object item) => new ItemContainerInfo(uiElement, item);
+
+    public static bool operator ==(ItemContainerInfo obj1, ItemContainerInfo obj2) =>
+        ReferenceEquals(obj1?.UIElement, obj2?.UIElement);
+
+    public static bool operator !=(ItemContainerInfo obj1, ItemContainerInfo obj2) =>
+        !ReferenceEquals(obj1?.UIElement, obj2?.UIElement);
 
     public override bool Equals(object obj) =>
         obj is ItemContainerInfo other && ReferenceEquals(UIElement, other.UIElement);

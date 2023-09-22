@@ -9,6 +9,12 @@ public sealed class AlphanumComparatorFast : IComparer<string>
 
     public static AlphanumComparatorFast Instance => _instance ??= new AlphanumComparatorFast();
 
+    private AlphanumComparatorFast()
+    {
+    }
+
+    public int Compare(string s1, string s2) => Compare(s1, s2, StringComparison.CurrentCulture);
+
     public static int Compare(string s1, string s2, StringComparison comparisonType)
     {
         if (s1 is not null
@@ -85,10 +91,4 @@ public sealed class AlphanumComparatorFast : IComparer<string>
 
         return 0;
     }
-
-    private AlphanumComparatorFast()
-    {
-    }
-
-    public int Compare(string s1, string s2) => Compare(s1, s2, StringComparison.CurrentCulture);
 }

@@ -13,33 +13,6 @@ namespace FEx.Fundamentals.Helpers;
 
 public class AsyncHelper
 {
-    private static object Wrap(Action action)
-    {
-        action();
-        return null;
-    }
-
-    private static async Task<object> WrapTaskAsync(Func<Task> task)
-    {
-        await task();
-        return null;
-    }
-
-    private static void SetResult<T>(T result, ITaskWrapper taskWrapper)
-    {
-        switch (taskWrapper)
-        {
-            case TaskWrapper<T> typedWrapper:
-                typedWrapper.SetResult(result);
-                break;
-            case TaskWrapper wrapper:
-                wrapper.SetResult();
-                break;
-            default:
-                throw new InvalidOperationException($"{taskWrapper.GetType().FullName} is not handled");
-        }
-    }
-
     private readonly ITasksInfoSubject _tasksInfoSubject;
     private readonly IFExDispatcher _dispatcher;
     private readonly ILogger<AsyncHelper> _logger;
@@ -185,6 +158,33 @@ public class AsyncHelper
     public async Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken = default)
     {
         await ExecuteTaskOnThreadPoolAsync(() => Task.Delay(delay, cancellationToken));
+    }
+
+    private static object Wrap(Action action)
+    {
+        action();
+        return null;
+    }
+
+    private static async Task<object> WrapTaskAsync(Func<Task> task)
+    {
+        await task();
+        return null;
+    }
+
+    private static void SetResult<T>(T result, ITaskWrapper taskWrapper)
+    {
+        switch (taskWrapper)
+        {
+            case TaskWrapper<T> typedWrapper:
+                typedWrapper.SetResult(result);
+                break;
+            case TaskWrapper wrapper:
+                wrapper.SetResult();
+                break;
+            default:
+                throw new InvalidOperationException($"{taskWrapper.GetType().FullName} is not handled");
+        }
     }
 
     private async Task<T> ExecuteAndCatchAsync<T>(Func<T> func,

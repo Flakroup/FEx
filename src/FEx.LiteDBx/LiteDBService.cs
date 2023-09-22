@@ -9,12 +9,6 @@ namespace FEx.LiteDBx;
 
 public abstract class LiteDBService : IDisposable
 {
-    private static Expression<Func<T, bool>> GetTrueExpression<T>()
-    {
-        Type type = typeof(T);
-        return Expression.Lambda<Func<T, bool>>(Expression.Constant(true), Expression.Parameter(type, "_"));
-    }
-
     private readonly ILiteRepository _context;
     private readonly ExtendedReaderWriterLockSlim _lock;
 
@@ -24,11 +18,6 @@ public abstract class LiteDBService : IDisposable
     {
         _lock = new ExtendedReaderWriterLockSlim();
         _context = context;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
     }
 
     /// <summary>
@@ -164,6 +153,12 @@ public abstract class LiteDBService : IDisposable
         }
     }
 
+    private static Expression<Func<T, bool>> GetTrueExpression<T>()
+    {
+        Type type = typeof(T);
+        return Expression.Lambda<Func<T, bool>>(Expression.Constant(true), Expression.Parameter(type, "_"));
+    }
+
     private void WrapInTransaction(Action action)
     {
         _context.Database.BeginTrans();
@@ -196,6 +191,11 @@ public abstract class LiteDBService : IDisposable
     }
 
     #region IDisposable
+
+    public void Dispose()
+    {
+        Dispose(true);
+    }
 
     private void Dispose(bool disposing)
     {

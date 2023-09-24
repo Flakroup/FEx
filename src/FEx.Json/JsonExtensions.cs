@@ -51,7 +51,7 @@ public static class JsonExtensions
     {
         try
         {
-            return json == NullString
+            return json is null || json == NullString
                 ? fallback
                 : JsonConvert.DeserializeObject<T>(json, settings ?? DefaultSettings);
         }

@@ -97,7 +97,6 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
         set => SetValue(SpacingModeProperty, value);
     }
 
-
     /// <summary>
     ///     Gets or sets a value that specifies if the items get stretched to fill up remaining space. The default value is
     ///     false.
@@ -138,6 +137,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
         get
         {
             _itemContainerManager ??= new ItemContainerManager(ItemContainerGenerator);
+
             return _itemContainerManager;
         }
     }
@@ -180,6 +180,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
             Size headerSize = groupItem.HeaderDesiredSizes.PixelSize;
 
             double viewportWidth = Math.Max(viewport.Size.Width, 0);
+
             double viewporteHeight = Orientation == Orientation.Horizontal
                 ? Math.Max(viewport.Size.Height, 0)
                 : Math.Max(viewport.Size.Height - headerSize.Height, 0);
@@ -196,6 +197,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
 
         Model.CacheLength = CacheLength;
         Model.CacheLengthUnit = CacheLengthUnit;
+
         return Model.OnMeasure(availableSize);
     }
 
@@ -204,6 +206,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
         Model.StretchItems = StretchItems;
         Model.SpacingMode = SpacingMode;
         Model.OnArrange(finalSize, ItemsOwner is IHierarchicalVirtualizationAndScrollInfo);
+
         return finalSize;
     }
 

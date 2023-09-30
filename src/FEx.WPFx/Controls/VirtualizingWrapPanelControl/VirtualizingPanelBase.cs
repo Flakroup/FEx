@@ -131,6 +131,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
                  * of the real items owner for example the group item when grouping */
                 MethodInfo getItemsOwnerInternalMethod = typeof(ItemsControl).GetMethod("GetItemsOwnerInternal",
                     BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(DependencyObject) }, null)!;
+
                 _itemsOwner = (DependencyObject)getItemsOwnerInternalMethod.Invoke(null, new object[] { this })!;
             }
 

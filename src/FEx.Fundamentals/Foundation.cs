@@ -97,6 +97,7 @@ public class Foundation
     public static void SetMainThread(bool ensureSyncContextExists = false)
     {
         Thread currentThread = Thread.CurrentThread;
+
         bool isMainThread = currentThread.GetApartmentState() == ApartmentState.STA
                             && !currentThread.IsBackground
                             && currentThread.IsAlive

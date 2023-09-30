@@ -161,6 +161,7 @@ public static class ObjectExtensions
         {
             if (func(value))
                 return true;
+
             return false;
         }, new ArgumentNullException(paramName, message));
 
@@ -180,6 +181,7 @@ public static class ObjectExtensions
             return default;
 
         actions.ForEachInEnumerable(a => a(value));
+
         return value;
     }
 
@@ -204,6 +206,7 @@ public static class ObjectExtensions
         if (obj is not null)
         {
             var propertyString = new StringBuilder();
+
             string objNameSegment = name is not null
                 ? name + " = "
                 : string.Empty;
@@ -256,10 +259,12 @@ public static class ObjectExtensions
     public static string ToPropertiesString(this object obj)
     {
         var propertiesString = new StringBuilder();
+
         foreach (PropertyInfo property in obj.GetType().GetProperties())
         {
             string name = property.Name;
             object value = property.GetValue(obj, null);
+
             propertiesString.Append("(")
                 .Append(property.PropertyType.Name)
                 .Append(") ")
@@ -357,6 +362,7 @@ public static class ObjectExtensions
             return false;
 
         onPropertyChanged?.Invoke(sender, propertyName, newValue);
+
         return true;
     }
 }

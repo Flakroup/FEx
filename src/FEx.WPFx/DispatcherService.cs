@@ -96,6 +96,7 @@ public static class DispatcherService
         var thread = new Thread(() => ShowView(viewFunc, isModal, tcs));
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
+
         return tcs;
     }
 
@@ -126,9 +127,11 @@ public static class DispatcherService
         {
             SynchronizationContext.SetSynchronizationContext(
                 new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+
             T view = viewFunc();
             // When the window closes, shut down the dispatcher
             view.Closed += (_, _) => Dispatcher.CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+
             view.Loaded += (_, _) =>
             {
                 if (isModal)

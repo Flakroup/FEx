@@ -144,16 +144,20 @@ public static class DbContextExtensions
             {
                 var sb = new StringBuilder();
                 sb.Append('[').Append(id).AppendLine("]");
+
                 foreach (string message in allFailedValidations
                              .Select(res => GetValidationResultInfo(res, Debugger.IsAttached))
                              .Distinct())
                     sb.Append(message);
 
                 var ex = new InvalidDataException(sb.ToString());
+
                 LogError(
                     $"[{id}]\tValidation of {allFailedValidations.Count} {(entities.Count > 1 ? "entities" : "entity")} failed",
                     ex);
+
                 onValidationFail?.Invoke(id, allFailedValidations); //todo convert to Rx
+
                 throw ex;
             }
         }
@@ -162,6 +166,7 @@ public static class DbContextExtensions
         {
             LogInformation(
                 $"[{id}]\tValidation of {entities.Count} {(entities.Count > 1 ? "entities" : "entity")} finished successfully");
+
             onValidationSuccess?.Invoke(id, entities); //todo convert to Rx
         }
 
@@ -242,11 +247,13 @@ public static class DbContextExtensions
         string entityName = typeof(T).FullName;
         IEntityType entityType = dbContext.Model.GetEntityTypes().First(x => x.Name == entityName);
         string tableName = entityType.GetTableName();
+
         string[] columnNames = entityType.GetProperties()
             .Select(propertyType => propertyType.GetColumnName())
             .ToArray();
 
         var sb = new StringBuilder();
+
         for (var index = 0; index < columnNames.Length; index++)
         {
             sb.Append('\'').Append(columnNames[index].FirstCharToLower()).Append("', ").Append(columnNames[index]);

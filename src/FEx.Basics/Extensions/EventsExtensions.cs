@@ -19,6 +19,7 @@ public static class EventsExtensions
         Action<TObj, string, TRet> action = propertyChanged is not null && propertyName is not null
             ? (s, p, _) => s.OnPropertyChangedStatic(propertyChanged, p, context)
             : null;
+
         return sender.SetObjectProperty(ref backingField, newValue, action, propertyName);
     }
 

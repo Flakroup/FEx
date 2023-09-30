@@ -15,12 +15,14 @@ public static class DeadlockMonitor
         if (!IsDeadlockMonitoringEnabled)
         {
             action();
+
             return;
         }
 
         StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
 
         var timer = new Timer(Callback, stackTrace, timeout, Timeout.Infinite);
+
         try
         {
             action();
@@ -35,9 +37,12 @@ public static class DeadlockMonitor
     private static void Callback(object state)
     {
         var stackTrace = (StackTrace)state;
+
         var ex = new AttachedException("Deadlock assumed, as no action could've been performed during timeout.",
             stackTrace);
+
         FExBasics.Logger.LogError(ex, ex.Message);
+
         throw ex;
     }
 }

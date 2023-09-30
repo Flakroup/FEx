@@ -25,6 +25,7 @@ public class FExStrongInjectServiceProvider : IFExServiceProvider
     {
         if (_provider is not IContainer<T> container)
             throw new InvalidOperationException($"Couldn't resolve type: {typeof(T).FullName}");
+
         return container.Resolve<T>().Value;
     }
 
@@ -36,12 +37,14 @@ public class FExStrongInjectServiceProvider : IFExServiceProvider
     public T GetRequiredService<T>(Type serviceType)
     {
         MethodInfo generic = _method.MakeGenericMethod(serviceType);
+
         return (T)generic.Invoke(this, null);
     }
 
     public object GetRequiredService(Type serviceType)
     {
         MethodInfo generic = _method.MakeGenericMethod(serviceType);
+
         return generic.Invoke(this, null);
     }
 
@@ -52,6 +55,7 @@ public class FExStrongInjectServiceProvider : IFExServiceProvider
     public TContainer ConfigureServiceProvider<TContainer>() where TContainer : class, IContainer<Foundation>, new()
     {
         _provider = new TContainer();
+
         return (TContainer)_provider;
     }
 

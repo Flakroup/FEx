@@ -40,6 +40,7 @@ public class NotifyPropertyChanged : IFExNotifyPropertyChanged
     {
         if (EqualityHelper.IsEqual(ref backingField, newValue))
             return false;
+
         TRet oldValue = backingField;
         backingField = newValue;
         OnPropertySet(oldValue, newValue, propertyName);

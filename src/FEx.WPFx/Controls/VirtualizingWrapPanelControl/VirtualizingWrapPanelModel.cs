@@ -69,6 +69,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
         double desiredWidth = Math.Min(GetWidth(availableSize), GetWidth(Extent));
         double desiredHeight = Math.Min(GetHeight(availableSize), GetHeight(Extent));
+
         return CreateSize(desiredWidth, desiredHeight);
     }
 
@@ -78,9 +79,11 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
             cachedContainer.Arrange(new Rect(0, 0, 0, 0));
 
         double x = _startItemOffsetX + GetX(ScrollOffset);
+
         double y = hierarchical
             ? _startItemOffsetY
             : _startItemOffsetY - GetY(ScrollOffset);
+
         double rowHeight = 0;
         var rowChilds = new List<IItemContainerInfo>();
         var childSizes = new List<Size>();
@@ -126,6 +129,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         if (_averageItemSizeCache is null
             && _itemSizesCache.Values.Any())
             _averageItemSizeCache = CalculateAverageSize(_itemSizesCache.Values);
+
         return _averageItemSizeCache ?? FallbackSize;
     }
 
@@ -155,6 +159,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         {
             foreach (object item in _items.Except(_itemContainerManager.Items))
                 _itemSizesCache.Remove(item);
+
             if (!_itemContainerManager.IsRecycling)
                 foreach (IItemContainerInfo container in e.RemovedContainers)
                     _childrenCollection.RemoveChild(container);
@@ -196,7 +201,6 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         return CreatePoint(x, y);
     }
 
-
     private void UpdateViewport(Size availableSize, ref bool invalidateScrollInfo)
     {
         bool viewportChanged = availableSize != ViewportSize;
@@ -216,6 +220,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
             _startItemIndex = 0;
             _startItemOffsetX = 0;
             _startItemOffsetY = 0;
+
             return;
         }
 
@@ -223,6 +228,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         var indexOfFirstRowItem = 0;
 
         var itemIndex = 0;
+
         foreach (object item in _items) // foreach seems to be faster than a for loop
         {
             Size itemSize = GetAssumedItemSize(item);
@@ -270,6 +276,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
             _knownExtendX = 0;
             _knownExtendY = 0;
             _itemsInKnownExtend = 0;
+
             return;
         }
 
@@ -293,6 +300,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
             IItemContainerInfo container =
                 _itemContainerManager.Realize(itemIndex, out bool _, out bool isNewContainer);
+
             if (isNewContainer)
                 _childrenCollection.AddChild(container);
 
@@ -352,7 +360,9 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         {
             if (upfrontKnownItemSize is not null)
                 return upfrontKnownItemSize.Value;
+
             _itemSizesCache[container.Item] = container.DesiredSize;
+
             return container.DesiredSize;
         }
 
@@ -362,6 +372,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     private void VirtualizeItemsBeforeStartIndex()
     {
         var containers = _itemContainerManager.RealizedContainers.ToList();
+
         foreach (IItemContainerInfo container in containers)
         {
             int itemIndex = _itemContainerManager.FindItemIndexOfContainer(container);
@@ -374,6 +385,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     private void VirtualizeItemsAfterEndIndex()
     {
         var containers = _itemContainerManager.RealizedContainers.ToList();
+
         foreach (IItemContainerInfo container in containers)
         {
             int itemIndex = _itemContainerManager.FindItemIndexOfContainer(container);
@@ -429,6 +441,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     {
         var itemsPerRow = (int)Math.Max(1, Math.Floor(GetWidth(ViewportSize) / GetWidth(itemSize)));
         double extentY = Math.Ceiling((double)_items.Count / itemsPerRow) * GetHeight(itemSize);
+
         return CreateSize(_knownExtendX, extentY);
     }
 
@@ -460,13 +473,16 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     {
         if (FixedItemSize != Size.Empty)
             return FixedItemSize;
+
         if (!AllowDifferentSizedItems
             && _sizeOfFirstItem != null)
             return _sizeOfFirstItem;
+
         if (ItemSizeProvider != null)
         {
             Size size = ItemSizeProvider.GetSizeForItem(item);
             _itemSizesCache[item] = size;
+
             return size;
         }
 
@@ -544,22 +560,26 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         {
             case SpacingMode.Uniform:
                 innerSpacing = outerSpacing = unusedWidth / (childCount + 1);
+
                 break;
 
             case SpacingMode.BetweenItemsOnly:
                 innerSpacing = unusedWidth / Math.Max(childCount - 1, 1);
                 outerSpacing = 0;
+
                 break;
 
             case SpacingMode.StartAndEndOnly:
                 innerSpacing = 0;
                 outerSpacing = unusedWidth / 2;
+
                 break;
 
             case SpacingMode.None:
             default:
                 innerSpacing = 0;
                 outerSpacing = 0;
+
                 break;
         }
     }
@@ -568,11 +588,11 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     {
         if (sizes.Any())
             return new Size(sizes.Average(size => size.Width), sizes.Average(size => size.Height));
+
         return Size.Empty;
     }
 
     #region scroll info
-
     // TODO determine line height
 
     protected override double GetLineUpScrollAmount() =>
@@ -606,11 +626,9 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     protected override double GetPageLeftScrollAmount() => -ViewportSize.Width;
 
     protected override double GetPageRightScrollAmount() => ViewportSize.Width;
-
     #endregion
 
     #region orientation aware helper methods
-
     protected double GetX(Point point) => Orientation == Orientation.Horizontal
         ? point.X
         : point.Y;
@@ -638,6 +656,5 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     protected Rect CreateRect(double x, double y, double width, double height) => Orientation == Orientation.Horizontal
         ? new Rect(x, y, width, height)
         : new Rect(y, x, height, width);
-
     #endregion
 }

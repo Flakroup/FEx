@@ -24,6 +24,7 @@ public static class FileSystemCommon
         {
             DriveInfo[] allDrives = DriveInfo.GetDrives();
             DriveInfo driveBasedOnPath = allDrives.FindInEnumerable(d => d.RootDirectory.Name == pathRoot);
+
             return driveBasedOnPath?.DriveFormat.IsEqual(Ntfs) == true
                    && driveBasedOnPath.DriveType.IsIn(DriveType.Fixed, DriveType.Removable);
         }

@@ -53,13 +53,16 @@ public static class ListExtensions
         bool Predicate(T i) => predicate(i);
 
         var anyItemHasMatched = false;
+
         switch (source)
         {
             case HashSet<T> hashSet:
                 anyItemHasMatched = hashSet.RemoveWhere(Predicate) != 0;
+
                 break;
             case List<T> list:
                 anyItemHasMatched = list.RemoveAll(Predicate) != 0;
+
                 break;
             case IList<T> list:
                 for (int i = list.Count - 1; i > -1; i--)
@@ -142,6 +145,7 @@ public static class ListExtensions
         IList<T> shorter = listA.Count <= listB.Count
             ? listA
             : listB;
+
         IList<T> longer = listA.Count <= listB.Count
             ? listB
             : listA;
@@ -176,6 +180,7 @@ public static class ListExtensions
     public static void AddRangeToList<T, TColl>(this TColl source, IEnumerable<T> items) where TColl : IList<T>
     {
         var list = source as List<T>;
+
         if (list is not null)
             list.AddRange(items);
         else

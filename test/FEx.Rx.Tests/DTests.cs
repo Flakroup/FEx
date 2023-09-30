@@ -26,19 +26,24 @@ public class DTests
     {
         string[] props = { nameof(Tester.Value), nameof(Tester.TestIt) };
         var cache = new SourceCache<Tester, string>(x => x.Key);
+
         IObservable<IChangeSet<Tester, string>> s = cache.Connect()
             .AutoRefreshOnObservable(x => x.WhenAnyPropertyChanged(props));
+
         s = AddMappedProps(s, props);
+
         using IDisposable m = s.Subscribe(x =>
         {
             Change<Tester, string> f = x.First();
             _output.WriteLine($"change:{f.Reason}\t{f.Key}");
         });
+
         var testerA = new Tester
         {
             Key = Guid.NewGuid().ToString(),
             TestIt = new NestedTester()
         };
+
         cache.AddOrUpdate(testerA);
         await Task.Delay(1000);
         testerA.Value = true;

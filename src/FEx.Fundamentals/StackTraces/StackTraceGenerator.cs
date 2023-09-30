@@ -21,6 +21,7 @@ public class StackTraceGenerator : IStackTraceProvider
     {
         string str;
         _stackTraceFilters = stackTraceFilters ?? new IStackTraceFilter[] { };
+
         try
         {
             CheatClrAndUseDynamicMethodsToGetStackTraceFast();
@@ -29,6 +30,7 @@ public class StackTraceGenerator : IStackTraceProvider
         catch (Exception exception1)
         {
             Exception exception = exception1;
+
             if (exception is not null)
                 str = exception.ToString();
             else
@@ -36,6 +38,7 @@ public class StackTraceGenerator : IStackTraceProvider
 
             Trace.WriteLine(string.Concat(
                 "Could not create fast stack trace cache, falling back to old supported way, failure because: ", str));
+
             SlowAndSafeApproachToGetStackTrace();
         }
     }
@@ -49,14 +52,17 @@ public class StackTraceGenerator : IStackTraceProvider
 
         var stackTraceFrames = new List<StackTraceFrame>();
         StackFrame[] frames = GetStackTrace().GetFrames();
+
         if (frames is null)
             return null;
 
         StackFrame[] stackFrameArray = frames;
+
         for (var i = 0; i < stackFrameArray.Length; i++)
         {
             StackFrame stackFrame = stackFrameArray[i];
             Type declaringType = stackFrame.GetMethod().DeclaringType;
+
             if (declaringType is not null)
                 stackTraceFrames.Add(new StackTraceFrame
                 {
@@ -80,14 +86,18 @@ public class StackTraceGenerator : IStackTraceProvider
         Type type = typeof(object).Assembly.GetType("System.Diagnostics.StackFrameHelper");
         FieldInfo field = type.GetField("rgMethodHandle", BindingFlags.Instance | BindingFlags.NonPublic);
         FieldInfo fieldInfo = type.GetField("rgiILOffset", BindingFlags.Instance | BindingFlags.NonPublic);
+
         MethodInfo method = Type.GetType("System.Diagnostics.StackTrace, mscorlib")
             .GetMethod("GetStackFramesInternal", BindingFlags.Static | BindingFlags.NonPublic);
+
         var dynamicMethod = new DynamicMethod("GetStackTraceFast", typeof(MethodHandleAndILOffset[]), Type.EmptyTypes,
             type, true);
+
         ConstructorInfo constructors = type.GetConstructors()[0];
         bool length = constructors.GetParameters().Length == 2;
         ILGenerator lGenerator = dynamicMethod.GetILGenerator();
         lGenerator.DeclareLocal(type);
+
         if (length)
             lGenerator.Emit(OpCodes.Ldc_I4_0);
 
@@ -96,6 +106,7 @@ public class StackTraceGenerator : IStackTraceProvider
         lGenerator.Emit(OpCodes.Stloc_0);
         lGenerator.Emit(OpCodes.Ldloc_0);
         lGenerator.Emit(OpCodes.Ldc_I4_0);
+
         if (!length)
             lGenerator.Emit(OpCodes.Ldc_I4_0);
 
@@ -107,8 +118,10 @@ public class StackTraceGenerator : IStackTraceProvider
         lGenerator.Emit(OpCodes.Ldfld, fieldInfo);
         lGenerator.Emit(OpCodes.Call, typeof(MethodHandleAndILOffset).GetMethod("Create"));
         lGenerator.Emit(OpCodes.Ret);
+
         var getMethodRuntimeHandle =
             (GetMethodRuntimeHandles)dynamicMethod.CreateDelegate(typeof(GetMethodRuntimeHandles));
+
         _stackTraceCache = new StackTraceCache(() => new Key(getMethodRuntimeHandle()));
     }
 
@@ -133,10 +146,12 @@ public class StackTraceGenerator : IStackTraceProvider
         _stackTraceCache = new StackTraceCache(() =>
         {
             StackFrame[] frames = new StackTrace(false).GetFrames();
+
             if (frames is null)
                 return new Key(new MethodHandleAndILOffset[0]);
 
             var methodHandleAndIlOffset = new MethodHandleAndILOffset[frames.Length];
+
             for (var i = 0; i < methodHandleAndIlOffset.Length; i++)
             {
                 methodHandleAndIlOffset[i] = new MethodHandleAndILOffset(frames[i].GetMethod().MethodHandle.Value,
@@ -176,6 +191,7 @@ public class StackTraceGenerator : IStackTraceProvider
         public override int GetHashCode()
         {
             var hashCode = 0;
+
             for (var i = 0; i < _items.Length; i++)
                 hashCode = _items[i].GetHashCode() * 397 ^ hashCode;
 
@@ -220,6 +236,7 @@ public class StackTraceGenerator : IStackTraceProvider
             // ReSharper restore UnusedMember.Local
         {
             var methodHandleAndILOffset = new MethodHandleAndILOffset[methods.Length];
+
             for (var i = 0; i < methods.Length; i++)
                 methodHandleAndILOffset[i] = new MethodHandleAndILOffset(methods[i], offsets[i]);
 
@@ -237,6 +254,7 @@ public class StackTraceGenerator : IStackTraceProvider
         public override int GetHashCode()
         {
             IntPtr intPtr = _methodHandle;
+
             return intPtr.GetHashCode() * 397 ^ _offset;
         }
 
@@ -269,11 +287,13 @@ public class StackTraceGenerator : IStackTraceProvider
             StackTrace stackTrace1;
             Key key = _createKey();
             _rwLock.EnterReadLock();
+
             try
             {
                 if (_cachedTraces.TryGetValue(key, out stackTrace))
                 {
                     stackTrace1 = stackTrace;
+
                     return stackTrace1;
                 }
             }
@@ -283,6 +303,7 @@ public class StackTraceGenerator : IStackTraceProvider
             }
 
             _rwLock.EnterWriteLock();
+
             try
             {
                 IDictionary<Key, StackTrace> keys = _cachedTraces;

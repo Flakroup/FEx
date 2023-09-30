@@ -22,11 +22,13 @@ public class HasInternetConnectionGate
         {
             var request = WebRequest.Create(url);
             using WebResponse response = await request.GetResponseAsync();
+
             return true;
         }
         catch (Exception ex)
         {
             _exceptionHandler.Handle(ex);
+
             return false;
         }
     }

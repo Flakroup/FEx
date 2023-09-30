@@ -15,6 +15,7 @@ public static class SynchronizationContextExtensions
         return thread.ExecutionContext?.GetPropertyValue(propertyName) as SynchronizationContext;
 #else
         const string fieldName = "_synchronizationContext";
+
         return thread.GetFieldValue(fieldName) as SynchronizationContext;
 #endif
     }

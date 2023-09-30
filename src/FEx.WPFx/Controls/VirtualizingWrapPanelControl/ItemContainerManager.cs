@@ -106,8 +106,10 @@ internal class ItemContainerManager : IItemContainerManager
         {
             var removedCotainers = _realizedContainers.Where(container => !Items.Contains(container.Item)).ToList();
             removedCotainers.ForEach(container => _realizedContainers.Remove(container));
+
             if (IsRecycling)
                 removedCotainers.ForEach(container => _cachedContainers.Add(container));
+
             ItemsChanged?.Invoke(this, new ItemContainerManagerItemsChangedEventArgs(e.Action, removedCotainers));
         }
         else
@@ -125,11 +127,13 @@ internal class ItemContainerManager : IItemContainerManager
         {
             isNewlyRealized = false;
             isNewContainer = false;
+
             return containerInfo;
         }
 
         isNewlyRealized = true;
         GeneratorPosition generatorPosition = _recyclingItemContainerGenerator.GeneratorPositionFromIndex(itemIndex);
+
         using (_recyclingItemContainerGenerator.StartAt(generatorPosition, GeneratorDirection.Forward))
         {
             DependencyObject container = _recyclingItemContainerGenerator.GenerateNext(out isNewContainer);
@@ -137,6 +141,7 @@ internal class ItemContainerManager : IItemContainerManager
             containerInfo = ItemContainerInfo.For((UIElement)container, item);
             _cachedContainers.Remove(containerInfo);
             _realizedContainers.Add(containerInfo);
+
             return containerInfo;
         }
     }
@@ -149,6 +154,7 @@ internal class ItemContainerManager : IItemContainerManager
         {
             Debug.WriteLine("Virtualize no more existing item");
             _realizedContainers.Remove(containerInfo);
+
             return true;
         }
 
@@ -159,11 +165,13 @@ internal class ItemContainerManager : IItemContainerManager
             _recyclingItemContainerGenerator.Recycle(generatorPosition, 1);
             _realizedContainers.Remove(containerInfo);
             _cachedContainers.Add(containerInfo);
+
             return false;
         }
 
         _recyclingItemContainerGenerator.Remove(generatorPosition, 1);
         _realizedContainers.Remove(containerInfo);
+
         return true;
     }
 

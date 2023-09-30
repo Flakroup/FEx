@@ -15,9 +15,11 @@ public static class StringHelpers
         char? currentChar = null;
 
         int bytesRead;
+
         while ((bytesRead = stream.Read(byteBuffer, 0, byteBuffer.Length)) > 0)
         {
             var i = 0;
+
             for (; i <= bytesRead - bytesAtTheTime; i += bytesAtTheTime)
             {
                 currentChar = (char)byteBuffer[i];
@@ -28,14 +30,17 @@ public static class StringHelpers
                         lineCount++;
 
                     currentChar = (char)byteBuffer[i + 1];
+
                     if (currentChar == detectedEOL)
                         lineCount++;
 
                     currentChar = (char)byteBuffer[i + 2];
+
                     if (currentChar == detectedEOL)
                         lineCount++;
 
                     currentChar = (char)byteBuffer[i + 3];
+
                     if (currentChar == detectedEOL)
                         lineCount++;
                 }

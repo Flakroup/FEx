@@ -18,15 +18,21 @@ public static class ExceptionExtensions
             ParameterExpression target = Expression.Parameter(typeof(Exception));
             ParameterExpression stack = Expression.Parameter(typeof(StackTrace));
             Type traceFormatType = typeof(StackTrace).GetNestedType("TraceFormat", BindingFlags.NonPublic);
+
             MethodInfo toString = typeof(StackTrace).GetMethod("ToString",
                 BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { traceFormatType }, null);
+
             object normalTraceFormat = Enum.GetValues(traceFormatType).GetValue(0);
+
             MethodCallExpression stackTraceString =
                 Expression.Call(stack, toString, Expression.Constant(normalTraceFormat, traceFormatType));
+
             FieldInfo stackTraceStringField =
                 typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
+
             BinaryExpression assign =
                 Expression.Assign(Expression.Field(target, stackTraceStringField), stackTraceString);
+
             return Expression
                 .Lambda<Func<Exception, StackTrace, Exception>>(Expression.Block(assign, target), target, stack)
                 .Compile();
@@ -63,6 +69,7 @@ public static class ExceptionExtensions
             DoNotReport = doNotReport,
             Custom = custom?.ToDictionary(x => x.Item1, x => x.Item2)
         };
+
         ex.HandleException(options);
     }
 
@@ -75,6 +82,7 @@ public static class ExceptionExtensions
     {
         var message = new StringBuilder();
         BuildMessage(ex, ref message);
+
         return message.ToString();
     }
 
@@ -92,6 +100,7 @@ public static class ExceptionExtensions
 
         //Stack trace is expensive to create. Do it only once.
         string stackTrace = ex.StackTrace;
+
         if (!string.IsNullOrWhiteSpace(stackTrace))
         {
             message.AppendLine("StackTrace:");

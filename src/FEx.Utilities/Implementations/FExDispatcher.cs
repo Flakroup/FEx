@@ -15,7 +15,6 @@ public abstract class FExDispatcher : IFExDispatcher
     protected static SynchronizationContext MainThreadSynchronizationContext =>
         Foundation.MainSynchronizationContext;
 
-
     protected FExDispatcher(ILogger logger)
     {
         _logger = logger;

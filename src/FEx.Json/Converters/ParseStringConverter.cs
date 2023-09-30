@@ -16,6 +16,7 @@ public class ParseStringConverter : JsonConverter
             return null;
 
         string value = serializer.Deserialize<string>(reader);
+
         return value.FromString();
     }
 
@@ -24,6 +25,7 @@ public class ParseStringConverter : JsonConverter
         if (untypedValue is null)
         {
             serializer.Serialize(writer, null);
+
             return;
         }
 

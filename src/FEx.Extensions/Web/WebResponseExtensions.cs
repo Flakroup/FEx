@@ -43,6 +43,7 @@ public static class WebResponseExtensions
                 using WebResponse res = await myHttpWebRequest.GetResponseAsync();
                 using var resp = (HttpWebResponse)res;
                 responseHeaders = resp.GetAllHeaders();
+
                 return (responseHeaders.ContainsKey(ContentRangeHeaderName), LengthType.Bytes);
             }
         }
@@ -57,6 +58,7 @@ public static class WebResponseExtensions
     public static ContentRangeHeaderValue GetContentRange(this HttpWebResponse response)
     {
         Dictionary<string, string> resultHeaders = response.GetAllHeaders();
+
         return GetContentRange(resultHeaders.TryGetKeyValue(ContentRangeHeaderName));
     }
 
@@ -68,6 +70,7 @@ public static class WebResponseExtensions
         string[] split = rangeHeader.Split(' ')[1].Split('/')[0].Split('-');
         var from = long.Parse(split[0]);
         var to = long.Parse(split[1]);
+
         return new ContentRangeHeaderValue(from, to);
     }
 

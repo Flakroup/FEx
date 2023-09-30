@@ -95,7 +95,6 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
     /// </summary>
     protected ScrollDirection MouseWheelScrollDirection { get; set; } = ScrollDirection.Vertical;
 
-
     protected bool IsVirtualizing => GetIsVirtualizing(ItemsControl);
 
     protected VirtualizationMode VirtualizationMode => GetVirtualizationMode(ItemsControl);
@@ -116,7 +115,6 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
     /// </summary>
     protected VirtualizationCacheLengthUnit CacheLengthUnit { get; private set; }
 
-
     /// <summary>
     ///     The ItemsControl (e.g. ListView).
     /// </summary>
@@ -136,6 +134,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
                  * of the real items owner for example the group item when grouping */
                 MethodInfo getItemsOwnerInternalMethod = typeof(ItemsControl).GetMethod("GetItemsOwnerInternal",
                     BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(DependencyObject) }, null)!;
+
                 _itemsOwner = (DependencyObject)getItemsOwnerInternalMethod.Invoke(null, new object[] { this })!;
             }
 
@@ -215,6 +214,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             offset = 0;
         else if (offset + ViewportSize.Height >= Extent.Height)
             offset = Extent.Height - ViewportSize.Height;
+
         Offset = new Point(Offset.X, offset);
         ScrollOwner?.InvalidateScrollInfo();
         InvalidateMeasure();
@@ -227,6 +227,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             offset = 0;
         else if (offset + ViewportSize.Width >= Extent.Width)
             offset = Extent.Width - ViewportSize.Width;
+
         Offset = new Point(offset, Offset.Y);
         ScrollOwner?.InvalidateScrollInfo();
         InvalidateMeasure();
@@ -371,12 +372,14 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             for (int i = ItemRange.StartIndex; i <= ItemRange.EndIndex; i++, childIndex++)
             {
                 var child = (UIElement)ItemContainerGenerator.GenerateNext(out bool isNewlyRealized);
+
                 if (isNewlyRealized || /*recycled*/!InternalChildren.Contains(child))
                 {
                     if (childIndex >= InternalChildren.Count)
                         AddInternalChild(child);
                     else
                         InsertInternalChild(childIndex, child);
+
                     ItemContainerGenerator.PrepareItemContainer(child);
 
                     child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
@@ -386,6 +389,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
                 {
                     groupItem.Constraints = new HierarchicalVirtualizationConstraints(new VirtualizationCacheLength(0),
                         VirtualizationCacheLengthUnit.Item, new Rect(0, 0, ViewportWidth, ViewportHeight));
+
                     child.Measure(new Size(ViewportWidth, ViewportHeight));
                 }
             }
@@ -410,6 +414,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
                     ItemContainerGenerator.Recycle(generatorPosition, 1);
                 else
                     ItemContainerGenerator.Remove(generatorPosition, 1);
+
                 RemoveInternalChildRange(childIndex, 1);
             }
 
@@ -427,9 +432,11 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             case NotifyCollectionChangedAction.Remove:
             case NotifyCollectionChangedAction.Replace:
                 RemoveInternalChildRange(args.Position.Index, args.ItemUICount);
+
                 break;
             case NotifyCollectionChangedAction.Move:
                 RemoveInternalChildRange(args.OldPosition.Index, args.ItemUICount);
+
                 break;
         }
     }
@@ -506,6 +513,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
     protected int GetItemIndexFromChildIndex(int childIndex)
     {
         GeneratorPosition generatorPosition = GetGeneratorPositionFromChildIndex(childIndex);
+
         return ItemContainerGenerator.IndexFromGeneratorPosition(generatorPosition);
     }
 

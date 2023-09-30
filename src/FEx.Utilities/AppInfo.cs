@@ -18,13 +18,17 @@ public static class AppInfo
     static AppInfo()
     {
         EntryAssembly = Assembly.GetEntryAssembly();
+
         EntryAssemblyLocation = EntryAssembly?.Location is not null
             ? new FileInfo(EntryAssembly.Location)
             : null;
+
         EntryAssemblyName = EntryAssembly?.GetName().Name;
+
         ProductVersionInfo = EntryAssemblyLocation is not null
             ? FileVersionInfo.GetVersionInfo(EntryAssemblyLocation.FullName)
             : null;
+
         ProductVersion = ProductVersionInfo?.ProductVersion;
         ApplicationName = ProductVersionInfo?.ProductName ?? EntryAssembly?.EntryPoint?.DeclaringType?.Namespace;
     }

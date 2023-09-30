@@ -89,6 +89,7 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
             }
 
             OnIndexerPropertyChanged();
+
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, removedItem,
                 newIndex, oldIndex));
         });

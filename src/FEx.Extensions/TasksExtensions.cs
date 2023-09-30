@@ -100,12 +100,14 @@ public static class TasksExtensions
     private static async Task<object> WrapTaskAsync<T>(Func<T, Task> taskFunc, T arg)
     {
         await taskFunc(arg);
+
         return null;
     }
 
     private static async Task<object> WrapTaskAsync(Func<Task> taskFunc)
     {
         await taskFunc();
+
         return null;
     }
 }

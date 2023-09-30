@@ -16,6 +16,7 @@ public abstract class TaskWrapperBase : ITaskWrapper
     protected TaskWrapperBase(bool setStackTrace = false)
     {
         Id = Guid.NewGuid();
+
         TaskCreationStackTrace = setStackTrace
             ? FExBasics.StackTraceProvider.GetStackTrace()
             : null;

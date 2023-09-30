@@ -17,11 +17,13 @@ public static class SQLConnectionHelper
             await using var connection = new SqlConnection(connectionString);
 #endif
             await connection.OpenAsync();
+
             return true;
         }
         catch (Exception ex)
         {
             ex.HandleException();
+
             return false;
         }
     }
@@ -32,11 +34,13 @@ public static class SQLConnectionHelper
         {
             using var connection = new SqlConnection(connectionString);
             connection.Open();
+
             return true;
         }
         catch (Exception ex)
         {
             ex.HandleException();
+
             return false;
         }
     }

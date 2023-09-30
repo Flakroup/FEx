@@ -17,12 +17,14 @@ public static class ErrorExtensions
         if (error is TError innerError)
         {
             foundError = innerError;
+
             return true;
         }
 
         if (error.InnerError is null)
         {
             foundError = default;
+
             return false;
         }
 
@@ -33,6 +35,7 @@ public static class ErrorExtensions
     {
         var error = new TError();
         error.SetInnerError(errorToWrap);
+
         return error;
     }
 

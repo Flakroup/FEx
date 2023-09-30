@@ -22,6 +22,7 @@ public static class DictionaryExtensions
                                                     IEnumerable<KeyValuePair<TK, TV>> merged)
     {
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
+
         if (cDic is not null)
             merged?.ForEachInEnumerable(pair => cDic.TryAdd(pair.Key, pair.Value));
         else
@@ -46,11 +47,13 @@ public static class DictionaryExtensions
                                                                      valuesSelector)
     {
         IDictionary<TOutKey, IEnumerable<TOutElement>> result = new Dictionary<TOutKey, IEnumerable<TOutElement>>();
+
         foreach (KeyValuePair<TKey, IList<TElement>> item in source)
         {
             IEnumerable<TOutElement> values;
             IEnumerable<TOutElement> valuesToMerge = valuesSelector(item.Value);
             TOutKey key = keySelector(item.Key);
+
             values = result.TryGetValue(key, out values)
                 ? values.Concat(valuesToMerge)
                 : valuesToMerge;
@@ -100,6 +103,7 @@ public static class DictionaryExtensions
                                                       TValue fallback = default)
     {
         var cDic = dictionary as ConcurrentDictionary<TKey, TValue>;
+
         if (cDic is not null)
             return cDic.TryGetValue(key, out TValue value)
                 ? value
@@ -131,6 +135,7 @@ public static class DictionaryExtensions
     public static TV GetOrAddValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> createValueToAdd)
     {
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
+
         if (cDic is not null)
             return cDic.GetOrAdd(key, _ => createValueToAdd());
 
@@ -138,6 +143,7 @@ public static class DictionaryExtensions
         {
             v = createValueToAdd();
             dictionary.Add(key, v);
+
             return dictionary[key];
         }
 
@@ -177,6 +183,7 @@ public static class DictionaryExtensions
     public static TV AddOrUpdateValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> valueToAddOrUpdate)
     {
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
+
         if (cDic is not null)
             return cDic.AddOrUpdate(key, _ => valueToAddOrUpdate(), (_, _) => valueToAddOrUpdate());
 
@@ -204,6 +211,7 @@ public static class DictionaryExtensions
     {
         (bool hadValue, TV oldValue) = dictionary.GetValue(key);
         TV added = dictionary.AddOrUpdateValue(key, valueToAddOrUpdate);
+
         return (hadValue, oldValue, added);
     }
 
@@ -213,6 +221,7 @@ public static class DictionaryExtensions
         {
             TV v = createValueToAdd();
             dictionary.Add(key, v);
+
             return true;
         }
 
@@ -227,6 +236,7 @@ public static class DictionaryExtensions
 
         bool hasBeenRemoved;
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
+
         if (cDic is not null)
         {
             hasBeenRemoved = cDic.TryRemove(key, out v);
@@ -271,6 +281,7 @@ public static class DictionaryExtensions
                 }
 
                 (bool hasBeenRemoved, TV removedValue) = dictionary.RemoveValue(key);
+
                 if (hasBeenRemoved)
                     removedEntries.Add(key, removedValue);
             }

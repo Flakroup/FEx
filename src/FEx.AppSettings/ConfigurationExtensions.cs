@@ -70,6 +70,7 @@ public static class ConfigurationExtensions
         ExpandoObject obj = BindToExpandoObject(config);
 
         string jsonText = JsonConvert.SerializeObject(obj);
+
         if (jsonFunc is not null)
             jsonText = jsonFunc(jsonText);
 
@@ -82,6 +83,7 @@ public static class ConfigurationExtensions
 
         // retrieve all keys from your settings
         IEnumerable<KeyValuePair<string, string>> configs = config.AsEnumerable();
+
         foreach (KeyValuePair<string, string> kvp in configs)
         {
             IDictionary<string, object> parent = result;
@@ -89,6 +91,7 @@ public static class ConfigurationExtensions
 
             // create or retrieve the hierarchy (keep last path item for later)
             int i;
+
             for (i = 0; i < path.Length - 1; i++)
             {
                 if (!parent.ContainsKey(path[i]))
@@ -121,6 +124,7 @@ public static class ConfigurationExtensions
             if (keys.All(k => int.TryParse(k, out int dummy)))
             {
                 var array = new object[keys.Length];
+
                 foreach (KeyValuePair<string, object> kvp in dict)
                     array[int.Parse(kvp.Key)] = kvp.Value;
 

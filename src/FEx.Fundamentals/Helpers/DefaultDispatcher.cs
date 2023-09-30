@@ -14,7 +14,6 @@ public class DefaultDispatcher : IFExDispatcher
 
     public Task<T> InvokeOnMainThreadAsync<T>(Func<T> func) => throw new NotImplementedException();
 
-
     public Task InvokeOnMainThreadAsync(Action action) => throw new NotImplementedException();
 
     public Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask) => throw new NotImplementedException();

@@ -33,11 +33,13 @@ public static class StreamExtensions
         {
             int num = await stream.ReadAsync(buffer, 0, buffer.Length);
             int bytesRead;
+
             if ((bytesRead = num) != 0)
             {
                 await destStream.WriteAsync(buffer, 0, bytesRead);
                 writtenBytes += num;
                 progressValueSet?.BeginInvoke(writtenBytes, null, null);
+
                 if (writtenBytes == length)
                     break;
             }
@@ -67,11 +69,13 @@ public static class StreamExtensions
         {
             int num = stream.Read(buffer, 0, buffer.Length);
             int bytesRead;
+
             if ((bytesRead = num) != 0)
             {
                 destStream.Write(buffer, 0, bytesRead);
                 writtenBytes += num;
                 progressValueSet?.BeginInvoke(writtenBytes, null, null);
+
                 if (writtenBytes == length)
                     break;
             }
@@ -104,6 +108,7 @@ public static class StreamExtensions
         var ms = new MemoryStream();
         await input.CopyToAsync(ms);
         ms.Seek(0, SeekOrigin.Begin);
+
         return ms;
     }
 

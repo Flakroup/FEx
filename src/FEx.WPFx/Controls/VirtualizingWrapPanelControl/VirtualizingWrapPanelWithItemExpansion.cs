@@ -90,6 +90,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
                     _expandedItemChild.Arrange(CreateRect(x - GetX(Offset), y - GetY(Offset), width, height));
                 else
                     _expandedItemChild.Arrange(CreateRect(x - GetX(Offset), y - GetY(Offset), height, width));
+
                 expandedItemChildHeight = height;
             }
             else
@@ -118,9 +119,11 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
             : startPosition.Index + 1;
 
         int expandedItemIndex = Items.IndexOf(ExpandedItem);
+
         int itemIndexFollwingExpansion = expandedItemIndex != -1
             ? (expandedItemIndex / _itemsPerRowCount + 1) * _itemsPerRowCount - 1
             : -1;
+
         itemIndexFollwingExpansion = Math.Min(itemIndexFollwingExpansion, Items.Count - 1);
 
         if (itemIndexFollwingExpansion != _itemIndexFollwingExpansion
@@ -164,6 +167,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
                     if (!InternalChildren.Contains(_expandedItemChild))
                     {
                         childIndex++;
+
                         if (childIndex >= InternalChildren.Count)
                             AddInternalChild(_expandedItemChild);
                         else
@@ -185,9 +189,11 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
     protected override GeneratorPosition GetGeneratorPositionFromChildIndex(int childIndex)
     {
         int expandedItemChildIndex = InternalChildren.IndexOf(_expandedItemChild);
+
         if (expandedItemChildIndex != -1
             && childIndex > expandedItemChildIndex)
             return new GeneratorPosition(childIndex - 1, 0);
+
         return new GeneratorPosition(childIndex, 0);
     }
 
@@ -243,6 +249,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
         if (args.OldValue != null)
         {
             int index = InternalChildren.IndexOf(_expandedItemChild);
+
             if (index != -1)
             {
                 _expandedItemChild = null;

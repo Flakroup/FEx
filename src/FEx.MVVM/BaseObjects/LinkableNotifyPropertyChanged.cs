@@ -39,6 +39,7 @@ public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILi
         {
             FExBasics.Logger.LogError(
                 $"There is no link from {propertyType.FullName} to {GetType().FullName} on {propertyName} property of id {linkId}");
+
             return;
         }
 

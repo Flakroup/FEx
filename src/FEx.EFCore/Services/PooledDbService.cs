@@ -106,6 +106,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         await RunFuncInDbContextAsync(dbContext =>
         {
             func(dbContext);
+
             return (object)null;
         }, errorMessage, saveChanges, useTransaction);
     }
@@ -136,6 +137,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         catch (Exception e)
         {
             _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
+
             throw;
         }
     }
@@ -160,6 +162,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         catch (Exception e)
         {
             _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
+
             throw;
         }
     }
@@ -184,6 +187,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         catch (Exception e)
         {
             _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
+
             throw;
         }
     }
@@ -275,9 +279,11 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                         {
                             case EntityState.Deleted:
                                 entry.State = EntityState.Detached;
+
                                 break;
                             case EntityState.Modified:
                                 entry.State = EntityState.Added;
+
                                 break;
                             default:
                                 throw;
@@ -289,6 +295,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         }
 
         _logger.LogInformation($"[{id}]\t{res} rows affected");
+
         return result;
     }
 
@@ -329,9 +336,11 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                         {
                             case EntityState.Deleted:
                                 entry.State = EntityState.Detached;
+
                                 break;
                             case EntityState.Modified:
                                 entry.State = EntityState.Added;
+
                                 break;
                             default:
                                 throw;
@@ -343,6 +352,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         }
 
         _logger.LogInformation($"[{id}]\t{res} rows affected");
+
         return result;
     }
 

@@ -21,6 +21,7 @@ public class LinkedPropertiesTests
         const string bName = "Monia";
         const int aAge = 16;
         const int bAge = 10;
+
         var p = new SingleParent(true)
         {
             Child = new Child
@@ -32,6 +33,7 @@ public class LinkedPropertiesTests
                 }
             }
         };
+
         Child c = p.Child;
         Assert.Equal(aName, p.ChildName);
         Assert.Equal(aAge, p.ChildAge);

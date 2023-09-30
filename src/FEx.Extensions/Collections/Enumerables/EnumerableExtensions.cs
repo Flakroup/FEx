@@ -45,6 +45,7 @@ public static class EnumerableExtensions
     {
         IEnumerable<string> enumerable = source as string[] ?? source.ToArray();
         string result = string.Empty;
+
         if (enumerable.Any())
             result = string.Join(", ", enumerable);
 
@@ -94,6 +95,7 @@ public static class EnumerableExtensions
     public static IEnumerable<T> MultiplyBy<T>(this IEnumerable<T> items, int multiplier)
     {
         var multipliedItems = new List<T>();
+
         for (var i = 0; i < multiplier; i++)
             multipliedItems.AddRange(items);
 
@@ -213,6 +215,7 @@ public static class EnumerableExtensions
     public static IEnumerable<int> IndexesWhere<T>(this IEnumerable<T> source, Func<T, bool> predicate)
     {
         var index = 0;
+
         foreach (T element in source)
         {
             if (predicate(element))
@@ -281,6 +284,7 @@ public static class EnumerableExtensions
                                                       IEnumerable<T> multiplier)
     {
         IList<IEnumerable<T>> multipliedLists = new List<IEnumerable<T>>();
+
         if (origin.Any())
             foreach (T item in multiplier)
             {
@@ -290,6 +294,7 @@ public static class EnumerableExtensions
                     {
                         item
                     };
+
                     multipliedLists.Add(multipliedList);
                 }
             }
@@ -300,6 +305,7 @@ public static class EnumerableExtensions
                 {
                     item
                 };
+
                 multipliedLists.Add(multipliedList);
             }
 
@@ -310,9 +316,11 @@ public static class EnumerableExtensions
     {
         int listACount = listA.Count();
         int listBCount = listB.Count();
+
         IEnumerable<T> shorter = listACount <= listBCount
             ? listA
             : listB;
+
         IEnumerable<T> longer = listACount <= listBCount
             ? listB
             : listA;

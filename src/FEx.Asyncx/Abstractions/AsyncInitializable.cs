@@ -40,6 +40,7 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
         if (IsInitialized && !reInitialize)
         {
             FExBasics.Logger.LogWarning($"{GetType().FullName} has been already initialized");
+
             return true;
         }
 
@@ -68,7 +69,6 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
     }
 
     #region IDisposable
-
     public void Dispose()
     {
         Dispose(true);
@@ -88,6 +88,5 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
 
         _isDisposed = true;
     }
-
     #endregion
 }

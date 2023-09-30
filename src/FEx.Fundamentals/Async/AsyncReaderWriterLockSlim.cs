@@ -128,6 +128,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
     public bool TryEnterReadLock(int millisecondsTimeout = 0, CancellationToken cancellationToken = default)
     {
         DenyIfDisposed();
+
         if (millisecondsTimeout < Timeout.Infinite)
             throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout));
 
@@ -138,6 +139,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
             return true;
 
         var waitResult = false;
+
         try
         {
             // Need to wait until the existing write lock is released.
@@ -174,6 +176,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
                                                   CancellationToken cancellationToken = default)
     {
         DenyIfDisposed();
+
         if (millisecondsTimeout < Timeout.Infinite)
             throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout));
 
@@ -184,6 +187,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
             return true;
 
         var waitResult = false;
+
         try
         {
             // Need to wait until the existing write lock is released.
@@ -239,6 +243,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
     public bool TryEnterWriteLock(int millisecondsTimeout = 0, CancellationToken cancellationToken = default)
     {
         DenyIfDisposed();
+
         if (millisecondsTimeout < Timeout.Infinite)
             throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout));
 
@@ -252,6 +257,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         if (!EnterWriteLockPreface(out bool waitForReadLocks))
         {
             var writeLockWaitResult = false;
+
             try
             {
                 writeLockWaitResult = _writeLockSemaphore.Wait(millisecondsTimeout, cancellationToken);
@@ -274,6 +280,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         if (waitForReadLocks)
         {
             var waitResult = false;
+
             try
             {
                 // This may throw an OperationCanceledException.
@@ -317,6 +324,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
                                                    CancellationToken cancellationToken = default)
     {
         DenyIfDisposed();
+
         if (millisecondsTimeout < Timeout.Infinite)
             throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout));
 
@@ -330,6 +338,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         if (!EnterWriteLockPreface(out bool waitForReadLocks))
         {
             var writeLockWaitResult = false;
+
             try
             {
                 writeLockWaitResult = await _writeLockSemaphore.WaitAsync(millisecondsTimeout, cancellationToken);
@@ -352,6 +361,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         if (waitForReadLocks)
         {
             var waitResult = false;
+
             try
             {
                 // This may throw an OperationCanceledException.
@@ -428,6 +438,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         // currently held and we can return immediately without the need to lock
         // on syncRoot.
         int readLockResult = Interlocked.Increment(ref _currentReadLockCount);
+
         if (readLockResult >= 0)
             return true;
 
@@ -435,6 +446,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         lock (_syncRoot)
         {
             existingWriteLockState = _currentWriteLockState;
+
             if (existingWriteLockState is null)
                 // There was a write lock state but it has already been released,
                 // so we don't need to do anything.
@@ -462,6 +474,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
             // Check if we need to dispose the semaphore after the write lock state
             // has already been released.
             existingLockState.WaitingReadLocksCount--;
+
             if (existingLockState.StateIsReleased
                 && existingLockState.WaitingReadLocksCount == 0)
                 existingLockState.WaitingReadLocksSemaphore.Dispose();
@@ -487,9 +500,11 @@ public class AsyncReaderWriterLockSlim : IDisposable
         {
             if (getLock)
                 Monitor.Enter(_syncRoot);
+
             try
             {
                 WriteLockState lockState = _currentWriteLockState;
+
                 if (lockState is not null
                     && !lockState.ReadLockReleaseSemaphoreReleased)
                 {
@@ -534,6 +549,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
 
         if (getLock)
             Monitor.Enter(_syncRoot);
+
         try
         {
             _currentWaitingWriteLockCount--;
@@ -675,7 +691,6 @@ public class AsyncReaderWriterLockSlim : IDisposable
     }
 
     #region IDisposable
-
     /// <summary>
     ///     Releases all resources used by the <see cref="AsyncReaderWriterLockSlim" />.
     /// </summary>
@@ -699,6 +714,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
                 if (_currentWriteLockState is not null)
                     throw new InvalidOperationException("A write lock was still active while trying to "
                                                         + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
+
                 if ((Volatile.Read(ref _currentReadLockCount) & 0x7FFFFFFF) > 0)
                     throw new InvalidOperationException("At least one read lock was still active while trying to "
                                                         + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
@@ -714,7 +730,6 @@ public class AsyncReaderWriterLockSlim : IDisposable
         _isDisposed = true;
         Thread.MemoryBarrier();
     }
-
     #endregion
 
     private class WriteLockState

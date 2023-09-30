@@ -22,8 +22,10 @@ public static class SynchronizationContextExtensions
         action.Guard(nameof(action));
         StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
         var postFinished = new TaskCompletionSource<bool>();
+
         Foundation.AsyncHelper.FireTaskAndForget(() =>
             context.InternalPostInContextAsync(action, sender, postFinished, stackTrace, handleException));
+
         return postFinished;
     }
 
@@ -31,9 +33,11 @@ public static class SynchronizationContextExtensions
     public static T SendInContext<T>(this SynchronizationContext context, object sender, Func<T> func)
     {
         StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
+
         try
         {
             T res = default;
+
             context.Send(_ =>
             {
                 try
@@ -43,14 +47,17 @@ public static class SynchronizationContextExtensions
                 catch (Exception ex)
                 {
                     HandleAttachedException(sender, stackTrace, null, ex);
+
                     throw;
                 }
             }, null);
+
             return res;
         }
         catch (Exception ex)
         {
             HandleAttachedException(sender, stackTrace, null, ex);
+
             throw;
         }
     }
@@ -59,6 +66,7 @@ public static class SynchronizationContextExtensions
     public static void SendInContext(this SynchronizationContext context, object sender, Action action)
     {
         StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
+
         try
         {
             context.Send(_ =>
@@ -70,6 +78,7 @@ public static class SynchronizationContextExtensions
                 catch (Exception ex)
                 {
                     HandleAttachedException(sender, stackTrace, null, ex);
+
                     throw;
                 }
             }, null);
@@ -77,6 +86,7 @@ public static class SynchronizationContextExtensions
         catch (Exception ex)
         {
             HandleAttachedException(sender, stackTrace, null, ex);
+
             throw;
         }
     }
@@ -84,9 +94,12 @@ public static class SynchronizationContextExtensions
     private static void Callback(object state)
     {
         var stackTrace = (StackTrace)state;
+
         var ex = new AttachedException("Deadlock assumed, as no action could've been performed during timeout.",
             stackTrace);
+
         FExBasics.Logger.LogError(ex, ex.Message);
+
         throw ex;
     }
 
@@ -101,9 +114,11 @@ public static class SynchronizationContextExtensions
         try
         {
             var timer = new Timer(Callback, stackTrace, 10000, Timeout.Infinite);
+
             try
             {
                 context.Post(_ => AwaitableInternalPost(action, sender, stackTrace, onException, postFinished), null);
+
                 return await postFinished.Task;
             }
             finally
@@ -116,6 +131,7 @@ public static class SynchronizationContextExtensions
         {
             HandleAttachedException(sender, stackTrace, onException, ex);
             postFinished.TrySetResult(false);
+
             return false;
         }
     }
@@ -138,11 +154,13 @@ public static class SynchronizationContextExtensions
         try
         {
             action();
+
             return Result<ExceptionError>.Success;
         }
         catch (Exception ex)
         {
             HandleAttachedException(sender, stackTrace, onException, ex);
+
             return new ExceptionError(ex);
         }
     }

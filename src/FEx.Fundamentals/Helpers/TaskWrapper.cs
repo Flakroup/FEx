@@ -26,10 +26,10 @@ public class TaskWrapper : TaskWrapperBase
         {
             if (_task is not null)
                 throw new InvalidOperationException($"{nameof(Task)} is already set");
+
             _task = value;
         }
     }
-
 
     public override void SetException(Exception exception)
     {
@@ -77,6 +77,7 @@ public class TaskWrapper<T> : TaskWrapperBase
         {
             if (_task is not null)
                 throw new InvalidOperationException($"{nameof(Task)} is already set");
+
             _task = value;
         }
     }

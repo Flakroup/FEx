@@ -51,9 +51,11 @@ public static class EventsExtensions
                 {
                     case THandler collectionChangedEventHandler:
                         defaultInvocation(collectionChangedEventHandler);
+
                         break;
                     case EventHandler eventHandler:
                         eventHandler(sender, eventArgs);
+
                         break;
                     default:
                         throw new Exception($"{invocation.GetType().FullName} delegate type is not handled");

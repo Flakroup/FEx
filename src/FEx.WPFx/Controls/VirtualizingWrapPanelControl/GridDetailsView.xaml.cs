@@ -49,8 +49,10 @@ public partial class GridDetailsView : GridView
         {
             if (_expandedItemContainerRoot is null)
                 throw new NullReferenceException($"{nameof(_expandedItemContainerRoot)} is null");
+
             if (Orientation == Orientation.Horizontal)
                 return _expandedItemContainerRoot.DesiredSize.Height;
+
             return _expandedItemContainerRoot.DesiredSize.Width;
         }
     }
@@ -61,14 +63,17 @@ public partial class GridDetailsView : GridView
         {
             if (_expandedItemContainerRoot is null)
                 throw new NullReferenceException($"{nameof(_expandedItemContainerRoot)} is null");
+
             if (Orientation == Orientation.Horizontal)
                 return _expandedItemContainerRoot.MaxHeight;
+
             return _expandedItemContainerRoot.MaxWidth;
         }
         set
         {
             if (_expandedItemContainerRoot is null)
                 throw new NullReferenceException($"{nameof(_expandedItemContainerRoot)} is null");
+
             if (Orientation == Orientation.Horizontal)
                 _expandedItemContainerRoot.MaxHeight = value;
             else
@@ -85,6 +90,7 @@ public partial class GridDetailsView : GridView
     {
         var container = (FrameworkElement)base.GetContainerForItemOverride();
         container.PreviewMouseDown += Container_PreviewMouseDown;
+
         return container;
     }
 
@@ -93,6 +99,7 @@ public partial class GridDetailsView : GridView
         if (args.LeftButton == MouseButtonState.Pressed)
         {
             object item = ((FrameworkElement)sender).DataContext;
+
             if (item != ExpandedItem)
             {
                 ExpandedItem = item;
@@ -111,7 +118,9 @@ public partial class GridDetailsView : GridView
                 {
                     if (!_animateCloseExpansion)
                         return;
+
                     MaxContainerSize = sourceHeight / 20 * i;
+
                     if (i != 0)
                         await Task.Delay(15);
                 }
@@ -135,11 +144,14 @@ public partial class GridDetailsView : GridView
             double targetHeight = DesiredContainerSize;
 
             _animateExpansion = true;
+
             for (var i = 0; i <= 20; i++)
             {
                 if (!_animateExpansion)
                     return;
+
                 MaxContainerSize = targetHeight / 20 * i;
+
                 if (i != 20)
                     await Task.Delay(15);
             }

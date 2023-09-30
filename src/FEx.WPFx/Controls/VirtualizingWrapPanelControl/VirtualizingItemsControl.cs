@@ -29,6 +29,7 @@ public class VirtualizingItemsControl : ItemsControl
                     </ScrollViewer>
                 </Border>
             </ControlTemplate>";
+
         Template = (ControlTemplate)XamlReader.Parse(template);
 
         ScrollViewer.SetCanContentScroll(this, true);

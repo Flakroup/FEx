@@ -20,6 +20,7 @@ public static class DoubleExtensions
                 "Only values between 1 and 7 are supported");
 
         double floatComparison = GetFloatComparison(floatDigits);
+
         return Math.Abs(left - right) < floatComparison;
     }
 

@@ -102,6 +102,7 @@ public static class DateExtensions
     public static int GetCountDaysOfMonth(this DateTime current)
     {
         DateTime nextMonth = current.AddMonths(1);
+
         return new DateTime(nextMonth.Year, nextMonth.Month, 1).AddDays(-1).Day;
     }
 
@@ -143,10 +144,13 @@ public static class DateExtensions
     public static DateTime StartOfWeek(this DateTime value)
     {
         DayOfWeek fdow = DateTimeDefaults.DefaultCulture.DateTimeFormat.FirstDayOfWeek;
+
         int offset = value.DayOfWeek - fdow < 0
             ? 7
             : 0;
+
         int numberOfDaysSinceBeginningOfTheWeek = value.DayOfWeek + offset - fdow;
+
         return value.AddDays(-numberOfDaysSinceBeginningOfTheWeek);
     }
 
@@ -252,6 +256,7 @@ public static class DateExtensions
             isValid = false;
 
         date = FirstDateOfWeekIso8601(year, week);
+
         return isValid;
     }
 
@@ -277,6 +282,7 @@ public static class DateExtensions
     public static bool TryGetDateFromYearWeekDay(this string source, char separator, out DateTime date)
     {
         var ok = true;
+
         string[] parsed = source.Remove(new List<char>
             {
                 'w',
@@ -285,24 +291,30 @@ public static class DateExtensions
                 'D'
             })
             .Split(separator);
+
         int year = parsed[0].ToInt();
+
         if (year == -1)
             ok = false;
 
         int week = parsed[1].ToInt();
+
         if (week == -1)
             ok = false;
 
         int dayresult = parsed[2].ToInt();
+
         if (dayresult == -1)
             ok = false;
 
         int day = dayresult == 0
             ? dayresult
             : dayresult - 1;
+
         // For ex: D2 where 2 is the weekday (Tuesday) and FirstDateOfWeekISO8601 returns Monday
         // and we only want to add 1 to get date for Tuesday so reduce with 1
         date = FirstDateOfWeekIso8601(year, week).AddDays(day);
+
         return ok;
     }
 
@@ -422,6 +434,7 @@ public static class DateExtensions
                 date1 = date1.AddDays(0 - (int)date1.GetDayOfWeek(dayOfWeek));
                 date2 = date2.AddDays(0 - (int)date2.GetDayOfWeek(dayOfWeek));
                 timeSpan = date2.Subtract(date1);
+
                 return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
             }
             case DateInterval.Weekday:
@@ -477,10 +490,12 @@ public static class DateExtensions
         int firstWeek = cal.GetWeekOfYear(firstThursday, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
 
         int weekNum = weekOfYear;
+
         if (firstWeek <= 1)
             weekNum--;
 
         DateTime result = firstThursday.AddDays(weekNum * 7);
+
         return result.AddDays(-3);
     }
 

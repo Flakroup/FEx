@@ -21,9 +21,11 @@ public class TasksInfoSubject : FExSubject<IList<Guid>>, ITasksInfoSubject
     {
         _logger = logger;
         _tasks = new ConcurrentList<Guid>();
+
         _subscription = Observable.Interval(TimeSpan.FromSeconds(1))
             .Where(_ => _tasks.Count > 0)
             .AsyncSubscribe(_ => HandleTasks());
+
         OnNext(_tasks);
     }
 
@@ -37,6 +39,7 @@ public class TasksInfoSubject : FExSubject<IList<Guid>>, ITasksInfoSubject
     {
         _tasks.Remove(value.Id);
         base.OnNext(_tasks);
+
         if (_tasks.Count == 0)
             HandleTasks();
     }
@@ -47,12 +50,15 @@ public class TasksInfoSubject : FExSubject<IList<Guid>>, ITasksInfoSubject
         {
             case 0:
                 _logger.LogInformation("All tasks had finished");
+
                 break;
             case 1:
                 _logger.LogInformation($"{_tasks.Count} task running");
+
                 break;
             case > 1:
                 _logger.LogInformation($"{_tasks.Count} tasks running");
+
                 break;
         }
     }

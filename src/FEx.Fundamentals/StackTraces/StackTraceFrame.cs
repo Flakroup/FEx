@@ -42,6 +42,7 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
         set
         {
             _fullFilename = value;
+
             try
             {
                 Filename = Path.GetFileName(value);

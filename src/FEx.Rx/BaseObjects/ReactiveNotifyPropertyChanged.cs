@@ -22,6 +22,7 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
         if (propertyNames.IsNotNullOrEmptyList())
         {
             ReactiveObject sender = this;
+
             foreach (string propertyName in propertyNames)
                 sender.RaisePropertyChanged(propertyName);
         }

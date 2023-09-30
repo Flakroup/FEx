@@ -40,6 +40,7 @@ public class WebRequestParams
         if (cookies is not null)
         {
             Cookies = new CookieContainer();
+
             foreach (Cookie c in cookies)
                 Cookies.Add(c);
         }

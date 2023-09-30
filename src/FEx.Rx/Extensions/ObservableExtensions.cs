@@ -41,6 +41,7 @@ public static class ObservableExtensions
         {
             IPropagatorBlock<T, TResult> block = blockFactory();
             source.Subscribe(block.AsObserver());
+
             return block.AsObservable();
         });
     }
@@ -71,6 +72,7 @@ public static class ObservableExtensions
                 await func(value, cancellationToken != default
                     ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
                     : token);
+
                 return value;
             }))
             .Switch();
@@ -129,6 +131,7 @@ public static class ObservableExtensions
     public static IDisposable AsyncSubscribe<T>(this IObservable<T> source, Action<T> onNext = null)
     {
         IObservable<T> observable = source.ObserveOn(Scheduler.Default).SubscribeOn(Scheduler.Default);
+
         return onNext is not null
             ? observable.Subscribe(onNext)
             : observable.Subscribe();
@@ -137,9 +140,11 @@ public static class ObservableExtensions
     public static void AsyncSubscribe<T>(this IObservable<T> source, Action<T> onNext, CompositeDisposable disposable)
     {
         IObservable<T> observable = source.ObserveOn(Scheduler.Default).SubscribeOn(Scheduler.Default);
+
         IDisposable subscription = onNext is not null
             ? observable.Subscribe(onNext)
             : observable.Subscribe();
+
         disposable?.Add(subscription);
     }
 
@@ -157,6 +162,7 @@ public static class ObservableExtensions
                                                                       CancellationToken cancellationToken = default)
     {
         Result<T, Error> result = observable.GetResult();
+
         if (result.IsSuccess)
             return result.Data;
 

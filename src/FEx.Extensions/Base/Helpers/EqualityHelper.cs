@@ -18,6 +18,7 @@ public static class EqualityHelper
             return false;
 
         backingField = newValue;
+
         return true;
     }
 }

@@ -31,6 +31,7 @@ public class AsyncHelper
         action.Guard(nameof(action));
         var taskWrapper = new TaskWrapper();
         taskWrapper.SetTask(() => ExecuteAndCatchAsync(() => Wrap(action), taskWrapper, cancellationToken, asyncMode));
+
         return taskWrapper;
     }
 
@@ -41,6 +42,7 @@ public class AsyncHelper
         func.Guard(nameof(func));
         var taskWrapper = new TaskWrapper<T>();
         taskWrapper.SetTask(() => ExecuteAndCatchAsync(func, taskWrapper, cancellationToken, asyncMode));
+
         return taskWrapper;
     }
 
@@ -49,6 +51,7 @@ public class AsyncHelper
         task.Guard(nameof(task));
         var taskWrapper = new TaskWrapper();
         taskWrapper.SetTask(() => ExecuteTaskAndCatchAsync(() => WrapTaskAsync(task), taskWrapper, asyncMode));
+
         return taskWrapper;
     }
 
@@ -57,6 +60,7 @@ public class AsyncHelper
         task.Guard(nameof(task));
         var taskWrapper = new TaskWrapper<T>();
         taskWrapper.SetTask(() => ExecuteTaskAndCatchAsync(task, taskWrapper, asyncMode));
+
         return taskWrapper;
     }
 
@@ -73,6 +77,7 @@ public class AsyncHelper
                                                                AsyncMode asyncMode = AsyncMode.Default)
     {
         tasks.Guard(nameof(tasks));
+
         return tasks.Select(x => FireTaskAndForget(x, asyncMode)).ToList().AsReadOnly();
     }
 
@@ -92,6 +97,7 @@ public class AsyncHelper
         catch (Exception ex) when (logException)
         {
             _logger.LogError(ex);
+
             throw;
         }
     }
@@ -110,6 +116,7 @@ public class AsyncHelper
         catch (Exception ex) when (logException)
         {
             _logger.LogError(ex);
+
             throw;
         }
     }
@@ -163,12 +170,14 @@ public class AsyncHelper
     private static object Wrap(Action action)
     {
         action();
+
         return null;
     }
 
     private static async Task<object> WrapTaskAsync(Func<Task> task)
     {
         await task();
+
         return null;
     }
 
@@ -178,9 +187,11 @@ public class AsyncHelper
         {
             case TaskWrapper<T> typedWrapper:
                 typedWrapper.SetResult(result);
+
                 break;
             case TaskWrapper wrapper:
                 wrapper.SetResult();
+
                 break;
             default:
                 throw new InvalidOperationException($"{taskWrapper.GetType().FullName} is not handled");
@@ -214,6 +225,7 @@ public class AsyncHelper
         }
 
         _tasksInfoSubject.RemoveTask(taskWrapper);
+
         return result;
     }
 
@@ -241,6 +253,7 @@ public class AsyncHelper
         }
 
         _tasksInfoSubject.RemoveTask(taskWrapper);
+
         return result;
     }
 }

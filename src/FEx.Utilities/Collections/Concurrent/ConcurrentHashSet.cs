@@ -43,6 +43,7 @@ public class ConcurrentHashSet<T> : HashSet<T>
     public TR RunLocked<TR>(Func<TR> func)
     {
         _lock.EnterWriteLock();
+
         try
         {
             return func();
@@ -57,6 +58,7 @@ public class ConcurrentHashSet<T> : HashSet<T>
     public void RunLocked(Action action)
     {
         _lock.EnterWriteLock();
+
         try
         {
             action();
@@ -69,7 +71,6 @@ public class ConcurrentHashSet<T> : HashSet<T>
     }
 
     #region Implementation of ICollection<T> ...ish
-
     public new bool Add(T item)
     {
         return RunLocked(() => base.Add(item));
@@ -157,14 +158,15 @@ public class ConcurrentHashSet<T> : HashSet<T>
     public void AddRange(IEnumerable<T> items)
     {
         var deferredList = items?.ToList();
+
         if (deferredList.IsNullOrEmptyList())
             return;
+
         RunLocked(() =>
         {
             foreach (T item in deferredList)
                 base.Add(item);
         });
     }
-
     #endregion
 }

@@ -35,7 +35,6 @@ public class FExSubject<T> : IDisposable, IObservable<T>
     }
 
     #region IDisposable
-
     public void Dispose()
     {
         Dispose(true);
@@ -52,6 +51,5 @@ public class FExSubject<T> : IDisposable, IObservable<T>
 
         _isDisposed = true;
     }
-
     #endregion
 }

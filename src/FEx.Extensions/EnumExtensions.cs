@@ -42,6 +42,7 @@ public static class EnumExtensions
     public static TEnum? TryParse<TEnum>(this string value, bool ignoreCase = false) where TEnum : struct
     {
         bool isSuccess = Enum.TryParse(value, ignoreCase, out TEnum result);
+
         return isSuccess
             ? result
             : null;

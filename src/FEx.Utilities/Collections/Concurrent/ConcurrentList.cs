@@ -53,6 +53,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         _lock = new ExtendedReaderWriterLockSlim();
 
         var items = collection?.ToList();
+
         if (items?.Any() == true)
             AddRange(items);
     }
@@ -116,10 +117,12 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         return WriteWithResult(() =>
         {
             int index = Items.IndexOf(item);
+
             if (index < 0)
                 return false;
 
             RemoveAt(index);
+
             return true;
         });
     }
@@ -135,6 +138,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         return WriteWithResult(() =>
         {
             Add(item);
+
             return Items.Count;
         });
     }
@@ -179,6 +183,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
             OnCountPropertyChanged();
             OnIndexerPropertyChanged();
+
             OnCollectionChanged(
                 new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItem, index));
         });
@@ -212,6 +217,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
                 return false;
 
             Add(item);
+
             return true;
         });
     }
@@ -224,6 +230,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     public bool RemoveWhere(Func<T, bool> predicate)
     {
         var hasRemovedAny = false;
+
         Write(() =>
         {
             for (int i = Items.Count - 1; i > -1; i--)
@@ -249,6 +256,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     public void ReplaceWith(IEnumerable<T> collection)
     {
         var items = collection.ToList();
+
         Write(() =>
         {
             if (items.SequenceEqual(Items))
@@ -445,8 +453,10 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         Items[index] = item;
 
         OnIndexerPropertyChanged();
+
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, originalItem,
             item, index));
+
         return originalItem;
     }
 
@@ -459,6 +469,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
         OnCountPropertyChanged();
         OnIndexerPropertyChanged();
+
         OnCollectionChanged(
             new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, itemsToAdd, startingIndex));
 

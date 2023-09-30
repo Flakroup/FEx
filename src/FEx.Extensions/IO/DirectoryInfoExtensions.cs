@@ -30,6 +30,7 @@ public static class DirectoryInfoExtensions
         {
             var file = new FileInfo(path);
             file.Directory?.Create();
+
             return file;
         }, descendants);
     }
@@ -40,6 +41,7 @@ public static class DirectoryInfoExtensions
         {
             var directory = new DirectoryInfo(path);
             directory.Create();
+
             return directory;
         }, descendants);
     }

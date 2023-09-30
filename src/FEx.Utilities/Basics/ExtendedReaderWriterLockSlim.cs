@@ -27,6 +27,7 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
     private void Execute(Action action, LockType type)
     {
         EnterLock(type);
+
         try
         {
             action();
@@ -40,6 +41,7 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
     private TResult ExecuteWithResult<TResult>(Func<TResult> action, LockType type)
     {
         EnterLock(type);
+
         try
         {
             return action();

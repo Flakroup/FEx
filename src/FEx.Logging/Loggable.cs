@@ -64,21 +64,27 @@ public class Loggable : ILoggable
         {
             case LogLevel.Trace:
                 LogTrace(message, exception);
+
                 break;
             case LogLevel.Debug:
                 LogDebug(message, exception);
+
                 break;
             case LogLevel.Information:
                 LogInformation(message, exception);
+
                 break;
             case LogLevel.Warning:
                 LogWarning(message, exception);
+
                 break;
             case LogLevel.Error:
                 LogError(message, exception);
+
                 break;
             case LogLevel.Critical:
                 LogCritical(message, exception);
+
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);

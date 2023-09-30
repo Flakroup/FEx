@@ -29,6 +29,7 @@ public class ResilientTransaction
                                          int? delayOnTimeout = null)
     {
         IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
+
         return await strategy.ExecuteAsync(() =>
             RunTransactionAsync(context, action, id, isolationLevel, delayOnTimeout));
     }
@@ -40,6 +41,7 @@ public class ResilientTransaction
                                          int? delayOnTimeout = null)
     {
         IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
+
         return await strategy.ExecuteAsync(() =>
             RunTransactionAsync(context, action, id, isolationLevel, delayOnTimeout));
     }
@@ -51,6 +53,7 @@ public class ResilientTransaction
                         int? delayOnTimeout = null)
     {
         IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
+
         return strategy.Execute(() => RunTransaction(context, action, id, isolationLevel, delayOnTimeout));
     }
 
@@ -64,6 +67,7 @@ public class ResilientTransaction
 
         await using IDbContextTransaction transaction =
             await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout);
+
         try
         {
             res = await action();
@@ -81,6 +85,7 @@ public class ResilientTransaction
         catch
         {
             await transaction.RollbackAsync();
+
             throw;
         }
 
@@ -97,9 +102,11 @@ public class ResilientTransaction
 
         await using IDbContextTransaction transaction =
             await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout);
+
         try
         {
             res = action();
+
             try
             {
                 await transaction.CommitAsync();
@@ -113,6 +120,7 @@ public class ResilientTransaction
         catch
         {
             await transaction.RollbackAsync();
+
             throw;
         }
 
@@ -128,9 +136,11 @@ public class ResilientTransaction
         T res;
 
         using IDbContextTransaction transaction = GetTransaction(context, id, isolationLevel, delayOnTimeout);
+
         try
         {
             res = action();
+
             try
             {
                 transaction.Commit();
@@ -144,6 +154,7 @@ public class ResilientTransaction
         catch
         {
             transaction.Rollback();
+
             throw;
         }
 

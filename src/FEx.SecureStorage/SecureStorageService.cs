@@ -17,6 +17,7 @@ public class SecureStorageService
     public SecureStorageService()
     {
         _cipher = $"{Environment.UserName}@{Environment.MachineName}".GenerateMd5OfString();
+
         _storage = SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile]
             .Directory.GetDescendantDirectory(".fexStorage");
     }
@@ -26,6 +27,7 @@ public class SecureStorageService
         FileInfo file = _storage.GetDescendantFile(key + FexFileExtension);
         string encrypted = File.ReadAllText(file.FullName);
         string decrypted = StringHasher.DecryptString(_cipher, encrypted);
+
         return decrypted.FromJson<T>();
     }
 

@@ -66,6 +66,7 @@ public class FExCookieJar : IReadOnlyCollection<FlurlCookie>
             // when server sends an expired cookie, it's effectively an instruction for client to delete it.
             // https://stackoverflow.com/a/53573622/62600
             _dict.TryRemove(cookie.GetKey(), out _);
+
             return false;
         }
 
@@ -80,8 +81,10 @@ public class FExCookieJar : IReadOnlyCollection<FlurlCookie>
     public FExCookieJar Remove(Func<FlurlCookie, bool> predicate)
     {
         var keys = _dict.Where(kv => predicate(kv.Value)).Select(kv => kv.Key).ToList();
+
         foreach (string key in keys)
             _dict.TryRemove(key, out _);
+
         return this;
     }
 
@@ -91,6 +94,7 @@ public class FExCookieJar : IReadOnlyCollection<FlurlCookie>
     public FExCookieJar Clear()
     {
         _dict.Clear();
+
         return this;
     }
 }

@@ -57,6 +57,7 @@ public static class UriExtensions
             pars.Timeout ??= DefaultTimeout;
 
             var sw = new Stopwatch();
+
             try
             {
                 if (url.Scheme is HttpScheme or HttpsScheme)
@@ -65,12 +66,14 @@ public static class UriExtensions
                         bool result = response?.StatusCode is HttpStatusCode.OK
                             or HttpStatusCode.PartialContent
                             or HttpStatusCode.NonAuthoritativeInformation;
+
                         return (result, sw.ElapsedMilliseconds);
                     }, pars, sw);
 
                 using (WebResponse response = await url.GetUriResponseAsync(pars))
                 {
                     bool result = response is not null;
+
                     return (result, sw.ElapsedMilliseconds);
                 }
             }
@@ -160,6 +163,7 @@ public static class UriExtensions
             {
                 pars ??= new WebRequestParams();
                 pars.Method = HeadMethod;
+
                 return await link.DoHttpResponseFuncAsync((response, _) => response.ContentLength <= 0, pars);
             }
             catch
@@ -189,6 +193,7 @@ public static class UriExtensions
             using WebResponse response = await request.GetResponseAsync();
             using var httpResponse = (HttpWebResponse)response;
             var statusCode = (int)httpResponse.StatusCode;
+
             switch (statusCode)
             {
                 //Good requests
@@ -198,6 +203,7 @@ public static class UriExtensions
                 case >= 500 and <= 510:
                     FExBasics.Logger.LogDebug(
                         $"The remote server has thrown an internal error. Url is not valid: {url}");
+
                     return false;
             }
         }
@@ -228,6 +234,7 @@ public static class UriExtensions
         using WebResponse response = await req.GetResponseAsync();
         stopwatch?.Stop();
         using var resp = (HttpWebResponse)response;
+
         return await func(resp, req);
     }
 
@@ -242,6 +249,7 @@ public static class UriExtensions
         using WebResponse response = await req.GetResponseAsync();
         stopwatch?.Stop();
         using var resp = (HttpWebResponse)response;
+
         return func(resp, req);
     }
 
@@ -266,12 +274,14 @@ public static class UriExtensions
         Stopwatch stopwatch = null)
     {
         WebClientExtensions.PrepareHttpClient(out HttpClient client, pars);
+
         using (client)
         {
             stopwatch?.Restart();
             using HttpResponseMessage response = await client.GetAsync(url);
             stopwatch?.Stop();
             using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
+
             return await func(ensuredResponse, client);
         }
     }
@@ -283,12 +293,14 @@ public static class UriExtensions
         Stopwatch stopwatch = null)
     {
         WebClientExtensions.PrepareHttpClient(out HttpClient client, pars);
+
         using (client)
         {
             stopwatch?.Restart();
             using HttpResponseMessage response = await client.GetAsync(url);
             stopwatch?.Stop();
             using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
+
             return func(ensuredResponse, client);
         }
     }
@@ -299,6 +311,7 @@ public static class UriExtensions
                                                                       Stopwatch stopwatch = null)
     {
         WebClientExtensions.PrepareHttpClient(out HttpClient client, pars);
+
         using (client)
         {
             stopwatch?.Restart();

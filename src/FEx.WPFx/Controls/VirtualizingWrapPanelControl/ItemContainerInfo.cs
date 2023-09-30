@@ -38,12 +38,14 @@ internal class ItemContainerInfo : IItemContainerInfo
 
         if (uiElement is FrameworkElement fe)
             MaxSize = new Size(fe.MaxWidth, fe.MaxHeight);
+
         Item = item;
     }
 
     public Size Measure(Size availableSize)
     {
         UIElement.Measure(availableSize);
+
         return UIElement.DesiredSize;
     }
 

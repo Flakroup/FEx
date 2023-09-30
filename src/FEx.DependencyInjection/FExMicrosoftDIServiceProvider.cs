@@ -39,6 +39,7 @@ public class FExMicrosoftDIServiceProvider : IFExServiceProvider
         catch (AggregateException ex) when (Debugger.IsAttached)
         {
             var sb = new StringBuilder();
+
             foreach (string m in ex.InnerExceptions.Select(e => e.Message.Split(':')[4])
                          .Distinct()
                          .OrderBy(x => x)
@@ -46,10 +47,10 @@ public class FExMicrosoftDIServiceProvider : IFExServiceProvider
                 sb.AppendLine(m);
 
             Console.WriteLine(sb.ToString()); //todo logger
+
             throw;
         }
     }
-
 
     private IServiceCollection ConfigureServices(Func<IServiceCollection, IServiceCollection> configuration,
                                                  IServiceCollection services)

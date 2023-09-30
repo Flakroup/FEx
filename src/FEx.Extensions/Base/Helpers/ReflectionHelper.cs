@@ -15,6 +15,7 @@ public static class ReflectionHelper
 
         Type objType = obj.GetType();
         PropertyInfo propInfo = GetPropertyInfo(objType, propertyName);
+
         return propInfo is null
             ? throw new ArgumentOutOfRangeException(nameof(propertyName),
                 $"Couldn't find property {propertyName} in type {objType.FullName}")
@@ -27,6 +28,7 @@ public static class ReflectionHelper
         {
             Type objType = obj.GetType();
             PropertyInfo propInfo = GetPropertyInfo(objType, propertyName);
+
             if (propInfo is not null)
                 propInfo.SetValue(obj, val, null);
             else
@@ -46,6 +48,7 @@ public static class ReflectionHelper
 
         Type objType = obj.GetType();
         FieldInfo propInfo = GetFieldInfo(objType, fieldName);
+
         return propInfo is null
             ? throw new ArgumentOutOfRangeException(nameof(fieldName),
                 $"Couldn't find field {fieldName} in type {objType.FullName}")
@@ -82,6 +85,7 @@ public static class ReflectionHelper
             || assembly.HasResource(resourceName))
         {
             using Stream stream = assembly.GetManifestResourceStream(resourceName);
+
             if (stream is not null)
                 using (var reader = new StreamReader(stream))
                     return reader.ReadToEnd();
@@ -119,10 +123,12 @@ public static class ReflectionHelper
     private static PropertyInfo GetPropertyInfo(Type type, string propertyName)
     {
         PropertyInfo propInfo;
+
         do
         {
             propInfo = type.GetProperty(propertyName,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
             type = type.BaseType;
         } while (propInfo is null
                  && type is not null);
@@ -133,6 +139,7 @@ public static class ReflectionHelper
     private static FieldInfo GetFieldInfo(Type type, string fieldName)
     {
         FieldInfo fieldInfo;
+
         do
         {
             fieldInfo = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);

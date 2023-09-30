@@ -213,6 +213,7 @@ public static class AsyncReaderWriterLockSlimExtension
             throw new ArgumentNullException(nameof(readLock));
 
         var myReadLock = readLock as ActionDisposableLock;
+
         if (myReadLock is null
             || myReadLock.LockOrigin != lockInstance
             || !myReadLock.IsWriteLock
@@ -253,7 +254,6 @@ public static class AsyncReaderWriterLockSlimExtension
         }
 
         #region IDisposable
-
         public void Dispose()
         {
             Dispose(true);
@@ -270,7 +270,6 @@ public static class AsyncReaderWriterLockSlimExtension
                 IsDisposed = true;
             }
         }
-
         #endregion
     }
 }

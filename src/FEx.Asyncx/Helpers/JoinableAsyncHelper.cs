@@ -41,6 +41,7 @@ public static class JoinableAsyncHelper
         JoinableTaskFactory jtf = onMainThread
             ? MainJTF
             : GetFactory();
+
         await jtf.RunAsync(func);
     }
 
@@ -49,6 +50,7 @@ public static class JoinableAsyncHelper
         JoinableTaskFactory jtf = onMainThread
             ? MainJTF
             : GetFactory();
+
         jtf.Run(func);
     }
 
@@ -64,7 +66,9 @@ public static class JoinableAsyncHelper
         SynchronizationContext syncCtx = thread is null
             ? SynchronizationContext.Current
             : thread.GetThreadSynchronizationContext();
+
         thread ??= Thread.CurrentThread;
+
         return new JoinableTaskFactory(new JoinableTaskContext(thread, syncCtx));
     }
 }

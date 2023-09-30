@@ -29,10 +29,12 @@ public static class JsonExtensions
             NullValueHandling = NullValueHandling.Ignore,
             DateFormatHandling = DateFormatHandling.IsoDateFormat
         };
+
         ((List<JsonConverter>)DefaultSettingsInstance.Converters).AddRange(new JsonConverter[]
         {
             ParseStringConverter.Singleton, new VersionConverter()
         });
+
         JsonConvert.DefaultSettings = () => DefaultSettingsInstance;
     }
 
@@ -75,6 +77,7 @@ public static class JsonExtensions
 
         using var sr = new StreamReader(stream);
         using var jsonTextReader = new JsonTextReader(sr);
+
         return serializer.Deserialize(jsonTextReader);
     }
 
@@ -84,6 +87,7 @@ public static class JsonExtensions
 
         using var sr = new StreamReader(stream);
         using var jsonTextReader = new JsonTextReader(sr);
+
         return serializer.Deserialize<T>(jsonTextReader);
     }
 
@@ -97,6 +101,7 @@ public static class JsonExtensions
     public static string ReformatJson(this string json)
     {
         object obj = JsonConvert.DeserializeObject(json);
+
         return JsonConvert.SerializeObject(obj, Formatting.Indented);
     }
 
@@ -144,6 +149,7 @@ public static class JsonExtensions
     public static T DeserializeFromFile<T>(this FileInfo file, JsonSerializerSettings settings = null)
     {
         using FileStream fStream = file.OpenRead();
+
         return fStream.DeserializeFromStream<T>(settings);
     }
 

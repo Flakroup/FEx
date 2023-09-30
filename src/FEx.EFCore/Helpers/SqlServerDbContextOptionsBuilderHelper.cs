@@ -11,6 +11,7 @@ public static class SqlServerDbContextOptionsBuilderHelper
     public static bool UseSqlServer(DbContextOptionsBuilder options, string sqlInstance, IFExDbConfig config)
     {
         sqlInstance.Guard(nameof(sqlInstance));
+
         try
         {
             string testConnectionString = GetConnectionString(sqlInstance, "master");
@@ -19,9 +20,11 @@ public static class SqlServerDbContextOptionsBuilderHelper
             if (canConnect)
             {
                 string connectionString = GetConnectionString(sqlInstance, config.SqlDbName, config.PoolSize);
+
                 options.UseSqlServer(connectionString, serverDbContextOptionsBuilder =>
                 {
                     serverDbContextOptionsBuilder.CommandTimeout(config.CommandTimeout);
+
                     serverDbContextOptionsBuilder.EnableRetryOnFailure(config.MaxRetryCount, config.MaxRetryDelay,
                         null);
                 });
@@ -43,10 +46,12 @@ public static class SqlServerDbContextOptionsBuilderHelper
                                               bool trustCertificate = true)
     {
         var stringBuilder = new StringBuilder();
+
         stringBuilder.Append($"Data Source={sqlInstance};")
             .Append($"Initial Catalog={sqlDbName};")
             .Append("Integrated Security=True;")
             .Append("Trusted_Connection=True;");
+
         if (poolSize > 0)
             stringBuilder.Append("Pooling=true;").Append($"Max Pool Size={poolSize};");
 

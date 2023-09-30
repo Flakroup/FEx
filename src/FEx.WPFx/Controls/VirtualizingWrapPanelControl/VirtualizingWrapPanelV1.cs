@@ -83,6 +83,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     protected override Size MeasureOverride(Size availableSize)
     {
         UpdateChildSize(availableSize);
+
         return base.MeasureOverride(availableSize);
     }
 
@@ -99,6 +100,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
                 : Math.Max(extentWidth - (Margin.Top + Margin.Bottom), 0);
 
         double extentHeight = GetHeight(_childSize) * _rowCount;
+
         return CreateSize(extentWidth, extentHeight);
     }
 
@@ -165,12 +167,14 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
                 offsetRowIndex = GetY(offset) >= 1
                     ? (int)GetY(offset) - 1
                     : 0; // ignore header
+
                 offsetInPixel = offsetRowIndex * GetHeight(_childSize);
             }
             else
             {
                 offsetInPixel = Math.Min(Math.Max(GetY(offset) - GetHeight(groupItem.HeaderDesiredSizes.PixelSize), 0),
                     GetHeight(Extent));
+
                 offsetRowIndex = GetRowIndex(offsetInPixel);
             }
 
@@ -185,12 +189,16 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
             if (CacheLengthUnit == VirtualizationCacheLengthUnit.Pixel)
             {
                 double cacheBeforeInPixel = Math.Min(CacheLength.CacheBeforeViewport, offsetInPixel);
+
                 double cacheAfterInPixel = Math.Min(CacheLength.CacheAfterViewport,
                     GetHeight(Extent) - viewportHeight - offsetInPixel);
+
                 var rowCountInCacheBefore = (int)(cacheBeforeInPixel / GetHeight(_childSize));
+
                 int rowCountInCacheAfter =
                     (int)Math.Ceiling((offsetInPixel + viewportHeight + cacheAfterInPixel) / GetHeight(_childSize))
                     - (int)Math.Ceiling((offsetInPixel + viewportHeight) / GetHeight(_childSize));
+
                 startIndex = Math.Max(startIndex - rowCountInCacheBefore * _itemsPerRowCount, 0);
                 endIndex = Math.Min(endIndex + rowCountInCacheAfter * _itemsPerRowCount, Items.Count - 1);
             }
@@ -300,22 +308,26 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
         {
             case SpacingMode.Uniform:
                 innerSpacing = outerSpacing = unusedWidth / (_itemsPerRowCount + 1);
+
                 break;
 
             case SpacingMode.BetweenItemsOnly:
                 innerSpacing = unusedWidth / Math.Max(_itemsPerRowCount - 1, 1);
                 outerSpacing = 0;
+
                 break;
 
             case SpacingMode.StartAndEndOnly:
                 innerSpacing = 0;
                 outerSpacing = unusedWidth / 2;
+
                 break;
 
             case SpacingMode.None:
             default:
                 innerSpacing = 0;
                 outerSpacing = 0;
+
                 break;
         }
     }
@@ -329,12 +341,14 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
                 double childMaxWidth = ReadItemContainerStyle(MaxWidthProperty, double.PositiveInfinity);
                 double maxPossibleChildWith = finalSize.Width / _itemsPerRowCount;
                 double childWidth = Math.Min(maxPossibleChildWith, childMaxWidth);
+
                 return new Size(childWidth, _childSize.Height);
             }
 
             double childMaxHeight = ReadItemContainerStyle(MaxHeightProperty, double.PositiveInfinity);
             double maxPossibleChildHeight = finalSize.Height / _itemsPerRowCount;
             double childHeight = Math.Min(maxPossibleChildHeight, childMaxHeight);
+
             return new Size(_childSize.Width, childHeight);
         }
 
@@ -409,13 +423,16 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     {
         if (Items.Count == 0)
             return new Size(0, 0);
+
         GeneratorPosition startPosition = ItemContainerGenerator.GeneratorPositionFromIndex(0);
+
         using (ItemContainerGenerator.StartAt(startPosition, GeneratorDirection.Forward, true))
         {
             var child = (UIElement)ItemContainerGenerator.GenerateNext();
             AddInternalChild(child);
             ItemContainerGenerator.PrepareItemContainer(child);
             child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+
             return child.DesiredSize;
         }
     }
@@ -425,6 +442,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
         object value = ItemsControl.ItemContainerStyle?.Setters.OfType<Setter>()
             .FirstOrDefault(setter => setter.Property == property)
             ?.Value;
+
         return (T)(value ?? fallbackValue);
     }
 
@@ -432,11 +450,11 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     {
         var calculatedRowIndex = (int)Math.Floor(location / GetHeight(_childSize));
         var maxRowIndex = (int)Math.Ceiling(Items.Count / (double)_itemsPerRowCount);
+
         return Math.Max(Math.Min(calculatedRowIndex, maxRowIndex), 0);
     }
 
     #region Deprecated properties
-
     [Obsolete("Use SpacingMode")] public static readonly DependencyProperty IsSpacingEnabledProperty =
         DependencyProperty.Register(nameof(IsSpacingEnabled), typeof(bool), typeof(VirtualizingWrapPanelV1),
             new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsMeasure));
@@ -466,6 +484,5 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
         get => ItemSize;
         set => ItemSize = value;
     }
-
     #endregion
 }

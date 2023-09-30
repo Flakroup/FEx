@@ -38,6 +38,7 @@ public static class PropertiesExtensions
             throw new ArgumentException(WrongExpressionMessage, nameof(expression));
 
         MethodInfo setMethod = member.GetSetMethod(true);
+
         if (setMethod.IsStatic)
             throw new ArgumentException(WrongExpressionMessage, nameof(expression));
 
@@ -49,6 +50,7 @@ public static class PropertiesExtensions
 
         setMethod.Invoke(target, new object[] { value });
         onSet?.Invoke(member.Name);
+
         return true;
     }
 
@@ -86,7 +88,6 @@ public static class PropertiesExtensions
         sender.InternalLink(property, (_, _, v) => onPropertyChange(v), parentLink);
     }
 
-
     public static void LinkChild<T, TProp>(this T sender,
                                            Expression<Func<T, TProp>> property,
                                            Action<ILink, TProp> onPropertyChange,
@@ -109,7 +110,6 @@ public static class PropertiesExtensions
     {
         sender.InternalLink(property, (_, _, v) => onPropertyChange(v));
     }
-
 
     public static void Link<T, TProp>(this T sender,
                                       Expression<Func<T, TProp>> property,

@@ -8,6 +8,7 @@ public static class WebRequestParamsExtensions
     public static HttpClientHandler GetHttpClientHandler(this WebRequestParams pars)
     {
         var handler = new HttpClientHandler();
+
         if (pars is not null)
         {
             if (pars.Credentials is not null)

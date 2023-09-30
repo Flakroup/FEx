@@ -19,7 +19,6 @@ public class StackError : Error, IStackError
         StackTrace = GetStackTrace();
     }
 
-
     public StackError(string message)
         : base(message)
     {

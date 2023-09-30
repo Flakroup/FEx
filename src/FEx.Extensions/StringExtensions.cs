@@ -155,6 +155,7 @@ public static class StringExtensions
     public static string ToTrace(this string value)
     {
         Trace.WriteLine(value);
+
         return value;
     }
 
@@ -202,6 +203,7 @@ public static class StringExtensions
     {
         int fullLength = value.Length;
         IList<string> elements = new List<string>();
+
         for (var startIndex = 0; startIndex < value.Length; startIndex += elementLength)
         {
             if (startIndex + elementLength > fullLength)
@@ -237,6 +239,7 @@ public static class StringExtensions
         writer.Write(value);
         writer.Flush();
         stream.Position = 0;
+
         return stream;
     }
 
@@ -278,6 +281,7 @@ public static class StringExtensions
     public static bool MatchesRegex(this string text, Regex regex)
     {
         Match match = regex.Match(text);
+
         return match.Value.Equals(text);
     }
 
@@ -521,6 +525,7 @@ public static class StringExtensions
             if (lastWasCR)
             {
                 lastWasCR = false;
+
                 if (c == '\n')
                     continue; // Already written \r\n
             }
@@ -530,12 +535,15 @@ public static class StringExtensions
                 case '\r':
                     builder.Append("\r\n");
                     lastWasCR = true;
+
                     break;
                 case '\n':
                     builder.Append("\r\n");
+
                     break;
                 default:
                     builder.Append(c);
+
                     break;
             }
         }
@@ -546,6 +554,7 @@ public static class StringExtensions
     public static string ComputeSha256Hash(this string rawData)
     {
         using var sha256Hash = SHA256.Create();
+
         return sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData)).ByteArrayToString();
     }
 

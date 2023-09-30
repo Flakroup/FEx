@@ -73,24 +73,28 @@ public class GridView : ListView
     public GridView()
     {
         var factory = new FrameworkElementFactory(typeof(VirtualizingWrapPanel));
+
         factory.SetBinding(VirtualizingWrapPanel.OrientationProperty, new Binding
         {
             Source = this,
             Path = new PropertyPath(nameof(Orientation)),
             Mode = BindingMode.OneWay
         });
+
         factory.SetBinding(VirtualizingWrapPanel.SpacingModeProperty, new Binding
         {
             Source = this,
             Path = new PropertyPath(nameof(SpacingMode)),
             Mode = BindingMode.OneWay
         });
+
         factory.SetBinding(VirtualizingWrapPanel.StretchItemsProperty, new Binding
         {
             Source = this,
             Path = new PropertyPath(nameof(StretchItems)),
             Mode = BindingMode.OneWay
         });
+
         ItemsPanel = new ItemsPanelTemplate(factory);
 
         VirtualizingPanel.SetCacheLengthUnit(this, VirtualizationCacheLengthUnit.Page);
@@ -142,14 +146,17 @@ public class GridView : ListView
             gridView.ItemContainerGenerator.ItemFromContainer((DependencyObject)Keyboard.FocusedElement);
 
         int targetIndex;
+
         if (Orientation == Orientation.Vertical)
             switch (e.Key)
             {
                 case Key.Left:
                     targetIndex = gridView.Items.IndexOf(currentItem) - 1;
+
                     break;
                 case Key.Right:
                     targetIndex = gridView.Items.IndexOf(currentItem) + 1;
+
                     break;
                 default:
                     return;
@@ -159,9 +166,11 @@ public class GridView : ListView
             {
                 case Key.Up:
                     targetIndex = gridView.Items.IndexOf(currentItem) - 1;
+
                     break;
                 case Key.Down:
                     targetIndex = gridView.Items.IndexOf(currentItem) + 1;
+
                     break;
                 default:
                     return;

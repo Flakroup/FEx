@@ -103,6 +103,7 @@ public abstract class LiteDBService : IDisposable
             int documentsCount = _context.Database.GetCollection<T>().Count();
 
             predicate ??= GetTrueExpression<T>();
+
             return WrapInTransaction(() => _context.Database.GetCollection<T>()
                                                .DeleteMany(predicate)
                                            == documentsCount);
@@ -128,6 +129,7 @@ public abstract class LiteDBService : IDisposable
         catch
         {
             Delete<T>();
+
             return default;
         }
     }
@@ -144,11 +146,13 @@ public abstract class LiteDBService : IDisposable
         try
         {
             predicate ??= GetTrueExpression<T>();
+
             return _lock.ReadWithResult(() => _context.Fetch(predicate));
         }
         catch
         {
             Delete<T>();
+
             return Enumerable.Empty<T>().ToList().AsReadOnly();
         }
     }
@@ -156,12 +160,14 @@ public abstract class LiteDBService : IDisposable
     private static Expression<Func<T, bool>> GetTrueExpression<T>()
     {
         Type type = typeof(T);
+
         return Expression.Lambda<Func<T, bool>>(Expression.Constant(true), Expression.Parameter(type, "_"));
     }
 
     private void WrapInTransaction(Action action)
     {
         _context.Database.BeginTrans();
+
         try
         {
             action();
@@ -170,6 +176,7 @@ public abstract class LiteDBService : IDisposable
         catch (Exception)
         {
             _context.Database.Rollback();
+
             throw;
         }
     }
@@ -177,21 +184,23 @@ public abstract class LiteDBService : IDisposable
     private T WrapInTransaction<T>(Func<T> func)
     {
         _context.Database.BeginTrans();
+
         try
         {
             T result = func();
             _context.Database.Commit();
+
             return result;
         }
         catch (Exception)
         {
             _context.Database.Rollback();
+
             throw;
         }
     }
 
     #region IDisposable
-
     public void Dispose()
     {
         Dispose(true);
@@ -207,6 +216,5 @@ public abstract class LiteDBService : IDisposable
 
         _isDisposed = true;
     }
-
     #endregion
 }

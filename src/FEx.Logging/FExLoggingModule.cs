@@ -31,9 +31,12 @@ public class FExLoggingModule
     public static ILogger CreateLogger(Type senderType)
     {
         SerilogLoggerFactory loggerFactory = GetSerilogLoggerFactory(GetLoggerProviderCollection(LoggerProviders));
+
         MethodInfo methodInfo = typeof(LoggerFactoryExtensions).GetMethods()
             .Single(x => x.Name == nameof(LoggerFactoryExtensions.CreateLogger) && x.IsGenericMethod);
+
         MethodInfo genericMethod = methodInfo.MakeGenericMethod(senderType);
+
         return (ILogger)genericMethod.Invoke(loggerFactory, new[] { loggerFactory });
     }
 
@@ -41,8 +44,10 @@ public class FExLoggingModule
     public static LoggerProviderCollection GetLoggerProviderCollection(ILoggerProvider[] loggerProviders)
     {
         var collection = new LoggerProviderCollection();
+
         foreach (ILoggerProvider loggerProvider in loggerProviders)
             collection.AddProvider(loggerProvider);
+
         return collection;
     }
 }

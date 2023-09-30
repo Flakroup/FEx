@@ -55,6 +55,7 @@ public static class FileInfoExtensions
         DirectoryInfo parentDirectory = zipFile is null
             ? file.Directory
             : zipFile.Directory;
+
         var tempDirectory =
             new DirectoryInfo(Path.Combine(parentDirectory?.FullName, Path.GetFileNameWithoutExtension(file.Name)));
 
@@ -87,6 +88,7 @@ public static class FileInfoExtensions
         ZipFile.CreateFromDirectory(tempDirectory.FullName, zipFile.FullName, CompressionLevel.Optimal, false);
         tempDirectory.Delete(true);
         zipFile.Refresh();
+
         return zipFile;
     }
 

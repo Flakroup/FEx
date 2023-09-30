@@ -11,6 +11,7 @@ public static class DirectoryInfoExtensions
                                                             params string[] descendants)
     {
         SpecialDirectory dir = GetSpecialDirectory(folder);
+
         return dir.Directory.GetDescendantPath(descendants);
     }
 

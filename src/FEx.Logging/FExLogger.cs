@@ -15,8 +15,10 @@ public class FExLogger : IFExLogger
     {
         message = message.TrimEnd();
         StringBuilder sb = new StringBuilder($"[{DateTime.Now}] [ERROR]\t").AppendLine(message);
+
         if (exception is not null)
             sb.AppendLine(exception.ToString());
+
         Console.Write(sb.ToString());
     }
 

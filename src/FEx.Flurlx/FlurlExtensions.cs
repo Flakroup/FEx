@@ -12,6 +12,7 @@ public static class FlurlExtensions
     public static IFlurlRequest FixBooleanQueryParameters(this IFlurlRequest req)
     {
         FixBooleanQueryParameters(req?.Url);
+
         return req;
     }
 
@@ -20,9 +21,11 @@ public static class FlurlExtensions
         if (url?.QueryParams?.Count > 0)
         {
             var toReplace = new Dictionary<string, string>();
+
             foreach ((string name, object value) in url.QueryParams)
             {
                 var b = value as bool?;
+
                 if (b.HasValue)
                     toReplace.Add(name, b.Value.ToString().ToLower());
             }
@@ -37,6 +40,7 @@ public static class FlurlExtensions
     public static HttpContent StripCharsetQuotes(this HttpContent content)
     {
         MediaTypeHeaderValue contentType = content?.Headers?.ContentType;
+
         if (contentType?.CharSet is not null)
             contentType.CharSet = contentType.CharSet.StripQuotes();
 

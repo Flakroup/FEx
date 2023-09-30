@@ -34,6 +34,7 @@ public static class UriExtensions
         {
             var request = WebRequest.Create(url);
             using WebResponse _ = await request.GetResponseAsync();
+
             return true;
         }
         catch
@@ -55,6 +56,7 @@ public static class UriExtensions
         stopwatch?.Restart();
         var response = (HttpWebResponse)await req.GetResponseAsync();
         stopwatch?.Stop();
+
         return response;
     }
 
@@ -66,12 +68,14 @@ public static class UriExtensions
         stopwatch?.Restart();
         WebResponse response = await req.GetResponseAsync();
         stopwatch?.Stop();
+
         return response;
     }
 
     public static HttpWebRequest GetHttpRequest(this Uri url, WebRequestParams pars = null)
     {
         HttpWebRequest myWebRequest = WebRequest.CreateHttp(url);
+
         if (pars is not null)
             myWebRequest.PrepareRequest(pars);
 
@@ -81,6 +85,7 @@ public static class UriExtensions
     public static WebRequest GetWebRequest(this Uri url, WebRequestParams pars = null)
     {
         var myWebRequest = WebRequest.Create(url);
+
         if (pars is not null)
             myWebRequest.PrepareRequest(pars);
 
@@ -93,6 +98,7 @@ public static class UriExtensions
                                                                   WebRequestParams pars = null)
     {
         using WebResponse resp = await url.GetUriResponseAsync(pars);
+
         return await resp.TryGetRangeAsync(rangeFrom, rangeTo, pars);
     }
 

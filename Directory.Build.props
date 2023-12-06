@@ -3,6 +3,7 @@
 	<Import Project="$(MSBuildThisFileDirectory)\DevConfigs\Directory.Build.props" />
 
 	<PropertyGroup>
+		<TargetFrameworkId>net8.0</TargetFrameworkId>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<PackageIcon>flakroup.png</PackageIcon>
 		<WarnOnPackingNonPackableProject>true</WarnOnPackingNonPackableProject>

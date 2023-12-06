@@ -1,27 +1,23 @@
 ﻿<Project>
 
-  <Import Project="..\Directory.Build.props" />
+	<Import Project="..\Directory.Build.props" />
 
-  <PropertyGroup>
-    <TargetFrameworkId>net7.0</TargetFrameworkId>
-    <TargetFrameworkIds>$(TargetFrameworkId);netstandard2.0</TargetFrameworkIds>
-    <TargetWindowsFrameworkIds>net481;net7.0-windows</TargetWindowsFrameworkIds>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <Nullable>disable</Nullable>
-    <LangVersion>latest</LangVersion>
-    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net7.0'">
-    <DefineConstants>NET</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>NETSTANDARD</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net7.0-windows'">
-    <DefineConstants>NETWINDOWS</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net481'">
-    <DefineConstants>NETFULL</DefineConstants>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworkIds>$(TargetFrameworkId);netstandard2.0</TargetFrameworkIds>
+		<TargetWindowsFrameworkIds>net481;net8.0-windows</TargetWindowsFrameworkIds>
+		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net8.0'">
+		<DefineConstants>NET</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
+		<DefineConstants>NETSTANDARD</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net8.0-windows'">
+		<DefineConstants>NETWINDOWS</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net481'">
+		<DefineConstants>NETFULL</DefineConstants>
+	</PropertyGroup>
 
 </Project>

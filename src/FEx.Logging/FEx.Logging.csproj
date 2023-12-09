@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FEx.DependencyInjection\FEx.DependencyInjection.csproj" />
     <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
     <ProjectReference Include="..\FEx.Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
     <ProjectReference Include="..\FEx.Utilities\FEx.Utilities.csproj" />

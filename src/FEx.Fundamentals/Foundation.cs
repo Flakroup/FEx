@@ -4,6 +4,7 @@ using FEx.Basics.Interfaces;
 using FEx.Extensions;
 using FEx.Extensions.Base;
 using FEx.Fundamentals.Helpers;
+using FEx.Fundamentals.Utilities.OS;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
@@ -98,7 +99,7 @@ public class Foundation
     {
         Thread currentThread = Thread.CurrentThread;
 
-        bool isMainThread = currentThread.GetApartmentState() == ApartmentState.STA
+        bool isMainThread = IsPlatformMainThread(currentThread)
                             && !currentThread.IsBackground
                             && currentThread.IsAlive
                             && !currentThread.IsThreadPoolThread;
@@ -113,4 +114,7 @@ public class Foundation
     }
 
     public Thread GetMainThread() => MainThread;
+
+    private static bool IsPlatformMainThread(Thread currentThread) =>
+        !OSVersionInfo.IsWin || currentThread.GetApartmentState() == ApartmentState.STA;
 }

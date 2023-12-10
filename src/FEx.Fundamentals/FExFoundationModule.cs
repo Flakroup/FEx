@@ -1,4 +1,5 @@
-﻿using FEx.Basics.Interfaces;
+﻿using FEx.Abstractions;
+using FEx.Basics.Interfaces;
 using FEx.Fundamentals.Helpers;
 using FEx.Fundamentals.StackTraces;
 using StrongInject;
@@ -13,4 +14,7 @@ public class FExFoundationModule
 {
     [Instance]
     public static IStackTraceFilter[] StackTraceFilters => Enumerable.Empty<IStackTraceFilter>().ToArray();
+
+    [Instance]
+    public static IFExServiceProvider ServiceProviderInstance => Foundation.StrongInjectServiceProvider;
 }

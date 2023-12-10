@@ -19,27 +19,26 @@ public class StackTraceGenerator : IStackTraceProvider
 
     public StackTraceGenerator(params IStackTraceFilter[] stackTraceFilters)
     {
-        string str;
-        _stackTraceFilters = stackTraceFilters ?? new IStackTraceFilter[] { };
+        _stackTraceFilters = stackTraceFilters ?? [];
 
         try
         {
             CheatClrAndUseDynamicMethodsToGetStackTraceFast();
-            _stackTraceCache.GetStackTrace();
+
+            if (_stackTraceCache is not null)
+                _stackTraceCache.GetStackTrace();
+            else
+                Fallback("System.Diagnostics.StackFrameHelper could not be found");
         }
         catch (Exception exception1)
         {
             Exception exception = exception1;
 
-            if (exception is not null)
-                str = exception.ToString();
-            else
-                str = null;
+            string str = exception is not null
+                ? exception.ToString()
+                : null;
 
-            Trace.WriteLine(string.Concat(
-                "Could not create fast stack trace cache, falling back to old supported way, failure because: ", str));
-
-            SlowAndSafeApproachToGetStackTrace();
+            Fallback(str);
         }
     }
 
@@ -81,14 +80,28 @@ public class StackTraceGenerator : IStackTraceProvider
         };
     }
 
+    private void Fallback(string str)
+    {
+        Trace.WriteLine(string.Concat(
+            "Could not create fast stack trace cache, falling back to old supported way, failure because: ", str));
+
+        SlowAndSafeApproachToGetStackTrace();
+    }
+
     private void CheatClrAndUseDynamicMethodsToGetStackTraceFast()
     {
-        Type type = typeof(object).Assembly.GetType("System.Diagnostics.StackFrameHelper");
+        Type stackTraceType = typeof(StackTrace);
+        Assembly stackTraceAssembly = stackTraceType.Assembly;
+        Type type = stackTraceAssembly.GetType("System.Diagnostics.StackFrameHelper");
+
+        if (type is null)
+            return;
+
         FieldInfo field = type.GetField("rgMethodHandle", BindingFlags.Instance | BindingFlags.NonPublic);
         FieldInfo fieldInfo = type.GetField("rgiILOffset", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        MethodInfo method = Type.GetType("System.Diagnostics.StackTrace, mscorlib")
-            .GetMethod("GetStackFramesInternal", BindingFlags.Static | BindingFlags.NonPublic);
+        MethodInfo method =
+            stackTraceType.GetMethod("GetStackFramesInternal", BindingFlags.Static | BindingFlags.NonPublic);
 
         var dynamicMethod = new DynamicMethod("GetStackTraceFast", typeof(MethodHandleAndILOffset[]), Type.EmptyTypes,
             type, true);
@@ -233,7 +246,7 @@ public class StackTraceGenerator : IStackTraceProvider
 
         // ReSharper disable UnusedMember.Local
         public static MethodHandleAndILOffset[] Create(IntPtr[] methods, int[] offsets)
-            // ReSharper restore UnusedMember.Local
+        // ReSharper restore UnusedMember.Local
         {
             var methodHandleAndILOffset = new MethodHandleAndILOffset[methods.Length];
 

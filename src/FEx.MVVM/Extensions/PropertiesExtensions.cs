@@ -48,7 +48,7 @@ public static class PropertiesExtensions
             || EqualityComparer<T>.Default.Equals(oldValue, value))
             return false;
 
-        setMethod.Invoke(target, new object[] { value });
+        setMethod.Invoke(target, [value]);
         onSet?.Invoke(member.Name);
 
         return true;

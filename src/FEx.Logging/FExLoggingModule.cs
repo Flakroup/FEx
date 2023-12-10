@@ -12,7 +12,7 @@ namespace FEx.Logging;
 public class FExLoggingModule
 {
     [Instance]
-    public static ILoggerProvider[] LoggerProviders { get; set; } = { };
+    public static ILoggerProvider[] LoggerProviders { get; set; } = [];
 
     [Factory(Scope.SingleInstance)]
     public static SerilogLoggerFactory GetSerilogLoggerFactory(LoggerProviderCollection providerCollection) =>

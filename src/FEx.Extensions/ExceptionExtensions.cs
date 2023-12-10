@@ -20,7 +20,7 @@ public static class ExceptionExtensions
             Type traceFormatType = typeof(StackTrace).GetNestedType("TraceFormat", BindingFlags.NonPublic);
 
             MethodInfo toString = typeof(StackTrace).GetMethod("ToString",
-                BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { traceFormatType }, null);
+                BindingFlags.NonPublic | BindingFlags.Instance, null, [traceFormatType], null);
 
             object normalTraceFormat = Enum.GetValues(traceFormatType).GetValue(0);
 

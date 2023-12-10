@@ -471,6 +471,13 @@ public static class StringExtensions
     public static bool CompareOrdinalIgnoreCase(this string source, string value) =>
         string.Compare(source, value, StringComparison.OrdinalIgnoreCase) == 0;
 
+    /// <summary>
+    ///     Indicates whether a string contains another string under <see cref="StringComparison.OrdinalIgnoreCase" />
+    ///     comparison.
+    /// </summary>
+    public static bool ContainsOrdinalIgnoreCase(this string str, string other) =>
+        str.IndexOf(other, StringComparison.OrdinalIgnoreCase) >= 0;
+
     public static bool IsBothNullOrEqual(this string source,
                                          string value,
                                          StringComparison comparisonType = StringComparison.Ordinal) =>
@@ -589,10 +596,10 @@ public static class StringExtensions
         var sb = new StringBuilder();
 
         foreach (char ch in formD.Select(ch => new
-                     {
-                         ch,
-                         uc = CharUnicodeInfo.GetUnicodeCategory(ch)
-                     })
+        {
+            ch,
+            uc = CharUnicodeInfo.GetUnicodeCategory(ch)
+        })
                      .Where(t => t.uc != UnicodeCategory.NonSpacingMark)
                      .Select(t => t.ch))
             sb.Append(ch);

@@ -1,3 +1,4 @@
+<!-- ReSharper disable InconsistentNaming -->
 <virtualizingWrapPanelControl:GridView x:Class="FEx.WPFx.Controls.VirtualizingWrapPanelControl.GridDetailsView"
                                        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,6 +9,7 @@
                                        d:DesignHeight="400"
                                        d:DesignWidth="600"
                                        mc:Ignorable="d">
+    <!-- ReSharper restore InconsistentNaming -->
     <virtualizingWrapPanelControl:GridView.ItemsPanel>
         <ItemsPanelTemplate>
             <virtualizingWrapPanelControl:VirtualizingWrapPanelWithItemExpansion ExpandedItem="{Binding ExpandedItem,

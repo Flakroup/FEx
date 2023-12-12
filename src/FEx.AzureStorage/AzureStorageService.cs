@@ -90,10 +90,10 @@ public class AzureStorageService : IAzureStorageService
             DeleteOldFiles(downloadDir, deleteFilesMask, blobsInfo.Select(x => x.localFile.FullName)
                 .ToArray());
 
-        (FileInfo localFile, CloudBlockBlob sourceBlob, bool shouldBeDownloaded)[] preparedBlobs = await blobsInfo.RunFuncTaskWithWhenAllAsync(x => PrepareBlobDownloadAsync(containerName, x.fileName, x.localFile, noDownload), true);
+        (FileInfo localFile, CloudBlockBlob sourceBlob, bool shouldBeDownloaded)[] preparedBlobs = await blobsInfo.RunFuncTaskWithWhenAllAsync(x => PrepareBlobDownloadAsync(containerName, x.fileName, x.localFile, noDownload));
 
         if (!noDownload)
-            await preparedBlobs.RunFuncTaskWithWhenAllAsync(x => RunBlobDownloadAsync(x.localFile, x.sourceBlob, x.shouldBeDownloaded), true);
+            await preparedBlobs.RunFuncTaskWithWhenAllAsync(x => RunBlobDownloadAsync(x.localFile, x.sourceBlob, x.shouldBeDownloaded));
 
         IDictionary<string, string> resDictionary = new Dictionary<string, string>();
         IDictionary<string, string> invalidDownloads = new Dictionary<string, string>();
@@ -177,7 +177,7 @@ public class AzureStorageService : IAzureStorageService
             .Cast<T>()
             .ToArray();
 
-        await blobs.RunFuncTaskWithWhenAllAsync(x => x.FetchAttributesAsync(), true);
+        await blobs.RunFuncTaskWithWhenAllAsync(x => x.FetchAttributesAsync());
         return blobs;
     }
 
@@ -234,7 +234,7 @@ public class AzureStorageService : IAzureStorageService
         CloudBlobContainer container = GetCloudBlobContainer(containerName);
 
         if (!oneByOne)
-            return (await files.RunFuncTaskWithWhenAllAsync(file => UploadFileAsync(path, overwrite, file, containerName, container), true)).ToDictionary(x => x.file, x => x.blob);
+            return (await files.RunFuncTaskWithWhenAllAsync(file => UploadFileAsync(path, overwrite, file, containerName, container))).ToDictionary(x => x.file, x => x.blob);
 
         var result = new Dictionary<FileInfo, CloudBlockBlobInfo>();
 

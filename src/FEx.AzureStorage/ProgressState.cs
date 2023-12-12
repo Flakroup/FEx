@@ -1,6 +1,7 @@
 ﻿using FEx.Extensions;
+using FEx.Extensions.Base.Converters;
+using FEx.Extensions.Base.Enums;
 using FEx.Extensions.DateTimes;
-using FEx.Extensions.Helpers;
 using Microsoft.Azure.Storage.DataMovement;
 using System;
 using System.Diagnostics;

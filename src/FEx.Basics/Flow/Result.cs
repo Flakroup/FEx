@@ -46,7 +46,16 @@ public class Result<TData, TError> where TError : class, IError, new()
         IsFailure = true;
     }
 
+    public static Result<TData, TError> Success(TData data) => new(data);
+
     public static implicit operator Result<TData, TError>(TData data) => new(data);
 
     public static implicit operator Result<TData, TError>(TError error) => new(error);
+
+    public bool TryGetData(out TData data)
+    {
+        data = Data;
+
+        return IsSuccess;
+    }
 }

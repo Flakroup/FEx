@@ -1,6 +1,7 @@
 ﻿using FEx.EFCore.Interfaces;
 using FEx.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
 using System.Text;
 
@@ -8,7 +9,10 @@ namespace FEx.EFCore.Helpers;
 
 public static class SqlServerDbContextOptionsBuilderHelper
 {
-    public static bool UseSqlServer(DbContextOptionsBuilder options, string sqlInstance, IFExDbConfig config)
+    public static bool UseSqlServer(this DbContextOptionsBuilder options,
+                                    string sqlInstance,
+                                    IFExDbConfig config,
+                                    Action<SqlServerDbContextOptionsBuilder> configure = null)
     {
         sqlInstance.Guard(nameof(sqlInstance));
 
@@ -27,6 +31,8 @@ public static class SqlServerDbContextOptionsBuilderHelper
 
                     serverDbContextOptionsBuilder.EnableRetryOnFailure(config.MaxRetryCount, config.MaxRetryDelay,
                         null);
+
+                    configure?.Invoke(serverDbContextOptionsBuilder);
                 });
 
                 return true;

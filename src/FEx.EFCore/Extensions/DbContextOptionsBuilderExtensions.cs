@@ -15,7 +15,7 @@ public static class DbContextOptionsBuilderExtensions
         var sqlInstanceFound = false;
 
         if (!useSqlite)
-            sqlInstanceFound = SqlServerDbContextOptionsBuilderHelper.UseSqlServer(options, sqlInstance, config);
+            sqlInstanceFound = options.UseSqlServer(sqlInstance, config);
         else
             SqlLiteDbContextOptionsBuilderHelper.UseSqlite(options, config);
 

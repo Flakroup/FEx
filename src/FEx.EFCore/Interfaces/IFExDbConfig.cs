@@ -15,4 +15,5 @@ public interface IFExDbConfig
     bool RunMigrations { get; set; }
     bool GetMappings { get; set; }
     bool DropIfMigrationFailed { get; }
+    bool UseSqlite { get; }
 }

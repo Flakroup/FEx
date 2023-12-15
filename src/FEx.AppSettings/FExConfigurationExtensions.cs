@@ -1,7 +1,6 @@
 ﻿using FEx.Extensions;
-using FEx.Extensions.Base.Helpers;
-using FEx.Extensions.Collections;
 using FEx.Extensions.Collections.Lists;
+using FEx.Json;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
@@ -9,40 +8,34 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
 
 namespace FEx.AppSettings;
 
-public static class ConfigurationExtensions
+public static class FExConfigurationExtensions
 {
-    public static T VerifyAppSettings<T>(this T appSettings, params string[] keys)
+    public static T VerifyAppSettings<T>(this T appSettings, params Expression<Func<T, object>>[] keys)
     {
-        if (appSettings is null)
-            throw new NullReferenceException($"{nameof(appSettings)} cannot be null");
+        appSettings.Guard(nameof(appSettings), $"{nameof(appSettings)} cannot be null");
 
-        IDictionary<string, object> properties = appSettings.AsDictionary();
-
-        if (properties.IsNullOrEmptyCollection())
-            throw new ArgumentNullException($"{nameof(appSettings)} has no settings");
-
-        string[] missingProps;
-
-        if (keys.IsNotNullOrEmptyList())
-        {
-            missingProps = keys.Where(x => !properties.ContainsKey(x)).ToArray();
-
-            if (missingProps.IsNotNullOrEmptyList())
-                throw new ArgumentNullException(
-                    $"{string.Join(", ", missingProps)} {(missingProps.Length == 1 ? "has" : "have")} no settings");
-        }
-
-        missingProps = properties
-            .Where(p => (keys.IsNullOrEmptyList() || keys.Contains(p.Key)) && p.Value.ReferenceIsNull())
-            .Select(x => x.Key)
-            .ToArray();
+        var missingProps = keys.Where(key =>
+            {
+                try
+                {
+                    return key.Compile()(appSettings) is null;
+                }
+                catch
+                {
+                    return true;
+                }
+            })
+            .Select(GetMemberPath)
+            .ToList();
 
         return missingProps.IsNotNullOrEmptyList()
             ? throw new ArgumentNullException(
-                $"{string.Join(", ", missingProps)} {(missingProps.Length == 1 ? "has" : "have")} no settings")
+                $"{string.Join(", ", missingProps)} {(missingProps.Count == 1 ? "has" : "have")} no value")
             : appSettings;
     }
 
@@ -65,7 +58,59 @@ public static class ConfigurationExtensions
         return appConfiguration;
     }
 
-    public static void BindJsonNet(this IConfiguration config, object instance, Func<string, string> jsonFunc = null)
+    public static void BindJsonNet(this IConfigurationSection config,
+                                   object instance,
+                                   Func<string, string> jsonFunc = null)
+    {
+        string jsonText = GetSerializedConfig(config, jsonFunc);
+
+        JsonConvert.PopulateObject(jsonText, instance);
+    }
+
+    public static T BindJsonNet<T>(this IConfigurationSection config, Func<string, string> jsonFunc = null)
+        where T : new()
+    {
+        string jsonText = GetSerializedConfig(config, jsonFunc);
+
+        return jsonText.FromJson<T>() ?? new T();
+    }
+
+    private static string GetMemberPath(Expression expression)
+    {
+        if (expression is LambdaExpression lambda)
+            return GetBodyMemberPath(lambda.Body);
+
+        return GetBodyMemberPath(expression);
+    }
+
+    private static string GetBodyMemberPath(Expression expression)
+    {
+        switch (expression.NodeType)
+        {
+            case ExpressionType.Convert:
+            case ExpressionType.ConvertChecked:
+                var unaryExpr = (UnaryExpression)expression;
+
+                return GetMemberPath(unaryExpr.Operand);
+
+            case ExpressionType.MemberAccess:
+                var memberExpr = (MemberExpression)expression;
+                var path = new StringBuilder(memberExpr.Member.Name);
+
+                while (memberExpr.Expression?.NodeType == ExpressionType.MemberAccess)
+                {
+                    memberExpr = (MemberExpression)memberExpr.Expression;
+                    path.Insert(0, memberExpr.Member.Name + ".");
+                }
+
+                return path.ToString();
+
+            default:
+                throw new InvalidOperationException("Unsupported expression type: " + expression.NodeType);
+        }
+    }
+
+    private static string GetSerializedConfig(IConfigurationSection config, Func<string, string> jsonFunc)
     {
         ExpandoObject obj = BindToExpandoObject(config);
 
@@ -74,10 +119,10 @@ public static class ConfigurationExtensions
         if (jsonFunc is not null)
             jsonText = jsonFunc(jsonText);
 
-        JsonConvert.PopulateObject(jsonText, instance);
+        return jsonText;
     }
 
-    private static ExpandoObject BindToExpandoObject(IConfiguration config)
+    private static ExpandoObject BindToExpandoObject(IConfigurationSection config)
     {
         var result = new ExpandoObject();
 
@@ -110,7 +155,9 @@ public static class ConfigurationExtensions
         // at this stage, all arrays are seen as dictionaries with integer keys
         ReplaceWithArray(null, null, result);
 
-        return result;
+        return result?.Any() == true
+            ? (ExpandoObject)((IDictionary<string, object>)result)[config.Key]
+            : null;
     }
 
     private static void ReplaceWithArray(ExpandoObject parent, string key, ExpandoObject input)
@@ -129,8 +176,8 @@ public static class ConfigurationExtensions
                     array[int.Parse(kvp.Key)] = kvp.Value;
 
                 IDictionary<string, object> parentDict = parent;
-                parentDict.Remove(key);
-                parentDict.Add(key, array);
+                parentDict?.Remove(key);
+                parentDict?.Add(key, array);
             }
             else
             {

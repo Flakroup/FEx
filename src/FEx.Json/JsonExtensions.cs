@@ -38,6 +38,10 @@ public static class JsonExtensions
         JsonConvert.DefaultSettings = () => DefaultSettingsInstance;
     }
 
+    public static void Initialize()
+    {
+    }
+
     public static void ConfigureDefaultSettings(Action<JsonSerializerSettings> configuration)
     {
         DefaultSettingsInstance = DefaultSettings;

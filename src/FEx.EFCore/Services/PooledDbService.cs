@@ -68,18 +68,24 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
             useTransaction);
     }
 
-    public async Task RunMigrationsAsync()
+    public async Task<bool> RunMigrationsAsync()
     {
         try
         {
             await MigrateAsync();
+
+            return true;
         }
         catch when (_dbConfig.DropIfMigrationFailed)
         {
             if (await DropAsync())
+            {
                 await MigrateAsync();
-            else
-                throw;
+
+                return true;
+            }
+
+            throw;
         }
     }
 
@@ -215,13 +221,15 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
 
     protected override async Task<bool> OnInitializationAsync(bool reInitialize)
     {
-        if (_dbConfig.RunMigrations)
-            await RunMigrationsAsync();
+        bool result = await SQLConnectionHelper.CheckMasterDbConnectionAsync(_dbConfig);
 
-        if (_dbConfig.GetMappings)
+        if (result && _dbConfig.RunMigrations)
+            result = await RunMigrationsAsync();
+
+        if (result && _dbConfig.GetMappings)
             await EnsureMappingSnapshotAsync();
 
-        return true;
+        return result;
     }
 
     protected async Task EnsureMappingSnapshotAsync()

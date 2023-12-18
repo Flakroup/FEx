@@ -8,14 +8,13 @@ namespace FEx.EFCore.Extensions;
 public static class DbContextOptionsBuilderExtensions
 {
     public static bool SetSqlInstanceConnection(this DbContextOptionsBuilder options,
-                                                string sqlInstance,
                                                 IFExDbConfig config,
                                                 bool useSqlite = false)
     {
         var sqlInstanceFound = false;
 
         if (!useSqlite)
-            sqlInstanceFound = options.UseSqlServer(sqlInstance, config);
+            sqlInstanceFound = options.UseSqlServer(config);
         else
             SqlLiteDbContextOptionsBuilderHelper.UseSqlite(options, config);
 

@@ -5,7 +5,10 @@ namespace FEx.EFCore.Interfaces;
 
 public interface IFExDbConfig
 {
+    string SqlInstance { get; }
     string SqlDbName { get; }
+    string Username { get; }
+    string Password { get; }
     FileInfo SqliteDbFile { get; }
     int? CommandTimeout { get; }
     int MaxRetryCount { get; }
@@ -16,4 +19,5 @@ public interface IFExDbConfig
     bool GetMappings { get; set; }
     bool DropIfMigrationFailed { get; }
     bool UseSqlite { get; }
+    bool TrustCertificate { get; }
 }

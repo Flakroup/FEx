@@ -11,18 +11,18 @@ namespace FEx.EFCore.Interfaces;
 public interface IPooledDbService<out TDbContext> : IAsyncInitialize where TDbContext : DbContext
 {
     /// <summary>
-    ///     Map of model to DB mappings.
-    ///     ForwardIndex contains model entities names to table names in DB mapping.
-    ///     ReverseIndex contains table names in DB to model entities names mapping.
+    /// Map of model to DB mappings.
+    /// ForwardIndex contains model entities names to table names in DB mapping.
+    /// ReverseIndex contains table names in DB to model entities names mapping.
     /// </summary>
     /// <value>
-    ///     The mappings.
+    /// The mappings.
     /// </value>
     Map<string, string> TableMappings { get; }
 
     IReadOnlyDictionary<string, Mapping> Mappings { get; }
 
-    Task RunMigrationsAsync();
+    Task<bool> RunMigrationsAsync();
     Task MigrateAsync();
 
     Task RunActionInDbContextAsync(Action<TDbContext> func,

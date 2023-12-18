@@ -28,7 +28,7 @@ public static class ObjectExtensions
     /// <returns>Field value.</returns>
     // ReSharper disable UnusedParameter.Global
     public static TField Get<TField>(this object value, ref TField field, Func<TField> initializer)
-        // ReSharper restore UnusedParameter.Global
+    // ReSharper restore UnusedParameter.Global
     {
         field ??= initializer();
 
@@ -135,6 +135,7 @@ public static class ObjectExtensions
     ///     The value itself.
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="value" /> is a null reference.</exception>
+    [ContractAnnotation("value:null => stop; value:notnull=>notnull")]
     public static T Guard<T>(this T value, [CallerMemberName] string paramName = null, string message = null)
     {
         return value.Guard(v => v is null, paramName, message);

@@ -3,27 +3,24 @@ using FEx.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
-using System.Text;
 
 namespace FEx.EFCore.Helpers;
 
 public static class SqlServerDbContextOptionsBuilderHelper
 {
     public static bool UseSqlServer(this DbContextOptionsBuilder options,
-                                    string sqlInstance,
                                     IFExDbConfig config,
                                     Action<SqlServerDbContextOptionsBuilder> configure = null)
     {
-        sqlInstance.Guard(nameof(sqlInstance));
+        config.SqlInstance.Guard(nameof(IFExDbConfig.SqlInstance));
 
         try
         {
-            string testConnectionString = GetConnectionString(sqlInstance, "master");
-            bool canConnect = SQLConnectionHelper.CheckDbConnection(testConnectionString);
+            bool canConnect = SQLConnectionHelper.CheckMasterDbConnection(config);
 
             if (canConnect)
             {
-                string connectionString = GetConnectionString(sqlInstance, config.SqlDbName, config.PoolSize);
+                string connectionString = SQLConnectionHelper.GetConnectionString(config);
 
                 options.UseSqlServer(connectionString, serverDbContextOptionsBuilder =>
                 {
@@ -44,26 +41,5 @@ public static class SqlServerDbContextOptionsBuilderHelper
         }
 
         return false;
-    }
-
-    private static string GetConnectionString(string sqlInstance,
-                                              string sqlDbName,
-                                              int poolSize = 0,
-                                              bool trustCertificate = true)
-    {
-        var stringBuilder = new StringBuilder();
-
-        stringBuilder.Append($"Data Source={sqlInstance};")
-            .Append($"Initial Catalog={sqlDbName};")
-            .Append("Integrated Security=True;")
-            .Append("Trusted_Connection=True;");
-
-        if (poolSize > 0)
-            stringBuilder.Append("Pooling=true;").Append($"Max Pool Size={poolSize};");
-
-        if (trustCertificate)
-            stringBuilder.Append("TrustServerCertificate=True;");
-
-        return stringBuilder.ToString();
     }
 }

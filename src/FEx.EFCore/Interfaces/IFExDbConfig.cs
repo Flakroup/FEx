@@ -5,7 +5,7 @@ namespace FEx.EFCore.Interfaces;
 
 public interface IFExDbConfig
 {
-    string SqlInstance { get; }
+    string SqlInstance { get; set; }
     string SqlDbName { get; }
     string Username { get; }
     string Password { get; }
@@ -20,4 +20,5 @@ public interface IFExDbConfig
     bool DropIfMigrationFailed { get; }
     bool UseSqlite { get; }
     bool TrustCertificate { get; }
+    bool EnableSensitiveDataLogging { get; }
 }

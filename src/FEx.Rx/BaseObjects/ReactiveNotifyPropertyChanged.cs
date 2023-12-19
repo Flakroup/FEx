@@ -13,8 +13,8 @@ namespace FEx.Rx.BaseObjects;
 public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyChanged
 {
     /// <summary>
-    ///     Use this method in your ReactiveObject classes when creating custom
-    ///     properties where raiseAndSetIfChanged doesn't suffice.
+    /// Use this method in your ReactiveObject classes when creating custom
+    /// properties where raiseAndSetIfChanged doesn't suffice.
     /// </summary>
     /// <param name="propertyNames">The property names.</param>
     public void OnPropertiesChanged(params string[] propertyNames)
@@ -29,8 +29,8 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
     }
 
     /// <summary>
-    ///     Use this method in your ReactiveObject classes when creating custom
-    ///     properties where raiseAndSetIfChanged doesn't suffice.
+    /// Use this method in your ReactiveObject classes when creating custom
+    /// properties where raiseAndSetIfChanged doesn't suffice.
     /// </summary>
     /// <param name="propertyName">The property names.</param>
     [NotifyPropertyChangedInvocator]

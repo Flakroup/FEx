@@ -7,7 +7,7 @@ namespace FEx.EFCore.Configuration;
 
 public record FExDbConfig : IFExDbConfig //todo inherit SqlCSB
 {
-    public string SqlInstance { get; init; }
+    public string SqlInstance { get; set; }
     public string SqlDbName { get; init; }
     public string Username { get; init; }
     public string Password { get; init; }
@@ -21,6 +21,7 @@ public record FExDbConfig : IFExDbConfig //todo inherit SqlCSB
     public int MaxRetryCount { get; init; } = 10;
     public TimeSpan MaxRetryDelay { get; init; } = TimeSpan.FromSeconds(10);
     public bool TrustCertificate { get; init; } = true;
+    public bool EnableSensitiveDataLogging { get; init; } = Debugger.IsAttached;
 
     public int? CommandTimeout { get; init; } = Debugger.IsAttached
         ? 5000

@@ -1,24 +1,21 @@
 ﻿using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 
 namespace FEx.EFCore.Extensions;
 
 public static class DbContextOptionsBuilderExtensions
 {
-    public static bool SetSqlInstanceConnection(this DbContextOptionsBuilder options,
-                                                IFExDbConfig config,
-                                                bool useSqlite = false)
+    public static bool SetSqlInstanceConnection(this DbContextOptionsBuilder options, IFExDbConfig config)
     {
-        var sqlInstanceFound = false;
+        var sqlInstanceFound = true;
 
-        if (!useSqlite)
-            sqlInstanceFound = options.UseSqlServer(config);
+        if (config.UseSqlite)
+            options.UseSqlite(config);
         else
-            SqlLiteDbContextOptionsBuilderHelper.UseSqlite(options, config);
+            sqlInstanceFound = options.UseSqlServer(config);
 
-        if (Debugger.IsAttached)
+        if (config.EnableSensitiveDataLogging)
             options.EnableSensitiveDataLogging();
 
         return sqlInstanceFound;

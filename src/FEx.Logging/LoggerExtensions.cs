@@ -46,6 +46,7 @@ public static class LoggerExtensions
             cfg = cfg.MinimumLevel.Debug()
                 .AddOverrides(overrides, externalDebugLoggingLevel)
                 .Enrich.FromLogContext()
+                .WriteTo.Debug(outputTemplate: DefaultConsoleOutputTemplate)
                 .WriteTo.SetFileLogger(logFilePath)
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code, outputTemplate: DefaultConsoleOutputTemplate);
         }

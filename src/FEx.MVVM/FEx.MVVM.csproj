@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(TargetFrameworkIds)</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="DynamicData" Version="8.3.27" />
+		<PackageReference Include="ReactiveUI" Version="19.5.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
+		<ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
+		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
+		<ProjectReference Include="..\FEx.Rx\FEx.Rx.csproj" />
+	</ItemGroup>
+
+</Project>

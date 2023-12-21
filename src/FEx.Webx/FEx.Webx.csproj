@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(TargetFrameworkIds)</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MimeMapping" Version="2.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
+		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+	</ItemGroup>
+
+</Project>

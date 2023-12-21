@@ -1,19 +1,15 @@
 <Project>
 
+	<Import Project="$(MSBuildThisFileDirectory)\DevConfigs\Directory.Build.props" />
+
 	<PropertyGroup>
-		<Deterministic>true</Deterministic>
-		<Authors>Flakroup</Authors>
-		<Company>Flakroup</Company>
-		<Copyright>Copyright © Flakroup 2021</Copyright>
+		<TargetFrameworkId>net8.0</TargetFrameworkId>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<PackageIcon>flakroup.png</PackageIcon>
-		<GenerateDocumentationFile>false</GenerateDocumentationFile>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<WarnOnPackingNonPackableProject>true</WarnOnPackingNonPackableProject>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://gitlab.com/flakroup/FEx</PackageProjectUrl>
 		<RepositoryUrl>https://gitlab.com/flakroup/FEx.git</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
 		<WarningsAsErrors>$(WarningsAsErrors);CS0660</WarningsAsErrors>
 	</PropertyGroup>
 
@@ -29,7 +25,7 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-		<PackageReference Include="Microsoft.SourceLink.GitLab" Version="1.0.0">
+		<PackageReference Include="Microsoft.SourceLink.GitLab" Version="1.1.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

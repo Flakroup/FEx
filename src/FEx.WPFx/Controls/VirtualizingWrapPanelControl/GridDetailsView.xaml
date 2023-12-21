@@ -1,0 +1,38 @@
+<!-- ReSharper disable InconsistentNaming -->
+<virtualizingWrapPanelControl:GridView x:Class="FEx.WPFx.Controls.VirtualizingWrapPanelControl.GridDetailsView"
+                                       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                                       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                                       xmlns:virtualizingWrapPanelControl="clr-namespace:FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+                                       x:Name="UC"
+                                       d:DesignHeight="400"
+                                       d:DesignWidth="600"
+                                       mc:Ignorable="d">
+    <!-- ReSharper restore InconsistentNaming -->
+    <virtualizingWrapPanelControl:GridView.ItemsPanel>
+        <ItemsPanelTemplate>
+            <virtualizingWrapPanelControl:VirtualizingWrapPanelWithItemExpansion ExpandedItem="{Binding ExpandedItem,
+                                                                                                        ElementName=UC,
+                                                                                                        Mode=OneWay}"
+                                                                                 Orientation="{Binding Orientation,
+                                                                                                       ElementName=UC,
+                                                                                                       Mode=OneWay}"
+                                                                                 SpacingMode="{Binding SpacingMode,
+                                                                                                       ElementName=UC,
+                                                                                                       Mode=OneWay}"
+                                                                                 StretchItems="{Binding StretchItems,
+                                                                                                        ElementName=UC,
+                                                                                                        Mode=OneWay}">
+                <virtualizingWrapPanelControl:VirtualizingWrapPanelWithItemExpansion.ExpandedItemTemplate>
+                    <DataTemplate>
+                        <Grid Loaded="ExpandedItemContainerRoot_Loaded">
+                            <ContentControl Content="{Binding Mode=OneWay}" ContentTemplate="{Binding ExpandedItemTemplate, Source={x:Reference UC}, Mode=OneWay}" />
+                        </Grid>
+                    </DataTemplate>
+                </virtualizingWrapPanelControl:VirtualizingWrapPanelWithItemExpansion.ExpandedItemTemplate>
+            </virtualizingWrapPanelControl:VirtualizingWrapPanelWithItemExpansion>
+        </ItemsPanelTemplate>
+    </virtualizingWrapPanelControl:GridView.ItemsPanel>
+
+</virtualizingWrapPanelControl:GridView>

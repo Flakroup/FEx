@@ -1,0 +1,210 @@
+﻿using FEx.Basics.Flow;
+using System;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Reactive.Threading.Tasks;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
+
+namespace FEx.Rx.Extensions;
+
+public static class ObservableExtensions
+{
+    public static IDisposable SubscribeWithoutOverlap<T>(this IObservable<T> source, Action<T> action)
+    {
+        var sampler = new Subject<Unit>();
+
+        IDisposable sub = source.Sample(sampler)
+            .Subscribe(l =>
+            {
+                action(l);
+                sampler.OnNext(Unit.Default);
+            });
+
+        // start sampling when we have a first value
+        source.Take(1).Subscribe(_ => sampler.OnNext(Unit.Default));
+
+        return sub;
+    }
+
+    public static IObservable<TResult> FromTdf<T, TResult>(this IObservable<T> source,
+                                                           Func<IPropagatorBlock<T, TResult>> blockFactory)
+    {
+        return Observable.Defer(() =>
+        {
+            IPropagatorBlock<T, TResult> block = blockFactory();
+            source.Subscribe(block.AsObserver());
+
+            return block.AsObservable();
+        });
+    }
+
+    public static IObservable<TResult> FromTdf<T, TResult>(this IObservable<T> source,
+                                                           Func<T, Task<TResult>> transformFunc)
+    {
+        return source.FromTdf(() => new TransformBlock<T, TResult>(transformFunc));
+    }
+
+    public static IObservable<TResult> SelectTask<TSource, TResult>(this IObservable<TSource> source,
+                                                                    Func<TSource, CancellationToken, Task<TResult>>
+                                                                        func,
+                                                                    CancellationToken cancellationToken = default)
+    {
+        return source.Select(value => Observable.FromAsync(token => func(value, cancellationToken != default
+                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
+                : token)))
+            .Switch();
+    }
+
+    public static IObservable<TSource> SelectTask<TSource>(this IObservable<TSource> source,
+                                                           Func<TSource, CancellationToken, Task> func,
+                                                           CancellationToken cancellationToken = default)
+    {
+        return source.Select(value => Observable.FromAsync(async token =>
+            {
+                await func(value, cancellationToken != default
+                    ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
+                    : token);
+
+                return value;
+            }))
+            .Switch();
+    }
+
+    public static IDisposable SubscribeTask<TSource>(this IObservable<TSource> source,
+                                                     Func<TSource, CancellationToken, Task> func,
+                                                     CancellationToken cancellationToken = default) =>
+        source.SelectTask(func, cancellationToken).AsyncSubscribe();
+
+    public static void SubscribeTask<TSource>(this IObservable<TSource> source,
+                                              Func<TSource, CancellationToken, Task> func,
+                                              CompositeDisposable disposable,
+                                              CancellationToken cancellationToken = default)
+    {
+        source.SelectTask(func, cancellationToken).AsyncSubscribe(null, disposable);
+    }
+
+    public static IObservable<EventPattern<PropertyChangedEventArgs>> GetPropertyChangedObservable(
+        this INotifyPropertyChanged notifyPropertyChanged)
+    {
+        return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+                ev => notifyPropertyChanged.PropertyChanged += ev, ev => notifyPropertyChanged.PropertyChanged -= ev)
+            .Where(y => y?.EventArgs?.PropertyName is not null && y.Sender is not null);
+    }
+
+    public static IObservable<EventPattern<PropertyChangedEventArgs>> GetPropertyChangedObservable(
+        this INotifyPropertyChanged notifyPropertyChanged,
+        string propertyName)
+    {
+        return notifyPropertyChanged.GetPropertyChangedObservable()
+            .Where(x => x.EventArgs.PropertyName == propertyName);
+    }
+
+    public static IObservable<EventPattern<NotifyCollectionChangedEventArgs>> GetCollectionChangedObservable(
+        this INotifyCollectionChanged notifyCollectionChanged)
+    {
+        return Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+                ev => notifyCollectionChanged.CollectionChanged += ev,
+                ev => notifyCollectionChanged.CollectionChanged -= ev)
+            .Where(y => y?.EventArgs is not null);
+    }
+
+    public static void TryGetLastValue<TResult>(this IObservable<TResult> source, out TResult value)
+    {
+        TResult result = default;
+        using IDisposable subscription = source.Subscribe(x => result = x);
+        value = result;
+    }
+
+    public static IObservable<T> MergeMany<T>(this IObservable<T> source, params IObservable<T>[] observables)
+    {
+        return observables.Aggregate(source, (current, observable) => current.Merge(observable));
+    }
+
+    public static IDisposable AsyncSubscribe<T>(this IObservable<T> source, Action<T> onNext = null)
+    {
+        IObservable<T> observable = source.ObserveOn(Scheduler.Default).SubscribeOn(Scheduler.Default);
+
+        return onNext is not null
+            ? observable.Subscribe(onNext)
+            : observable.Subscribe();
+    }
+
+    public static void AsyncSubscribe<T>(this IObservable<T> source, Action<T> onNext, CompositeDisposable disposable)
+    {
+        IObservable<T> observable = source.ObserveOn(Scheduler.Default).SubscribeOn(Scheduler.Default);
+
+        IDisposable subscription = onNext is not null
+            ? observable.Subscribe(onNext)
+            : observable.Subscribe();
+
+        disposable?.Add(subscription);
+    }
+
+    /// <summary>
+    ///     Waits for the observable to retrieve a value and returns it wrapped in Result.
+    /// </summary>
+    /// <param name="observable">Observable to get the value</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <typeparam name="T">Type of value</typeparam>
+    /// <returns>
+    ///     Data from observable wrapped in Result class.
+    ///     Result property IsSuccess is false if task was cancelled.
+    /// </returns>
+    public static async ValueTask<Result<T, Error>> GetResultAsync<T>(this IObservable<T> observable,
+                                                                      CancellationToken cancellationToken = default)
+    {
+        Result<T, Error> result = observable.GetResult();
+
+        if (result.IsSuccess)
+            return result.Data;
+
+        try
+        {
+            T data = await observable.ObserveOn(Scheduler.Default)
+                .SubscribeOn(Scheduler.Default)
+                .FirstAsync()
+                .ToTask(cancellationToken, null, Scheduler.Default);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            return data;
+        }
+        catch (TaskCanceledException)
+        {
+            return Result<T, Error>.Failure;
+        }
+    }
+
+    /// <summary>
+    ///     Tries to get the value from the observable and returns it wrapped in Result.
+    /// </summary>
+    /// <param name="observable">Observable to get the value.</param>
+    /// <typeparam name="T">Type of value</typeparam>
+    /// <returns>
+    ///     Data from observable wrapped in Result class.
+    ///     Result property IsSuccess is false if no value was present in observable.
+    /// </returns>
+    public static Result<T, Error> GetResult<T>(this IObservable<T> observable)
+    {
+        T result = default;
+        var isSet = false;
+
+        using IDisposable subscription = observable.Subscribe(x =>
+        {
+            result = x;
+            isSet = true;
+        });
+
+        return !isSet
+            ? Result<T, Error>.Failure
+            : result;
+    }
+}

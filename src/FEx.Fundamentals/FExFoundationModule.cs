@@ -1,0 +1,20 @@
+﻿using FEx.Abstractions;
+using FEx.Basics.Interfaces;
+using FEx.Fundamentals.Helpers;
+using FEx.Fundamentals.StackTraces;
+using StrongInject;
+using System.Linq;
+
+namespace FEx.Fundamentals;
+
+[Register(typeof(AsyncHelper))]
+[Register(typeof(Foundation), Scope.SingleInstance)]
+[Register(typeof(StackTraceGenerator), Scope.SingleInstance, typeof(IStackTraceProvider))]
+public class FExFoundationModule
+{
+    [Instance]
+    public static IStackTraceFilter[] StackTraceFilters => Enumerable.Empty<IStackTraceFilter>().ToArray();
+
+    [Instance]
+    public static IFExServiceProvider ServiceProviderInstance => Foundation.StrongInjectServiceProvider;
+}

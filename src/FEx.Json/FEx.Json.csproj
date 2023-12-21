@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(TargetFrameworkIds)</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
+    <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+    <ProjectReference Include="..\FEx.Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

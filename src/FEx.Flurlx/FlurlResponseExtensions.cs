@@ -11,5 +11,5 @@ public static class FlurlResponseExtensions
     ///     200-299; otherwise, <see langword="false" />.
     /// </returns>
     public static bool IsSuccessStatusCode(this IFlurlResponse response) =>
-        response.StatusCode is >= (int)HttpStatusCode.OK and <= 299;
+        response?.StatusCode is >= (int)HttpStatusCode.OK and <= 299;
 }

@@ -14,6 +14,7 @@ namespace FEx.Fundamentals;
 public class Foundation
 {
     private static AsyncHelper _asyncHelper;
+    private static IFExDispatcher _dispatcher;
     private static IFExServiceProvider _serviceProvider;
     private static IFExServiceProvider _strongInjectServiceProvider;
     private static Thread _mainThread;
@@ -21,8 +22,14 @@ public class Foundation
 
     public static AsyncHelper AsyncHelper
     {
-        get => _asyncHelper.Guard();
-        private set => _asyncHelper = value;
+        get => _asyncHelper;
+        private set => _asyncHelper = value.Guard();
+    }
+
+    public static IFExDispatcher Dispatcher
+    {
+        get => _dispatcher;
+        private set => _dispatcher = value.Guard();
     }
 
     public static IFExServiceProvider ServiceProvider
@@ -72,11 +79,13 @@ public class Foundation
 
     public Foundation(ILogger<FExBasics> logger,
                       AsyncHelper asyncHelper,
+                      IFExDispatcher dispatcher,
                       IExceptionHandler exceptionHandler,
                       IStackTraceProvider stackTraceProvider,
                       IEventDeliverer eventDeliverer)
     {
         AsyncHelper = asyncHelper;
+        Dispatcher = dispatcher;
         FExExtensionsCommon.Initialize(exceptionHandler.Guard(nameof(exceptionHandler)));
         FExBasics.Init(stackTraceProvider, eventDeliverer, logger);
     }

@@ -125,5 +125,5 @@ public class Foundation
     public Thread GetMainThread() => MainThread;
 
     private static bool IsPlatformMainThread(Thread currentThread) =>
-        !OSVersionInfo.IsWin || currentThread.GetApartmentState() == ApartmentState.STA;
+        !OSVersionInfo.IsWindows || currentThread.GetApartmentState() == ApartmentState.STA;
 }

@@ -1,9 +1,12 @@
 ﻿namespace FEx.Fundamentals.Utilities.OS;
 
-public enum OSPlatform
+public enum OSPlatformInfo
 {
     Unknown,
     Windows,
     Linux,
-    OSX
+    OSX,
+    Android,
+    IOS,
+    Browser
 }

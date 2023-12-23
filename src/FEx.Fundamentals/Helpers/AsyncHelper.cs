@@ -88,8 +88,9 @@ public class AsyncHelper
         await ExecuteTaskOnThreadPoolAsync(() => WrapTaskAsync(task));
     }
 
-    public async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> taskFunc, bool logException = true) 
-    {//todo enhance with valueTasks
+    public async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> taskFunc, bool logException = true)
+    {
+        //todo enhance with valueTasks
         Task<T> task = await ExecuteOnThreadPoolAsync(taskFunc);
 
         try
@@ -230,7 +231,15 @@ public class AsyncHelper
             ? DefaultDelayTimeSpan
             : TimeSpan.FromMilliseconds(delayMilliseconds);
 
-        await DelayAsync(delayTimeSpan, cancellationToken);
+        try
+        {
+            await DelayAsync(delayTimeSpan, cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            //ignored
+        }
+
         action?.Invoke();
     }
 

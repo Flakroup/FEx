@@ -4,10 +4,12 @@ using FEx.Fundamentals.Utilities.OS.Enums;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Text;
 
 // http://www.codeproject.com/Articles/73000/Getting-Operating-System-Version-Info-Even-for-Win
 //https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions
@@ -20,50 +22,36 @@ using System.Runtime.Versioning;
 namespace FEx.Fundamentals.Utilities.OS;
 
 /// <summary>
-///     Provides detailed information about the host operating system.
+/// Provides detailed information about the host operating system.
 /// </summary>
-public class OSVersionInfo : IOSInfoProvider
+public static class OSVersionInfo
 {
     private const int SmTabletPC = 86;
 
     /// <summary>
-    ///     Indicates whether the operating-system is arm64.
+    /// Indicates whether the operating-system is arm64.
     /// </summary>
     public static bool IsArm64 => RuntimeInformation.OSArchitecture == Architecture.Arm64;
 
     /// <summary>
-    ///     Indicates whether the operating-system is 64bit.
+    /// Indicates whether the operating-system is 64bit.
     /// </summary>
-    public static bool Is64Bit => RuntimeInformation.OSArchitecture == Architecture.X64
-                                  || RuntimeInformation.OSArchitecture == Architecture.Arm64;
+    public static bool Is64Bit =>
+        RuntimeInformation.OSArchitecture is Architecture.X64
+            or Architecture.Arm64;
 
     /// <summary>
-    ///     Indicates whether the operating-system is 32bit.
+    /// Indicates whether the operating-system is 32bit.
     /// </summary>
     public static bool Is32Bit => !Is64Bit;
 
     /// <summary>
-    ///     Indicates whether the operating-system is UNIX.
+    /// Indicates whether the operating-system is UNIX.
     /// </summary>
-    public static bool IsUnix => OSPlatform is OSPlatform.Linux or OSPlatform.OSX;
+    public static bool IsUnix => IsLinux || IsMacOS || IsIOS;
 
     /// <summary>
-    ///     Indicates whether the operating-system is Windows.
-    /// </summary>
-    public static bool IsWin => OSPlatform is OSPlatform.Windows;
-
-    /// <summary>
-    ///     Indicates whether the operating-system is Linux.
-    /// </summary>
-    public static bool IsLinux => OSPlatform == OSPlatform.Linux;
-
-    /// <summary>
-    ///     Indicates whether the operating-system is OSX.
-    /// </summary>
-    public static bool IsOsx => OSPlatform == OSPlatform.OSX;
-
-    /// <summary>
-    ///     Indicates whether the current process is running under Windows Subsystem for Linux.
+    /// Indicates whether the current process is running under Windows Subsystem for Linux.
     /// </summary>
     public static bool IsWsl
     {
@@ -86,7 +74,7 @@ public class OSVersionInfo : IOSInfoProvider
     }
 
     /// <summary>
-    ///     Indicates the target framework of the current process.
+    /// Indicates the target framework of the current process.
     /// </summary>
     public static FrameworkName Framework => new(Assembly.GetEntryAssembly()
         .Guard()
@@ -95,58 +83,78 @@ public class OSVersionInfo : IOSInfoProvider
         .FrameworkName);
 
     /// <summary>
-    ///     Indicates the operating-system platform.
+    /// Indicates the operating-system platform.
     /// </summary>
-    public static OSPlatform OSPlatform =>
-        RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX) ? OSPlatform.OSX :
-        RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) ? OSPlatform.Linux :
-        RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows) ? OSPlatform.Windows :
-        OSPlatform.Unknown;
+    public static OSPlatformInfo OSPlatform =>
+        IsBrowser ? OSPlatformInfo.Browser :
+        IsIOS ? OSPlatformInfo.IOS :
+        IsAndroid ? OSPlatformInfo.Android :
+        IsMacOS ? OSPlatformInfo.OSX :
+        IsLinux ? OSPlatformInfo.Linux :
+        IsWindows ? OSPlatformInfo.Windows : OSPlatformInfo.Unknown;
 
-    public string InfoString { get; }
+#if NET6_0_OR_GREATER
+    public static bool IsWindows => OperatingSystem.IsWindows();
+    public static bool IsMacOS => OperatingSystem.IsMacOS();
+    public static bool IsLinux => OperatingSystem.IsLinux();
+    public static bool IsAndroid => OperatingSystem.IsAndroid();
+    public static bool IsIOS => OperatingSystem.IsIOS();
+    public static bool IsBrowser => OperatingSystem.IsBrowser();
+    public static bool IsOSPlatform(string platform) => OperatingSystem.IsOSPlatform(platform);
+#else
+        public static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        public static bool IsMacOS => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+        public static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+        public static bool IsAndroid => IsOSPlatform("ANDROID");
+        public static bool IsIOS => IsOSPlatform("IOS");
+        public static bool IsBrowser => IsOSPlatform("BROWSER");
+        public static bool IsOSPlatform(string platform) => RuntimeInformation.IsOSPlatform(OSPlatform.Create(platform));
+#endif
 
     /// <summary>
-    ///     Determines if the current application is 32 or 64-bit.
+    /// Determines if the current application is 32 or 64-bit.
     /// </summary>
-    public SoftwareArchitecture ProgramBits { get; }
+    public static SoftwareArchitecture ProgramBits { get; }
 
-    public SoftwareArchitecture OSBits { get; }
+    public static SoftwareArchitecture OSBits { get; }
+
+    public static bool Is64BitOperatingSystem => OSBits == SoftwareArchitecture.Bit64;
 
     /// <summary>
-    ///     Determines if the current processor is 32 or 64-bit.
+    /// Determines if the current processor is 32 or 64-bit.
     /// </summary>
-    public OSProcessorArchitecture ProcessorBits { get; }
+    public static OSProcessorArchitecture ProcessorBits { get; }
 
-    public OSEdition Edition { get; }
+    public static OSEdition Edition { get; }
 
     /// <summary>
-    ///     Gets the name of the operating system running on this computer.
+    /// Gets the edition of the operating system running on this computer.
     /// </summary>
-    public string Name { get; }
-
-    /// <summary>
-    ///     Gets the service pack information of the operating system running on this computer.
-    /// </summary>
-    public string ServicePack { get; }
-
-    /// <summary>
-    ///     Gets the build version number of the operating system running on this computer.
-    /// </summary>
-    public int BuildVersion { get; }
-
-    /// <summary>
-    ///     Gets the full version of the operating system running on this computer.
-    /// </summary>
-    public Version Version { get; }
-
-    public bool Is64BitOperatingSystem => OSBits == SoftwareArchitecture.Bit64;
-
-    /// <summary>
-    ///     Gets the edition of the operating system running on this computer.
-    /// </summary>
-    public string EditionString => Edition != OSEdition.Unknown
+    public static string EditionString => Edition != OSEdition.Unknown
         ? Edition.GetEnumValueDescription()
         : null;
+
+    /// <summary>
+    /// Gets the name of the operating system running on this computer.
+    /// </summary>
+    public static string Name { get; }
+
+    /// <summary>
+    /// Gets the service pack information of the operating system running on this computer.
+    /// </summary>
+    public static string ServicePack { get; }
+
+    /// <summary>
+    /// Gets the build version number of the operating system running on this computer.
+    /// </summary>
+    public static int BuildVersion { get; }
+
+    /// <summary>
+    /// Gets the full version of the operating system running on this computer.
+    /// </summary>
+    public static Version Version { get; }
+
+    public static string InfoString { get; }
 
     private static Dictionary<OSProduct, OSEdition> ProductToEdition { get; } = new()
     {
@@ -248,6 +256,11 @@ public class OSVersionInfo : IOSInfoProvider
 
     private static OSProcessorArchitecture GetProcessorBits()
     {
+        if (!IsWindows)
+            return Is32Bit
+                ? OSProcessorArchitecture.Bit32
+                : OSProcessorArchitecture.Bit64;
+
         OSProcessorArchitecture pbits = OSProcessorArchitecture.Unknown;
 
         try
@@ -277,6 +290,9 @@ public class OSVersionInfo : IOSInfoProvider
 
     private static string GetServicePack()
     {
+        if (!IsWindows)
+            return null;
+
         var osVersionInfo = new OSVersionInfoEx
         {
             dwOSVersionInfoSize = Marshal.SizeOf(typeof(OSVersionInfoEx))
@@ -295,43 +311,69 @@ public class OSVersionInfo : IOSInfoProvider
         return null;
     }
 
+    [SuppressMessage("Interoperability", "CA1416:Walidacja zgodności z platformą")]
     private static RegistryKey GetRegistryKey(string pathRoot)
     {
-        if (pathRoot.IsEqual("HKEY_CLASSES_ROOT"))
-            return Registry.ClassesRoot;
+        if (!IsWindows)
+            return null;
 
-        if (pathRoot.IsEqual("HKEY_CURRENT_USER"))
-            return Registry.CurrentUser;
-
-        if (pathRoot.IsEqual("HKEY_LOCAL_MACHINE"))
-            return Registry.LocalMachine;
-
-        return pathRoot.IsEqual("HKEY_USERS") ? Registry.Users :
+        return pathRoot.IsEqual("HKEY_CLASSES_ROOT") ? Registry.ClassesRoot :
+            pathRoot.IsEqual("HKEY_CURRENT_USER") ? Registry.CurrentUser :
+            pathRoot.IsEqual("HKEY_LOCAL_MACHINE") ? Registry.LocalMachine :
+            pathRoot.IsEqual("HKEY_USERS") ? Registry.Users :
             pathRoot.IsEqual("HKEY_CURRENT_CONFIG") ? Registry.CurrentConfig : null;
     }
 
-    private string GetInfoString() => $"{Name} {Edition} {Version} {ProgramBits}";
-
-    private SoftwareArchitecture GetProgramBits()
+    private static string GetInfoString()
     {
-        int check = IntPtr.Size * 8;
+        var sb = new StringBuilder();
 
-        return check == 64 ? SoftwareArchitecture.Bit64 :
-            check == 32 ? SoftwareArchitecture.Bit32 : SoftwareArchitecture.Unknown;
+        if (Name.IsNotNullOrEmptyString())
+            sb.Append(Name);
+
+        if (Edition != OSEdition.Unknown)
+            sb.Append(' ').Append(Edition);
+
+        if (Version is not null)
+            sb.Append(' ').Append(Version);
+
+        if (ProgramBits != SoftwareArchitecture.Unknown)
+            sb.Append(' ').Append(ProgramBits);
+
+        return sb.ToString();
     }
 
-    private SoftwareArchitecture GetOSBits()
+    private static SoftwareArchitecture GetProgramBits()
     {
         int check = IntPtr.Size * 8;
 
-        return check == 64 ? SoftwareArchitecture.Bit64 :
-            check == 32 ? Is32BitProcessOn64BitProcessor()
+        return check switch
+        {
+            64 => SoftwareArchitecture.Bit64,
+            32 => SoftwareArchitecture.Bit32,
+            _ => SoftwareArchitecture.Unknown
+        };
+    }
+
+    private static SoftwareArchitecture GetOSBits()
+    {
+        int check = IntPtr.Size * 8;
+
+        return check switch
+        {
+            64 => SoftwareArchitecture.Bit64,
+            32 => Environment.Is64BitOperatingSystem //Is 32-bit program on 64-bit OS
                 ? SoftwareArchitecture.Bit64
-                : SoftwareArchitecture.Bit32 : SoftwareArchitecture.Unknown;
+                : SoftwareArchitecture.Bit32,
+            _ => SoftwareArchitecture.Unknown
+        };
     }
 
-    private OSEdition GetEdition()
+    private static OSEdition GetEdition()
     {
+        if (!IsWindows)
+            return OSEdition.Unknown;
+
         OperatingSystem osVersion = Environment.OSVersion;
 
         var osVersionInfo = new OSVersionInfoEx
@@ -390,12 +432,16 @@ public class OSVersionInfo : IOSInfoProvider
         return OSEdition.Unknown;
     }
 
-    private OSEdition GetEditionFromProduct(uint product) => GetEditionFromProduct((OSProduct)product);
+    private static OSEdition GetEditionFromProduct(uint product) => GetEditionFromProduct((OSProduct)product);
 
-    private OSEdition GetEditionFromProduct(OSProduct product) => ProductToEdition.TryGetKeyValue(product);
+    private static OSEdition GetEditionFromProduct(OSProduct product) => ProductToEdition.TryGetKeyValue(product);
 
-    private string GetName()
+    [SuppressMessage("ReSharper", "CognitiveComplexity")]
+    private static string GetName()
     {
+        // if (IsWindows)
+        //     return null;
+
         OperatingSystem osVersion = Environment.OSVersion;
 
         var osVersionInfo = new OSVersionInfoEx
@@ -417,7 +463,7 @@ public class OSVersionInfo : IOSInfoProvider
 
                     //http://msdn.microsoft.com/en-us/library/windows/desktop/ms724832(v=vs.85).aspx
 
-                    // For applications that have been manifested for Windows 8.1 & Windows 10. Applications not manifested for 8.1 or 10 will return the Windows 8 OS version value (6.2). 
+                    // For applications that have been manifested for Windows 8.1 & Windows 10. Applications not manifested for 8.1 or 10 will return the Windows 8 OS version value (6.2).
                     // By reading the registry, we'll get the exact version - meaning we can even compare against  Win 8 and Win 8.1.
                     string exactVersion =
                         RegistryRead(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion",
@@ -444,34 +490,34 @@ public class OSVersionInfo : IOSInfoProvider
                     case PlatformID.WinCE:
                         return "Windows CE";
                     case PlatformID.Win32Windows:
+                    {
+                        if (majorVersion == 4)
                         {
-                            if (majorVersion == 4)
+                            string csdVersion = osVersionInfo.szCSDVersion;
+
+                            switch (minorVersion)
                             {
-                                string csdVersion = osVersionInfo.szCSDVersion;
-
-                                switch (minorVersion)
-                                {
-                                    case 0:
-                                        return csdVersion is "B" or "C"
-                                            ? "Windows 95 OSR2"
-                                            : "Windows 95";
-                                    case 10:
-                                        return csdVersion == "A"
-                                            ? "Windows 98 Second Edition"
-                                            : "Windows 98";
-                                    case 90:
-                                        return "Windows Me";
-                                }
+                                case 0:
+                                    return csdVersion is "B" or "C"
+                                        ? "Windows 95 OSR2"
+                                        : "Windows 95";
+                                case 10:
+                                    return csdVersion == "A"
+                                        ? "Windows 98 Second Edition"
+                                        : "Windows 98";
+                                case 90:
+                                    return "Windows Me";
                             }
-
-                            break;
                         }
+
+                        break;
+                    }
                     case PlatformID.Win32NT:
-                        {
-                            int productType = osVersionInfo.wProductType;
+                    {
+                        int productType = osVersionInfo.wProductType;
 
-                            return new OSVersion(majorVersion, minorVersion, productType).ToString();
-                        }
+                        return new OSVersion(majorVersion, minorVersion, productType).ToString();
+                    }
                     case PlatformID.Unix:
                     case PlatformID.Xbox:
                     case PlatformID.MacOSX:
@@ -488,8 +534,11 @@ public class OSVersionInfo : IOSInfoProvider
         return "unknown";
     }
 
-    private int GetBuildVersion()
+    private static int GetBuildVersion()
     {
+        if (!IsWindows)
+            return 0;
+
         string version = RegistryRead(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion",
             "CurrentBuildNumber", null);
 
@@ -498,14 +547,17 @@ public class OSVersionInfo : IOSInfoProvider
             : 0;
     }
 
-    private Version GetVersion()
+    private static Version GetVersion()
     {
+        if (!IsWindows)
+            return null;
+
         Version currentVersion = GetCurrentVersion();
 
         return new Version(currentVersion.Major, currentVersion.Minor, GetBuildVersion(), currentVersion.Revision);
     }
 
-    private Version GetCurrentVersion()
+    private static Version GetCurrentVersion()
     {
         if (IsWindows10())
             return new Version(10, 0, 0, 0);
@@ -525,9 +577,7 @@ public class OSVersionInfo : IOSInfoProvider
         return new Version(Environment.OSVersion.Version.Major, Environment.OSVersion.Version.Minor, 0, revision);
     }
 
-    private bool Is32BitProcessOn64BitProcessor() => Environment.Is64BitOperatingSystem;
-
-    private bool IsWindows10()
+    private static bool IsWindows10()
     {
         string productName = RegistryRead(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion",
             "ProductName", "");
@@ -535,7 +585,8 @@ public class OSVersionInfo : IOSInfoProvider
         return productName?.StartsWith("Windows 10", StringComparison.OrdinalIgnoreCase) == true;
     }
 
-    private string RegistryRead(string registryPath, string field, string defaultValue)
+    [SuppressMessage("Interoperability", "CA1416:Walidacja zgodności z platformą")]
+    private static string RegistryRead(string registryPath, string field, string defaultValue)
     {
         string rtn = null;
         var backSlash = "";
@@ -562,7 +613,11 @@ public class OSVersionInfo : IOSInfoProvider
                         if (newRegistryPath != "")
                         {
                             //rtn = (string)Registry.GetValue(RegistryPath, "CurrentVersion", DefaultValue);
-                            ourKey?.Dispose();
+#pragma warning disable IDISP016
+#pragma warning disable IDISP007
+                            ourKey.Dispose();
+#pragma warning restore IDISP007
+#pragma warning restore IDISP016
                             ourKey = ourKey.OpenSubKey(newRegistryPath);
                             rtn = (string)ourKey?.GetValue(field, defaultValue);
                             ourKey?.Close();
@@ -583,26 +638,10 @@ public class OSVersionInfo : IOSInfoProvider
         return rtn;
     }
 
+    [SuppressMessage("ReSharper", "UnusedType.Local")]
     private delegate bool IsWow64ProcessDelegate([In] IntPtr handle, [Out] out bool isWow64Process);
 
-    #region Singleton
-    private static object SyncRoot { get; } = new();
-    private static volatile OSVersionInfo _instance;
-
-    public static OSVersionInfo Instance
-    {
-        get
-        {
-            if (_instance is null)
-                lock (SyncRoot)
-                    _instance ??= new OSVersionInfo();
-
-            return _instance;
-        }
-    }
-
-    // Note: constructor is 'private'
-    private OSVersionInfo()
+    static OSVersionInfo()
     {
         ProgramBits = GetProgramBits();
         OSBits = GetOSBits();
@@ -612,10 +651,8 @@ public class OSVersionInfo : IOSInfoProvider
         ServicePack = GetServicePack();
         BuildVersion = GetBuildVersion();
         Version = GetVersion();
-
         InfoString = GetInfoString();
     }
-    #endregion
 
     // ReSharper disable UnusedMember.Local
     //todo convert to enum

@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.Extensions.IO;
@@ -14,29 +15,47 @@ public static class StreamExtensions
                                                      Stream destStream,
                                                      Action<double> progressMaximumSet = null,
                                                      Action<double> progressValueSet = null,
-                                                     long? length = null)
+                                                     long? length = null,
+                                                     CancellationToken cancellationToken = default)
     {
+#if NETSTANDARD
         var buffer = new byte[BufferSize];
+#else
+        var buffer = new Memory<byte>(new byte[BufferSize]);
+#endif
         var writtenBytes = 0;
 
-        if (sourceStream is null)
-            return;
+        sourceStream.Guard(nameof(sourceStream));
 
 #if NETSTANDARD
+#pragma warning disable IDISP007
         using Stream stream = sourceStream;
+#pragma warning restore IDISP007
 #else
+#pragma warning disable IDISP007
         await using Stream stream = sourceStream;
+#pragma warning restore IDISP007
 #endif
         progressMaximumSet?.BeginInvoke(stream.Length, null, null);
 
         while (true)
         {
-            int num = await stream.ReadAsync(buffer, 0, buffer.Length);
+#if NETSTANDARD
+            int num = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+#else
+            int num = await stream.ReadAsync(buffer, cancellationToken);
+#endif
+#if NETSTANDARD
             int bytesRead;
 
             if ((bytesRead = num) != 0)
             {
-                await destStream.WriteAsync(buffer, 0, bytesRead);
+                await destStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+#else
+            if (num != 0)
+            {
+                await destStream.WriteAsync(buffer, cancellationToken);
+#endif
                 writtenBytes += num;
                 progressValueSet?.BeginInvoke(writtenBytes, null, null);
 
@@ -59,10 +78,12 @@ public static class StreamExtensions
         var buffer = new byte[BufferSize];
         var writtenBytes = 0;
 
-        if (sourceStream is null)
-            return;
+        sourceStream.Guard(nameof(sourceStream));
 
+#pragma warning disable IDISP007
         using Stream stream = sourceStream;
+#pragma warning restore IDISP007
+
         progressMaximumSet?.BeginInvoke(stream.Length, null, null);
 
         while (true)
@@ -88,11 +109,16 @@ public static class StreamExtensions
 
     public static async Task<byte[]> ReadFullyAsync(this Stream input)
     {
+        //todo refactor it
 #if NETSTANDARD
-        using (input) //todo refactor it
+#pragma warning disable IDISP007
+        using (input)
+#pragma warning restore IDISP007
         using (MemoryStream ms = await input.ToMemoryStreamAsync())
 #else
-        await using (input) //todo refactor it
+#pragma warning disable IDISP007
+        await using (input)
+#pragma warning restore IDISP007
         await using (MemoryStream ms = await input.ToMemoryStreamAsync())
 #endif
             return ms.ToArray();
@@ -101,9 +127,13 @@ public static class StreamExtensions
     public static async Task<MemoryStream> ToMemoryStreamAsync(this Stream input)
     {
 #if NETSTANDARD
+#pragma warning disable IDISP007
         using Stream stream = input;
+#pragma warning restore IDISP007
 #else
+#pragma warning disable IDISP007
         await using Stream stream = input;
+#pragma warning restore IDISP007
 #endif
         var ms = new MemoryStream();
         await input.CopyToAsync(ms);

@@ -1,35 +1,21 @@
 ﻿using Avalonia.Threading;
-using FEx.Abstractions;
 using FEx.Fundamentals;
 using FEx.MVVM.Abstractions;
+using FEx.Utilities.Implementations;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.Avaloniax;
 
-public class AvaloniaDispatcher : IFExDispatcher, IUIContextExecutor
+public class AvaloniaDispatcher : FExDispatcher, IUIContextExecutor
 {
-    protected Dispatcher Dispatcher => Dispatcher.UIThread;
+    protected static Dispatcher Dispatcher => Dispatcher.UIThread;
 
-    public void BeginInvokeOnMainThread(Action action)
+    public AvaloniaDispatcher(ILogger logger)
+        : base(logger)
     {
-        Foundation.AsyncHelper.FireAndForget(() => Dispatcher.Invoke(action), asyncMode: AsyncMode.ThreadPool);
-    }
-
-    public async Task<T> InvokeOnMainThreadAsync<T>(Func<T> func) => await Dispatcher.InvokeAsync(func);
-
-    public async Task InvokeOnMainThreadAsync(Action action) => await Dispatcher.InvokeAsync(action);
-
-    public async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask) => await Dispatcher.InvokeAsync(funcTask);
-
-    public async Task InvokeOnMainThreadAsync(Func<Task> funcTask) => await Dispatcher.InvokeAsync(funcTask);
-
-    public void SendInThisOrMainThreadContext(Action action,
-                                              SynchronizationContext synchronizationContext = null,
-                                              uint timeout = 10000)
-    {
-        Dispatcher.Invoke(action);
     }
 
     public bool CheckAccess(object sender = null) => Dispatcher.CheckAccess();
@@ -64,4 +50,25 @@ public class AvaloniaDispatcher : IFExDispatcher, IUIContextExecutor
 
     public async Task<T> ExecuteActionInUIContextAsync<T>(Func<T> action, object sender = null) =>
         await Dispatcher.InvokeAsync(action);
+
+    public override void BeginInvokeOnMainThread(Action action)
+    {
+        Foundation.AsyncHelper.FireAndForget(() => Dispatcher.Invoke(action), AsyncMode.ThreadPool);
+    }
+
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> func) => await Dispatcher.InvokeAsync(func);
+
+    public override async Task InvokeOnMainThreadAsync(Action action) => await Dispatcher.InvokeAsync(action);
+
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask) =>
+        await Dispatcher.InvokeAsync(funcTask);
+
+    public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask) => await Dispatcher.InvokeAsync(funcTask);
+
+    public override void SendInThisOrMainThreadContext(Action action,
+                                                       SynchronizationContext synchronizationContext = null,
+                                                       uint timeout = 10000)
+    {
+        Dispatcher.Invoke(action);
+    }
 }

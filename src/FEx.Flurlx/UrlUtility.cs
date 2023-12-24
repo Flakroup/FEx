@@ -23,11 +23,13 @@ public static class UrlUtility
         {
             if (client is null)
             {
+#pragma warning disable IDISP001
                 client = new FlurlClient();
+#pragma warning restore IDISP001
                 dispose = true;
             }
 
-            IFlurlResponse response = await client.Request(url).HeadAsync();
+            using IFlurlResponse response = await client.Request(url).HeadAsync();
             double bytesTotal = GetContentLength(response);
 
             return unit == LengthType.Bytes
@@ -54,7 +56,9 @@ public static class UrlUtility
         {
             if (client is null)
             {
+#pragma warning disable IDISP001
                 client = new FlurlClient();
+#pragma warning restore IDISP001
                 dispose = true;
             }
 
@@ -63,7 +67,7 @@ public static class UrlUtility
 
             if (length.HasValue)
             {
-                IFlurlResponse response = await request.HeadAsync();
+                using IFlurlResponse response = await request.HeadAsync();
 
                 Dictionary<string, string[]> headers = response.ResponseMessage.GetAllHeaders();
 

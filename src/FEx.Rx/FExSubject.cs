@@ -3,17 +3,11 @@ using System.Reactive.Subjects;
 
 namespace FEx.Rx;
 
-public class FExArgumentlessSubject : FExSubject<bool>
-{
-    public void OnNext()
-    {
-        base.OnNext(false);
-    }
-}
-
 public class FExSubject<T> : IDisposable, IObservable<T>
 {
+#pragma warning disable IDISP008
     protected readonly ISubject<T> _subject;
+#pragma warning restore IDISP008
 
     private bool _isDisposed;
 

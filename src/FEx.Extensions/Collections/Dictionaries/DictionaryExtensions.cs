@@ -21,12 +21,13 @@ public static class DictionaryExtensions
     public static void AddRangeToDictionary<TK, TV>(this IDictionary<TK, TV> dictionary,
                                                     IEnumerable<KeyValuePair<TK, TV>> merged)
     {
+        var deferredList = merged.Guard(nameof(merged)).ToList();
         var cDic = dictionary as ConcurrentDictionary<TK, TV>;
 
         if (cDic is not null)
-            merged?.ForEachInEnumerable(pair => cDic.TryAdd(pair.Key, pair.Value));
+            deferredList.ForEachInEnumerable(pair => cDic.TryAdd(pair.Key, pair.Value));
         else
-            merged?.ForEachInEnumerable(pair => dictionary.Add(pair.Key, pair.Value));
+            deferredList.ForEachInEnumerable(pair => dictionary.Add(pair.Key, pair.Value));
     }
 
     /// <summary>
@@ -46,7 +47,7 @@ public static class DictionaryExtensions
                                                                  Func<IEnumerable<TElement>, IEnumerable<TOutElement>>
                                                                      valuesSelector)
     {
-        IDictionary<TOutKey, IEnumerable<TOutElement>> result = new Dictionary<TOutKey, IEnumerable<TOutElement>>();
+        var result = new Dictionary<TOutKey, IEnumerable<TOutElement>>();
 
         foreach (KeyValuePair<TKey, IList<TElement>> item in source)
         {
@@ -160,7 +161,7 @@ public static class DictionaryExtensions
     /// <summary>
     ///     Adds a key/value pair to the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
     ///     does not already exist, or updates a key/value pair in the
-    ///     <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
+    /// <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
     /// </summary>
     /// <param name="dictionary"></param>
     /// <param name="key">The key to be added or whose value should be updated</param>
@@ -174,7 +175,7 @@ public static class DictionaryExtensions
     /// <summary>
     ///     Adds a key/value pair to the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
     ///     does not already exist, or updates a key/value pair in the
-    ///     <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
+    /// <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
     /// </summary>
     /// <param name="dictionary"></param>
     /// <param name="key">The key to be added or whose value should be updated</param>
@@ -198,7 +199,7 @@ public static class DictionaryExtensions
     /// <summary>
     ///     Adds a key/value pair to the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
     ///     does not already exist, or updates a key/value pair in the
-    ///     <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
+    /// <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
     /// </summary>
     /// <param name="dictionary"></param>
     /// <param name="key">The key to be added or whose value should be updated</param>
@@ -266,7 +267,7 @@ public static class DictionaryExtensions
         Func<TK, TV, bool> predicate)
     {
         var anyItemHasMatched = false;
-        IDictionary<TK, TV> removedEntries = null;
+        Dictionary<TK, TV> removedEntries = null;
 
         for (int i = dictionary.Keys.Count - 1; i > -1; i--)
         {
@@ -277,7 +278,7 @@ public static class DictionaryExtensions
                 if (!anyItemHasMatched)
                 {
                     anyItemHasMatched = true;
-                    removedEntries = new Dictionary<TK, TV>();
+                    removedEntries = [];
                 }
 
                 (bool hasBeenRemoved, TV removedValue) = dictionary.RemoveValue(key);

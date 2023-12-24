@@ -26,5 +26,22 @@ public class WidthAndHeight : IComparable<WidthAndHeight>, IEquatable<WidthAndHe
             : 1;
     }
 
-    public bool Equals(WidthAndHeight other) => Width == other?.Width && Height == other.Height;
+    public bool Equals(WidthAndHeight other) =>
+        other is not null && (ReferenceEquals(this, other) || Width == other.Width && Height == other.Height);
+
+    public override bool Equals(object obj) =>
+        obj is WidthAndHeight widthAndHeight
+        && (ReferenceEquals(this, widthAndHeight) || widthAndHeight.GetType() == GetType() && Equals(widthAndHeight));
+
+    public override int GetHashCode()
+    {
+#if NETSTANDARD
+        unchecked
+        {
+            return Width * 397 ^ Height;
+        }
+#else
+        return HashCode.Combine(Width, Height);
+#endif
+    }
 }

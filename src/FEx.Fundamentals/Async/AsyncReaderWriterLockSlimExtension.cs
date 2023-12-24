@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FEx.Extensions;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -209,16 +210,13 @@ public static class AsyncReaderWriterLockSlimExtension
     public static void DowngradeWriteLockToReadLock(this AsyncReaderWriterLockSlim lockInstance,
                                                     IDisposableLock readLock)
     {
-        if (readLock is null)
-            throw new ArgumentNullException(nameof(readLock));
+        readLock.Guard(nameof(readLock));
 
-        var myReadLock = readLock as ActionDisposableLock;
-
-        if (myReadLock is null
+        if (readLock is not ActionDisposableLock myReadLock
             || myReadLock.LockOrigin != lockInstance
             || !myReadLock.IsWriteLock
             || myReadLock.IsDisposed)
-            throw new ArgumentException();
+            throw new ArgumentException(null, nameof(readLock));
 
         // Downgrade the lock.
         lockInstance.DowngradeWriteLockToReadLock();

@@ -1,18 +1,19 @@
-﻿using FEx.Abstractions;
+using FEx.Abstractions;
 using FEx.Fundamentals;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
 namespace FEx.DependencyInjection;
 
-public class FExStrongInjectServiceProvider : IFExServiceProvider
+public sealed class FExStrongInjectServiceProvider : IFExServiceProvider, IDisposable
 {
     private readonly MethodInfo _method;
-    private object _provider;
+    private IDisposable _provider;
 
     public FExStrongInjectServiceProvider()
     {
@@ -26,12 +27,16 @@ public class FExStrongInjectServiceProvider : IFExServiceProvider
         if (_provider is not IContainer<T> container)
             throw new InvalidOperationException($"Couldn't resolve type: {typeof(T).FullName}");
 
+#pragma warning disable IDISP004
         return container.Resolve<T>().Value;
+#pragma warning restore IDISP004
     }
 
     public T TryResolveService<T>() =>
         _provider is IContainer<T> container
+#pragma warning disable IDISP004
             ? container.Resolve<T>().Value
+#pragma warning restore IDISP004
             : default;
 
     public T GetRequiredService<T>(Type serviceType)
@@ -54,13 +59,24 @@ public class FExStrongInjectServiceProvider : IFExServiceProvider
 
     public TContainer ConfigureServiceProvider<TContainer>() where TContainer : class, IContainer<Foundation>, new()
     {
+        _provider?.Dispose();
         _provider = new TContainer();
 
         return (TContainer)_provider;
     }
 
+#pragma warning disable IDE0079
+    [SuppressMessage("ReSharper", "SuspiciousTypeConversion.Global")]
+#pragma warning restore IDE0079
     public async Task<T> GetRequiredServiceAsync<T>() =>
         _provider is IAsyncContainer<T> container
             ? (await container.ResolveAsync<T>()).Value
             : GetRequiredService<T>();
+
+    #region IDisposable
+    public void Dispose()
+    {
+        _provider?.Dispose();
+    }
+    #endregion
 }

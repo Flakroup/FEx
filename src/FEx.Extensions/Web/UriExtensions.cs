@@ -32,7 +32,13 @@ public static class UriExtensions
 
         try
         {
+#if NET
+#pragma warning disable SYSLIB0014
+#endif
             var request = WebRequest.Create(url);
+#if NET
+#pragma warning restore SYSLIB0014
+#endif
             using WebResponse _ = await request.GetResponseAsync();
 
             return true;
@@ -74,7 +80,13 @@ public static class UriExtensions
 
     public static HttpWebRequest GetHttpRequest(this Uri url, WebRequestParams pars = null)
     {
+#if NET
+#pragma warning disable SYSLIB0014
+#endif
         HttpWebRequest myWebRequest = WebRequest.CreateHttp(url);
+#if NET
+#pragma warning restore SYSLIB0014
+#endif
 
         if (pars is not null)
             myWebRequest.PrepareRequest(pars);
@@ -84,7 +96,13 @@ public static class UriExtensions
 
     public static WebRequest GetWebRequest(this Uri url, WebRequestParams pars = null)
     {
+#if NET
+#pragma warning disable SYSLIB0014
+#endif
         var myWebRequest = WebRequest.Create(url);
+#if NET
+#pragma warning restore SYSLIB0014
+#endif
 
         if (pars is not null)
             myWebRequest.PrepareRequest(pars);

@@ -2,36 +2,16 @@
 
 	<Import Project="$(MSBuildThisFileDirectory)\DevConfigs\Directory.Build.props" />
 
-	<PropertyGroup>
-		<TargetFrameworkId>net8.0</TargetFrameworkId>
+	<PropertyGroup Condition=" '$(IsPackable)' == 'True' ">
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<PackageIcon>flakroup.png</PackageIcon>
 		<WarnOnPackingNonPackableProject>true</WarnOnPackingNonPackableProject>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://gitlab.com/flakroup/FEx</PackageProjectUrl>
 		<RepositoryUrl>https://gitlab.com/flakroup/FEx.git</RepositoryUrl>
-		<WarningsAsErrors>$(WarningsAsErrors);CS0660</WarningsAsErrors>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-		<EmbedAllSources>true</EmbedAllSources>
-		<DeterministicSourcePaths>true</DeterministicSourcePaths>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<EnableSourceLink>true</EnableSourceLink>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-	</PropertyGroup>
-
-	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-		<PackageReference Include="Microsoft.SourceLink.GitLab" Version="1.1.1">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup>
+	<ItemGroup Condition=" '$(IsPackable)' == 'True' ">
 		<None Include="$(MSBuildThisFileDirectory)\flakroup.png">
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>

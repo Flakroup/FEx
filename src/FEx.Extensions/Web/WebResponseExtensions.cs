@@ -76,7 +76,7 @@ public static class WebResponseExtensions
 
     public static Dictionary<string, string[]> GetAllHeaders(this HttpResponseMessage resp)
     {
-        KeyValuePair<string, IEnumerable<string>>[] headers = resp.Headers.ToArray();
+        KeyValuePair<string, IEnumerable<string>>[] headers = [.. resp.Headers];
 
         return headers.ToDictionary(x => x.Key, x => x.Value.ToArray());
     }

@@ -5,7 +5,7 @@ namespace FEx.Utilities;
 
 public abstract class FExSingleton : IDisposable
 {
-    private static readonly List<FExSingleton> Singletons = new();
+    private static readonly List<FExSingleton> Singletons = [];
 
     protected FExSingleton()
     {

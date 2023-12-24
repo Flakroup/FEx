@@ -68,7 +68,9 @@ public static class JoinableAsyncHelper
             : thread.GetThreadSynchronizationContext();
 
         thread ??= Thread.CurrentThread;
-
-        return new JoinableTaskFactory(new JoinableTaskContext(thread, syncCtx));
+#pragma warning disable IDISP001
+        var owner = new JoinableTaskContext(thread, syncCtx);
+#pragma warning restore IDISP001
+        return new JoinableTaskFactory(owner);
     }
 }

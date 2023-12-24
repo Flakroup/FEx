@@ -6,6 +6,10 @@ namespace FEx.Utilities.Strings;
 // http://stackoverflow.com/questions/32149/does-anyone-have-a-good-proper-case-algorithm
 public static class ProperCaseHelper
 {
+    public static Regex RomanNumeralsRegex { get; } = new(
+        @"\b(?!Xi\b)(X|XX|XXX|XL|L|LX|LXX|LXXX|XC|C)?(I|II|III|IV|V|VI|VII|VIII|IX)?\b",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     public static bool IsAllUpperOrAllLower(this string input) =>
         input.ToLower().Equals(input) || input.ToUpper().Equals(input);
 
@@ -42,11 +46,8 @@ public static class ProperCaseHelper
         return ret;
     }
 
-    public static string DealWithRomanNumerals(this string word)
-    {
-        return new Regex(@"\b(?!Xi\b)(X|XX|XXX|XL|L|LX|LXX|LXXX|XC|C)?(I|II|III|IV|V|VI|VII|VIII|IX)?\b",
-            RegexOptions.IgnoreCase).Replace(word, match => match.Value.ToUpperInvariant());
-    }
+    public static string DealWithRomanNumerals(this string word) =>
+        RomanNumeralsRegex.Replace(word, match => match.Value.ToUpperInvariant());
 
     private static string ProperSuffix(string word, string prefix)
     {
@@ -62,9 +63,14 @@ public static class ProperCaseHelper
         int index = lowerWord.IndexOf(lowerPrefix, StringComparison.Ordinal);
 
         // If the search string is at the end of the word ignore.
-        return index + prefix.Length == word.Length
-            ? word
-            : word.Substring(0, index) + prefix + CapitaliseFirstLetter(word.Substring(index + prefix.Length));
+        if (index + prefix.Length == word.Length)
+            return word;
+
+#if NETSTANDARD
+        return word.Substring(0, index) + prefix + CapitaliseFirstLetter(word.Substring(index + prefix.Length));
+#else
+        return string.Concat(word.AsSpan(0, index), prefix, CapitaliseFirstLetter(word[(index + prefix.Length)..]));
+#endif
     }
 
     private static string SpecialWords(string word, string specialWord) =>
@@ -73,5 +79,9 @@ public static class ProperCaseHelper
             : word;
 
     private static string CapitaliseFirstLetter(string word) =>
+#if NETSTANDARD
         char.ToUpper(word[0]) + word.Substring(1).ToLower();
+#else
+        char.ToUpper(word[0]) + word[1..].ToLower();
+#endif
 }

@@ -19,7 +19,9 @@ public static class ObservableExtensions
 {
     public static IDisposable SubscribeWithoutOverlap<T>(this IObservable<T> source, Action<T> action)
     {
+#pragma warning disable IDISP001
         var sampler = new Subject<Unit>();
+#pragma warning restore IDISP001
 
         IDisposable sub = source.Sample(sampler)
             .Subscribe(l =>
@@ -29,7 +31,9 @@ public static class ObservableExtensions
             });
 
         // start sampling when we have a first value
+#pragma warning disable IDISP004
         source.Take(1).Subscribe(_ => sampler.OnNext(Unit.Default));
+#pragma warning restore IDISP004
 
         return sub;
     }
@@ -40,7 +44,9 @@ public static class ObservableExtensions
         return Observable.Defer(() =>
         {
             IPropagatorBlock<T, TResult> block = blockFactory();
+#pragma warning disable IDISP004
             source.Subscribe(block.AsObserver());
+#pragma warning restore IDISP004
 
             return block.AsObservable();
         });
@@ -58,7 +64,9 @@ public static class ObservableExtensions
                                                                     CancellationToken cancellationToken = default)
     {
         return source.Select(value => Observable.FromAsync(token => func(value, cancellationToken != default
+#pragma warning disable IDISP004
                 ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
+#pragma warning restore IDISP004
                 : token)))
             .Switch();
     }
@@ -70,7 +78,9 @@ public static class ObservableExtensions
         return source.Select(value => Observable.FromAsync(async token =>
             {
                 await func(value, cancellationToken != default
+#pragma warning disable IDISP004
                     ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
+#pragma warning restore IDISP004
                     : token);
 
                 return value;
@@ -88,7 +98,7 @@ public static class ObservableExtensions
                                               CompositeDisposable disposable,
                                               CancellationToken cancellationToken = default)
     {
-        source.SelectTask(func, cancellationToken).AsyncSubscribe(null, disposable);
+        source.SelectTask(func, cancellationToken).AsyncSubscribe(disposable);
     }
 
     public static IObservable<EventPattern<PropertyChangedEventArgs>> GetPropertyChangedObservable(
@@ -137,7 +147,9 @@ public static class ObservableExtensions
             : observable.Subscribe();
     }
 
-    public static void AsyncSubscribe<T>(this IObservable<T> source, Action<T> onNext, CompositeDisposable disposable)
+    public static void AsyncSubscribe<T>(this IObservable<T> source,
+                                         CompositeDisposable disposable,
+                                         Action<T> onNext = null)
     {
         IObservable<T> observable = source.ObserveOn(Scheduler.Default).SubscribeOn(Scheduler.Default);
 
@@ -145,7 +157,7 @@ public static class ObservableExtensions
             ? observable.Subscribe(onNext)
             : observable.Subscribe();
 
-        disposable?.Add(subscription);
+        disposable.Add(subscription);
     }
 
     /// <summary>

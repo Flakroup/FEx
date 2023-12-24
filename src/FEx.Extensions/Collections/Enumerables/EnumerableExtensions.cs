@@ -112,7 +112,7 @@ public static class EnumerableExtensions
     public static IEnumerable<IEnumerable<T>> Divide<T>(this IEnumerable<T> items, int maxNumberOfItems)
     {
         var dividedLists = new List<IEnumerable<T>>();
-        IList<T> partialList = new List<T>();
+        var partialList = new List<T>();
         var counter = 0;
 
         foreach (T item in items)
@@ -120,7 +120,7 @@ public static class EnumerableExtensions
             if (counter == 0
                 || counter % maxNumberOfItems == 0)
             {
-                partialList = new List<T>();
+                partialList = [];
                 dividedLists.Add(partialList);
             }
 
@@ -283,39 +283,27 @@ public static class EnumerableExtensions
     public static IList<IEnumerable<T>> MulitplyBy<T>(this IEnumerable<IEnumerable<T>> origin,
                                                       IEnumerable<T> multiplier)
     {
-        IList<IEnumerable<T>> multipliedLists = new List<IEnumerable<T>>();
+        var defreedList = origin.ToList();
 
-        if (origin.Any())
-            foreach (T item in multiplier)
-            {
-                foreach (IEnumerable<T> list in origin)
-                {
-                    var multipliedList = new List<T>(list)
-                    {
-                        item
-                    };
-
-                    multipliedLists.Add(multipliedList);
-                }
-            }
-        else
-            foreach (T item in multiplier)
-            {
-                var multipliedList = new List<T>
+        return (defreedList.Count != 0
+                ? multiplier.SelectMany(item => defreedList.Select(list => new List<T>(list)
                 {
                     item
-                };
-
-                multipliedLists.Add(multipliedList);
-            }
-
-        return multipliedLists;
+                }))
+                : multiplier.Select(item => new List<T>
+                {
+                    item
+                })).Cast<IEnumerable<T>>()
+            .ToList();
     }
 
-    public static int CountEqualItems<T>(this IEnumerable<T> listA, IEnumerable<T> listB) where T : IEquatable<T>
+    public static int CountEqualItems<T>(this IEnumerable<T> sourceA, IEnumerable<T> sourceB) where T : IEquatable<T>
     {
-        int listACount = listA.Count();
-        int listBCount = listB.Count();
+        var listA = sourceA.ToList();
+        var listB = sourceB.ToList();
+
+        int listACount = listA.Count;
+        int listBCount = listB.Count;
 
         IEnumerable<T> shorter = listACount <= listBCount
             ? listA

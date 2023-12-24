@@ -22,36 +22,35 @@ using System.Text;
 namespace FEx.Fundamentals.Utilities.OS;
 
 /// <summary>
-/// Provides detailed information about the host operating system.
+///     Provides detailed information about the host operating system.
 /// </summary>
 public static class OSVersionInfo
 {
     private const int SmTabletPC = 86;
 
     /// <summary>
-    /// Indicates whether the operating-system is arm64.
+    ///     Indicates whether the operating-system is arm64.
     /// </summary>
     public static bool IsArm64 => RuntimeInformation.OSArchitecture == Architecture.Arm64;
 
     /// <summary>
-    /// Indicates whether the operating-system is 64bit.
+    ///     Indicates whether the operating-system is 64bit.
     /// </summary>
     public static bool Is64Bit =>
-        RuntimeInformation.OSArchitecture is Architecture.X64
-            or Architecture.Arm64;
+        RuntimeInformation.OSArchitecture is Architecture.X64 or Architecture.Arm64;
 
     /// <summary>
-    /// Indicates whether the operating-system is 32bit.
+    ///     Indicates whether the operating-system is 32bit.
     /// </summary>
     public static bool Is32Bit => !Is64Bit;
 
     /// <summary>
-    /// Indicates whether the operating-system is UNIX.
+    ///     Indicates whether the operating-system is UNIX.
     /// </summary>
     public static bool IsUnix => IsLinux || IsMacOS || IsIOS;
 
     /// <summary>
-    /// Indicates whether the current process is running under Windows Subsystem for Linux.
+    ///     Indicates whether the current process is running under Windows Subsystem for Linux.
     /// </summary>
     public static bool IsWsl
     {
@@ -74,7 +73,7 @@ public static class OSVersionInfo
     }
 
     /// <summary>
-    /// Indicates the target framework of the current process.
+    ///     Indicates the target framework of the current process.
     /// </summary>
     public static FrameworkName Framework => new(Assembly.GetEntryAssembly()
         .Guard()
@@ -83,9 +82,9 @@ public static class OSVersionInfo
         .FrameworkName);
 
     /// <summary>
-    /// Indicates the operating-system platform.
+    ///     Indicates the operating-system platform.
     /// </summary>
-    public static OSPlatformInfo OSPlatform =>
+    public static OSPlatformInfo Platform =>
         IsBrowser ? OSPlatformInfo.Browser :
         IsIOS ? OSPlatformInfo.IOS :
         IsAndroid ? OSPlatformInfo.Android :
@@ -102,17 +101,17 @@ public static class OSVersionInfo
     public static bool IsBrowser => OperatingSystem.IsBrowser();
     public static bool IsOSPlatform(string platform) => OperatingSystem.IsOSPlatform(platform);
 #else
-        public static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        public static bool IsMacOS => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-        public static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-        public static bool IsAndroid => IsOSPlatform("ANDROID");
-        public static bool IsIOS => IsOSPlatform("IOS");
-        public static bool IsBrowser => IsOSPlatform("BROWSER");
-        public static bool IsOSPlatform(string platform) => RuntimeInformation.IsOSPlatform(OSPlatform.Create(platform));
+    public static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+    public static bool IsMacOS => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+    public static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+    public static bool IsAndroid => IsOSPlatform("ANDROID");
+    public static bool IsIOS => IsOSPlatform("IOS");
+    public static bool IsBrowser => IsOSPlatform("BROWSER");
+    public static bool IsOSPlatform(string platform) => RuntimeInformation.IsOSPlatform(OSPlatform.Create(platform));
 #endif
 
     /// <summary>
-    /// Determines if the current application is 32 or 64-bit.
+    ///     Determines if the current application is 32 or 64-bit.
     /// </summary>
     public static SoftwareArchitecture ProgramBits { get; }
 
@@ -121,36 +120,36 @@ public static class OSVersionInfo
     public static bool Is64BitOperatingSystem => OSBits == SoftwareArchitecture.Bit64;
 
     /// <summary>
-    /// Determines if the current processor is 32 or 64-bit.
+    ///     Determines if the current processor is 32 or 64-bit.
     /// </summary>
     public static OSProcessorArchitecture ProcessorBits { get; }
 
     public static OSEdition Edition { get; }
 
     /// <summary>
-    /// Gets the edition of the operating system running on this computer.
+    ///     Gets the edition of the operating system running on this computer.
     /// </summary>
     public static string EditionString => Edition != OSEdition.Unknown
         ? Edition.GetEnumValueDescription()
         : null;
 
     /// <summary>
-    /// Gets the name of the operating system running on this computer.
+    ///     Gets the name of the operating system running on this computer.
     /// </summary>
     public static string Name { get; }
 
     /// <summary>
-    /// Gets the service pack information of the operating system running on this computer.
+    ///     Gets the service pack information of the operating system running on this computer.
     /// </summary>
     public static string ServicePack { get; }
 
     /// <summary>
-    /// Gets the build version number of the operating system running on this computer.
+    ///     Gets the build version number of the operating system running on this computer.
     /// </summary>
     public static int BuildVersion { get; }
 
     /// <summary>
-    /// Gets the full version of the operating system running on this computer.
+    ///     Gets the full version of the operating system running on this computer.
     /// </summary>
     public static Version Version { get; }
 
@@ -233,6 +232,9 @@ public static class OSVersionInfo
         [OSProduct.Unlicensed] = OSEdition.Unknown
     };
 
+#if NET
+#pragma warning disable SYSLIB1054
+#endif
     [DllImport("Kernel32.dll")]
     private static extern bool GetProductInfo(int osMajorVersion,
                                               int osMinorVersion,
@@ -246,13 +248,16 @@ public static class OSVersionInfo
     [DllImport("user32")]
     private static extern int GetSystemMetrics(int nIndex);
 
-    [DllImport("kernel32.dll")]
     // ReSharper disable UnusedMember.Local
+    [DllImport("kernel32.dll")]
     private static extern void GetSystemInfo([MarshalAs(UnmanagedType.Struct)] ref SystemInfo lpSystemInfo);
     // ReSharper restore UnusedMember.Local
 
     [DllImport("kernel32.dll")]
     private static extern void GetNativeSystemInfo([MarshalAs(UnmanagedType.Struct)] ref SystemInfo lpSystemInfo);
+#if NET
+#pragma warning restore SYSLIB1054
+#endif
 
     private static OSProcessorArchitecture GetProcessorBits()
     {
@@ -311,7 +316,9 @@ public static class OSVersionInfo
         return null;
     }
 
-    [SuppressMessage("Interoperability", "CA1416:Walidacja zgodności z platformą")]
+#if NET
+    [SuppressMessage("Interoperability", "CA1416")]
+#endif
     private static RegistryKey GetRegistryKey(string pathRoot)
     {
         if (!IsWindows)
@@ -395,25 +402,25 @@ public static class OSVersionInfo
                     case 4:
                         return productType switch
                         {
-                            VerNtWorkstation => OSEdition.Workstation,
-                            VerNtServer => (suiteMask & VerSuiteEnterprise) != 0
+                            (int)VerNt.Workstation => OSEdition.Workstation,
+                            (int)VerNt.Server => (suiteMask & (int)VerSuite.Enterprise) != 0
                                 ? OSEdition.EnterpriseServer
                                 : OSEdition.StandardServer,
                             _ => OSEdition.Unknown
                         };
-                    case 5 when productType == VerNtWorkstation:
-                        return (suiteMask & VerSuitePersonal) != 0 ? OSEdition.Home :
+                    case 5 when productType == (int)VerNt.Workstation:
+                        return (suiteMask & (int)VerSuite.Personal) != 0 ? OSEdition.Home :
                             GetSystemMetrics(SmTabletPC) == 0 ? OSEdition.Professional : OSEdition.TabletEdition;
-                    case 5 when productType == VerNtServer:
+                    case 5 when productType == (int)VerNt.Server:
                         return minorVersion == 0
                             ?
-                            (suiteMask & VerSuiteDatacenter) != 0 ? OSEdition.DatacenterServer :
-                            (suiteMask & VerSuiteEnterprise) != 0 ? OSEdition.AdvancedServer : OSEdition.Server
-                            : (suiteMask & VerSuiteDatacenter) != 0
+                            (suiteMask & (int)VerSuite.Datacenter) != 0 ? OSEdition.DatacenterServer :
+                            (suiteMask & (int)VerSuite.Enterprise) != 0 ? OSEdition.AdvancedServer : OSEdition.Server
+                            : (suiteMask & (int)VerSuite.Datacenter) != 0
                                 ? OSEdition.Datacenter
-                                : (suiteMask & VerSuiteEnterprise) != 0
+                                : (suiteMask & (int)VerSuite.Enterprise) != 0
                                     ? OSEdition.Enterprise
-                                    : (suiteMask & VerSuiteBlade) != 0
+                                    : (suiteMask & (int)VerSuite.Blade) != 0
                                         ? OSEdition.WebEdition
                                         : OSEdition.Standard;
                     case 5:
@@ -436,7 +443,9 @@ public static class OSVersionInfo
 
     private static OSEdition GetEditionFromProduct(OSProduct product) => ProductToEdition.TryGetKeyValue(product);
 
+#pragma warning disable IDE0079
     [SuppressMessage("ReSharper", "CognitiveComplexity")]
+#pragma warning restore IDE0079
     private static string GetName()
     {
         // if (IsWindows)
@@ -490,34 +499,34 @@ public static class OSVersionInfo
                     case PlatformID.WinCE:
                         return "Windows CE";
                     case PlatformID.Win32Windows:
-                    {
-                        if (majorVersion == 4)
                         {
-                            string csdVersion = osVersionInfo.szCSDVersion;
-
-                            switch (minorVersion)
+                            if (majorVersion == 4)
                             {
-                                case 0:
-                                    return csdVersion is "B" or "C"
-                                        ? "Windows 95 OSR2"
-                                        : "Windows 95";
-                                case 10:
-                                    return csdVersion == "A"
-                                        ? "Windows 98 Second Edition"
-                                        : "Windows 98";
-                                case 90:
-                                    return "Windows Me";
+                                string csdVersion = osVersionInfo.szCSDVersion;
+
+                                switch (minorVersion)
+                                {
+                                    case 0:
+                                        return csdVersion is "B" or "C"
+                                            ? "Windows 95 OSR2"
+                                            : "Windows 95";
+                                    case 10:
+                                        return csdVersion == "A"
+                                            ? "Windows 98 Second Edition"
+                                            : "Windows 98";
+                                    case 90:
+                                        return "Windows Me";
+                                }
                             }
+
+                            break;
                         }
-
-                        break;
-                    }
                     case PlatformID.Win32NT:
-                    {
-                        int productType = osVersionInfo.wProductType;
+                        {
+                            int productType = osVersionInfo.wProductType;
 
-                        return new OSVersion(majorVersion, minorVersion, productType).ToString();
-                    }
+                            return new OSVersion(majorVersion, minorVersion, productType).ToString();
+                        }
                     case PlatformID.Unix:
                     case PlatformID.Xbox:
                     case PlatformID.MacOSX:
@@ -585,7 +594,9 @@ public static class OSVersionInfo
         return productName?.StartsWith("Windows 10", StringComparison.OrdinalIgnoreCase) == true;
     }
 
+#if NET
     [SuppressMessage("Interoperability", "CA1416:Walidacja zgodności z platformą")]
+#endif
     private static string RegistryRead(string registryPath, string field, string defaultValue)
     {
         string rtn = null;
@@ -654,18 +665,27 @@ public static class OSVersionInfo
         InfoString = GetInfoString();
     }
 
-    // ReSharper disable UnusedMember.Local
-    //todo convert to enum
-    private const int VerNtWorkstation = 1;
-    private const int VerNtDomainController = 2;
-    private const int VerNtServer = 3;
-    private const int VerSuiteSmallbusiness = 1;
-    private const int VerSuiteEnterprise = 2;
-    private const int VerSuiteTerminal = 16;
-    private const int VerSuiteDatacenter = 128;
-    private const int VerSuiteSingleuserts = 256;
-    private const int VerSuitePersonal = 512;
+#pragma warning disable IDE0079
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
+#pragma warning restore IDE0079
+    private enum VerNt
+    {
+        Workstation = 1,
+        DomainController = 2,
+        Server = 3
+    }
 
-    private const int VerSuiteBlade = 1024;
-    // ReSharper restore UnusedMember.Local
+#pragma warning disable IDE0079
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
+#pragma warning restore IDE0079
+    private enum VerSuite
+    {
+        Smallbusiness = 1,
+        Enterprise = 2,
+        Terminal = 16,
+        Datacenter = 128,
+        Singleuserts = 256,
+        Personal = 512,
+        Blade = 1024
+    }
 }

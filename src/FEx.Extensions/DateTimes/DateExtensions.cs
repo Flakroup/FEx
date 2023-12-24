@@ -183,9 +183,7 @@ public static class DateExtensions
     /// <returns>A DateTime instance adjusted to the end of the current week</returns>
     /// <remarks>the end of the week is controlled by the current Culture.</remarks>
     public static DateTime? LastDayOfWeek(this DateTime? dateTime) =>
-        dateTime is not null
-            ? dateTime.StartOfWeek()?.AddDays(6)
-            : null;
+        dateTime?.StartOfWeek().AddDays(6);
 
     /// <summary>
     ///     Combines the date part of a DateTime with the time part from a TimeSpan
@@ -372,14 +370,14 @@ public static class DateExtensions
 
     /// <summary>
     ///     Returns a <see langword="Long" /> value specifying the number of time intervals between two
-    ///     <see langword="Date" /> values.
+    /// <see langword="Date" /> values.
     /// </summary>
     /// <param name="date1">Required. <see langword="Date" />. The first date/time value you want to use in the calculation. </param>
     /// <param name="date2">Required. <see langword="Date" />. The second date/time value you want to use in the calculation.</param>
     /// <param name="interval">
     ///     Required. <see langword="DateInterval" /> enumeration value or <see langword="String" />
-    ///     expression representing the time interval you want to use as the unit of difference between
-    ///     <paramref name="date1" /> and <paramref name="date2" />.
+    /// expression representing the time interval you want to use as the unit of difference between
+    /// <paramref name="date1" /> and <paramref name="date2" />.
     /// </param>
     /// <param name="dayOfWeek">
     ///     Optional. A value chosen from the <see langword="FirstDayOfWeek" /> enumeration that specifies
@@ -387,7 +385,7 @@ public static class DateExtensions
     /// </param>
     /// <returns>
     ///     Returns a <see langword="Long" /> value specifying the number of time intervals between two
-    ///     <see langword="Date" /> values.
+    /// <see langword="Date" /> values.
     /// </returns>
     /// <exception cref="T:System.ArgumentException">Invalid <paramref name="interval" />.</exception>
     /// <exception cref="T:System.ArgumentException">
@@ -406,59 +404,59 @@ public static class DateExtensions
         switch (interval)
         {
             case DateInterval.Year:
-                {
-                    return DateTimeDefaults.CurrentCalendar.GetYear(date2)
-                           - DateTimeDefaults.CurrentCalendar.GetYear(date1);
-                }
+            {
+                return DateTimeDefaults.CurrentCalendar.GetYear(date2)
+                       - DateTimeDefaults.CurrentCalendar.GetYear(date1);
+            }
             case DateInterval.Quarter:
-                {
-                    return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
-                            - DateTimeDefaults.CurrentCalendar.GetYear(date1))
-                           * 4
-                           + (DateTimeDefaults.CurrentCalendar.GetMonth(date2) - 1) / 3
-                           - (DateTimeDefaults.CurrentCalendar.GetMonth(date1) - 1) / 3;
-                }
+            {
+                return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
+                        - DateTimeDefaults.CurrentCalendar.GetYear(date1))
+                       * 4
+                       + (DateTimeDefaults.CurrentCalendar.GetMonth(date2) - 1) / 3
+                       - (DateTimeDefaults.CurrentCalendar.GetMonth(date1) - 1) / 3;
+            }
             case DateInterval.Month:
-                {
-                    return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
-                            - DateTimeDefaults.CurrentCalendar.GetYear(date1))
-                           * 12
-                           + DateTimeDefaults.CurrentCalendar.GetMonth(date2)
-                           - DateTimeDefaults.CurrentCalendar.GetMonth(date1);
-                }
+            {
+                return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
+                        - DateTimeDefaults.CurrentCalendar.GetYear(date1))
+                       * 12
+                       + DateTimeDefaults.CurrentCalendar.GetMonth(date2)
+                       - DateTimeDefaults.CurrentCalendar.GetMonth(date1);
+            }
             case DateInterval.DayOfYear:
             case DateInterval.Day:
-                {
-                    return Math.Round(Conversion.Fix(timeSpan.TotalDays));
-                }
+            {
+                return Math.Round(Conversion.Fix(timeSpan.TotalDays));
+            }
             case DateInterval.WeekOfYear:
-                {
-                    date1 = date1.AddDays(0 - (int)date1.GetDayOfWeek(dayOfWeek));
-                    date2 = date2.AddDays(0 - (int)date2.GetDayOfWeek(dayOfWeek));
-                    timeSpan = date2.Subtract(date1);
+            {
+                date1 = date1.AddDays(0 - (int)date1.GetDayOfWeek(dayOfWeek));
+                date2 = date2.AddDays(0 - (int)date2.GetDayOfWeek(dayOfWeek));
+                timeSpan = date2.Subtract(date1);
 
-                    return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
-                }
+                return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
+            }
             case DateInterval.Weekday:
-                {
-                    return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
-                }
+            {
+                return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
+            }
             case DateInterval.Hour:
-                {
-                    return Math.Round(Conversion.Fix(timeSpan.TotalHours));
-                }
+            {
+                return Math.Round(Conversion.Fix(timeSpan.TotalHours));
+            }
             case DateInterval.Minute:
-                {
-                    return Math.Round(Conversion.Fix(timeSpan.TotalMinutes));
-                }
+            {
+                return Math.Round(Conversion.Fix(timeSpan.TotalMinutes));
+            }
             case DateInterval.Second:
-                {
-                    return Math.Round(Conversion.Fix(timeSpan.TotalSeconds));
-                }
+            {
+                return Math.Round(Conversion.Fix(timeSpan.TotalSeconds));
+            }
             default:
-                {
-                    throw new ArgumentException("Argument_InvalidValue1", nameof(interval));
-                }
+            {
+                throw new ArgumentException("Argument_InvalidValue1", nameof(interval));
+            }
         }
     }
 

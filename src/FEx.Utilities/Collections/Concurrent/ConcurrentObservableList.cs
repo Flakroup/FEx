@@ -25,13 +25,13 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     ///     Occurs when the collection changes, either by adding or removing an item.
     /// </summary>
     [field: NonSerialized]
-    public virtual event NotifyCollectionChangedEventHandler CollectionChanged;
+    public event NotifyCollectionChangedEventHandler CollectionChanged;
 
     /// <summary>
     ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
     [field: NonSerialized]
-    protected virtual event PropertyChangedEventHandler PropertyChanged;
+    protected event PropertyChangedEventHandler PropertyChanged;
 
     /// <summary>
     ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).

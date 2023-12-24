@@ -1,23 +1,25 @@
 ﻿using MimeMapping;
-using System.Collections.ObjectModel;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FEx.Webx;
 
 public static class MimeTypesUtility
 {
-    public static ReadOnlyDictionary<string, string> Mappings { get; }
+    public static ConcurrentDictionary<string, string> TypeMap { get; }
+    public static IReadOnlyDictionary<string, string> Mappings => TypeMap;
 
     static MimeTypesUtility()
     {
         try
         {
-            var typeMap = MimeUtility.TypeMap.ToDictionary(x => x.Key, x => x.Value);
+            var typeMap =
+                new ConcurrentDictionary<string, string>(MimeUtility.TypeMap.ToDictionary(x => x.Key, x => x.Value));
 
-            if (!typeMap.ContainsKey(".*"))
-                typeMap.Add(".*", "application/octet-stream");
+            typeMap.TryAdd(".*", "application/octet-stream");
 
-            Mappings = new ReadOnlyDictionary<string, string>(typeMap);
+            TypeMap = typeMap;
         }
         catch
         {

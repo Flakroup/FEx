@@ -3,7 +3,7 @@ using StrongInject;
 
 namespace FEx.MVVM;
 
-[Register(typeof(AsyncEventDeliverer), Scope.SingleInstance, typeof(IEventDeliverer))]//todo: Move outside
+[Register(typeof(AsyncEventDeliverer), Scope.SingleInstance, typeof(IEventDeliverer))] //todo: Move outside
 public class FExMvvmModule
 {
 }

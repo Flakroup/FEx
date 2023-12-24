@@ -30,11 +30,13 @@ public abstract class FExDispatcher : IFExDispatcher
 
     public abstract void BeginInvokeOnMainThread(Action action);
 
-    public void SendInThisOrMainThreadContext(Action action,
-                                              SynchronizationContext synchronizationContext = null,
-                                              uint timeout = 10000)
+    public virtual void SendInThisOrMainThreadContext(Action action,
+                                                      SynchronizationContext synchronizationContext = null,
+                                                      uint timeout = 10000)
     {
         SynchronizationContext syncContext = synchronizationContext ?? MainThreadSynchronizationContext;
+#pragma warning disable VSTHRD001
         DeadlockMonitor.Execute(() => syncContext.Send(_ => action(), default), timeout);
+#pragma warning restore VSTHRD001
     }
 }

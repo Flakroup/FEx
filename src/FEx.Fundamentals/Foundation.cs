@@ -122,7 +122,7 @@ public class Foundation
             MainThread.GetThreadSynchronizationContext(true);
     }
 
-    public Thread GetMainThread() => MainThread;
+    public static Thread GetMainThread() => MainThread;
 
     private static bool IsPlatformMainThread(Thread currentThread) =>
         !OSVersionInfo.IsWindows || currentThread.GetApartmentState() == ApartmentState.STA;

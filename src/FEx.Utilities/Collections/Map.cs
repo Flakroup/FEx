@@ -5,8 +5,8 @@ namespace FEx.Utilities.Collections;
 
 public class Map<TKey1, TKey2>
 {
-    private readonly Dictionary<TKey1, TKey2> _forwardDictionary = new();
-    private readonly Dictionary<TKey2, TKey1> _reverseDictionary = new();
+    private readonly Dictionary<TKey1, TKey2> _forwardDictionary = [];
+    private readonly Dictionary<TKey2, TKey1> _reverseDictionary = [];
     private bool _isReadOnly;
 
     public Index<TKey1, TKey2> ForwardIndex { get; }

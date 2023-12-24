@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Threading;
 
 namespace FEx.Utilities.Collections.Concurrent;
@@ -30,11 +29,6 @@ public class ConcurrentHashSet<T> : HashSet<T>
 
     public ConcurrentHashSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
         : base(collection, comparer)
-    {
-    }
-
-    protected ConcurrentHashSet(SerializationInfo info, StreamingContext context)
-        : base(info, context)
     {
     }
 

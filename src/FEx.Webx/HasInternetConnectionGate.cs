@@ -20,7 +20,13 @@ public class HasInternetConnectionGate
 
         try
         {
+#if NET
+#pragma warning disable SYSLIB0014
+#endif
             var request = WebRequest.Create(url);
+#if NET
+#pragma warning restore SYSLIB0014
+#endif
             using WebResponse response = await request.GetResponseAsync();
 
             return true;

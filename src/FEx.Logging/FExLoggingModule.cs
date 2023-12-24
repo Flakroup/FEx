@@ -37,7 +37,7 @@ public class FExLoggingModule
 
         MethodInfo genericMethod = methodInfo.MakeGenericMethod(senderType);
 
-        return (ILogger)genericMethod.Invoke(loggerFactory, new[] { loggerFactory });
+        return (ILogger)genericMethod.Invoke(loggerFactory, [loggerFactory]);
     }
 
     [Factory(Scope.SingleInstance)]

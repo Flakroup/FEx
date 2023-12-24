@@ -175,7 +175,10 @@ public static class UriExtensions
     }
 
     public static Uri TryGetUri(this string uri) =>
-        uri.IsNotNullOrEmptyString() && Uri.TryCreate(uri, UriKind.Absolute, out Uri uriResult) && uriResult is not null
+        uri.IsNotNullOrEmptyString() && Uri.TryCreate(uri, UriKind.Absolute, out Uri uriResult)
+#if NETSTANDARD
+        && uriResult is not null
+#endif
             ? uriResult
             : null;
 
@@ -183,7 +186,13 @@ public static class UriExtensions
     {
         try
         {
+#if NET
+#pragma warning disable SYSLIB0014
+#endif
             HttpWebRequest request = WebRequest.CreateHttp(url);
+#if NET
+#pragma warning restore SYSLIB0014
+#endif
 
             if (pars is not null)
                 request.PrepareRequest(pars);

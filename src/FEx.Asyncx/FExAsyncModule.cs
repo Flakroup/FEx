@@ -5,8 +5,8 @@ namespace FEx.Asyncx;
 
 public class FExAsyncModule
 {
-    public FExAsyncModule(Foundation foundation)
+    public FExAsyncModule()
     {
-        JoinableAsyncHelper.SetMainJoinableTaskFactory(foundation.GetMainThread());
+        JoinableAsyncHelper.SetMainJoinableTaskFactory(Foundation.GetMainThread());
     }
 }

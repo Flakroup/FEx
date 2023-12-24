@@ -28,11 +28,21 @@ public static class DoubleExtensions
     {
         string numberDecimalSeparator = Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 
-        if (value.Contains(".")
+        if (
+#if NETSTANDARD
+            value.Contains(".")
+#else
+            value.Contains('.')
+#endif
             && "." != numberDecimalSeparator)
             value = value.Replace(".", numberDecimalSeparator);
-        else if (value.Contains(",")
-                 && "," != numberDecimalSeparator)
+        else if (
+#if NETSTANDARD
+            value.Contains(",")
+#else
+            value.Contains(',')
+#endif
+            && "," != numberDecimalSeparator)
             value = value.Replace(",", numberDecimalSeparator);
 
         return double.TryParse(value, out double l)

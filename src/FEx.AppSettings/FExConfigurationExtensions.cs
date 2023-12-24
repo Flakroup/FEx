@@ -165,7 +165,7 @@ public static class FExConfigurationExtensions
         if (input is not null)
         {
             IDictionary<string, object> dict = input;
-            string[] keys = dict.Keys.ToArray();
+            string[] keys = [.. dict.Keys];
 
             // it's an array if all keys are integers
             if (keys.All(k => int.TryParse(k, out int dummy)))

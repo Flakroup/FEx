@@ -36,7 +36,7 @@ public static class TypeExtensions
     /// <returns></returns>
     public static List<Type> GetBaseTypes(this Type baseType, List<Type> baseTypes = null)
     {
-        baseTypes ??= new List<Type>();
+        baseTypes ??= [];
 
         if (baseType.BaseType is not null)
         {

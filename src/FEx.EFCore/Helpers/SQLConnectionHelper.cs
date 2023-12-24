@@ -64,28 +64,6 @@ public static class SQLConnectionHelper
         return CheckDbConnection(testConnectionString);
     }
 
-    private static FExDbConfig GetMasterDbConfig(IFExDbConfig config)
-    {
-        config.Guard(nameof(config));
-
-        return new FExDbConfig
-        {
-            SqlInstance = config.SqlInstance.Guard(nameof(IFExDbConfig.SqlInstance)),
-            SqlDbName = "master",
-            Username = config.Username,
-            Password = config.Password,
-            CommandTimeout = config.CommandTimeout,
-            MaxRetryCount = config.MaxRetryCount,
-            MaxRetryDelay = config.MaxRetryDelay,
-            PoolSize = 0,
-            DelayOnTimeout = config.DelayOnTimeout,
-            RunMigrations = false,
-            GetMappings = false,
-            DropIfMigrationFailed = false,
-            TrustCertificate = config.TrustCertificate
-        };
-    }
-
     public static string GetConnectionString(IFExDbConfig config)
     {
         var sB = new SqlConnectionStringBuilder
@@ -112,5 +90,27 @@ public static class SQLConnectionHelper
         sB.TrustServerCertificate = config.TrustCertificate;
 
         return sB.ToString();
+    }
+
+    private static FExDbConfig GetMasterDbConfig(IFExDbConfig config)
+    {
+        config.Guard(nameof(config));
+
+        return new FExDbConfig
+        {
+            SqlInstance = config.SqlInstance.Guard(nameof(IFExDbConfig.SqlInstance)),
+            SqlDbName = "master",
+            Username = config.Username,
+            Password = config.Password,
+            CommandTimeout = config.CommandTimeout,
+            MaxRetryCount = config.MaxRetryCount,
+            MaxRetryDelay = config.MaxRetryDelay,
+            PoolSize = 0,
+            DelayOnTimeout = config.DelayOnTimeout,
+            RunMigrations = false,
+            GetMappings = false,
+            DropIfMigrationFailed = false,
+            TrustCertificate = config.TrustCertificate
+        };
     }
 }

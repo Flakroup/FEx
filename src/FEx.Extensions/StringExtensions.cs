@@ -58,6 +58,11 @@ public static class StringExtensions
     /// </summary>
     public const string SqlWildCardOneCharacterEscaped = "[_]";
 
+    public static Regex WordRegex { get; } = new(@"\b[\w']+\b", RegexOptions.Compiled);
+    public static Regex LettersRegex { get; } = new("^[a-zA-Z]+$", RegexOptions.Compiled);
+    public static Regex LettersAndNumbersRegex { get; } = new("^[a-zA-Z0-9]+$", RegexOptions.Compiled);
+    public static Regex LettersNumbersAndUnderscoreRegex { get; } = new("^[a-zA-Z0-9_]+$", RegexOptions.Compiled);
+
     /// <summary>
     ///     Removes the specified chars from current string.
     /// </summary>
@@ -202,7 +207,7 @@ public static class StringExtensions
     public static IEnumerable<string> Split(this string value, int elementLength)
     {
         int fullLength = value.Length;
-        IList<string> elements = new List<string>();
+        var elements = new List<string>();
 
         for (var startIndex = 0; startIndex < value.Length; startIndex += elementLength)
         {
@@ -235,7 +240,9 @@ public static class StringExtensions
     public static Stream ToStream(this string value)
     {
         var stream = new MemoryStream();
+#pragma warning disable IDISP001
         var writer = new StreamWriter(stream);
+#pragma warning restore IDISP001
         writer.Write(value);
         writer.Flush();
         stream.Position = 0;
@@ -285,15 +292,15 @@ public static class StringExtensions
         return match.Value.Equals(text);
     }
 
-    public static bool IsAWord(this string text) => text.MatchesRegex(new Regex(@"\b[\w']+\b"));
+    public static bool IsAWord(this string text) => text.MatchesRegex(WordRegex);
 
-    public static bool ContainsOnlyLetters(this string text) => text.MatchesRegex(new Regex("^[a-zA-Z]+$"));
+    public static bool ContainsOnlyLetters(this string text) => text.MatchesRegex(LettersRegex);
 
     public static bool ContainsOnlyLettersAndNumbers(this string text) =>
-        text.MatchesRegex(new Regex("^[a-zA-Z0-9]+$"));
+        text.MatchesRegex(LettersAndNumbersRegex);
 
     public static bool ContainsOnlyLettersNumbersAndUnderscore(this string text) =>
-        text.MatchesRegex(new Regex("^[a-zA-Z0-9_]+$"));
+        text.MatchesRegex(LettersNumbersAndUnderscoreRegex);
 
     public static bool Contains(this string source, string toCheck, StringComparison comp) =>
         source?.IndexOf(toCheck, comp) >= 0;
@@ -309,7 +316,11 @@ public static class StringExtensions
         {
             null => throw new ArgumentNullException(nameof(input)),
             "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
+#if NETSTANDARD
             _ => input[0].ToString().ToUpper() + input.Substring(1)
+#else
+            _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
+#endif
         };
     }
 
@@ -319,7 +330,11 @@ public static class StringExtensions
         {
             null => throw new ArgumentNullException(nameof(input)),
             "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
+#if NETSTANDARD
             _ => input[0].ToString().ToLower() + input.Substring(1)
+#else
+            _ => string.Concat(input[0].ToString().ToLower(), input.AsSpan(1))
+#endif
         };
     }
 
@@ -328,7 +343,7 @@ public static class StringExtensions
     /// <param name="length">
     ///     Required. <see langword="Integer" /> expression. Numeric expression indicating how many characters
     ///     to return. If 0, a zero-length string ("") is returned. If greater than or equal to the number of characters in
-    ///     <paramref name="str" />, the entire string is returned.
+    /// <paramref name="str" />, the entire string is returned.
     /// </param>
     /// <param name="trim">Trims provided string before processing.</param>
     /// <returns>Returns a string containing a specified number of characters from the left side of a string.</returns>
@@ -340,15 +355,19 @@ public static class StringExtensions
         if (trim)
             str = str.Trim();
 
+#if NETSTANDARD
         return str.Substring(0, length);
+#else
+        return str[..length];
+#endif
     }
 
     /// <summary>Returns a string that contains all the characters starting from a specified position in a string.</summary>
     /// <param name="str">Required. <see langword="String" /> expression from which characters are returned.</param>
     /// <param name="start">
     ///     Required. <see langword="Integer" /> expression. Starting position of the characters to return. If
-    ///     <paramref name="start" /> is greater than the number of characters in <paramref name="str" />, the
-    ///     <see langword="Mid" /> function returns a zero-length string (""). <paramref name="start" /> is one-based.
+    /// <paramref name="start" /> is greater than the number of characters in <paramref name="str" />, the
+    /// <see langword="Mid" /> function returns a zero-length string (""). <paramref name="start" /> is one-based.
     /// </param>
     /// <param name="trim">Trims provided string before processing.</param>
     /// <returns>A string that consists of all the characters starting from the specified position in the string.</returns>
@@ -360,7 +379,11 @@ public static class StringExtensions
         if (trim)
             str = str.Trim();
 
+#if NETSTANDARD
         return str.Substring(start);
+#else
+        return str[start..];
+#endif
     }
 
     /// <summary>
@@ -370,13 +393,13 @@ public static class StringExtensions
     /// <param name="str">Required. <see langword="String" /> expression from which characters are returned.</param>
     /// <param name="start">
     ///     Required. <see langword="Integer" /> expression. Starting position of the characters to return. If
-    ///     <paramref name="start" /> is greater than the number of characters in <paramref name="str" />, the
-    ///     <see langword="Mid" /> function returns a zero-length string (""). <paramref name="start" /> is one based.
+    /// <paramref name="start" /> is greater than the number of characters in <paramref name="str" />, the
+    /// <see langword="Mid" /> function returns a zero-length string (""). <paramref name="start" /> is one based.
     /// </param>
     /// <param name="length">
     ///     Optional. <see langword="Integer" /> expression. Number of characters to return. If omitted or if
     ///     there are fewer than <paramref name="length" /> characters in the text (including the character at position
-    ///     <paramref name="start" />), all characters from the start position to the end of the string are returned.
+    /// <paramref name="start" />), all characters from the start position to the end of the string are returned.
     /// </param>
     /// <param name="trim">Trims provided string before processing.</param>
     /// <returns>
@@ -399,7 +422,7 @@ public static class StringExtensions
     /// <param name="length">
     ///     Required. <see langword="Integer" />. Numeric expression indicating how many characters to return.
     ///     If 0, a zero-length string ("") is returned. If greater than or equal to the number of characters in
-    ///     <paramref name="str" />, the entire string is returned.
+    /// <paramref name="str" />, the entire string is returned.
     /// </param>
     /// <param name="trim">Trims provided string before processing.</param>
     /// <returns>Returns a string containing a specified number of characters from the right side of a string.</returns>
@@ -473,11 +496,14 @@ public static class StringExtensions
 
     /// <summary>
     ///     Indicates whether a string contains another string under <see cref="StringComparison.OrdinalIgnoreCase" />
-    ///     comparison.
+    /// comparison.
     /// </summary>
     public static bool ContainsOrdinalIgnoreCase(this string str, string other) =>
+#if NETSTANDARD
         str.IndexOf(other, StringComparison.OrdinalIgnoreCase) >= 0;
-
+#else
+        str.Contains(other, StringComparison.OrdinalIgnoreCase);
+#endif
     public static bool IsBothNullOrEqual(this string source,
                                          string value,
                                          StringComparison comparisonType = StringComparison.Ordinal) =>
@@ -560,9 +586,14 @@ public static class StringExtensions
 
     public static string ComputeSha256Hash(this string rawData)
     {
+        byte[] bytes = Encoding.UTF8.GetBytes(rawData);
+#if NETSTANDARD
         using var sha256Hash = SHA256.Create();
-
-        return sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData)).ByteArrayToString();
+        byte[] hash = sha256Hash.ComputeHash(bytes);
+#else
+        byte[] hash = SHA256.HashData(bytes);
+#endif
+        return hash.ByteArrayToString();
     }
 
     public static string TrimLength(this string value, int length, bool trim = false)
@@ -570,9 +601,14 @@ public static class StringExtensions
         if (trim)
             value = value.Trim();
 
-        return value.Length <= length
-            ? value
-            : value.Substring(0, length);
+        if (value.Length <= length)
+            return value;
+
+#if NETSTANDARD
+        return value.Substring(0, length);
+#else
+        return value[..length];
+#endif
     }
 
     /// <summary>

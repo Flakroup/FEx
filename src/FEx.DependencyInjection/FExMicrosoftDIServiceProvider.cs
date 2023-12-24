@@ -5,12 +5,19 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace FEx.DependencyInjection;
 
-public class FExMicrosoftDIServiceProvider : IFExServiceProvider
+public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider, IDisposable, IAsyncDisposable
 {
     private ServiceProvider _provider;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_provider != null)
+            await _provider.DisposeAsync();
+    }
 
     public T GetRequiredService<T>() => _provider.GetRequiredService<T>();
 
@@ -31,6 +38,8 @@ public class FExMicrosoftDIServiceProvider : IFExServiceProvider
 
         try
         {
+            _provider?.Dispose();
+
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             {
                 ValidateOnBuild = true
@@ -68,4 +77,11 @@ public class FExMicrosoftDIServiceProvider : IFExServiceProvider
 
         return services;
     }
+
+    #region IDisposable
+    public void Dispose()
+    {
+        _provider?.Dispose();
+    }
+    #endregion
 }

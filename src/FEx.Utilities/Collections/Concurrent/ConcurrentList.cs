@@ -15,7 +15,9 @@ namespace FEx.Utilities.Collections.Concurrent;
 [Serializable]
 public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEvents
 {
+#pragma warning disable IDISP006
     [NonSerialized] protected readonly ExtendedReaderWriterLockSlim _lock;
+#pragma warning restore IDISP006
 
     public int SuppressedEvents { get; set; }
 
@@ -49,12 +51,12 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
     public ConcurrentList(IEnumerable<T> collection = null)
     {
-        Items = new List<T>();
+        Items = [];
         _lock = new ExtendedReaderWriterLockSlim();
 
         var items = collection?.ToList();
 
-        if (items?.Any() == true)
+        if (items?.Count > 0)
             AddRange(items);
     }
 
@@ -279,8 +281,8 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     /// </summary>
     /// <exception cref="T:System.InvalidOperationException">
     ///     The default comparer
-    ///     <see cref="P:System.Collections.Generic.Comparer`1.Default" /> cannot find an implementation of the
-    ///     <see cref="T:System.IComparable`1" /> generic interface or the <see cref="T:System.IComparable" /> interface for
+    /// <see cref="P:System.Collections.Generic.Comparer`1.Default" /> cannot find an implementation of the
+    /// <see cref="T:System.IComparable`1" /> generic interface or the <see cref="T:System.IComparable" /> interface for
     ///     type <typeparamref name="T" />.
     /// </exception>
     public void Sort()
@@ -303,8 +305,8 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     /// </param>
     /// <exception cref="T:System.InvalidOperationException">
     ///     <paramref name="comparer" /> is null, and the default comparer
-    ///     <see cref="P:System.Collections.Generic.Comparer`1.Default" /> cannot find implementation of the
-    ///     <see cref="T:System.IComparable`1" /> generic interface or the <see cref="T:System.IComparable" /> interface for
+    /// <see cref="P:System.Collections.Generic.Comparer`1.Default" /> cannot find implementation of the
+    /// <see cref="T:System.IComparable`1" /> generic interface or the <see cref="T:System.IComparable" /> interface for
     ///     type <typeparamref name="T" />.
     /// </exception>
     /// <exception cref="T:System.ArgumentException">
@@ -333,18 +335,18 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     /// </param>
     /// <exception cref="T:System.ArgumentOutOfRangeException">
     ///     <paramref name="index" /> is less than 0.-or-
-    ///     <paramref name="count" /> is less than 0.
+    /// <paramref name="count" /> is less than 0.
     /// </exception>
     /// <exception cref="T:System.ArgumentException">
     ///     <paramref name="index" /> and <paramref name="count" /> do not specify a
     ///     valid range in the <see cref="T:System.Collections.Generic.List`1" />.-or-The implementation of
-    ///     <paramref name="comparer" /> caused an error during the sort. For example, <paramref name="comparer" /> might not
+    /// <paramref name="comparer" /> caused an error during the sort. For example, <paramref name="comparer" /> might not
     ///     return 0 when comparing an item with itself.
     /// </exception>
     /// <exception cref="T:System.InvalidOperationException">
     ///     <paramref name="comparer" /> is null, and the default comparer
-    ///     <see cref="P:System.Collections.Generic.Comparer`1.Default" /> cannot find implementation of the
-    ///     <see cref="T:System.IComparable`1" /> generic interface or the <see cref="T:System.IComparable" /> interface for
+    /// <see cref="P:System.Collections.Generic.Comparer`1.Default" /> cannot find implementation of the
+    /// <see cref="T:System.IComparable`1" /> generic interface or the <see cref="T:System.IComparable" /> interface for
     ///     type <typeparamref name="T" />.
     /// </exception>
     public void Sort(int index, int count, IComparer<T> comparer)
@@ -401,7 +403,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
     /// <summary>
     ///     Suppresses all events regarding this collection while executing the specified action.
-    ///     <see cref="NotifyCollectionChangedAction.Reset" /> event is fired afterwards.
+    /// <see cref="NotifyCollectionChangedAction.Reset" /> event is fired afterwards.
     /// </summary>
     /// <param name="action">The action.</param>
     public void Combo(Action action)

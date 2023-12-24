@@ -5,7 +5,6 @@ using FEx.MVVM.Abstractions;
 using JetBrains.Annotations;
 using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace FEx.MVVM.BaseObjects;
@@ -16,7 +15,7 @@ public class NotifyPropertyChanged : IFExNotifyPropertyChanged
 
     public void OnPropertiesChanged(params string[] propertyNames)
     {
-        if (propertyNames?.Any() != true)
+        if (!(propertyNames?.Length > 0))
             return;
 
         foreach (string propertyName in propertyNames)

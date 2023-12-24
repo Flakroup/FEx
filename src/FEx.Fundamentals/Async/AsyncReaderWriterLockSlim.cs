@@ -63,7 +63,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
     /// <summary>
     ///     If not <c>null</c>, contains the <see cref="WriteLockState" /> that represents the
     ///     state of the current write lock. This field may be set even if
-    ///     <see cref="_currentReadLockCount" /> is not yet 0, in which case the task or thread
+    /// <see cref="_currentReadLockCount" /> is not yet 0, in which case the task or thread
     ///     trying to get the write lock needs to wait until the existing read locks are left.
     ///     However, while this field is set, no new read locks can be acquired.
     /// </summary>
@@ -129,9 +129,12 @@ public class AsyncReaderWriterLockSlim : IDisposable
     {
         DenyIfDisposed();
 
+#if NETSTANDARD
         if (millisecondsTimeout < Timeout.Infinite)
             throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout));
-
+#else
+        ArgumentOutOfRangeException.ThrowIfLessThan(millisecondsTimeout, Timeout.Infinite);
+#endif
         cancellationToken.ThrowIfCancellationRequested();
 
         // Check if we can enter the lock directly.
@@ -177,8 +180,12 @@ public class AsyncReaderWriterLockSlim : IDisposable
     {
         DenyIfDisposed();
 
+#if NETSTANDARD
         if (millisecondsTimeout < Timeout.Infinite)
             throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout));
+#else
+        ArgumentOutOfRangeException.ThrowIfLessThan(millisecondsTimeout, Timeout.Infinite);
+#endif
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -244,8 +251,12 @@ public class AsyncReaderWriterLockSlim : IDisposable
     {
         DenyIfDisposed();
 
+#if NETSTANDARD
         if (millisecondsTimeout < Timeout.Infinite)
             throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout));
+#else
+        ArgumentOutOfRangeException.ThrowIfLessThan(millisecondsTimeout, Timeout.Infinite);
+#endif
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -325,8 +336,12 @@ public class AsyncReaderWriterLockSlim : IDisposable
     {
         DenyIfDisposed();
 
+#if NETSTANDARD
         if (millisecondsTimeout < Timeout.Infinite)
             throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout));
+#else
+        ArgumentOutOfRangeException.ThrowIfLessThan(millisecondsTimeout, Timeout.Infinite);
+#endif
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -426,8 +441,12 @@ public class AsyncReaderWriterLockSlim : IDisposable
 
     private void DenyIfDisposed()
     {
+#if NETSTANDARD
         if (_isDisposed)
             throw new ObjectDisposedException(nameof(AsyncReaderWriterLockSlim));
+#else
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
+#endif
     }
 
     private bool EnterReadLockPreface(out WriteLockState existingWriteLockState)
@@ -477,7 +496,9 @@ public class AsyncReaderWriterLockSlim : IDisposable
 
             if (existingLockState.StateIsReleased
                 && existingLockState.WaitingReadLocksCount == 0)
+#pragma warning disable IDISP007
                 existingLockState.WaitingReadLocksSemaphore.Dispose();
+#pragma warning restore IDISP007
 
             if (waitResult)
                 // The write lock has already incremented the currentReadLockCount
@@ -736,31 +757,31 @@ public class AsyncReaderWriterLockSlim : IDisposable
     {
         /// <summary>
         ///     Gets or sets a value that indicates if the state is active. Only when <c>true</c>, the
-        ///     <see cref="AsyncReaderWriterLockSlim._readLockReleaseSemaphore" /> will be released once the last read lock exits.
+        /// <see cref="AsyncReaderWriterLockSlim._readLockReleaseSemaphore" /> will be released once the last read lock exits.
         /// </summary>
         public bool StateIsActive { get; set; }
 
         /// <summary>
         ///     Gets or sets a value that indicates if the write lock associated with this
-        ///     <see cref="WriteLockState" /> has already been released. This is also used
+        /// <see cref="WriteLockState" /> has already been released. This is also used
         ///     to indicate if the the task or thread that waits on the
-        ///     <see cref="WaitingReadLocksSemaphore" /> semaphore and then decrements
-        ///     <see cref="WaitingReadLocksCount" /> to zero (0) must dispose the
-        ///     <see cref="WaitingReadLocksSemaphore" /> semaphore.
+        /// <see cref="WaitingReadLocksSemaphore" /> semaphore and then decrements
+        /// <see cref="WaitingReadLocksCount" /> to zero (0) must dispose the
+        /// <see cref="WaitingReadLocksSemaphore" /> semaphore.
         /// </summary>
         public bool StateIsReleased { get; set; }
 
         /// <summary>
         ///     Gets or sets a value that indicates if a write lock that uses an existing
-        ///     <see cref="WriteLockState" /> must wait until the
-        ///     <see cref="AsyncReaderWriterLockSlim._readLockReleaseSemaphore" /> is released.
+        /// <see cref="WriteLockState" /> must wait until the
+        /// <see cref="AsyncReaderWriterLockSlim._readLockReleaseSemaphore" /> is released.
         /// </summary>
         public bool WaitForReadLocks { get; set; }
 
         /// <summary>
         ///     Gets or sets a value that indicates if a read lock that is exited when
         ///     there is a write lock present should not release the
-        ///     <see cref="AsyncReaderWriterLockSlim._readLockReleaseSemaphore" /> as it has already been released
+        /// <see cref="AsyncReaderWriterLockSlim._readLockReleaseSemaphore" /> as it has already been released
         ///     (or there were no read locks present when the write lock was initially
         ///     entered).
         /// </summary>
@@ -769,7 +790,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         /// <summary>
         ///     Gets or sets a <see cref="SemaphoreSlim" /> on which new read locks need
         ///     to wait until the existing write lock is released. The <see cref="SemaphoreSlim" />
-        ///     will be created only if there is at least on additional task or thread that wants
+        /// will be created only if there is at least on additional task or thread that wants
         ///     to enter a read lock.
         /// </summary>
         public SemaphoreSlim WaitingReadLocksSemaphore { get; set; }
@@ -778,8 +799,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
         ///     Gets or sets a value that indicates the number of tasks or threads which intend
         ///     to wait on the <see cref="WaitingReadLocksSemaphore" /> semaphore. This
         ///     is used to determine which task or thread is responsible to dispose the
-        ///     <see cref="WaitingReadLocksSemaphore" /> if
-        ///     <see cref="StateIsReleased" /> is <c>true</c>.
+        /// <see cref="WaitingReadLocksSemaphore" /> if
+        /// <see cref="StateIsReleased" /> is <c>true</c>.
         /// </summary>
         public int WaitingReadLocksCount { get; set; }
     }

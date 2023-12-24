@@ -10,7 +10,9 @@ public class Loggable : ILoggable
 {
     private readonly ILogger _logger;
 
+#pragma warning disable IDISP006
     protected IDisposable Scope { get; private set; }
+#pragma warning restore IDISP006
     protected object State { get; private set; }
 
     public Loggable(ILogger logger)
@@ -94,6 +96,7 @@ public class Loggable : ILoggable
     public void BeginScope<TState>(TState state)
     {
         State = state;
+        Scope?.Dispose();
         Scope = _logger.BeginScope(state);
     }
 

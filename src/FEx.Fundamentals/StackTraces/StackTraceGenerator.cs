@@ -13,7 +13,7 @@ namespace FEx.Fundamentals.StackTraces;
 public class StackTraceGenerator : IStackTraceProvider
 {
     private readonly IStackTraceFilter[] _stackTraceFilters;
-    private IStackTraceCache _stackTraceCache;
+    private StackTraceCache _stackTraceCache;
 
     public bool DotNotFixDynamicProxyStackTrace { get; set; }
 
@@ -34,9 +34,7 @@ public class StackTraceGenerator : IStackTraceProvider
         {
             Exception exception = exception1;
 
-            string str = exception is not null
-                ? exception.ToString()
-                : null;
+            var str = exception?.ToString();
 
             Fallback(str);
         }
@@ -76,7 +74,7 @@ public class StackTraceGenerator : IStackTraceProvider
 
         return new StackTraceInfo
         {
-            Frames = stackTraceFrames.ToArray()
+            Frames = [.. stackTraceFrames]
         };
     }
 
@@ -161,7 +159,7 @@ public class StackTraceGenerator : IStackTraceProvider
             StackFrame[] frames = new StackTrace(false).GetFrames();
 
             if (frames is null)
-                return new Key(new MethodHandleAndILOffset[0]);
+                return new Key([]);
 
             var methodHandleAndIlOffset = new MethodHandleAndILOffset[frames.Length];
 
@@ -178,11 +176,6 @@ public class StackTraceGenerator : IStackTraceProvider
     private delegate Key GetKey();
 
     private delegate MethodHandleAndILOffset[] GetMethodRuntimeHandles();
-
-    private interface IStackTraceCache
-    {
-        StackTrace GetStackTrace();
-    }
 
     private class Key
     {
@@ -246,7 +239,7 @@ public class StackTraceGenerator : IStackTraceProvider
 
         // ReSharper disable UnusedMember.Local
         public static MethodHandleAndILOffset[] Create(IntPtr[] methods, int[] offsets)
-        // ReSharper restore UnusedMember.Local
+            // ReSharper restore UnusedMember.Local
         {
             var methodHandleAndILOffset = new MethodHandleAndILOffset[methods.Length];
 
@@ -283,7 +276,7 @@ public class StackTraceGenerator : IStackTraceProvider
         }
     }
 
-    private class StackTraceCache : IStackTraceCache
+    private class StackTraceCache
     {
         private readonly GetKey _createKey;
 
@@ -333,9 +326,11 @@ public class StackTraceGenerator : IStackTraceProvider
             return stackTrace1;
         }
 #pragma warning disable CS0649
+#pragma warning disable IDISP006
         private readonly ReaderWriterLockSlim _rwLock;
+#pragma warning restore IDISP006
 
-        private readonly IDictionary<Key, StackTrace> _cachedTraces;
+        private readonly ConcurrentDictionary<Key, StackTrace> _cachedTraces;
 #pragma warning restore CS0649
     }
 }

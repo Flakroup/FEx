@@ -124,10 +124,12 @@ public static class FileInfoExtensions
                                         bool toLower = true,
                                         bool asBase64String = false)
     {
-        byte[] hash;
-
-        using (var md5Algorithm = MD5.Create())
-            hash = md5Algorithm.ComputeHash(data);
+#if NETSTANDARD
+        using var md5Algorithm = MD5.Create();
+        byte[] hash = md5Algorithm.ComputeHash(data);
+#else
+        byte[] hash = MD5.HashData(data);
+#endif
 
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }
@@ -138,7 +140,9 @@ public static class FileInfoExtensions
 
         return !file.Exists
             ? null
+#pragma warning disable IDISP004
             : await new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefBufferSize)
+#pragma warning restore IDISP004
                 .ToMemoryStreamAsync();
     }
 }

@@ -43,8 +43,7 @@ public static class ReflectionHelper
 
     public static object GetFieldValue(this object obj, string fieldName)
     {
-        if (obj is null)
-            throw new ArgumentNullException(nameof(obj));
+        obj.Guard(nameof(obj));
 
         Type objType = obj.GetType();
         FieldInfo propInfo = GetFieldInfo(objType, fieldName);

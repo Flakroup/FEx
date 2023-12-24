@@ -2,13 +2,10 @@ using FEx.Extensions.Base.Helpers;
 using FEx.Extensions.Collections.Enumerables;
 using JetBrains.Annotations;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using Guardian = GuardNet.Guard;
 
 namespace FEx.Extensions;
@@ -18,23 +15,6 @@ namespace FEx.Extensions;
 /// </summary>
 public static class ObjectExtensions
 {
-    /// <summary>
-    ///     Gets the specified field and initialized it if needed.
-    /// </summary>
-    /// <typeparam name="TField">Field type.</typeparam>
-    /// <param name="value">The value.</param>
-    /// <param name="field">The field.</param>
-    /// <param name="initializer">The initializer.</param>
-    /// <returns>Field value.</returns>
-    // ReSharper disable UnusedParameter.Global
-    public static TField Get<TField>(this object value, ref TField field, Func<TField> initializer)
-    // ReSharper restore UnusedParameter.Global
-    {
-        field ??= initializer();
-
-        return field;
-    }
-
     /// <summary>
     ///     Indicates that the specified reference is not a null reference
     /// </summary>
@@ -112,7 +92,10 @@ public static class ObjectExtensions
     /// <param name="value">Current instance.</param>
     public static void TryDispose<T>(this T value)
     {
-        (value as IDisposable)?.Dispose();
+        if (value is IDisposable disposable)
+#pragma warning disable IDISP007
+            disposable.Dispose();
+#pragma warning restore IDISP007
     }
 
     /// <summary>
@@ -184,104 +167,6 @@ public static class ObjectExtensions
         actions.ForEachInEnumerable(a => a(value));
 
         return value;
-    }
-
-    /// <summary>
-    ///     Gets a string representation of the objects property values.
-    /// </summary>
-    /// <param name="source">The object for the string representation.</param>
-    /// <param name="name">The name of the object.</param>
-    /// <returns>A string of properties.</returns>
-    public static string ToPropertiesString(this object source, string name) =>
-        source.ToPropertiesString(source.GetType(), name);
-
-    /// <summary>
-    ///     Gets a string representation of the objects property values, with a delimiter between values.
-    /// </summary>
-    /// <param name="obj">The object for the string representation.</param>
-    /// <param name="type">The type of the object.</param>
-    /// <param name="name">The name of the object.</param>
-    /// <returns>A string of properties.</returns>
-    public static string ToPropertiesString(this object obj, Type type, string name)
-    {
-        if (obj is not null)
-        {
-            var propertyString = new StringBuilder();
-
-            string objNameSegment = name is not null
-                ? name + " = "
-                : string.Empty;
-
-            if (Convert.GetTypeCode(obj) == TypeCode.Object
-                && obj is not IEnumerable
-                && type != typeof(Guid))
-            {
-                // if object, get all properties
-                propertyString.Append("(")
-                    .Append(type.FullName)
-                    .Append(" ")
-                    .Append(objNameSegment)
-                    .Append(") Properties: ")
-                    .Append(obj.ToPropertiesString());
-            }
-            else
-            {
-                if (type == typeof(Guid))
-                    propertyString.Append("(")
-                        .Append(type.Name)
-                        .Append(" ")
-                        .Append(name)
-                        .Append(" = '")
-                        .Append(type.GUID)
-                        .Append("')");
-                else
-                    // for primitive types, just show the type and value
-                    // for collection types, just show the collection type and item type (e.g. [(List`1)  'System.Collections.Generic.List`1[JCDCHelper.CV.DDLDispValueCV]'])
-                    propertyString.Append("(")
-                        .Append(type.Name)
-                        .Append(" ")
-                        .Append(objNameSegment)
-                        .Append(" '")
-                        .Append(obj)
-                        .Append("')");
-            }
-
-            return propertyString.ToString();
-        }
-
-        return " None ";
-    }
-
-    /// <summary>
-    ///     Gets a string representation of the objects property values, with a delimiter between values.
-    /// </summary>
-    /// <param name="obj">The object for the string representation.</param>
-    /// <returns>A string of properties.</returns>
-    public static string ToPropertiesString(this object obj)
-    {
-        var propertiesString = new StringBuilder();
-
-        foreach (PropertyInfo property in obj.GetType().GetProperties())
-        {
-            string name = property.Name;
-            object value = property.GetValue(obj, null);
-
-            propertiesString.Append("(")
-                .Append(property.PropertyType.Name)
-                .Append(") ")
-                .Append(name)
-                .Append(" = '")
-                .Append(value is null
-                    ? "null"
-                    : value)
-                .Append("', ");
-        }
-
-        // remove last comma
-        if (propertiesString.Length > 0)
-            propertiesString.Remove(propertiesString.Length - 2, 2);
-
-        return propertiesString.ToString();
     }
 
     /// <summary>

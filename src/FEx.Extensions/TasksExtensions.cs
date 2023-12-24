@@ -23,13 +23,13 @@ public static class TasksExtensions
         task?.Status is TaskStatus.Canceled or TaskStatus.Faulted;
 
     public static async Task RunWithWhenAllAsync(this IEnumerable<Action> tasksToBeStarted,
-                                                 CancellationToken cancellationToken = default,
-                                                 bool immediateStart = true) =>
+                                                 bool immediateStart = true,
+                                                 CancellationToken cancellationToken = default) =>
         await WhenAllAsync(immediateStart, tasksToBeStarted.Select(x => Task.Run(x, cancellationToken)));
 
     public static async Task<T[]> RunFuncWithWhenAllAsync<T>(this IEnumerable<Func<T>> tasksToBeStarted,
-                                                             CancellationToken cancellationToken = default,
-                                                             bool immediateStart = true) =>
+                                                             bool immediateStart = true,
+                                                             CancellationToken cancellationToken = default) =>
         await WhenAllAsync(immediateStart, tasksToBeStarted.Select(x => Task.Run(x, cancellationToken)));
 
     public static async Task RunFuncTaskWithWhenAllAsync(this IEnumerable<Func<Task>> tasksToBeStarted,
@@ -42,14 +42,14 @@ public static class TasksExtensions
 
     public static async Task RunWithWhenAllAsync<T>(this IEnumerable<T> values,
                                                     Action<T> asyncAction,
-                                                    CancellationToken cancellationToken = default,
-                                                    bool immediateStart = true) =>
+                                                    bool immediateStart = true,
+                                                    CancellationToken cancellationToken = default) =>
         await WhenAllAsync(immediateStart, values.Select(x => Task.Run(() => asyncAction(x), cancellationToken)));
 
     public static async Task<TRet[]> RunFuncWithWhenAllAsync<T, TRet>(this IEnumerable<T> values,
                                                                       Func<T, TRet> asyncAction,
-                                                                      CancellationToken cancellationToken = default,
-                                                                      bool immediateStart = true) =>
+                                                                      bool immediateStart = true,
+                                                                      CancellationToken cancellationToken = default) =>
         await WhenAllAsync(immediateStart, values.Select(x => Task.Run(() => asyncAction(x), cancellationToken)));
 
     public static async Task RunFuncTaskWithWhenAllAsync<T>(this IEnumerable<T> values,

@@ -101,6 +101,7 @@ internal class OSVersion : IEquatable<OSVersion>
 
     public override int GetHashCode()
     {
+#if NETSTANDARD
         unchecked
         {
             int hashCode = Major;
@@ -109,5 +110,8 @@ internal class OSVersion : IEquatable<OSVersion>
 
             return hashCode;
         }
+#else
+        return HashCode.Combine(Major, Minor, ProductType);
+#endif
     }
 }

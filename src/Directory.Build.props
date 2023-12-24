@@ -3,21 +3,7 @@
 	<Import Project="..\Directory.Build.props" />
 
 	<PropertyGroup>
-		<TargetFrameworkIds>$(TargetFrameworkId);netstandard2.0</TargetFrameworkIds>
-		<TargetWindowsFrameworkIds>net481;net8.0-windows</TargetWindowsFrameworkIds>
 		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net8.0'">
-		<DefineConstants>NET</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
-		<DefineConstants>NETSTANDARD</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net8.0-windows'">
-		<DefineConstants>NETWINDOWS</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net481'">
-		<DefineConstants>NETFULL</DefineConstants>
 	</PropertyGroup>
 
 </Project>

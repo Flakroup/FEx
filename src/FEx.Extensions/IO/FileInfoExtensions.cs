@@ -143,6 +143,6 @@ public static class FileInfoExtensions
 #pragma warning disable IDISP004
             : await new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefBufferSize)
 #pragma warning restore IDISP004
-                .ToMemoryStreamAsync();
+                .CopyToMemoryStreamAsync(true);
     }
 }

@@ -608,12 +608,19 @@ public static class StringExtensions
     /// <returns>MD5 of string</returns>
     public static string GenerateMd5OfString(this string value)
     {
-        if (value is not null)
-            using (var md5 = MD5.Create())
-            using (var stream = value.ToStream())
-                return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty).ToLower();
+        if (value is null)
+            return null;
 
-        return null;
+        using var stream = value.ToStream();
+
+#if NETSTANDARD
+        using var md5 = MD5.Create();
+
+        byte[] hash = md5.ComputeHash(stream);
+#else
+        byte[] hash = MD5.HashData(stream);
+#endif
+        return BitConverter.ToString(hash).Replace("-", string.Empty).ToLower();
     }
 
     public static string RemoveDiacritics(this string text)

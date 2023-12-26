@@ -31,20 +31,11 @@ public class TaskWrapper : TaskWrapperBase
         }
     }
 
-    public override void SetException(Exception exception)
-    {
-        Result = new ExceptionError(exception);
-    }
+    public override void SetException(Exception exception) => Result = new ExceptionError(exception);
 
-    public void SetResult()
-    {
-        Result = Result<ExceptionError>.Success;
-    }
+    public void SetResult() => Result = Result<ExceptionError>.Success;
 
-    public void SetTask(Func<Task> task)
-    {
-        Task = ExecuteTaskAsync(task);
-    }
+    public void SetTask(Func<Task> task) => Task = ExecuteTaskAsync(task);
 
     private async Task ExecuteTaskAsync(Func<Task> task)
     {
@@ -82,20 +73,11 @@ public class TaskWrapper<T> : TaskWrapperBase
         }
     }
 
-    public override void SetException(Exception exception)
-    {
-        Result = new ExceptionError(exception);
-    }
+    public override void SetException(Exception exception) => Result = new ExceptionError(exception);
 
-    public void SetResult(T result)
-    {
-        Result = new Result<T, ExceptionError>(result);
-    }
+    public void SetResult(T result) => Result = new Result<T, ExceptionError>(result);
 
-    public void SetTask(Func<Task<T>> task)
-    {
-        Task = ExecuteTaskAsync(task);
-    }
+    public void SetTask(Func<Task<T>> task) => Task = ExecuteTaskAsync(task);
 
     private async Task<T> ExecuteTaskAsync(Func<Task<T>> task)
     {

@@ -11,13 +11,7 @@ public class GlobalLogger
         Logger = new FExLogger();
     }
 
-    public static void LogInformation(string message)
-    {
-        Logger.LogInformation(message);
-    }
+    public static void LogInformation(string message) => Logger.LogInformation(message);
 
-    public static void LogError(string message, Exception ex = null)
-    {
-        Logger.LogError(message, ex);
-    }
+    public static void LogError(string message, Exception ex = null) => Logger.LogError(message, ex);
 }

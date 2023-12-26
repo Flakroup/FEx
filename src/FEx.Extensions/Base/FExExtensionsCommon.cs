@@ -12,8 +12,6 @@ public static class FExExtensionsCommon
         ExceptionHandler = new DebugExceptionHandler();
     }
 
-    public static void Initialize(IExceptionHandler exceptionHandler)
-    {
+    public static void Initialize(IExceptionHandler exceptionHandler) =>
         ExceptionHandler = exceptionHandler.Guard(nameof(exceptionHandler));
-    }
 }

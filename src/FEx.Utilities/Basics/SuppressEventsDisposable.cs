@@ -13,8 +13,5 @@ public readonly struct SuppressEventsDisposable : IDisposable
         ++suppressedEventSource.SuppressedEvents;
     }
 
-    public void Dispose()
-    {
-        --_suppressedEventSource.SuppressedEvents;
-    }
+    public void Dispose() => --_suppressedEventSource.SuppressedEvents;
 }

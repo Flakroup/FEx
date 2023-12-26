@@ -187,12 +187,9 @@ public static class DbContextExtensions
     }
 
     public static IList<EntityEntry> GetChangedEntities<TDbContext>(this TDbContext dbContext)
-        where TDbContext : DbContext
-    {
-        return dbContext.ChangeTracker.Entries()
-            .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
-            .ToList();
-    }
+        where TDbContext : DbContext => dbContext.ChangeTracker.Entries()
+        .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+        .ToList();
 
     public static bool IsSqlite<TDbContext>(this TDbContext context) where TDbContext : DbContext =>
         context.Database.ProviderName?.EndsWith(nameof(SqlDialect.Sqlite)) == true;

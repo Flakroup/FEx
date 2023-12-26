@@ -50,18 +50,15 @@ public static class DoubleExtensions
             : throw new Exception("Cannot unmarshal type double");
     }
 
-    private static double GetFloatComparison(int floatDigits)
+    private static double GetFloatComparison(int floatDigits) => floatDigits switch
     {
-        return floatDigits switch
-        {
-            1 => D1,
-            2 => D2,
-            3 => D3,
-            4 => D4,
-            5 => D5,
-            6 => D6,
-            7 => D7,
-            _ => 0
-        };
-    }
+        1 => D1,
+        2 => D2,
+        3 => D3,
+        4 => D4,
+        5 => D5,
+        6 => D6,
+        7 => D7,
+        _ => 0
+    };
 }

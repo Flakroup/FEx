@@ -74,9 +74,6 @@ public sealed class FExStrongInjectServiceProvider : IFExServiceProvider, IDispo
             : GetRequiredService<T>();
 
     #region IDisposable
-    public void Dispose()
-    {
-        _provider?.Dispose();
-    }
+    public void Dispose() => _provider?.Dispose();
     #endregion
 }

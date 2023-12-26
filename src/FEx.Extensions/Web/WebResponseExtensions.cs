@@ -16,10 +16,8 @@ public static class WebResponseExtensions
     public const string ContentRangeHeaderName = "Content-Range";
     public const string AcceptRangesHeaderName = "Accept-Ranges";
 
-    public static Dictionary<string, string> GetAllHeaders(this WebResponse resp)
-    {
-        return resp?.Headers.AllKeys.ToDictionary(x => x, x => resp.Headers[x]);
-    }
+    public static Dictionary<string, string> GetAllHeaders(this WebResponse resp) =>
+        resp?.Headers.AllKeys.ToDictionary(x => x, x => resp.Headers[x]);
 
     public static async Task<(bool, LengthType)> TryGetRangeAsync(this WebResponse response,
                                                                   int rangeFrom,

@@ -65,85 +65,37 @@ public class ConcurrentHashSet<T> : HashSet<T>
     }
 
     #region Implementation of ICollection<T> ...ish
-    public new bool Add(T item)
-    {
-        return RunLocked(() => base.Add(item));
-    }
+    public new bool Add(T item) => RunLocked(() => base.Add(item));
 
-    public new void UnionWith(IEnumerable<T> other)
-    {
-        RunLocked(() => base.UnionWith(other));
-    }
+    public new void UnionWith(IEnumerable<T> other) => RunLocked(() => base.UnionWith(other));
 
-    public new void IntersectWith(IEnumerable<T> other)
-    {
-        RunLocked(() => base.IntersectWith(other));
-    }
+    public new void IntersectWith(IEnumerable<T> other) => RunLocked(() => base.IntersectWith(other));
 
-    public new void ExceptWith(IEnumerable<T> other)
-    {
-        RunLocked(() => base.ExceptWith(other));
-    }
+    public new void ExceptWith(IEnumerable<T> other) => RunLocked(() => base.ExceptWith(other));
 
-    public new void SymmetricExceptWith(IEnumerable<T> other)
-    {
-        RunLocked(() => base.SymmetricExceptWith(other));
-    }
+    public new void SymmetricExceptWith(IEnumerable<T> other) => RunLocked(() => base.SymmetricExceptWith(other));
 
-    public new bool IsSubsetOf(IEnumerable<T> other)
-    {
-        return RunLocked(() => base.IsSubsetOf(other));
-    }
+    public new bool IsSubsetOf(IEnumerable<T> other) => RunLocked(() => base.IsSubsetOf(other));
 
-    public new bool IsSupersetOf(IEnumerable<T> other)
-    {
-        return RunLocked(() => base.IsSupersetOf(other));
-    }
+    public new bool IsSupersetOf(IEnumerable<T> other) => RunLocked(() => base.IsSupersetOf(other));
 
-    public new bool IsProperSupersetOf(IEnumerable<T> other)
-    {
-        return RunLocked(() => base.IsProperSupersetOf(other));
-    }
+    public new bool IsProperSupersetOf(IEnumerable<T> other) => RunLocked(() => base.IsProperSupersetOf(other));
 
-    public new bool IsProperSubsetOf(IEnumerable<T> other)
-    {
-        return RunLocked(() => base.IsProperSubsetOf(other));
-    }
+    public new bool IsProperSubsetOf(IEnumerable<T> other) => RunLocked(() => base.IsProperSubsetOf(other));
 
-    public new bool Overlaps(IEnumerable<T> other)
-    {
-        return RunLocked(() => base.Overlaps(other));
-    }
+    public new bool Overlaps(IEnumerable<T> other) => RunLocked(() => base.Overlaps(other));
 
-    public new bool SetEquals(IEnumerable<T> other)
-    {
-        return RunLocked(() => base.SetEquals(other));
-    }
+    public new bool SetEquals(IEnumerable<T> other) => RunLocked(() => base.SetEquals(other));
 
-    public new void Clear()
-    {
-        RunLocked(base.Clear);
-    }
+    public new void Clear() => RunLocked(base.Clear);
 
-    public new bool Contains(T item)
-    {
-        return RunLocked(() => base.Contains(item));
-    }
+    public new bool Contains(T item) => RunLocked(() => base.Contains(item));
 
-    public new void CopyTo(T[] array, int arrayIndex)
-    {
-        RunLocked(() => base.CopyTo(array, arrayIndex));
-    }
+    public new void CopyTo(T[] array, int arrayIndex) => RunLocked(() => base.CopyTo(array, arrayIndex));
 
-    public new bool Remove(T item)
-    {
-        return RunLocked(() => base.Remove(item));
-    }
+    public new bool Remove(T item) => RunLocked(() => base.Remove(item));
 
-    public new int RemoveWhere(Predicate<T> match)
-    {
-        return RunLocked(() => base.RemoveWhere(match));
-    }
+    public new int RemoveWhere(Predicate<T> match) => RunLocked(() => base.RemoveWhere(match));
 
     public new int Count => RunLocked(() => base.Count);
 

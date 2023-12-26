@@ -152,26 +152,23 @@ public class StackTraceGenerator : IStackTraceProvider
         return false;
     }
 
-    private void SlowAndSafeApproachToGetStackTrace()
+    private void SlowAndSafeApproachToGetStackTrace() => _stackTraceCache = new StackTraceCache(() =>
     {
-        _stackTraceCache = new StackTraceCache(() =>
+        StackFrame[] frames = new StackTrace(false).GetFrames();
+
+        if (frames is null)
+            return new Key([]);
+
+        var methodHandleAndIlOffset = new MethodHandleAndILOffset[frames.Length];
+
+        for (var i = 0; i < methodHandleAndIlOffset.Length; i++)
         {
-            StackFrame[] frames = new StackTrace(false).GetFrames();
+            methodHandleAndIlOffset[i] = new MethodHandleAndILOffset(frames[i].GetMethod().MethodHandle.Value,
+                frames[i].GetILOffset());
+        }
 
-            if (frames is null)
-                return new Key([]);
-
-            var methodHandleAndIlOffset = new MethodHandleAndILOffset[frames.Length];
-
-            for (var i = 0; i < methodHandleAndIlOffset.Length; i++)
-            {
-                methodHandleAndIlOffset[i] = new MethodHandleAndILOffset(frames[i].GetMethod().MethodHandle.Value,
-                    frames[i].GetILOffset());
-            }
-
-            return new Key(methodHandleAndIlOffset);
-        });
-    }
+        return new Key(methodHandleAndIlOffset);
+    });
 
     private delegate Key GetKey();
 

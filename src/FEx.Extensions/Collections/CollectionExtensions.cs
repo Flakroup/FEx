@@ -33,10 +33,7 @@ public static class CollectionExtensions
                 source.Add(item);
     }
 
-    public static void Remove<T>(this ICollection<T> items, T item) where T : class
-    {
-        items.Remove(item);
-    }
+    public static void Remove<T>(this ICollection<T> items, T item) where T : class => items.Remove(item);
 
     /// <summary>
     ///     Adds the specified item many times.

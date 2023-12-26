@@ -61,8 +61,5 @@ public class Map<TKey1, TKey2>
         _reverseDictionary.Clear();
     }
 
-    public void SetReadOnly()
-    {
-        _isReadOnly = true;
-    }
+    public void SetReadOnly() => _isReadOnly = true;
 }

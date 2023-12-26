@@ -60,10 +60,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
             AddRange(items);
     }
 
-    public void CopyTo(Array array, int index)
-    {
-        Read(() => ((ICollection)Items).CopyTo(array, index));
-    }
+    public void CopyTo(Array array, int index) => Read(() => ((ICollection)Items).CopyTo(array, index));
 
     /// <summary>
     ///     Adds an object to the end of the <see cref="ConcurrentList{T}" />.
@@ -72,62 +69,47 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     ///     The object to be added to the end of the <see cref="ConcurrentList{T}" />.
     ///     The value can be null for reference types
     /// </param>
-    public void Add(T item)
+    public void Add(T item) => Write(() =>
     {
-        Write(() =>
-        {
-            int index = Items.Count;
-            Items.Add(item);
+        int index = Items.Count;
+        Items.Add(item);
 
-            OnCountPropertyChanged();
-            OnIndexerPropertyChanged();
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
-        });
-    }
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
+    });
 
-    public void Clear()
+    public void Clear() => Write(() =>
     {
-        Write(() =>
-        {
-            if (Items.Count == 0)
-                return;
+        if (Items.Count == 0)
+            return;
 
-            Items.Clear();
+        Items.Clear();
 
-            OnCountPropertyChanged();
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
-        });
-    }
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    });
 
-    public bool Contains(T item)
-    {
-        return Read(() => Items.Contains(item));
-    }
+    public bool Contains(T item) => Read(() => Items.Contains(item));
 
-    public void CopyTo(T[] array, int arrayIndex)
-    {
-        Read(() => Items.CopyTo(array, arrayIndex));
-    }
+    public void CopyTo(T[] array, int arrayIndex) => Read(() => Items.CopyTo(array, arrayIndex));
 
     /// <summary>
     ///     Removes the specified item.
     /// </summary>
     /// <param name="item">The item.</param>
-    public bool Remove(T item)
+    public bool Remove(T item) => WriteWithResult(() =>
     {
-        return WriteWithResult(() =>
-        {
-            int index = Items.IndexOf(item);
+        int index = Items.IndexOf(item);
 
-            if (index < 0)
-                return false;
+        if (index < 0)
+            return false;
 
-            RemoveAt(index);
+        RemoveAt(index);
 
-            return true;
-        });
-    }
+        return true;
+    });
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -149,47 +131,32 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
 
     public int IndexOf(object value) => IndexOf((T)value);
 
-    public void Insert(int index, object value)
+    public void Insert(int index, object value) => Insert(index, (T)value);
+
+    public void Remove(object value) => Remove((T)value);
+
+    public int IndexOf(T item) => Read(() => Items.IndexOf(item));
+
+    public void Insert(int index, T item) => Write(() =>
     {
-        Insert(index, (T)value);
-    }
+        Items.Insert(index, item);
 
-    public void Remove(object value)
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
+    });
+
+    public void RemoveAt(int index) => Write(() =>
     {
-        Remove((T)value);
-    }
+        T removedItem = Items[index];
+        Items.RemoveAt(index);
 
-    public int IndexOf(T item)
-    {
-        return Read(() => Items.IndexOf(item));
-    }
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
 
-    public void Insert(int index, T item)
-    {
-        Write(() =>
-        {
-            Items.Insert(index, item);
-
-            OnCountPropertyChanged();
-            OnIndexerPropertyChanged();
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
-        });
-    }
-
-    public void RemoveAt(int index)
-    {
-        Write(() =>
-        {
-            T removedItem = Items[index];
-            Items.RemoveAt(index);
-
-            OnCountPropertyChanged();
-            OnIndexerPropertyChanged();
-
-            OnCollectionChanged(
-                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItem, index));
-        });
-    }
+        OnCollectionChanged(
+            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItem, index));
+    });
 
     public SuppressEventsDisposable SuppressEvents() => new(this);
 
@@ -197,10 +164,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     ///     Adds the specified items to this collection.
     /// </summary>
     /// <param name="range">The items collection to add</param>
-    public void AddRange(IEnumerable<T> range)
-    {
-        WriteWithResult(() => InternalAddRange(range));
-    }
+    public void AddRange(IEnumerable<T> range) => WriteWithResult(() => InternalAddRange(range));
 
     public ReadOnlyCollection<T> AsReadOnly() => Read(Items.AsReadOnly);
 
@@ -211,23 +175,18 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     ///     The object to be added to the end of the <see cref="ConcurrentList{T}" />.
     ///     The value can be null for reference types
     /// </param>
-    public bool AddUnique(T item)
+    public bool AddUnique(T item) => WriteWithResult(() =>
     {
-        return WriteWithResult(() =>
-        {
-            if (Items.Contains(item))
-                return false;
+        if (Items.Contains(item))
+            return false;
 
-            Add(item);
+        Add(item);
 
-            return true;
-        });
-    }
+        return true;
+    });
 
-    public void AddUniqueRange(IEnumerable<T> range)
-    {
+    public void AddUniqueRange(IEnumerable<T> range) =>
         WriteWithResult(() => InternalAddRange(range.Distinct().Where(x => !Items.Contains(x))));
-    }
 
     public bool RemoveWhere(Func<T, bool> predicate)
     {
@@ -250,10 +209,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
         return hasRemovedAny;
     }
 
-    public void Replace(int index, T item)
-    {
-        WriteWithResult(() => SetItem(index, item));
-    }
+    public void Replace(int index, T item) => WriteWithResult(() => SetItem(index, item));
 
     public void ReplaceWith(IEnumerable<T> collection)
     {
@@ -285,16 +241,13 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     /// <see cref="T:System.IComparable`1" /> generic interface or the <see cref="T:System.IComparable" /> interface for
     ///     type <typeparamref name="T" />.
     /// </exception>
-    public void Sort()
+    public void Sort() => Write(() =>
     {
-        Write(() =>
-        {
-            Items.Sort();
+        Items.Sort();
 
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
-        });
-    }
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    });
 
     /// <summary>
     ///     Sorts the elements using the specified comparer.
@@ -313,16 +266,13 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     ///     The implementation of <paramref name="comparer" /> caused an error during
     ///     the sort. For example, <paramref name="comparer" /> might not return 0 when comparing an item with itself.
     /// </exception>
-    public void Sort(IComparer<T> comparer)
+    public void Sort(IComparer<T> comparer) => Write(() =>
     {
-        Write(() =>
-        {
-            Items.Sort(comparer);
+        Items.Sort(comparer);
 
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
-        });
-    }
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    });
 
     /// <summary>
     ///     Sorts the elements in a range of elements using the specified comparer.
@@ -349,16 +299,13 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     /// <see cref="T:System.IComparable`1" /> generic interface or the <see cref="T:System.IComparable" /> interface for
     ///     type <typeparamref name="T" />.
     /// </exception>
-    public void Sort(int index, int count, IComparer<T> comparer)
+    public void Sort(int index, int count, IComparer<T> comparer) => Write(() =>
     {
-        Write(() =>
-        {
-            Items.Sort(index, count, comparer);
+        Items.Sort(index, count, comparer);
 
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
-        });
-    }
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    });
 
     /// <summary>Sorts the elements using the specified <see cref="T:System.Comparison`1" />.</summary>
     /// <param name="comparison">The <see cref="T:System.Comparison`1" /> to use when comparing elements.</param>
@@ -369,55 +316,46 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     ///     The implementation of <paramref name="comparison" /> caused an error
     ///     during the sort. For example, <paramref name="comparison" /> might not return 0 when comparing an item with itself.
     /// </exception>
-    public void Sort(Comparison<T> comparison)
+    public void Sort(Comparison<T> comparison) => Write(() =>
     {
-        Write(() =>
-        {
-            Items.Sort(comparison);
+        Items.Sort(comparison);
 
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
-        });
-    }
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    });
 
     public void SortBy<TKey>(Func<T, TKey> selector,
                              ListSortDirection order = ListSortDirection.Ascending,
-                             IComparer<TKey> comparer = null)
+                             IComparer<TKey> comparer = null) => Write(() =>
     {
-        Write(() =>
+        var sortedItems = (order == ListSortDirection.Ascending
+            ? Items.OrderBy(selector, comparer)
+            : Items.OrderByDescending(selector, comparer)).ToList();
+
+        using (SuppressEvents())
         {
-            var sortedItems = (order == ListSortDirection.Ascending
-                ? Items.OrderBy(selector, comparer)
-                : Items.OrderByDescending(selector, comparer)).ToList();
+            for (var i = 0; i < sortedItems.Count; i++)
+                Items[i] = sortedItems[i];
+        }
 
-            using (SuppressEvents())
-            {
-                for (var i = 0; i < sortedItems.Count; i++)
-                    Items[i] = sortedItems[i];
-            }
-
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
-        });
-    }
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    });
 
     /// <summary>
     ///     Suppresses all events regarding this collection while executing the specified action.
     /// <see cref="NotifyCollectionChangedAction.Reset" /> event is fired afterwards.
     /// </summary>
     /// <param name="action">The action.</param>
-    public void Combo(Action action)
+    public void Combo(Action action) => Write(() =>
     {
-        Write(() =>
-        {
-            using (SuppressEvents())
-                action();
+        using (SuppressEvents())
+            action();
 
-            OnCountPropertyChanged();
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
-        });
-    }
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    });
 
     protected virtual void OnCountPropertyChanged()
     {
@@ -435,17 +373,11 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
     {
     }
 
-    protected void Read(Action action)
-    {
-        _lock.Read(action);
-    }
+    protected void Read(Action action) => _lock.Read(action);
 
     protected TResult Read<TResult>(Func<TResult> action) => _lock.ReadWithResult(action);
 
-    protected void Write(Action action)
-    {
-        _lock.Write(action);
-    }
+    protected void Write(Action action) => _lock.Write(action);
 
     protected TResult WriteWithResult<TResult>(Func<TResult> action) => _lock.WriteWithResult(action);
 

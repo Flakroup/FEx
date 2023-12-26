@@ -31,10 +31,7 @@ public static class EnumerableExtensions
     /// <param name="source">The list to modify.</param>
     /// <param name="items">The sequence of items to add to the list.</param>
     /// <returns></returns>
-    public static void AddRange<T>(ref IEnumerable<T> source, IEnumerable<T> items)
-    {
-        source = source.Concat(items);
-    }
+    public static void AddRange<T>(ref IEnumerable<T> source, IEnumerable<T> items) => source = source.Concat(items);
 
     /// <summary>
     ///     Aggregates a list of strings.
@@ -150,10 +147,8 @@ public static class EnumerableExtensions
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <param name="items">The items.</param>
     /// <returns>The joined string.</returns>
-    public static string ToJoinedString<TItem>(this IEnumerable<TItem> items)
-    {
-        return string.Join(", ", items.Select(i => i.ToString()).ToArray());
-    }
+    public static string ToJoinedString<TItem>(this IEnumerable<TItem> items) =>
+        string.Join(", ", items.Select(i => i.ToString()).ToArray());
 
     /// <summary>
     ///     Converts <see cref="IEnumerable{T}" /> to the <see cref="ObservableCollection{T}" />.
@@ -174,10 +169,8 @@ public static class EnumerableExtensions
     /// <returns>
     ///     The index of the first matching item, or -1 if the item was not found.
     /// </returns>
-    public static int IndexOf<T>(this IEnumerable<T> items, T item)
-    {
-        return items.IndexWhere(i => ObjectExtensions.IsEqual(ref item, i));
-    }
+    public static int IndexOf<T>(this IEnumerable<T> items, T item) =>
+        items.IndexWhere(i => ObjectExtensions.IsEqual(ref item, i));
 
     /// <summary>
     ///     Gets index of first element where condition is met.
@@ -239,10 +232,9 @@ public static class EnumerableExtensions
     /// <param name="first">The first sequence.</param>
     /// <param name="second">The second sequence.</param>
     /// <returns><c>true</c> if sequences contain the same elements; otherwise, <c>false</c>.</returns>
-    public static bool UnorderedSequenceEqual(this IEnumerable first, IEnumerable second)
-    {
-        return first.Cast<object>().OrderBy(t => t).SequenceEqual(second.Cast<object>().OrderBy(t => t));
-    }
+    public static bool UnorderedSequenceEqual(this IEnumerable first, IEnumerable second) => first.Cast<object>()
+        .OrderBy(t => t)
+        .SequenceEqual(second.Cast<object>().OrderBy(t => t));
 
     /// <summary>
     ///     Checks if two sequences contain the same elements without checking their order
@@ -250,10 +242,8 @@ public static class EnumerableExtensions
     /// <param name="first">The first sequence.</param>
     /// <param name="second">The second sequence.</param>
     /// <returns><c>true</c> if sequences contain the same elements; otherwise, <c>false</c>.</returns>
-    public static bool UnorderedSequenceEqual<T>(this IEnumerable<T> first, IEnumerable<T> second)
-    {
-        return first.OrderBy(t => t).SequenceEqual(second.OrderBy(t => t));
-    }
+    public static bool UnorderedSequenceEqual<T>(this IEnumerable<T> first, IEnumerable<T> second) =>
+        first.OrderBy(t => t).SequenceEqual(second.OrderBy(t => t));
 
     /// <summary>
     ///     To the collection.
@@ -268,10 +258,8 @@ public static class EnumerableExtensions
     public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int n) =>
         source.Skip(Math.Max(0, source.Count() - n));
 
-    public static IEnumerable<T> DistinctBy<T>(this IEnumerable<T> enumerable, Func<T, object> propertySelector)
-    {
-        return enumerable.GroupBy(propertySelector).Select(g => g.First());
-    }
+    public static IEnumerable<T> DistinctBy<T>(this IEnumerable<T> enumerable, Func<T, object> propertySelector) =>
+        enumerable.GroupBy(propertySelector).Select(g => g.First());
 
     /// <summary>
     ///     Multiplies the given IEnumerables by given one (builds cartesian result).
@@ -341,10 +329,8 @@ public static class EnumerableExtensions
     }
 
     public static IEnumerable<T> GetAllItemsChildren<T>(this IEnumerable<T> items,
-                                                        Func<T, IEnumerable<T>> getChildrenFunc)
-    {
-        return items?.SelectMany(item => item.Yield().Concat(GetAllItemChildren(item, getChildrenFunc)));
-    }
+                                                        Func<T, IEnumerable<T>> getChildrenFunc) =>
+        items?.SelectMany(item => item.Yield().Concat(GetAllItemChildren(item, getChildrenFunc)));
 
     public static IEnumerable<T> GetAllItemChildren<T>(this T item, Func<T, IEnumerable<T>> getChildrenFunc)
     {

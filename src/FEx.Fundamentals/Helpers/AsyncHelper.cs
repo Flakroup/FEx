@@ -83,10 +83,8 @@ public class AsyncHelper
         return tasks.Select(x => FireTaskAndForget(x, asyncMode)).ToList().AsReadOnly();
     }
 
-    public async Task ExecuteTaskOnThreadPoolAsync(Func<Task> task)
-    {
-        await ExecuteTaskOnThreadPoolAsync(() => WrapTaskAsync(task));
-    }
+    public async Task ExecuteTaskOnThreadPoolAsync(Func<Task> task, bool logException = true) =>
+        await ExecuteTaskOnThreadPoolAsync(() => WrapTaskAsync(task), logException);
 
     public async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> taskFunc, bool logException = true)
     {
@@ -140,10 +138,8 @@ public class AsyncHelper
     ///     The provided
     /// <paramref name="cancellationToken">cancellationToken</paramref> has already been disposed.
     /// </exception>
-    public async Task DelayAsync(int millisecondsDelay, CancellationToken cancellationToken = default)
-    {
+    public async Task DelayAsync(int millisecondsDelay, CancellationToken cancellationToken = default) =>
         await ExecuteTaskOnThreadPoolAsync(() => Task.Delay(millisecondsDelay, cancellationToken));
-    }
 
     /// <summary>Creates a cancellable task that completes after a specified time interval.</summary>
     /// <param name="delay">
@@ -165,15 +161,16 @@ public class AsyncHelper
     ///     disposed.
     /// </exception>
     /// <returns>A task that represents the time delay.</returns>
-    public async Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken = default)
-    {
-        await ExecuteTaskOnThreadPoolAsync(() => Task.Delay(delay, cancellationToken));
-    }
+    public async Task DelayAsync(TimeSpan delay,
+                                 bool logException = true,
+                                 CancellationToken cancellationToken = default) =>
+        await ExecuteTaskOnThreadPoolAsync(() => Task.Delay(delay, cancellationToken), logException);
 
     /// <summary>
     ///     Waits asynchronously the specified amount of milliseconds.
     /// </summary>
     /// <param name="predicate">The predicate.</param>
+    /// <param name="logException">Log exception</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <param name="action">The action to invoke after awaited amount of time.</param>
     /// <param name="milliseconds">The amount of time in milliseconds to await.</param>
@@ -183,38 +180,36 @@ public class AsyncHelper
     public async Task DelayUntilAsync(Func<bool> predicate,
                                       Action action = null,
                                       double milliseconds = 0,
-                                      CancellationToken cancellationToken = default)
-    {
-        await ExecuteTaskOnThreadPoolAsync(() =>
-            InternalDelayUntilAsync(predicate, action, milliseconds, cancellationToken));
-    }
+                                      bool logException = true,
+                                      CancellationToken cancellationToken = default) =>
+        await ExecuteTaskOnThreadPoolAsync(
+            () => InternalDelayUntilAsync(predicate, action, milliseconds, logException, cancellationToken),
+            logException);
 
     public async Task DelayUntilAsync(Func<Task<bool>> predicate,
                                       Action action = null,
                                       double milliseconds = 0,
-                                      CancellationToken cancellationToken = default)
-    {
-        await ExecuteTaskOnThreadPoolAsync(() =>
-            InternalDelayUntilAsync(predicate, action, milliseconds, cancellationToken));
-    }
+                                      bool logException = true,
+                                      CancellationToken cancellationToken = default) =>
+        await ExecuteTaskOnThreadPoolAsync(
+            () => InternalDelayUntilAsync(predicate, action, milliseconds, logException, cancellationToken),
+            logException);
 
     public async Task DelayUntilWithTimeSpanAsync(Func<bool> predicate,
                                                   Action action = null,
                                                   TimeSpan? timeSpan = null,
-                                                  CancellationToken cancellationToken = default)
-    {
+                                                  bool logException = true,
+                                                  CancellationToken cancellationToken = default) =>
         await ExecuteTaskOnThreadPoolAsync(
-            () => InternalDelayUntilAsync(predicate, action, timeSpan, cancellationToken));
-    }
+            () => InternalDelayUntilAsync(predicate, action, timeSpan, logException, cancellationToken), logException);
 
     public async Task DelayUntilWithTimeSpanAsync(Func<Task<bool>> predicate,
                                                   Action action = null,
                                                   TimeSpan? timeSpan = null,
-                                                  CancellationToken cancellationToken = default)
-    {
+                                                  bool logException = true,
+                                                  CancellationToken cancellationToken = default) =>
         await ExecuteTaskOnThreadPoolAsync(
-            () => InternalDelayUntilAsync(predicate, action, timeSpan, cancellationToken));
-    }
+            () => InternalDelayUntilAsync(predicate, action, timeSpan, logException, cancellationToken), logException);
 
     /// <summary>
     ///     Waits asynchronously the specified amount of milliseconds and invokes action.
@@ -225,6 +220,7 @@ public class AsyncHelper
     /// <returns></returns>
     public async Task WaitAndInvokeActionAsync(double delayMilliseconds = 0,
                                                Action action = null,
+                                               bool logException = true,
                                                CancellationToken cancellationToken = default)
     {
         TimeSpan delayTimeSpan = delayMilliseconds < 1
@@ -233,7 +229,7 @@ public class AsyncHelper
 
         try
         {
-            await DelayAsync(delayTimeSpan, cancellationToken);
+            await DelayAsync(delayTimeSpan, logException, cancellationToken);
         }
         catch (TaskCanceledException)
         {
@@ -245,13 +241,14 @@ public class AsyncHelper
 
     public async Task WaitAndInvokeActionAsync(TimeSpan? delayTimeSpan = null,
                                                Action action = null,
+                                               bool logException = true,
                                                CancellationToken cancellationToken = default)
     {
         if (delayTimeSpan is null
             || delayTimeSpan.Value <= TimeSpan.Zero)
             delayTimeSpan = DefaultDelayTimeSpan;
 
-        await DelayAsync(delayTimeSpan.Value, cancellationToken);
+        await DelayAsync(delayTimeSpan.Value, logException, cancellationToken);
         action?.Invoke();
     }
 
@@ -289,6 +286,7 @@ public class AsyncHelper
     private async Task InternalDelayUntilAsync(Func<bool> predicate,
                                                Action action = null,
                                                double delayMilliseconds = 0,
+                                               bool logException = true,
                                                CancellationToken cancellationToken = default)
     {
         if (predicate is null
@@ -297,12 +295,13 @@ public class AsyncHelper
 
         while (predicate()
                && !cancellationToken.IsCancellationRequested)
-            await WaitAndInvokeActionAsync(delayMilliseconds, action, cancellationToken);
+            await WaitAndInvokeActionAsync(delayMilliseconds, action, logException, cancellationToken);
     }
 
     private async Task InternalDelayUntilAsync(Func<Task<bool>> predicate,
                                                Action action = null,
                                                double delayMilliseconds = 0,
+                                               bool logException = true,
                                                CancellationToken cancellationToken = default)
     {
         bool result = predicate is not null && await predicate();
@@ -312,7 +311,7 @@ public class AsyncHelper
 
         while (result && !cancellationToken.IsCancellationRequested)
         {
-            await WaitAndInvokeActionAsync(delayMilliseconds, action, cancellationToken);
+            await WaitAndInvokeActionAsync(delayMilliseconds, action, logException, cancellationToken);
             result = await predicate();
         }
     }
@@ -320,6 +319,7 @@ public class AsyncHelper
     private async Task InternalDelayUntilAsync(Func<bool> predicate,
                                                Action action = null,
                                                TimeSpan? delayTimeSpan = null,
+                                               bool logException = true,
                                                CancellationToken cancellationToken = default)
     {
         if (predicate is null
@@ -328,12 +328,13 @@ public class AsyncHelper
 
         while (predicate()
                && !cancellationToken.IsCancellationRequested)
-            await WaitAndInvokeActionAsync(delayTimeSpan, action, cancellationToken);
+            await WaitAndInvokeActionAsync(delayTimeSpan, action, logException, cancellationToken);
     }
 
     private async Task InternalDelayUntilAsync(Func<Task<bool>> predicate,
                                                Action action = null,
                                                TimeSpan? delayTimeSpan = null,
+                                               bool logException = true,
                                                CancellationToken cancellationToken = default)
     {
         bool result = predicate is not null && await predicate();
@@ -343,7 +344,7 @@ public class AsyncHelper
 
         while (result && !cancellationToken.IsCancellationRequested)
         {
-            await WaitAndInvokeActionAsync(delayTimeSpan, action, cancellationToken);
+            await WaitAndInvokeActionAsync(delayTimeSpan, action, logException, cancellationToken);
             result = await predicate();
         }
     }

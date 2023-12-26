@@ -67,33 +67,27 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     /// <summary>
     ///     Move item at oldIndex to newIndex.
     /// </summary>
-    public void Move(int oldIndex, int newIndex)
-    {
-        MoveItem(oldIndex, newIndex);
-    }
+    public void Move(int oldIndex, int newIndex) => MoveItem(oldIndex, newIndex);
 
     /// <summary>
     ///     Called by base class ObservableCollection&lt;T&gt; when an item is to be moved within the list;
     ///     raises a CollectionChanged event to any listeners.
     /// </summary>
-    protected virtual void MoveItem(int oldIndex, int newIndex)
+    protected virtual void MoveItem(int oldIndex, int newIndex) => Write(() =>
     {
-        Write(() =>
+        T removedItem = this[oldIndex];
+
+        using (SuppressEvents())
         {
-            T removedItem = this[oldIndex];
+            Remove(oldIndex);
+            Insert(newIndex, removedItem);
+        }
 
-            using (SuppressEvents())
-            {
-                Remove(oldIndex);
-                Insert(newIndex, removedItem);
-            }
+        OnIndexerPropertyChanged();
 
-            OnIndexerPropertyChanged();
-
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, removedItem,
-                newIndex, oldIndex));
-        });
-    }
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, removedItem,
+            newIndex, oldIndex));
+    });
 
     /// <summary>
     ///     Raises a PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
@@ -115,31 +109,19 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     /// <summary>
     ///     Helper to raise a PropertyChanged event for the Count property
     /// </summary>
-    protected override void OnCountPropertyChanged()
-    {
-        OnPropertyChanged(EventArgsCache.CountPropertyChanged);
-    }
+    protected override void OnCountPropertyChanged() => OnPropertyChanged(EventArgsCache.CountPropertyChanged);
 
     /// <summary>
     ///     Helper to raise a PropertyChanged event for the Indexer property
     /// </summary>
-    protected override void OnIndexerPropertyChanged()
-    {
-        OnPropertyChanged(EventArgsCache.IndexerPropertyChanged);
-    }
+    protected override void OnIndexerPropertyChanged() => OnPropertyChanged(EventArgsCache.IndexerPropertyChanged);
 
     /// <summary>
     ///     Helper to raise CollectionChanged event with action == Reset to any listeners
     /// </summary>
-    protected override void OnCollectionReset()
-    {
-        OnCollectionChanged(EventArgsCache.ResetCollectionChanged);
-    }
+    protected override void OnCollectionReset() => OnCollectionChanged(EventArgsCache.ResetCollectionChanged);
 
-    private void Dispatch(Action action)
-    {
-        EventDeliverer.DeliverEvent(action, this, _sendEventsInCreationContext
-            ? _synchronizationContext
-            : null);
-    }
+    private void Dispatch(Action action) => EventDeliverer.DeliverEvent(action, this, _sendEventsInCreationContext
+        ? _synchronizationContext
+        : null);
 }

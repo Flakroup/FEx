@@ -80,17 +80,14 @@ public static class FileLengthConverter
 
     public static double GetLength(LengthType lengthType) => Math.Pow(1024, (double)lengthType);
 
-    private static string GetUnitShortcut(LengthType lengthType, double size = 0)
+    private static string GetUnitShortcut(LengthType lengthType, double size = 0) => lengthType switch
     {
-        return lengthType switch
-        {
-            LengthType.Bytes => "B",
-            LengthType.Kilobytes => "KB",
-            LengthType.Megabytes => "MB",
-            LengthType.Gigabytes => "GB",
-            LengthType.Terabytes => "TB",
-            LengthType.AutoDetect => GetUnitShortcut(GetOutputLenghtType(size)),
-            _ => null
-        };
-    }
+        LengthType.Bytes => "B",
+        LengthType.Kilobytes => "KB",
+        LengthType.Megabytes => "MB",
+        LengthType.Gigabytes => "GB",
+        LengthType.Terabytes => "TB",
+        LengthType.AutoDetect => GetUnitShortcut(GetOutputLenghtType(size)),
+        _ => null
+    };
 }

@@ -34,14 +34,14 @@ public class WidthAndHeight : IComparable<WidthAndHeight>, IEquatable<WidthAndHe
         && (ReferenceEquals(this, widthAndHeight) || widthAndHeight.GetType() == GetType() && Equals(widthAndHeight));
 
     public override int GetHashCode()
-    {
 #if NETSTANDARD
+    {
         unchecked
         {
             return Width * 397 ^ Height;
         }
-#else
-        return HashCode.Combine(Width, Height);
-#endif
     }
+#else
+        => HashCode.Combine(Width, Height);
+#endif
 }

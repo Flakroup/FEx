@@ -20,17 +20,13 @@ public static class EventsExtensions
 
     public static void HandlePropertyChanged(this PropertyChangedEventHandler propertyChangedEventHandler,
                                              object sender,
-                                             PropertyChangedEventArgs eventArgs)
-    {
+                                             PropertyChangedEventArgs eventArgs) =>
         propertyChangedEventHandler.HandleMulticastEvent(sender, eventArgs, handler => handler(sender, eventArgs));
-    }
 
     public static void HandleCollectionChanged(this NotifyCollectionChangedEventHandler collectionChangedEventHandler,
                                                object sender,
-                                               NotifyCollectionChangedEventArgs eventArgs)
-    {
+                                               NotifyCollectionChangedEventArgs eventArgs) =>
         collectionChangedEventHandler.HandleMulticastEvent(sender, eventArgs, handler => handler(sender, eventArgs));
-    }
 
     public static void HandleMulticastEvent<THandler, TArgs>(this THandler handler,
                                                              object sender,

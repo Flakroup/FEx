@@ -89,72 +89,56 @@ public static class UriExtensions
 
     public static async Task<long> GetHttpFileSizeAsync(this Uri url,
                                                         WebRequestParams pars = null,
-                                                        Stopwatch stopwatch = null)
-    {
-        return await url.DoHttpResponseFuncAsync((response, _) => response.ContentLength, pars, stopwatch);
-    }
+                                                        Stopwatch stopwatch = null) =>
+        await url.DoHttpResponseFuncAsync((response, _) => response.ContentLength, pars, stopwatch);
 
     public static async Task<Dictionary<string, string>> GetResponseHeadersAsync(
         this Uri url,
-        WebRequestParams pars = null)
-    {
-        return await DoHttpResponseFuncAsync(url, (response, _) => response.GetAllHeaders(), pars);
-    }
+        WebRequestParams pars = null) =>
+        await DoHttpResponseFuncAsync(url, (response, _) => response.GetAllHeaders(), pars);
 
     public static async Task<T> DoHttpResponseFuncTaskAsync<T>(this Uri url,
                                                                Func<HttpWebResponse, HttpWebRequest, Task<T>> func,
                                                                WebRequestParams pars = null,
-                                                               Stopwatch stopwatch = null)
-    {
-        return await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
+                                                               Stopwatch stopwatch = null) =>
+        await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
             InternalDoHttpResponseFuncTaskAsync(url, func, pars, stopwatch));
-    }
 
     public static async Task<T> DoHttpResponseFuncAsync<T>(this Uri url,
                                                            Func<HttpWebResponse, HttpWebRequest, T> func,
                                                            WebRequestParams pars = null,
-                                                           Stopwatch stopwatch = null)
-    {
-        return await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
-            InternalDoHttpResponseFuncAsync(url, func, pars, stopwatch));
-    }
+                                                           Stopwatch stopwatch = null) =>
+        await AsyncHelper.ExecuteTaskOnThreadPoolAsync(
+            () => InternalDoHttpResponseFuncAsync(url, func, pars, stopwatch));
 
     public static async Task DoHttpResponseActionAsync(this Uri url,
                                                        Action<HttpWebResponse, HttpWebRequest> action,
                                                        WebRequestParams pars = null,
-                                                       Stopwatch stopwatch = null)
-    {
+                                                       Stopwatch stopwatch = null) =>
         await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
             InternalDoHttpResponseActionAsync(url, action, pars, stopwatch));
-    }
 
     public static async Task<T> DoHttpClientResponseFuncTaskAsync<T>(this Uri url,
                                                                      Func<HttpResponseMessage, HttpClient, Task<T>>
                                                                          func,
                                                                      WebRequestParams pars = null,
-                                                                     Stopwatch stopwatch = null)
-    {
-        return await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
+                                                                     Stopwatch stopwatch = null) =>
+        await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
             url.InternalDoHttpClientResponseFuncTaskAsync(func, pars, stopwatch));
-    }
 
     public static async Task<T> DoHttpClientResponseFuncAsync<T>(this Uri url,
                                                                  Func<HttpResponseMessage, HttpClient, T> func,
                                                                  WebRequestParams pars = null,
-                                                                 Stopwatch stopwatch = null)
-    {
-        return await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
+                                                                 Stopwatch stopwatch = null) =>
+        await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
             url.InternalDoHttpClientResponseFuncAsync(func, pars, stopwatch));
-    }
 
     public static async Task DoHttpClientResponseActionAsync(this Uri url,
                                                              Action<HttpResponseMessage, HttpClient> action,
                                                              WebRequestParams pars = null,
-                                                             Stopwatch stopwatch = null)
-    {
+                                                             Stopwatch stopwatch = null) =>
         await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
             url.InternalDoHttpClientResponseActionAsync(action, pars, stopwatch));
-    }
 
     public static async Task<bool> CheckIfLinkIsExpiredAsync(this Uri link, WebRequestParams pars = null)
     {

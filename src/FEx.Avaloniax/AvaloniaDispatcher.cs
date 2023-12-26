@@ -20,41 +20,30 @@ public class AvaloniaDispatcher : FExDispatcher, IUIContextExecutor
 
     public bool CheckAccess(object sender = null) => Dispatcher.CheckAccess();
 
-    public void ExecuteActionInIdleUIContext(Action action, object sender = null)
-    {
+    public void ExecuteActionInIdleUIContext(Action action, object sender = null) =>
         Dispatcher.Invoke(action, DispatcherPriority.ApplicationIdle);
-    }
 
     public T ExecuteActionInIdleUIContext<T>(Func<T> action, object sender = null) =>
         Dispatcher.Invoke(action, DispatcherPriority.ApplicationIdle);
 
-    public void ExecuteActionInUIContext(Action action, object sender = null)
-    {
-        Dispatcher.Invoke(action);
-    }
+    public void ExecuteActionInUIContext(Action action, object sender = null) => Dispatcher.Invoke(action);
 
     public T ExecuteActionInUIContext<T>(Func<T> action, object sender = null) => Dispatcher.Invoke(action);
 
-    public async Task ExecuteActionInIdleUIContextAsync(Action action, object sender = null)
-    {
+    public async Task ExecuteActionInIdleUIContextAsync(Action action, object sender = null) =>
         await Dispatcher.InvokeAsync(action, DispatcherPriority.ApplicationIdle);
-    }
 
     public async Task<T> ExecuteActionInIdleUIContextAsync<T>(Func<T> action, object sender = null) =>
         await Dispatcher.InvokeAsync(action, DispatcherPriority.ApplicationIdle);
 
-    public async Task ExecuteActionInUIContextAsync(Action action, object sender = null)
-    {
+    public async Task ExecuteActionInUIContextAsync(Action action, object sender = null) =>
         await Dispatcher.InvokeAsync(action);
-    }
 
     public async Task<T> ExecuteActionInUIContextAsync<T>(Func<T> action, object sender = null) =>
         await Dispatcher.InvokeAsync(action);
 
-    public override void BeginInvokeOnMainThread(Action action)
-    {
+    public override void BeginInvokeOnMainThread(Action action) =>
         Foundation.AsyncHelper.FireAndForget(() => Dispatcher.Invoke(action), AsyncMode.ThreadPool);
-    }
 
     public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> func) => await Dispatcher.InvokeAsync(func);
 
@@ -67,8 +56,5 @@ public class AvaloniaDispatcher : FExDispatcher, IUIContextExecutor
 
     public override void SendInThisOrMainThreadContext(Action action,
                                                        SynchronizationContext synchronizationContext = null,
-                                                       uint timeout = 10000)
-    {
-        Dispatcher.Invoke(action);
-    }
+                                                       uint timeout = 10000) => Dispatcher.Invoke(action);
 }

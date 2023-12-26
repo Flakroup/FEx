@@ -19,15 +19,9 @@ public class LoggerState : Dictionary<string, object>, ILoggerState
     {
     }
 
-    public void AddOrUpdateLabel(string key, object value)
-    {
-        this.AddOrUpdateValue(key, value);
-    }
+    public void AddOrUpdateLabel(string key, object value) => this.AddOrUpdateValue(key, value);
 
-    public void RemoveLabel(string key)
-    {
-        this.RemoveValue(key);
-    }
+    public void RemoveLabel(string key) => this.RemoveValue(key);
 
     public override string ToString() =>
         this.IsNotNullOrEmptyCollection()

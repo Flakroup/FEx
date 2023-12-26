@@ -20,21 +20,15 @@ public static class JoinableAsyncHelper
         set => _mainJTF = value;
     }
 
-    public static void SetMainJoinableTaskFactory(Thread mainThread = null)
-    {
+    public static void SetMainJoinableTaskFactory(Thread mainThread = null) =>
         MainJTF = GetFactory(mainThread ?? Foundation.MainThread);
-    }
 
     public static async Task DelayWithoutDeadlockAsync(int millisecondsDelay,
-                                                       CancellationToken cancellationToken = default)
-    {
+                                                       CancellationToken cancellationToken = default) =>
         await AwaitWithoutDeadlockAsync(() => Task.Delay(millisecondsDelay, cancellationToken));
-    }
 
-    public static void DelayWithoutDeadlock(int millisecondsDelay)
-    {
+    public static void DelayWithoutDeadlock(int millisecondsDelay) =>
         AwaitWithoutDeadlock(() => Task.Delay(millisecondsDelay));
-    }
 
     public static async Task AwaitWithoutDeadlockAsync(Func<Task> func, bool onMainThread = false)
     {

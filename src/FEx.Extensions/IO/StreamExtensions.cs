@@ -114,32 +114,66 @@ public static class StreamExtensions
 #pragma warning disable IDISP007
         using (input)
 #pragma warning restore IDISP007
-        using (MemoryStream ms = await input.ToMemoryStreamAsync())
+        using (MemoryStream ms = await input.CopyToMemoryStreamAsync(true))
 #else
 #pragma warning disable IDISP007
         await using (input)
 #pragma warning restore IDISP007
-        await using (MemoryStream ms = await input.ToMemoryStreamAsync())
+        await using (MemoryStream ms = await input.CopyToMemoryStreamAsync(true))
 #endif
             return ms.ToArray();
     }
 
-    public static async Task<MemoryStream> ToMemoryStreamAsync(this Stream input)
+    public static async Task<MemoryStream> CopyToMemoryStreamAsync(this Stream streamToCopy,
+                                                                   bool disposeSource = false,
+                                                                   CancellationToken cancellationToken = default)
     {
-#if NETSTANDARD
-#pragma warning disable IDISP007
-        using Stream stream = input;
-#pragma warning restore IDISP007
-#else
-#pragma warning disable IDISP007
-        await using Stream stream = input;
-#pragma warning restore IDISP007
-#endif
-        var ms = new MemoryStream();
-        await input.CopyToAsync(ms);
-        ms.Seek(0, SeekOrigin.Begin);
+        const int defaultBufferSize = 81920;
 
-        return ms;
+        try
+        {
+            streamToCopy.Guard(nameof(streamToCopy)).Seek(0, SeekOrigin.Begin);
+            var stream = new MemoryStream();
+            await streamToCopy.CopyToAsync(stream, defaultBufferSize, cancellationToken);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            return stream;
+        }
+        catch (TaskCanceledException)
+        {
+            return null;
+        }
+        finally
+        {
+            if (disposeSource)
+                // ReSharper disable MethodHasAsyncOverload
+#pragma warning disable VSTHRD103
+#pragma warning disable IDISP007
+                streamToCopy?.Dispose();
+#pragma warning restore IDISP007
+#pragma warning restore VSTHRD103
+            // ReSharper restore MethodHasAsyncOverload
+        }
+    }
+
+    public static MemoryStream CopyToMemoryStream(this Stream streamToCopy, bool disposeSource = false)
+    {
+        try
+        {
+            streamToCopy.Guard(nameof(streamToCopy)).Seek(0, SeekOrigin.Begin);
+            var stream = new MemoryStream();
+            streamToCopy.CopyTo(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            return stream;
+        }
+        finally
+        {
+            if (disposeSource)
+#pragma warning disable IDISP007
+                streamToCopy?.Dispose();
+#pragma warning restore IDISP007
+        }
     }
 
     public static string ComputeMd5Hash(this Stream data,
@@ -147,11 +181,14 @@ public static class StreamExtensions
                                         bool toLower = true,
                                         bool asBase64String = false)
     {
+#if NETSTANDARD
         byte[] hash;
 
         using (var md5Algorithm = MD5.Create())
             hash = md5Algorithm.ComputeHash(data);
-
+#else
+        byte[] hash = MD5.HashData(data); //todo provide async overloads for NET
+#endif
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Avalonia.Threading;
 using FEx.Fundamentals;
+using FEx.Fundamentals.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.Utilities.Abstractions;
 using Microsoft.Extensions.Logging;

@@ -1,7 +1,7 @@
 ﻿using FEx.EFCore.Configuration;
 using FEx.EFCore.Interfaces;
 using FEx.Extensions;
-using FEx.Fundamentals.Utilities.OS;
+using FEx.Fundamentals.Utilities;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Threading.Tasks;

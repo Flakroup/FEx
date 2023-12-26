@@ -1,5 +1,6 @@
 using FEx.Abstractions;
 using FEx.Extensions;
+using FEx.Fundamentals.Enums;
 using FEx.Logging.Abstractions;
 using GuardNet;
 using Microsoft.Extensions.Logging;

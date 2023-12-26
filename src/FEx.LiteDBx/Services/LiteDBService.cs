@@ -1,23 +1,32 @@
-﻿using FEx.Utilities.Basics;
+﻿using FEx.Extensions.Collections.Lists;
+using FEx.LiteDbx.Abstractions.Interfaces;
+using FEx.LiteDbx.Enums;
+using FEx.LiteDbx.Extensions;
+using FEx.Utilities.Basics;
 using LiteDB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace FEx.LiteDBx;
+namespace FEx.LiteDbx.Services;
 
-public abstract class LiteDBService : IDisposable
+public sealed class LiteDBService : ILiteDBService
 {
-    private readonly ILiteRepository _context;
-    private readonly ExtendedReaderWriterLockSlim _lock;
+    private readonly IDatabaseProvider _databaseProvider;
+    private readonly IFileLocalStorageService _fileLocalStorageService;
+    private readonly IClearCache[] _clearCaches;
 
-    private bool _isDisposed;
+    private ILiteRepository Context => _databaseProvider.Repository;
+    private ExtendedReaderWriterLockSlim DbLock => _databaseProvider.DbLock;
 
-    protected LiteDBService(ILiteRepository context)
+    public LiteDBService(IDatabaseProvider databaseProvider,
+                         IFileLocalStorageService fileLocalStorageService,
+                         IClearCache[] clearCaches)
     {
-        _lock = new ExtendedReaderWriterLockSlim();
-        _context = context;
+        _databaseProvider = databaseProvider;
+        _fileLocalStorageService = fileLocalStorageService;
+        _clearCaches = clearCaches;
     }
 
     /// <summary>
@@ -27,7 +36,7 @@ public abstract class LiteDBService : IDisposable
     /// <typeparam name="T">The type of cacheable object</typeparam>
     public void Add<T>(T item) where T : ICacheableItem
     {
-        _lock.Write(() => WrapInTransaction(() => _context.Insert(item)));
+        DbLock.Write(() => Context.Insert(item));
     }
 
     /// <summary>
@@ -38,7 +47,7 @@ public abstract class LiteDBService : IDisposable
     public void Add<T>(IEnumerable<T> items) where T : ICacheableItem
     {
         var deferredList = items.ToList();
-        _lock.Write(() => WrapInTransaction(() => _context.Insert(deferredList)));
+        DbLock.Write(() => Context.Insert(deferredList));
     }
 
     /// <summary>
@@ -54,7 +63,7 @@ public abstract class LiteDBService : IDisposable
     {
         try
         {
-            _lock.WriteWithResult(() => WrapInTransaction(() => _context.Update(item)));
+            DbLock.WriteWithResult(() => Context.Update(item));
         }
         catch
         {
@@ -70,7 +79,7 @@ public abstract class LiteDBService : IDisposable
     /// <typeparam name="T">Type of an object to be removed</typeparam>
     public void Delete<T>(ObjectId id) where T : ICacheableItem
     {
-        _lock.WriteWithResult(() => WrapInTransaction(() => _context.Delete<T>(id)));
+        DbLock.WriteWithResult(() => Context.Delete<T>(id));
     }
 
     /// <summary>
@@ -80,11 +89,11 @@ public abstract class LiteDBService : IDisposable
     /// <typeparam name="T">Type of objects to be removed</typeparam>
     public void Delete<T>(IEnumerable<T> items) where T : ICacheableItem
     {
-        _lock.Write(() => WrapInTransaction(() =>
+        DbLock.Write(() =>
         {
             foreach (T item in items)
-                _context.Delete<T>(item.LocalStorageId);
-        }));
+                Context.Delete<T>(item.LocalStorageId);
+        });
     }
 
     /// <summary>
@@ -94,20 +103,7 @@ public abstract class LiteDBService : IDisposable
     /// <typeparam name="T">Type of objects to be removed</typeparam>
     public void Delete<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem
     {
-        _lock.WriteWithResult(() =>
-        {
-            if (!_context.Database.CollectionExists(typeof(T).Name))
-                return true;
-
-            //LiteDB issue workaround https://github.com/mbdavid/LiteDB/issues/1940#issuecomment-961784366
-            int documentsCount = _context.Database.GetCollection<T>().Count();
-
-            predicate ??= GetTrueExpression<T>();
-
-            return WrapInTransaction(() => _context.Database.GetCollection<T>()
-                                               .DeleteMany(predicate)
-                                           == documentsCount);
-        });
+        DbLock.WriteWithResult(() => InternalDelete(predicate));
     }
 
     /// <summary>
@@ -124,7 +120,9 @@ public abstract class LiteDBService : IDisposable
     {
         try
         {
-            return _lock.ReadWithResult(() => _context.FirstOrDefault(predicate));
+            predicate ??= GetTrueExpression<T>();
+
+            return DbLock.ReadWithResult(() => Context.FirstOrDefault(predicate));
         }
         catch
         {
@@ -147,7 +145,7 @@ public abstract class LiteDBService : IDisposable
         {
             predicate ??= GetTrueExpression<T>();
 
-            return _lock.ReadWithResult(() => _context.Fetch(predicate));
+            return DbLock.ReadWithResult(() => Context.Fetch(predicate));
         }
         catch
         {
@@ -157,6 +155,37 @@ public abstract class LiteDBService : IDisposable
         }
     }
 
+    /// <summary>
+    ///     Calls the ClearCache method of inheritors of IClearCache for the selected Cached Type
+    /// </summary>
+    /// <param name="clearCacheReason">Clear Cache Reason</param>
+    public void ClearCache(ClearCacheReason clearCacheReason)
+    {
+        if (_clearCaches.IsNullOrEmptyList())
+            return;
+
+        var cleanupCandidates = _clearCaches.Where(service => service.ClearCacheReason.HasFlagFast(clearCacheReason))
+            .ToList();
+
+        foreach (IClearCache cleanupCandidate in cleanupCandidates)
+            cleanupCandidate.ClearCache();
+    }
+
+    public ICachedFile CacheFile(IDownloadResult downloadResult) =>
+        DbLock.WriteWithResult(() => _fileLocalStorageService.CacheFile(downloadResult));
+
+    public ICachedFile GetCachedFile(Uri fileUrl) =>
+        DbLock.ReadWithResult(() => _fileLocalStorageService.GetCachedFile(fileUrl));
+
+    public void Replace<T>(T item) where T : ICacheableItem
+    {
+        DbLock.Write(() =>
+        {
+            InternalDelete<T>();
+            Context.Insert(item);
+        });
+    }
+
     private static Expression<Func<T, bool>> GetTrueExpression<T>()
     {
         Type type = typeof(T);
@@ -164,57 +193,19 @@ public abstract class LiteDBService : IDisposable
         return Expression.Lambda<Func<T, bool>>(Expression.Constant(true), Expression.Parameter(type, "_"));
     }
 
-    private void WrapInTransaction(Action action)
+    private bool InternalDelete<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem
     {
-        _context.Database.BeginTrans();
+        predicate ??= GetTrueExpression<T>();
 
-        try
-        {
-            action();
-            _context.Database.Commit();
-        }
-        catch (Exception)
-        {
-            _context.Database.Rollback();
+        //LiteDB issue workaround https://github.com/mbdavid/LiteDB/issues/1940#issuecomment-961784366
+        int? documentsCount = CollectionCount(predicate);
 
-            throw;
-        }
+        return documentsCount is null or 0
+               || Context.Database.GetCollection<T>().DeleteMany(predicate) == documentsCount;
     }
 
-    private T WrapInTransaction<T>(Func<T> func)
-    {
-        _context.Database.BeginTrans();
-
-        try
-        {
-            T result = func();
-            _context.Database.Commit();
-
-            return result;
-        }
-        catch (Exception)
-        {
-            _context.Database.Rollback();
-
-            throw;
-        }
-    }
-
-    #region IDisposable
-    public void Dispose()
-    {
-        Dispose(true);
-    }
-
-    private void Dispose(bool disposing)
-    {
-        if (_isDisposed)
-            return;
-
-        if (disposing)
-            _context.Dispose();
-
-        _isDisposed = true;
-    }
-    #endregion
+    private int? CollectionCount<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem =>
+        Context.Database.CollectionExists(typeof(T).Name)
+            ? Context.Database.GetCollection<T>().Count(predicate)
+            : null;
 }

@@ -1,9 +1,9 @@
-﻿using FEx.Extensions.Collections.Dictionaries;
+﻿using FEx.Basics.IO;
+using FEx.Extensions.Collections.Dictionaries;
 using FEx.Extensions.IO;
-using FEx.Utilities.IO;
 using System;
 
-namespace FEx.Utilities.Extensions;
+namespace FEx.Basics.Extensions;
 
 public static class DirectoryInfoExtensions
 {

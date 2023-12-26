@@ -6,10 +6,7 @@ namespace FEx.Logging;
 
 public class FExLogger : IFExLogger
 {
-    public void LogInformation(string message)
-    {
-        Console.WriteLine($"[{DateTime.Now}] {message}");
-    }
+    public void LogInformation(string message) => Console.WriteLine($"[{DateTime.Now}] {message}");
 
     public void LogError(string message, Exception exception = null)
     {
@@ -22,8 +19,5 @@ public class FExLogger : IFExLogger
         Console.Write(sb.ToString());
     }
 
-    public void LogError(Exception exception)
-    {
-        LogError(null, exception);
-    }
+    public void LogError(Exception exception) => LogError(null, exception);
 }

@@ -6,8 +6,6 @@ namespace FEx.Extensions.Base.Implementations;
 
 public class DebugExceptionHandler : ExceptionHandlerBase
 {
-    protected override void HandleException(Exception exception, IExceptionHandlerOptions options)
-    {
+    protected override void HandleException(Exception exception, IExceptionHandlerOptions options) =>
         Debug.WriteLine(exception.ToString());
-    }
 }

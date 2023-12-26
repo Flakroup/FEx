@@ -46,15 +46,11 @@ public static class ExceptionExtensions
     /// <returns></returns>
     public static Exception SetStackTrace(this Exception target, StackTrace stack) => SetStackTraceFunc(target, stack);
 
-    public static void HandleException(this Exception exception)
-    {
+    public static void HandleException(this Exception exception) =>
         FExExtensionsCommon.ExceptionHandler.Handle(exception);
-    }
 
-    public static void HandleException(this Exception exception, IExceptionHandlerOptions options)
-    {
+    public static void HandleException(this Exception exception, IExceptionHandlerOptions options) =>
         FExExtensionsCommon.ExceptionHandler.Handle(exception, options);
-    }
 
     public static void HandleException(this Exception ex,
                                        bool informUser = false,

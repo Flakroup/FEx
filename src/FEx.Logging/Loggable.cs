@@ -20,45 +20,25 @@ public class Loggable : ILoggable
         _logger = logger.Guard();
     }
 
-    public void LogCritical(string message, Exception exception = null)
-    {
+    public void LogCritical(string message, Exception exception = null) =>
         _logger.LogCritical(exception, Combine(message));
-    }
 
-    public void LogDebug(string message, Exception exception = null)
-    {
-        _logger.LogDebug(exception, Combine(message));
-    }
+    public void LogDebug(string message, Exception exception = null) => _logger.LogDebug(exception, Combine(message));
 
-    public void LogError(string message, Exception exception = null)
-    {
-        _logger.LogError(exception, Combine(message));
-    }
+    public void LogError(string message, Exception exception = null) => _logger.LogError(exception, Combine(message));
 
-    public void LogInformation(string message, Exception exception = null)
-    {
+    public void LogInformation(string message, Exception exception = null) =>
         _logger.LogInformation(exception, Combine(message));
-    }
 
-    public void LogTrace(string message, Exception exception = null)
-    {
-        _logger.LogTrace(exception, Combine(message));
-    }
+    public void LogTrace(string message, Exception exception = null) => _logger.LogTrace(exception, Combine(message));
 
-    public void LogWarning(string message, Exception exception = null)
-    {
+    public void LogWarning(string message, Exception exception = null) =>
         _logger.LogWarning(exception, Combine(message));
-    }
 
-    public void BeginLabeledScope(params (string, object)[] state)
-    {
-        BeginLabeledScope(new LoggerState(state));
-    }
+    public void BeginLabeledScope(params (string, object)[] state) => BeginLabeledScope(new LoggerState(state));
 
-    public void BeginLabeledScope(IDictionary<string, object> argsCustom)
-    {
+    public void BeginLabeledScope(IDictionary<string, object> argsCustom) =>
         BeginLabeledScope(new LoggerState(argsCustom));
-    }
 
     public void Log(LogLevel logLevel, string message, Exception exception = null)
     {
@@ -100,10 +80,7 @@ public class Loggable : ILoggable
         Scope = _logger.BeginScope(state);
     }
 
-    public void BeginLabeledScope(ILoggerState state)
-    {
-        BeginScope(state);
-    }
+    public void BeginLabeledScope(ILoggerState state) => BeginScope(state);
 
     public void AddOrUpdateLabel(string key, object value)
     {

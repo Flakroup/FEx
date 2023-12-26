@@ -39,9 +39,8 @@ public static class ObservableExtensions
     }
 
     public static IObservable<TResult> FromTdf<T, TResult>(this IObservable<T> source,
-                                                           Func<IPropagatorBlock<T, TResult>> blockFactory)
-    {
-        return Observable.Defer(() =>
+                                                           Func<IPropagatorBlock<T, TResult>> blockFactory) =>
+        Observable.Defer(() =>
         {
             IPropagatorBlock<T, TResult> block = blockFactory();
 #pragma warning disable IDISP004
@@ -50,43 +49,36 @@ public static class ObservableExtensions
 
             return block.AsObservable();
         });
-    }
 
     public static IObservable<TResult> FromTdf<T, TResult>(this IObservable<T> source,
-                                                           Func<T, Task<TResult>> transformFunc)
-    {
-        return source.FromTdf(() => new TransformBlock<T, TResult>(transformFunc));
-    }
+                                                           Func<T, Task<TResult>> transformFunc) => source.FromTdf(() =>
+        new TransformBlock<T, TResult>(transformFunc));
 
     public static IObservable<TResult> SelectTask<TSource, TResult>(this IObservable<TSource> source,
                                                                     Func<TSource, CancellationToken, Task<TResult>>
                                                                         func,
-                                                                    CancellationToken cancellationToken = default)
-    {
-        return source.Select(value => Observable.FromAsync(token => func(value, cancellationToken != default
+                                                                    CancellationToken cancellationToken = default) =>
+        source.Select(value => Observable.FromAsync(token => func(value, cancellationToken != default
 #pragma warning disable IDISP004
                 ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
 #pragma warning restore IDISP004
                 : token)))
             .Switch();
-    }
 
     public static IObservable<TSource> SelectTask<TSource>(this IObservable<TSource> source,
                                                            Func<TSource, CancellationToken, Task> func,
-                                                           CancellationToken cancellationToken = default)
-    {
-        return source.Select(value => Observable.FromAsync(async token =>
-            {
-                await func(value, cancellationToken != default
+                                                           CancellationToken cancellationToken = default) => source
+        .Select(value => Observable.FromAsync(async token =>
+        {
+            await func(value, cancellationToken != default
 #pragma warning disable IDISP004
-                    ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
+                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
 #pragma warning restore IDISP004
-                    : token);
+                : token);
 
-                return value;
-            }))
-            .Switch();
-    }
+            return value;
+        }))
+        .Switch();
 
     public static IDisposable SubscribeTask<TSource>(this IObservable<TSource> source,
                                                      Func<TSource, CancellationToken, Task> func,
@@ -96,35 +88,26 @@ public static class ObservableExtensions
     public static void SubscribeTask<TSource>(this IObservable<TSource> source,
                                               Func<TSource, CancellationToken, Task> func,
                                               CompositeDisposable disposable,
-                                              CancellationToken cancellationToken = default)
-    {
+                                              CancellationToken cancellationToken = default) =>
         source.SelectTask(func, cancellationToken).AsyncSubscribe(disposable);
-    }
 
-    public static IObservable<EventPattern<PropertyChangedEventArgs>> GetPropertyChangedObservable(
-        this INotifyPropertyChanged notifyPropertyChanged)
-    {
-        return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
-                ev => notifyPropertyChanged.PropertyChanged += ev, ev => notifyPropertyChanged.PropertyChanged -= ev)
-            .Where(y => y?.EventArgs?.PropertyName is not null && y.Sender is not null);
-    }
+    public static IObservable<EventPattern<PropertyChangedEventArgs>>
+        GetPropertyChangedObservable(this INotifyPropertyChanged notifyPropertyChanged) => Observable
+        .FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+            ev => notifyPropertyChanged.PropertyChanged += ev, ev => notifyPropertyChanged.PropertyChanged -= ev)
+        .Where(y => y?.EventArgs?.PropertyName is not null && y.Sender is not null);
 
     public static IObservable<EventPattern<PropertyChangedEventArgs>> GetPropertyChangedObservable(
         this INotifyPropertyChanged notifyPropertyChanged,
-        string propertyName)
-    {
-        return notifyPropertyChanged.GetPropertyChangedObservable()
-            .Where(x => x.EventArgs.PropertyName == propertyName);
-    }
+        string propertyName) => notifyPropertyChanged.GetPropertyChangedObservable()
+        .Where(x => x.EventArgs.PropertyName == propertyName);
 
-    public static IObservable<EventPattern<NotifyCollectionChangedEventArgs>> GetCollectionChangedObservable(
-        this INotifyCollectionChanged notifyCollectionChanged)
-    {
-        return Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
-                ev => notifyCollectionChanged.CollectionChanged += ev,
-                ev => notifyCollectionChanged.CollectionChanged -= ev)
-            .Where(y => y?.EventArgs is not null);
-    }
+    public static IObservable<EventPattern<NotifyCollectionChangedEventArgs>>
+        GetCollectionChangedObservable(this INotifyCollectionChanged notifyCollectionChanged) => Observable
+        .FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+            ev => notifyCollectionChanged.CollectionChanged += ev,
+            ev => notifyCollectionChanged.CollectionChanged -= ev)
+        .Where(y => y?.EventArgs is not null);
 
     public static void TryGetLastValue<TResult>(this IObservable<TResult> source, out TResult value)
     {
@@ -133,10 +116,8 @@ public static class ObservableExtensions
         value = result;
     }
 
-    public static IObservable<T> MergeMany<T>(this IObservable<T> source, params IObservable<T>[] observables)
-    {
-        return observables.Aggregate(source, (current, observable) => current.Merge(observable));
-    }
+    public static IObservable<T> MergeMany<T>(this IObservable<T> source, params IObservable<T>[] observables) =>
+        observables.Aggregate(source, (current, observable) => current.Merge(observable));
 
     public static IDisposable AsyncSubscribe<T>(this IObservable<T> source, Action<T> onNext = null)
     {

@@ -83,48 +83,35 @@ public static class PropertiesExtensions
     public static void LinkChild<T, TProp>(this T sender,
                                            Expression<Func<T, TProp>> property,
                                            Action<TProp> onPropertyChange,
-                                           ILink parentLink) where T : ILinkableNotifyPropertyChanged
-    {
+                                           ILink parentLink) where T : ILinkableNotifyPropertyChanged =>
         sender.InternalLink(property, (_, _, v) => onPropertyChange(v), parentLink);
-    }
 
     public static void LinkChild<T, TProp>(this T sender,
                                            Expression<Func<T, TProp>> property,
                                            Action<ILink, TProp> onPropertyChange,
-                                           ILink parentLink) where T : ILinkableNotifyPropertyChanged
-    {
+                                           ILink parentLink) where T : ILinkableNotifyPropertyChanged =>
         sender.InternalLink(property, (l, _, v) => onPropertyChange(l, v), parentLink);
-    }
 
     public static void LinkChild<T, TProp>(this T sender,
                                            Expression<Func<T, TProp>> property,
                                            Action<ILink, TProp, TProp> onPropertyChange,
-                                           ILink parentLink) where T : ILinkableNotifyPropertyChanged
-    {
+                                           ILink parentLink) where T : ILinkableNotifyPropertyChanged =>
         sender.InternalLink(property, onPropertyChange, parentLink);
-    }
 
     public static void Link<T, TProp>(this T sender,
                                       Expression<Func<T, TProp>> property,
-                                      Action<TProp> onPropertyChange) where T : ILinkableNotifyPropertyChanged
-    {
+                                      Action<TProp> onPropertyChange) where T : ILinkableNotifyPropertyChanged =>
         sender.InternalLink(property, (_, _, v) => onPropertyChange(v));
-    }
 
     public static void Link<T, TProp>(this T sender,
                                       Expression<Func<T, TProp>> property,
-                                      Action<ILink, TProp> onPropertyChange) where T : ILinkableNotifyPropertyChanged
-    {
+                                      Action<ILink, TProp> onPropertyChange) where T : ILinkableNotifyPropertyChanged =>
         sender.InternalLink(property, (l, _, v) => onPropertyChange(l, v));
-    }
 
     public static void Link<T, TProp>(this T sender,
                                       Expression<Func<T, TProp>> property,
                                       Action<ILink, TProp, TProp> onPropertyChange)
-        where T : ILinkableNotifyPropertyChanged
-    {
-        sender.InternalLink(property, onPropertyChange);
-    }
+        where T : ILinkableNotifyPropertyChanged => sender.InternalLink(property, onPropertyChange);
 
     private static void InternalLink<T, TProp>(this T sender,
                                                Expression<Func<T, TProp>> property,

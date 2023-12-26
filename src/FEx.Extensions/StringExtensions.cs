@@ -69,10 +69,8 @@ public static class StringExtensions
     /// <param name="source">Current string.</param>
     /// <param name="chars">The chars to remove.</param>
     /// <returns>A string.</returns>
-    public static string Remove(this string source, IEnumerable<char> chars)
-    {
-        return new string(source.Where(c => !chars.Contains(c)).ToArray());
-    }
+    public static string Remove(this string source, IEnumerable<char> chars) =>
+        new(source.Where(c => !chars.Contains(c)).ToArray());
 
     /// <summary>
     ///     Compare 2 strings, ignoring case.
@@ -305,38 +303,30 @@ public static class StringExtensions
     public static bool Contains(this string source, string toCheck, StringComparison comp) =>
         source?.IndexOf(toCheck, comp) >= 0;
 
-    public static IEnumerable<string> GetPathParts(this string path)
-    {
-        return path.Split(Path.DirectorySeparatorChar).SelectMany(x => x.Split(Path.AltDirectorySeparatorChar));
-    }
+    public static IEnumerable<string> GetPathParts(this string path) => path.Split(Path.DirectorySeparatorChar)
+        .SelectMany(x => x.Split(Path.AltDirectorySeparatorChar));
 
-    public static string FirstCharToUpper(this string input)
+    public static string FirstCharToUpper(this string input) => input switch
     {
-        return input switch
-        {
-            null => throw new ArgumentNullException(nameof(input)),
-            "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
+        null => throw new ArgumentNullException(nameof(input)),
+        "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
 #if NETSTANDARD
-            _ => input[0].ToString().ToUpper() + input.Substring(1)
+        _ => input[0].ToString().ToUpper() + input.Substring(1)
 #else
-            _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
+        _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
 #endif
-        };
-    }
+    };
 
-    public static string FirstCharToLower(this string input)
+    public static string FirstCharToLower(this string input) => input switch
     {
-        return input switch
-        {
-            null => throw new ArgumentNullException(nameof(input)),
-            "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
+        null => throw new ArgumentNullException(nameof(input)),
+        "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
 #if NETSTANDARD
-            _ => input[0].ToString().ToLower() + input.Substring(1)
+        _ => input[0].ToString().ToLower() + input.Substring(1)
 #else
-            _ => string.Concat(input[0].ToString().ToLower(), input.AsSpan(1))
+        _ => string.Concat(input[0].ToString().ToLower(), input.AsSpan(1))
 #endif
-        };
-    }
+    };
 
     /// <summary>Returns a string containing a specified number of characters from the left side of a string.</summary>
     /// <param name="str">Required. <see langword="String" /> expression from which the leftmost characters are returned.</param>
@@ -632,10 +622,10 @@ public static class StringExtensions
         var sb = new StringBuilder();
 
         foreach (char ch in formD.Select(ch => new
-        {
-            ch,
-            uc = CharUnicodeInfo.GetUnicodeCategory(ch)
-        })
+                     {
+                         ch,
+                         uc = CharUnicodeInfo.GetUnicodeCategory(ch)
+                     })
                      .Where(t => t.uc != UnicodeCategory.NonSpacingMark)
                      .Select(t => t.ch))
             sb.Append(ch);

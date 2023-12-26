@@ -26,10 +26,7 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
         _semaphore = new SemaphoreSlim(1, 1);
     }
 
-    public virtual void Initialize()
-    {
-        RunInitialize();
-    }
+    public virtual void Initialize() => RunInitialize();
 
     protected abstract Task<bool> OnInitializationAsync(bool reInitialize);
 
@@ -63,10 +60,8 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
         return IsInitialized;
     }
 
-    protected void RunInitialize(bool reInitialize = false)
-    {
-        InitializationTask = _asyncHelper.ExecuteTaskOnThreadPoolAsync(() => InitializeAsync(reInitialize));
-    }
+    protected void RunInitialize(bool reInitialize = false) => InitializationTask =
+        _asyncHelper.ExecuteTaskOnThreadPoolAsync(() => InitializeAsync(reInitialize));
 
     #region IDisposable
     public void Dispose()

@@ -24,27 +24,23 @@ public static class DirectoryInfoExtensions
         return path;
     }
 
-    public static FileInfo GetDescendantFile(this DirectoryInfo dir, params string[] descendants)
-    {
-        return GetDescendantFileSystemObject(dir, path =>
+    public static FileInfo GetDescendantFile(this DirectoryInfo dir, params string[] descendants) =>
+        GetDescendantFileSystemObject(dir, path =>
         {
             var file = new FileInfo(path);
             file.Directory?.Create();
 
             return file;
         }, descendants);
-    }
 
-    public static DirectoryInfo GetDescendantDirectory(this DirectoryInfo dir, params string[] descendants)
-    {
-        return GetDescendantFileSystemObject(dir, path =>
+    public static DirectoryInfo GetDescendantDirectory(this DirectoryInfo dir, params string[] descendants) =>
+        GetDescendantFileSystemObject(dir, path =>
         {
             var directory = new DirectoryInfo(path);
             directory.Create();
 
             return directory;
         }, descendants);
-    }
 
     public static T GetDescendantFileSystemObject<T>(this string directoryPath,
                                                      Func<string, T> activator,

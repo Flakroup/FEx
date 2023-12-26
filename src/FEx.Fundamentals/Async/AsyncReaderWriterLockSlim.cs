@@ -95,10 +95,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
     /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public void EnterReadLock(CancellationToken cancellationToken = default)
-    {
+    public void EnterReadLock(CancellationToken cancellationToken = default) =>
         TryEnterReadLock(Timeout.Infinite, cancellationToken);
-    }
 
     /// <summary>
     ///     Asynchronously enters the lock in read mode.
@@ -217,10 +215,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
     /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public void EnterWriteLock(CancellationToken cancellationToken = default)
-    {
+    public void EnterWriteLock(CancellationToken cancellationToken = default) =>
         TryEnterWriteLock(Timeout.Infinite, cancellationToken);
-    }
 
     /// <summary>
     ///     Asynchronously enters the lock in write mode.
@@ -403,10 +399,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
     ///     Downgrades the lock from write mode to read mode.
     /// </summary>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public void DowngradeWriteLockToReadLock()
-    {
-        ExitWriteLockInternal(true);
-    }
+    public void DowngradeWriteLockToReadLock() => ExitWriteLockInternal(true);
 
     /// <summary>
     ///     Exits read mode.
@@ -427,10 +420,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
     ///     Exits write mode.
     /// </summary>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
-    public void ExitWriteLock()
-    {
-        ExitWriteLockInternal(false);
-    }
+    public void ExitWriteLock() => ExitWriteLockInternal(false);
 
     private static int GetRemainingTimeout(int millisecondsTimeout, long initialTicks) =>
         millisecondsTimeout == Timeout.Infinite
@@ -440,14 +430,14 @@ public class AsyncReaderWriterLockSlim : IDisposable
     private static long GetTimestampTicks() => DateTime.Now.Ticks;
 
     private void DenyIfDisposed()
-    {
 #if NETSTANDARD
+    {
         if (_isDisposed)
             throw new ObjectDisposedException(nameof(AsyncReaderWriterLockSlim));
-#else
-        ObjectDisposedException.ThrowIf(_isDisposed, this);
-#endif
     }
+#else
+        => ObjectDisposedException.ThrowIf(_isDisposed, this);
+#endif
 
     private bool EnterReadLockPreface(out WriteLockState existingWriteLockState)
     {

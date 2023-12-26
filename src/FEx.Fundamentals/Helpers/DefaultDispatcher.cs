@@ -7,10 +7,7 @@ namespace FEx.Fundamentals.Helpers;
 
 public class DefaultDispatcher : IFExDispatcher
 {
-    public void BeginInvokeOnMainThread(Action action)
-    {
-        throw new NotImplementedException();
-    }
+    public void BeginInvokeOnMainThread(Action action) => throw new NotImplementedException();
 
     public Task<T> InvokeOnMainThreadAsync<T>(Func<T> func) => throw new NotImplementedException();
 
@@ -22,8 +19,5 @@ public class DefaultDispatcher : IFExDispatcher
 
     public void SendInThisOrMainThreadContext(Action action,
                                               SynchronizationContext synchronizationContext = null,
-                                              uint timeout = 10000)
-    {
-        throw new NotImplementedException();
-    }
+                                              uint timeout = 10000) => throw new NotImplementedException();
 }

@@ -112,12 +112,9 @@ public static class ReflectionHelper
                                                            BindingFlags bindingAttr =
                                                                BindingFlags.DeclaredOnly
                                                                | BindingFlags.Public
-                                                               | BindingFlags.Instance)
-    {
-        return source.GetType()
-            .GetProperties(bindingAttr)
-            .ToDictionary(propInfo => propInfo.Name, propInfo => propInfo.GetValue(source, null));
-    }
+                                                               | BindingFlags.Instance) => source.GetType()
+        .GetProperties(bindingAttr)
+        .ToDictionary(propInfo => propInfo.Name, propInfo => propInfo.GetValue(source, null));
 
     private static PropertyInfo GetPropertyInfo(Type type, string propertyName)
     {

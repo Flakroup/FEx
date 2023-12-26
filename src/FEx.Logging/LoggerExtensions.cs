@@ -99,12 +99,10 @@ public static class LoggerExtensions
                                  LogEventLevel externalLoggingLevel = LogEventLevel.Warning,
                                  LogEventLevel externalDebugLoggingLevel = LogEventLevel.Information,
                                  Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null,
-                                 params string[] overrides)
-    {
-        Log.Logger = new LoggerConfiguration().ConfigureSerilog(logFilePath, forceConsole, externalLoggingLevel,
-                externalDebugLoggingLevel, cfgFunc, overrides)
-            .CreateLogger();
-    }
+                                 params string[] overrides) => Log.Logger = new LoggerConfiguration()
+        .ConfigureSerilog(logFilePath, forceConsole, externalLoggingLevel, externalDebugLoggingLevel, cfgFunc,
+            overrides)
+        .CreateLogger();
 
     private static LoggerConfiguration
         SetFileLogger(this LoggerSinkConfiguration sinkConfiguration, string logFilePath) => sinkConfiguration.File(

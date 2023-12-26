@@ -13,20 +13,16 @@ public static class TypeExtensions
     /// </summary>
     /// <param name="interfaceType">Type of the interface.</param>
     /// <returns></returns>
-    public static IEnumerable<Type> GetImplementedInterfaces(this Type interfaceType)
-    {
-        return GetAllNotSealedClasses().Where(type => type.GetInterface(interfaceType.Name) is not null);
-    }
+    public static IEnumerable<Type> GetImplementedInterfaces(this Type interfaceType) => GetAllNotSealedClasses()
+        .Where(type => type.GetInterface(interfaceType.Name) is not null);
 
     /// <summary>
     ///     Gets the implemented classes.
     /// </summary>
     /// <param name="baseType">Type of the base.</param>
     /// <returns></returns>
-    public static IEnumerable<Type> GetImplementedClasses(this Type baseType)
-    {
-        return GetAllNotSealedClasses().Where(type => type.GetBaseTypes().Contains(baseType));
-    }
+    public static IEnumerable<Type> GetImplementedClasses(this Type baseType) =>
+        GetAllNotSealedClasses().Where(type => type.GetBaseTypes().Contains(baseType));
 
     /// <summary>
     ///     Gets the base types.
@@ -57,10 +53,7 @@ public static class TypeExtensions
     ///     Gets all not sealed classes.
     /// </summary>
     /// <returns></returns>
-    private static IEnumerable<Type> GetAllNotSealedClasses()
-    {
-        return AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(assembly => assembly.GetTypes())
-            .Where(t => t.IsClass && !t.IsSealed);
-    }
+    private static IEnumerable<Type> GetAllNotSealedClasses() => AppDomain.CurrentDomain.GetAssemblies()
+        .SelectMany(assembly => assembly.GetTypes())
+        .Where(t => t.IsClass && !t.IsSealed);
 }

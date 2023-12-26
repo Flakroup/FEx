@@ -167,10 +167,8 @@ public static class DictionaryExtensions
     /// <param name="key">The key to be added or whose value should be updated</param>
     /// <param name="valueToAddOrUpdate">The function used to generate a new value</param>
     /// <returns>The new value for the key.</returns>
-    public static TV AddOrUpdateValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, TV valueToAddOrUpdate)
-    {
-        return dictionary.AddOrUpdateValue(key, () => valueToAddOrUpdate);
-    }
+    public static TV AddOrUpdateValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, TV valueToAddOrUpdate) =>
+        dictionary.AddOrUpdateValue(key, () => valueToAddOrUpdate);
 
     /// <summary>
     ///     Adds a key/value pair to the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key

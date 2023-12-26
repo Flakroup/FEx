@@ -499,34 +499,34 @@ public static class OSVersionInfo
                     case PlatformID.WinCE:
                         return "Windows CE";
                     case PlatformID.Win32Windows:
+                    {
+                        if (majorVersion == 4)
                         {
-                            if (majorVersion == 4)
+                            string csdVersion = osVersionInfo.szCSDVersion;
+
+                            switch (minorVersion)
                             {
-                                string csdVersion = osVersionInfo.szCSDVersion;
-
-                                switch (minorVersion)
-                                {
-                                    case 0:
-                                        return csdVersion is "B" or "C"
-                                            ? "Windows 95 OSR2"
-                                            : "Windows 95";
-                                    case 10:
-                                        return csdVersion == "A"
-                                            ? "Windows 98 Second Edition"
-                                            : "Windows 98";
-                                    case 90:
-                                        return "Windows Me";
-                                }
+                                case 0:
+                                    return csdVersion is "B" or "C"
+                                        ? "Windows 95 OSR2"
+                                        : "Windows 95";
+                                case 10:
+                                    return csdVersion == "A"
+                                        ? "Windows 98 Second Edition"
+                                        : "Windows 98";
+                                case 90:
+                                    return "Windows Me";
                             }
-
-                            break;
                         }
+
+                        break;
+                    }
                     case PlatformID.Win32NT:
-                        {
-                            int productType = osVersionInfo.wProductType;
+                    {
+                        int productType = osVersionInfo.wProductType;
 
-                            return new OSVersion(majorVersion, minorVersion, productType).ToString();
-                        }
+                        return new OSVersion(majorVersion, minorVersion, productType).ToString();
+                    }
                     case PlatformID.Unix:
                     case PlatformID.Xbox:
                     case PlatformID.MacOSX:

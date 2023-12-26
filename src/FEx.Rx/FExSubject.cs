@@ -18,15 +18,9 @@ public class FExSubject<T> : IDisposable, IObservable<T>
 
     public IDisposable Subscribe(IObserver<T> observer) => _subject.Subscribe(observer);
 
-    public virtual void OnNext(T value)
-    {
-        SynchronizedOnNext(value);
-    }
+    public virtual void OnNext(T value) => SynchronizedOnNext(value);
 
-    protected void SynchronizedOnNext(T value)
-    {
-        Subject.Synchronize(_subject).OnNext(value);
-    }
+    protected void SynchronizedOnNext(T value) => Subject.Synchronize(_subject).OnNext(value);
 
     #region IDisposable
     public void Dispose()

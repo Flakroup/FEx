@@ -119,10 +119,8 @@ public static class ObjectExtensions
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="value" /> is a null reference.</exception>
     [ContractAnnotation("value:null => stop; value:notnull=>notnull")]
-    public static T Guard<T>(this T value, [CallerMemberName] string paramName = null, string message = null)
-    {
-        return value.Guard(v => v is null, paramName, message);
-    }
+    public static T Guard<T>(this T value, [CallerMemberName] string paramName = null, string message = null) =>
+        value.Guard(v => v is null, paramName, message);
 
     /// <summary>
     ///     Checks an value to ensure it comply to the condition we provide.
@@ -208,15 +206,12 @@ public static class ObjectExtensions
     /// </returns>
     public static bool IsIn<T>(this T item, params T[] items) => item.IsIn((IEnumerable<T>)items);
 
-    public static bool IsIn<T>(this T item, IEnumerable<T> items)
+    public static bool IsIn<T>(this T item, IEnumerable<T> items) => items switch
     {
-        return items switch
-        {
-            ISet<T> iSet => iSet.Contains(item),
-            ICollection<T> col => col.Contains(item),
-            _ => items.Contains(item)
-        };
-    }
+        ISet<T> iSet => iSet.Contains(item),
+        ICollection<T> col => col.Contains(item),
+        _ => items.Contains(item)
+    };
 
     public static bool IsNotIn<T>(this T item, params T[] items) => item.IsNotIn((IEnumerable<T>)items);
 

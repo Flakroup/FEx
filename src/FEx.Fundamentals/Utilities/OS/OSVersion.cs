@@ -28,65 +28,62 @@ internal class OSVersion : IEquatable<OSVersion>
 
     public static bool operator !=(OSVersion left, OSVersion right) => !Equals(left, right);
 
-    public override string ToString()
+    public override string ToString() => Major switch
     {
-        return Major switch
+        3 => "Windows NT 3.51",
+        4 => ProductType switch
         {
-            3 => "Windows NT 3.51",
-            4 => ProductType switch
+            1 => "Windows NT 4.0",
+            3 => "Windows NT 4.0 Server",
+            _ => "unknown"
+        },
+        5 => Minor switch
+        {
+            0 => "Windows 2000",
+            1 => "Windows XP",
+            2 => "Windows Server 2003",
+            _ => "unknown"
+        },
+        6 => Minor switch
+        {
+            0 => ProductType switch
             {
-                1 => "Windows NT 4.0",
-                3 => "Windows NT 4.0 Server",
+                1 => "Windows Vista",
+                3 => "Windows Server 2008",
                 _ => "unknown"
             },
-            5 => Minor switch
+            1 => ProductType switch
             {
-                0 => "Windows 2000",
-                1 => "Windows XP",
-                2 => "Windows Server 2003",
+                1 => "Windows 7",
+                3 => "Windows Server 2008 R2",
                 _ => "unknown"
             },
-            6 => Minor switch
+            2 => ProductType switch
             {
-                0 => ProductType switch
-                {
-                    1 => "Windows Vista",
-                    3 => "Windows Server 2008",
-                    _ => "unknown"
-                },
-                1 => ProductType switch
-                {
-                    1 => "Windows 7",
-                    3 => "Windows Server 2008 R2",
-                    _ => "unknown"
-                },
-                2 => ProductType switch
-                {
-                    1 => "Windows 8",
-                    3 => "Windows Server 2012",
-                    _ => "unknown"
-                },
-                3 => ProductType switch
-                {
-                    1 => "Windows 8.1",
-                    3 => "Windows Server 2012 R2",
-                    _ => "unknown"
-                },
+                1 => "Windows 8",
+                3 => "Windows Server 2012",
                 _ => "unknown"
             },
-            10 => Minor switch
+            3 => ProductType switch
             {
-                0 => ProductType switch
-                {
-                    1 => "Windows 10",
-                    3 => "Windows Server 2016",
-                    _ => "unknown"
-                },
+                1 => "Windows 8.1",
+                3 => "Windows Server 2012 R2",
                 _ => "unknown"
             },
             _ => "unknown"
-        };
-    }
+        },
+        10 => Minor switch
+        {
+            0 => ProductType switch
+            {
+                1 => "Windows 10",
+                3 => "Windows Server 2016",
+                _ => "unknown"
+            },
+            _ => "unknown"
+        },
+        _ => "unknown"
+    };
 
     public override bool Equals(object obj)
     {
@@ -100,8 +97,8 @@ internal class OSVersion : IEquatable<OSVersion>
     }
 
     public override int GetHashCode()
-    {
 #if NETSTANDARD
+    {
         unchecked
         {
             int hashCode = Major;
@@ -110,8 +107,8 @@ internal class OSVersion : IEquatable<OSVersion>
 
             return hashCode;
         }
-#else
-        return HashCode.Combine(Major, Minor, ProductType);
-#endif
     }
+#else
+        => HashCode.Combine(Major, Minor, ProductType);
+#endif
 }

@@ -7,12 +7,9 @@ namespace FEx.Flurlx;
 
 public class FlurlConfigurator : IFlurlConfigurator
 {
-    public void Configure()
+    public void Configure() => FlurlHttp.Clients.WithDefaults(builder =>
     {
-        FlurlHttp.Clients.WithDefaults(builder =>
-        {
-            builder.Settings.JsonSerializer = new NewtonsoftJsonSerializer(JsonExtensions.DefaultSettings);
-            builder.Settings.Timeout = TimeSpan.FromMinutes(2);
-        });
-    }
+        builder.Settings.JsonSerializer = new NewtonsoftJsonSerializer(JsonExtensions.DefaultSettings);
+        builder.Settings.Timeout = TimeSpan.FromMinutes(2);
+    });
 }

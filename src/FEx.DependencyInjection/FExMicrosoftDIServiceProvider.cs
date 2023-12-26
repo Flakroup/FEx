@@ -79,9 +79,6 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider, IDispos
     }
 
     #region IDisposable
-    public void Dispose()
-    {
-        _provider?.Dispose();
-    }
+    public void Dispose() => _provider?.Dispose();
     #endregion
 }

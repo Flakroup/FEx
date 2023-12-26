@@ -5,9 +5,7 @@ namespace FEx.EFCore.Helpers;
 
 public static class SqlLiteDbContextOptionsBuilderHelper
 {
-    public static void UseSqlite(this DbContextOptionsBuilder options, IFExDbConfig config)
-    {
-        options.UseSqlite($"data source={config.SqliteDbFile.FullName}",
-            sqliteDbContextOptionsBuilder => sqliteDbContextOptionsBuilder.CommandTimeout(config.CommandTimeout));
-    }
+    public static void UseSqlite(this DbContextOptionsBuilder options, IFExDbConfig config) => options.UseSqlite(
+        $"data source={config.SqliteDbFile.FullName}",
+        sqliteDbContextOptionsBuilder => sqliteDbContextOptionsBuilder.CommandTimeout(config.CommandTimeout));
 }

@@ -161,8 +161,6 @@ public static class JsonExtensions
     public static void SerializeToFile(this FileInfo file,
                                        object self,
                                        JsonSerializerSettings settings = null,
-                                       Formatting formatting = Formatting.None)
-    {
-        File.WriteAllText(file.FullName, self.ToJson(settings, formatting));
-    }
+                                       Formatting formatting = Formatting.None) => File.WriteAllText(file.FullName,
+        self.ToJson(settings, formatting));
 }

@@ -48,10 +48,8 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     public async Task RunTaskInDbContextAsync(Func<TDbContext, Task> func,
                                               string errorMessage = null,
                                               bool saveChanges = true,
-                                              bool useTransaction = true)
-    {
+                                              bool useTransaction = true) =>
         await RunTaskInDbContextAsync(func.WrapTask, errorMessage, saveChanges, useTransaction);
-    }
 
     public async Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Task<T>> func,
                                                     string errorMessage = null,
@@ -62,11 +60,8 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     public async Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Func<Task<T>>> func,
                                                     string errorMessage = null,
                                                     bool saveChanges = true,
-                                                    bool useTransaction = true)
-    {
-        return await RunWithinTransactionAsync(dbContext => func(dbContext)(), errorMessage, saveChanges,
-            useTransaction);
-    }
+                                                    bool useTransaction = true) =>
+        await RunWithinTransactionAsync(dbContext => func(dbContext)(), errorMessage, saveChanges, useTransaction);
 
     public async Task<bool> RunMigrationsAsync()
     {
@@ -107,15 +102,13 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     public async Task RunActionInDbContextAsync(Action<TDbContext> func,
                                                 string errorMessage = null,
                                                 bool saveChanges = true,
-                                                bool useTransaction = true)
-    {
-        await RunFuncInDbContextAsync(dbContext =>
+                                                bool useTransaction = true) => await RunFuncInDbContextAsync(
+        dbContext =>
         {
             func(dbContext);
 
             return (object)null;
         }, errorMessage, saveChanges, useTransaction);
-    }
 
     public async Task<T> RunFuncInDbContextAsync<T>(Func<TDbContext, T> func,
                                                     string errorMessage = null,
@@ -198,10 +191,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         }
     }
 
-    protected virtual async Task AfterAppliedMigrationAsync()
-    {
-        await Task.CompletedTask;
-    }
+    protected virtual async Task AfterAppliedMigrationAsync() => await Task.CompletedTask;
 
     protected virtual void OnValidationSuccess(string id, IReadOnlyCollection<EntityEntry> entities)
     {
@@ -232,23 +222,20 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         return result;
     }
 
-    protected async Task EnsureMappingSnapshotAsync()
+    protected async Task EnsureMappingSnapshotAsync() => await RunActionInDbContextAsync(dbContext =>
     {
-        await RunActionInDbContextAsync(dbContext =>
-        {
-            var mappings = dbContext.Model.GetEntityTypes()
-                .Select(t => new Mapping
-                {
-                    ClrTypeName = t.ClrType.FullName.Guard("ClrTypeName"),
-                    TableName = t.GetTableName(),
-                    Properties = t.GetMappedProperties()
-                })
-                .ToDictionary(mapping => mapping.ClrTypeName);
+        var mappings = dbContext.Model.GetEntityTypes()
+            .Select(t => new Mapping
+            {
+                ClrTypeName = t.ClrType.FullName.Guard("ClrTypeName"),
+                TableName = t.GetTableName(),
+                Properties = t.GetMappedProperties()
+            })
+            .ToDictionary(mapping => mapping.ClrTypeName);
 
-            Mappings = new ReadOnlyDictionary<string, Mapping>(mappings);
-            TableMappings = new Map<string, string>(Mappings.ToDictionary(x => x.Key, x => x.Value.TableName));
-        });
-    }
+        Mappings = new ReadOnlyDictionary<string, Mapping>(mappings);
+        TableMappings = new Map<string, string>(Mappings.ToDictionary(x => x.Key, x => x.Value.TableName));
+    });
 
     protected Result<Error> ValidateAndSaveChanges(TDbContext dbContext,
                                                    string id,
@@ -364,10 +351,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         return result;
     }
 
-    protected async Task ShrinkDbAsync()
-    {
-        await RunTaskInDbContextAsync(ShrinkDbAsync, null, false, false);
-    }
+    protected async Task ShrinkDbAsync() => await RunTaskInDbContextAsync(ShrinkDbAsync, null, false, false);
 
     private static async Task ShrinkDbAsync(TDbContext context)
     {
@@ -375,22 +359,17 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
             await context.Database.ExecuteSqlRawAsync("VACUUM;");
     }
 
-    private async Task<bool> DropAsync()
-    {
-        return await RunFuncInDbContextAsync(dbContext => dbContext.Database.EnsureDeleted(), null, false, false);
-    }
+    private async Task<bool> DropAsync() =>
+        await RunFuncInDbContextAsync(dbContext => dbContext.Database.EnsureDeleted(), null, false, false);
 
-    private async Task<bool> HasNoPendingMigrationsAsync()
+    private async Task<bool> HasNoPendingMigrationsAsync() => await RunFuncInDbContextAsync(dbContext =>
     {
-        return await RunFuncInDbContextAsync(dbContext =>
-        {
-            var migs = dbContext.Database.GetMigrations().ToList();
-            var aMigs = dbContext.Database.GetAppliedMigrations().ToList();
-            var pMigs = dbContext.Database.GetPendingMigrations().ToList();
+        var migs = dbContext.Database.GetMigrations().ToList();
+        var aMigs = dbContext.Database.GetAppliedMigrations().ToList();
+        var pMigs = dbContext.Database.GetPendingMigrations().ToList();
 
-            return migs.UnorderedSequenceEqual(aMigs) && pMigs.Count == 0;
-        }, null, false, false);
-    }
+        return migs.UnorderedSequenceEqual(aMigs) && pMigs.Count == 0;
+    }, null, false, false);
 
     private T Execute<T>(TDbContext dbContext, Func<TDbContext, T> func, bool saveChanges, string id)
     {

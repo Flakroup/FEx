@@ -1,6 +1,6 @@
 using FEx.Utilities.Basics;
 
-namespace FEx.Utilities.Interfaces;
+namespace FEx.Utilities.Abstractions.Interfaces;
 
 public interface ISuppressEvents
 {

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace FEx.Basics.Interfaces;
+namespace FEx.Basics.Abstractions.Interfaces;
 
 public interface IStackTraceProvider
 {

@@ -32,7 +32,10 @@ public static class EventsExtensions
         propertyChanged.Guard(nameof(propertyChanged));
         propertyName.Guard(nameof(propertyName));
 
-        void EventDelegate() => propertyChanged(propertyName);
         FExBasics.EventDeliverer.DeliverEvent(EventDelegate, sender, context);
+
+        return;
+
+        void EventDelegate() => propertyChanged(propertyName);
     }
 }

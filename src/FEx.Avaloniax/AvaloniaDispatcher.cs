@@ -1,7 +1,7 @@
 ﻿using Avalonia.Threading;
 using FEx.Fundamentals;
-using FEx.MVVM.Abstractions;
-using FEx.Utilities.Implementations;
+using FEx.MVVM.Abstractions.Interfaces;
+using FEx.Utilities.Abstractions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;

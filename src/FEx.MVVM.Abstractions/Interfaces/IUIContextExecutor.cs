@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace FEx.MVVM.Abstractions;
+namespace FEx.MVVM.Abstractions.Interfaces;
 
 public interface IUIContextExecutor
 {

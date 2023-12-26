@@ -1,7 +1,7 @@
 ﻿using FEx.Basics;
+using FEx.Basics.Abstractions.Interfaces;
 using FEx.Extensions;
 using FEx.Extensions.Collections.Lists;
-using FEx.MVVM.Abstractions;
 using JetBrains.Annotations;
 using ReactiveUI;
 using System;
@@ -64,15 +64,21 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
     {
         ReactiveObject sender = this;
 
-        void EventDelegate() => sender.RaisePropertyChanging(propertyName);
         FExBasics.EventDeliverer.DeliverEvent(EventDelegate, this);
+
+        return;
+
+        void EventDelegate() => sender.RaisePropertyChanging(propertyName);
     }
 
     private void OnPropertyChangedInternal(string propertyName)
     {
         ReactiveObject sender = this;
 
-        void EventDelegate() => sender.RaisePropertyChanged(propertyName);
         FExBasics.EventDeliverer.DeliverEvent(EventDelegate, this);
+
+        return;
+
+        void EventDelegate() => sender.RaisePropertyChanged(propertyName);
     }
 }

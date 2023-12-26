@@ -1,5 +1,5 @@
 ﻿using FEx.Abstractions;
-using FEx.Basics.Interfaces;
+using FEx.Basics.Abstractions.Interfaces;
 using FEx.Fundamentals.Helpers;
 using FEx.Fundamentals.StackTraces;
 using StrongInject;

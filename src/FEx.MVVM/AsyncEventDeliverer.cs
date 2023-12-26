@@ -10,10 +10,12 @@ public class AsyncEventDeliverer : IEventDeliverer
 {
     public void DeliverEvent(Action eventDelegate, object sender, SynchronizationContext context = null)
     {
+        DeadlockMonitor.Execute(EventDelegate);
+
+        return;
+
         void EventDelegate() =>
             InternalDeliverEvent(eventDelegate, sender, context);
-
-        DeadlockMonitor.Execute(EventDelegate);
     }
 
     private static void InternalDeliverEvent(Action eventDelegate, object sender, SynchronizationContext context)

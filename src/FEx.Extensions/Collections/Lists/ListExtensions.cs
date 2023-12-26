@@ -50,8 +50,6 @@ public static class ListExtensions
 
     public static bool RemoveFromListWhere<T>(this ICollection<T> source, Func<T, bool> predicate)
     {
-        bool Predicate(T i) => predicate(i);
-
         var anyItemHasMatched = false;
 
         switch (source)
@@ -91,6 +89,8 @@ public static class ListExtensions
         }
 
         return anyItemHasMatched;
+
+        bool Predicate(T i) => predicate(i);
     }
 
     public static List<T> GetRange<T>(this IList<T> sourceList, int index, int count)

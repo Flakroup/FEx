@@ -1,5 +1,5 @@
 ﻿using FEx.Abstractions;
-using FEx.MVVM.Abstractions;
+using FEx.MVVM.Abstractions.Interfaces;
 using StrongInject;
 
 namespace FEx.Avaloniax;

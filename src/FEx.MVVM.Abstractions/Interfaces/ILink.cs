@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FEx.MVVM.Abstractions;
+namespace FEx.MVVM.Abstractions.Interfaces;
 
 public interface ILink
 {

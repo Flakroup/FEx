@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace FEx.MVVM.Abstractions;
+namespace FEx.Basics.Abstractions.Interfaces;
 
 public interface IFExNotifyPropertyChanged : INotifyPropertyChanged
 {

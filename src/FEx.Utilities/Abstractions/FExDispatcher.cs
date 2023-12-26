@@ -6,11 +6,11 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Utilities.Implementations;
+namespace FEx.Utilities.Abstractions;
 
 public abstract class FExDispatcher : IFExDispatcher
 {
-    private readonly ILogger _logger;
+    protected readonly ILogger _logger;
 
     protected static SynchronizationContext MainThreadSynchronizationContext =>
         Foundation.MainSynchronizationContext;

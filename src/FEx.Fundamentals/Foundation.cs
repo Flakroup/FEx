@@ -1,6 +1,6 @@
 ﻿using FEx.Abstractions;
 using FEx.Basics;
-using FEx.Basics.Interfaces;
+using FEx.Basics.Abstractions.Interfaces;
 using FEx.Extensions;
 using FEx.Extensions.Base;
 using FEx.Fundamentals.Helpers;

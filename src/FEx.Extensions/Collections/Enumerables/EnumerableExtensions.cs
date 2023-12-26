@@ -72,14 +72,14 @@ public static class EnumerableExtensions
     /// <returns>If found, an element of type T; otherwise default(T).</returns>
     public static T FindInEnumerable<T>(this IEnumerable<T> source, Func<T, bool> predicate = null)
     {
-        bool Predicate(T i) => predicate?.Invoke(i) ?? true;
-
         return source switch
         {
             T[] array => Array.Find(array, Predicate),
             List<T> list => list.Find(Predicate),
             _ => source.FirstOrDefault(Predicate)
         };
+
+        bool Predicate(T i) => predicate?.Invoke(i) ?? true;
     }
 
     /// <summary>

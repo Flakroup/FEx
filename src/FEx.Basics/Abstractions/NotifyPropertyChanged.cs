@@ -1,15 +1,14 @@
-﻿using FEx.Basics;
+﻿using FEx.Basics.Abstractions.Interfaces;
 using FEx.Extensions;
 using FEx.Extensions.Base.Helpers;
-using FEx.MVVM.Abstractions;
 using JetBrains.Annotations;
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace FEx.MVVM.BaseObjects;
+namespace FEx.Basics.Abstractions;
 
-public class NotifyPropertyChanged : IFExNotifyPropertyChanged
+public abstract class NotifyPropertyChanged : IFExNotifyPropertyChanged
 {
     public event PropertyChangedEventHandler PropertyChanged;
 
@@ -28,8 +27,11 @@ public class NotifyPropertyChanged : IFExNotifyPropertyChanged
             || PropertyChanged is null)
             return;
 
-        void EventDelegate() => NotifyChanged(propertyName);
         FExBasics.EventDeliverer.DeliverEvent(EventDelegate, this);
+
+        return;
+
+        void EventDelegate() => NotifyChanged(propertyName);
     }
 
     public virtual bool SetProperty<TRet>(ref TRet backingField,

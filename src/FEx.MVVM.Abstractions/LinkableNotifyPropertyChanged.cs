@@ -1,13 +1,14 @@
 ﻿using FEx.Basics;
+using FEx.Basics.Abstractions;
 using FEx.Extensions.Collections.Dictionaries;
-using FEx.MVVM.Abstractions;
+using FEx.MVVM.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FEx.MVVM.BaseObjects;
+namespace FEx.MVVM.Abstractions;
 
 public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILinkableNotifyPropertyChanged
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FEx.Utilities.Interfaces;
+namespace FEx.Utilities.Abstractions.Interfaces;
 
 public interface IFExLogger
 {

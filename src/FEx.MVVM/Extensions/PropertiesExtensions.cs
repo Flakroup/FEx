@@ -1,6 +1,6 @@
 ﻿using FEx.Extensions;
 using FEx.MVVM.Abstractions;
-using FEx.MVVM.BaseObjects;
+using FEx.MVVM.Abstractions.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -127,14 +127,16 @@ public static class PropertiesExtensions
         string propertyName = memberExpression.Member.Name;
         Func<T, TProp> getPropertyValue = property.Compile();
 
-        object GetPropertyValue(ILinkableNotifyPropertyChanged p) => getPropertyValue((T)p);
-
-        void OnPropertyChange(ILink l, object oldValue, object newValue) =>
-            onPropertyChange(l, (TProp)oldValue, (TProp)newValue);
-
         var link = new Link(typeof(TProp), sender, propertyName, GetPropertyValue, OnPropertyChange, default(TProp),
             parentLink);
 
         sender.AddLink(link);
+
+        return;
+
+        object GetPropertyValue(ILinkableNotifyPropertyChanged p) => getPropertyValue((T)p);
+
+        void OnPropertyChange(ILink l, object oldValue, object newValue) =>
+            onPropertyChange(l, (TProp)oldValue, (TProp)newValue);
     }
 }

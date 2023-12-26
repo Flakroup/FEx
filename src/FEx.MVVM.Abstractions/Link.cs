@@ -1,11 +1,11 @@
 ﻿using FEx.Extensions;
 using FEx.Extensions.Collections;
-using FEx.MVVM.Abstractions;
+using FEx.MVVM.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
 
-namespace FEx.MVVM.BaseObjects;
+namespace FEx.MVVM.Abstractions;
 
 public class Link : ILink
 {

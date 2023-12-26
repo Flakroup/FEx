@@ -4,4 +4,8 @@
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
+	</ItemGroup>
+
 </Project>

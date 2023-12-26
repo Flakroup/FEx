@@ -1,6 +1,7 @@
-﻿using System;
+﻿using FEx.Basics.Abstractions.Interfaces;
+using System;
 
-namespace FEx.MVVM.Abstractions;
+namespace FEx.MVVM.Abstractions.Interfaces;
 
 public interface ILinkableNotifyPropertyChanged : IFExNotifyPropertyChanged
 {

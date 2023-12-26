@@ -1,4 +1,4 @@
-﻿using FEx.Basics.Interfaces;
+﻿using FEx.Basics.Abstractions.Interfaces;
 using System.Diagnostics;
 
 namespace FEx.Basics;

@@ -1,6 +1,8 @@
-﻿using FEx.Extensions.Base.Converters;
+﻿using FEx.Extensions;
+using FEx.Extensions.Base.Converters;
 using FEx.Extensions.Base.Enums;
 using FEx.Extensions.Collections.Lists;
+using FEx.Fundamentals;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -13,7 +15,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 
 namespace FEx.Logging;
 
@@ -37,9 +38,9 @@ public static class LoggerExtensions
                                                        Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null,
                                                        params string[] overrides)
     {
-        logFilePath ??= Path.GetFullPath($@".\_Logs\{Assembly.GetEntryAssembly()?.GetName().Name}.log");
+        logFilePath ??= Foundation.AppInfoProvider.LogFilePath.Guard(nameof(logFilePath));
 
-        Directory.CreateDirectory(Path.GetDirectoryName(logFilePath));
+        Directory.CreateDirectory(Path.GetDirectoryName(logFilePath)!);
 
         if (Debugger.IsAttached)
         {

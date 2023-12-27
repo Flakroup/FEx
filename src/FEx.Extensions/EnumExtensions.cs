@@ -1,5 +1,6 @@
 ﻿using FEx.Extensions.Collections.Enumerables;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 
@@ -30,27 +31,24 @@ public static class EnumExtensions
     /// </summary>
     /// <typeparam name="TAttributeType">Attribute type.</typeparam>
     /// <param name="enumValue">Enumerator value.</param>
-    /// <returns>Attribute object.</returns>
-    public static TAttributeType[] GetEnumValueAttributes<TAttributeType>(this Enum enumValue)
+    /// <returns>Attributes collection.</returns>
+    public static IReadOnlyCollection<TAttributeType> GetEnumValueAttributes<TAttributeType>(this Enum enumValue)
         where TAttributeType : Attribute =>
-        Enum.IsDefined(enumValue.GetType(), enumValue)
-            ? (TAttributeType[])enumValue.GetType()
-                .GetField(enumValue.ToString())
-                .GetCustomAttributes(typeof(TAttributeType), true)
-            : null;
+        (enumValue.GetType()
+             .GetField(enumValue.ToString())
+             ?.GetCustomAttributes(typeof(TAttributeType), true)
+             .Cast<TAttributeType>()
+         ?? Enumerable.Empty<TAttributeType>()).ToList()
+        .AsReadOnly();
 
-    public static TEnum? TryParse<TEnum>(this string value, bool ignoreCase = false) where TEnum : struct
-    {
-        bool isSuccess = Enum.TryParse(value, ignoreCase, out TEnum result);
-
-        return isSuccess
+    public static TEnum? TryParse<TEnum>(this string value, bool ignoreCase = false) where TEnum : struct =>
+        Enum.TryParse(value, ignoreCase, out TEnum result)
             ? result
             : null;
-    }
 
-    public static TEnum[] GetEnumValues<TEnum>(this TEnum value) where TEnum : struct =>
-        Enum.GetValues(value.GetType()).Cast<TEnum>().ToArray();
+    public static IReadOnlyCollection<TEnum> GetEnumValues<TEnum>(this TEnum value) where TEnum : struct =>
+        Enum.GetValues(value.GetType()).Cast<TEnum>().Distinct().ToList().AsReadOnly();
 
-    public static TEnum[] GetEnumValues<TEnum>() where TEnum : struct =>
-        Enum.GetValues(typeof(TEnum)).Cast<TEnum>().ToArray();
+    public static IReadOnlyCollection<TEnum> GetEnumValues<TEnum>() where TEnum : struct =>
+        Enum.GetValues(typeof(TEnum)).Cast<TEnum>().Distinct().ToList().AsReadOnly();
 }

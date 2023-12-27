@@ -25,7 +25,7 @@ namespace FEx.Fundamentals.Utilities;
 /// <summary>
 ///     Provides detailed information about the host operating system.
 /// </summary>
-public static class OSVersionInfo
+public static class PlatformInfoProvider
 {
     private const int SmTabletPC = 86;
 
@@ -449,8 +449,8 @@ public static class OSVersionInfo
 #pragma warning restore IDE0079
     private static string GetName()
     {
-        // if (IsWindows)
-        //     return null;
+        if (!IsWindows)
+            return null;
 
         OperatingSystem osVersion = Environment.OSVersion;
 
@@ -653,7 +653,7 @@ public static class OSVersionInfo
     [SuppressMessage("ReSharper", "UnusedType.Local")]
     private delegate bool IsWow64ProcessDelegate([In] IntPtr handle, [Out] out bool isWow64Process);
 
-    static OSVersionInfo()
+    static PlatformInfoProvider()
     {
         ProgramBits = GetProgramBits();
         OSBits = GetOSBits();

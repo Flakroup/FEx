@@ -79,9 +79,9 @@ public class AsyncHelper
     public IReadOnlyList<TaskWrapper<T>> FireTasksAndForget<T>(IEnumerable<Func<Task<T>>> tasks,
                                                                AsyncMode asyncMode = AsyncMode.Default)
     {
-        tasks.Guard(nameof(tasks));
+        List<Func<Task<T>>> deferredList = (tasks?.ToList()).Guard(nameof(tasks));
 
-        return tasks.Select(x => FireTaskAndForget(x, asyncMode)).ToList().AsReadOnly();
+        return deferredList.Select(x => FireTaskAndForget(x, asyncMode)).ToList().AsReadOnly();
     }
 
     public async Task ExecuteTaskOnThreadPoolAsync(Func<Task> task, bool logException = true) =>
@@ -147,6 +147,7 @@ public class AsyncHelper
     ///     The time span to wait before completing the returned task, or
     /// <see langword="TimeSpan.FromMilliseconds(-1)" /> to wait indefinitely.
     /// </param>
+    /// <param name="logException">Log exception</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <exception cref="T:System.ArgumentOutOfRangeException">
     ///     <paramref name="delay" /> represents a negative time interval other than
@@ -165,7 +166,17 @@ public class AsyncHelper
     public async Task DelayAsync(TimeSpan delay,
                                  bool logException = true,
                                  CancellationToken cancellationToken = default) =>
-        await ExecuteTaskOnThreadPoolAsync(() => Task.Delay(delay, cancellationToken), logException);
+        await ExecuteTaskOnThreadPoolAsync(async () =>
+        {
+            try
+            {
+                await Task.Delay(delay, cancellationToken);
+            }
+            catch (TaskCanceledException)
+            {
+                //ignore
+            }
+        }, logException);
 
     /// <summary>
     ///     Waits asynchronously the specified amount of milliseconds.
@@ -217,6 +228,7 @@ public class AsyncHelper
     /// </summary>
     /// <param name="delayMilliseconds">The milliseconds.</param>
     /// <param name="action">The action.</param>
+    /// <param name="logException">Log exception</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     public async Task WaitAndInvokeActionAsync(double delayMilliseconds = 0,

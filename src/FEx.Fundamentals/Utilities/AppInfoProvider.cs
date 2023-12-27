@@ -1,6 +1,7 @@
 ﻿using FEx.Abstractions;
 using FEx.Basics.Extensions;
 using FEx.Extensions.Base.Helpers;
+using FEx.Fundamentals.Models;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -8,58 +9,102 @@ using System.Reflection;
 
 namespace FEx.Fundamentals.Utilities;
 
-public class AppInfoProvider : IAppInfoProvider
+public record AppInfoProvider : IAppInfoProvider
 {
-    public Assembly EntryAssembly { get; set; }
-    public string EntryAssemblyLocation { get; set; }
-    public string ApplicationName { get; }
-    public string ProductVersion { get; private set; }
-    public Version ApplicationVersion { get; }
-    public string ApplicationNameAndVersionWithPrefix { get; private set; }
-    public string ApplicationNameLineVersion { get; private set; }
-    public string ApplicationNameAndVersion { get; private set; }
-    public string ApplicationCompany { get; }
-    public string ApplicationCopyright { get; private set; }
-    public string UserDataPath => UserData.FullName;
+    public string EntryAssemblyName { get; }
+    public Assembly EntryAssembly { get; }
+    public FileInfo EntryAssemblyLocation { get; }
+
+    public string Name { get; }
+    public Version Version { get; }
+    public string VersionString { get; }
+
+    public string Company { get; }
+    public string Copyright { get; }
+    public string NameAndVersionWithPrefix { get; }
+    public string NameLineVersion { get; }
+    public string NameAndVersion { get; }
+
     public DirectoryInfo UserData { get; }
-    public string AppDataPath => AppData.FullName;
+    public string UserDataPath { get; }
+
     public DirectoryInfo AppData { get; }
-    public string UserSettingsPath { get; private set; }
+    public string AppDataPath { get; }
+
+    public string UserSettingsPath { get; }
+
+    public string LogFilePath { get; }
+
+    private static AppInfo AppInfo { get; set; }
+    private FileVersionInfo ProductVersionInfo { get; }
 
     public AppInfoProvider()
     {
-        EntryAssembly = Assembly.GetEntryAssembly();
-        EntryAssemblyLocation = Process.GetCurrentProcess().MainModule?.FileName;
+        if (PlatformInfoProvider.IsWindows)
+        {
+            EntryAssembly = Assembly.GetEntryAssembly();
 
-        ApplicationName = EntryAssembly?.EntryPoint?.DeclaringType?.Namespace;
+            string mainModule = Process.GetCurrentProcess().MainModule?.FileName;
 
-        ProductVersion = EntryAssemblyLocation is not null
-            ? FileVersionInfo.GetVersionInfo(EntryAssemblyLocation)?.ProductVersion
-            : null;
+            EntryAssemblyLocation = EntryAssembly?.Location is not null ? new FileInfo(EntryAssembly.Location) :
+                mainModule is not null ? new FileInfo(mainModule) : null;
 
-        ApplicationVersion = EntryAssembly?.GetName()?.Version;
-        ApplicationCompany = GetEntryAssemblyAttribute<AssemblyCompanyAttribute>(x => x?.Company);
-        ApplicationCopyright = GetEntryAssemblyAttribute<AssemblyCopyrightAttribute>(x => x?.Copyright);
-        ApplicationNameAndVersion = $"{ApplicationName} {ApplicationVersion}";
-        ApplicationNameAndVersionWithPrefix = $"{ApplicationName} ver. {ApplicationVersion}";
-        ApplicationNameLineVersion = $"{ApplicationName}{Environment.NewLine}{ApplicationVersion}";
+            EntryAssemblyName = EntryAssembly?.GetName().Name;
 
-        UserData = new DirectoryInfo(
-            Environment.SpecialFolder.ApplicationData.GetSpecialDirectoryPathDescendants(ApplicationCompany,
-                ApplicationName));
+            ProductVersionInfo = EntryAssemblyLocation is not null
+                ? FileVersionInfo.GetVersionInfo(EntryAssemblyLocation.FullName)
+                : null;
+        }
 
+        Name = AppInfo?.Name ?? ProductVersionInfo?.ProductName ?? EntryAssembly?.EntryPoint?.DeclaringType?.Namespace;
+
+        Version = AppInfo?.Version
+                  ?? ParseVersionString(ProductVersionInfo?.ProductVersion) ?? EntryAssembly?.GetName().Version;
+
+        VersionString = Version?.ToString();
+
+        NameAndVersion = $"{Name} {Version}";
+        NameAndVersionWithPrefix = $"{Name} ver. {Version}";
+        NameLineVersion = $"{Name}{Environment.NewLine}{Version}";
+
+        Company = GetEntryAssemblyAttribute<AssemblyCompanyAttribute>(x => x?.Company);
+        Copyright = GetEntryAssemblyAttribute<AssemblyCopyrightAttribute>(x => x?.Copyright);
+
+        if (PlatformInfoProvider.IsWindows)
+        {
+            UserData = new DirectoryInfo(
+                Environment.SpecialFolder.ApplicationData.GetSpecialDirectoryPathDescendants(Company, Name));
+
+            AppData = new DirectoryInfo(
+                Environment.SpecialFolder.CommonApplicationData.GetSpecialDirectoryPathDescendants(Company, Name));
+        }
+        else
+        {
+            UserData = Environment.SpecialFolder.UserProfile.GetSpecialDirectory().Directory;
+            AppData = Environment.SpecialFolder.LocalApplicationData.GetSpecialDirectory().Directory;
+        }
+
+        UserDataPath = UserData.FullName;
         UserData.Create();
 
-        AppData = new DirectoryInfo(
-            Environment.SpecialFolder.CommonApplicationData.GetSpecialDirectoryPathDescendants(ApplicationCompany,
-                ApplicationName));
-
+        AppDataPath = AppData.FullName;
         AppData.Create();
 
+        LogFilePath = Path.GetFullPath(Path.Combine(UserDataPath, ".logs", $"{Name}.log"));
+
         UserSettingsPath = UserDataPath is not null
-            ? Path.Combine(UserDataPath, $"{ApplicationName}.config")
+            ? Path.Combine(UserDataPath, $"{Name}.config")
             : null;
     }
+
+    public static void Initialize(AppInfo appInfo)
+    {
+        AppInfo ??= appInfo;
+    }
+
+    private static Version ParseVersionString(string version) => Version.TryParse(version, out Version result)
+        ? result
+        : null;
 
     private string GetEntryAssemblyAttribute<T>(Func<T, string> func) where T : Attribute =>
         EntryAssembly.GetEntryAssemblyAttribute(func);

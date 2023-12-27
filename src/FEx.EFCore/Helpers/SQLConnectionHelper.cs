@@ -75,7 +75,7 @@ public static class SQLConnectionHelper
         };
 
         if (config.SqlInstance == "localhost"
-            && OSVersionInfo.IsWindows)
+            && PlatformInfoProvider.IsWindows)
         {
             sB.IntegratedSecurity = true;
             sB.Add("Trusted_Connection", "True");

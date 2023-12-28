@@ -1,12 +1,9 @@
-﻿using FEx.Asyncx.Helpers;
-using FEx.Fundamentals;
+﻿using FEx.Abstractions;
+using StrongInject;
 
 namespace FEx.Asyncx;
 
+[Register(typeof(FExAsyncModuleInitializer), Scope.SingleInstance, typeof(FExAsyncModuleInitializer), typeof(IInitializeModule))]
 public class FExAsyncModule
 {
-    public FExAsyncModule()
-    {
-        JoinableAsyncHelper.SetMainJoinableTaskFactory(Foundation.GetMainThread());
-    }
 }

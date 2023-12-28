@@ -9,9 +9,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace FEx.Flurlx;
+namespace FEx.Flurlx.Extensions;
 
-public static class UrlUtility
+public static class UrlExtensions
 {
     public static async Task<double> CalculateSizeAsync(this Url url,
                                                         LengthType unit = LengthType.Megabytes,

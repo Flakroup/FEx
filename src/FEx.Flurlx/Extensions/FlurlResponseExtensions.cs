@@ -1,7 +1,7 @@
 using Flurl.Http;
 using System.Net;
 
-namespace FEx.Flurlx;
+namespace FEx.Flurlx.Extensions;
 
 public static class FlurlResponseExtensions
 {

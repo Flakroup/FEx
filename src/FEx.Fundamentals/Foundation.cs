@@ -1,6 +1,7 @@
 ﻿using FEx.Abstractions;
 using FEx.Basics;
 using FEx.Basics.Abstractions.Interfaces;
+using FEx.DependencyInjection;
 using FEx.Extensions;
 using FEx.Extensions.Base;
 using FEx.Fundamentals.Helpers;
@@ -17,7 +18,7 @@ public class Foundation
     private static IFExDispatcher _dispatcher;
     private static IAppInfoProvider _appInfoProvider;
     private static IFExServiceProvider _serviceProvider;
-    private static IFExServiceProvider _strongInjectServiceProvider;
+    private static FExStrongInjectServiceProvider _strongInjectServiceProvider;
     private static Thread _mainThread;
     private static SynchronizationContext _mainSynchronizationContext;
 
@@ -45,7 +46,7 @@ public class Foundation
         private set => _serviceProvider = value;
     }
 
-    public static IFExServiceProvider StrongInjectServiceProvider
+    public static FExStrongInjectServiceProvider StrongInjectServiceProvider
     {
         get => _strongInjectServiceProvider.Guard();
         private set => _strongInjectServiceProvider = value;
@@ -82,9 +83,11 @@ public class Foundation
 
     public static bool IsInitialized { get; private set; }
 
+    public static bool IsUIApp { get; private set; }
+
     private static bool IsDispatcherContext { get; set; }
 
-    public Foundation(ILogger<FExBasics> logger,
+    public Foundation(ILogger logger,
                       AsyncHelper asyncHelper,
                       IFExDispatcher dispatcher,
                       IAppInfoProvider appInfoProvider,
@@ -99,11 +102,15 @@ public class Foundation
         FExBasics.Init(stackTraceProvider, eventDeliverer, logger);
     }
 
-    public static void Init<T>(T strongInjectServiceProvider) where T : class, IFExServiceProvider
+    public static void Init<TContainer>(bool isUIApp = false, IFExServiceProvider microsoftDiServiceProvider = null)
+        where TContainer : class, IDisposable, new()
     {
-        StrongInjectServiceProvider = strongInjectServiceProvider;
-        StrongInjectServiceProvider.GetRequiredService<Foundation>().Guard();
-        ServiceProvider = StrongInjectServiceProvider;
+        IsUIApp = isUIApp;
+        SetMainThread();
+        _strongInjectServiceProvider?.Dispose();
+        StrongInjectServiceProvider = new FExStrongInjectServiceProvider();
+        StrongInjectServiceProvider.ConfigureServiceProvider<TContainer>();
+        ServiceProvider = microsoftDiServiceProvider ?? StrongInjectServiceProvider;
         IsInitialized = true;
     }
 
@@ -113,7 +120,7 @@ public class Foundation
         ServiceProvider = serviceProviderConfiguration();
     }
 
-    public static void SetMainThread(bool ensureSyncContextExists = false)
+    private static void SetMainThread()
     {
         Thread currentThread = Thread.CurrentThread;
 
@@ -127,12 +134,10 @@ public class Foundation
 
         MainThread = currentThread;
 
-        if (ensureSyncContextExists)
+        if (IsUIApp)
             MainThread.GetThreadSynchronizationContext(true);
     }
 
-    public static Thread GetMainThread() => MainThread;
-
     private static bool IsPlatformMainThread(Thread currentThread) =>
-        !PlatformInfoProvider.IsWindows || currentThread.GetApartmentState() == ApartmentState.STA;
+        !PlatformInfoProvider.IsWindows || !IsUIApp || currentThread.GetApartmentState() == ApartmentState.STA;
 }

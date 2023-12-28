@@ -1,5 +1,6 @@
 ﻿using FEx.Abstractions;
 using FEx.Basics.Extensions;
+using FEx.Extensions;
 using FEx.Extensions.Base.Helpers;
 using FEx.Fundamentals.Models;
 using System;
@@ -56,7 +57,7 @@ public record AppInfoProvider : IAppInfoProvider
                 : null;
         }
 
-        Name = AppInfo?.Name ?? ProductVersionInfo?.ProductName ?? EntryAssembly?.EntryPoint?.DeclaringType?.Namespace;
+        Name = AppInfo?.Name ?? TryGetProductName() ?? EntryAssembly?.EntryPoint?.DeclaringType?.Namespace;
 
         Version = AppInfo?.Version
                   ?? ParseVersionString(ProductVersionInfo?.ProductVersion) ?? EntryAssembly?.GetName().Version;
@@ -67,16 +68,20 @@ public record AppInfoProvider : IAppInfoProvider
         NameAndVersionWithPrefix = $"{Name} ver. {Version}";
         NameLineVersion = $"{Name}{Environment.NewLine}{Version}";
 
-        Company = GetEntryAssemblyAttribute<AssemblyCompanyAttribute>(x => x?.Company);
+        Company =
+            AppInfo?.Company ?? GetEntryAssemblyAttribute<AssemblyCompanyAttribute>(x => x?.Company);
+
         Copyright = GetEntryAssemblyAttribute<AssemblyCopyrightAttribute>(x => x?.Copyright);
 
         if (PlatformInfoProvider.IsWindows)
         {
             UserData = new DirectoryInfo(
-                Environment.SpecialFolder.ApplicationData.GetSpecialDirectoryPathDescendants(Company, Name));
+                Environment.SpecialFolder.ApplicationData.GetSpecialDirectoryPathDescendants(Company.Guard(
+                    nameof(Company)), Name));
 
             AppData = new DirectoryInfo(
-                Environment.SpecialFolder.CommonApplicationData.GetSpecialDirectoryPathDescendants(Company, Name));
+                Environment.SpecialFolder.CommonApplicationData.GetSpecialDirectoryPathDescendants(Company.Guard(
+                    nameof(Company)), Name));
         }
         else
         {
@@ -104,6 +109,10 @@ public record AppInfoProvider : IAppInfoProvider
 
     private static Version ParseVersionString(string version) => Version.TryParse(version, out Version result)
         ? result
+        : null;
+
+    private string TryGetProductName() => !string.IsNullOrEmpty(ProductVersionInfo?.ProductName)
+        ? ProductVersionInfo.ProductName
         : null;
 
     private string GetEntryAssemblyAttribute<T>(Func<T, string> func) where T : Attribute =>

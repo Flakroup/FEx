@@ -1,6 +1,6 @@
 ﻿using FEx.Abstractions;
-using FEx.Fundamentals;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace FEx.DependencyInjection;
 
-public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider, IDisposable, IAsyncDisposable
+public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider, IAsyncDisposable
 {
+    private readonly ILogger _logger;
     private ServiceProvider _provider;
 
-    public async ValueTask DisposeAsync()
+    public FExMicrosoftDIServiceProvider(ILogger logger)
     {
-        if (_provider != null)
-            await _provider.DisposeAsync();
+        _logger = logger;
     }
 
     public T GetRequiredService<T>() => _provider.GetRequiredService<T>();
@@ -55,7 +55,7 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider, IDispos
                          .ToList())
                 sb.AppendLine(m);
 
-            Console.WriteLine(sb.ToString()); //todo logger
+            _logger.LogError(sb.ToString());
 
             throw;
         }
@@ -69,16 +69,16 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider, IDispos
         if (configuration is not null)
             services = configuration(services);
 
-        services.AddSingleton<IScopeProvider>(this)
-            .AddSingleton<IFExServiceProvider>(this)
-            .AddSingleton(Foundation.StrongInjectServiceProvider.GetRequiredService<Foundation>())
-            .AddSingleton(Foundation.AsyncHelper)
-            .AddSingleton(Foundation.StrongInjectServiceProvider.GetRequiredService<ITasksInfoSubject>());
-
-        return services;
+        return services.AddSingleton<IScopeProvider>(this).AddSingleton<IFExServiceProvider>(this);
     }
 
     #region IDisposable
+    public async ValueTask DisposeAsync()
+    {
+        if (_provider != null)
+            await _provider.DisposeAsync();
+    }
+
     public void Dispose() => _provider?.Dispose();
     #endregion
 }

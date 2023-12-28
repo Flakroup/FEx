@@ -1,4 +1,5 @@
-﻿using FEx.Logging.Abstractions;
+﻿using FEx.Abstractions;
+using FEx.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
 using Serilog.Extensions.Logging;
 using StrongInject;
@@ -9,6 +10,7 @@ using System.Reflection;
 namespace FEx.Logging;
 
 [Register(typeof(Loggable), typeof(ILoggable))]
+[Register(typeof(FExLoggingModuleInitializer), Scope.SingleInstance, typeof(FExLoggingModuleInitializer), typeof(IInitializeModule))]
 public class FExLoggingModule
 {
     [Instance]

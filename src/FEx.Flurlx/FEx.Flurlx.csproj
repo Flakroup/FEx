@@ -5,17 +5,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Flurl" Version="4.0.0"/>
-        <PackageReference Include="Flurl.Http" Version="4.0.0"/>
-        <PackageReference Include="Flurl.Http.Newtonsoft" Version="0.9.0"/>
-        <PackageReference Include="Polly" Version="8.2.0"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
-        <PackageReference Include="StrongInject" Version="1.4.4"/>
+        <PackageReference Include="Flurl" Version="4.0.0" />
+        <PackageReference Include="Flurl.Http" Version="4.0.0" />
+        <PackageReference Include="Flurl.Http.Newtonsoft" Version="0.9.0" />
+        <PackageReference Include="Polly" Version="8.2.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="StrongInject" Version="1.4.4" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj"/>
-        <ProjectReference Include="..\FEx.Json\FEx.Json.csproj"/>
+        <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+        <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
     </ItemGroup>
 
 </Project>

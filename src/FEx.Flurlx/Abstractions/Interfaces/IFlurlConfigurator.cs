@@ -1,4 +1,4 @@
-namespace FEx.Flurlx;
+namespace FEx.Flurlx.Abstractions.Interfaces;
 
 public interface IFlurlConfigurator
 {

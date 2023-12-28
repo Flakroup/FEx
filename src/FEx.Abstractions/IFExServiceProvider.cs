@@ -2,7 +2,7 @@
 
 namespace FEx.Abstractions;
 
-public interface IFExServiceProvider : IServiceProvider, IScopeProvider
+public interface IFExServiceProvider : IServiceProvider, IScopeProvider, IDisposable
 {
     /// <summary>
     ///     Get service of type <typeparamref name="T" /> from the <see cref="IServiceProvider" />.

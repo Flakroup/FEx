@@ -5,13 +5,13 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 
-namespace FEx.Flurlx;
+namespace FEx.Flurlx.Extensions;
 
 public static class FlurlExtensions
 {
     public static IFlurlRequest FixBooleanQueryParameters(this IFlurlRequest req)
     {
-        FixBooleanQueryParameters(req?.Url);
+        (req?.Url).FixBooleanQueryParameters();
 
         return req;
     }

@@ -10,7 +10,10 @@ using System.Reflection;
 namespace FEx.Logging;
 
 [Register(typeof(Loggable), typeof(ILoggable))]
-[Register(typeof(FExLoggingModuleInitializer), Scope.SingleInstance, typeof(FExLoggingModuleInitializer), typeof(IInitializeModule))]
+[Register(typeof(FExLoggingModuleInitializer),
+    Scope.SingleInstance,
+    typeof(FExLoggingModuleInitializer),
+    typeof(IInitializeModule))]
 public class FExLoggingModule
 {
     [Instance]

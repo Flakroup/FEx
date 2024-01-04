@@ -1,9 +1,8 @@
 using FEx.Abstractions;
-using FEx.Basics;
 using System;
 using System.Diagnostics;
 
-namespace FEx.Fundamentals.Helpers;
+namespace FEx.Basics.Helpers;
 
 public abstract class TaskWrapperBase : ITaskWrapper
 {

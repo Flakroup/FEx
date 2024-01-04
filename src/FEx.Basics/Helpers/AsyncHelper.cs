@@ -1,7 +1,6 @@
 using FEx.Abstractions;
+using FEx.Basics.Enums;
 using FEx.Extensions;
-using FEx.Fundamentals.Enums;
-using FEx.Logging.Abstractions;
 using GuardNet;
 using Microsoft.Extensions.Logging;
 using System;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Fundamentals.Helpers;
+namespace FEx.Basics.Helpers;
 
 public class AsyncHelper
 {
@@ -18,7 +17,7 @@ public class AsyncHelper
     private readonly IFExDispatcher _dispatcher;
     private readonly ILogger<AsyncHelper> _logger;
 
-    public TimeSpan DefaultDelayTimeSpan { get; } = TimeSpan.FromMilliseconds(15);
+    public TimeSpan DefaultDelayTimeSpan { get; set; } = TimeSpan.FromMilliseconds(15);
 
     public AsyncHelper(IFExDispatcher dispatcher, ILogger<AsyncHelper> logger, ITasksInfoSubject tasksInfoSubject)
     {
@@ -98,7 +97,7 @@ public class AsyncHelper
         }
         catch (Exception ex) when (logException)
         {
-            _logger.LogError(ex);
+            _logger.LogError(ex, ex.Message);
 
             throw;
         }
@@ -117,7 +116,7 @@ public class AsyncHelper
         }
         catch (Exception ex) when (logException)
         {
-            _logger.LogError(ex);
+            _logger.LogError(ex, ex.Message);
 
             throw;
         }
@@ -167,16 +166,17 @@ public class AsyncHelper
                                  bool logException = true,
                                  CancellationToken cancellationToken = default) =>
         await ExecuteTaskOnThreadPoolAsync(async () =>
-        {
-            try
             {
-                await Task.Delay(delay, cancellationToken);
-            }
-            catch (TaskCanceledException)
-            {
-                //ignore
-            }
-        }, logException);
+                try
+                {
+                    await Task.Delay(delay, cancellationToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    //ignore
+                }
+            },
+            logException);
 
     /// <summary>
     ///     Waits asynchronously the specified amount of milliseconds.
@@ -194,8 +194,8 @@ public class AsyncHelper
                                       double milliseconds = 0,
                                       bool logException = true,
                                       CancellationToken cancellationToken = default) =>
-        await ExecuteTaskOnThreadPoolAsync(
-            () => InternalDelayUntilAsync(predicate, action, milliseconds, logException, cancellationToken),
+        await ExecuteTaskOnThreadPoolAsync(() =>
+                InternalDelayUntilAsync(predicate, action, milliseconds, logException, cancellationToken),
             logException);
 
     public async Task DelayUntilAsync(Func<Task<bool>> predicate,
@@ -203,8 +203,8 @@ public class AsyncHelper
                                       double milliseconds = 0,
                                       bool logException = true,
                                       CancellationToken cancellationToken = default) =>
-        await ExecuteTaskOnThreadPoolAsync(
-            () => InternalDelayUntilAsync(predicate, action, milliseconds, logException, cancellationToken),
+        await ExecuteTaskOnThreadPoolAsync(() =>
+                InternalDelayUntilAsync(predicate, action, milliseconds, logException, cancellationToken),
             logException);
 
     public async Task DelayUntilWithTimeSpanAsync(Func<bool> predicate,
@@ -212,16 +212,18 @@ public class AsyncHelper
                                                   TimeSpan? timeSpan = null,
                                                   bool logException = true,
                                                   CancellationToken cancellationToken = default) =>
-        await ExecuteTaskOnThreadPoolAsync(
-            () => InternalDelayUntilAsync(predicate, action, timeSpan, logException, cancellationToken), logException);
+        await ExecuteTaskOnThreadPoolAsync(() =>
+                InternalDelayUntilAsync(predicate, action, timeSpan, logException, cancellationToken),
+            logException);
 
     public async Task DelayUntilWithTimeSpanAsync(Func<Task<bool>> predicate,
                                                   Action action = null,
                                                   TimeSpan? timeSpan = null,
                                                   bool logException = true,
                                                   CancellationToken cancellationToken = default) =>
-        await ExecuteTaskOnThreadPoolAsync(
-            () => InternalDelayUntilAsync(predicate, action, timeSpan, logException, cancellationToken), logException);
+        await ExecuteTaskOnThreadPoolAsync(() =>
+                InternalDelayUntilAsync(predicate, action, timeSpan, logException, cancellationToken),
+            logException);
 
     /// <summary>
     ///     Waits asynchronously the specified amount of milliseconds and invokes action.
@@ -374,8 +376,9 @@ public class AsyncHelper
         {
             result = asyncMode switch
             {
-                AsyncMode.MainThread => await ExecuteTaskOnThreadPoolAsync(
-                    () => _dispatcher.InvokeOnMainThreadAsync(func), false),
+                AsyncMode.MainThread => await ExecuteTaskOnThreadPoolAsync(() =>
+                        _dispatcher.InvokeOnMainThreadAsync(func),
+                    false),
                 AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(func, false, cancellationToken),
                 _ => await Task.Run(func, cancellationToken)
             };
@@ -384,7 +387,7 @@ public class AsyncHelper
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex);
+            _logger.LogError(ex, ex.Message);
             taskWrapper.SetException(ex);
         }
 
@@ -402,8 +405,9 @@ public class AsyncHelper
         {
             result = asyncMode switch
             {
-                AsyncMode.MainThread => await ExecuteTaskOnThreadPoolAsync(
-                    () => _dispatcher.InvokeOnMainThreadAsync(task), false),
+                AsyncMode.MainThread => await ExecuteTaskOnThreadPoolAsync(() =>
+                        _dispatcher.InvokeOnMainThreadAsync(task),
+                    false),
                 AsyncMode.ThreadPool => await ExecuteTaskOnThreadPoolAsync(task, false),
                 _ => await task()
             };
@@ -412,7 +416,7 @@ public class AsyncHelper
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex);
+            _logger.LogError(ex, ex.Message);
             taskWrapper.SetException(ex);
         }
 

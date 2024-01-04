@@ -1,12 +1,7 @@
 ﻿using FEx.Abstractions;
-using FEx.Basics;
-using FEx.Basics.Abstractions.Interfaces;
 using FEx.DependencyInjection;
 using FEx.Extensions;
-using FEx.Extensions.Base;
-using FEx.Fundamentals.Helpers;
 using FEx.Fundamentals.Utilities;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 
@@ -14,19 +9,12 @@ namespace FEx.Fundamentals;
 
 public class Foundation
 {
-    private static AsyncHelper _asyncHelper;
     private static IFExDispatcher _dispatcher;
     private static IAppInfoProvider _appInfoProvider;
     private static IFExServiceProvider _serviceProvider;
     private static FExStrongInjectServiceProvider _strongInjectServiceProvider;
     private static Thread _mainThread;
     private static SynchronizationContext _mainSynchronizationContext;
-
-    public static AsyncHelper AsyncHelper
-    {
-        get => _asyncHelper;
-        private set => _asyncHelper = value.Guard();
-    }
 
     public static IFExDispatcher Dispatcher
     {
@@ -87,19 +75,11 @@ public class Foundation
 
     private static bool IsDispatcherContext { get; set; }
 
-    public Foundation(ILogger logger,
-                      AsyncHelper asyncHelper,
-                      IFExDispatcher dispatcher,
-                      IAppInfoProvider appInfoProvider,
-                      IExceptionHandler exceptionHandler,
-                      IStackTraceProvider stackTraceProvider,
-                      IEventDeliverer eventDeliverer)
+    public Foundation(IFExDispatcher dispatcher,
+                      IAppInfoProvider appInfoProvider)
     {
-        AsyncHelper = asyncHelper;
         Dispatcher = dispatcher;
         AppInfoProvider = appInfoProvider;
-        FExExtensionsCommon.Initialize(exceptionHandler.Guard(nameof(exceptionHandler)));
-        FExBasics.Init(stackTraceProvider, eventDeliverer, logger);
     }
 
     public static void Init<TContainer>(bool isUIApp = false, IFExServiceProvider microsoftDiServiceProvider = null)

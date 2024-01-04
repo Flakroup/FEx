@@ -27,7 +27,7 @@ public class FlurlConfigurator : IFlurlConfigurator
     private void DefaultClientConfiguration(IFlurlClientBuilder builder)
     {
         builder.Settings.JsonSerializer = new NewtonsoftJsonSerializer(JsonExtensions.DefaultSettings);
-        builder.Settings.Timeout = TimeSpan.FromMinutes(2);
+        builder.Settings.Timeout = TimeSpan.FromSeconds(15);
 
         if (_apiConfiguration.IgnoreSSLErrors)
             builder.ConfigureInnerHandler(handler => handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true);

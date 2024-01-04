@@ -1,9 +1,8 @@
 using FEx.Basics;
+using FEx.Basics.Helpers;
 using FEx.Extensions;
 using FEx.Extensions.Base.Models;
 using FEx.Extensions.Web;
-using FEx.Fundamentals;
-using FEx.Fundamentals.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -23,7 +22,7 @@ public static class UriExtensions
     private const string AdditionalInfoKey = "additionalInfo";
     private const int DefaultTimeout = 100000000;
 
-    private static AsyncHelper AsyncHelper => Foundation.AsyncHelper;
+    private static AsyncHelper AsyncHelper => FExBasics.AsyncHelper;
 
     /// <summary>
     ///     Determines whether the specified URL is reachable.

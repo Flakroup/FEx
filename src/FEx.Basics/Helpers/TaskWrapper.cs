@@ -2,7 +2,7 @@ using FEx.Basics.Flow;
 using System;
 using System.Threading.Tasks;
 
-namespace FEx.Fundamentals.Helpers;
+namespace FEx.Basics.Helpers;
 
 public class TaskWrapper : TaskWrapperBase
 {

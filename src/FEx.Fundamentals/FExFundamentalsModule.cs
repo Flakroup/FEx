@@ -1,6 +1,6 @@
 ﻿using FEx.Abstractions;
 using FEx.Basics.Abstractions.Interfaces;
-using FEx.Fundamentals.Helpers;
+using FEx.Basics.Helpers;
 using FEx.Fundamentals.StackTraces;
 using FEx.Fundamentals.Utilities;
 using StrongInject;
@@ -12,6 +12,7 @@ namespace FEx.Fundamentals;
 [Register(typeof(Foundation), Scope.SingleInstance)]
 [Register(typeof(StackTraceGenerator), Scope.SingleInstance, typeof(IStackTraceProvider))]
 [Register(typeof(AppInfoProvider), Scope.SingleInstance, typeof(IAppInfoProvider))]
+[Register(typeof(AsyncEventDeliverer), Scope.SingleInstance, typeof(IEventDeliverer))]
 [Register(typeof(FExFundamentalsModuleInitializer), Scope.SingleInstance, typeof(FExFundamentalsModuleInitializer), typeof(IInitializeModule))]
 public class FExFundamentalsModule
 {

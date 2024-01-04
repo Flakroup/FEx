@@ -1,4 +1,4 @@
-﻿namespace FEx.Fundamentals.Enums;
+﻿namespace FEx.Basics.Enums;
 
 public enum AsyncMode
 {

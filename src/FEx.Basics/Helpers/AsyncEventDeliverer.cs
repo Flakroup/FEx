@@ -1,10 +1,9 @@
 ﻿using FEx.Abstractions;
-using FEx.Basics.Helpers;
-using FEx.Fundamentals.Extensions;
+using FEx.Basics.Extensions;
 using System;
 using System.Threading;
 
-namespace FEx.MVVM;
+namespace FEx.Basics.Helpers;
 
 public class AsyncEventDeliverer : IEventDeliverer
 {

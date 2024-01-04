@@ -1,6 +1,6 @@
 ﻿using Avalonia.Threading;
-using FEx.Fundamentals;
-using FEx.Fundamentals.Enums;
+using FEx.Basics;
+using FEx.Basics.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.Utilities.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -44,7 +44,7 @@ public class AvaloniaDispatcher : FExDispatcher, IUIContextExecutor
         await Dispatcher.InvokeAsync(action);
 
     public override void BeginInvokeOnMainThread(Action action) =>
-        Foundation.AsyncHelper.FireAndForget(() => Dispatcher.Invoke(action), AsyncMode.ThreadPool);
+        FExBasics.AsyncHelper.FireAndForget(() => Dispatcher.Invoke(action), AsyncMode.ThreadPool);
 
     public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> func) => await Dispatcher.InvokeAsync(func);
 

@@ -1,4 +1,5 @@
 ﻿using FEx.Abstractions;
+using FEx.Basics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,13 +12,7 @@ namespace FEx.DependencyInjection;
 
 public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider, IAsyncDisposable
 {
-    private readonly ILogger _logger;
     private ServiceProvider _provider;
-
-    public FExMicrosoftDIServiceProvider(ILogger logger)
-    {
-        _logger = logger;
-    }
 
     public T GetRequiredService<T>() => _provider.GetRequiredService<T>();
 
@@ -55,7 +50,7 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider, IAsyncD
                          .ToList())
                 sb.AppendLine(m);
 
-            _logger.LogError(sb.ToString());
+            FExBasics.Logger.LogError(sb.ToString());
 
             throw;
         }

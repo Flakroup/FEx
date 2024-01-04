@@ -1,7 +1,7 @@
-﻿using FEx.Basics;
-using FEx.Basics.Exceptions;
+﻿using FEx.Basics.Exceptions;
 using FEx.Basics.Flow;
 using FEx.Extensions;
+using FEx.Extensions.Base;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -9,7 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Fundamentals.Extensions;
+namespace FEx.Basics.Extensions;
 
 public static class SynchronizationContextExtensions
 {
@@ -23,7 +23,7 @@ public static class SynchronizationContextExtensions
         StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
         var postFinished = new TaskCompletionSource<bool>();
 
-        Foundation.AsyncHelper.FireTaskAndForget(() =>
+        FExBasics.AsyncHelper.FireTaskAndForget(() =>
             context.InternalPostInContextAsync(action, sender, postFinished, stackTrace, handleException));
 
         return postFinished;
@@ -183,7 +183,7 @@ public static class SynchronizationContextExtensions
 
         if (onException is not null)
             onException(aEx);
-        else if (Foundation.IsInitialized)
+        else if (FExExtensionsCommon.ExceptionHandler is not null)
             aEx.HandleException();
         else
             throw aEx;

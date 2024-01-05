@@ -1,7 +1,8 @@
 ﻿using FEx.Abstractions;
+using FEx.Asyncx;
+using FEx.Asyncx.Helpers;
 using FEx.Basics;
 using FEx.Basics.Abstractions.Interfaces;
-using FEx.Basics.Helpers;
 using FEx.Extensions;
 using FEx.Extensions.Base;
 using Microsoft.Extensions.Logging;
@@ -36,6 +37,7 @@ public class FExFundamentalsModuleInitializer : InitializeModule
     {
         _foundation.Guard();
         FExExtensionsCommon.Initialize(_exceptionHandler.Guard(nameof(_exceptionHandler)));
-        FExBasics.Init(_stackTraceProvider, _eventDeliverer, _logger, _asyncHelper);
+        FExBasics.Init(_stackTraceProvider, _eventDeliverer, _logger);
+        FExAsyncx.Init(_asyncHelper, Foundation.MainThread);
     }
 }

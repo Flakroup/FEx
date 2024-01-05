@@ -1,6 +1,5 @@
 ﻿using FEx.Extensions;
 using FEx.Extensions.Collections.Dictionaries;
-using FEx.Fundamentals;
 using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Concurrent;
@@ -20,8 +19,8 @@ public static class JoinableAsyncHelper
         set => _mainJTF = value;
     }
 
-    public static void SetMainJoinableTaskFactory(Thread mainThread = null) =>
-        MainJTF = GetFactory(mainThread ?? Foundation.MainThread);
+    public static void SetMainJoinableTaskFactory(Thread mainThread) =>
+        MainJTF = GetFactory(mainThread.Guard(nameof(mainThread)));
 
     public static async Task DelayWithoutDeadlockAsync(int millisecondsDelay,
                                                        CancellationToken cancellationToken = default) =>

@@ -40,8 +40,6 @@ public class Foundation
         private set => _strongInjectServiceProvider = value;
     }
 
-    public static bool SendEventsInCreationContext { get; set; }
-
     public static Thread MainThread
     {
         get => _mainThread.Guard();

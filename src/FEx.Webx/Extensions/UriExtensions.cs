@@ -1,5 +1,6 @@
+using FEx.Asyncx;
+using FEx.Asyncx.Helpers;
 using FEx.Basics;
-using FEx.Basics.Helpers;
 using FEx.Extensions;
 using FEx.Extensions.Base.Models;
 using FEx.Extensions.Web;
@@ -22,7 +23,7 @@ public static class UriExtensions
     private const string AdditionalInfoKey = "additionalInfo";
     private const int DefaultTimeout = 100000000;
 
-    private static AsyncHelper AsyncHelper => FExBasics.AsyncHelper;
+    private static AsyncHelper AsyncHelper => FExAsyncx.AsyncHelper;
 
     /// <summary>
     ///     Determines whether the specified URL is reachable.
@@ -61,13 +62,15 @@ public static class UriExtensions
             {
                 if (url.Scheme is HttpScheme or HttpsScheme)
                     return await url.DoHttpResponseFuncAsync((response, _) =>
-                    {
-                        bool result = response?.StatusCode is HttpStatusCode.OK
-                            or HttpStatusCode.PartialContent
-                            or HttpStatusCode.NonAuthoritativeInformation;
+                        {
+                            bool result = response?.StatusCode is HttpStatusCode.OK
+                                or HttpStatusCode.PartialContent
+                                or HttpStatusCode.NonAuthoritativeInformation;
 
-                        return (result, sw.ElapsedMilliseconds);
-                    }, pars, sw);
+                            return (result, sw.ElapsedMilliseconds);
+                        },
+                        pars,
+                        sw);
 
                 using (WebResponse response = await url.GetUriResponseAsync(pars))
                 {

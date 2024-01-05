@@ -1,5 +1,5 @@
 ﻿using FEx.Abstractions;
-using FEx.Logging.Abstractions;
+using FEx.Logging.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using Serilog.Extensions.Logging;
 using StrongInject;

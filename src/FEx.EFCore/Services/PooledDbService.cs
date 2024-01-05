@@ -1,5 +1,6 @@
 ﻿using FEx.Abstractions;
 using FEx.Asyncx.Abstractions;
+using FEx.Basics.Collections;
 using FEx.Basics.Flow;
 using FEx.EFCore.Extensions;
 using FEx.EFCore.Helpers;
@@ -7,7 +8,6 @@ using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
 using FEx.Extensions;
 using FEx.Extensions.Collections.Enumerables;
-using FEx.Utilities.Collections;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.DependencyInjection;

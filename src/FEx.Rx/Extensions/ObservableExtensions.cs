@@ -58,11 +58,12 @@ public static class ObservableExtensions
                                                                     Func<TSource, CancellationToken, Task<TResult>>
                                                                         func,
                                                                     CancellationToken cancellationToken = default) =>
-        source.Select(value => Observable.FromAsync(token => func(value, cancellationToken != default
+        source.Select(value => Observable.FromAsync(token => func(value,
+                cancellationToken != default
 #pragma warning disable IDISP004
-                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
+                    ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
 #pragma warning restore IDISP004
-                : token)))
+                    : token)))
             .Switch();
 
     public static IObservable<TSource> SelectTask<TSource>(this IObservable<TSource> source,
@@ -70,11 +71,12 @@ public static class ObservableExtensions
                                                            CancellationToken cancellationToken = default) => source
         .Select(value => Observable.FromAsync(async token =>
         {
-            await func(value, cancellationToken != default
+            await func(value,
+                cancellationToken != default
 #pragma warning disable IDISP004
-                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
+                    ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
 #pragma warning restore IDISP004
-                : token);
+                    : token);
 
             return value;
         }))
@@ -94,7 +96,8 @@ public static class ObservableExtensions
     public static IObservable<EventPattern<PropertyChangedEventArgs>>
         GetPropertyChangedObservable(this INotifyPropertyChanged notifyPropertyChanged) => Observable
         .FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
-            ev => notifyPropertyChanged.PropertyChanged += ev, ev => notifyPropertyChanged.PropertyChanged -= ev)
+            ev => notifyPropertyChanged.PropertyChanged += ev,
+            ev => notifyPropertyChanged.PropertyChanged -= ev)
         .Where(y => y?.EventArgs?.PropertyName is not null && y.Sender is not null);
 
     public static IObservable<EventPattern<PropertyChangedEventArgs>> GetPropertyChangedObservable(

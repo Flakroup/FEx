@@ -1,4 +1,4 @@
-using FEx.Utilities.Basics;
+using FEx.Basics.Utilities;
 using LiteDB;
 
 namespace FEx.LiteDbx.Abstractions.Interfaces;

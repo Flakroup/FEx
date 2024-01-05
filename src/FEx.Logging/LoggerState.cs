@@ -1,7 +1,7 @@
 ﻿using FEx.Extensions.Collections;
 using FEx.Extensions.Collections.Dictionaries;
 using FEx.Json;
-using FEx.Logging.Abstractions;
+using FEx.Logging.Abstractions.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 

@@ -1,5 +1,5 @@
 ﻿using FEx.Extensions;
-using FEx.Logging.Abstractions;
+using FEx.Logging.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

@@ -1,4 +1,4 @@
-using FEx.Utilities.Abstractions.Interfaces;
+using FEx.Logging.Abstractions.Interfaces;
 using System;
 using System.Text;
 

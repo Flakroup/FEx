@@ -1,6 +1,6 @@
 ﻿using FEx.Asyncx.Abstractions.Interfaces;
+using FEx.Asyncx.Helpers;
 using FEx.Basics;
-using FEx.Basics.Helpers;
 using FEx.Extensions;
 using Microsoft.Extensions.Logging;
 using StrongInject;
@@ -21,7 +21,7 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
 
     protected AsyncInitializable()
     {
-        _asyncHelper = FExBasics.AsyncHelper;
+        _asyncHelper = FExAsyncx.AsyncHelper;
         _semaphore = new SemaphoreSlim(1, 1);
     }
 

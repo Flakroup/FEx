@@ -1,6 +1,6 @@
 using FEx.Basics;
 using FEx.Json.Converters;
-using FEx.Logging.Abstractions;
+using FEx.Logging.Abstractions.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;

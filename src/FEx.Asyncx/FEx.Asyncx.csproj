@@ -2,16 +2,18 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Async and parallel programming related FEx utilities</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.8.14" />
 		<PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.8.8" />
+		<PackageReference Include="StrongInject" Version="1.4.4" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
-		<ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
+	  <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
 	</ItemGroup>
 
 </Project>

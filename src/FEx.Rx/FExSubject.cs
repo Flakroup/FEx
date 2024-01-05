@@ -1,9 +1,10 @@
-﻿using System;
+﻿using FEx.Rx.Abstractions.Interfaces;
+using System;
 using System.Reactive.Subjects;
 
 namespace FEx.Rx;
 
-public class FExSubject<T> : IDisposable, IObservable<T>
+public class FExSubject<T> : IDisposable, IObservable<T>, IFExSubject<T>
 {
 #pragma warning disable IDISP008
     protected readonly ISubject<T> _subject;
@@ -16,9 +17,9 @@ public class FExSubject<T> : IDisposable, IObservable<T>
         _subject = subject ?? new Subject<T>();
     }
 
-    public IDisposable Subscribe(IObserver<T> observer) => _subject.Subscribe(observer);
-
     public virtual void OnNext(T value) => SynchronizedOnNext(value);
+
+    public IDisposable Subscribe(IObserver<T> observer) => _subject.Subscribe(observer);
 
     protected void SynchronizedOnNext(T value) => Subject.Synchronize(_subject).OnNext(value);
 

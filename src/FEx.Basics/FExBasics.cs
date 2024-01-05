@@ -1,6 +1,5 @@
 ﻿using FEx.Abstractions;
 using FEx.Basics.Abstractions.Interfaces;
-using FEx.Basics.Helpers;
 using FEx.Extensions;
 using Microsoft.Extensions.Logging;
 
@@ -11,7 +10,8 @@ public class FExBasics
     public static IStackTraceProvider StackTraceProvider { get; private set; }
     public static IEventDeliverer EventDeliverer { get; private set; }
     public static ILogger Logger { get; private set; }
-    public static AsyncHelper AsyncHelper { get; private set; }
+
+    public static bool SendEventsInCreationContext { get; set; }
 
     static FExBasics()
     {
@@ -20,12 +20,10 @@ public class FExBasics
 
     public static void Init(IStackTraceProvider stackTraceProvider,
                             IEventDeliverer eventDeliverer,
-                            ILogger logger,
-                            AsyncHelper asyncHelper)
+                            ILogger logger)
     {
         StackTraceProvider = stackTraceProvider.Guard(nameof(stackTraceProvider));
         EventDeliverer = eventDeliverer.Guard(nameof(eventDeliverer));
         Logger = logger.Guard(nameof(logger));
-        AsyncHelper = asyncHelper.Guard(nameof(asyncHelper));
     }
 }

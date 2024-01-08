@@ -1,10 +1,9 @@
 using FEx.Asyncx;
 using FEx.Asyncx.Helpers;
-using FEx.Basics;
+using FEx.Basics.Flow;
 using FEx.Extensions;
 using FEx.Extensions.Base.Models;
 using FEx.Extensions.Web;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -160,15 +159,7 @@ public static class UriExtensions
         return true;
     }
 
-    public static Uri TryGetUri(this string uri) =>
-        uri.IsNotNullOrEmptyString() && Uri.TryCreate(uri, UriKind.Absolute, out Uri uriResult)
-#if NETSTANDARD
-        && uriResult is not null
-#endif
-            ? uriResult
-            : null;
-
-    public static async Task<bool> UrlIsValidAsync(this Uri url, WebRequestParams pars = null)
+    public static async Task<Result<Error>> UrlIsValidAsync(this Uri url, WebRequestParams pars = null)
     {
         try
         {
@@ -193,28 +184,25 @@ public static class UriExtensions
             {
                 //Good requests
                 case >= 100 and < 400:
-                    return true;
+                    return Result<Error>.Success;
                 //Server Errors
                 case >= 500 and <= 510:
-                    FExBasics.Logger.LogDebug(
-                        $"The remote server has thrown an internal error. Url is not valid: {url}");
-
-                    return false;
+                    return new StackError($"The remote server has thrown an internal error. Url is not valid: {url}");
             }
+
+            return new StackError($"The remote server has thrown an unexpected code. Url is not valid: {url}");
         }
         catch (WebException ex)
         {
             if (ex.Status == WebExceptionStatus.ProtocolError) //400 errors
-                return false;
-
-            FExBasics.Logger.LogDebug($"Unhandled status [{ex.Status}] returned for url: {url}", ex);
+                return new ExceptionError(ex, $"Unhandled status [{ex.Status}] returned for url: {url}");
         }
         catch (Exception ex)
         {
-            FExBasics.Logger.LogDebug($"Could not test url {url}.", ex);
+            return new ExceptionError(ex, $"Could not test url {url}.");
         }
 
-        return false;
+        return new StackError($"Could not test url {url}.");
     }
 
     private static async Task<T> InternalDoHttpResponseFuncTaskAsync<T>(

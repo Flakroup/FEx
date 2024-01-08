@@ -13,7 +13,7 @@ public class VirtualizingItemsControl : ItemsControl
     {
         ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(VirtualizingStackPanel)));
 
-        var template = @"
+        const string template = @"
             <ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>
                 <Border
                     BorderThickness='{TemplateBinding Border.BorderThickness}'

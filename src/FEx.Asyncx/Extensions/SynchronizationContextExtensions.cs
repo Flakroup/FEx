@@ -19,7 +19,7 @@ public static class SynchronizationContextExtensions
                                                            object sender,
                                                            Action<AttachedException> handleException = null)
     {
-        context.Guard(nameof(context));
+        _ = context.Guard(nameof(context));
         action.Guard(nameof(action));
         StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
         var postFinished = new TaskCompletionSource<bool>();

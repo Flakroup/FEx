@@ -6,7 +6,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="DynamicData" Version="8.3.27" />
-		<PackageReference Include="ReactiveUI" Version="19.5.31" />
+		<PackageReference Include="ReactiveUI" Version="19.5.39" />
 		<PackageReference Include="System.Reactive.Linq" Version="6.0.0" />
 		<PackageReference Include="System.Threading.Tasks.Dataflow" Version="8.0.0" />
 	</ItemGroup>

@@ -17,8 +17,8 @@ public class ExceptionError : Error, IExceptionError
     {
     }
 
-    public ExceptionError(Exception exception)
-        : base(exception.Message)
+    public ExceptionError(Exception exception, string message = null)
+        : base(message ?? exception.Message)
     {
         Exception = exception;
         StackTraceString = Exception.StackTrace;

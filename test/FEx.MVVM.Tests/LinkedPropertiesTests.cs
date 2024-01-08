@@ -1,4 +1,4 @@
-using FEx.MVVM.BaseObjects;
+using FEx.MVVM.Abstractions;
 using FEx.MVVM.Extensions;
 using Xunit;
 using Xunit.Abstractions;

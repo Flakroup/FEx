@@ -1,5 +1,5 @@
 ﻿using FEx.Abstractions;
-using FEx.Fundamentals;
+using FEx.Asyncx;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Dispatching;
@@ -20,7 +20,7 @@ public class FExMauiDispatcher : BindableObject, IFExDispatcher
         if (MainThread.IsMainThread)
             MainThreadSynchronizationContext = SynchronizationContext.Current;
         else
-            Foundation.AsyncHelper.FireTaskAndForget(async () => MainThreadSynchronizationContext = await MainThread.GetMainThreadSynchronizationContextAsync());
+            FExAsyncx.AsyncHelper.FireTaskAndForget(async () => MainThreadSynchronizationContext = await MainThread.GetMainThreadSynchronizationContextAsync());
     }
 
     public void BeginInvokeOnMainThread(Action action)

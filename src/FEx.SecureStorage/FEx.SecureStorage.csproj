@@ -7,7 +7,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\FEx.Encryption\FEx.Encryption.csproj" />
 		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
-		<ProjectReference Include="..\FEx.Utilities\FEx.Utilities.csproj" />
 	</ItemGroup>
 
 </Project>

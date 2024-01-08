@@ -73,8 +73,7 @@ public class Foundation
 
     private static bool IsDispatcherContext { get; set; }
 
-    public Foundation(IFExDispatcher dispatcher,
-                      IAppInfoProvider appInfoProvider)
+    public Foundation(IFExDispatcher dispatcher, IAppInfoProvider appInfoProvider)
     {
         Dispatcher = dispatcher;
         AppInfoProvider = appInfoProvider;
@@ -98,7 +97,7 @@ public class Foundation
         ServiceProvider = serviceProviderConfiguration();
     }
 
-    private static void SetMainThread()
+    public static void SetMainThread()
     {
         Thread currentThread = Thread.CurrentThread;
 
@@ -113,7 +112,7 @@ public class Foundation
         MainThread = currentThread;
 
         if (IsUIApp)
-            MainThread.GetThreadSynchronizationContext(true);
+            _ = MainThread.GetThreadSynchronizationContext(true);
     }
 
     private static bool IsPlatformMainThread(Thread currentThread) =>

@@ -16,6 +16,7 @@ namespace FEx.Fundamentals;
 [Register(typeof(AppInfoProvider), Scope.SingleInstance, typeof(IAppInfoProvider))]
 [Register(typeof(EventDeliverer), Scope.SingleInstance, typeof(IEventDeliverer))]
 [Register(typeof(TasksInfoSubject), Scope.SingleInstance, typeof(ITasksInfoSubject))]
+[Register(typeof(ExceptionHandler), Scope.SingleInstance, typeof(IExceptionHandler))]
 [Register(typeof(FExFundamentalsModuleInitializer), Scope.SingleInstance, typeof(FExFundamentalsModuleInitializer), typeof(IInitializeModule))]
 public class FExFundamentalsModule
 {

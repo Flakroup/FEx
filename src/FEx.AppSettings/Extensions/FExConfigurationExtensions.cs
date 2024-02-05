@@ -11,11 +11,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace FEx.AppSettings;
+namespace FEx.AppSettings.Extensions;
 
 public static class FExConfigurationExtensions
 {
-    public static T VerifyAppSettings<T>(this T appSettings, params Expression<Func<T, object>>[] keys)
+    public static T VerifyAppSettings<T>(this T appSettings, params Expression<Func<T, object>>[] keys) where T : class
     {
         appSettings.Guard(nameof(appSettings), $"{nameof(appSettings)} cannot be null");
 

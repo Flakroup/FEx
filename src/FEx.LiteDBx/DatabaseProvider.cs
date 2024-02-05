@@ -1,10 +1,10 @@
 ﻿using FEx.Basics.Utilities;
-using FEx.LiteDbx.Abstractions.Interfaces;
+using FEx.LiteDBx.Abstractions.Interfaces;
 using LiteDB;
 using System;
 using System.IO;
 
-namespace FEx.LiteDbx;
+namespace FEx.LiteDBx;
 
 public sealed class DatabaseProvider : IDatabaseProvider, IDisposable
 {

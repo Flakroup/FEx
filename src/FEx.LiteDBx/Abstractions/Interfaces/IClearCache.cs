@@ -1,6 +1,6 @@
-using FEx.LiteDbx.Enums;
+using FEx.LiteDBx.Enums;
 
-namespace FEx.LiteDbx.Abstractions.Interfaces;
+namespace FEx.LiteDBx.Abstractions.Interfaces;
 
 public interface IClearCache
 {

@@ -1,14 +1,12 @@
 ﻿using FEx.Basics.Abstractions.Interfaces;
 using FEx.Extensions;
-using FEx.Extensions.Base.Helpers;
 using JetBrains.Annotations;
-using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace FEx.Basics.Abstractions;
 
-public abstract class NotifyPropertyChanged : IFExNotifyPropertyChanged
+public abstract class NotifyPropertyChanged : PropertyChangeAware, IFExNotifyPropertyChanged
 {
     public event PropertyChangedEventHandler PropertyChanged;
 
@@ -21,8 +19,10 @@ public abstract class NotifyPropertyChanged : IFExNotifyPropertyChanged
             OnPropertyChanged(propertyName);
     }
 
-    public virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    public override void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
+        base.OnPropertyChanged(propertyName);
+
         if (propertyName is null
             || PropertyChanged is null)
             return;
@@ -32,27 +32,6 @@ public abstract class NotifyPropertyChanged : IFExNotifyPropertyChanged
         return;
 
         void EventDelegate() => NotifyChanged(propertyName);
-    }
-
-    public virtual bool SetProperty<TRet>(ref TRet backingField,
-                                          TRet newValue,
-                                          Action<TRet> onPropertyChanged = null,
-                                          [CallerMemberName] string propertyName = null)
-    {
-        if (EqualityHelper.IsEqual(ref backingField, newValue))
-            return false;
-
-        TRet oldValue = backingField;
-        backingField = newValue;
-        OnPropertySet(oldValue, newValue, propertyName);
-        OnPropertyChanged(propertyName);
-        onPropertyChanged?.Invoke(newValue);
-
-        return true;
-    }
-
-    protected virtual void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
-    {
     }
 
     [NotifyPropertyChangedInvocator]

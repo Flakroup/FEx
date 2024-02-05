@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions;
+﻿using FEx.Abstractions.Interfaces;
 using FEx.Basics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

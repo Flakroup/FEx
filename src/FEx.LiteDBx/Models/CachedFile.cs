@@ -1,13 +1,13 @@
 using FEx.Basics.Abstractions;
 using FEx.Extensions.IO;
-using FEx.LiteDbx.Abstractions.Interfaces;
+using FEx.LiteDBx.Abstractions.Interfaces;
 using LiteDB;
 using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.LiteDbx.Models;
+namespace FEx.LiteDBx.Models;
 
 public sealed class CachedFile : NotifyPropertyChanged, ICachedFile, IDisposable
 #if NET

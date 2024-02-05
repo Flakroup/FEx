@@ -1,5 +1,6 @@
 ﻿using FEx.Abstractions;
 using FEx.Fundamentals;
+using FEx.Logging.Extensions;
 
 namespace FEx.Logging;
 

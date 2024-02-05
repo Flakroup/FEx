@@ -82,8 +82,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
                 double width = GetWidth(finalSize) - 2 * outerSpacing;
                 double height = GetHeight(_expandedItemChild.DesiredSize);
 
-                if (!IsSpacingEnabled
-                    || SpacingMode == SpacingMode.None)
+                if (SpacingMode == SpacingMode.None)
                     width = _itemsPerRowCount * GetWidth(childSize);
 
                 if (Orientation == Orientation.Horizontal)

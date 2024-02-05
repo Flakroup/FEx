@@ -5,7 +5,7 @@ namespace FEx.Basics.Utilities.Comparers;
 
 public sealed class AlphanumComparatorFast : IComparer<string>
 {
-    private static volatile AlphanumComparatorFast _instance;
+    private static AlphanumComparatorFast _instance;
 
     public static AlphanumComparatorFast Instance => _instance ??= new AlphanumComparatorFast();
 
@@ -17,78 +17,49 @@ public sealed class AlphanumComparatorFast : IComparer<string>
 
     public static int Compare(string s1, string s2, StringComparison comparisonType)
     {
-        if (s1 is not null
-            && s2 is not null)
+        if (s1 == null
+            || s2 == null)
+            return 0; // or consider throwing an ArgumentNullException
+
+        int marker1 = 0, marker2 = 0;
+
+        while (marker1 < s1.Length
+               && marker2 < s2.Length)
         {
-            int len1 = s1.Length;
-            int len2 = s2.Length;
-            var marker1 = 0;
-            var marker2 = 0;
+            // Build up two strings to compare either numerically or alphabetically
+            string str1 = ExtractChunk(s1, ref marker1);
+            string str2 = ExtractChunk(s2, ref marker2);
 
-            // Walk through two the strings with two markers.
-            while (marker1 < len1
-                   && marker2 < len2)
+            int result;
+
+            if (char.IsDigit(str1[0])
+                && char.IsDigit(str2[0]))
             {
-                char ch1 = s1[marker1];
-                char ch2 = s2[marker2];
-
-                // Some buffers we can build up characters in for each chunk.
-                var space1 = new char[len1];
-                var loc1 = 0;
-                var space2 = new char[len2];
-                var loc2 = 0;
-
-                // Walk through all following characters that are digits or
-                // characters in BOTH strings starting at the appropriate marker.
-                // Collect char arrays.
-                do
-                {
-                    space1[loc1++] = ch1;
-                    marker1++;
-
-                    if (marker1 < len1)
-                        ch1 = s1[marker1];
-                    else
-                        break;
-                } while (char.IsDigit(ch1) == char.IsDigit(space1[0]));
-
-                do
-                {
-                    space2[loc2++] = ch2;
-                    marker2++;
-
-                    if (marker2 < len2)
-                        ch2 = s2[marker2];
-                    else
-                        break;
-                } while (char.IsDigit(ch2) == char.IsDigit(space2[0]));
-
-                // If we have collected numbers, compare them numerically.
-                // Otherwise, if we have strings, compare them alphabetically.
-                var str1 = new string(space1);
-                var str2 = new string(space2);
-
-                int result;
-
-                if (char.IsDigit(space1[0])
-                    && char.IsDigit(space2[0]))
-                {
-                    var thisNumericChunk = int.Parse(str1);
-                    var thatNumericChunk = int.Parse(str2);
-                    result = thisNumericChunk.CompareTo(thatNumericChunk);
-                }
-                else
-                {
-                    result = string.Compare(str1, str2, comparisonType);
-                }
-
-                if (result != 0)
-                    return result;
+                var numeric1 = int.Parse(str1);
+                var numeric2 = int.Parse(str2);
+                result = numeric1.CompareTo(numeric2);
+            }
+            else
+            {
+                result = string.Compare(str1, str2, comparisonType);
             }
 
-            return len1 - len2;
+            if (result != 0)
+                return result;
         }
 
-        return 0;
+        return s1.Length - s2.Length;
+    }
+
+    private static string ExtractChunk(string str, ref int marker)
+    {
+        int originalMarker = marker;
+        bool isDigit = char.IsDigit(str[marker]);
+
+        while (marker < str.Length
+               && char.IsDigit(str[marker]) == isDigit)
+            marker++;
+
+        return str.Substring(originalMarker, marker - originalMarker);
     }
 }

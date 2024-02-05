@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions;
+﻿using FEx.Abstractions.Interfaces;
 using System.Collections.Generic;
 
 namespace FEx.Extensions.Base.Models;

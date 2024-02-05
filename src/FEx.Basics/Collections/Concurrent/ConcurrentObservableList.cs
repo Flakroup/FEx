@@ -1,5 +1,5 @@
-﻿using FEx.Abstractions;
-using FEx.Basics.Utilities;
+﻿using FEx.Abstractions.Interfaces;
+using FEx.Basics.Utilities.Collections;
 using FEx.Extensions;
 using System;
 using System.Collections.Generic;

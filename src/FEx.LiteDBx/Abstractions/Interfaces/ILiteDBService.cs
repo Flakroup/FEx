@@ -1,10 +1,10 @@
-﻿using FEx.LiteDbx.Enums;
+﻿using FEx.LiteDBx.Enums;
 using LiteDB;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace FEx.LiteDbx.Abstractions.Interfaces;
+namespace FEx.LiteDBx.Abstractions.Interfaces;
 
 public interface ILiteDBService : IFileLocalStorageService
 {

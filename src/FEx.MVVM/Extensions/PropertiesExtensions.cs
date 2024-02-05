@@ -83,40 +83,42 @@ public static class PropertiesExtensions
     public static void LinkChild<T, TProp>(this T sender,
                                            Expression<Func<T, TProp>> property,
                                            Action<TProp> onPropertyChange,
-                                           ILink parentLink) where T : ILinkableNotifyPropertyChanged =>
+                                           ILink parentLink) where T : class, ILinkableNotifyPropertyChanged =>
         sender.InternalLink(property, (_, _, v) => onPropertyChange(v), parentLink);
 
     public static void LinkChild<T, TProp>(this T sender,
                                            Expression<Func<T, TProp>> property,
                                            Action<ILink, TProp> onPropertyChange,
-                                           ILink parentLink) where T : ILinkableNotifyPropertyChanged =>
+                                           ILink parentLink) where T : class, ILinkableNotifyPropertyChanged =>
         sender.InternalLink(property, (l, _, v) => onPropertyChange(l, v), parentLink);
 
     public static void LinkChild<T, TProp>(this T sender,
                                            Expression<Func<T, TProp>> property,
                                            Action<ILink, TProp, TProp> onPropertyChange,
-                                           ILink parentLink) where T : ILinkableNotifyPropertyChanged =>
+                                           ILink parentLink) where T : class, ILinkableNotifyPropertyChanged =>
         sender.InternalLink(property, onPropertyChange, parentLink);
 
     public static void Link<T, TProp>(this T sender,
                                       Expression<Func<T, TProp>> property,
-                                      Action<TProp> onPropertyChange) where T : ILinkableNotifyPropertyChanged =>
+                                      Action<TProp> onPropertyChange) where T : class, ILinkableNotifyPropertyChanged =>
         sender.InternalLink(property, (_, _, v) => onPropertyChange(v));
 
     public static void Link<T, TProp>(this T sender,
                                       Expression<Func<T, TProp>> property,
-                                      Action<ILink, TProp> onPropertyChange) where T : ILinkableNotifyPropertyChanged =>
+                                      Action<ILink, TProp> onPropertyChange)
+        where T : class, ILinkableNotifyPropertyChanged =>
         sender.InternalLink(property, (l, _, v) => onPropertyChange(l, v));
 
     public static void Link<T, TProp>(this T sender,
                                       Expression<Func<T, TProp>> property,
                                       Action<ILink, TProp, TProp> onPropertyChange)
-        where T : ILinkableNotifyPropertyChanged => sender.InternalLink(property, onPropertyChange);
+        where T : class, ILinkableNotifyPropertyChanged =>
+        sender.InternalLink(property, onPropertyChange);
 
     private static void InternalLink<T, TProp>(this T sender,
                                                Expression<Func<T, TProp>> property,
                                                Action<ILink, TProp, TProp> onPropertyChange,
-                                               ILink parentLink = null) where T : ILinkableNotifyPropertyChanged
+                                               ILink parentLink = null) where T : class, ILinkableNotifyPropertyChanged
     {
         sender.Guard(nameof(sender));
         property.Guard(nameof(property));
@@ -127,7 +129,12 @@ public static class PropertiesExtensions
         string propertyName = memberExpression.Member.Name;
         Func<T, TProp> getPropertyValue = property.Compile();
 
-        var link = new Link(typeof(TProp), sender, propertyName, GetPropertyValue, OnPropertyChange, default(TProp),
+        var link = new Link(typeof(TProp),
+            sender,
+            propertyName,
+            GetPropertyValue,
+            OnPropertyChange,
+            default(TProp),
             parentLink);
 
         sender.AddLink(link);

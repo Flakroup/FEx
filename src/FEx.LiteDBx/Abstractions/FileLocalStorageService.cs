@@ -1,8 +1,8 @@
 ﻿using FEx.Extensions;
-using FEx.LiteDbx.Abstractions.Interfaces;
+using FEx.LiteDBx.Abstractions.Interfaces;
 using System;
 
-namespace FEx.LiteDbx.Abstractions
+namespace FEx.LiteDBx.Abstractions
 {
     public abstract class FileLocalStorageService : IFileLocalStorageService
     {

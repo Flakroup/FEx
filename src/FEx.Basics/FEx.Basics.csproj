@@ -5,7 +5,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="DynamicData" Version="8.3.27" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
 		<PackageReference Include="System.Reactive.Linq" Version="6.0.0" />
 	</ItemGroup>
 

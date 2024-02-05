@@ -119,7 +119,7 @@ public static class ObjectExtensions
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="value" /> is a null reference.</exception>
     [ContractAnnotation("value:null => stop; value:notnull=>notnull")]
-    public static T Guard<T>(this T value, [CallerMemberName] string paramName = null, string message = null) =>
+    public static T Guard<T>(this T value, [CallerMemberName] string paramName = null, string message = null) where T : class =>
         value.Guard(v => v is null, paramName, message);
 
     /// <summary>
@@ -137,15 +137,9 @@ public static class ObjectExtensions
     /// <remarks>
     ///     Throws a <see cref="ArgumentNullException" /> if the condition is false.
     /// </remarks>
-    public static T Guard<T>(this T value, Func<T, bool> func, string paramName, string message = null)
+    public static T Guard<T>(this T value, Func<T, bool> func, string paramName, string message = null) where T : class
     {
-        Guardian.For(() =>
-        {
-            if (func(value))
-                return true;
-
-            return false;
-        }, new ArgumentNullException(paramName, message));
+        Guardian.For(() => func(value), new ArgumentNullException(paramName, message));
 
         return value;
     }
@@ -206,12 +200,13 @@ public static class ObjectExtensions
     /// </returns>
     public static bool IsIn<T>(this T item, params T[] items) => item.IsIn((IEnumerable<T>)items);
 
-    public static bool IsIn<T>(this T item, IEnumerable<T> items) => items switch
-    {
-        ISet<T> iSet => iSet.Contains(item),
-        ICollection<T> col => col.Contains(item),
-        _ => items.Contains(item)
-    };
+    public static bool IsIn<T>(this T item, IEnumerable<T> items) =>
+        items switch
+        {
+            ISet<T> iSet => iSet.Contains(item),
+            ICollection<T> col => col.Contains(item),
+            _ => items.Contains(item)
+        };
 
     public static bool IsNotIn<T>(this T item, params T[] items) => item.IsNotIn((IEnumerable<T>)items);
 

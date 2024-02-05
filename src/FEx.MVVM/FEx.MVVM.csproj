@@ -10,6 +10,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
 		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
 		<ProjectReference Include="..\FEx.Rx\FEx.Rx.csproj" />
 	</ItemGroup>

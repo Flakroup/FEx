@@ -1,4 +1,4 @@
-namespace FEx.LiteDbx.Abstractions.Interfaces;
+namespace FEx.LiteDBx.Abstractions.Interfaces;
 
 public interface IDatabaseFilePathResolver
 {

@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="StrongInject" Version="1.4.4" />
+	  <PackageReference Include="StrongInject.Extensions.DependencyInjection" Version="1.4.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
+	  <ProjectReference Include="..\FEx.Platforms.Abstractions\FEx.Platforms.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

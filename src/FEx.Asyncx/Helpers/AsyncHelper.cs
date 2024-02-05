@@ -1,4 +1,4 @@
-using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
 using FEx.Asyncx.Enums;
 using FEx.Asyncx.Utilities;
 using FEx.Extensions;
@@ -18,7 +18,7 @@ public class AsyncHelper
     private readonly IFExDispatcher _dispatcher;
     private readonly ILogger<AsyncHelper> _logger;
 
-    public TimeSpan DefaultDelayTimeSpan { get; set; } = TimeSpan.FromMilliseconds(15);
+    public static TimeSpan DefaultDelay { get; set; } = TimeSpan.FromMilliseconds(250);
 
     public AsyncHelper(IFExDispatcher dispatcher, ILogger<AsyncHelper> logger, ITasksInfoSubject tasksInfoSubject)
     {
@@ -84,17 +84,24 @@ public class AsyncHelper
         return deferredList.Select(x => FireTaskAndForget(x, asyncMode)).ToList().AsReadOnly();
     }
 
-    public async Task ExecuteTaskOnThreadPoolAsync(Func<Task> task, bool logException = true) =>
-        await ExecuteTaskOnThreadPoolAsync(() => WrapTaskAsync(task), logException);
-
-    public async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> taskFunc, bool logException = true)
+    public async Task ExecuteOnThreadPoolAsync(Action action,
+                                               bool immediateStart = true,
+                                               bool logException = true,
+                                               CancellationToken cancellationToken = default)
     {
-        //todo enhance with valueTasks
-        Task<T> task = await ExecuteOnThreadPoolAsync(taskFunc);
+        if (immediateStart)
+        {
+            await ExecuteTaskOnThreadPoolAsync(() => Task.Run(action, cancellationToken), false);
+
+            return;
+        }
 
         try
         {
-            return await task;
+            if (Thread.CurrentThread.IsThreadPoolThread)
+                action();
+
+            await new TaskFactory(TaskScheduler.Default).StartNew(action, cancellationToken);
         }
         catch (Exception ex) when (logException)
         {
@@ -105,15 +112,71 @@ public class AsyncHelper
     }
 
     public async Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func,
+                                                     bool immediateStart = true,
                                                      bool logException = true,
                                                      CancellationToken cancellationToken = default)
     {
-        if (Thread.CurrentThread.IsThreadPoolThread)
-            return func();
+        //todo enhance with valueTasks
+        if (immediateStart)
+            return await ExecuteTaskOnThreadPoolAsync(() => Task.Run(func, cancellationToken), false);
 
         try
         {
+            if (Thread.CurrentThread.IsThreadPoolThread)
+                return func();
+
             return await new TaskFactory(TaskScheduler.Default).StartNew(func, cancellationToken);
+        }
+        catch (Exception ex) when (logException)
+        {
+            _logger.LogError(ex, ex.Message);
+
+            throw;
+        }
+    }
+
+    public async Task ExecuteTaskOnThreadPoolAsync(Func<Task> func,
+                                                   bool immediateStart = true,
+                                                   bool logException = true)
+    {
+        Func<Task> effectiveFunc = immediateStart
+            ? () => Task.Run(func)
+            : func;
+
+        try
+        {
+            if (Thread.CurrentThread.IsThreadPoolThread)
+            {
+                await effectiveFunc();
+
+                return;
+            }
+
+            await await new TaskFactory(TaskScheduler.Default).StartNew(effectiveFunc);
+        }
+        catch (Exception ex) when (logException)
+        {
+            _logger.LogError(ex, ex.Message);
+
+            throw;
+        }
+    }
+
+    public async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> func,
+                                                         bool immediateStart = true,
+                                                         bool logException = true)
+    {
+        //todo enhance with valueTasks
+        Func<Task<T>> effectiveFunc = immediateStart
+            ? () => Task.Run(func)
+            : func;
+
+        try
+        {
+            if (Thread.CurrentThread.IsThreadPoolThread)
+                return await effectiveFunc();
+
+            return await await new TaskFactory(TaskScheduler.Default).StartNew(effectiveFunc);
         }
         catch (Exception ex) when (logException)
         {
@@ -196,7 +259,11 @@ public class AsyncHelper
                                       bool logException = true,
                                       CancellationToken cancellationToken = default) =>
         await ExecuteTaskOnThreadPoolAsync(() =>
-                InternalDelayUntilAsync(predicate, action, milliseconds, logException, cancellationToken),
+                InternalDelayUntilAsync(predicate,
+                    action,
+                    GetDelayTimeSpan(milliseconds),
+                    logException,
+                    cancellationToken),
             logException);
 
     public async Task DelayUntilAsync(Func<Task<bool>> predicate,
@@ -205,25 +272,29 @@ public class AsyncHelper
                                       bool logException = true,
                                       CancellationToken cancellationToken = default) =>
         await ExecuteTaskOnThreadPoolAsync(() =>
-                InternalDelayUntilAsync(predicate, action, milliseconds, logException, cancellationToken),
+                InternalDelayUntilAsync(predicate,
+                    action,
+                    GetDelayTimeSpan(milliseconds),
+                    logException,
+                    cancellationToken),
             logException);
 
-    public async Task DelayUntilWithTimeSpanAsync(Func<bool> predicate,
-                                                  Action action = null,
-                                                  TimeSpan? timeSpan = null,
-                                                  bool logException = true,
-                                                  CancellationToken cancellationToken = default) =>
+    public async Task DelayUntilAsync(Func<bool> predicate,
+                                      Action action = null,
+                                      TimeSpan? timeSpan = null,
+                                      bool logException = true,
+                                      CancellationToken cancellationToken = default) =>
         await ExecuteTaskOnThreadPoolAsync(() =>
-                InternalDelayUntilAsync(predicate, action, timeSpan, logException, cancellationToken),
+                InternalDelayUntilAsync(predicate, action, GetDelayTimeSpan(timeSpan), logException, cancellationToken),
             logException);
 
-    public async Task DelayUntilWithTimeSpanAsync(Func<Task<bool>> predicate,
-                                                  Action action = null,
-                                                  TimeSpan? timeSpan = null,
-                                                  bool logException = true,
-                                                  CancellationToken cancellationToken = default) =>
+    public async Task DelayUntilAsync(Func<Task<bool>> predicate,
+                                      Action action = null,
+                                      TimeSpan? timeSpan = null,
+                                      bool logException = true,
+                                      CancellationToken cancellationToken = default) =>
         await ExecuteTaskOnThreadPoolAsync(() =>
-                InternalDelayUntilAsync(predicate, action, timeSpan, logException, cancellationToken),
+                InternalDelayUntilAsync(predicate, action, GetDelayTimeSpan(timeSpan), logException, cancellationToken),
             logException);
 
     /// <summary>
@@ -239,9 +310,7 @@ public class AsyncHelper
                                                bool logException = true,
                                                CancellationToken cancellationToken = default)
     {
-        TimeSpan delayTimeSpan = delayMilliseconds < 1
-            ? DefaultDelayTimeSpan
-            : TimeSpan.FromMilliseconds(delayMilliseconds);
+        TimeSpan delayTimeSpan = GetDelayTimeSpan(delayMilliseconds);
 
         try
         {
@@ -260,12 +329,24 @@ public class AsyncHelper
                                                bool logException = true,
                                                CancellationToken cancellationToken = default)
     {
-        if (delayTimeSpan is null
-            || delayTimeSpan.Value <= TimeSpan.Zero)
-            delayTimeSpan = DefaultDelayTimeSpan;
+        delayTimeSpan = GetDelayTimeSpan(delayTimeSpan);
 
         await DelayAsync(delayTimeSpan.Value, logException, cancellationToken);
         action?.Invoke();
+    }
+
+    private static TimeSpan GetDelayTimeSpan(double delayMilliseconds) =>
+        delayMilliseconds < 1
+            ? DefaultDelay
+            : TimeSpan.FromMilliseconds(delayMilliseconds);
+
+    private static TimeSpan GetDelayTimeSpan(TimeSpan? delayTimeSpan)
+    {
+        if (!delayTimeSpan.HasValue
+            || delayTimeSpan.Value <= TimeSpan.Zero)
+            delayTimeSpan = DefaultDelay;
+
+        return delayTimeSpan.Value;
     }
 
     private static object Wrap(Action action)
@@ -300,56 +381,26 @@ public class AsyncHelper
     }
 
     private async Task InternalDelayUntilAsync(Func<bool> predicate,
-                                               Action action = null,
-                                               double delayMilliseconds = 0,
+                                               Action action,
+                                               TimeSpan delayTimeSpan,
                                                bool logException = true,
                                                CancellationToken cancellationToken = default)
     {
-        if (predicate is null
-            || !predicate())
-            return;
-
-        while (predicate()
-               && !cancellationToken.IsCancellationRequested)
-            await WaitAndInvokeActionAsync(delayMilliseconds, action, logException, cancellationToken);
-    }
-
-    private async Task InternalDelayUntilAsync(Func<Task<bool>> predicate,
-                                               Action action = null,
-                                               double delayMilliseconds = 0,
-                                               bool logException = true,
-                                               CancellationToken cancellationToken = default)
-    {
-        bool result = predicate is not null && await predicate();
+        bool result = predicate is not null && predicate();
 
         if (!result)
             return;
 
         while (result && !cancellationToken.IsCancellationRequested)
         {
-            await WaitAndInvokeActionAsync(delayMilliseconds, action, logException, cancellationToken);
-            result = await predicate();
+            await WaitAndInvokeActionAsync(delayTimeSpan, action, logException, cancellationToken);
+            result = predicate();
         }
     }
 
-    private async Task InternalDelayUntilAsync(Func<bool> predicate,
-                                               Action action = null,
-                                               TimeSpan? delayTimeSpan = null,
-                                               bool logException = true,
-                                               CancellationToken cancellationToken = default)
-    {
-        if (predicate is null
-            || !predicate())
-            return;
-
-        while (predicate()
-               && !cancellationToken.IsCancellationRequested)
-            await WaitAndInvokeActionAsync(delayTimeSpan, action, logException, cancellationToken);
-    }
-
     private async Task InternalDelayUntilAsync(Func<Task<bool>> predicate,
-                                               Action action = null,
-                                               TimeSpan? delayTimeSpan = null,
+                                               Action action,
+                                               TimeSpan delayTimeSpan,
                                                bool logException = true,
                                                CancellationToken cancellationToken = default)
     {
@@ -380,7 +431,7 @@ public class AsyncHelper
                 AsyncMode.MainThread => await ExecuteTaskOnThreadPoolAsync(() =>
                         _dispatcher.InvokeOnMainThreadAsync(func),
                     false),
-                AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(func, false, cancellationToken),
+                AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(func, true, false, cancellationToken),
                 _ => await Task.Run(func, cancellationToken)
             };
 

@@ -1,8 +1,8 @@
-﻿using FEx.LiteDbx.Abstractions.Interfaces;
-using FEx.LiteDbx.Services;
+﻿using FEx.LiteDBx.Abstractions.Interfaces;
+using FEx.LiteDBx.Services;
 using StrongInject;
 
-namespace FEx.LiteDbx;
+namespace FEx.LiteDBx;
 
 [Register(typeof(LiteDBService), typeof(ILiteDBService))]
 [Register(typeof(DatabaseProvider), Scope.SingleInstance, typeof(IDatabaseProvider))]

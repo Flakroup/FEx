@@ -1,6 +1,6 @@
 ﻿using LiteDB;
 
-namespace FEx.LiteDbx.Abstractions.Interfaces;
+namespace FEx.LiteDBx.Abstractions.Interfaces;
 
 public interface ICacheableItem
 {

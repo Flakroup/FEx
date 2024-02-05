@@ -1,15 +1,15 @@
 ﻿using FEx.Basics.Utilities;
 using FEx.Extensions.Collections.Lists;
-using FEx.LiteDbx.Abstractions.Interfaces;
-using FEx.LiteDbx.Enums;
-using FEx.LiteDbx.Extensions;
+using FEx.LiteDBx.Abstractions.Interfaces;
+using FEx.LiteDBx.Enums;
+using FEx.LiteDBx.Extensions;
 using LiteDB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace FEx.LiteDbx.Services;
+namespace FEx.LiteDBx.Services;
 
 public sealed class LiteDBService : ILiteDBService
 {

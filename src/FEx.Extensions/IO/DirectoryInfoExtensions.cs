@@ -1,12 +1,12 @@
-﻿using FEx.Extensions.Base;
-using System;
+﻿using System;
 using System.IO;
+using FEx.Extensions.Base.IO;
 
 namespace FEx.Extensions.IO;
 
 public static class DirectoryInfoExtensions
 {
-    public static bool IsNtfs(this DirectoryInfo dir) => FileSystemCommon.IsPathNtfs(dir.FullName);
+    public static bool IsNtfs(this DirectoryInfo dir) => FileSystemHelper.IsPathNtfs(dir.FullName);
 
     public static string GetDescendantPath(this DirectoryInfo dir, params string[] descendants)
     {

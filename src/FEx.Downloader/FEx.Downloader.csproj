@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="StrongInject.Extensions.DependencyInjection" Version="1.4.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+		<ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
+		<ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
+		<ProjectReference Include="..\FEx.Rx\FEx.Rx.csproj" />
+		<ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
+	</ItemGroup>
+
+</Project>

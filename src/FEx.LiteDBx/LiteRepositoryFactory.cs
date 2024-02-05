@@ -1,7 +1,7 @@
 ﻿using LiteDB;
 using System.IO;
 
-namespace FEx.LiteDbx;
+namespace FEx.LiteDBx;
 
 public class LiteRepositoryFactory
 {

@@ -78,9 +78,9 @@ internal class ItemContainerManager : IItemContainerManager
     public IEnumerable<IItemContainerInfo> CachedContainers => _cachedContainers;
 #endif
 
-    private readonly HashSet<IItemContainerInfo> _realizedContainers = new();
+    private readonly HashSet<IItemContainerInfo> _realizedContainers = [];
 
-    private readonly HashSet<IItemContainerInfo> _cachedContainers = new();
+    private readonly HashSet<IItemContainerInfo> _cachedContainers = [];
 
     private readonly ItemContainerGenerator _itemContainerGenerator;
 

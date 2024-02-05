@@ -132,10 +132,23 @@ public static class StreamExtensions
 
         try
         {
-            streamToCopy.Guard(nameof(streamToCopy)).Seek(0, SeekOrigin.Begin);
+            streamToCopy.Guard(nameof(streamToCopy));
+
+            if (streamToCopy.CanSeek)
+                streamToCopy.Seek(0, SeekOrigin.Begin);
+
             var stream = new MemoryStream();
             await streamToCopy.CopyToAsync(stream, defaultBufferSize, cancellationToken);
             stream.Seek(0, SeekOrigin.Begin);
+
+            if (disposeSource)
+#pragma warning disable IDISP007
+#if NETSTANDARD
+                streamToCopy.Dispose();
+#else
+                await streamToCopy.DisposeAsync();
+#endif
+#pragma warning restore IDISP007
 
             return stream;
         }
@@ -143,37 +156,27 @@ public static class StreamExtensions
         {
             return null;
         }
-        finally
-        {
-            if (disposeSource)
-                // ReSharper disable MethodHasAsyncOverload
-#pragma warning disable VSTHRD103
-#pragma warning disable IDISP007
-                streamToCopy?.Dispose();
-#pragma warning restore IDISP007
-#pragma warning restore VSTHRD103
-            // ReSharper restore MethodHasAsyncOverload
-        }
     }
 
     public static MemoryStream CopyToMemoryStream(this Stream streamToCopy, bool disposeSource = false)
     {
-        try
-        {
-            streamToCopy.Guard(nameof(streamToCopy)).Seek(0, SeekOrigin.Begin);
-            var stream = new MemoryStream();
-            streamToCopy.CopyTo(stream);
-            stream.Seek(0, SeekOrigin.Begin);
+        const int defaultBufferSize = 81920;
 
-            return stream;
-        }
-        finally
-        {
-            if (disposeSource)
+        streamToCopy.Guard(nameof(streamToCopy));
+
+        if (streamToCopy.CanSeek)
+            streamToCopy.Seek(0, SeekOrigin.Begin);
+
+        var stream = new MemoryStream();
+        streamToCopy.CopyTo(stream, defaultBufferSize);
+        stream.Seek(0, SeekOrigin.Begin);
+
+        if (disposeSource)
 #pragma warning disable IDISP007
-                streamToCopy?.Dispose();
+            streamToCopy.Dispose();
 #pragma warning restore IDISP007
-        }
+
+        return stream;
     }
 
     public static string ComputeMd5Hash(this Stream data,

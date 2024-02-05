@@ -50,7 +50,7 @@ public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILi
             link.ResetProperty();
     }
 
-    protected override void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
+    public override void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
     {
         base.OnPropertySet(oldValue, newValue, propertyName);
 

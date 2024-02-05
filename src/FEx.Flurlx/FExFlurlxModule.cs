@@ -1,4 +1,4 @@
-using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
 using FEx.Flurlx.Abstractions.Interfaces;
 using StrongInject;
 

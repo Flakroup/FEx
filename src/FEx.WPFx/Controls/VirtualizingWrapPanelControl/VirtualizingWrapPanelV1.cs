@@ -90,7 +90,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     protected override Size CalculateExtent(Size availableSize)
     {
         double extentWidth =
-            IsSpacingEnabled && SpacingMode != SpacingMode.None && !double.IsInfinity(GetWidth(availableSize))
+            SpacingMode != SpacingMode.None && !double.IsInfinity(GetWidth(availableSize))
                 ? GetWidth(availableSize)
                 : GetWidth(_childSize) * _itemsPerRowCount;
 
@@ -300,9 +300,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
         double totalItemsWidth = Math.Min(GetWidth(childSize) * _itemsPerRowCount, finalWidth);
         double unusedWidth = finalWidth - totalItemsWidth;
 
-        SpacingMode spacingMode = IsSpacingEnabled
-            ? SpacingMode
-            : SpacingMode.None;
+        SpacingMode spacingMode = SpacingMode;
 
         switch (spacingMode)
         {
@@ -455,7 +453,8 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     }
 
     #region Deprecated properties
-    [Obsolete("Use SpacingMode")] public static readonly DependencyProperty IsSpacingEnabledProperty =
+    [Obsolete("Use SpacingMode")]
+    public static readonly DependencyProperty IsSpacingEnabledProperty =
         DependencyProperty.Register(nameof(IsSpacingEnabled), typeof(bool), typeof(VirtualizingWrapPanelV1),
             new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsMeasure));
 

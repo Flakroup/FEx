@@ -1,8 +1,8 @@
-﻿using FEx.Abstractions;
-using FEx.LiteDbx.Abstractions.Interfaces;
+﻿using FEx.Abstractions.Interfaces;
+using FEx.LiteDBx.Abstractions.Interfaces;
 using System.IO;
 
-namespace FEx.LiteDbx;
+namespace FEx.LiteDBx;
 
 public class DatabaseFilePathResolver : IDatabaseFilePathResolver
 {

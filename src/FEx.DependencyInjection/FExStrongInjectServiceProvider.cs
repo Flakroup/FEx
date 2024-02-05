@@ -1,4 +1,4 @@
-using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 using System;

@@ -15,7 +15,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     private readonly IChildrenCollection _childrenCollection;
 
     private readonly List<object> _items;
-    private readonly Dictionary<object, Size> _itemSizesCache = new();
+    private readonly Dictionary<object, Size> _itemSizesCache = [];
 
     private Size? _sizeOfFirstItem;
     private Size? _averageItemSizeCache;

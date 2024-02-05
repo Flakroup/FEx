@@ -1,6 +1,6 @@
 using System;
 
-namespace FEx.LiteDbx.Enums;
+namespace FEx.LiteDBx.Enums;
 
 [Flags]
 public enum ClearCacheReason

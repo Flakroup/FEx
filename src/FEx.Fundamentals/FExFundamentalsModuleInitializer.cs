@@ -1,4 +1,5 @@
 ﻿using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
 using FEx.Asyncx;
 using FEx.Asyncx.Helpers;
 using FEx.Basics;
@@ -17,13 +18,17 @@ public class FExFundamentalsModuleInitializer : InitializeModule
     private readonly IExceptionHandler _exceptionHandler;
     private readonly IStackTraceProvider _stackTraceProvider;
     private readonly IEventDeliverer _eventDeliverer;
+    private readonly ISynchronizedAccessService _synchronizedAccessService;
+    private readonly IAppInfoProvider _appInfoProvider;
 
     public FExFundamentalsModuleInitializer(Foundation foundation,
                                             ILogger logger,
                                             AsyncHelper asyncHelper,
                                             IExceptionHandler exceptionHandler,
                                             IStackTraceProvider stackTraceProvider,
-                                            IEventDeliverer eventDeliverer)
+                                            IEventDeliverer eventDeliverer,
+                                            ISynchronizedAccessService synchronizedAccessService,
+                                            IAppInfoProvider appInfoProvider)
     {
         _foundation = foundation;
         _logger = logger;
@@ -31,13 +36,15 @@ public class FExFundamentalsModuleInitializer : InitializeModule
         _exceptionHandler = exceptionHandler;
         _stackTraceProvider = stackTraceProvider;
         _eventDeliverer = eventDeliverer;
+        _synchronizedAccessService = synchronizedAccessService;
+        _appInfoProvider = appInfoProvider;
     }
 
     protected override void OnInitialize()
     {
-        _foundation.Guard();
         FExExtensionsCommon.Initialize(_exceptionHandler.Guard(nameof(_exceptionHandler)));
-        FExBasics.Init(_stackTraceProvider, _eventDeliverer, _logger);
-        FExAsyncx.Init(_asyncHelper, Foundation.MainThread);
+        _foundation.Guard(nameof(_foundation));
+        FExBasics.Init(_stackTraceProvider, _eventDeliverer, _logger, _synchronizedAccessService, _appInfoProvider);
+        FExAsyncx.Init(_asyncHelper, FExBasics.MainThread);
     }
 }

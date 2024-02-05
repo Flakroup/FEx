@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions;
+﻿using FEx.Abstractions.Interfaces;
 using FEx.Basics.Collections.Concurrent;
 using FEx.Rx;
 using FEx.Rx.Extensions;

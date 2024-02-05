@@ -1,11 +1,11 @@
-﻿using FEx.LiteDbx.Abstractions;
-using FEx.LiteDbx.Abstractions.Interfaces;
-using FEx.LiteDbx.Models;
+﻿using FEx.LiteDBx.Abstractions;
+using FEx.LiteDBx.Abstractions.Interfaces;
+using FEx.LiteDBx.Models;
 using LiteDB;
 using System;
 using System.IO;
 
-namespace FEx.LiteDbx.Services;
+namespace FEx.LiteDBx.Services;
 
 public class LiteDbFileLocalStorageService : FileLocalStorageService
 {

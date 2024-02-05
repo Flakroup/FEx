@@ -4,7 +4,7 @@ using System.Reactive.Subjects;
 
 namespace FEx.Rx;
 
-public class FExSubject<T> : IDisposable, IObservable<T>, IFExSubject<T>
+public class FExSubject<T> : IFExSubject<T>
 {
 #pragma warning disable IDISP008
     protected readonly ISubject<T> _subject;
@@ -19,6 +19,12 @@ public class FExSubject<T> : IDisposable, IObservable<T>, IFExSubject<T>
 
     public virtual void OnNext(T value) => SynchronizedOnNext(value);
 
+    /// <summary>Notifies the provider that an observer is to receive notifications.</summary>
+    /// <param name="observer">The object that is to receive notifications.</param>
+    /// <returns>
+    /// A reference to an interface that allows observers to stop receiving notifications before the provider has
+    /// finished sending them.
+    /// </returns>
     public IDisposable Subscribe(IObserver<T> observer) => _subject.Subscribe(observer);
 
     protected void SynchronizedOnNext(T value) => Subject.Synchronize(_subject).OnNext(value);

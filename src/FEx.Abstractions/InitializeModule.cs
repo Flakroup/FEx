@@ -1,3 +1,5 @@
+using FEx.Abstractions.Interfaces;
+
 namespace FEx.Abstractions;
 
 public abstract class InitializeModule : IInitializeModule

@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions;
+﻿using FEx.Abstractions.Interfaces;
 using FEx.Logging.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using Serilog.Extensions.Logging;

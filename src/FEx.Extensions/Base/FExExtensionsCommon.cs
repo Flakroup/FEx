@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions;
+﻿using FEx.Abstractions.Interfaces;
 using FEx.Extensions.Base.Implementations;
 
 namespace FEx.Extensions.Base;

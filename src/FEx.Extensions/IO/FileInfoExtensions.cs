@@ -1,7 +1,7 @@
-﻿using FEx.Extensions.Base;
-using FEx.Extensions.Base.Converters;
+﻿using FEx.Extensions.Base.Converters;
 using FEx.Extensions.Base.Enums;
 using FEx.Extensions.Base.Helpers;
+using FEx.Extensions.Base.IO;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -110,7 +110,7 @@ public static class FileInfoExtensions
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }
 
-    public static bool IsNtfs(this FileInfo file) => FileSystemCommon.IsPathNtfs(file.FullName);
+    public static bool IsNtfs(this FileInfo file) => FileSystemHelper.IsPathNtfs(file.FullName);
 
     /// <summary>
     ///     Computes the md5 hash.

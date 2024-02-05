@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using FEx.Avaloniax.Abstractions;
-using FEx.Extensions;
 using ReactiveUI;
 using System;
 using System.Reflection;
@@ -11,14 +10,27 @@ public class AppViewLocator : IViewLocator
 {
     public bool SupportsRecycling => false;
 
+    /// <summary>
+    /// Determines the view for an associated ViewModel.
+    /// </summary>
+    /// <typeparam name="T">The view model type.</typeparam>
+    /// <param name="viewModel">View model.</param>
+    /// <param name="contract">Contract.</param>
+    /// <returns>The view associated with the given view model.</returns>
     public IViewFor ResolveView<T>(T viewModel, string contract = null)
     {
-        if (viewModel.Guard(nameof(viewModel)) is not FExAvaloniaViewModelBase)
-            throw new ArgumentOutOfRangeException(viewModel.GetType().Name);
+        if (viewModel is null)
+            throw new ArgumentNullException(nameof(viewModel));
 
-        Assembly vmAssembly = viewModel.GetType().Assembly;
-        string name = viewModel.GetType().FullName!.Replace("ViewModel", "View");
-        Type type = vmAssembly.GetType(name) ?? throw new ArgumentOutOfRangeException(viewModel.GetType().Name);
+        Type vmType = viewModel.GetType();
+
+        if (viewModel is not FExAvaloniaViewModelBase)
+            throw new ArgumentOutOfRangeException(nameof(viewModel),
+                $"{vmType.Name} does not inherit from {nameof(FExAvaloniaViewModelBase)}");
+
+        Assembly vmAssembly = vmType.Assembly;
+        string name = vmType.Name!.Replace("ViewModel", "View");//todo cache types and check inheritance 
+        Type type = vmAssembly.GetType(name) ?? throw new ArgumentOutOfRangeException(vmType.Name);
         var view = (IViewFor)Activator.CreateInstance(type);
 
         if (view is StyledElement styledElement)

@@ -18,7 +18,7 @@ public class AsyncHelper
     private readonly IFExDispatcher _dispatcher;
     private readonly ILogger<AsyncHelper> _logger;
 
-    public static TimeSpan DefaultDelay { get; set; } = TimeSpan.FromMilliseconds(250);
+    public static TimeSpan DefaultDelay { get; set; } = TimeSpan.FromMilliseconds(25);
 
     public AsyncHelper(IFExDispatcher dispatcher, ILogger<AsyncHelper> logger, ITasksInfoSubject tasksInfoSubject)
     {

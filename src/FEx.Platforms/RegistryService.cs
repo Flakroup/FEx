@@ -224,11 +224,9 @@ public class RegistryService : IRegistryService
     {
         using RegistryKey reg = GetOrAddCurrentUserSubKey(path);
 
-#pragma warning disable CA1416
         if (PlatformInfoProvider.IsWindows
             && !reg.GetValueNames().Contains(keyName))
             reg.SetValue(keyName, getNewValue(), RegistryValueKind.String);
-#pragma warning restore CA1416
 
         return reg.GetKeyValue<string>(keyName);
     }
@@ -312,3 +310,4 @@ public class RegistryService : IRegistryService
         return GetSubKey(root, subKey, writable);
     }
 }
+#pragma warning restore CA1416

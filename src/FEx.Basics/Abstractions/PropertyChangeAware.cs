@@ -6,6 +6,15 @@ namespace FEx.Basics.Abstractions;
 
 public class PropertyChangeAware
 {
+    public virtual void OnPropertiesChanged(params string[] propertyNames)
+    {
+        if (!(propertyNames?.Length > 0))
+            return;
+
+        foreach (string propertyName in propertyNames)
+            OnPropertyChanged(propertyName);
+    }
+
     public virtual bool SetProperty<TRet>(ref TRet backingField,
                                           TRet newValue,
                                           Action<TRet> onPropertyChanged = null,

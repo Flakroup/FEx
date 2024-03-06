@@ -10,15 +10,6 @@ public abstract class NotifyPropertyChanged : PropertyChangeAware, IFExNotifyPro
 {
     public event PropertyChangedEventHandler PropertyChanged;
 
-    public void OnPropertiesChanged(params string[] propertyNames)
-    {
-        if (!(propertyNames?.Length > 0))
-            return;
-
-        foreach (string propertyName in propertyNames)
-            OnPropertyChanged(propertyName);
-    }
-
     public override void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         base.OnPropertyChanged(propertyName);

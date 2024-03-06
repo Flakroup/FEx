@@ -23,7 +23,7 @@ namespace FEx.MVVM.Utilities;
 
 public class ProgressAggregator : ProgressStatus, IDisposable
 {
-    protected readonly FExSubject<string> _subject;
+    protected readonly FExSubject<string> _changedPropertiesSubject;
     private readonly CompositeDisposable _subscriptions;
     private readonly IDisposable _changeSubscription;
     private readonly SemaphoreSlim _progressLock;
@@ -33,6 +33,8 @@ public class ProgressAggregator : ProgressStatus, IDisposable
     private readonly ProgressChangeSubject _progressChangeSubject;
     private readonly Stopwatch _stopwatch;
     private bool _isDisposed;
+
+    public static TimeSpan ChangesBufferingDelay { get; set; } = TimeSpan.FromMilliseconds(25);
 
     public string Id { get; }
 
@@ -53,19 +55,17 @@ public class ProgressAggregator : ProgressStatus, IDisposable
         _progressLock = new SemaphoreSlim(1, 1);
         _stopwatch = new Stopwatch();
 
-        _subject = new FExSubject<string>();
+        _changedPropertiesSubject = new FExSubject<string>();
         _subscriptions = [];
 
-        foreach (string p in ExcludedProperties)
-        {
-            _subject.Where(x => x == p) //todo if needed Dispose and renew sub on progress Start/End
-                .Sample(FExMvvmConfiguration.DefaultUIRefreshInterval)
-                .AsyncSubscribe(base.OnPropertyChanged)
-                .DisposeWith(_subscriptions);
-        }
+        //todo if needed Dispose and renew sub on progress Start/End
+        _changedPropertiesSubject.Where(ExcludedProperties.Contains)
+            .Buffer(FExMvvmConfiguration.DefaultUIRefreshInterval)
+            .Distinct()
+            .AsyncSubscribe(_subscriptions, propertyNames => OnPropertiesChanged([.. propertyNames]));
 
         _changeSubscription = _progressChangeSubject.Timestamp()
-            .Buffer(TimeSpan.FromMilliseconds(25))
+            .Buffer(ChangesBufferingDelay)
             .SubscribeTask(ProcessChangesAsync);
     }
 
@@ -202,7 +202,7 @@ public class ProgressAggregator : ProgressStatus, IDisposable
     protected override void OnExcludedPropertyChanged(string propertyName)
     {
         base.OnExcludedPropertyChanged(propertyName);
-        _subject.OnNext(propertyName);
+        _changedPropertiesSubject.OnNext(propertyName);
     }
 
     protected void RefreshIsPrgInfoVisible()
@@ -458,7 +458,7 @@ public class ProgressAggregator : ProgressStatus, IDisposable
 
         if (disposing)
         {
-            _subject?.Dispose();
+            _changedPropertiesSubject?.Dispose();
             _subscriptions?.Dispose();
             _changeSubscription?.Dispose();
             _progressLock?.Dispose();

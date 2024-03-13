@@ -1,10 +1,9 @@
 ﻿using FEx.Abstractions.Interfaces;
-using FEx.MVVM.Abstractions.Interfaces;
 using StrongInject;
 
 namespace FEx.Avaloniax;
 
-[Register(typeof(AvaloniaDispatcher), typeof(IFExDispatcher), typeof(IUIContextExecutor))]
+[Register(typeof(AvaloniaDispatcher), typeof(IFExDispatcher))]
 public class FExAvaloniaxModule
 {
 }

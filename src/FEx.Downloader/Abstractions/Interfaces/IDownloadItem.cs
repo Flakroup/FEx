@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Downloader.Abstractions.Interfaces;
 
-public interface IDownloadItem : IDownloadStub, IDisposable, INotifyPropertyChanged, IProgressAggregatorProperties
+public interface IDownloadItem : IDownloadStub, IDisposable, INotifyPropertyChanged, IProgressStatus
 {
     CancellationTokenSource CancellationTokenSource { get; }
     Task DownloadFileTask { get; set; }

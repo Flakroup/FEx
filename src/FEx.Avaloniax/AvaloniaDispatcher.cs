@@ -2,7 +2,6 @@
 using FEx.Asyncx;
 using FEx.Asyncx.Enums;
 using FEx.Basics.Abstractions;
-using FEx.MVVM.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
@@ -10,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Avaloniax;
 
-public class AvaloniaDispatcher : FExDispatcher, IUIContextExecutor
+public class AvaloniaDispatcher : FExDispatcher
 {
     protected static Dispatcher Dispatcher => Dispatcher.UIThread;
 
@@ -19,43 +18,41 @@ public class AvaloniaDispatcher : FExDispatcher, IUIContextExecutor
     {
     }
 
-    public bool CheckAccess(object sender = null) => Dispatcher.CheckAccess();
+    public override bool CheckAccess(object sender = null) => Dispatcher.CheckAccess();
 
-    public void ExecuteActionInIdleUIContext(Action action, object sender = null) =>
+    public override void InvokeOnIdleMainThread(Action action, object sender = null) =>
         Dispatcher.Invoke(action, DispatcherPriority.ApplicationIdle);
 
-    public T ExecuteActionInIdleUIContext<T>(Func<T> action, object sender = null) =>
+    public override T InvokeOnIdleMainThread<T>(Func<T> action, object sender = null) =>
         Dispatcher.Invoke(action, DispatcherPriority.ApplicationIdle);
 
-    public void ExecuteActionInUIContext(Action action, object sender = null) => Dispatcher.Invoke(action);
+    public override void InvokeOnMainThread(Action action, object sender = null) => Dispatcher.Invoke(action);
 
-    public T ExecuteActionInUIContext<T>(Func<T> action, object sender = null) => Dispatcher.Invoke(action);
+    public override T InvokeOnMainThread<T>(Func<T> action, object sender = null) => Dispatcher.Invoke(action);
 
-    public async Task ExecuteActionInIdleUIContextAsync(Action action, object sender = null) =>
+    public override async Task InvokeOnIdleMainThreadAsync(Action action, object sender = null) =>
         await Dispatcher.InvokeAsync(action, DispatcherPriority.ApplicationIdle);
 
-    public async Task<T> ExecuteActionInIdleUIContextAsync<T>(Func<T> action, object sender = null) =>
+    public override async Task<T> InvokeOnIdleMainThreadAsync<T>(Func<T> action, object sender = null) =>
         await Dispatcher.InvokeAsync(action, DispatcherPriority.ApplicationIdle);
 
-    public async Task ExecuteActionInUIContextAsync(Action action, object sender = null) =>
+    public override async Task InvokeOnMainThreadAsync(Action action, object sender = null) =>
         await Dispatcher.InvokeAsync(action);
 
-    public async Task<T> ExecuteActionInUIContextAsync<T>(Func<T> action, object sender = null) =>
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object sender = null) =>
         await Dispatcher.InvokeAsync(action);
 
     public override void BeginInvokeOnMainThread(Action action) =>
         FExAsyncx.AsyncHelper.FireAndForget(() => Dispatcher.Invoke(action), AsyncMode.ThreadPool);
 
-    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> func) => await Dispatcher.InvokeAsync(func);
-
-    public override async Task InvokeOnMainThreadAsync(Action action) => await Dispatcher.InvokeAsync(action);
-
-    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask) =>
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object sender = null) =>
         await Dispatcher.InvokeAsync(funcTask);
 
-    public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask) => await Dispatcher.InvokeAsync(funcTask);
+    public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null) =>
+        await Dispatcher.InvokeAsync(funcTask);
 
     public override void SendInThisOrMainThreadContext(Action action,
                                                        SynchronizationContext synchronizationContext = null,
-                                                       uint timeout = 10000) => Dispatcher.Invoke(action);
+                                                       uint timeout = 10000) =>
+        Dispatcher.Invoke(action);
 }

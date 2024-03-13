@@ -1,5 +1,7 @@
 ﻿using FEx.Abstractions;
 using FEx.Abstractions.Interfaces;
+using FEx.Asyncx;
+using FEx.Asyncx.Enums;
 using FEx.Basics;
 using FEx.Extensions;
 using FEx.Extensions.Base.Models;
@@ -27,7 +29,7 @@ public class ExceptionHandler : ExceptionHandlerBase
     /// </summary>
     public static Exception LastException { get; set; }
 
-    public static Action<string, bool, bool> Callback { get; set; }
+    public static Func<string, bool, Task> Callback { get; set; }
 
     public static bool ConsolePresent
     {
@@ -62,7 +64,7 @@ public class ExceptionHandler : ExceptionHandlerBase
 
     protected override void HandleException(Exception exception, IExceptionHandlerOptions options)
     {
-        var args = new ExceptionEventArgs(exception, options.Wait, options.Custom);
+        var args = new ExceptionEventArgs(exception, options.Custom);
         ExceptionOccured?.Invoke(null, args);
         LastException = exception;
         var infoSb = new StringBuilder();
@@ -87,7 +89,11 @@ public class ExceptionHandler : ExceptionHandlerBase
             LogToFile(exception);
         }
 
-        Callback?.Invoke(info, options.InformUser || Debugger.IsAttached, options.Wait);
+        if (Callback is null)
+            return;
+
+        FExAsyncx.AsyncHelper.FireTaskAndForget(() => Callback(info, options.InformUser || Debugger.IsAttached),
+            AsyncMode.ThreadPool);
     }
 
     private static void LogToFile(Exception exception)

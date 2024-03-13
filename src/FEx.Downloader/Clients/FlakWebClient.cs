@@ -60,7 +60,7 @@ public sealed class FlakWebClient : WebClient
     {
         var table = (Hashtable)Pars.Cookies.GetType()
             .InvokeMember("m_domainTable", BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance, null,
-                Pars.Cookies, new object[] { });
+                Pars.Cookies, []);
 
         return table.Keys.Cast<object>()
             .SelectMany(key => Pars.Cookies.GetCookies(new Uri($"http://{key}/"))

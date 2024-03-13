@@ -1,11 +1,14 @@
-﻿using FEx.Extensions;
+﻿using FEx.Asyncx;
+using FEx.Extensions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace FEx.WPFx;
+#pragma warning disable VSTHRD001
+
+namespace FEx.WPFx.Services;
 
 public static class DispatcherService
 {
@@ -85,6 +88,30 @@ public static class DispatcherService
             : await dispatcherObject.Dispatcher.InvokeAsync(action, priority);
     }
 
+    public static async Task ExecuteTaskInDispatcherContextAsync(Func<Task> funcTask,
+                                                                 DispatcherObject sender = null,
+                                                                 DispatcherPriority priority = DispatcherPriority.Send)
+    {
+        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+
+        if (CheckAccess(dispatcherObject))
+            await funcTask();
+        else
+            await dispatcherObject.Dispatcher.Invoke(funcTask, priority);
+    }
+
+    public static async Task<T> ExecuteTaskInDispatcherContextAsync<T>(Func<Task<T>> funcTask,
+                                                                       DispatcherObject sender = null,
+                                                                       DispatcherPriority priority =
+                                                                           DispatcherPriority.Send)
+    {
+        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+
+        return CheckAccess(dispatcherObject)
+            ? await funcTask()
+            : await dispatcherObject.Dispatcher.Invoke(funcTask, priority);
+    }
+
     /// <summary>
     ///     Shows the view and waits until it's closed.
     /// </summary>
@@ -110,15 +137,16 @@ public static class DispatcherService
     /// </summary>
     /// <param name="sender">The sender.</param>
     /// <returns>True if you're on the dispatcher thread, otherwise - false</returns>
-    public static bool CheckAccess(DispatcherObject sender) =>
-        sender.GetDispatcherObject().Dispatcher.CheckAccess();
+    public static bool CheckAccess(DispatcherObject sender) => sender.GetDispatcherObject().Dispatcher.CheckAccess();
 
     public static void BeginInvoke(Action action,
                                    DispatcherObject sender = null,
                                    DispatcherPriority priority = DispatcherPriority.Normal)
     {
         DispatcherObject dispatcherObject = sender.GetDispatcherObject();
-        dispatcherObject.Dispatcher.BeginInvoke(action, priority);
+
+        FExAsyncx.AsyncHelper.FireTaskAndForget(async () =>
+            await dispatcherObject.Dispatcher.BeginInvoke(action, priority));
     }
 
     private static void ShowView<T>(Func<T> viewFunc, bool isModal, TaskCompletionSource<bool> tcs) where T : Window

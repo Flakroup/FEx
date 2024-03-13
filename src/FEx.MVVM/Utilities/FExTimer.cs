@@ -33,7 +33,7 @@ public class FExTimer : ReactiveNotifyPropertyChanged, IDisposable
 
     public FExTimer()
     {
-        Interval = FExMvvmConfiguration.DefaultUIRefreshInterval;
+        Interval = FExMvvm.DefaultUIRefreshInterval;
     }
 
     public FExTimer WithCallback(Action callback)
@@ -59,7 +59,7 @@ public class FExTimer : ReactiveNotifyPropertyChanged, IDisposable
     {
         Interval = interval.TotalMilliseconds > 0
             ? interval
-            : FExMvvmConfiguration.DefaultUIRefreshInterval;
+            : FExMvvm.DefaultUIRefreshInterval;
 
         return this;
     }

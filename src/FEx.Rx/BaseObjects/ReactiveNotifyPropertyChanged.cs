@@ -52,12 +52,18 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
             return false;
 
         OnPropertyChangingInternal(propertyName);
+        TRet oldValue = backingField;
         backingField = newValue;
+        OnPropertySet(oldValue, newValue, propertyName);
         OnPropertyChangedInternal(propertyName);
 
         onPropertyChanged?.Invoke(newValue);
 
         return true;
+    }
+
+    public virtual void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
+    {
     }
 
     private void OnPropertyChangingInternal(string propertyName)

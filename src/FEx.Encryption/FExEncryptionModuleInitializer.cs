@@ -1,4 +1,5 @@
 ﻿using FEx.Abstractions;
+using FEx.Encryption.Abstractions.Interfaces;
 
 namespace FEx.Encryption;
 

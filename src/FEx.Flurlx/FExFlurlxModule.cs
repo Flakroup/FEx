@@ -11,8 +11,4 @@ namespace FEx.Flurlx;
     typeof(IInitializeModule))]
 public class FExFlurlxModule
 {
-    public static void Initialize(IFlurlConfigurator configurator)
-    {
-        configurator.Configure();
-    }
 }

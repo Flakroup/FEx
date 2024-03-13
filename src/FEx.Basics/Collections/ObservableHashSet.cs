@@ -26,7 +26,7 @@ namespace FEx.Basics.Collections;
 [Serializable]
 public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadOnlyCollection<T>, IChangeableCollection
 {
-    protected static readonly string[] PropertyChangedArgs = { nameof(Count) };
+    protected static readonly string[] PropertyChangedArgs = [nameof(Count)];
 
     private HashSet<T> _set;
 

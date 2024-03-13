@@ -10,17 +10,17 @@ namespace FEx.Asyncx.Helpers;
 
 public static class JoinableAsyncHelper
 {
-    private static JoinableTaskFactory _mainJTF;
-    private static ConcurrentDictionary<int, JoinableTaskFactory> Factories { get; } = new();
+    private static JoinableTaskFactoryHandler _mainJTF;
+    private static ConcurrentDictionary<int, JoinableTaskFactoryHandler> Factories { get; } = new();
 
-    private static JoinableTaskFactory MainJTF
+    private static JoinableTaskFactoryHandler MainJTF
     {
         get => _mainJTF.Guard();
         set => _mainJTF = value;
     }
 
     public static void SetMainJoinableTaskFactory(Thread mainThread) =>
-        MainJTF = GetFactory(mainThread.Guard(nameof(mainThread)));
+        MainJTF = GetFactory(mainThread.Guard(nameof(mainThread)), true);
 
     public static async Task DelayWithoutDeadlockAsync(int millisecondsDelay,
                                                        CancellationToken cancellationToken = default) =>
@@ -31,31 +31,54 @@ public static class JoinableAsyncHelper
 
     public static async Task AwaitWithoutDeadlockAsync(Func<Task> func, bool onMainThread = false)
     {
-        JoinableTaskFactory jtf = onMainThread
+        JoinableTaskFactoryHandler jtf = onMainThread
             ? MainJTF
             : GetFactory();
 
-        await jtf.RunAsync(func);
+        await await jtf.RunAsync(func);
     }
 
     public static void AwaitWithoutDeadlock(Func<Task> func, bool onMainThread = false)
     {
-        JoinableTaskFactory jtf = onMainThread
+        JoinableTaskFactoryHandler jtf = onMainThread
             ? MainJTF
             : GetFactory();
 
         jtf.Run(func);
     }
 
-    public static async Task<T> AwaitWithoutDeadlockAsync<T>(Func<Task<T>> func) => await GetFactory().RunAsync(func);
-
-    public static T AwaitWithoutDeadlock<T>(Func<Task<T>> func) => GetFactory().Run(func);
-
-    private static JoinableTaskFactory GetFactory(Thread thread = null) =>
-        Factories.GetOrAddValue(thread?.ManagedThreadId ?? Environment.CurrentManagedThreadId, () => GetNew(thread));
-
-    private static JoinableTaskFactory GetNew(Thread thread = null)
+    public static async Task<T> AwaitWithoutDeadlockAsync<T>(Func<Task<T>> func, bool onMainThread = false)
     {
+        JoinableTaskFactoryHandler jtf = onMainThread
+            ? MainJTF
+            : GetFactory();
+
+        return await await jtf.RunAsync(func);
+    }
+
+    public static T AwaitWithoutDeadlock<T>(Func<Task<T>> func, bool onMainThread = false)
+    {
+        JoinableTaskFactoryHandler jtf = onMainThread
+            ? MainJTF
+            : GetFactory();
+
+        return jtf.Run(func);
+    }
+
+    private static JoinableTaskFactoryHandler GetFactory(Thread thread = null, bool replace = false)
+    {
+        int key = thread?.ManagedThreadId ?? Environment.CurrentManagedThreadId;
+        Func<JoinableTaskFactoryHandler> func = () => GetNew(thread);
+
+        return replace
+            ? Factories.AddOrUpdateValue(key, func)
+            : Factories.GetOrAddValue(key, func);
+    }
+
+    private static JoinableTaskFactoryHandler GetNew(Thread thread)
+    {
+        int key = thread?.ManagedThreadId ?? Environment.CurrentManagedThreadId;
+
         SynchronizationContext syncCtx = thread is null
             ? SynchronizationContext.Current
             : thread.GetThreadSynchronizationContext();
@@ -64,6 +87,6 @@ public static class JoinableAsyncHelper
 #pragma warning disable IDISP001
         var owner = new JoinableTaskContext(thread, syncCtx);
 #pragma warning restore IDISP001
-        return new JoinableTaskFactory(owner);
+        return new JoinableTaskFactoryHandler(key, new JoinableTaskFactory(owner));
     }
 }

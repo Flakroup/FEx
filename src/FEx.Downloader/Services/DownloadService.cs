@@ -1,13 +1,15 @@
-﻿using FEx.Asyncx;
-using FEx.Asyncx.Helpers;
+﻿using FEx.Asyncx.Helpers;
 using FEx.Basics.Collections.Concurrent;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
 using FEx.Extensions;
 using FEx.Extensions.Collections.Dictionaries;
+using FEx.MVVM;
+using FEx.MVVM.Extensions;
 using FEx.MVVM.Utilities;
 using ReactiveUI;
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -17,6 +19,7 @@ namespace FEx.Downloader.Services;
 public class DownloadService : ProgressAggregator
 {
     public static int DefaultParallelDownloads { get; set; } = 10;
+    public ConcurrentDictionary<string, IDisposable> Subscriptions { get; }
 
     public ObservableConcurrentDictionary<DownloadIndex, IDownloadItem> Downloads { get; }
     public AsyncQueue<DownloadIndex, bool> Queue { get; }
@@ -32,6 +35,7 @@ public class DownloadService : ProgressAggregator
 
     public DownloadService()
     {
+        Subscriptions = [];
         Downloads = [];
         Queue = new AsyncQueue<DownloadIndex, bool>(ex => ex.HandleException(), DefaultParallelDownloads);
         SetFinished = true;
@@ -119,7 +123,7 @@ public class DownloadService : ProgressAggregator
     {
         Subscriptions.ReplaceAndDisposeOldValue(di.Url.AbsoluteUri.GenerateMd5OfString(),
             () => di.WhenAnyValue(x => x.TotalPrg, x => x.DState)
-                .Sample(FExAsyncx.AsyncHelper.DefaultDelayTimeSpan)
+                .Sample(FExMvvm.DefaultUIRefreshInterval)
                 .Subscribe(_ => OnDownloadPropertyChanged()));
     }
 
@@ -145,7 +149,7 @@ public class DownloadService : ProgressAggregator
     {
         (double val, double max, int finished) = CalculateProgress();
 
-        ProgressViewModel.SetCurrentDownloadState(val, max);
+        this.SetCurrentDownloadState(val, max);
 
         if (SetFinished)
             StatusInfo = $"Finished: {finished} / {Downloads.Count}";

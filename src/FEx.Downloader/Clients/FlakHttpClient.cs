@@ -104,9 +104,12 @@ public class FlakHttpClient : ProgressAggregator, IDisposable, IDownloadBase
     }
 
     #region IDisposable
-    public virtual void Dispose()
+    protected override void Dispose(bool disposing)
     {
-        Client?.Dispose();
+        if (disposing)
+            Client?.Dispose();
+
+        base.Dispose(disposing);
     }
     #endregion
 }

@@ -26,7 +26,7 @@ namespace FEx.Basics.Collections.Concurrent;
 public class ObservableConcurrentDictionary<TKey, TValue> : BaseObservableCollection<TValue>, IChangeableCollection,
     IDictionary<TKey, TValue>, IDictionary, IReadOnlyDictionary<TKey, TValue>
 {
-    protected static readonly string[] PropertyChangedArgs = { nameof(Count), nameof(Keys), nameof(Values) };
+    protected static readonly string[] PropertyChangedArgs = [nameof(Count), nameof(Keys), nameof(Values)];
 
     [NonSerialized] private readonly ConcurrentDictionary<TKey, TValue> _dictionary;
 

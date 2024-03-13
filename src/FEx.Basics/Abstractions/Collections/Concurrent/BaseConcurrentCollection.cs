@@ -18,7 +18,7 @@ namespace FEx.Basics.Abstractions.Collections.Concurrent;
 public abstract class BaseConcurrentCollection<TColl, T> : BaseObservableCollection<T>,
     IBaseConcurrentCollection<TColl, T> where TColl : class, IList<T>
 {
-    protected static readonly string[] PropertyChangedArgs = { nameof(Count), "Item[]" };
+    protected static readonly string[] PropertyChangedArgs = [nameof(Count), "Item[]"];
     protected readonly bool _useResetOnBulkOperations;
 
     [NonSerialized] protected readonly ReaderWriterLockSlim _lock;

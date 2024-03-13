@@ -110,6 +110,6 @@ public class ObservableConcurrentCollection<T> : ConcurrentCollection<T>, IChang
         }, _ => false);
 
         OnCollectionChanged(NotifyCollectionChangedAction.Move, obj, newIndex, oldIndex,
-            propertyChangedArgs: new[] { "Item[]" });
+            propertyChangedArgs: ["Item[]"]);
     }
 }

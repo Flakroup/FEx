@@ -15,8 +15,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
 		<ProjectReference Include="..\FEx.Encryption\FEx.Encryption.csproj" />
-		<ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
-		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
 	</ItemGroup>
 
 </Project>

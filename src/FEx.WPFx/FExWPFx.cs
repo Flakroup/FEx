@@ -4,7 +4,7 @@ using System.Windows.Markup;
 
 namespace FEx.WPFx;
 
-public class WPFUtilities
+public class FExWPFx
 {
     /// <summary>
     ///     Overrides formatting on UI.

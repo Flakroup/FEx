@@ -13,4 +13,5 @@ public interface IFExNotifyPropertyChanged : INotifyPropertyChanged
                            TRet newValue,
                            Action<TRet> onPropertyChanged = null,
                            [CallerMemberName] string propertyName = null);
+    void OnPropertySet<T>(T oldValue, T newValue, string propertyName);
 }

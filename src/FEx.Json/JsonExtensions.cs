@@ -31,10 +31,10 @@ public static class JsonExtensions
             MissingMemberHandling = MissingMemberHandling.Ignore
         };
 
-        ((List<JsonConverter>)DefaultSettingsInstance.Converters).AddRange(new JsonConverter[]
-        {
+        ((List<JsonConverter>)DefaultSettingsInstance.Converters).AddRange(
+        [
             ParseStringConverter.Singleton, new VersionConverter()
-        });
+        ]);
 
         JsonConvert.DefaultSettings = () => DefaultSettingsInstance;
     }

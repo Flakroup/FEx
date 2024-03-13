@@ -9,12 +9,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
-		<ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
-		<ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
-		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
-		<ProjectReference Include="..\FEx.Rx\FEx.Rx.csproj" />
-		<ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
+	  <ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
+	  <ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
+	  <ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
 	</ItemGroup>
 
 </Project>

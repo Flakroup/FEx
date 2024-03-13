@@ -1,4 +1,5 @@
 ﻿using FEx.Basics;
+using FEx.Extensions;
 using FEx.Extensions.Base.Converters;
 using FEx.Extensions.Base.Enums;
 using FEx.Extensions.DateTimes;
@@ -13,414 +14,159 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace FEx.MVVM.Utilities;
 
-public class ProgressAggregator : ProgressStatus, IDisposable
+public class ProgressAggregator : ProgressStatus, IProgressAggregator
 {
     protected readonly FExSubject<string> _changedPropertiesSubject;
-    private readonly CompositeDisposable _subscriptions;
-    private readonly IDisposable _changeSubscription;
-    private readonly SemaphoreSlim _progressLock;
-    private readonly SemaphoreSlim _queueLock;
-    private readonly List<Timestamped<IProgressChange>> _changesQueue;
-    private readonly SemaphoreSlim _progressQueueLock;
-    private readonly ProgressChangeSubject _progressChangeSubject;
-    private readonly Stopwatch _stopwatch;
+    protected readonly CompositeDisposable _subscriptions;
+
     private bool _isDisposed;
 
-    public static TimeSpan ChangesBufferingDelay { get; set; } = TimeSpan.FromMilliseconds(25);
+    public event ProgressPropertyChangedEventHandler ProgressPropertyChanged;
+    public Stopwatch Stopwatch { get; }
+
+    public FExTimer Timer { get; }
 
     public string Id { get; }
-
-    private static ProgressChange<double> IncrementChange { get; } = new()
-    {
-        PropertyName = nameof(IProgressAggregatorProperties.Value),
-        Value = 1,
-        ChangeMode = ProgressChangeMode.Add
-    };
 
     public ProgressAggregator()
     {
         Id = Guid.NewGuid().ToString();
-        _progressChangeSubject = new ProgressChangeSubject();
-        _changesQueue = [];
-        _queueLock = new SemaphoreSlim(1, 1);
-        _progressQueueLock = new SemaphoreSlim(1, 1);
-        _progressLock = new SemaphoreSlim(1, 1);
-        _stopwatch = new Stopwatch();
-
+        Stopwatch = new Stopwatch();
+        Timer = new FExTimer().WithCallback(TimerCallback);
         _changedPropertiesSubject = new FExSubject<string>();
         _subscriptions = [];
 
         //todo if needed Dispose and renew sub on progress Start/End
         _changedPropertiesSubject.Where(ExcludedProperties.Contains)
-            .Buffer(FExMvvmConfiguration.DefaultUIRefreshInterval)
-            .Distinct()
-            .AsyncSubscribe(_subscriptions, propertyNames => OnPropertiesChanged([.. propertyNames]));
-
-        _changeSubscription = _progressChangeSubject.Timestamp()
-            .Buffer(ChangesBufferingDelay)
-            .SubscribeTask(ProcessChangesAsync);
+            .Buffer(FExMvvm.DefaultUIRefreshInterval)
+            .Where(propertyNames => propertyNames.Count > 0)
+            .Select(propertyNames => propertyNames.Distinct().ToList())
+            .AsyncSubscribe(_subscriptions, OnExcludedPropertiesChanged);
     }
 
-    public void IncrementProgressValue()
+    public override bool SetProperty<TRet>(ref TRet backingField,
+                                           TRet newValue,
+                                           Action<TRet> onPropertyChanged = null,
+                                           [CallerMemberName] string propertyName = null)
     {
-        _progressChangeSubject.OnNext(IncrementChange);
+        if (!base.SetProperty(ref backingField, newValue, onPropertyChanged, propertyName))
+            return false;
+
+        InvokeProgressPropertyChanged(newValue, propertyName);
+
+        return true;
     }
 
-    /// <summary>
-    /// Sets current progress value and maximal allowed value of the ProgressBar
-    /// </summary>
-    /// <param name="val">Progress value to be added or set. -1 sets ProgressValue to current ProgressMaximum.</param>
-    /// <param name="max">Maximal allowed value.</param>
-    /// <param name="mode">Setting mode. Only Add or Set will do actual work.</param>
-    public void PrgSet(double? val, double? max = null, ProgressChangeMode mode = ProgressChangeMode.Set)
+    public virtual void Start()
     {
-        //todo start/stop stopwatch after
-        if (max.HasValue)
-            _progressChangeSubject.OnNext(new ProgressChange<double>
-            {
-                Value = max.Value,
-                ChangeMode = mode
-            });
-
-        if (val.HasValue)
-            _progressChangeSubject.OnNext(new ProgressChange<double>
-            {
-                Value = val.Value,
-                ChangeMode = mode
-            });
+        IsIndeterminate = true;
+        CurrItemInfo = string.Empty;
+        StatusInfo = string.Empty;
+        Info = string.Empty;
     }
 
-    public void SetProgressIsIndeterminate(bool value)
+    public virtual void Stop()
     {
-        IsIndeterminate = value;
-        RefreshIsPrgInfoVisible();
+        IsIndeterminate = false;
+        Value = 0;
+        Maximum = 0;
+        StatusInfo = string.Empty;
+        CurrItemInfo = string.Empty;
+        ThreadsInfo = string.Empty;
+        Unit = string.Empty;
+        Info = string.Empty;
     }
 
-    public void SetProgressValue(double value)
+    public virtual void Report(string propertyName, object value)
     {
-        Value = value;
-
-        if (IsIndeterminate && value > 0)
-            IsIndeterminate = false;
-
-        RefreshIsPrgInfoVisible();
-    }
-
-    public void SetProgressMaximum(double value)
-    {
-        Maximum = value;
-        RefreshIsPrgInfoVisible();
-    }
-
-    public void SetPrgInfo(string value)
-    {
-        Info = value;
-    }
-
-    public void SetProgressPercentage(double value)
-    {
-        Percentage = value;
-    }
-
-    public void SetProgressUnit(string value)
-    {
-        Unit = value;
-    }
-
-    public void SetIsPrgInfoVisible(bool value)
-    {
-        IsInfoVisible = value;
-    }
-
-    public void SetIsFileOperation(bool value)
-    {
-        Mode = value
-            ? ProgressOperationMode.Stream
-            : ProgressOperationMode.Standard;
-    }
-
-    public void SetIsBusy(bool value)
-    {
-        State = value
-            ? ProgressState.Busy
-            : ProgressState.Idle;
-    }
-
-    /// <summary>
-    ///     Sets progress value of the ProgressBar to the maximal value
-    /// </summary>
-    public void PrgSetEnd()
-    {
-        PrgSet(-1);
-    }
-
-    /// <summary>
-    ///     Increments current progress value of the ProgressBar
-    /// </summary>
-    /// <param name="addedValue">The added value.</param>
-    public void PrgAdd(double addedValue = 1)
-    {
-        PrgSet(addedValue, null, ProgressChangeMode.Add);
-    }
-
-    /// <summary>
-    ///     Adds value to the maximum of progress value.
-    /// </summary>
-    /// <param name="addedValue">The added value.</param>
-    public void PrgMaxAdd(double addedValue)
-    {
-        PrgSet(null, addedValue, ProgressChangeMode.Add);
-    }
-
-    /// <summary>
-    ///     Sets maximal allowed value of the ProgressBar and resets current progress
-    /// </summary>
-    /// <param name="max"></param>
-    public void PrgSetMax(double max)
-    {
-        PrgSet(0, max);
-    }
-
-    public void Busy()
-    {
-        State = ProgressState.Busy;
-    }
-
-    public void Idle()
-    {
-        State = ProgressState.Idle;
-    }
-
-    protected override void OnExcludedPropertyChanged(string propertyName)
-    {
-        base.OnExcludedPropertyChanged(propertyName);
-        _changedPropertiesSubject.OnNext(propertyName);
-    }
-
-    protected void RefreshIsPrgInfoVisible()
-    {
-        IsInfoVisible = Value < Maximum && !IsIndeterminate;
-    }
-
-    protected void UpdateProgressInfo()
-    {
-        if (Value == 0
-            || !_stopwatch.IsRunning && Value < Maximum)
+        switch (propertyName)
         {
-            _stopwatch.Restart();
-            CalculateProgressPercentage();
-        }
-        else if (Value.PreciseEquals(Maximum, 3))
-        {
-            _stopwatch.Reset();
-            Info = string.Empty;
-            //ProgressValue = 0;
-            //ProgressMaximum = 0;
-
-            if (Timer.IsRunning)
-                Timer.TimerStop();
-
-            CalculateProgressPercentage();
-        }
-        else if (Value > 0)
-        {
-            CalculateProgressPercentage();
-
-            if (Mode != ProgressOperationMode.Stream)
-            {
-                double curr = _stopwatch.ElapsedMilliseconds;
-                double avgMs = curr / Value;
-                double etr = (Maximum - Value) / Value * curr;
-                //double v = avgMs * ProgressBarValue / curr;
-
-                if (!double.IsNaN(etr)
-                    && !double.IsInfinity(etr))
-                {
-                    var est = $"ETR: {TimeSpan.FromMilliseconds(etr).GetTime()}";
-                    var avg = $"AVG: {avgMs.GetTime()}";
-
-                    //string speed = $"V: {v}x";
-                    Info = $"{Math.Floor(Percentage * 100D)}% {Value}/{Maximum} {Unit} {est} {avg}"; // {speed}";
-                }
-            }
-            else
-            {
-                double bytesReceived = Value;
-                double totalBytesToReceive = Maximum;
-
-                string curBt =
-                    FileLengthConverter.ConvertFileLengthToString(bytesReceived,
-                        LengthType.Bytes,
-                        LengthType.AutoDetect);
-
-                string curTb = FileLengthConverter.ConvertFileLengthToString(totalBytesToReceive,
-                    LengthType.Bytes,
-                    LengthType.AutoDetect);
-
-                double curr = _stopwatch.Elapsed.TotalSeconds;
-
-                string kbPerSec = FileLengthConverter.ConvertFileLengthToString(bytesReceived / curr,
-                    LengthType.Bytes,
-                    LengthType.AutoDetect,
-                    1);
-
-                double etr = 0;
-                double perc = 0;
-
-                if (bytesReceived > 0)
-                {
-                    etr = (totalBytesToReceive - bytesReceived) / bytesReceived * curr;
-                    perc = Math.Floor(bytesReceived / totalBytesToReceive * 100D);
-                }
-
-                string est = etr > 0
-                    ? $"ETR: {TimeSpan.FromSeconds(etr).GetTime()}"
-                    : string.Empty;
-
-                Info = $"{perc}% {curBt} /{curTb} {kbPerSec}/Sec {est}";
-            }
-        }
-    }
-
-    protected void CalculateProgressPercentage()
-    {
-        double pv = Value;
-        double pm = Maximum;
-
-        if (!(pv > 0)
-            || !(pm > 0))
-        {
-            SetProgressPercentage(0);
-        }
-        else
-        {
-            double prc = pv / pm;
-
-            if (!prc.PreciseEquals(Percentage))
-                SetProgressPercentage(prc);
-        }
-    }
-
-    private async Task ProcessChangesAsync(IList<Timestamped<IProgressChange>> newChangesbatch,
-                                           CancellationToken cancellationToken)
-    {
-        await AddChangesAsync(newChangesbatch, cancellationToken);
-
-        if (!await _progressQueueLock.WaitAsync(TimeSpan.Zero, cancellationToken))
-            return;
-
-        try
-        {
-            if (!await _progressLock.WaitAsync(TimeSpan.Zero, cancellationToken))
-                return;
-        }
-        finally
-        {
-            _progressQueueLock.Release();
-        }
-
-        try
-        {
-            IList<Timestamped<IProgressChange>> changes = await DequeueAsync(cancellationToken);
-
-            while (_changesQueue.Any())
-            {
-                foreach (Timestamped<IProgressChange> change in changes)
-                    ProcessChange(change.Value);
-
-                changes = await DequeueAsync(cancellationToken);
-            }
-        }
-        finally
-        {
-            _progressLock.Release();
-        }
-    }
-
-    private async Task<IList<Timestamped<IProgressChange>>> DequeueAsync(CancellationToken cancellationToken)
-    {
-        await _queueLock.WaitAsync(cancellationToken);
-
-        try
-        {
-            var changes = _changesQueue.OrderBy(change => change.Timestamp).ToList();
-
-            _changesQueue.Clear();
-
-            return changes;
-        }
-        finally
-        {
-            _queueLock.Release();
-        }
-    }
-
-    private async Task AddChangesAsync(IList<Timestamped<IProgressChange>> changes, CancellationToken cancellationToken)
-    {
-        await _queueLock.WaitAsync(cancellationToken);
-
-        try
-        {
-            _changesQueue.AddRange(changes);
-        }
-        finally
-        {
-            _queueLock.Release();
-        }
-    }
-
-    private void ProcessChange(IProgressChange progressChange)
-    {
-        switch (progressChange.PropertyName)
-        {
-            case nameof(IProgressAggregatorProperties.Value):
-                ChangeProgressValue((ProgressChange<double>)progressChange);
+            case nameof(IProgressAggregator.StatusInfo):
+                StatusInfo = (string)value;
 
                 break;
-            default:
-                return;
+            case nameof(IProgressAggregator.CurrItemInfo):
+                CurrItemInfo = (string)value;
+
+                break;
+            case nameof(IProgressAggregator.Unit):
+                Unit = (string)value;
+
+                break;
+            case nameof(IProgressAggregator.Info):
+                Info = (string)value;
+
+                break;
+            case nameof(IProgressAggregator.IsIndeterminate):
+                IsIndeterminate = (bool)value;
+
+                break;
+            case nameof(IProgressAggregator.Mode):
+                Mode = (ProgressOperationMode)value;
+
+                break;
+            case nameof(IProgressAggregator.Maximum):
+                Maximum = (double)value;
+
+                break;
+            case nameof(IProgressAggregator.Value):
+                Value = (double)value;
+
+                break;
+            case nameof(IProgressAggregator.PrecisePercentage):
+                PrecisePercentage = (double)value;
+
+                break;
+            case nameof(IProgressAggregator.IsInfoVisible):
+                IsInfoVisible = (bool?)value;
+
+                break;
+            case nameof(IProgressAggregator.ThreadsInfo):
+                ThreadsInfo = (string)value;
+
+                break;
+            case nameof(IProgressAggregator.State):
+                State = (ProgressState)value;
+
+                break;
         }
     }
 
-    private void ProcessPrg(IProgressInfo progressInfo)
+    public virtual List<string> GetProperties() =>
+    [
+        nameof(IProgressStatus.Value),
+        nameof(IProgressStatus.Maximum),
+        nameof(IProgressStatus.IsIndeterminate),
+        nameof(IProgressStatus.Percentage),
+        nameof(IProgressStatus.PrecisePercentage),
+        nameof(IProgressStatus.Info),
+        nameof(IProgressStatus.Unit),
+        nameof(IProgressStatus.Mode),
+        nameof(IProgressStatus.IsBusy),
+        nameof(IProgressStatus.IsInfoVisible),
+        nameof(IProgressStatus.StatusInfo),
+        nameof(IProgressStatus.CurrItemInfo),
+        nameof(IProgressStatus.ThreadsInfo),
+        nameof(IProgressStatus.State)
+    ];
+
+    protected virtual void LogError(string message)
     {
-        switch (progressInfo.ChangeMode)
-        {
-            case ProgressChangeMode.Add:
-            {
-                ProcessAddPrg(progressInfo.Value, progressInfo.Maximum);
-
-                break;
-            }
-            case ProgressChangeMode.Set:
-            {
-                ProcessSetPrg(progressInfo.Value, progressInfo.Maximum);
-
-                break;
-            }
-            case ProgressChangeMode.End:
-                ProcessEndPrg();
-
-                break;
-            default:
-                throw new ArgumentOutOfRangeException($"{progressInfo.ChangeMode} is not handled");
-        }
+        FExBasics.Logger.LogError(message);
     }
 
-    private void ProcessEndPrg()
+    protected virtual void ProcessEndPrg()
     {
         Value = Maximum;
     }
 
-    private void ProcessSetPrg(double? value, double? maximum)
+    protected virtual void ProcessSetPrg(double? value, double? maximum)
     {
         if (maximum is >= 0D)
             Maximum = maximum.Value;
@@ -429,10 +175,10 @@ public class ProgressAggregator : ProgressStatus, IDisposable
             && value.Value <= Maximum)
             Value = value.Value;
         else
-            FExBasics.Logger.LogError("Invalid progress state");
+            LogError("Invalid progress state");
     }
 
-    private void ProcessAddPrg(double? value, double? maximum)
+    protected virtual void ProcessAddPrg(double? value, double? maximum)
     {
         if (maximum is > 0D)
             Maximum += maximum.Value;
@@ -441,7 +187,117 @@ public class ProgressAggregator : ProgressStatus, IDisposable
             && value + Value <= Maximum)
             Value += value.Value;
         else
-            FExBasics.Logger.LogError("Invalid progress state");
+            LogError("Invalid progress state");
+    }
+
+    protected virtual void TimerCallback()
+    {
+        if (!Stopwatch.IsRunning
+            && Value < Maximum)
+        {
+            Stopwatch.Restart();
+            UpdateProgressInfo();
+        }
+        else if (Value.PreciseEquals(Maximum, 3))
+        {
+            if (Timer.IsRunning)
+                Timer.TimerStop();
+
+            Stopwatch.Reset();
+            Info = string.Empty;
+            IsIndeterminate = false;
+        }
+        else
+        {
+            UpdateProgressInfo();
+        }
+    }
+
+    protected virtual void UpdateProgressInfo()
+    {
+        TimeSpan elapsed = Stopwatch.Elapsed;
+        double elapsedMilliseconds = elapsed.TotalMilliseconds;
+        double maximum = Maximum;
+        double value = Value;
+        double percentage = Percentage;
+        double avgMs = elapsedMilliseconds / value;
+
+        double etr = value > 0
+            ? (maximum - value) * avgMs
+            : 0;
+
+        string est = !double.IsNaN(etr) && !double.IsInfinity(etr) && etr > 0
+            ? $"ETR: {TimeSpan.FromMilliseconds(etr).GetTime()}"
+            : string.Empty;
+
+        switch (Mode)
+        {
+            case ProgressOperationMode.Standard:
+            {
+                string avg = est.IsNotNullOrEmptyString()
+                    ? $"AVG: {avgMs.GetTime()}"
+                    : string.Empty;
+
+                Info =
+                    $"{percentage}% {value}/{maximum}{(Unit.IsNotNullOrEmptyString() ? $"{Unit}" : string.Empty)} {est} {avg}";
+
+                break;
+            }
+            case ProgressOperationMode.Stream:
+            {
+                string curBt =
+                    FileLengthConverter.ConvertFileLengthToString(value, LengthType.Bytes, LengthType.AutoDetect);
+
+                string curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
+                    LengthType.Bytes,
+                    LengthType.AutoDetect);
+
+                double curr = elapsed.TotalSeconds;
+
+                string kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
+                    LengthType.Bytes,
+                    LengthType.AutoDetect,
+                    1);
+
+                Info = $"{percentage}% {curBt}/{curTb} {kbPerSec}/sec {est}";
+
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(Mode), $"{Mode} is not handled");
+        }
+    }
+
+    protected override void OnExcludedPropertyChanged(string propertyName)
+    {
+        base.OnExcludedPropertyChanged(propertyName);
+        _changedPropertiesSubject.OnNext(propertyName);
+    }
+
+    protected void InvokeProgressPropertyChanged<TRet>(TRet newValue, string propertyName)
+
+    {
+        if (ProgressPropertyChanged is null)
+            return;
+
+        void EventDelegate() =>
+            InvokeProgressPropertyChanged(new ProgressPropertyChangedEventArgs(Id, propertyName, newValue));
+
+        FExBasics.EventDeliverer.DeliverEvent(EventDelegate, this);
+    }
+
+    private void OnExcludedPropertiesChanged(IEnumerable<string> propertyNames)
+    {
+        foreach (string propertyName in propertyNames)
+            InvokePropertyChanged(propertyName);
+    }
+
+    private void InvokeProgressPropertyChanged(ProgressPropertyChangedEventArgs args)
+    {
+        if (args is null)
+            return;
+
+        ProgressPropertyChanged?.Invoke(this, args);
     }
 
     #region IDisposable
@@ -460,14 +316,66 @@ public class ProgressAggregator : ProgressStatus, IDisposable
         {
             _changedPropertiesSubject?.Dispose();
             _subscriptions?.Dispose();
-            _changeSubscription?.Dispose();
-            _progressLock?.Dispose();
-            _queueLock?.Dispose();
-            _progressQueueLock?.Dispose();
-            _progressChangeSubject?.Dispose();
         }
 
         _isDisposed = true;
     }
+    #endregion
+
+    #region Setters
+    /// <summary>
+    /// Sets current progress value and maximal allowed value of the ProgressBar
+    /// </summary>
+    /// <param name="value">Progress value to be added or set</param>
+    /// <param name="maximum">Maximal allowed value.</param>
+    /// <param name="mode">Progress change mode. ProgressChangeMode.End sets ProgressValue to current ProgressMaximum.</param>
+    public virtual void PrgSet(double? value, double? maximum = null, ProgressChangeMode mode = ProgressChangeMode.Set)
+    {
+        if (!Timer.IsRunning
+            && (maximum.HasValue || value.HasValue)
+            && mode != ProgressChangeMode.End)
+            Timer.TimerStart();
+
+        switch (mode)
+        {
+            case ProgressChangeMode.Set:
+                ProcessSetPrg(value, maximum);
+
+                break;
+            case ProgressChangeMode.Add:
+                ProcessAddPrg(value, maximum);
+
+                break;
+            case ProgressChangeMode.End:
+                ProcessEndPrg();
+
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+        }
+    }
+
+    /// <summary>
+    ///     Sets progress value of the ProgressBar to the maximal value
+    /// </summary>
+    public void PrgSetEnd() => PrgSet(-1, mode: ProgressChangeMode.End);
+
+    /// <summary>
+    ///     Increments current progress value of the ProgressBar
+    /// </summary>
+    /// <param name="addedValue">The added value.</param>
+    public void PrgAdd(double addedValue = 1) => PrgSet(addedValue, mode: ProgressChangeMode.Add);
+
+    /// <summary>
+    ///     Adds value to the maximum of progress value.
+    /// </summary>
+    /// <param name="addedValue">The added value.</param>
+    public void PrgMaxAdd(double addedValue) => PrgSet(null, addedValue, ProgressChangeMode.Add);
+
+    /// <summary>
+    ///     Sets maximal allowed value of the ProgressBar and resets current progress
+    /// </summary>
+    /// <param name="max"></param>
+    public void PrgSetMax(double max) => PrgSet(0, max);
     #endregion
 }

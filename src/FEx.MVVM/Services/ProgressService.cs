@@ -1,0 +1,176 @@
+﻿using FEx.Basics.Collections.Concurrent;
+using FEx.Extensions;
+using FEx.Extensions.Base.Helpers;
+using FEx.Extensions.Collections.Dictionaries;
+using FEx.Extensions.Collections.Enumerables;
+using FEx.MVVM.Abstractions;
+using FEx.MVVM.Abstractions.Interfaces;
+using FEx.MVVM.Utilities;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Reflection;
+
+namespace FEx.MVVM.Services;
+
+public sealed class ProgressService : SubscriberBase, IProgressService
+{
+    private static ProgressService _instance;
+
+    public static string MainContainerId { get; private set; }
+
+    public static ProgressService Instance => _instance ??= new ProgressService();
+
+    public ConcurrentDictionary<string, IProgressAggregator> Containers { get; }
+    public ConcurrentDictionary<string, ISet<ReceiverDefinition>> Listeners { get; }
+
+    private ProgressService()
+    {
+        Containers = new ConcurrentDictionary<string, IProgressAggregator>();
+        Listeners = new ConcurrentDictionary<string, ISet<ReceiverDefinition>>();
+    }
+
+    public bool SubscribeToProgress<T, TCon>(IProgressReceiver<T> receiver,
+                                             IProgressReceiver<TCon> producer,
+                                             params string[] iProgressReceiverProperties)
+        where T : IProgressAggregator where TCon : IProgressAggregator =>
+        SubscribeToProgress(receiver, producer.Progress, iProgressReceiverProperties);
+
+    public bool SubscribeToProgress<TCon>(IProgressReceiver<TCon> receiver,
+                                          IProgressAggregator container,
+                                          params string[] iProgressReceiverProperties) where TCon : IProgressAggregator
+    {
+        if (!Containers.ContainsKey(container.Id))
+        {
+            Containers.TryAddValue(container.Id, () => container);
+            AttachContainer(container);
+        }
+
+        return SubscribeToProgress(receiver.Progress, container.Id, iProgressReceiverProperties);
+    }
+
+    public bool SubscribeToProgress(IProgressAggregator receiver,
+                                    string containerId,
+                                    params string[] iProgressReceiverProperties)
+    {
+        var hasBeenAdded = false;
+        var def = new ReceiverDefinition(receiver, iProgressReceiverProperties);
+
+        Listeners.AddOrUpdate(containerId,
+            _ =>
+            {
+                var set = new ConcurrentHashSet<ReceiverDefinition>(def.Yield());
+                hasBeenAdded = true;
+
+                return set;
+            },
+            (_, v) =>
+            {
+                if (v.Contains(def))
+                    v.Remove(def);
+
+                hasBeenAdded = v.Add(def);
+
+                return v;
+            });
+
+        if (hasBeenAdded)
+            OnListenerAttached(def, containerId);
+
+        return hasBeenAdded;
+    }
+
+    public bool UnsubscribeFromProgress<T, TCon>(IProgressReceiver<T> receiver, IProgressReceiver<TCon> producer)
+        where T : IProgressAggregator where TCon : IProgressAggregator =>
+        UnsubscribeFromProgress(receiver, producer.Progress);
+
+    public bool UnsubscribeFromProgress<TCon>(IProgressReceiver<TCon> receiver, IProgressAggregator container)
+        where TCon : IProgressAggregator =>
+        UnsubscribeFromProgress(receiver.Progress, container.Id);
+
+    public bool UnsubscribeFromProgress(IProgressAggregator receiver, string containerId)
+    {
+        if (!Listeners.ContainsKey(containerId))
+            return false;
+
+        ISet<ReceiverDefinition> entry = Listeners[containerId];
+        ReceiverDefinition def = entry.Single(x => x.Container.Id == receiver.Id);
+        entry.Remove(def);
+        OnListenerAttached(def, containerId);
+
+        return true;
+    }
+
+    public TCon GetOrAddContainer<TCon>(bool isMain = false) where TCon : class, IProgressAggregator, new()
+    {
+        TCon container = ProgressStatusContainerFactory<TCon>();
+        Containers.GetOrAdd(container.Id, container);
+
+        if (isMain)
+            MainContainerId = container.Id;
+
+        return container;
+    }
+
+    public void RemoveContainer(string id)
+    {
+        if (!Containers.TryRemove(id, out IProgressAggregator container))
+            return;
+
+        DetachContainer(container.Id);
+    }
+
+    private TCon ProgressStatusContainerFactory<TCon>() where TCon : class, IProgressAggregator, new()
+    {
+        var container = new TCon();
+        AttachContainer(container);
+
+        return container;
+    }
+
+    private void AttachContainer(IProgressAggregator container)
+    {
+        Subscriptions.ReplaceAndDisposeOldValue(container.Id, () => GetSubscription(container));
+    }
+
+    private IDisposable GetSubscription(IProgressAggregator container)
+    {
+        return Observable
+            .FromEventPattern<ProgressPropertyChangedEventHandler, ProgressPropertyChangedEventArgs>(
+                h => container.ProgressPropertyChanged += h,
+                h => container.ProgressPropertyChanged -= h)
+            .Subscribe(x => OnProgressChange(x.EventArgs.ContainerId, x.EventArgs.PropertyName, x.EventArgs.Value));
+    }
+
+    private void OnProgressChange(string producerId, string propertyName, object value)
+    {
+        if (!Listeners.TryGetValue(producerId, out ISet<ReceiverDefinition> listeners))
+            return;
+
+        listeners.ForEachInEnumerable(l => ReportToListener(l, propertyName, value));
+    }
+
+    private void OnListenerAttached(ReceiverDefinition def, string id)
+    {
+        IDictionary<string, object> properties = Containers[id]
+            .AsDictionary(BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public);
+
+        properties.ForEachInEnumerable(kv => ReportToListener(def, kv.Key, kv.Value));
+    }
+
+    private void ReportToListener(ReceiverDefinition def, string propertyName, object value)
+    {
+        if (def.IsReceivingThisProperty(propertyName))
+            def.Container.Report(propertyName, value);
+    }
+
+    private void DetachContainer(string containerId)
+    {
+        if (!Subscriptions.TryRemove(containerId, out IDisposable subscription))
+            return;
+
+        subscription.Dispose();
+    }
+}

@@ -39,5 +39,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
 		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
+		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
 	</ItemGroup>
 </Project>

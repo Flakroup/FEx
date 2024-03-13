@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace FEx.Logging.Abstractions.Interfaces;
@@ -12,7 +11,6 @@ public interface ILoggable
     void BeginLabeledScope(params (string, object)[] state);
     void BeginScope<TState>(TState state);
     void EndScope();
-    void Log(LogLevel logLevel, string message, Exception exception = null);
     void LogCritical(string message, Exception exception = null);
     void LogDebug(string message, Exception exception = null);
     void LogError(string message, Exception exception = null);

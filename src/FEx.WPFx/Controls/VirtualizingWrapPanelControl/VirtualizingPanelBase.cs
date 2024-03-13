@@ -130,9 +130,9 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
                  * GetItemsOwner method does always return the itmes control instead
                  * of the real items owner for example the group item when grouping */
                 MethodInfo getItemsOwnerInternalMethod = typeof(ItemsControl).GetMethod("GetItemsOwnerInternal",
-                    BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(DependencyObject) }, null)!;
+                    BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(DependencyObject)], null)!;
 
-                _itemsOwner = (DependencyObject)getItemsOwnerInternalMethod.Invoke(null, new object[] { this })!;
+                _itemsOwner = (DependencyObject)getItemsOwnerInternalMethod.Invoke(null, [this])!;
             }
 
             return _itemsOwner;

@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Threading;
 using WpfBindingErrors;
 
-namespace FEx.WPFx;
+namespace FEx.WPFx.Abstractions;
 
 public abstract class AppBootstrapper : Application
 {
@@ -31,7 +31,7 @@ public abstract class AppBootstrapper : Application
 
     protected virtual void BeforeStartup(StartupEventArgs e)
     {
-        WPFUtilities.OverrideFormattingOnUI();
+        FExWPFx.OverrideFormattingOnUI();
 
         //BeforeInitializationCheck();
 

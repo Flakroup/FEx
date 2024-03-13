@@ -1,10 +1,9 @@
 ﻿using FEx.Basics.Abstractions;
-using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Enums;
 
 namespace FEx.MVVM.Models;
 
-public class NotifyProgressInfoChanged : NotifyPropertyChanged, IProgressInfo
+public class NotifyProgressInfoChanged : NotifyPropertyChanged
 {
     private ProgressChangeMode _progressMode;
     private double? _progressValue;

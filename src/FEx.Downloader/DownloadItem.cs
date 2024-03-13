@@ -12,7 +12,9 @@ using FEx.Extensions.Collections.Lists;
 using FEx.Extensions.DateTimes;
 using FEx.Extensions.IO;
 using FEx.Extensions.Web;
+using FEx.Fundamentals.Utilities;
 using FEx.MVVM.Enums;
+using FEx.MVVM.Extensions;
 using FEx.MVVM.Utilities;
 using FEx.Webx.Extensions;
 using Microsoft.VisualStudio.Threading;
@@ -29,7 +31,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Downloader;
 
-public class DownloadItem : ProgressAggregator, IDownloadItem, IDisposable
+public class DownloadItem : ProgressAggregator, IDownloadItem
 {
     private string _runningTasks;
     private DownloadState _state;
@@ -522,9 +524,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem, IDisposable
         TempDirectory = new DirectoryInfo(path);
     }
 
-    protected override void UpdateProgressInfo()
+    protected override void TimerCallback()
     {
-        base.UpdateProgressInfo();
+        base.TimerCallback();
 
         if (!ReportProgress)
             return;
@@ -738,7 +740,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem, IDisposable
 #if NET
         await
 #endif
-            using Stream streamResponse = response.GetResponseStream();
+        using Stream streamResponse = response.GetResponseStream();
 
 #if NETSTANDARD
         if (streamResponse is null)
@@ -891,13 +893,18 @@ public class DownloadItem : ProgressAggregator, IDownloadItem, IDisposable
     }
 
     #region IDisposable
-    public void Dispose()
+    protected override void Dispose(bool disposing)
     {
-        Semaphore?.Dispose();
-        TotalSemaphore?.Dispose();
-        CancellationTokenSource?.Dispose();
-        DownloadFileTask?.Dispose();
-        Response?.Dispose();
+        if (disposing)
+        {
+            Semaphore?.Dispose();
+            TotalSemaphore?.Dispose();
+            CancellationTokenSource?.Dispose();
+            DownloadFileTask?.Dispose();
+            Response?.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
     #endregion
 

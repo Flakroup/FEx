@@ -1,5 +1,6 @@
 ﻿using FEx.Abstractions.Interfaces;
 using FEx.Logging.Abstractions.Interfaces;
+using FEx.Logging.Services;
 using Microsoft.Extensions.Logging;
 using Serilog.Extensions.Logging;
 using StrongInject;
@@ -14,6 +15,7 @@ namespace FEx.Logging;
     Scope.SingleInstance,
     typeof(FExLoggingModuleInitializer),
     typeof(IInitializeModule))]
+[Register(typeof(LoggingService), Scope.SingleInstance, typeof(ILoggingService))]
 public class FExLoggingModule
 {
     [Instance]

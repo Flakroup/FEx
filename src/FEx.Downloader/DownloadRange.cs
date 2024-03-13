@@ -171,7 +171,7 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
         {
             if (res.Count == 0
                 || res[res.Count - 1][1] != t - 1)
-                res.Add(new[] { t, t });
+                res.Add([t, t]);
             else
                 res[res.Count - 1][1] = t;
         }

@@ -82,8 +82,8 @@ public class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
         Progress = progress;
         RangeHeaderValue = rangeHeader;
         RangeHeader = RangeHeaderValue.ToString();
-        From = RangeHeaderValue.From ?? throw new ArgumentNullException();
-        To = RangeHeaderValue.To ?? throw new ArgumentNullException();
+        From = RangeHeaderValue.From ?? throw new ArgumentNullException(nameof(ContentRangeHeaderValue.From));
+        To = RangeHeaderValue.To ?? throw new ArgumentNullException(nameof(ContentRangeHeaderValue.To));
 
         ExpectedSize = To - From + 1;
 

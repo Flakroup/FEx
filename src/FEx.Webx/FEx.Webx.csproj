@@ -1,11 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MimeMapping" Version="2.0.0" />
+		<PackageReference Include="MimeMapping" Version="3.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>

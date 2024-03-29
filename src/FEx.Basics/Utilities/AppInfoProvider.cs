@@ -11,6 +11,7 @@ namespace FEx.Basics.Utilities;
 
 public record AppInfoProvider : IAppInfoProvider
 {
+    public static bool IsUIApp => AppInfo is { IsUIApp: true };
     public string EntryAssemblyName { get; }
     public Assembly EntryAssembly { get; }
     public FileInfo EntryAssemblyLocation { get; }
@@ -35,8 +36,6 @@ public record AppInfoProvider : IAppInfoProvider
     public string UserSettingsPath { get; }
 
     public string LogFilePath { get; }
-
-    public static bool IsUIApp => AppInfo is { IsUIApp: true };
 
     private static IAppInfo AppInfo { get; set; }
 
@@ -72,26 +71,26 @@ public record AppInfoProvider : IAppInfoProvider
         NameLineVersion = $"{Name}{Environment.NewLine}{Version}";
         NameLineVersionWithPrefix = $"{Name}{Environment.NewLine}ver. {Version}";
 
-        Company =
-            AppInfo?.Company ?? GetEntryAssemblyAttribute<AssemblyCompanyAttribute>(x => x?.Company);
+        Company = AppInfo?.Company ?? GetEntryAssemblyAttribute<AssemblyCompanyAttribute>(x => x?.Company);
 
         Copyright = GetEntryAssemblyAttribute<AssemblyCopyrightAttribute>(x => x?.Copyright);
 
-        if (PlatformInfoProvider.IsWindows)
-        {
-            UserData = new DirectoryInfo(
-                Environment.SpecialFolder.ApplicationData.GetSpecialDirectoryPathDescendants(Company.Guard(
-                    nameof(Company)), Name));
+        UserData = AppInfo?.UserData
+                   ?? (PlatformInfoProvider.IsWindows
+                       ? new DirectoryInfo(
+                           Environment.SpecialFolder.ApplicationData.GetSpecialDirectoryPathDescendants(Company.Guard(
+                                   nameof(Company)),
+                               Name))
+                       : Environment.SpecialFolder.UserProfile.GetSpecialDirectory().Directory);
 
-            AppData = new DirectoryInfo(
-                Environment.SpecialFolder.CommonApplicationData.GetSpecialDirectoryPathDescendants(Company.Guard(
-                    nameof(Company)), Name));
-        }
-        else
-        {
-            UserData = Environment.SpecialFolder.UserProfile.GetSpecialDirectory().Directory;
-            AppData = Environment.SpecialFolder.LocalApplicationData.GetSpecialDirectory().Directory;
-        }
+        AppData = AppInfo?.AppData
+                  ?? (PlatformInfoProvider.IsWindows
+                      ? new DirectoryInfo(
+                          Environment.SpecialFolder.CommonApplicationData.GetSpecialDirectoryPathDescendants(
+                              Company.Guard(
+                                  nameof(Company)),
+                              Name))
+                      : Environment.SpecialFolder.LocalApplicationData.GetSpecialDirectory().Directory);
 
         UserDataPath = UserData.FullName;
         UserData.Create();
@@ -111,13 +110,15 @@ public record AppInfoProvider : IAppInfoProvider
         AppInfo ??= appInfo;
     }
 
-    private static Version ParseVersionString(string version) => Version.TryParse(version, out Version result)
-        ? result
-        : null;
+    private static Version ParseVersionString(string version) =>
+        Version.TryParse(version, out Version result)
+            ? result
+            : null;
 
-    private string TryGetProductName() => !string.IsNullOrEmpty(ProductVersionInfo?.ProductName)
-        ? ProductVersionInfo.ProductName
-        : null;
+    private string TryGetProductName() =>
+        !string.IsNullOrEmpty(ProductVersionInfo?.ProductName)
+            ? ProductVersionInfo.ProductName
+            : null;
 
     private string GetEntryAssemblyAttribute<T>(Func<T, string> func) where T : Attribute =>
         EntryAssembly.GetEntryAssemblyAttribute(func);

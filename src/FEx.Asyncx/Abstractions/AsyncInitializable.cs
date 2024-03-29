@@ -21,7 +21,7 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
 
     protected AsyncInitializable()
     {
-        _asyncHelper = FExAsyncx.AsyncHelper;
+        _asyncHelper = FExAsyncx.AsyncHelper.Guard(nameof(FExAsyncx.AsyncHelper));
         _semaphore = new SemaphoreSlim(1, 1);
     }
 

@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Abstractions.Interfaces;
 using FEx.Basics;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Clients;
@@ -304,7 +304,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     {
         if (IsRunning)
         {
+#if NETSTANDARD
             CancellationTokenSource.Cancel();
+#else
+            await CancellationTokenSource.CancelAsync();
+#endif
             using var cts = new CancellationTokenSource();
             await Semaphore.WaitAsync(cts.Token);
             DState = DownloadState.Cancelled;
@@ -344,7 +348,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                     Mode = ProgressOperationMode.Stream;
 
                     if (ReportProgress)
-                        Timer.TimerStart();
+                        Timer.Start();
 
                     if (Response is null)
                         await GetResponseAsync();
@@ -737,10 +741,12 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             || response.ContentLength != BufferLength + 1)
             return false;
 
-#if NET
-        await
-#endif
+#if NETSTANDARD
         using Stream streamResponse = response.GetResponseStream();
+#else
+        await using Stream streamResponse = response.GetResponseStream();
+#endif
+            
 
 #if NETSTANDARD
         if (streamResponse is null)

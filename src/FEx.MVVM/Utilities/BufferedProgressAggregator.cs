@@ -46,7 +46,7 @@ public class BufferedProgressAggregator : ProgressAggregator
         if (!Timer.IsRunning
             && (maximum.HasValue || value.HasValue)
             && mode != ProgressChangeMode.End)
-            Timer.TimerStart();
+            Timer.Start();
 
         if (maximum.HasValue)
             _progressChangeSubject.OnNext(new ProgressChange<double>

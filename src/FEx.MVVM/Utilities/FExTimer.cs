@@ -67,7 +67,7 @@ public class FExTimer : ReactiveNotifyPropertyChanged, IDisposable
     /// <summary>
     /// Starts the timer.
     /// </summary>
-    public void TimerStart()
+    public void Start()
     {
         if (IsRunning)
             return;
@@ -78,7 +78,7 @@ public class FExTimer : ReactiveNotifyPropertyChanged, IDisposable
     /// <summary>
     /// Stops the timer.
     /// </summary>
-    public void TimerStop()
+    public void Stop()
     {
         if (!IsRunning)
             return;

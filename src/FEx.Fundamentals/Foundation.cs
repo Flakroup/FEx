@@ -34,13 +34,15 @@ public class Foundation
         Dispatcher = dispatcher;
     }
 
-    public static void Init<TContainer>(IFExServiceProvider microsoftDiServiceProvider = null)
+    public static TContainer Init<TContainer>(IFExServiceProvider microsoftDiServiceProvider = null)
         where TContainer : class, IDisposable, new()
     {
         _strongInjectServiceProvider?.Dispose();
         StrongInjectServiceProvider = new FExStrongInjectServiceProvider();
-        StrongInjectServiceProvider.ConfigureServiceProvider<TContainer>();
+        TContainer container = StrongInjectServiceProvider.ConfigureServiceProvider<TContainer>();
         ServiceProvider = microsoftDiServiceProvider ?? StrongInjectServiceProvider;
+
+        return container;
     }
 
     public static void RegisterDependencies(Func<IFExServiceProvider> serviceProviderConfiguration)

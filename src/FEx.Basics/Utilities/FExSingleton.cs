@@ -42,7 +42,7 @@ public abstract class FExSingleton : IDisposable
 
 public abstract class FExSingleton<T> : FExSingleton where T : class, new()
 {
-    private static volatile T _instance;
+    private static T _instance;
 
     public static T Instance
     {

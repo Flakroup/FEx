@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions;
+﻿using FEx.Abstractions.Interfaces;
 using FEx.Asyncx.Abstractions;
 using FEx.Basics.Collections;
 using FEx.Basics.Flow;

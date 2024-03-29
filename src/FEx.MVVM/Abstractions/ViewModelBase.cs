@@ -4,7 +4,7 @@ using System;
 
 namespace FEx.MVVM.Abstractions;
 
-public abstract class ViewModelBase : ReactiveNotifyPropertyChanged, IViewModelBase, IEquatable<ViewModelBase>
+public abstract class ViewModelBase : LinkableReactiveNotifyPropertyChanged, IViewModelBase, IEquatable<ViewModelBase>
 {
     private string _title;
 

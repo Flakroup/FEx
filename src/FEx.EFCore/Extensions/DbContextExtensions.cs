@@ -43,10 +43,10 @@ public static class DbContextExtensions
             MaxDepth = 1
         };
 
-        ((List<JsonConverter>)Settings.Converters).AddRange(new JsonConverter[]
-        {
+        ((List<JsonConverter>)Settings.Converters).AddRange(
+        [
             ParseStringConverter.Singleton, new VersionConverter(), new StringEnumConverter()
-        });
+        ]);
 
         Settings.Error = (_, e) =>
         {

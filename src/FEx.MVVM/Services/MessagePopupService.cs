@@ -22,52 +22,44 @@ public abstract class MessagePopupServiceBase : IMessagePopupService
     }
 
     public async Task<MessageResult> ShowMessageAsync(string txt,
-                                                      Type callerType = null,
-                                                      ISupportInitialize ownerWindow = null,
-                                                      bool informUser = true,
                                                       string caption = "Something wrong happened",
-                                                      bool wait = true,
                                                       MessageIcon messageBoxImage = MessageIcon.Exclamation,
                                                       FExMessageButton button = FExMessageButton.OK,
+                                                      ISupportInitialize ownerWindow = null,
+                                                      bool informUser = true,
+                                                      bool wait = true,
                                                       Stopwatch sw = null,
                                                       LogLevel level = LogLevel.Information,
-                                                      Exception exception = null)
-    {
-        _logger.LogInformation($"{(callerType is null ? string.Empty : $"{callerType?.FullName} ")}{txt}");
-
-        return await InternalShowMessageAsync(txt,
-            callerType,
-            ownerWindow,
-            informUser,
+                                                      Exception exception = null) =>
+        await InternalShowMessageAsync(txt,
             caption,
-            wait,
             messageBoxImage,
             button,
+            ownerWindow,
+            informUser,
+            wait,
             sw,
             level,
             exception);
-    }
 
     public MessageResult ShowMessage(string txt,
-                                     Type callerType = null,
-                                     ISupportInitialize ownerWindow = null,
-                                     bool informUser = true,
                                      string caption = "Something wrong happened",
-                                     bool wait = true,
                                      MessageIcon messageBoxImage = MessageIcon.Exclamation,
                                      FExMessageButton button = FExMessageButton.OK,
+                                     ISupportInitialize ownerWindow = null,
+                                     bool informUser = true,
+                                     bool wait = true,
                                      Stopwatch sw = null,
                                      LogLevel level = LogLevel.Information,
                                      Exception exception = null)
     {
         return FExAsyncx.AsyncHelper.FireOrWait(() => ShowMessageAsync(txt,
-                callerType,
-                ownerWindow,
-                informUser,
                 caption,
-                wait,
                 messageBoxImage,
                 button,
+                ownerWindow,
+                informUser,
+                wait,
                 sw,
                 level,
                 exception),
@@ -75,14 +67,13 @@ public abstract class MessagePopupServiceBase : IMessagePopupService
     }
 
     protected abstract Task<MessageResult> InternalShowMessageAsync(string txt,
-                                                                    Type callerType = null,
-                                                                    ISupportInitialize ownerWindow = null,
-                                                                    bool informUser = true,
                                                                     string caption = "Something wrong happened",
-                                                                    bool wait = true,
                                                                     MessageIcon messageBoxImage =
                                                                         MessageIcon.Exclamation,
                                                                     FExMessageButton button = FExMessageButton.OK,
+                                                                    ISupportInitialize ownerWindow = null,
+                                                                    bool informUser = true,
+                                                                    bool wait = true,
                                                                     Stopwatch sw = null,
                                                                     LogLevel level = LogLevel.Information,
                                                                     Exception exception = null);

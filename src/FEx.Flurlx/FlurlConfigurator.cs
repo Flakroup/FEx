@@ -24,6 +24,8 @@ public class FlurlConfigurator : IFlurlConfigurator
         _flurlClientCache.Add(_apiConfiguration.ClientName, _apiConfiguration.BaseUrl, DefaultClientConfiguration);
     }
 
+    public IFlurlClient GetClient() => _flurlClientCache.Get(_apiConfiguration.ClientName);
+
     private void DefaultClientConfiguration(IFlurlClientBuilder builder)
     {
         builder.Settings.JsonSerializer = new NewtonsoftJsonSerializer(JsonExtensions.DefaultSettings);

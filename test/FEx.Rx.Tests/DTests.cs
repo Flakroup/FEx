@@ -24,7 +24,7 @@ public class DTests
     [Fact]
     public async Task D_TestAsync()
     {
-        string[] props = { nameof(Tester.Value), nameof(Tester.TestIt) };
+        string[] props = [nameof(Tester.Value), nameof(Tester.TestIt)];
         var cache = new SourceCache<Tester, string>(x => x.Key);
 
         IObservable<IChangeSet<Tester, string>> s = cache.Connect()

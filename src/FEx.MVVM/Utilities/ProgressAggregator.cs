@@ -201,7 +201,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         else if (Value.PreciseEquals(Maximum, 3))
         {
             if (Timer.IsRunning)
-                Timer.TimerStop();
+                Timer.Stop();
 
             Stopwatch.Reset();
             Info = string.Empty;
@@ -334,7 +334,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         if (!Timer.IsRunning
             && (maximum.HasValue || value.HasValue)
             && mode != ProgressChangeMode.End)
-            Timer.TimerStart();
+            Timer.Start();
 
         switch (mode)
         {

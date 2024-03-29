@@ -10,9 +10,6 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-#if NETFULL
-using System.Security.Permissions;
-#endif
 
 namespace FEx.WPFx.Implementations;
 
@@ -29,51 +26,16 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
     }
 
     protected override async Task<MessageResult> InternalShowMessageAsync(string txt,
-                                                                          Type callerType = null,
-                                                                          ISupportInitialize ownerWindow = null,
-                                                                          bool informUser = true,
                                                                           string caption = "Something wrong happened",
-                                                                          bool wait = true,
                                                                           MessageIcon messageBoxImage =
                                                                               MessageIcon.Exclamation,
                                                                           FExMessageButton button = FExMessageButton.OK,
+                                                                          ISupportInitialize ownerWindow = null,
+                                                                          bool informUser = true,
+                                                                          bool wait = true,
                                                                           Stopwatch sw = null,
                                                                           LogLevel level = LogLevel.Information,
-                                                                          Exception exception = null) =>
-        await LogItAsync(txt,
-            informUser,
-            caption,
-            wait,
-            messageBoxImage,
-            button,
-            ownerWindow as Window,
-            sw,
-            level,
-            exception);
-
-    /// <summary>
-    ///     Receives text to log and passes via event.
-    /// </summary>
-    /// <param name="txt">Text to be logged</param>
-    /// <param name="informUser">Show message dialog if no textbox for log?</param>
-    /// <param name="caption">The caption.</param>
-    /// <param name="messageBoxImage">The message box image.</param>
-    /// <param name="button">The buttons to show.</param>
-    /// <param name="owner">The owner window.</param>
-    /// <param name="sw">The stopwatch.</param>
-    /// <param name="level">The level.</param>
-    /// <param name="exception">The exception.</param>
-    /// <returns></returns>
-    protected async Task<MessageResult> LogItAsync(string txt,
-                                                   bool informUser = true,
-                                                   string caption = "Something wrong happened",
-                                                   bool wait = true,
-                                                   MessageIcon messageBoxImage = MessageIcon.Exclamation,
-                                                   FExMessageButton button = FExMessageButton.OK,
-                                                   Window owner = null,
-                                                   Stopwatch sw = null,
-                                                   LogLevel level = LogLevel.Information,
-                                                   Exception exception = null)
+                                                                          Exception exception = null)
     {
         try
         {
@@ -85,7 +47,7 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
                     wait,
                     (MessageBoxImage)messageBoxImage,
                     (MessageBoxButton)button,
-                    owner,
+                    (Window)ownerWindow,
                     sw);
         }
         catch (Exception ex)
@@ -96,7 +58,7 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
                     wait,
                     (MessageBoxImage)messageBoxImage,
                     (MessageBoxButton)button,
-                    owner,
+                    (Window)ownerWindow,
                     sw);
         }
 
@@ -161,7 +123,8 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
             MessagesCache.Remove(message);
             MessagesCacheSemaphore.Release();
         }
-            return MessageResult.None;
+
+        return MessageResult.None;
     }
 
     private void Log(string txt, LogLevel level = LogLevel.Information, Exception exception = null)

@@ -19,7 +19,7 @@ public static class DispatcherService
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
-    public static void ExecuteActionInDispatcherContext(Action action,
+    public static void InvokeOnDispatcherContext(Action action,
                                                         DispatcherObject sender = null,
                                                         DispatcherPriority priority = DispatcherPriority.Send)
     {
@@ -38,7 +38,7 @@ public static class DispatcherService
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
-    public static async Task ExecuteActionInDispatcherContextAsync(Action action,
+    public static async Task InvokeOnDispatcherContextAsync(Action action,
                                                                    DispatcherObject sender = null,
                                                                    DispatcherPriority priority =
                                                                        DispatcherPriority.Send)
@@ -58,7 +58,7 @@ public static class DispatcherService
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
-    public static T ExecuteActionInDispatcherContext<T>(Func<T> action,
+    public static T InvokeOnDispatcherContext<T>(Func<T> action,
                                                         DispatcherObject sender = null,
                                                         DispatcherPriority priority = DispatcherPriority.Send)
     {
@@ -76,7 +76,7 @@ public static class DispatcherService
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
-    public static async Task<T> ExecuteActionInDispatcherContextAsync<T>(
+    public static async Task<T> InvokeOnDispatcherContextAsync<T>(
         Func<T> action,
         DispatcherObject sender = null,
         DispatcherPriority priority = DispatcherPriority.Send)

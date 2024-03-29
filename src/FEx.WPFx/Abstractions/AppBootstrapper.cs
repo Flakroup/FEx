@@ -121,8 +121,8 @@ public abstract class AppBootstrapper : Application
         //Guid s = LogToHub("Checking duplicated instances");
         //if (!CommonServicesModule.EnsureSingleInstance())
         //{
-        //    if (WpfCommon.ShowMessageBox(
-        //        $"{CommonServicesModule.ApplicationName} is already running.{Environment.NewLine}Do you want to close it?",
+        //    if (FExMvvm.MessagePopupService.ShowMessage(
+        //        $"{FExBasics.AppInfoProvider.Name} is already running.{Environment.NewLine}Do you want to close it?",
         //        buttons: MessageBoxButton.YesNo) == MessageBoxResult.No)
         //    {
         //        Environment.Exit(0);

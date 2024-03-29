@@ -152,7 +152,7 @@ public class DownloadService : ProgressAggregator
         this.SetCurrentDownloadState(val, max);
 
         if (SetFinished)
-            StatusInfo = $"Finished: {finished} / {Downloads.Count}";
+           SetStatusInfo($"Finished: {finished} / {Downloads.Count}");
     }
 
     private (double value, double maximum, int finished) CalculateProgress()

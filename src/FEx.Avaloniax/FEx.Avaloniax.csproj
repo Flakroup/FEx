@@ -14,6 +14,7 @@
 		<ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
 		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
 		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
+		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
 		<ProjectReference Include="..\FEx.Rx\FEx.Rx.csproj" />
 	</ItemGroup>
 

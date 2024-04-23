@@ -10,7 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace FEx.Json;
+namespace FEx.Json.Extensions;
 
 public static class JsonExtensions
 {

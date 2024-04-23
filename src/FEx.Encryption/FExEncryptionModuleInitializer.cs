@@ -1,9 +1,9 @@
-﻿using FEx.Abstractions;
+﻿using FEx.DependencyInjection.Abstractions;
 using FEx.Encryption.Abstractions.Interfaces;
 
 namespace FEx.Encryption;
 
-public class FExEncryptionModuleInitializer : InitializeModule
+public class FExEncryptionModuleInitializer : InitializeOnlyModule
 {
     private readonly IFExEncryptionSettings _settings;
 

@@ -3,6 +3,6 @@ using StrongInject;
 
 namespace FEx.Platforms;
 
-public interface IFExPlatformsModule : IContainer<IRegistryService>
+public interface IFExPlatformsModule : IContainer<IRegistryService>, IContainer<FExPlatformsModuleInitializer>
 {
 }

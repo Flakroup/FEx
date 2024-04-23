@@ -1,5 +1,5 @@
 using FEx.Flurlx.Abstractions.Interfaces;
-using FEx.Json;
+using FEx.Json.Extensions;
 using Flurl.Http;
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;

@@ -1,6 +1,6 @@
 ﻿using FEx.Extensions;
 using FEx.Extensions.Collections.Lists;
-using FEx.Json;
+using FEx.Json.Extensions;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;

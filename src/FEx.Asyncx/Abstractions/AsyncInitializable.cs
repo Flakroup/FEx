@@ -3,14 +3,14 @@ using FEx.Asyncx.Helpers;
 using FEx.Basics;
 using FEx.Extensions;
 using Microsoft.Extensions.Logging;
-using StrongInject;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.Asyncx.Abstractions;
 
-public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequiresInitialization
+public abstract class AsyncInitializable : IAsyncInitialize, IDisposable
 {
     protected readonly AsyncHelper _asyncHelper;
     private readonly SemaphoreSlim _semaphore;
@@ -24,8 +24,6 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
         _asyncHelper = FExAsyncx.AsyncHelper.Guard(nameof(FExAsyncx.AsyncHelper));
         _semaphore = new SemaphoreSlim(1, 1);
     }
-
-    public virtual void Initialize() => RunInitialize();
 
     protected abstract Task<bool> OnInitializationAsync(bool reInitialize);
 
@@ -44,7 +42,9 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
 
         try
         {
+            Debug.WriteLine($"Initializing {GetType().Name}");
             IsInitialized = await OnInitializationAsync(reInitialize);
+            Debug.WriteLine($"{GetType().Name} initialized");
         }
         catch (Exception ex)
         {
@@ -59,8 +59,8 @@ public abstract class AsyncInitializable : IAsyncInitialize, IDisposable, IRequi
         return IsInitialized;
     }
 
-    protected void RunInitialize(bool reInitialize = false) => InitializationTask =
-        _asyncHelper.ExecuteTaskOnThreadPoolAsync(() => InitializeAsync(reInitialize));
+    protected void Initialize(bool reInitialize = false) =>
+        InitializationTask = _asyncHelper.ExecuteTaskOnThreadPoolAsync(() => InitializeAsync(reInitialize));
 
     #region IDisposable
     public void Dispose()

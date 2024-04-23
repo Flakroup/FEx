@@ -3,6 +3,6 @@ using StrongInject;
 
 namespace FEx.Downloader;
 
-public interface IFExDownloaderModule : IContainer<DownloadService>
+public interface IFExDownloaderModule : IContainer<DownloadService>, IContainer<FExDownloaderModuleInitializer>
 {
 }

@@ -1,6 +1,6 @@
 ﻿using FEx.Basics.Abstractions;
 using FEx.Extensions;
-using FEx.Json;
+using FEx.Json.Extensions;
 using System;
 using System.Globalization;
 using System.IO;

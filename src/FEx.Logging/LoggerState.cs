@@ -1,6 +1,6 @@
 ﻿using FEx.Extensions.Collections;
 using FEx.Extensions.Collections.Dictionaries;
-using FEx.Json;
+using FEx.Json.Extensions;
 using FEx.Logging.Abstractions.Interfaces;
 using System.Collections.Generic;
 using System.Linq;

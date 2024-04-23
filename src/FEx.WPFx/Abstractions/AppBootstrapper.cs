@@ -1,4 +1,5 @@
 ﻿using FEx.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Fundamentals;
 using System;
 using System.Windows;

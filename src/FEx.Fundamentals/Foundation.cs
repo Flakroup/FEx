@@ -1,7 +1,9 @@
 ﻿using FEx.Abstractions.Interfaces;
 using FEx.DependencyInjection;
+using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Extensions;
 using System;
+using System.Threading.Tasks;
 
 namespace FEx.Fundamentals;
 
@@ -45,9 +47,13 @@ public class Foundation
         return container;
     }
 
-    public static void RegisterDependencies(Func<IFExServiceProvider> serviceProviderConfiguration)
+    public static async Task<IFExServiceProvider> RegisterDependenciesAsync(IFExDependencyInjectionModule container, Func<FExMicrosoftDIServiceProvider, Task> serviceProviderConfiguration)
     {
         serviceProviderConfiguration.Guard(nameof(serviceProviderConfiguration));
-        ServiceProvider = serviceProviderConfiguration();
+        FExMicrosoftDIServiceProvider provider = container.Resolve<FExMicrosoftDIServiceProvider>().Value;
+        await serviceProviderConfiguration(provider);
+        ServiceProvider = provider;
+
+        return ServiceProvider;
     }
 }

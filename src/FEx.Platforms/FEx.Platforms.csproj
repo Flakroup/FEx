@@ -11,6 +11,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
+	  <ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
 	  <ProjectReference Include="..\FEx.Platforms.Abstractions\FEx.Platforms.Abstractions.csproj" />
 	</ItemGroup>
 

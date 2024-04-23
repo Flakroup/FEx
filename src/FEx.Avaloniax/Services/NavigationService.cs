@@ -1,5 +1,6 @@
 ﻿using FEx.Abstractions.Interfaces;
 using FEx.Avaloniax.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Extensions;
 using ReactiveUI;
 using System.Threading.Tasks;

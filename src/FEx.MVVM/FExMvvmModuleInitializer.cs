@@ -1,9 +1,10 @@
-﻿using FEx.Abstractions;
+﻿using FEx.DependencyInjection.Abstractions;
 using FEx.MVVM.Abstractions.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FEx.MVVM;
 
-public class FExMvvmModuleInitializer : InitializeModule
+public class FExMvvmModuleInitializer : InitializeModule<IFExMvvmModule>
 {
     private readonly IMessagePopupService _messagePopupService;
 
@@ -15,5 +16,10 @@ public class FExMvvmModuleInitializer : InitializeModule
     protected override void OnInitialize()
     {
         FExMvvm.Init(_messagePopupService);
+    }
+
+    protected override void AddServices(IFExMvvmModule container, IServiceCollection services)
+    {
+        FExMvvmModule.AddServices(container, services);
     }
 }

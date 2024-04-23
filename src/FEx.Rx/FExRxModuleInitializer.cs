@@ -1,8 +1,8 @@
-﻿using FEx.Abstractions;
+﻿using FEx.DependencyInjection.Abstractions;
 
 namespace FEx.Rx;
 
-public class FExRxModuleInitializer : InitializeModule
+public class FExRxModuleInitializer : InitializeOnlyModule
 {
     protected override void OnInitialize()
     {

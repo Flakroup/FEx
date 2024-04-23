@@ -1,13 +1,23 @@
 ﻿using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
+using FEx.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using System;
 
 namespace FEx.EFCore.Extensions;
 
 public static class DbContextOptionsBuilderExtensions
 {
-    public static bool SetSqlInstanceConnection(this DbContextOptionsBuilder options, IFExDbConfig config)
+    public static bool ConfigureDbContext(this DbContextOptionsBuilder options,
+                                      IFExDbConfig config,
+                                      ISqlDbHelper sqlDbHelper)
     {
+        if (!sqlDbHelper.IsInitialized)
+            throw new InvalidOperationException();
+
+        config.SqlInstance = sqlDbHelper.SQLInstance;
+
         var sqlInstanceFound = true;
 
         if (config.UseSqlite)
@@ -19,5 +29,46 @@ public static class DbContextOptionsBuilderExtensions
             options.EnableSensitiveDataLogging();
 
         return sqlInstanceFound;
+    }
+
+    public static void UseSqlite(this DbContextOptionsBuilder options, IFExDbConfig config) =>
+        options.UseSqlite($"data source={config.SqliteDbFile.FullName}",
+            sqliteDbContextOptionsBuilder => sqliteDbContextOptionsBuilder.CommandTimeout(config.CommandTimeout));
+
+    public static bool UseSqlServer(this DbContextOptionsBuilder options,
+                                    IFExDbConfig config,
+                                    Action<SqlServerDbContextOptionsBuilder> configure = null)
+    {
+        config.SqlInstance.Guard(nameof(IFExDbConfig.SqlInstance));
+
+        try
+        {
+            bool canConnect = SQLConnectionHelper.CheckMasterDbConnection(config);
+
+            if (canConnect)
+            {
+                string connectionString = SQLConnectionHelper.GetConnectionString(config);
+
+                options.UseSqlServer(connectionString,
+                    serverDbContextOptionsBuilder =>
+                    {
+                        serverDbContextOptionsBuilder.CommandTimeout(config.CommandTimeout);
+
+                        serverDbContextOptionsBuilder.EnableRetryOnFailure(config.MaxRetryCount,
+                            config.MaxRetryDelay,
+                            null);
+
+                        configure?.Invoke(serverDbContextOptionsBuilder);
+                    });
+
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.HandleException();
+        }
+
+        return false;
     }
 }

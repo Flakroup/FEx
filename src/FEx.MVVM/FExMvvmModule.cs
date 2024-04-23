@@ -1,5 +1,8 @@
-﻿using FEx.Abstractions.Interfaces;
+﻿using FEx.DependencyInjection.Abstractions.Interfaces;
+using FEx.MVVM.Abstractions.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
+using StrongInject.Extensions.DependencyInjection;
 
 namespace FEx.MVVM;
 
@@ -9,4 +12,8 @@ namespace FEx.MVVM;
     typeof(IInitializeModule))]
 public class FExMvvmModule
 {
+    public static void AddServices(IFExMvvmModule container, IServiceCollection services)
+    {
+        services.AddTransientServiceUsingContainer<IMessagePopupService>(container);
+    }
 }

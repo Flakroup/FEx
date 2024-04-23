@@ -1,10 +1,9 @@
-﻿#if NETSTANDARD
+#if NETSTANDARD
 using FEx.Extensions.Collections.Lists;
 #endif
 using FEx.Basics.Flow;
 using FEx.EFCore.Enums;
 using FEx.EFCore.Models;
-using FEx.Extensions;
 using FEx.Json;
 using FEx.Json.Converters;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +11,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,6 +24,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using static FEx.Logging.GlobalLogger;
+using StringExtensions = FEx.Extensions.StringExtensions;
 
 namespace FEx.EFCore.Extensions;
 
@@ -43,8 +44,7 @@ public static class DbContextExtensions
             MaxDepth = 1
         };
 
-        ((List<JsonConverter>)Settings.Converters).AddRange(
-        [
+        ((List<JsonConverter>)Settings.Converters).AddRange([
             ParseStringConverter.Singleton, new VersionConverter(), new StringEnumConverter()
         ]);
 
@@ -71,8 +71,12 @@ public static class DbContextExtensions
     {
         id ??= Guid.NewGuid().ToString();
 
-        Result<Error> result = dbContext.ValidateChangedEntities(id, validateAllProperties, onValidationStart,
-            onFaultyEntity, onValidationFail, onValidationSuccess);
+        Result<Error> result = dbContext.ValidateChangedEntities(id,
+            validateAllProperties,
+            onValidationStart,
+            onFaultyEntity,
+            onValidationFail,
+            onValidationSuccess);
 
         if (result.IsFailure)
             return;
@@ -123,7 +127,9 @@ public static class DbContextExtensions
                 var validationContext = new ValidationContext(entry.Entity);
                 failedValidations.Clear();
 
-                if (!Validator.TryValidateObject(entry.Entity, validationContext, failedValidations,
+                if (!Validator.TryValidateObject(entry.Entity,
+                        validationContext,
+                        failedValidations,
                         validateAllProperties))
                 {
                     ReadOnlyCollection<ValidationResult> fails = failedValidations.ToList().AsReadOnly();
@@ -187,9 +193,10 @@ public static class DbContextExtensions
     }
 
     public static IList<EntityEntry> GetChangedEntities<TDbContext>(this TDbContext dbContext)
-        where TDbContext : DbContext => dbContext.ChangeTracker.Entries()
-        .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
-        .ToList();
+        where TDbContext : DbContext =>
+        dbContext.ChangeTracker.Entries()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .ToList();
 
     public static bool IsSqlite<TDbContext>(this TDbContext context) where TDbContext : DbContext =>
         context.Database.ProviderName?.EndsWith(nameof(SqlDialect.Sqlite)) == true;

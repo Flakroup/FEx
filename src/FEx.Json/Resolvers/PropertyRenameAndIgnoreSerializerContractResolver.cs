@@ -1,0 +1,68 @@
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+
+namespace FEx.Json.Resolvers;
+
+public class PropertyRenameAndIgnoreSerializerContractResolver : DefaultContractResolver
+{
+    private readonly Dictionary<Type, HashSet<string>> _ignores;
+    private readonly Dictionary<Type, Dictionary<string, string>> _renames;
+
+    public PropertyRenameAndIgnoreSerializerContractResolver()
+    {
+        _ignores = [];
+        _renames = [];
+    }
+
+    public void IgnoreProperty(Type type, params string[] jsonPropertyNames)
+    {
+        if (!_ignores.ContainsKey(type))
+            _ignores[type] = [];
+
+        foreach (string prop in jsonPropertyNames)
+            _ignores[type].Add(prop);
+    }
+
+    public void RenameProperty(Type type, string propertyName, string newJsonPropertyName)
+    {
+        if (!_renames.ContainsKey(type))
+            _renames[type] = [];
+
+        _renames[type][propertyName] = newJsonPropertyName;
+    }
+
+    protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
+    {
+        JsonProperty property = base.CreateProperty(member, memberSerialization);
+
+        if (IsIgnored(property.DeclaringType, property.PropertyName))
+        {
+            property.ShouldSerialize = _ => false;
+            property.Ignored = true;
+        }
+
+        if (IsRenamed(property.DeclaringType, property.PropertyName, out string newJsonPropertyName))
+            property.PropertyName = newJsonPropertyName;
+
+        return property;
+    }
+
+    private bool IsIgnored(Type type, string jsonPropertyName) =>
+        _ignores.ContainsKey(type) && _ignores[type].Contains(jsonPropertyName);
+
+    private bool IsRenamed(Type type, string jsonPropertyName, out string newJsonPropertyName)
+    {
+        if (!_renames.TryGetValue(type, out Dictionary<string, string> renames)
+            || !renames.TryGetValue(jsonPropertyName, out newJsonPropertyName))
+        {
+            newJsonPropertyName = null;
+
+            return false;
+        }
+
+        return true;
+    }
+}

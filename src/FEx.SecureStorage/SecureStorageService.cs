@@ -2,7 +2,7 @@
 using FEx.Encryption;
 using FEx.Extensions;
 using FEx.Extensions.IO;
-using FEx.Json;
+using FEx.Json.Extensions;
 using System;
 using System.IO;
 

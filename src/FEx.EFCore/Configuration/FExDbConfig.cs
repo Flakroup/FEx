@@ -5,7 +5,7 @@ using System.IO;
 
 namespace FEx.EFCore.Configuration;
 
-public record FExDbConfig : IFExDbConfig //todo inherit SqlCSB
+public record FExDbConfig : IFExDbConfig //todo inherit SqlConnectionStringBuilder
 {
     public string SqlInstance { get; set; }
     public string SqlDbName { get; init; }

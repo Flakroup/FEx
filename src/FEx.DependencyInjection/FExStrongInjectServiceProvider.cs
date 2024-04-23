@@ -1,4 +1,4 @@
-using FEx.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 using System;
@@ -31,15 +31,12 @@ public sealed class FExStrongInjectServiceProvider : IFExServiceProvider
 #pragma warning restore IDISP004
     }
 
-    public T TryResolveService<T>()
-    {
-        if (_provider is not IContainer<T> container)
-            return default;
-
 #pragma warning disable IDISP004
-        return container.Resolve<T>().Value;
+    public T TryResolveService<T>() =>
+        _provider is not IContainer<T> container
+            ? default
+            : container.Resolve<T>().Value;
 #pragma warning restore IDISP004
-    }
 
     public T GetRequiredService<T>(Type serviceType)
     {
@@ -55,9 +52,22 @@ public sealed class FExStrongInjectServiceProvider : IFExServiceProvider
         return generic.Invoke(this, null);
     }
 
-    public IServiceScope CreateScope() => null;
+    public TContainer GetContainer<TContainer>() where TContainer : class => (TContainer)_provider;
 
-    public object GetService(Type serviceType) => null;
+    public IServiceScope CreateScope() => default;
+
+    public object GetService(Type serviceType)
+    {
+        try
+        {
+            return GetRequiredService(serviceType);
+        }
+        catch
+        {
+            //ignored
+            return default;
+        }
+    }
 
     public TContainer ConfigureServiceProvider<TContainer>() where TContainer : class, IDisposable, new()
     {

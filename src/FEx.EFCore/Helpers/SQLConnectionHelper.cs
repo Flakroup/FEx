@@ -69,12 +69,18 @@ public static class SQLConnectionHelper
         var sB = new SqlConnectionStringBuilder
         {
             DataSource = config.SqlInstance,
-            InitialCatalog = config.SqlDbName,
-            UserID = config.Username,
-            Password = config.Password
+            InitialCatalog = config.SqlDbName
         };
 
-        if (config.SqlInstance == "localhost"
+        if (config.Username is not null)
+            sB.UserID = config.Username;
+
+        if (config.Password is not null)
+            sB.Password = config.Password;
+
+        string host = config.SqlInstance.Split('\\')[0];
+
+        if ((host.CompareOrdinalIgnoreCase("localhost") || host.CompareOrdinalIgnoreCase(Environment.MachineName))
             && PlatformInfoProvider.IsWindows)
         {
             sB.IntegratedSecurity = true;

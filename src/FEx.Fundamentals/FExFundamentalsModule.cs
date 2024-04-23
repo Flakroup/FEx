@@ -5,10 +5,13 @@ using FEx.Basics.Helpers;
 using FEx.Basics.Services;
 using FEx.Basics.Utilities;
 using FEx.Basics.Utilities.Comparers;
+using FEx.DependencyInjection;
+using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Fundamentals.StackTraces;
 using FEx.Fundamentals.Subjects;
 using FEx.Fundamentals.Utilities;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using StrongInject;
 using StrongInject.Extensions.DependencyInjection;
 using System.Collections.Generic;
@@ -28,29 +31,28 @@ namespace FEx.Fundamentals;
     Scope.SingleInstance,
     typeof(FExFundamentalsModuleInitializer),
     typeof(IInitializeModule))]
-public class FExFundamentalsModule
+public class FExFundamentalsModule : FExDependencyInjectionModule
 {
     [Instance]
     public static IStackTraceFilter[] StackTraceFilters => Enumerable.Empty<IStackTraceFilter>().ToArray();
 
     [Instance]
-    public static IFExServiceProvider ServiceProviderInstance => Foundation.StrongInjectServiceProvider;
-
-    [Instance]
     public static IComparer<string> StringComparerInstance => AlphanumComparatorFast.Instance;
 
-    public static void AddServices<TContainer>(IServiceCollection services) where TContainer : class, IFExFundamentalsModule
+    public static void AddServices(IFExFundamentalsModule container, IServiceCollection services)
     {
-        services.AddTransientServiceUsingContainer<TContainer, AsyncHelper>();
-        services.AddTransientServiceUsingContainer<TContainer, IFExDispatcher>();
+        services.AddTransientServiceUsingContainer<AsyncHelper>(container);
+        services.AddTransientServiceUsingContainer<ILogger>(container);
 
-        services.AddSingletonServiceUsingContainer<TContainer, Foundation>();
-        services.AddSingletonServiceUsingContainer<TContainer, IFExServiceProvider>();
-        services.AddSingletonServiceUsingContainer<TContainer, IEventDeliverer>();
-        services.AddSingletonServiceUsingContainer<TContainer, IExceptionHandler>();
-        services.AddSingletonServiceUsingContainer<TContainer, ITasksInfoSubject>();
-        services.AddSingletonServiceUsingContainer<TContainer, IStackTraceProvider>();
-        services.AddSingletonServiceUsingContainer<TContainer, ISynchronizedAccessService>();
-        services.AddSingletonServiceUsingContainer<TContainer, IComparer<string>>();
+        services.AddSingletonServiceUsingContainer<Foundation>(container);
+        services.AddSingletonServiceUsingContainer<IStackTraceProvider>(container);
+        services.AddSingletonServiceUsingContainer<IAppInfoProvider>(container);
+        services.AddSingletonServiceUsingContainer<IEventDeliverer>(container);
+        services.AddSingletonServiceUsingContainer<ITasksInfoSubject>(container);
+        services.AddSingletonServiceUsingContainer<IExceptionHandler>(container);
+        services.AddSingletonServiceUsingContainer<ISynchronizedAccessService>(container);
+        services.AddSingletonServiceUsingContainer<IFExDispatcher>(container);
+        services.AddSingletonServiceUsingContainer<IStackTraceFilter[]>(container);
+        services.AddSingletonServiceUsingContainer<IComparer<string>>(container);
     }
 }

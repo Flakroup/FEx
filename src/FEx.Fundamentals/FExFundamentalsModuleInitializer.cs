@@ -1,16 +1,17 @@
-﻿using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
+﻿using FEx.Abstractions.Interfaces;
 using FEx.Asyncx;
 using FEx.Asyncx.Helpers;
 using FEx.Basics;
 using FEx.Basics.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions;
 using FEx.Extensions;
 using FEx.Extensions.Base;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace FEx.Fundamentals;
 
-public class FExFundamentalsModuleInitializer : InitializeModule
+public class FExFundamentalsModuleInitializer : InitializeModule<IFExFundamentalsModule>
 {
     private readonly Foundation _foundation;
     private readonly ILogger _logger;
@@ -45,6 +46,11 @@ public class FExFundamentalsModuleInitializer : InitializeModule
         FExExtensionsCommon.Initialize(_exceptionHandler.Guard(nameof(_exceptionHandler)));
         _foundation.Guard(nameof(_foundation));
         FExBasics.Init(_stackTraceProvider, _eventDeliverer, _logger, _synchronizedAccessService, _appInfoProvider);
-        FExAsyncx.Init(_asyncHelper, FExBasics.MainThread);
+        FExAsyncx.Init(_asyncHelper);
+    }
+
+    protected override void AddServices(IFExFundamentalsModule container, IServiceCollection services)
+    {
+        FExFundamentalsModule.AddServices(container, services);
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace FEx.Abstractions.Interfaces;
+namespace FEx.DependencyInjection.Abstractions.Interfaces;
 
 public interface IScopeProvider
 {

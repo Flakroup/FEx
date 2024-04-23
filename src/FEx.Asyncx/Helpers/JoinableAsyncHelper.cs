@@ -65,7 +65,7 @@ public static class JoinableAsyncHelper
         return jtf.Run(func);
     }
 
-    private static JoinableTaskFactoryHandler GetFactory(Thread thread = null, bool replace = false)
+    public static JoinableTaskFactoryHandler GetFactory(Thread thread = null, bool replace = false)
     {
         int key = thread?.ManagedThreadId ?? Environment.CurrentManagedThreadId;
         Func<JoinableTaskFactoryHandler> func = () => GetNew(thread);

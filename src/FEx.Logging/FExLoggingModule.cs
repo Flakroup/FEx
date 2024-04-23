@@ -1,21 +1,25 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Logging.Abstractions.Interfaces;
 using FEx.Logging.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using Serilog.Extensions.Logging;
 using StrongInject;
+using StrongInject.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 using System.Reflection;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace FEx.Logging;
 
 [Register(typeof(Loggable), typeof(ILoggable))]
+[Register(typeof(LoggingService), Scope.SingleInstance, typeof(ILoggingService))]
 [Register(typeof(FExLoggingModuleInitializer),
     Scope.SingleInstance,
     typeof(FExLoggingModuleInitializer),
     typeof(IInitializeModule))]
-[Register(typeof(LoggingService), Scope.SingleInstance, typeof(ILoggingService))]
 public class FExLoggingModule
 {
     [Instance]
@@ -56,5 +60,11 @@ public class FExLoggingModule
             collection.AddProvider(loggerProvider);
 
         return collection;
+    }
+
+    public static void AddServices(IFExLoggingModule container, IServiceCollection services)
+    {
+        services.AddTransientServiceUsingContainer<ILoggable>(container);
+        services.AddTransientServiceUsingContainer<ILoggingService>(container);
     }
 }

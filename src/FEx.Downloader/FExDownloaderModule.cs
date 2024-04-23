@@ -1,4 +1,5 @@
-﻿using FEx.Downloader.Services;
+﻿using FEx.DependencyInjection.Abstractions.Interfaces;
+using FEx.Downloader.Services;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 using StrongInject.Extensions.DependencyInjection;
@@ -6,11 +7,14 @@ using StrongInject.Extensions.DependencyInjection;
 namespace FEx.Downloader;
 
 [Register(typeof(DownloadService), Scope.SingleInstance)]
+[Register(typeof(FExDownloaderModuleInitializer),
+    Scope.SingleInstance,
+    typeof(FExDownloaderModuleInitializer),
+    typeof(IInitializeModule))]
 public class FExDownloaderModule
 {
-    public static void AddServices<TContainer>(IServiceCollection services)
-        where TContainer : class, IFExDownloaderModule
+    public static void AddServices(IFExDownloaderModule module, IServiceCollection services)
     {
-        services.AddSingletonServiceUsingContainer<TContainer, DownloadService>();
+        services.AddSingletonServiceUsingContainer<DownloadService>(module);
     }
 }

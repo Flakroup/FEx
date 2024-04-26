@@ -1,4 +1,4 @@
-using FEx.DependencyInjection.Abstractions.Interfaces;
+﻿using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Logging.Abstractions.Interfaces;
 using FEx.Logging.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,5 +66,25 @@ public class FExLoggingModule
     {
         services.AddTransientServiceUsingContainer<ILoggable>(container);
         services.AddTransientServiceUsingContainer<ILoggingService>(container);
+
+        // Creating a `LoggerProviderCollection` lets Serilog optionally write
+        // events through other dynamically-added MEL ILoggerProviders.
+        var providers = new LoggerProviderCollection();
+
+        services.AddSingleton(providers)
+            .AddSingleton<ILoggerFactory>(sc =>
+            {
+                LoggerProviderCollection providerCollection = sc.GetRequiredService<LoggerProviderCollection>();
+                var factory = new SerilogLoggerFactory(null, true, providerCollection);
+
+                foreach (ILoggerProvider provider in sc.GetServices<ILoggerProvider>())
+                    factory.AddProvider(provider);
+
+                return factory;
+            })
+            .AddLogging(loggingBuilder => loggingBuilder.AddSerilog())
+            .AddSingleton<ILoggingService, LoggingService>()
+            .AddTransient(x => x.GetRequiredService<SerilogLoggerFactory>().CreateLogger(string.Empty))
+            .AddTransient<ILoggable, Loggable>();
     }
 }

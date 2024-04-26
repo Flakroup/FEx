@@ -1,4 +1,4 @@
-using FEx.Extensions.Web;
+﻿using FEx.Extensions.Web;
 using FEx.Json.Extensions;
 using Newtonsoft.Json;
 using System;
@@ -17,7 +17,7 @@ public static class JsonExtensions
                                                               JsonSerializerSettings settings = null,
                                                               bool checkNetAvailability = false,
                                                               CancellationToken cancellationToken = default)
-    {
+    {//
         T res = default;
 
         if (!checkNetAvailability

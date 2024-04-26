@@ -1,11 +1,11 @@
-#if NETSTANDARD
+﻿#if NETSTANDARD
 using FEx.Extensions.Collections.Lists;
 #endif
 using FEx.Basics.Flow;
 using FEx.EFCore.Enums;
 using FEx.EFCore.Models;
-using FEx.Json;
 using FEx.Json.Converters;
+using FEx.Json.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -245,6 +245,20 @@ public static class DbContextExtensions
             : $"SELECT * FROM {tableName} FOR JSON AUTO";
     }
 
+    public static void EnsureCreatingMissingTables<TDbContext>(this TDbContext dbContext) where TDbContext : DbContext
+    {
+        Type type = typeof(TDbContext);
+        Type dbSetType = typeof(DbSet<>);
+
+        string[] dbPropertyNames = type.GetProperties()
+            .Where(p => p.PropertyType.Name == dbSetType.Name)
+            .Select(p => p.Name)
+            .ToArray();
+
+        foreach (string entityName in dbPropertyNames)
+            CheckTableExistsAndCreateIfMissing(dbContext, entityName);
+    }
+
     private static (string tableName, string properties)
         GetSerializedPropertiesString<TDbContext, T>(this TDbContext dbContext) where TDbContext : DbContext
     {
@@ -260,7 +274,10 @@ public static class DbContextExtensions
 
         for (var index = 0; index < columnNames.Length; index++)
         {
-            sb.Append('\'').Append(columnNames[index].FirstCharToLower()).Append("', ").Append(columnNames[index]);
+            sb.Append('\'')
+                .Append(StringExtensions.FirstCharToLower(columnNames[index]))
+                .Append("', ")
+                .Append(columnNames[index]);
 
             if (index < columnNames.Length - 1)
                 sb.Append(',');
@@ -296,5 +313,34 @@ public static class DbContextExtensions
         }
 
         return sb.ToString();
+    }
+
+    private static void CheckTableExistsAndCreateIfMissing(DbContext dbContext, string entityName)
+    {
+        string defaultSchema = dbContext.Model.GetDefaultSchema();
+
+        string tableName = string.IsNullOrWhiteSpace(defaultSchema)
+            ? $"[{entityName}]"
+            : $"[{defaultSchema}].[{entityName}]";
+
+        try
+        {
+            _ = dbContext.Database.ExecuteSqlRaw($"SELECT TOP(1) * FROM {tableName}"); //Throws on missing table
+        }
+        catch (Exception)
+        {
+            var scriptStart = $"CREATE TABLE {tableName}";
+            const string scriptEnd = "GO";
+            string script = dbContext.Database.GenerateCreateScript();
+
+            string[] tableScript = script.Split([scriptStart], StringSplitOptions.RemoveEmptyEntries)
+                .Last()
+                .Split([scriptEnd], StringSplitOptions.RemoveEmptyEntries);
+
+            var first = $"{scriptStart} {tableScript.First()}";
+
+            dbContext.Database.ExecuteSqlRaw(first);
+            Log.Information($"Database table: '{tableName}' was created.");
+        }
     }
 }

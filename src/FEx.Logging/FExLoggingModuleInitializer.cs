@@ -1,4 +1,4 @@
-using FEx.DependencyInjection.Abstractions;
+﻿using FEx.DependencyInjection.Abstractions;
 using FEx.Fundamentals;
 using FEx.Json;
 using FEx.Logging.Abstractions.Interfaces;
@@ -27,6 +27,7 @@ public class FExLoggingModuleInitializer : InitializeModule<IFExLoggingModule>
         _initializer.Initialize();
         _jsonModule.Initialize();
         LoggerExtensions.SetLogger();
+        FExLogging.Init(_loggingService, _configurator);
     }
 
     protected override void AddServices(IFExLoggingModule container, IServiceCollection services)

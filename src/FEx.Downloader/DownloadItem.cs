@@ -1,5 +1,7 @@
+using FEx.Abstractions;
 using FEx.Abstractions.Interfaces;
-using FEx.Basics;
+using FEx.Basics.Extensions;
+using FEx.Common.Extensions;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Clients;
 using FEx.Downloader.Enums;
@@ -104,7 +106,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                     fP =>
                     {
                         if (fP != File?.FullName)
-                            File = new FileInfo(fP);
+                            File = new(fP);
 
                         if (fP is not null)
                             Semaphore = LockSrv.EnsureLock(fP);
@@ -123,7 +125,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                     fN =>
                     {
                         if (fN != Path.GetFileNameWithoutExtension(File?.Name))
-                            File = new FileInfo(Path.Combine(DirPath, fN + Path.GetExtension(FilePath)));
+                            File = new(Path.Combine(DirPath, fN + Path.GetExtension(FilePath)));
                     });
         }
     }
@@ -139,7 +141,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                     fN =>
                     {
                         if (fN != File?.Name)
-                            File = new FileInfo(Path.Combine(DirPath, fN));
+                            File = new(Path.Combine(DirPath, fN));
                     });
         }
     }
@@ -156,7 +158,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                     {
                         if (dP != File?.DirectoryName
                             && FileName is not null)
-                            File = new FileInfo(Path.Combine(dP, FileName));
+                            File = new(Path.Combine(dP, FileName));
                     });
         }
     }
@@ -259,7 +261,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     }
 
     protected CancellationToken CancellationToken => CancellationTokenSource.Token;
-    private static ISynchronizedAccessService LockSrv => FExBasics.SynchronizedAccessService;
+    private static ISynchronizedAccessService LockSrv => FExFoundation.SynchronizedAccessService;
 
     private DownloadItem(Uri url,
                          string filePath,
@@ -281,7 +283,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         }
 
         CancellationTokenSource = cancellationToken == default
-            ? new CancellationTokenSource()
+            ? new()
             : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
         Url = url;
@@ -293,11 +295,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             FilePath = filePath;
 
         Pars = pars;
-        TotalSemaphore = new SemaphoreSlim(1, 1);
+        TotalSemaphore = new(1, 1);
         Ranges = [];
         ParallelRanges = parallelRanges;
         DataLength = dataLength;
-        DownloadStopwatch = new Stopwatch();
+        DownloadStopwatch = new();
     }
 
     public async Task CancelAsync()
@@ -316,12 +318,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         }
     }
 
-    public void StartDownload()
-    {
+    public void StartDownload() =>
         // ReSharper disable MethodSupportsCancellation
-        DownloadFileTask = Task.Run(DownloadFileAsync);
-        // ReSharper restore MethodSupportsCancellation
-    }
+        DownloadFileTask = Task.Run(DownloadFileAsync);// ReSharper restore MethodSupportsCancellation
 
     public async Task<bool> DownloadFileAsync()
     {
@@ -440,13 +439,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                                                        CancellationToken cancellationToken = default)
     {
         if (downloadItem.FilePath is null
-            && downloadItem.DirPath is not null)
-        {
-            var ds = downloadItem as DownloadStub;
-
-            if (ds is not null)
-                await ds.LoadTargetFileNameAsync();
-        }
+            && downloadItem.DirPath is not null
+            && downloadItem is DownloadStub ds)
+            await ds.LoadTargetFileNameAsync();
 
         return await CreateAsync(downloadItem.Url,
             downloadItem.FilePath,
@@ -523,10 +518,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         return res;
     }
 
-    public void SetTemporaryCacheDirectory(string path)
-    {
-        TempDirectory = new DirectoryInfo(path);
-    }
+    public void SetTemporaryCacheDirectory(string path) => TempDirectory = new(path);
 
     protected override void TimerCallback()
     {
@@ -626,10 +618,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         Ping = sw.ElapsedMilliseconds;
     }
 
-    private void SetResponse(WebResponse response)
-    {
-        Response = response;
-    }
+    private void SetResponse(WebResponse response) => Response = response;
 
     private async Task DownloadSmallItemAsync()
     {
@@ -746,7 +735,6 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 #else
         await using Stream streamResponse = response.GetResponseStream();
 #endif
-            
 
 #if NETSTANDARD
         if (streamResponse is null)
@@ -762,8 +750,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     {
         if (TempDirectory is null
             && FilePath is not null)
-            TempDirectory = new DirectoryInfo(Path.Combine(
-                Path.GetPathRoot(Path.GetTempPath()) == Path.GetPathRoot(FilePath)
+            TempDirectory = new(Path.Combine(Path.GetPathRoot(Path.GetTempPath()) == Path.GetPathRoot(FilePath)
                     ? Path.GetTempPath()
                     : Path.GetPathRoot(FilePath),
                 "TempFlakWebCache"));
@@ -795,17 +782,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             var end = (long)Math.Min(offset + operatingSize - 1, DataLength - 1);
 
             Ranges.Add(rangeNo,
-                new DownloadRange(offset,
-                    end,
-                    dir,
-                    Url,
-                    Pars,
-                    BufferLength,
-                    FilePath,
-                    DataLength,
-                    Prg,
-                    ConnPrg,
-                    CancellationToken));
+                new(offset, end, dir, Url, Pars, BufferLength, FilePath, DataLength, Prg, ConnPrg, CancellationToken));
 
             offset = end + 1;
         }
@@ -819,7 +796,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         {
             if (ParallelRanges > 1
                 && unfinishedRanges.Length > 1)
-                await unfinishedRanges.RunFuncTaskWithWhenAllAsync(x => Ranges[x].DoDownloadAsync());
+                await unfinishedRanges.RunWithWhenAllTasksAsync(x => Ranges[x].DoDownloadAsync());
             else
                 foreach (int x in unfinishedRanges)
                     await Ranges[x].DoDownloadAsync();
@@ -887,10 +864,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         return false;
     }
 
-    private void SetRunningTasks()
-    {
-        RunningTasks = $"{OpenConnections}/{Ranges.Count}";
-    }
+    private void SetRunningTasks() => RunningTasks = $"{OpenConnections}/{Ranges.Count}";
 
     private async Task PrgHandlerAsync(double prgDelta)
     {

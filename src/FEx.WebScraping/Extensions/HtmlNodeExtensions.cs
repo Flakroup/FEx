@@ -53,7 +53,7 @@ public static class HtmlNodeExtensions
     ///     node was found.
     /// </returns>
     public static HtmlNode SelectSingleNode(this HtmlNode value, Func<XPathBuilderEx, XPathBuilderEx> xpath) =>
-        value.SelectSingleNode(xpath(new XPathBuilderEx()));
+        value.SelectSingleNode(xpath(new()));
 
     /// <summary>
     ///     Selects a list of nodes matching the <see cref="P:HtmlAgilityPack.HtmlNode.XPath" /> expression.
@@ -65,5 +65,5 @@ public static class HtmlNodeExtensions
     /// <see cref="P:HtmlAgilityPack.HtmlNode.XPath" /> query, or <c>null</c> if no node matched the XPath expression.
     /// </returns>
     public static HtmlNodeCollection SelectNodes(this HtmlNode value, Func<XPathBuilderEx, XPathBuilderEx> xpath) =>
-        value.SelectNodes(xpath(new XPathBuilderEx()));
+        value.SelectNodes(xpath(new()));
 }

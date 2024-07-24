@@ -6,8 +6,8 @@ public interface IProgressService
 {
     bool SubscribeToProgress<T, TCon>(IProgressReceiver<T> receiver,
                                       IProgressReceiver<TCon> producer,
-                                      params string[] iProgressReceiverProperties)
-        where T : IProgressAggregator where TCon : IProgressAggregator;
+                                      params string[] iProgressReceiverProperties) where T : IProgressAggregator
+        where TCon : IProgressAggregator;
 
     bool SubscribeToProgress<TCon>(IProgressReceiver<TCon> receiver,
                                    IProgressAggregator container,

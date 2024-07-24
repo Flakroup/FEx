@@ -1,6 +1,6 @@
 ﻿using FEx.Basics.Collections.Concurrent;
+using FEx.Common.Helpers;
 using FEx.Extensions;
-using FEx.Extensions.Base.Helpers;
 using FEx.Extensions.Collections.Dictionaries;
 using FEx.Extensions.Collections.Enumerables;
 using FEx.MVVM.Abstractions;
@@ -21,15 +21,15 @@ public sealed class ProgressService : SubscriberBase, IProgressService
 
     public static string MainContainerId { get; private set; }
 
-    public static ProgressService Instance => _instance ??= new ProgressService();
+    public static ProgressService Instance => _instance ??= new();
 
     public ConcurrentDictionary<string, IProgressAggregator> Containers { get; }
     public ConcurrentDictionary<string, ISet<ReceiverDefinition>> Listeners { get; }
 
     private ProgressService()
     {
-        Containers = new ConcurrentDictionary<string, IProgressAggregator>();
-        Listeners = new ConcurrentDictionary<string, ISet<ReceiverDefinition>>();
+        Containers = new();
+        Listeners = new();
     }
 
     public bool SubscribeToProgress<T, TCon>(IProgressReceiver<T> receiver,
@@ -122,6 +122,12 @@ public sealed class ProgressService : SubscriberBase, IProgressService
         DetachContainer(container.Id);
     }
 
+    private static void ReportToListener(ReceiverDefinition def, string propertyName, object value)
+    {
+        if (def.IsReceivingThisProperty(propertyName))
+            def.Container.Report(propertyName, value);
+    }
+
     private TCon ProgressStatusContainerFactory<TCon>() where TCon : class, IProgressAggregator, new()
     {
         var container = new TCon();
@@ -130,19 +136,13 @@ public sealed class ProgressService : SubscriberBase, IProgressService
         return container;
     }
 
-    private void AttachContainer(IProgressAggregator container)
-    {
-        Subscriptions.ReplaceAndDisposeOldValue(container.Id, () => GetSubscription(container));
-    }
+    private void AttachContainer(IProgressAggregator container) => Subscriptions.ReplaceAndDisposeOldValue(container.Id, () => GetSubscription(container));
 
-    private IDisposable GetSubscription(IProgressAggregator container)
-    {
-        return Observable
+    private IDisposable GetSubscription(IProgressAggregator container) => Observable
             .FromEventPattern<ProgressPropertyChangedEventHandler, ProgressPropertyChangedEventArgs>(
                 h => container.ProgressPropertyChanged += h,
                 h => container.ProgressPropertyChanged -= h)
             .Subscribe(x => OnProgressChange(x.EventArgs.ContainerId, x.EventArgs.PropertyName, x.EventArgs.Value));
-    }
 
     private void OnProgressChange(string producerId, string propertyName, object value)
     {
@@ -158,12 +158,6 @@ public sealed class ProgressService : SubscriberBase, IProgressService
             .AsDictionary(BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public);
 
         properties.ForEachInEnumerable(kv => ReportToListener(def, kv.Key, kv.Value));
-    }
-
-    private void ReportToListener(ReceiverDefinition def, string propertyName, object value)
-    {
-        if (def.IsReceivingThisProperty(propertyName))
-            def.Container.Report(propertyName, value);
     }
 
     private void DetachContainer(string containerId)

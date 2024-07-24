@@ -15,19 +15,27 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
 {
     public static readonly DependencyProperty ScrollLineDeltaProperty =
-        DependencyProperty.Register(nameof(ScrollLineDelta), typeof(double), typeof(VirtualizingPanelBaseV1),
+        DependencyProperty.Register(nameof(ScrollLineDelta),
+            typeof(double),
+            typeof(VirtualizingPanelBaseV1),
             new FrameworkPropertyMetadata(16.0));
 
     public static readonly DependencyProperty MouseWheelDeltaProperty =
-        DependencyProperty.Register(nameof(MouseWheelDelta), typeof(double), typeof(VirtualizingPanelBaseV1),
+        DependencyProperty.Register(nameof(MouseWheelDelta),
+            typeof(double),
+            typeof(VirtualizingPanelBaseV1),
             new FrameworkPropertyMetadata(48.0));
 
     public static readonly DependencyProperty ScrollLineDeltaItemProperty =
-        DependencyProperty.Register(nameof(ScrollLineDeltaItem), typeof(int), typeof(VirtualizingPanelBaseV1),
+        DependencyProperty.Register(nameof(ScrollLineDeltaItem),
+            typeof(int),
+            typeof(VirtualizingPanelBaseV1),
             new FrameworkPropertyMetadata(1));
 
     public static readonly DependencyProperty MouseWheelDeltaItemProperty =
-        DependencyProperty.Register(nameof(MouseWheelDeltaItem), typeof(int), typeof(VirtualizingPanelBaseV1),
+        DependencyProperty.Register(nameof(MouseWheelDeltaItem),
+            typeof(int),
+            typeof(VirtualizingPanelBaseV1),
             new FrameworkPropertyMetadata(3));
 
     private DependencyObject _itemsOwner;
@@ -133,7 +141,10 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
                  * GetItemsOwner method does always return the itmes control instead
                  * of the real items owner for example the group item when grouping */
                 MethodInfo getItemsOwnerInternalMethod = typeof(ItemsControl).GetMethod("GetItemsOwnerInternal",
-                    BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(DependencyObject)], null)!;
+                    BindingFlags.Static | BindingFlags.NonPublic,
+                    null,
+                    [typeof(DependencyObject)],
+                    null)!;
 
                 _itemsOwner = (DependencyObject)getItemsOwnerInternalMethod.Invoke(null, [this])!;
             }
@@ -204,7 +215,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
         double visibleRectWidth = Math.Min(rectangle.Width, ViewportSize.Width);
         double visibleRectHeight = Math.Min(rectangle.Height, ViewportSize.Height);
 
-        return new Rect(scrollAmountX, scrollAmountY, visibleRectWidth, visibleRectHeight);
+        return new(scrollAmountX, scrollAmountY, visibleRectWidth, visibleRectHeight);
     }
 
     public void SetVerticalOffset(double offset)
@@ -215,7 +226,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
         else if (offset + ViewportSize.Height >= Extent.Height)
             offset = Extent.Height - ViewportSize.Height;
 
-        Offset = new Point(Offset.X, offset);
+        Offset = new(Offset.X, offset);
         ScrollOwner?.InvalidateScrollInfo();
         InvalidateMeasure();
     }
@@ -228,26 +239,30 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
         else if (offset + ViewportSize.Width >= Extent.Width)
             offset = Extent.Width - ViewportSize.Width;
 
-        Offset = new Point(offset, Offset.Y);
+        Offset = new(offset, Offset.Y);
         ScrollOwner?.InvalidateScrollInfo();
         InvalidateMeasure();
     }
 
-    public void LineUp() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
-        ? -ScrollLineDelta
-        : GetLineUpScrollAmount());
+    public void LineUp() =>
+        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+            ? -ScrollLineDelta
+            : GetLineUpScrollAmount());
 
-    public void LineDown() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
-        ? ScrollLineDelta
-        : GetLineDownScrollAmount());
+    public void LineDown() =>
+        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+            ? ScrollLineDelta
+            : GetLineDownScrollAmount());
 
-    public void LineLeft() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
-        ? -ScrollLineDelta
-        : GetLineLeftScrollAmount());
+    public void LineLeft() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+            ? -ScrollLineDelta
+            : GetLineLeftScrollAmount());
 
-    public void LineRight() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
-        ? ScrollLineDelta
-        : GetLineRightScrollAmount());
+    public void LineRight() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+            ? ScrollLineDelta
+            : GetLineRightScrollAmount());
 
     public void MouseWheelUp()
     {
@@ -269,29 +284,35 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             MouseWheelRight();
     }
 
-    public void MouseWheelLeft() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
-        ? -MouseWheelDelta
-        : GetMouseWheelLeftScrollAmount());
+    public void MouseWheelLeft() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+            ? -MouseWheelDelta
+            : GetMouseWheelLeftScrollAmount());
 
-    public void MouseWheelRight() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
-        ? MouseWheelDelta
-        : GetMouseWheelRightScrollAmount());
+    public void MouseWheelRight() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+            ? MouseWheelDelta
+            : GetMouseWheelRightScrollAmount());
 
-    public void PageUp() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
-        ? -ViewportHeight
-        : GetPageUpScrollAmount());
+    public void PageUp() =>
+        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+            ? -ViewportHeight
+            : GetPageUpScrollAmount());
 
-    public void PageDown() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
-        ? ViewportHeight
-        : GetPageDownScrollAmount());
+    public void PageDown() =>
+        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+            ? ViewportHeight
+            : GetPageDownScrollAmount());
 
-    public void PageLeft() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
-        ? -ViewportHeight
-        : GetPageLeftScrollAmount());
+    public void PageLeft() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+            ? -ViewportHeight
+            : GetPageLeftScrollAmount());
 
-    public void PageRight() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
-        ? ViewportHeight
-        : GetPageRightScrollAmount());
+    public void PageRight() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+            ? ViewportHeight
+            : GetPageRightScrollAmount());
 
     /// <summary>
     ///     Calculates the extent that would be needed to show all items.
@@ -338,7 +359,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             && VerticalOffset != 0
             && VerticalOffset + ViewportHeight + 1 >= ExtentHeight)
         {
-            Offset = new Point(Offset.X, extent.Height - availableSize.Height);
+            Offset = new(Offset.X, extent.Height - availableSize.Height);
             invalidateScrollInfo = true;
         }
 
@@ -346,7 +367,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             && HorizontalOffset != 0
             && HorizontalOffset + ViewportWidth + 1 >= ExtentWidth)
         {
-            Offset = new Point(extent.Width - availableSize.Width, Offset.Y);
+            Offset = new(extent.Width - availableSize.Width, Offset.Y);
             invalidateScrollInfo = true;
         }
 
@@ -382,15 +403,16 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
 
                     ItemContainerGenerator.PrepareItemContainer(child);
 
-                    child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                    child.Measure(new(double.PositiveInfinity, double.PositiveInfinity));
                 }
 
                 if (child is IHierarchicalVirtualizationAndScrollInfo groupItem)
                 {
-                    groupItem.Constraints = new HierarchicalVirtualizationConstraints(new VirtualizationCacheLength(0),
-                        VirtualizationCacheLengthUnit.Item, new Rect(0, 0, ViewportWidth, ViewportHeight));
+                    groupItem.Constraints = new(new(0),
+                        VirtualizationCacheLengthUnit.Item,
+                        new(0, 0, ViewportWidth, ViewportHeight));
 
-                    child.Measure(new Size(ViewportWidth, ViewportHeight));
+                    child.Measure(new(ViewportWidth, ViewportHeight));
                 }
             }
         }
@@ -465,12 +487,10 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
                 return availableSize;
         }
 
-        var groupItem = ItemsOwner as IHierarchicalVirtualizationAndScrollInfo;
-
         Size extent;
         Size desiredSize;
 
-        if (groupItem != null)
+        if (ItemsOwner is IHierarchicalVirtualizationAndScrollInfo groupItem)
         {
             /* If the ItemsOwner is a group item the availableSize is ifinity.
              * Therfore the vieport size provided by the group item is used. */
@@ -478,11 +498,11 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             Size headerSize = groupItem.HeaderDesiredSizes.PixelSize;
             double availableWidth = Math.Max(viewportSize.Width - 5, 0); // left margin of 5 dp
             double availableHeight = Math.Max(viewportSize.Height - headerSize.Height, 0);
-            availableSize = new Size(availableWidth, availableHeight);
+            availableSize = new(availableWidth, availableHeight);
 
             extent = CalculateExtent(availableSize);
 
-            desiredSize = new Size(extent.Width, extent.Height);
+            desiredSize = new(extent.Width, extent.Height);
 
             Extent = extent;
             Offset = groupItem.Constraints.Viewport.Location;
@@ -495,7 +515,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
             extent = CalculateExtent(availableSize);
             double desiredWidth = Math.Min(availableSize.Width, extent.Width);
             double desiredHeight = Math.Min(availableSize.Height, extent.Height);
-            desiredSize = new Size(desiredWidth, desiredHeight);
+            desiredSize = new(desiredWidth, desiredHeight);
 
             UpdateScrollInfo(desiredSize, extent);
             CacheLength = GetCacheLength(ItemsOwner);
@@ -517,13 +537,7 @@ public abstract class VirtualizingPanelBaseV1 : VirtualizingPanel, IScrollInfo
         return ItemContainerGenerator.IndexFromGeneratorPosition(generatorPosition);
     }
 
-    protected void ScrollVertical(double amount)
-    {
-        SetVerticalOffset(VerticalOffset + amount);
-    }
+    protected void ScrollVertical(double amount) => SetVerticalOffset(VerticalOffset + amount);
 
-    protected void ScrollHorizontal(double amount)
-    {
-        SetHorizontalOffset(HorizontalOffset + amount);
-    }
+    protected void ScrollHorizontal(double amount) => SetHorizontalOffset(HorizontalOffset + amount);
 }

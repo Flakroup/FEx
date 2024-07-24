@@ -1,4 +1,5 @@
-﻿using FEx.Basics.Abstractions.Interfaces.Collections;
+﻿using FEx.Abstractions;
+using FEx.Basics.Abstractions.Interfaces.Collections;
 using FEx.Extensions;
 using FEx.Extensions.Collections.Lists;
 using System;
@@ -44,10 +45,7 @@ public class CollectionChangeNotifier : ICollectionChangeNotifier
         NotifyOnCreationContext = notifyOnCreationContext;
     }
 
-    public void SetNotifyOnCreationContext(bool notifyOnCreationContext)
-    {
-        NotifyOnCreationContext = notifyOnCreationContext;
-    }
+    public void SetNotifyOnCreationContext(bool notifyOnCreationContext) => NotifyOnCreationContext = notifyOnCreationContext;
 
     public void OnCollectionChanged(object sender,
                                     string[] propertyChangedArgs,
@@ -65,16 +63,10 @@ public class CollectionChangeNotifier : ICollectionChangeNotifier
             InvokeCollectionChangedEvent(sender, changeAction, changedItem, oldItem, index, oldIndex);
     }
 
-    public async Task WaitForCollectionEventsAsync()
-    {
-        await Task.WhenAll(PropertyChangedTcs?.Task ?? Task.CompletedTask,
+    public async Task WaitForCollectionEventsAsync() => await Task.WhenAll(PropertyChangedTcs?.Task ?? Task.CompletedTask,
             CollectionChangedTcs?.Task ?? Task.CompletedTask);
-    }
 
-    public void SetUseDispatcherContext(bool useDispatcherContext)
-    {
-        UseDispatcherContext = useDispatcherContext;
-    }
+    public void SetUseDispatcherContext(bool useDispatcherContext) => UseDispatcherContext = useDispatcherContext;
 
     private static NotifyCollectionChangedEventArgs GetArgs(NotifyCollectionChangedAction changeAction,
                                                             object changedItem,
@@ -86,13 +78,13 @@ public class CollectionChangeNotifier : ICollectionChangeNotifier
         {
             case NotifyCollectionChangedAction.Add:
             case NotifyCollectionChangedAction.Remove:
-                return new NotifyCollectionChangedEventArgs(changeAction, changedItem, index ?? -1);
+                return new(changeAction, changedItem, index ?? -1);
             case NotifyCollectionChangedAction.Move:
-                return new NotifyCollectionChangedEventArgs(changeAction, changedItem, index ?? -1, oldIndex ?? -1);
+                return new(changeAction, changedItem, index ?? -1, oldIndex ?? -1);
             case NotifyCollectionChangedAction.Replace:
-                return new NotifyCollectionChangedEventArgs(changeAction, changedItem, oldItem, index ?? -1);
+                return new(changeAction, changedItem, oldItem, index ?? -1);
             case NotifyCollectionChangedAction.Reset:
-                return new NotifyCollectionChangedEventArgs(changeAction);
+                return new(changeAction);
         }
 
         throw new InvalidOperationException(
@@ -110,12 +102,12 @@ public class CollectionChangeNotifier : ICollectionChangeNotifier
             return;
 
         NotifyCollectionChangedEventArgs args = GetArgs(changeAction, changedItem, oldItem, index, oldIndex);
-        CollectionChangedTcs = new TaskCompletionSource<bool>();
+        CollectionChangedTcs = new();
         void EventDelegate() => InvokeCollectionChangedEvent(sender, args, CollectionChangedTcs);
 
         SynchronizationContext context = GetSynchronizationContext();
 
-        FExBasics.EventDeliverer.DeliverEvent(EventDelegate, sender, context);
+        FExFoundation.EventDeliverer.DeliverEvent(EventDelegate, sender, context);
     }
 
     private SynchronizationContext GetSynchronizationContext()
@@ -127,10 +119,10 @@ public class CollectionChangeNotifier : ICollectionChangeNotifier
 
         do
         {
-            context = FExBasics.MainSynchronizationContext;
+            context = FExFoundation.MainSynchronizationContext;
 
-            if (UseDispatcherContext && !FExBasics.IsDispatcherContext)
-                context = null;//todo timeout
+            if (UseDispatcherContext && !FExFoundation.IsDispatcherContext)
+                context = null; //todo timeout
         } while (context is null);
 
         return context;
@@ -156,12 +148,12 @@ public class CollectionChangeNotifier : ICollectionChangeNotifier
             || !propertyChangedArgs.IsNotNullOrEmptyList())
             return;
 
-        PropertyChangedTcs = new TaskCompletionSource<bool>();
+        PropertyChangedTcs = new();
         void EventDelegate() => InvokePropertyChangedEvent(sender, propertyChangedArgs, PropertyChangedTcs);
 
         SynchronizationContext context = GetSynchronizationContext();
 
-        FExBasics.EventDeliverer.DeliverEvent(EventDelegate, sender, context);
+        FExFoundation.EventDeliverer.DeliverEvent(EventDelegate, sender, context);
     }
 
     private void InvokePropertyChangedEvent(object sender,

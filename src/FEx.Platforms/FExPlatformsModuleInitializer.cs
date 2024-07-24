@@ -13,13 +13,7 @@ public class FExPlatformsModuleInitializer : InitializeModule<IFExPlatformsModul
         _registryService = registryService;
     }
 
-    protected override void OnInitialize()
-    {
-        Platform.Initialize(_registryService);
-    }
+    protected override void OnInitialize() => Platform.Initialize(_registryService);
 
-    protected override void AddServices(IFExPlatformsModule container, IServiceCollection services)
-    {
-        FExPlatformsModule.AddServices(container, services);
-    }
+    protected override void AddServices(IFExPlatformsModule container, IServiceCollection services) => FExPlatformsModule.AddServices(container, services);
 }

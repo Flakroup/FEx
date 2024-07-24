@@ -50,7 +50,7 @@ public abstract class FExSingleton<T> : FExSingleton where T : class, new()
         {
             if (_instance is null)
                 lock (SyncRoot)
-                    _instance ??= new T();
+                    _instance ??= new();
 
             return _instance;
         }

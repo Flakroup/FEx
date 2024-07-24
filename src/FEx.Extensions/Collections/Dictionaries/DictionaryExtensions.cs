@@ -1,4 +1,5 @@
-﻿using FEx.Extensions.Collections.Enumerables;
+﻿using FEx.Common.Extensions;
+using FEx.Extensions.Collections.Enumerables;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -22,9 +23,8 @@ public static class DictionaryExtensions
                                                     IEnumerable<KeyValuePair<TK, TV>> merged)
     {
         var deferredList = merged.Guard(nameof(merged)).ToList();
-        var cDic = dictionary as ConcurrentDictionary<TK, TV>;
 
-        if (cDic is not null)
+        if (dictionary is ConcurrentDictionary<TK, TV> cDic)
             deferredList.ForEachInEnumerable(pair => cDic.TryAdd(pair.Key, pair.Value));
         else
             deferredList.ForEachInEnumerable(pair => dictionary.Add(pair.Key, pair.Value));
@@ -89,41 +89,6 @@ public static class DictionaryExtensions
     }
 
     /// <summary>
-    ///     Tries to get key value.
-    /// </summary>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <typeparam name="TValue">The type of the value.</typeparam>
-    /// <param name="dictionary">The dictionary.</param>
-    /// <param name="key">The key.</param>
-    /// <param name="fallback">The fallback.</param>
-    /// <returns>
-    ///     TValue
-    /// </returns>
-    public static TValue TryGetKeyValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary,
-                                                      TKey key,
-                                                      TValue fallback = default)
-    {
-        var cDic = dictionary as ConcurrentDictionary<TKey, TValue>;
-
-        if (cDic is not null)
-            return cDic.TryGetValue(key, out TValue value)
-                ? value
-                : fallback;
-
-        if (key is not null
-            && dictionary.IsNotNullOrEmptyCollection()
-            && dictionary.ContainsKey(key))
-        {
-            (bool isSuccess, TValue value) = dictionary.GetValue(key);
-
-            if (isSuccess)
-                return value;
-        }
-
-        return fallback;
-    }
-
-    /// <summary>
     ///     Returns the value in an IDictionary at the given key, or creates a new value using the given delegate, adds it at
     ///     the given key, and returns the new value.
     /// </summary>
@@ -135,9 +100,7 @@ public static class DictionaryExtensions
     /// <returns></returns>
     public static TV GetOrAddValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> createValueToAdd)
     {
-        var cDic = dictionary as ConcurrentDictionary<TK, TV>;
-
-        if (cDic is not null)
+        if (dictionary is ConcurrentDictionary<TK, TV> cDic)
             return cDic.GetOrAdd(key, _ => createValueToAdd());
 
         if (!dictionary.TryGetValue(key, out TV v))
@@ -149,13 +112,6 @@ public static class DictionaryExtensions
         }
 
         return v;
-    }
-
-    public static (bool isSuccess, TV value) GetValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key)
-    {
-        bool res = dictionary.TryGetValue(key, out TV v);
-
-        return (res, v);
     }
 
     /// <summary>
@@ -181,9 +137,7 @@ public static class DictionaryExtensions
     /// <returns>The new value for the key.</returns>
     public static TV AddOrUpdateValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> valueToAddOrUpdate)
     {
-        var cDic = dictionary as ConcurrentDictionary<TK, TV>;
-
-        if (cDic is not null)
+        if (dictionary is ConcurrentDictionary<TK, TV> cDic)
             return cDic.AddOrUpdate(key, _ => valueToAddOrUpdate(), (_, _) => valueToAddOrUpdate());
 
         if (dictionary.ContainsKey(key))
@@ -234,9 +188,8 @@ public static class DictionaryExtensions
         TV v;
 
         bool hasBeenRemoved;
-        var cDic = dictionary as ConcurrentDictionary<TK, TV>;
 
-        if (cDic is not null)
+        if (dictionary is ConcurrentDictionary<TK, TV> cDic)
         {
             hasBeenRemoved = cDic.TryRemove(key, out v);
         }

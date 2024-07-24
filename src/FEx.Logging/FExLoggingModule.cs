@@ -1,4 +1,4 @@
-﻿using FEx.DependencyInjection.Abstractions.Interfaces;
+﻿using FEx.DI.Abstractions.Interfaces;
 using FEx.Logging.Abstractions.Interfaces;
 using FEx.Logging.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +16,7 @@ namespace FEx.Logging;
 
 [Register(typeof(Loggable), typeof(ILoggable))]
 [Register(typeof(LoggingService), Scope.SingleInstance, typeof(ILoggingService))]
+[Register(typeof(FExLoggingConfigurator), Scope.SingleInstance)]
 [Register(typeof(FExLoggingModuleInitializer),
     Scope.SingleInstance,
     typeof(FExLoggingModuleInitializer),

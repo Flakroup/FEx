@@ -20,13 +20,7 @@ internal class VirtualizingPanelWrapper : IChildrenCollection
         _removetInternalChild = removetInternalChild;
     }
 
-    public void AddChild(IItemContainerInfo containerInfo)
-    {
-        _addInternalChild.Invoke(containerInfo.UIElement);
-    }
+    public void AddChild(IItemContainerInfo containerInfo) => _addInternalChild.Invoke(containerInfo.UIElement);
 
-    public void RemoveChild(IItemContainerInfo containerInfo)
-    {
-        _removetInternalChild.Invoke(containerInfo.UIElement);
-    }
+    public void RemoveChild(IItemContainerInfo containerInfo) => _removetInternalChild.Invoke(containerInfo.UIElement);
 }

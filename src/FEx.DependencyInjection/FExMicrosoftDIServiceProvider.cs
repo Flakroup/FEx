@@ -1,17 +1,17 @@
-using FEx.DependencyInjection.Abstractions.Interfaces;
+using FEx.DI.Abstractions;
+using FEx.DI.Abstractions.Interfaces;
 using FEx.Extensions;
+using FEx.Extensions.Collections.Lists;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using StrongInject;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace FEx.DependencyInjection;
 
-public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider, IAsyncDisposable
+public sealed class FExMicrosoftDIServiceProvider : IFExMicrosoftDIServiceProvider
 {
     private readonly ILogger _logger;
     private ServiceProvider _provider;
@@ -19,6 +19,37 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider, IAsyncD
     public FExMicrosoftDIServiceProvider(ILogger logger)
     {
         _logger = logger;
+    }
+
+    public async Task ConfigureServiceProviderAsync(Func<IServiceCollection, IServiceCollection> configuration = null,
+                                                    IServiceCollection services = null)
+    {
+        services = await ConfigureServicesAsync(configuration, services);
+
+        try
+        {
+            if (_provider is not null)
+                await _provider.DisposeAsync();
+
+            _provider = services.BuildServiceProvider(new ServiceProviderOptions
+            {
+                ValidateOnBuild = true
+            });
+        }
+        catch (AggregateException ex)
+        {
+            var sb = new StringBuilder();
+
+            foreach (string m in ex.InnerExceptions.Select(e => e.Message.Split(':')[4])
+                         .Distinct()
+                         .OrderBy(x => x)
+                         .ToList())
+                sb.AppendLine(m);
+
+            _logger.LogError(sb.ToString());
+
+            throw;
+        }
     }
 
     /// <summary>
@@ -50,55 +81,31 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider, IAsyncD
 
     public object GetService(Type serviceType) => _provider.GetService(serviceType);
 
-    public async Task ConfigureServiceProviderAsync(IContainer<IInitializeModule[]> modulesContainer,
-                                                    Func<IServiceCollection, IServiceCollection> configuration = null,
-                                                    IServiceCollection services = null)
-    {
-        services = await ConfigureServicesAsync(configuration, services, modulesContainer);
-
-        try
-        {
-            if (_provider is not null)
-                await _provider.DisposeAsync();
-
-            _provider = services.BuildServiceProvider(new ServiceProviderOptions
-            {
-                ValidateOnBuild = true
-            });
-        }
-        catch (AggregateException ex) when (Debugger.IsAttached)
-        {
-            var sb = new StringBuilder();
-
-            foreach (string m in ex.InnerExceptions.Select(e => e.Message.Split(':')[4])
-                         .Distinct()
-                         .OrderBy(x => x)
-                         .ToList())
-                sb.AppendLine(m);
-
-            _logger.LogError(sb.ToString());
-
-            throw;
-        }
-    }
-
-    private static async Task<IServiceCollection> ConfigureServicesAsync(Func<IServiceCollection, IServiceCollection> configuration,
-                                                                         IServiceCollection services, IContainer<IInitializeModule[]> modulesContainer)
+    private static async Task<IServiceCollection> ConfigureServicesAsync(
+        Func<IServiceCollection, IServiceCollection> configuration,
+        IServiceCollection services)
     {
         configuration ??= x => x;
         services ??= new ServiceCollection();
 
-        IInitializeModule[] modules = modulesContainer.Resolve<IInitializeModule[]>().Value;
-
-        if (modules?.Length > 0)
-        {
-            foreach (IInitializeModule initializer in modules)
-                initializer.ConfigureServices(modulesContainer, services);
-
-            await modules.Where(x => !x.HasBeenCompleted).RunFuncTaskWithWhenAllAsync(m => m.CompleteInitializationAsync());
-        }
+        await InitializeModulesAsync(services);
 
         return configuration(services);
+    }
+
+    private static async Task InitializeModulesAsync(IServiceCollection services)
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        IInitializeModule[] modules = FExServiceProvider.Get<IInitializeModule[]>();
+#pragma warning restore CS0618 // Type or member is obsolete
+
+        if (modules.IsNullOrEmptyList())
+            return;
+
+        foreach (IInitializeModule initializer in modules)
+            initializer.ConfigureServices(services);
+
+        await modules.Where(x => !x.HasBeenCompleted).RunWithWhenAllAsync(m => m.CompleteInitializationAsync(services));
     }
 
     #region IDisposable

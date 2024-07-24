@@ -23,5 +23,9 @@ public interface IAppInfoProvider
     DirectoryInfo AppData { get; }
     string AppDataPath { get; }
     string UserSettingsPath { get; }
+    string LogDirPath { get; }
     string LogFilePath { get; }
+    IAppInfo AppInfo { get; }
+
+    void Initialize(IAppInfo appInfo);
 }

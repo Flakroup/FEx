@@ -1,4 +1,4 @@
-﻿using FEx.Extensions;
+﻿using FEx.Common.Extensions;
 using FEx.Extensions.Collections.Dictionaries;
 using Microsoft.VisualStudio.Threading;
 using System;
@@ -15,7 +15,7 @@ public static class JoinableAsyncHelper
 
     private static JoinableTaskFactoryHandler MainJTF
     {
-        get => _mainJTF.Guard();
+        get => _mainJTF.Guard(nameof(MainJTF));
         set => _mainJTF = value;
     }
 
@@ -87,6 +87,6 @@ public static class JoinableAsyncHelper
 #pragma warning disable IDISP001
         var owner = new JoinableTaskContext(thread, syncCtx);
 #pragma warning restore IDISP001
-        return new JoinableTaskFactoryHandler(key, new JoinableTaskFactory(owner));
+        return new(key, new(owner));
     }
 }

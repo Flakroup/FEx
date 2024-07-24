@@ -8,7 +8,7 @@ namespace FEx.Avaloniax.Services;
 
 public class AppViewLocator : IViewLocator
 {
-    public bool SupportsRecycling => false;
+    public static bool SupportsRecycling => false;
 
     /// <summary>
     /// Determines the view for an associated ViewModel.

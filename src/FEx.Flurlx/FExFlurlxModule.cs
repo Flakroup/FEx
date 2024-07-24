@@ -1,4 +1,4 @@
-using FEx.DependencyInjection.Abstractions.Interfaces;
+using FEx.DI.Abstractions.Interfaces;
 using FEx.Flurlx.Abstractions.Interfaces;
 using Flurl.Http.Configuration;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,9 +1,10 @@
-﻿using FEx.Extensions;
+﻿using FEx.Common.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using EnumExtensions = FEx.Extensions.EnumExtensions;
 
 namespace FEx.Basics.IO;
 
@@ -35,12 +36,9 @@ public class SpecialDirectory
         EnsureSpecialDirectories();
     }
 
-    public static IDictionary<Environment.SpecialFolder, SpecialDirectory> GetExistingDirectories()
-    {
-        return SpecialDirectories.Where(x => x.Value is not null && x.Value.Directory.Exists)
+    public static IDictionary<Environment.SpecialFolder, SpecialDirectory> GetExistingDirectories() => SpecialDirectories.Where(x => x.Value is not null && x.Value.Directory.Exists)
             .OrderBy(x => x.Value.FullName)
             .ToDictionary(x => x.Key, x => x.Value);
-    }
 
     public override string ToString() => FullName;
 
@@ -60,7 +58,7 @@ public class SpecialDirectory
             string path = Environment.GetFolderPath(value);
 
             if (path.IsNotNullOrEmptyString())
-                return new SpecialDirectory(value, path);
+                return new(value, path);
         }
         catch
         {

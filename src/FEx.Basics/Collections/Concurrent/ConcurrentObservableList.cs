@@ -1,4 +1,5 @@
-﻿using FEx.Abstractions.Interfaces;
+﻿using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
 using FEx.Basics.Utilities.Collections;
 using FEx.Extensions;
 using System;
@@ -42,9 +43,10 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
 
     public IObservable<EventPattern<NotifyCollectionChangedEventArgs>> CollectionChangedObservable =>
         Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
-            ev => CollectionChanged += ev, ev => CollectionChanged -= ev);
+            ev => CollectionChanged += ev,
+            ev => CollectionChanged -= ev);
 
-    private static IEventDeliverer EventDeliverer => FExBasics.EventDeliverer;
+    private static IEventDeliverer EventDeliverer => FExFoundation.EventDeliverer;
 
     /// <summary>
     ///     Initializes a new instance of the ConcurrentObservableList class that contains
@@ -53,13 +55,13 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     /// </summary>
     /// <param name="collection">The collection whose elements are copied to the new list.</param>
     /// <param name="sendEventsInCreationContext">
-    ///     Overrides setting from Foundation.SendEventsInCreationContext.
+    ///     Overrides setting from FExFoundation.SendEventsInCreationContext.
     ///     If true sends all events using SynchronizationContext of thread in which was this constructor executed.
     /// </param>
     public ConcurrentObservableList(IEnumerable<T> collection = null, bool? sendEventsInCreationContext = null)
         : base(collection)
     {
-        _sendEventsInCreationContext = sendEventsInCreationContext ?? FExBasics.SendEventsInCreationContext;
+        _sendEventsInCreationContext = sendEventsInCreationContext ?? FExFoundation.SendEventsInCreationContext;
     }
 
     /// <summary>
@@ -71,21 +73,21 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     ///     Called by base class ObservableCollection&lt;T&gt; when an item is to be moved within the list;
     ///     raises a CollectionChanged event to any listeners.
     /// </summary>
-    protected virtual void MoveItem(int oldIndex, int newIndex) => Write(() =>
-    {
-        T removedItem = this[oldIndex];
-
-        using (SuppressEvents())
+    protected virtual void MoveItem(int oldIndex, int newIndex) =>
+        Write(() =>
         {
-            Remove(oldIndex);
-            Insert(newIndex, removedItem);
-        }
+            T removedItem = this[oldIndex];
 
-        OnIndexerPropertyChanged();
+            using (SuppressEvents())
+            {
+                Remove(oldIndex);
+                Insert(newIndex, removedItem);
+            }
 
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, removedItem,
-            newIndex, oldIndex));
-    });
+            OnIndexerPropertyChanged();
+
+            OnCollectionChanged(new(NotifyCollectionChangedAction.Move, removedItem, newIndex, oldIndex));
+        });
 
     /// <summary>
     ///     Raises a PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
@@ -119,7 +121,10 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     /// </summary>
     protected override void OnCollectionReset() => OnCollectionChanged(EventArgsCache.ResetCollectionChanged);
 
-    private void Dispatch(Action action) => EventDeliverer.DeliverEvent(action, this, _sendEventsInCreationContext
-        ? _synchronizationContext
-        : null);
+    private void Dispatch(Action action) =>
+        EventDeliverer.DeliverEvent(action,
+            this,
+            _sendEventsInCreationContext
+                ? _synchronizationContext
+                : null);
 }

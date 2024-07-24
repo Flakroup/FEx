@@ -18,6 +18,6 @@ public static class ListExtensions
         var totalPagesCount = (int)Math.Ceiling(items.Count / (double)itemsPerPage);
         IList<T> itemsForThisPage = items.Skip(itemsToSkip).Take(itemsPerPage).ToArray();
 
-        return new PaginatedList<T>(itemsForThisPage, items.Count, page, totalPagesCount);
+        return new(itemsForThisPage, items.Count, page, totalPagesCount);
     }
 }

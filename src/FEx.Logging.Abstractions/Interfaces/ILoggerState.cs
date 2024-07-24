@@ -1,9 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 
 namespace FEx.Logging.Abstractions.Interfaces;
 
+[SuppressMessage("ReSharper", "PossibleInterfaceMemberAmbiguity")]
 public interface ILoggerState : IDictionary<string, object>, IDictionary, IReadOnlyDictionary<string, object>,
     ISerializable, IDeserializationCallback
 {

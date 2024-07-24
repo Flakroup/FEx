@@ -1,4 +1,5 @@
-﻿using FEx.Abstractions.Interfaces;
+﻿using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
 using FEx.Basics.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,7 +12,8 @@ public abstract class FExDispatcher : IFExDispatcher
 {
     protected readonly ILogger _logger;
 
-    protected static SynchronizationContext MainThreadSynchronizationContext => FExBasics.MainSynchronizationContext;
+    protected static SynchronizationContext MainThreadSynchronizationContext =>
+        FExFoundation.MainSynchronizationContext;
 
     protected FExDispatcher(ILogger logger)
     {

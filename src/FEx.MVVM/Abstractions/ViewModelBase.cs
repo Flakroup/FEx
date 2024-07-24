@@ -1,5 +1,7 @@
-﻿using FEx.MVVM.Abstractions.Interfaces;
-using FEx.Rx.BaseObjects;
+﻿using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
+using FEx.MVVM.Abstractions.Interfaces;
+using FEx.MVVM.Rx.BaseObjects;
 using System;
 
 namespace FEx.MVVM.Abstractions;
@@ -16,6 +18,8 @@ public abstract class ViewModelBase : LinkableReactiveNotifyPropertyChanged, IVi
         get => _title;
         set => SetProperty(ref _title, value);
     }
+
+    protected static IFExDispatcher Dispatcher => FExFoundation.Dispatcher;
 
     protected ViewModelBase()
     {

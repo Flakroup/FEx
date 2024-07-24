@@ -40,7 +40,8 @@ public static class DateExtensions
     /// <param name="current">Current date.</param>
     /// <returns>A week number.</returns>
     public static int GetWeekNumber(this DateTime current) =>
-        DateTimeDefaults.DefaultCulture.Calendar.GetWeekOfYear(current, DateTimeDefaults.CurrentCalendarWeekRule,
+        DateTimeDefaults.DefaultCulture.Calendar.GetWeekOfYear(current,
+            DateTimeDefaults.CurrentCalendarWeekRule,
             DateTimeDefaults.CurrentFirstDayOfWeek);
 
     /// <summary>
@@ -173,8 +174,7 @@ public static class DateExtensions
     /// <param name="dateTime">The DateTime to adjust</param>
     /// <returns>A DateTime instance adjusted to the end of the current week</returns>
     /// <remarks>the end of the week is controlled by the current Culture.</remarks>
-    public static DateTime LastDayOfWeek(this DateTime dateTime) =>
-        dateTime.StartOfWeek().AddDays(6);
+    public static DateTime LastDayOfWeek(this DateTime dateTime) => dateTime.StartOfWeek().AddDays(6);
 
     /// <summary>
     ///     Returns a DateTime adjusted to the end of the week.
@@ -182,8 +182,7 @@ public static class DateExtensions
     /// <param name="dateTime">The DateTime to adjust</param>
     /// <returns>A DateTime instance adjusted to the end of the current week</returns>
     /// <remarks>the end of the week is controlled by the current Culture.</remarks>
-    public static DateTime? LastDayOfWeek(this DateTime? dateTime) =>
-        dateTime?.StartOfWeek().AddDays(6);
+    public static DateTime? LastDayOfWeek(this DateTime? dateTime) => dateTime?.StartOfWeek().AddDays(6);
 
     /// <summary>
     ///     Combines the date part of a DateTime with the time part from a TimeSpan
@@ -191,9 +190,14 @@ public static class DateExtensions
     /// <param name="date"></param>
     /// <param name="time"></param>
     /// <returns>DateTime</returns>
-    public static DateTime Combine(this DateTime date, TimeSpan time) => new(date.Year, date.Month, date.Day,
-        int.Parse(time.Hours.ToString()), int.Parse(time.Minutes.ToString()), int.Parse(time.Seconds.ToString()),
-        int.Parse(time.Milliseconds.ToString()));
+    public static DateTime Combine(this DateTime date, TimeSpan time) =>
+        new(date.Year,
+            date.Month,
+            date.Day,
+            int.Parse(time.Hours.ToString()),
+            int.Parse(time.Minutes.ToString()),
+            int.Parse(time.Seconds.ToString()),
+            int.Parse(time.Milliseconds.ToString()));
 
     /// <summary>
     ///     Combines the date part of a DateTime with the time part from another DateTime
@@ -201,8 +205,8 @@ public static class DateExtensions
     /// <param name="date"></param>
     /// <param name="time"></param>
     /// <returns>DateTime</returns>
-    public static DateTime Combine(this DateTime date, DateTime time) => new(date.Year, date.Month, date.Day, time.Hour,
-        time.Minute, time.Second, time.Millisecond);
+    public static DateTime Combine(this DateTime date, DateTime time) =>
+        new(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
 
     /// <summary>
     ///     Gets first date of year/week using ISO8601.

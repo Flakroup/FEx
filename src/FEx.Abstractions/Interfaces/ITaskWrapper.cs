@@ -1,12 +1,13 @@
-using System;
-using System.Diagnostics;
+using FEx.Abstractions.Flow;
+using FEx.Abstractions.Flow.Errors;
+using System.Threading.Tasks;
 
 namespace FEx.Abstractions.Interfaces;
 
-public interface ITaskWrapper
+public interface ITaskWrapper : ITaskWrapperBase<Task, Result<ExceptionError>>
 {
-    Guid Id { get; }
-    bool IsFinished { get; }
-    StackTrace TaskCreationStackTrace { get; }
-    void SetException(Exception exception);
+}
+
+public interface ITaskWrapper<T> : ITaskWrapperBase<Task<T>, Result<T, ExceptionError>>
+{
 }

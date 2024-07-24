@@ -1,4 +1,4 @@
-using FEx.DependencyInjection.Abstractions.Interfaces;
+using FEx.DI.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 using System;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace FEx.DependencyInjection;
 
-public sealed class FExStrongInjectServiceProvider : IFExServiceProvider
+public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProvider
 {
     private readonly MethodInfo _method;
     private IDisposable _provider;
@@ -54,6 +54,19 @@ public sealed class FExStrongInjectServiceProvider : IFExServiceProvider
 
     public TContainer GetContainer<TContainer>() where TContainer : class => (TContainer)_provider;
 
+    public TContainer ConfigureServiceProvider<TContainer>() where TContainer : class, IDisposable, new()
+    {
+        _provider?.Dispose();
+        _provider = new TContainer();
+        IInitializeModule[] modules = TryResolveService<IInitializeModule[]>();
+
+        if (modules?.Length > 0)
+            foreach (IInitializeModule initializer in modules)
+                initializer.Initialize();
+
+        return (TContainer)_provider;
+    }
+
     public IServiceScope CreateScope() => default;
 
     public object GetService(Type serviceType)
@@ -67,19 +80,6 @@ public sealed class FExStrongInjectServiceProvider : IFExServiceProvider
             //ignored
             return default;
         }
-    }
-
-    public TContainer ConfigureServiceProvider<TContainer>() where TContainer : class, IDisposable, new()
-    {
-        _provider?.Dispose();
-        _provider = new TContainer();
-        IInitializeModule[] modules = TryResolveService<IInitializeModule[]>();
-
-        if (modules?.Length > 0)
-            foreach (IInitializeModule initializer in modules)
-                initializer.Initialize();
-
-        return (TContainer)_provider;
     }
 
 #pragma warning disable IDE0079

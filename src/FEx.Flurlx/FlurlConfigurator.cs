@@ -32,6 +32,7 @@ public class FlurlConfigurator : IFlurlConfigurator
         builder.Settings.Timeout = TimeSpan.FromSeconds(15);
 
         if (_apiConfiguration.IgnoreSSLErrors)
-            builder.ConfigureInnerHandler(handler => handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true);
+            builder.ConfigureInnerHandler(handler =>
+                handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true);
     }
 }

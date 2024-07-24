@@ -1,10 +1,10 @@
-﻿using FEx.Extensions.Base.Enums;
+﻿using FEx.Common.Extensions;
+using FEx.Extensions.Base.Enums;
 using FEx.Extensions.Base.Models;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 
 namespace FEx.Extensions.Web;
 
@@ -28,12 +28,11 @@ public static class WebClientExtensions
         HttpClientHandler handler = pars.GetHttpClientHandler();
 
         client = handler is not null
-            ? new HttpClient(handler)
+            ? new(handler)
             : new HttpClient();
 
         if (resultAsJson)
-            client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue(MediaTypes.ApplicationJson.GetEnumValueDescription()));
+            client.DefaultRequestHeaders.Accept.Add(new(MediaTypes.ApplicationJson.GetEnumValueDescription()));
 
         if (pars?.Timeout is not null)
             client.Timeout = TimeSpan.FromMilliseconds(pars.Timeout.Value);

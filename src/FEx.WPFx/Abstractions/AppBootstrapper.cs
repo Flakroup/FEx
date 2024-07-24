@@ -1,6 +1,5 @@
 ﻿using FEx.Abstractions.Interfaces;
-using FEx.DependencyInjection.Abstractions.Interfaces;
-using FEx.Fundamentals;
+using FEx.DI.Abstractions;
 using System;
 using System.Windows;
 using System.Windows.Threading;
@@ -12,23 +11,18 @@ public abstract class AppBootstrapper : Application
 {
     private readonly IExceptionHandler _exceptionHandler;
 
-    protected IFExServiceProvider IoCProvider => Foundation.ServiceProvider;
-
     protected AppBootstrapper()
     {
         ConfigureServiceProvider();
 
-        _exceptionHandler = IoCProvider.GetRequiredService<IExceptionHandler>();
+        _exceptionHandler = FExServiceProvider.Get<IExceptionHandler>();
         AppDomain.CurrentDomain.UnhandledException += AppDomainUnhandledException;
         DispatcherUnhandledException += OnAppDispatcherUnhandledException;
     }
 
     protected abstract void ComponentInitialize();
 
-    protected virtual void HandleAppException(Exception exception)
-    {
-        _exceptionHandler.Handle(exception);
-    }
+    protected virtual void HandleAppException(Exception exception) => _exceptionHandler.Handle(exception);
 
     protected virtual void BeforeStartup(StartupEventArgs e)
     {
@@ -49,10 +43,7 @@ public abstract class AppBootstrapper : Application
         //return !HasBeenInitialized || ExceptionHandler.LastException != null;
         false;
 
-    protected virtual void AfterStartup(StartupEventArgs e)
-    {
-        BindingExceptionThrower.Attach();
-    }
+    protected virtual void AfterStartup(StartupEventArgs e) => BindingExceptionThrower.Attach();
 
     /// <summary>
     ///     Raises the <see cref="E:System.Windows.Application.Startup" /> event.
@@ -93,37 +84,17 @@ public abstract class AppBootstrapper : Application
         }
     }
 
-    private void ConfigureServiceProvider()
+    private static void ConfigureServiceProvider()
     {
     }
 
-    private void OnAppDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
-    {
-        if (e.Exception != null)
-            HandleAppException(e.Exception);
-
-        e.Handled = true;
-    }
-
-    private void AppDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
-    {
-        if (e.ExceptionObject is Exception exception)
-            HandleAppException(exception);
-    }
-
-    private void Initialize()
-    {
-        ComponentInitialize();
-        //HasBeenInitialized = true;
-    }
-
-    private void EnsureSingleInstance()
+    private static void EnsureSingleInstance()
     {
         //Guid s = LogToHub("Checking duplicated instances");
         //if (!CommonServicesModule.EnsureSingleInstance())
         //{
         //    if (FExMvvm.MessagePopupService.ShowMessage(
-        //        $"{FExBasics.AppInfoProvider.Name} is already running.{Environment.NewLine}Do you want to close it?",
+        //        $"{FExFoundation.AppInfoProvider.Name} is already running.{Environment.NewLine}Do you want to close it?",
         //        buttons: MessageBoxButton.YesNo) == MessageBoxResult.No)
         //    {
         //        Environment.Exit(0);
@@ -141,4 +112,20 @@ public abstract class AppBootstrapper : Application
         //}
         //RemoveLog(s);
     }
+
+    private void OnAppDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        if (e.Exception != null)
+            HandleAppException(e.Exception);
+
+        e.Handled = true;
+    }
+
+    private void AppDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception exception)
+            HandleAppException(exception);
+    }
+
+    private void Initialize() => ComponentInitialize();//HasBeenInitialized = true;
 }

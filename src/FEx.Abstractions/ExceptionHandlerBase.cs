@@ -1,5 +1,5 @@
-﻿using System;
-using FEx.Abstractions.Interfaces;
+﻿using FEx.Abstractions.Interfaces;
+using System;
 
 namespace FEx.Abstractions;
 

@@ -4,6 +4,7 @@ namespace FEx.Basics.Utilities;
 
 public class FExSemaphoreSlim : SemaphoreSlim
 {
+    public bool IsDisposed { get; protected set; }
     public int InitialCount { get; }
     public bool IsIdle => InitialCount == CurrentCount;
 
@@ -18,4 +19,12 @@ public class FExSemaphoreSlim : SemaphoreSlim
     {
         InitialCount = initialCount;
     }
+
+    #region IDisposable
+    protected override void Dispose(bool disposing)
+    {
+        IsDisposed = true;
+        base.Dispose(disposing);
+    }
+    #endregion
 }

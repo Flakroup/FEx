@@ -16,7 +16,7 @@ public sealed class DatabaseProvider : IDatabaseProvider, IDisposable
     public DatabaseProvider(IDatabaseFilePathResolver filePathResolver)
     {
         Repository = GetRepository(filePathResolver);
-        DbLock = new ExtendedReaderWriterLockSlim();
+        DbLock = new();
     }
 
     private static LiteRepository GetRepository(IDatabaseFilePathResolver filePathResolver)

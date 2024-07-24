@@ -10,8 +10,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
+    <ProjectReference Include="..\FEx.DependencyInjection\FEx.DependencyInjection.csproj" />
     <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
-    <ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
     <ProjectReference Include="..\FEx.Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
   </ItemGroup>
 

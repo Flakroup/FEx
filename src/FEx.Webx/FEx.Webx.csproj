@@ -9,9 +9,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
-		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
-		<ProjectReference Include="..\FEx.Platforms.Abstractions\FEx.Platforms.Abstractions.csproj" />
+	  <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+	  <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+	  <ProjectReference Include="..\FEx.Platforms.Abstractions\FEx.Platforms.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -4,9 +4,9 @@ namespace FEx.Telemetry;
 
 public interface IFExTelemetryConfig
 {
-    public string RollbarAccessToken { get; set; }
-    public string RollbarEnvironment { get; set; }
-    public Func<string> RollbarPersonEmail { get; set; }
-    public Func<string> RollbarPersonUserName { get; set; }
-    public bool AddPersonToRollbarEnvironment { get; set; }
+    string AccessToken { get; set; }
+    string AppEnvironment { get; }
+    Func<string> PersonEmail { get; set; }
+    Func<string> PersonUserName { get; set; }
+    bool AddPersonToEnvironment { get; set; }
 }

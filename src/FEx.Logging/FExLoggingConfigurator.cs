@@ -1,17 +1,15 @@
-﻿using FEx.Basics;
-using FEx.Extensions;
+﻿using FEx.Abstractions;
 using FEx.Logging.Extensions;
 using Serilog;
 using Serilog.Events;
 using System;
-using System.IO;
 
 namespace FEx.Logging;
 
 public class FExLoggingConfigurator
 {
-    public string LogDirPath { get; private set; }
-    public string LogFilePath { get; private set; }
+    public string LogDirPath => FExFoundation.AppInfoProvider.LogDirPath;
+    public string LogFilePath => FExFoundation.AppInfoProvider.LogFilePath;
     public bool ForceConsole { get; private set; }
     public LogEventLevel ExternalLoggingLevel { get; private set; }
     public LogEventLevel ExternalDebugLoggingLevel { get; private set; }
@@ -20,24 +18,22 @@ public class FExLoggingConfigurator
 
     public LoggerConfiguration Configuration { get; private set; }
 
-    public void Set(string logDirPath,
-                    bool forceConsole = false,
-                    LogEventLevel externalLoggingLevel = LogEventLevel.Warning,
-                    LogEventLevel externalDebugLoggingLevel = LogEventLevel.Information,
-                    Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null,
-                    params string[] overrides)
+    public FExLoggingConfigurator Set(bool forceConsole = false,
+                                      LogEventLevel externalLoggingLevel = LogEventLevel.Warning,
+                                      LogEventLevel externalDebugLoggingLevel = LogEventLevel.Information,
+                                      Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null,
+                                      params string[] overrides)
     {
-        logDirPath.Guard(nameof(logDirPath));
-        LogDirPath = logDirPath;
-        LogFilePath = Path.Combine(LogDirPath, $"{FExBasics.AppInfoProvider.Name}.log");
         ForceConsole = forceConsole;
         ExternalLoggingLevel = externalLoggingLevel;
         ExternalDebugLoggingLevel = externalDebugLoggingLevel;
         CfgFunc = cfgFunc;
         Overrides = overrides;
+
+        return this;
     }
 
-    public void ConfigureSerilog()
+    public FExLoggingConfigurator ConfigureSerilog()
     {
         Configuration = new LoggerConfiguration().ConfigureSerilog(LogFilePath,
             ForceConsole,
@@ -45,6 +41,9 @@ public class FExLoggingConfigurator
             ExternalDebugLoggingLevel,
             CfgFunc,
             Overrides);
+
         Log.Logger = Configuration.CreateLogger();
+
+        return this;
     }
 }

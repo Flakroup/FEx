@@ -1,5 +1,4 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 using System.Windows.Markup;
 
 namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
@@ -11,7 +10,7 @@ public class VirtualizingItemsControl : ItemsControl
 {
     public VirtualizingItemsControl()
     {
-        ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(VirtualizingStackPanel)));
+        ItemsPanel = new(new(typeof(VirtualizingStackPanel)));
 
         const string template = @"
             <ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>
@@ -38,7 +37,7 @@ public class VirtualizingItemsControl : ItemsControl
         ScrollViewer.SetHorizontalScrollBarVisibility(this, ScrollBarVisibility.Auto);
 
         VirtualizingPanel.SetCacheLengthUnit(this, VirtualizationCacheLengthUnit.Page);
-        VirtualizingPanel.SetCacheLength(this, new VirtualizationCacheLength(1));
+        VirtualizingPanel.SetCacheLength(this, new(1));
 
         VirtualizingPanel.SetIsVirtualizingWhenGrouping(this, true);
     }

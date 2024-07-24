@@ -1,7 +1,6 @@
 ﻿using FEx.AppSettings.Abstractions.Interfaces;
 using FEx.AppSettings.ConfigurationEx;
-using FEx.Extensions;
-using FEx.Extensions.Collections;
+using FEx.Common.Extensions;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -49,12 +48,6 @@ public class ConfigurationService : IConfigurationService
             : defaultValue;
     }
 
-    private void EnsureConfiguration()
-    {
-        if (Configuration is null)
-            Build();
-    }
-
     private static bool? StringToBool(string appSetting)
     {
         if (appSetting.IsEqual("true"))
@@ -63,5 +56,11 @@ public class ConfigurationService : IConfigurationService
         return appSetting.IsEqual("false")
             ? false
             : throw new InvalidOperationException($"No conversion to bool from {appSetting} string was provided");
+    }
+
+    private void EnsureConfiguration()
+    {
+        if (Configuration is null)
+            Build();
     }
 }

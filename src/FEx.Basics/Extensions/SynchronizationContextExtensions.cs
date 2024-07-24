@@ -1,6 +1,5 @@
-﻿using FEx.Basics.Exceptions;
-using FEx.Extensions;
-using FEx.Extensions.Base;
+﻿using FEx.Abstractions;
+using FEx.Basics.Exceptions;
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -13,7 +12,7 @@ public static class SynchronizationContextExtensions
     [SuppressMessage("Usage", "VSTHRD001:Avoid legacy thread switching APIs")]
     public static T SendInContext<T>(this SynchronizationContext context, object sender, Func<T> func)
     {
-        StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
+        StackTrace stackTrace = FExFoundation.StackTraceProvider.GetStackTrace();
 
         try
         {
@@ -47,7 +46,7 @@ public static class SynchronizationContextExtensions
     [SuppressMessage("Usage", "VSTHRD001:Avoid legacy thread switching APIs")]
     public static void SendInContext(this SynchronizationContext context, object sender, Action action)
     {
-        StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
+        StackTrace stackTrace = FExFoundation.StackTraceProvider.GetStackTrace();
 
         try
         {
@@ -83,7 +82,7 @@ public static class SynchronizationContextExtensions
 
         if (onException is not null)
             onException(aEx);
-        else if (FExExtensionsCommon.ExceptionHandler is not null)
+        else if (FExFoundation.ExceptionHandler is not null)
             aEx.HandleException();
         else
             throw aEx;

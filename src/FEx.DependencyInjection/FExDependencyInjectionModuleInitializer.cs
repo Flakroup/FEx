@@ -1,14 +1,10 @@
 ﻿using FEx.DependencyInjection.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FEx.DependencyInjection
-{
-    public class FExDependencyInjectionModuleInitializer : InitializeModule<IFExDependencyInjectionModule>
-    {
-        protected override void OnInitialize()
-        {
-        }
+namespace FEx.DependencyInjection;
 
-        protected override void AddServices(IFExDependencyInjectionModule container, IServiceCollection services) => FExDependencyInjectionModule.AddServices(container, services);
-    }
+public class FExDependencyInjectionModuleInitializer : InitializeModule<IFExDependencyInjectionModule>
+{
+    protected override void AddServices(IFExDependencyInjectionModule container, IServiceCollection services) =>
+        FExDependencyInjectionModule.AddServices(container, services);
 }

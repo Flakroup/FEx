@@ -1,15 +1,13 @@
-﻿using FEx.Basics;
-using FEx.Extensions;
+﻿using FEx.Abstractions;
+using FEx.Common.Extensions;
 using FEx.Extensions.Base.Converters;
 using FEx.Extensions.Base.Enums;
 using FEx.Extensions.Collections.Lists;
 using FEx.Logging.Abstractions.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Events;
-using Serilog.Extensions.Logging;
 using Serilog.Sinks.SystemConsole.Themes;
 using System;
 using System.Collections.Generic;
@@ -28,8 +26,7 @@ public static class LoggerExtensions
     public static string DefaultFileOutputTemplate { get; set; } =
         "[{Timestamp:yyyy-MM-dd HH:mm:ss}|{Level:u3}] <s:{SourceContext}>{NewLine}   {Message:lj} {Exception}{NewLine}    [Properties:{Properties}]{NewLine}";
 
-    public static IList<string> DefaultOverrides { get; set; } =
-        ["Microsoft", "Microsoft.Hosting.Lifetime", "System"];
+    public static IList<string> DefaultOverrides { get; set; } = ["Microsoft", "Microsoft.Hosting.Lifetime", "System"];
 
     public static LoggerConfiguration ConfigureSerilog(this LoggerConfiguration cfg,
                                                        string logFilePath,
@@ -40,7 +37,7 @@ public static class LoggerExtensions
                                                        Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null,
                                                        params string[] overrides)
     {
-        logFilePath ??= FExBasics.AppInfoProvider.LogFilePath.Guard(nameof(logFilePath));
+        logFilePath ??= FExFoundation.AppInfoProvider.LogFilePath.Guard(nameof(logFilePath));
 
         Directory.CreateDirectory(Path.GetDirectoryName(logFilePath)!);
 
@@ -75,26 +72,6 @@ public static class LoggerExtensions
             overrides = DefaultOverrides;
 
         return overrides.Aggregate(cfg, (current, o) => current.MinimumLevel.Override(o, level));
-    }
-
-    public static IServiceCollection ConfigureLogging(this IServiceCollection services)
-    {
-        // Creating a `LoggerProviderCollection` lets Serilog optionally write
-        // events through other dynamically-added MEL ILoggerProviders.
-        var providers = new LoggerProviderCollection();
-
-        return services.AddSingleton(providers)
-            .AddSingleton<ILoggerFactory>(sc =>
-            {
-                LoggerProviderCollection providerCollection = sc.GetRequiredService<LoggerProviderCollection>();
-                var factory = new SerilogLoggerFactory(null, true, providerCollection);
-
-                foreach (ILoggerProvider provider in sc.GetServices<ILoggerProvider>())
-                    factory.AddProvider(provider);
-
-                return factory;
-            })
-            .AddLogging(loggingBuilder => loggingBuilder.AddSerilog());
     }
 
     public static void SetLogger(string logFilePath = null,

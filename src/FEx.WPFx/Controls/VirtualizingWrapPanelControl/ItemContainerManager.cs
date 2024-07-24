@@ -110,12 +110,11 @@ internal class ItemContainerManager : IItemContainerManager
             if (IsRecycling)
                 removedCotainers.ForEach(container => _cachedContainers.Add(container));
 
-            ItemsChanged?.Invoke(this, new ItemContainerManagerItemsChangedEventArgs(e.Action, removedCotainers));
+            ItemsChanged?.Invoke(this, new(e.Action, removedCotainers));
         }
         else
         {
-            ItemsChanged?.Invoke(this,
-                new ItemContainerManagerItemsChangedEventArgs(e.Action, []));
+            ItemsChanged?.Invoke(this, new(e.Action, []));
         }
     }
 

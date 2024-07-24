@@ -1,8 +1,8 @@
-﻿using FEx.Asyncx.Abstractions.Interfaces;
+﻿using FEx.Abstractions.Interfaces;
 
 namespace FEx.EFCore.Interfaces;
 
-public interface ISqlDbHelper : IAsyncInitialize
+public interface ISqlDbHelper : IAsyncInitializable
 {
     string SQLInstance { get; }
 }

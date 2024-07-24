@@ -9,6 +9,6 @@ public abstract class SubscriberBase
 
     protected SubscriberBase()
     {
-        Subscriptions = new ConcurrentDictionary<string, IDisposable>();
+        Subscriptions = new();
     }
 }

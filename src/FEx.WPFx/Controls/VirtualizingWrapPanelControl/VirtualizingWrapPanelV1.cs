@@ -9,25 +9,30 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 /// <summary>
 ///     A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical
 ///     orientation.
-///     <p class="note">In order to work properly all items must have the same size.</p>
+/// <p class="note">In order to work properly all items must have the same size.</p>
 /// </summary>
 public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
 {
     public static readonly DependencyProperty SpacingModeProperty = DependencyProperty.Register(nameof(SpacingMode),
-        typeof(SpacingMode), typeof(VirtualizingWrapPanelV1),
+        typeof(SpacingMode),
+        typeof(VirtualizingWrapPanelV1),
         new FrameworkPropertyMetadata(SpacingMode.Uniform, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(nameof(Orientation),
-        typeof(Orientation), typeof(VirtualizingWrapPanelV1),
-        new FrameworkPropertyMetadata(Orientation.Vertical, FrameworkPropertyMetadataOptions.AffectsMeasure,
+        typeof(Orientation),
+        typeof(VirtualizingWrapPanelV1),
+        new FrameworkPropertyMetadata(Orientation.Vertical,
+            FrameworkPropertyMetadataOptions.AffectsMeasure,
             (obj, _) => ((VirtualizingWrapPanelV1)obj).Orientation_Changed()));
 
     public static readonly DependencyProperty ItemSizeProperty = DependencyProperty.Register(nameof(ItemSize),
-        typeof(Size), typeof(VirtualizingWrapPanelV1),
+        typeof(Size),
+        typeof(VirtualizingWrapPanelV1),
         new FrameworkPropertyMetadata(Size.Empty, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     public static readonly DependencyProperty StretchItemsProperty = DependencyProperty.Register(nameof(StretchItems),
-        typeof(bool), typeof(VirtualizingWrapPanelV1),
+        typeof(bool),
+        typeof(VirtualizingWrapPanelV1),
         new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsArrange));
 
     protected Size _childSize;
@@ -38,7 +43,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
 
     /// <summary>
     ///     Gets or sets the spacing mode used when arranging the items. The default value is
-    ///     <see cref="SpacingMode.Uniform" />.
+    /// <see cref="SpacingMode.Uniform" />.
     /// </summary>
     public SpacingMode SpacingMode
     {
@@ -48,7 +53,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
 
     /// <summary>
     ///     Gets or sets a value that specifies the orientation in which items are arranged. The default value is
-    ///     <see cref="Orientation.Vertical" />.
+    /// <see cref="Orientation.Vertical" />.
     /// </summary>
     public Orientation Orientation
     {
@@ -89,10 +94,9 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
 
     protected override Size CalculateExtent(Size availableSize)
     {
-        double extentWidth =
-            SpacingMode != SpacingMode.None && !double.IsInfinity(GetWidth(availableSize))
-                ? GetWidth(availableSize)
-                : GetWidth(_childSize) * _itemsPerRowCount;
+        double extentWidth = SpacingMode != SpacingMode.None && !double.IsInfinity(GetWidth(availableSize))
+            ? GetWidth(availableSize)
+            : GetWidth(_childSize) * _itemsPerRowCount;
 
         if (ItemsOwner is IHierarchicalVirtualizationAndScrollInfo)
             extentWidth = Orientation == Orientation.Vertical
@@ -134,7 +138,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
                  * in the viewport it has no valid arrangement. That means that the
                  * height/width is 0. Therefore the items should not be visible so
                  * that they are not falsely displayed. */
-                child.Arrange(new Rect(0, 0, 0, 0));
+                child.Arrange(new(0, 0, 0, 0));
             else
                 child.Arrange(CreateRect(x - offsetX, y - offsetY, childSize.Width, childSize.Height));
         }
@@ -145,7 +149,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     protected override ItemRange UpdateItemRange()
     {
         if (!IsVirtualizing)
-            return new ItemRange(0, Items.Count - 1);
+            return new(0, Items.Count - 1);
 
         int startIndex;
         int endIndex;
@@ -153,7 +157,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
         if (ItemsOwner is IHierarchicalVirtualizationAndScrollInfo groupItem)
         {
             if (!GetIsVirtualizingWhenGrouping(ItemsControl))
-                return new ItemRange(0, Items.Count - 1);
+                return new(0, Items.Count - 1);
 
             var offset = new Point(Offset.X, groupItem.Constraints.Viewport.Location.Y);
 
@@ -238,7 +242,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
             }
         }
 
-        return new ItemRange(startIndex, endIndex);
+        return new(startIndex, endIndex);
     }
 
     protected override void BringIndexIntoView(int index)
@@ -340,14 +344,14 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
                 double maxPossibleChildWith = finalSize.Width / _itemsPerRowCount;
                 double childWidth = Math.Min(maxPossibleChildWith, childMaxWidth);
 
-                return new Size(childWidth, _childSize.Height);
+                return new(childWidth, _childSize.Height);
             }
 
             double childMaxHeight = ReadItemContainerStyle(MaxHeightProperty, double.PositiveInfinity);
             double maxPossibleChildHeight = finalSize.Height / _itemsPerRowCount;
             double childHeight = Math.Min(maxPossibleChildHeight, childMaxHeight);
 
-            return new Size(_childSize.Width, childHeight);
+            return new(_childSize.Width, childHeight);
         }
 
         return _childSize;
@@ -355,36 +359,39 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
 
     /* orientation aware helper methods */
 
-    protected double GetX(Point point) => Orientation == Orientation.Horizontal
-        ? point.X
-        : point.Y;
+    protected double GetX(Point point) =>
+        Orientation == Orientation.Horizontal
+            ? point.X
+            : point.Y;
 
-    protected double GetY(Point point) => Orientation == Orientation.Horizontal
-        ? point.Y
-        : point.X;
+    protected double GetY(Point point) =>
+        Orientation == Orientation.Horizontal
+            ? point.Y
+            : point.X;
 
-    protected double GetWidth(Size size) => Orientation == Orientation.Horizontal
-        ? size.Width
-        : size.Height;
+    protected double GetWidth(Size size) =>
+        Orientation == Orientation.Horizontal
+            ? size.Width
+            : size.Height;
 
-    protected double GetHeight(Size size) => Orientation == Orientation.Horizontal
-        ? size.Height
-        : size.Width;
+    protected double GetHeight(Size size) =>
+        Orientation == Orientation.Horizontal
+            ? size.Height
+            : size.Width;
 
-    protected Size CreateSize(double width, double height) => Orientation == Orientation.Horizontal
-        ? new Size(width, height)
-        : new Size(height, width);
+    protected Size CreateSize(double width, double height) =>
+        Orientation == Orientation.Horizontal
+            ? new(width, height)
+            : new Size(height, width);
 
-    protected Rect CreateRect(double x, double y, double width, double height) => Orientation == Orientation.Horizontal
-        ? new Rect(x, y, width, height)
-        : new Rect(y, x, width, height);
+    protected Rect CreateRect(double x, double y, double width, double height) =>
+        Orientation == Orientation.Horizontal
+            ? new(x, y, width, height)
+            : new Rect(y, x, width, height);
 
-    private void Orientation_Changed()
-    {
-        MouseWheelScrollDirection = Orientation == Orientation.Horizontal
+    private void Orientation_Changed() => MouseWheelScrollDirection = Orientation == Orientation.Horizontal
             ? ScrollDirection.Vertical
             : ScrollDirection.Horizontal;
-    }
 
     private void UpdateChildSize(Size availableSize)
     {
@@ -420,7 +427,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     private Size CalculateChildSize()
     {
         if (Items.Count == 0)
-            return new Size(0, 0);
+            return new(0, 0);
 
         GeneratorPosition startPosition = ItemContainerGenerator.GeneratorPositionFromIndex(0);
 
@@ -429,7 +436,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
             var child = (UIElement)ItemContainerGenerator.GenerateNext();
             AddInternalChild(child);
             ItemContainerGenerator.PrepareItemContainer(child);
-            child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            child.Measure(new(double.PositiveInfinity, double.PositiveInfinity));
 
             return child.DesiredSize;
         }
@@ -453,9 +460,10 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     }
 
     #region Deprecated properties
-    [Obsolete("Use SpacingMode")]
-    public static readonly DependencyProperty IsSpacingEnabledProperty =
-        DependencyProperty.Register(nameof(IsSpacingEnabled), typeof(bool), typeof(VirtualizingWrapPanelV1),
+    [Obsolete("Use SpacingMode")] public static readonly DependencyProperty IsSpacingEnabledProperty =
+        DependencyProperty.Register(nameof(IsSpacingEnabled),
+            typeof(bool),
+            typeof(VirtualizingWrapPanelV1),
             new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     [Obsolete("Use IsSpacingEnabled")]

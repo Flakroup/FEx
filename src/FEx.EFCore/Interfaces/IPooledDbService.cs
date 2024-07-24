@@ -1,4 +1,4 @@
-﻿using FEx.Asyncx.Abstractions.Interfaces;
+﻿using FEx.Abstractions.Interfaces;
 using FEx.Basics.Collections;
 using FEx.EFCore.Models;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace FEx.EFCore.Interfaces;
 
-public interface IPooledDbService<out TDbContext> : IAsyncInitialize where TDbContext : DbContext
+public interface IPooledDbService<out TDbContext> : IAsyncInitializable where TDbContext : DbContext
 {
     /// <summary>
     /// Map of model to DB mappings.

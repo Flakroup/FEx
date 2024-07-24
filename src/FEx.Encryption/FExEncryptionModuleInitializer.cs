@@ -12,8 +12,5 @@ public class FExEncryptionModuleInitializer : InitializeOnlyModule
         _settings = settings;
     }
 
-    protected override void OnInitialize()
-    {
-        FExEncryption.Initialize(_settings);
-    }
+    protected override void OnInitialize() => FExEncryption.Initialize(_settings);
 }

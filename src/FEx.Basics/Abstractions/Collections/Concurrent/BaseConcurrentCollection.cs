@@ -81,20 +81,18 @@ public abstract class BaseConcurrentCollection<TColl, T> : BaseObservableCollect
     private BaseConcurrentCollection(bool passIndexOfRemovedItem = false, bool sendAsyncEvents = true)
         : base(passIndexOfRemovedItem, sendAsyncEvents)
     {
-        _syncRoot = new object();
-        _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        _syncRoot = new();
+        _lock = new(LockRecursionPolicy.SupportsRecursion);
         Collection = (TColl)Activator.CreateInstance(typeof(TColl));
     }
 
-    public virtual void DoBulkOperation(Action<TColl> action, Func<TColl, bool> triggerCollectionChanged)
-    {
-        DoBulkOperation(c =>
-        {
-            action(c);
+    public virtual void DoBulkOperation(Action<TColl> action, Func<TColl, bool> triggerCollectionChanged) => DoBulkOperation(c =>
+                                                                                                                      {
+                                                                                                                          action(c);
 
-            return (object)null;
-        }, triggerCollectionChanged);
-    }
+                                                                                                                          return (object)null;
+                                                                                                                      },
+            triggerCollectionChanged);
 
     public virtual TR DoBulkOperation<TR>(Func<TColl, TR> func, Func<TColl, bool> triggerCollectionChanged)
     {
@@ -176,10 +174,7 @@ public abstract class BaseConcurrentCollection<TColl, T> : BaseObservableCollect
         return (removed is not null, removed);
     }
 
-    public void CopyTo(Array array, int index)
-    {
-        Read(() => ((ICollection)Collection).CopyTo(array, index));
-    }
+    public void CopyTo(Array array, int index) => Read(() => ((ICollection)Collection).CopyTo(array, index));
 
     /// <summary>
     ///     Adds an object to the end of the <see cref="ConcurrentCollection{T}" />.
@@ -209,15 +204,9 @@ public abstract class BaseConcurrentCollection<TColl, T> : BaseObservableCollect
         }
     }
 
-    public bool Contains(T item)
-    {
-        return Read(() => Collection.Contains(item));
-    }
+    public bool Contains(T item) => Read(() => Collection.Contains(item));
 
-    public void CopyTo(T[] array, int arrayIndex)
-    {
-        Read(() => Collection.CopyTo(array, arrayIndex));
-    }
+    public void CopyTo(T[] array, int arrayIndex) => Read(() => Collection.CopyTo(array, arrayIndex));
 
     /// <summary>
     ///     Removes the specified item.
@@ -259,20 +248,11 @@ public abstract class BaseConcurrentCollection<TColl, T> : BaseObservableCollect
 
     public int IndexOf(object value) => IndexOf((T)value);
 
-    public void Insert(int index, object value)
-    {
-        Insert(index, (T)value);
-    }
+    public void Insert(int index, object value) => Insert(index, (T)value);
 
-    public void Remove(object value)
-    {
-        Remove((T)value);
-    }
+    public void Remove(object value) => Remove((T)value);
 
-    public int IndexOf(T item)
-    {
-        return Read(() => Collection.IndexOf(item));
-    }
+    public int IndexOf(T item) => Read(() => Collection.IndexOf(item));
 
     public void Insert(int index, T item)
     {
@@ -316,7 +296,8 @@ public abstract class BaseConcurrentCollection<TColl, T> : BaseObservableCollect
         if (collection is not null)
         {
             (List<T> added, int startingIndex) = DoBulkOperation(
-                coll => InternalAddRange(coll, collection.Distinct().Where(x => !coll.Contains(x))), _ => false);
+                coll => InternalAddRange(coll, collection.Distinct().Where(x => !coll.Contains(x))),
+                _ => false);
 
             InternalOnAddedRange(added, startingIndex);
         }
@@ -355,11 +336,12 @@ public abstract class BaseConcurrentCollection<TColl, T> : BaseObservableCollect
             var c = 0;
 
             DoBulkOperation(coll =>
-            {
-                c = coll.Count;
-                coll.Clear();
-                coll.AddRangeToList(collection);
-            }, coll => c != 0 || coll.Count > 0);
+                {
+                    c = coll.Count;
+                    coll.Clear();
+                    coll.AddRangeToList(collection);
+                },
+                coll => c != 0 || coll.Count > 0);
         }
     }
 
@@ -421,7 +403,7 @@ public abstract class BaseConcurrentCollection<TColl, T> : BaseObservableCollect
         }
     }
 
-    private (List<T> added, int startingIndex) InternalAddRange(TColl coll, IEnumerable<T> collection)
+    private static (List<T> added, int startingIndex) InternalAddRange(TColl coll, IEnumerable<T> collection)
     {
         int startingIndex = coll.Count;
         List<T> added = null;

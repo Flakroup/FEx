@@ -17,7 +17,8 @@ public static class JsonExtensions
                                                               JsonSerializerSettings settings = null,
                                                               bool checkNetAvailability = false,
                                                               CancellationToken cancellationToken = default)
-    {//
+    {
+        //
         T res = default;
 
         if (!checkNetAvailability

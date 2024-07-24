@@ -1,5 +1,5 @@
-﻿using FEx.Asyncx;
-using FEx.Extensions;
+﻿using FEx.Abstractions;
+using FEx.Basics.Extensions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,8 +20,8 @@ public static class DispatcherService
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
     public static void InvokeOnDispatcherContext(Action action,
-                                                        DispatcherObject sender = null,
-                                                        DispatcherPriority priority = DispatcherPriority.Send)
+                                                 DispatcherObject sender = null,
+                                                 DispatcherPriority priority = DispatcherPriority.Send)
     {
         DispatcherObject dispatcherObject = sender.GetDispatcherObject();
 
@@ -39,9 +39,8 @@ public static class DispatcherService
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
     public static async Task InvokeOnDispatcherContextAsync(Action action,
-                                                                   DispatcherObject sender = null,
-                                                                   DispatcherPriority priority =
-                                                                       DispatcherPriority.Send)
+                                                            DispatcherObject sender = null,
+                                                            DispatcherPriority priority = DispatcherPriority.Send)
     {
         DispatcherObject dispatcherObject = sender.GetDispatcherObject();
 
@@ -59,8 +58,8 @@ public static class DispatcherService
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
     public static T InvokeOnDispatcherContext<T>(Func<T> action,
-                                                        DispatcherObject sender = null,
-                                                        DispatcherPriority priority = DispatcherPriority.Send)
+                                                 DispatcherObject sender = null,
+                                                 DispatcherPriority priority = DispatcherPriority.Send)
     {
         DispatcherObject dispatcherObject = sender.GetDispatcherObject();
 
@@ -76,10 +75,9 @@ public static class DispatcherService
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
-    public static async Task<T> InvokeOnDispatcherContextAsync<T>(
-        Func<T> action,
-        DispatcherObject sender = null,
-        DispatcherPriority priority = DispatcherPriority.Send)
+    public static async Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action,
+                                                                  DispatcherObject sender = null,
+                                                                  DispatcherPriority priority = DispatcherPriority.Send)
     {
         DispatcherObject dispatcherObject = sender.GetDispatcherObject();
 
@@ -145,7 +143,7 @@ public static class DispatcherService
     {
         DispatcherObject dispatcherObject = sender.GetDispatcherObject();
 
-        FExAsyncx.AsyncHelper.FireTaskAndForget(async () =>
+        FExFoundation.AsyncHelper.FireTaskAndForget(async () =>
             await dispatcherObject.Dispatcher.BeginInvoke(action, priority));
     }
 

@@ -1,4 +1,4 @@
-﻿using FEx.Rx.BaseObjects;
+﻿using FEx.MVVM.Rx.BaseObjects;
 using FEx.Rx.Extensions;
 using System;
 using System.Reactive.Concurrency;
@@ -47,6 +47,7 @@ public class FExTimer : ReactiveNotifyPropertyChanged, IDisposable
     public FExTimer WithAsyncCallback(Func<Task> asyncCallback, CancellationToken cancellationToken = default)
     {
         _timer?.Dispose();
+
         _timer = IntervalObservable.SubscribeTask((_, ct) => ExecuteCallbackAsync(asyncCallback, ct),
             cancellationToken);
 

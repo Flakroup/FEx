@@ -13,13 +13,7 @@ public class FExFlurlxModuleInitializer : InitializeModule<IFExFlurlxModule>
         _configurator = configurator;
     }
 
-    protected override void OnInitialize()
-    {
-        _configurator.Configure();
-    }
+    protected override void OnInitialize() => _configurator.Configure();
 
-    protected override void AddServices(IFExFlurlxModule container, IServiceCollection services)
-    {
-        FExFlurlxModule.AddServices(container, services);
-    }
+    protected override void AddServices(IFExFlurlxModule container, IServiceCollection services) => FExFlurlxModule.AddServices(container, services);
 }

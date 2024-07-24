@@ -54,7 +54,7 @@ public static class EventsExtensions
 
                         break;
                     default:
-                        throw new Exception($"{invocation.GetType().FullName} delegate type is not handled");
+                        throw new($"{invocation.GetType().FullName} delegate type is not handled");
                 }
         }
     }

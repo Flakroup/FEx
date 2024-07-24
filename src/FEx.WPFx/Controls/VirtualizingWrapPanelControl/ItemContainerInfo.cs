@@ -37,7 +37,7 @@ internal class ItemContainerInfo : IItemContainerInfo
         Item = item;
 
         if (uiElement is FrameworkElement fe)
-            MaxSize = new Size(fe.MaxWidth, fe.MaxHeight);
+            MaxSize = new(fe.MaxWidth, fe.MaxHeight);
 
         Item = item;
     }
@@ -49,10 +49,7 @@ internal class ItemContainerInfo : IItemContainerInfo
         return UIElement.DesiredSize;
     }
 
-    public void Arrange(Rect rect)
-    {
-        UIElement.Arrange(rect);
-    }
+    public void Arrange(Rect rect) => UIElement.Arrange(rect);
 
     public static IItemContainerInfo For(UIElement uiElement, object item) => new ItemContainerInfo(uiElement, item);
 

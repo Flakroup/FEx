@@ -1,6 +1,6 @@
-﻿using FEx.Extensions.Base.Enums;
+﻿using FEx.Common.Extensions;
+using FEx.Extensions.Base.Enums;
 using FEx.Extensions.Base.Models;
-using FEx.Extensions.Collections.Dictionaries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,26 +31,17 @@ public static class WebResponseExtensions
                                                                   int rangeTo,
                                                                   WebRequestParams pars = null)
     {
-        try
-        {
-            if (responseHeaders.ContainsKey(AcceptRangesHeaderName))
-            {
-                HttpWebRequest myHttpWebRequest = responseUri.GetHttpRequest(pars);
-                myHttpWebRequest.AddRange(rangeFrom, rangeTo);
+        if (!responseHeaders.ContainsKey(AcceptRangesHeaderName))
+            return (false, LengthType.AutoDetect);
 
-                using WebResponse res = await myHttpWebRequest.GetResponseAsync();
-                using var resp = (HttpWebResponse)res;
-                responseHeaders = resp.GetAllHeaders();
+        HttpWebRequest myHttpWebRequest = responseUri.GetHttpRequest(pars);
+        myHttpWebRequest.AddRange(rangeFrom, rangeTo);
 
-                return (responseHeaders.ContainsKey(ContentRangeHeaderName), LengthType.Bytes);
-            }
-        }
-        catch (Exception ex)
-        {
-            ex.HandleException();
-        }
+        using WebResponse res = await myHttpWebRequest.GetResponseAsync();
+        using var resp = (HttpWebResponse)res;
+        responseHeaders = resp.GetAllHeaders();
 
-        return (false, LengthType.AutoDetect);
+        return (responseHeaders.ContainsKey(ContentRangeHeaderName), LengthType.Bytes);
     }
 
     public static ContentRangeHeaderValue GetContentRange(this HttpWebResponse response)
@@ -69,7 +60,7 @@ public static class WebResponseExtensions
         var from = long.Parse(split[0]);
         var to = long.Parse(split[1]);
 
-        return new ContentRangeHeaderValue(from, to);
+        return new(from, to);
     }
 
     public static Dictionary<string, string[]> GetAllHeaders(this HttpResponseMessage resp)

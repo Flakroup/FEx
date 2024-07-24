@@ -1,10 +1,9 @@
 ﻿using FEx.Abstractions;
+using FEx.Abstractions.Enums;
 using FEx.Abstractions.Interfaces;
-using FEx.Asyncx;
-using FEx.Asyncx.Enums;
-using FEx.Basics;
+using FEx.Basics.Implementations;
 using FEx.Extensions;
-using FEx.Extensions.Base.Models;
+using FEx.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -74,9 +73,9 @@ public class ExceptionHandler : ExceptionHandlerBase
             .AppendLine(exception.BuildMessage())
             .ToString();
 
-        if (FExBasics.Logger is not null)
+        if (FExLoggingFoundation.Logger is not null)
         {
-            FExBasics.Logger.LogError(exception, info);
+            FExLoggingFoundation.Logger.LogError(exception, info);
         }
         else
         {
@@ -92,7 +91,7 @@ public class ExceptionHandler : ExceptionHandlerBase
         if (Callback is null)
             return;
 
-        FExAsyncx.AsyncHelper.FireTaskAndForget(() => Callback(info, options.InformUser || Debugger.IsAttached),
+        FExFoundation.AsyncHelper.FireTaskAndForget(() => Callback(info, options.InformUser || Debugger.IsAttached),
             AsyncMode.ThreadPool);
     }
 

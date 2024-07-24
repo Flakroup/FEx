@@ -179,9 +179,7 @@ public static class ListExtensions
 
     public static void AddRangeToList<T, TColl>(this TColl source, IEnumerable<T> items) where TColl : IList<T>
     {
-        var list = source as List<T>;
-
-        if (list is not null)
+        if (source is List<T> list)
             list.AddRange(items);
         else
             source.AddRangeToCollection(items);

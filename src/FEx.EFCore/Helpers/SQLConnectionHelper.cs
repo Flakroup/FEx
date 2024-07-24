@@ -1,7 +1,8 @@
-﻿using FEx.Basics.Utilities;
+﻿using FEx.Basics.Extensions;
+using FEx.Common.Extensions;
+using FEx.Common.Utilities;
 using FEx.EFCore.Configuration;
 using FEx.EFCore.Interfaces;
-using FEx.Extensions;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Threading.Tasks;
@@ -102,7 +103,7 @@ public static class SQLConnectionHelper
     {
         config.Guard(nameof(config));
 
-        return new FExDbConfig
+        return new()
         {
             SqlInstance = config.SqlInstance.Guard(nameof(IFExDbConfig.SqlInstance)),
             SqlDbName = "master",

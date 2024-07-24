@@ -1,0 +1,11 @@
+<Project>
+
+	<Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props"/>
+
+	<PropertyGroup>
+		<TargetFrameworkId>net8.0</TargetFrameworkId>
+	</PropertyGroup>
+
+    <Import Project="$(MSBuildThisFileDirectory)..\DevConfigs\Directory.Build.Tests.props"/>
+
+</Project>

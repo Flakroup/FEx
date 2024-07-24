@@ -34,7 +34,10 @@ public static class ConfigurationManagerExtensions
             readonlyField?.SetValue(ConfigurationManager.ConnectionStrings, false);
 
             MethodInfo baseAddMethod = typeof(ConfigurationElementCollection).GetMethod("BaseAdd",
-                BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(ConfigurationElement)], null);
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                null,
+                [typeof(ConfigurationElement)],
+                null);
 
             ConnectionStringSettings[] connStrs =
                 ConfigurationManager.ConnectionStrings.Cast<ConnectionStringSettings>().ToArray();

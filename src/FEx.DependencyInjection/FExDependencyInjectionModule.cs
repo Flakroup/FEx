@@ -1,4 +1,6 @@
-﻿using FEx.DependencyInjection.Abstractions.Interfaces;
+﻿using FEx.Abstractions.Interfaces;
+using FEx.Asyncx.Helpers;
+using FEx.DI.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 using StrongInject.Extensions.DependencyInjection;
@@ -16,6 +18,7 @@ namespace FEx.DependencyInjection;
     Scope.SingleInstance,
     typeof(FExDependencyInjectionModuleInitializer),
     typeof(IInitializeModule))]
+[Register(typeof(AsyncHelper), typeof(IAsyncHelper))]
 public class FExDependencyInjectionModule
 {
     public static void AddServices(IFExDependencyInjectionModule container, IServiceCollection services)

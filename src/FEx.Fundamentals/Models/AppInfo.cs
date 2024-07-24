@@ -12,4 +12,5 @@ public record AppInfo : IAppInfo
     public bool IsUIApp { get; init; }
     public DirectoryInfo UserData { get; init; }
     public DirectoryInfo AppData { get; init; }
+    public string LogDirPath { get; init; }
 }

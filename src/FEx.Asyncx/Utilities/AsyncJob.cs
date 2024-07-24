@@ -29,7 +29,7 @@ public class AsyncJob<TK, T>
         Index = no;
         _onException = onException;
         _logger = logger;
-        _tcs = new TaskCompletionSource<bool>();
+        _tcs = new();
         _coldTask = coldTask;
     }
 
@@ -66,13 +66,7 @@ public class AsyncJob<TK, T>
         }
     }
 
-    public void SetLogger<TKey, TValue>(ILogger<AsyncQueue<TKey, TValue>> logger)
-    {
-        _logger = logger;
-    }
+    public void SetLogger<TKey, TValue>(ILogger<AsyncQueue<TKey, TValue>> logger) => _logger = logger;
 
-    private void Log(string message)
-    {
-        _logger?.LogDebug(message);
-    }
+    private void Log(string message) => _logger?.LogDebug(message);
 }

@@ -1,7 +1,7 @@
 ﻿using FEx.Basics.Abstractions;
+using FEx.Basics.Extensions;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
-using FEx.Extensions;
 using FEx.Extensions.Base.Converters;
 using FEx.Extensions.Base.Enums;
 using FEx.Extensions.Base.Models;
@@ -98,7 +98,7 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
         foreach (int chunkNr in Enumerable.Range(0, chunksCount))
         {
             var end = (long)Math.Min(offset + operatingSize - 1, To);
-            Chunks.Add(chunkNr, new DownloadChunk(offset, end, Dir, progress));
+            Chunks.Add(chunkNr, new(offset, end, Dir, progress));
             offset = end + 1;
         }
 
@@ -141,6 +141,22 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
         To = RangeHeaderValue?.To ?? -1;
     }
 
+    private static (int start, int end)[] GetRanges(int[] unfinishedChunks)
+    {
+        var res = new List<int[]>();
+
+        foreach (int t in unfinishedChunks)
+        {
+            if (res.Count == 0
+                || res[res.Count - 1][1] != t - 1)
+                res.Add([t, t]);
+            else
+                res[res.Count - 1][1] = t;
+        }
+
+        return res.Select(x => (start: x[0], end: x[1])).ToArray();
+    }
+
     private void HandleChunks()
     {
         var isFinished = true;
@@ -161,22 +177,6 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
             DState = isFinished
                 ? DownloadState.Finished
                 : DownloadState.InProgress;
-    }
-
-    private (int start, int end)[] GetRanges(int[] unfinishedChunks)
-    {
-        var res = new List<int[]>();
-
-        foreach (int t in unfinishedChunks)
-        {
-            if (res.Count == 0
-                || res[res.Count - 1][1] != t - 1)
-                res.Add([t, t]);
-            else
-                res[res.Count - 1][1] = t;
-        }
-
-        return res.Select(x => (start: x[0], end: x[1])).ToArray();
     }
 
     private async Task ProcessDownloadAsync(int startChunkKey, int endChunkKey)
@@ -230,8 +230,10 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
                                    && receivedBytes != 0
                                    && !CancellationToken.IsCancellationRequested)
                             {
-                                receivedBytes = await streamResponse.ReadAsync(Buffer, bytesRead,
-                                    Buffer.Length - bytesRead, CancellationToken);
+                                receivedBytes = await streamResponse.ReadAsync(Buffer,
+                                    bytesRead,
+                                    Buffer.Length - bytesRead,
+                                    CancellationToken);
 
                                 bytesRead += receivedBytes;
                             }
@@ -308,15 +310,9 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
         }
     }
 
-    private void ClosedConnection()
-    {
-        IsConnected = false;
-    }
+    private void ClosedConnection() => IsConnected = false;
 
-    private void OpenedConnection()
-    {
-        IsConnected = true;
-    }
+    private void OpenedConnection() => IsConnected = true;
 
     #region IComparable
     public override bool Equals(object obj) => Equals(obj as IDownloadBase);
@@ -326,10 +322,7 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
     public override int GetHashCode() =>
         BitConverter.ToInt32(Encoding.UTF8.GetBytes($"{FilePath}@{Url.AbsoluteUri}"), 0);
 
-    public void Dispose()
-    {
-        Chunks?.Values.ForEachInEnumerable(x => x?.Dispose());
-    }
+    public void Dispose() => Chunks?.Values.ForEachInEnumerable(x => x?.Dispose());
 
     public int CompareTo(object obj) =>
         Equals(obj)

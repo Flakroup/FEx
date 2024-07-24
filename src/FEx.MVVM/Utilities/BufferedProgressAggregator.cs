@@ -25,10 +25,10 @@ public class BufferedProgressAggregator : ProgressAggregator
 
     public BufferedProgressAggregator()
     {
-        _progressChangeSubject = new ProgressChangeSubject();
-        _progressQueueLock = new SemaphoreSlim(1, 1);
-        _progressLock = new SemaphoreSlim(1, 1);
-        _changesBuffer = new ProgressChangesBuffer();
+        _progressChangeSubject = new();
+        _progressQueueLock = new(1, 1);
+        _progressLock = new(1, 1);
+        _changesBuffer = new();
 
         _changeSubscription = _progressChangeSubject.Timestamp()
             .Buffer(ChangesBufferingDelay)

@@ -10,26 +10,34 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 ///     horizontally or vertically
 ///     until the items are wrapped to the next row or column. The control is using virtualization to support large amount
 ///     of items.
-///     <p class="note">In order to work properly all items must have the same size.</p>
+/// <p class="note">In order to work properly all items must have the same size.</p>
 /// </summary>
 public class GridView : ListView
 {
     public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(nameof(Orientation),
-        typeof(Orientation), typeof(GridView), new FrameworkPropertyMetadata(Orientation.Horizontal));
+        typeof(Orientation),
+        typeof(GridView),
+        new FrameworkPropertyMetadata(Orientation.Horizontal));
 
     public static readonly DependencyProperty SpacingModeProperty = DependencyProperty.Register(nameof(SpacingMode),
-        typeof(SpacingMode), typeof(GridView), new FrameworkPropertyMetadata(SpacingMode.Uniform));
+        typeof(SpacingMode),
+        typeof(GridView),
+        new FrameworkPropertyMetadata(SpacingMode.Uniform));
 
     public static readonly DependencyProperty StretchItemsProperty = DependencyProperty.Register(nameof(StretchItems),
-        typeof(bool), typeof(GridView), new FrameworkPropertyMetadata(false));
+        typeof(bool),
+        typeof(GridView),
+        new FrameworkPropertyMetadata(false));
 
     public static readonly DependencyProperty IsWrappingKeyboardNavigationEnabledProperty =
-        DependencyProperty.Register(nameof(IsWrappingKeyboardNavigationEnabled), typeof(bool), typeof(GridView),
+        DependencyProperty.Register(nameof(IsWrappingKeyboardNavigationEnabled),
+            typeof(bool),
+            typeof(GridView),
             new FrameworkPropertyMetadata(false));
 
     /// <summary>
     ///     Gets or sets a value that specifies the orientation in which items are arranged. The default value is
-    ///     <see cref="Orientation.Horizontal" />.
+    /// <see cref="Orientation.Horizontal" />.
     /// </summary>
     public Orientation Orientation
     {
@@ -39,7 +47,7 @@ public class GridView : ListView
 
     /// <summary>
     ///     Gets or sets the spacing mode used when arranging the items. The default value is
-    ///     <see cref="SpacingMode.Uniform" />.
+    /// <see cref="SpacingMode.Uniform" />.
     /// </summary>
     public SpacingMode SpacingMode
     {
@@ -74,31 +82,34 @@ public class GridView : ListView
     {
         var factory = new FrameworkElementFactory(typeof(VirtualizingWrapPanel));
 
-        factory.SetBinding(VirtualizingWrapPanel.OrientationProperty, new Binding
-        {
-            Source = this,
-            Path = new PropertyPath(nameof(Orientation)),
-            Mode = BindingMode.OneWay
-        });
+        factory.SetBinding(VirtualizingWrapPanel.OrientationProperty,
+            new Binding
+            {
+                Source = this,
+                Path = new(nameof(Orientation)),
+                Mode = BindingMode.OneWay
+            });
 
-        factory.SetBinding(VirtualizingWrapPanel.SpacingModeProperty, new Binding
-        {
-            Source = this,
-            Path = new PropertyPath(nameof(SpacingMode)),
-            Mode = BindingMode.OneWay
-        });
+        factory.SetBinding(VirtualizingWrapPanel.SpacingModeProperty,
+            new Binding
+            {
+                Source = this,
+                Path = new(nameof(SpacingMode)),
+                Mode = BindingMode.OneWay
+            });
 
-        factory.SetBinding(VirtualizingWrapPanel.StretchItemsProperty, new Binding
-        {
-            Source = this,
-            Path = new PropertyPath(nameof(StretchItems)),
-            Mode = BindingMode.OneWay
-        });
+        factory.SetBinding(VirtualizingWrapPanel.StretchItemsProperty,
+            new Binding
+            {
+                Source = this,
+                Path = new(nameof(StretchItems)),
+                Mode = BindingMode.OneWay
+            });
 
-        ItemsPanel = new ItemsPanelTemplate(factory);
+        ItemsPanel = new(factory);
 
         VirtualizingPanel.SetCacheLengthUnit(this, VirtualizationCacheLengthUnit.Page);
-        VirtualizingPanel.SetCacheLength(this, new VirtualizationCacheLength(1));
+        VirtualizingPanel.SetCacheLength(this, new(1));
 
         VirtualizingPanel.SetIsVirtualizingWhenGrouping(this, true);
 
@@ -107,32 +118,33 @@ public class GridView : ListView
 
     static GridView()
     {
-        ItemContainerStyleProperty.OverrideMetadata(typeof(GridView), new FrameworkPropertyMetadata(new Style
-        {
-            Setters =
+        ItemContainerStyleProperty.OverrideMetadata(typeof(GridView),
+            new FrameworkPropertyMetadata(new Style
             {
-                new Setter
+                Setters =
                 {
-                    Property = MarginProperty,
-                    Value = new Thickness(0)
-                },
-                new Setter
-                {
-                    Property = PaddingProperty,
-                    Value = new Thickness(4)
-                },
-                new Setter
-                {
-                    Property = HorizontalContentAlignmentProperty,
-                    Value = HorizontalAlignment.Stretch
-                },
-                new Setter
-                {
-                    Property = VerticalContentAlignmentProperty,
-                    Value = VerticalAlignment.Stretch
+                    new Setter
+                    {
+                        Property = MarginProperty,
+                        Value = new Thickness(0)
+                    },
+                    new Setter
+                    {
+                        Property = PaddingProperty,
+                        Value = new Thickness(4)
+                    },
+                    new Setter
+                    {
+                        Property = HorizontalContentAlignmentProperty,
+                        Value = HorizontalAlignment.Stretch
+                    },
+                    new Setter
+                    {
+                        Property = VerticalContentAlignmentProperty,
+                        Value = VerticalAlignment.Stretch
+                    }
                 }
-            }
-        }));
+            }));
     }
 
     private void GridView_PreviewKeyDown(object sender, KeyEventArgs e)

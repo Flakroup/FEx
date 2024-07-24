@@ -33,6 +33,6 @@ public class LiteDbFileLocalStorageService : FileLocalStorageService
         string fileId = GetFileId(fileUrl);
         LiteFileInfo<string> result = _context.Database.FileStorage.Upload(fileId, fileName, stream);
 
-        return new CachedFile(result, fileUrl);
+        return new(result, fileUrl);
     }
 }

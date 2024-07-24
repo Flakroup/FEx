@@ -13,32 +13,43 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 public class VirtualizingWrapPanel : VirtualizingPanelBase
 {
     public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(nameof(Orientation),
-        typeof(Orientation), typeof(VirtualizingWrapPanel),
-        new FrameworkPropertyMetadata(Orientation.Horizontal, FrameworkPropertyMetadataOptions.AffectsMeasure,
+        typeof(Orientation),
+        typeof(VirtualizingWrapPanel),
+        new FrameworkPropertyMetadata(Orientation.Horizontal,
+            FrameworkPropertyMetadataOptions.AffectsMeasure,
             (obj, _) => ((VirtualizingWrapPanel)obj).Orientation_Changed()));
 
     public static readonly DependencyProperty ItemSizeProperty = DependencyProperty.Register(nameof(ItemSize),
-        typeof(Size), typeof(VirtualizingWrapPanel),
+        typeof(Size),
+        typeof(VirtualizingWrapPanel),
         new FrameworkPropertyMetadata(Size.Empty, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     public static readonly DependencyProperty ItemSizeProviderProperty =
-        DependencyProperty.Register(nameof(ItemSizeProvider), typeof(IItemSizeProvider), typeof(VirtualizingWrapPanel),
+        DependencyProperty.Register(nameof(ItemSizeProvider),
+            typeof(IItemSizeProvider),
+            typeof(VirtualizingWrapPanel),
             new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     public static readonly DependencyProperty AllowDifferentSizedItemsProperty =
-        DependencyProperty.Register(nameof(AllowDifferentSizedItems), typeof(bool), typeof(VirtualizingWrapPanel),
+        DependencyProperty.Register(nameof(AllowDifferentSizedItems),
+            typeof(bool),
+            typeof(VirtualizingWrapPanel),
             new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     public static readonly DependencyProperty SpacingModeProperty = DependencyProperty.Register(nameof(SpacingMode),
-        typeof(SpacingMode), typeof(VirtualizingWrapPanel),
+        typeof(SpacingMode),
+        typeof(VirtualizingWrapPanel),
         new FrameworkPropertyMetadata(SpacingMode.Uniform, FrameworkPropertyMetadataOptions.AffectsArrange));
 
     public static readonly DependencyProperty StretchItemsProperty = DependencyProperty.Register(nameof(StretchItems),
-        typeof(bool), typeof(VirtualizingWrapPanel),
+        typeof(bool),
+        typeof(VirtualizingWrapPanel),
         new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsArrange));
 
     public static readonly DependencyProperty HorizontalGroupOffsetProperty =
-        DependencyProperty.Register(nameof(HorizontalGroupOffset), typeof(double), typeof(VirtualizingWrapPanel),
+        DependencyProperty.Register(nameof(HorizontalGroupOffset),
+            typeof(double),
+            typeof(VirtualizingWrapPanel),
             new FrameworkPropertyMetadata(5d, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     private readonly VirtualizingPanelWrapper _internalChildrenWrapper;
@@ -48,7 +59,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
 
     /// <summary>
     ///     Gets or sets a value that specifies the orientation in which items are arranged. The default value is
-    ///     <see cref="Orientation.Horizontal" />.
+    /// <see cref="Orientation.Horizontal" />.
     /// </summary>
     public Orientation Orientation
     {
@@ -89,7 +100,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
 
     /// <summary>
     ///     Gets or sets the spacing mode used when arranging the items. The default value is
-    ///     <see cref="SpacingMode.Uniform" />.
+    /// <see cref="SpacingMode.Uniform" />.
     /// </summary>
     public SpacingMode SpacingMode
     {
@@ -126,9 +137,10 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
 
     protected override bool HasLogicalOrientation => true;
 
-    protected override Orientation LogicalOrientation => Orientation == Orientation.Horizontal
-        ? Orientation.Vertical
-        : Orientation.Horizontal;
+    protected override Orientation LogicalOrientation =>
+        Orientation == Orientation.Horizontal
+            ? Orientation.Vertical
+            : Orientation.Horizontal;
 
     internal override VirtualizingPanelModelBase BaseModel => Model;
 
@@ -148,7 +160,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
         {
             if (_model is null)
             {
-                _model = new VirtualizingWrapPanelModel(ItemContainerManager, _internalChildrenWrapper);
+                _model = new(ItemContainerManager, _internalChildrenWrapper);
                 _model.ScrollInfoInvalidated += Model_ScrollInfoInvalidated;
                 _model.MeasureInvalidated += Model_MeasureInvalidated;
             }
@@ -159,7 +171,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
 
     public VirtualizingWrapPanel()
     {
-        _internalChildrenWrapper = new VirtualizingPanelWrapper(AddInternalChild,
+        _internalChildrenWrapper = new(AddInternalChild,
             child => RemoveInternalChildRange(InternalChildren.IndexOf(child), 1));
     }
 
@@ -187,7 +199,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
 
             var viewportSize = new Size(viewportWidth, viewporteHeight);
 
-            Margin = new Thickness(-HorizontalGroupOffset, 0, 0, 0);
+            Margin = new(-HorizontalGroupOffset, 0, 0, 0);
 
             Model.CacheLength = groupItem.Constraints.CacheLength;
             Model.CacheLengthUnit = groupItem.Constraints.CacheLengthUnit;
@@ -210,25 +222,13 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
         return finalSize;
     }
 
-    protected override void BringIndexIntoView(int index)
-    {
-        Model.BringIndexIntoView(index);
-    }
+    protected override void BringIndexIntoView(int index) => Model.BringIndexIntoView(index);
 
-    private void Model_ScrollInfoInvalidated(object sender, EventArgs e)
-    {
-        ScrollOwner?.InvalidateScrollInfo();
-    }
+    private void Model_ScrollInfoInvalidated(object sender, EventArgs e) => ScrollOwner?.InvalidateScrollInfo();
 
-    private void Model_MeasureInvalidated(object sender, EventArgs e)
-    {
-        InvalidateMeasure();
-    }
+    private void Model_MeasureInvalidated(object sender, EventArgs e) => InvalidateMeasure();
 
-    private void Orientation_Changed()
-    {
-        MouseWheelScrollDirection = Orientation == Orientation.Horizontal
+    private void Orientation_Changed() => MouseWheelScrollDirection = Orientation == Orientation.Horizontal
             ? ScrollDirection.Vertical
             : ScrollDirection.Horizontal;
-    }
 }

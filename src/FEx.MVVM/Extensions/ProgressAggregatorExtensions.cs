@@ -30,10 +30,7 @@ public static class ProgressAggregatorExtensions
     /// </summary>
     /// <param name="viewModel">The view model.</param>
     /// <param name="e">The <see cref="DownloadProgressChangedEventArgs" /> instance containing the event data.</param>
-    public static void SetCurrentDownloadState(this IProgressAggregator viewModel, DownloadProgressChangedEventArgs e)
-    {
-        viewModel.SetCurrentDownloadState(e.BytesReceived, e.TotalBytesToReceive, e.UserState);
-    }
+    public static void SetCurrentDownloadState(this IProgressAggregator viewModel, DownloadProgressChangedEventArgs e) => viewModel.SetCurrentDownloadState(e.BytesReceived, e.TotalBytesToReceive, e.UserState);
 
     // ReSharper disable UnusedParameter.Global
     public static void SetCurrentDownloadState(this IProgressAggregator viewModel,

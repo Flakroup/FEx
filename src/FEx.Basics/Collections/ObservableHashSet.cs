@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET FExFoundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using FEx.Basics.Abstractions.Collections;
@@ -82,7 +82,7 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
     /// <param name="comparer">
     ///     The <see cref="IEqualityComparer{T}" /> implementation to use when
     ///     comparing values in the set, or null to use the default <see cref="IEqualityComparer{T}" />
-    ///     implementation for the set type.
+    /// implementation for the set type.
     /// </param>
     /// <param name="notifyOnCreationContext">True if should notify on main thread context</param>
     /// <param name="passIndexOfRemovedItem">if set to <c>true</c> [pass index of removed item].</param>
@@ -96,16 +96,13 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
         comparer ??= EqualityComparer<T>.Default;
 
         _set = collection is null
-            ? new HashSet<T>(comparer)
+            ? new(comparer)
             : new HashSet<T>(collection, comparer);
 
         SetNotifyOnCreationContext(notifyOnCreationContext);
     }
 
-    void ICollection<T>.Add(T item)
-    {
-        Add(item);
-    }
+    void ICollection<T>.Add(T item) => Add(item);
 
     /// <summary>
     ///     Removes all elements from the hash set.
@@ -140,10 +137,7 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
     ///     the hash set. The array must have zero-based indexing.
     /// </param>
     /// <param name="arrayIndex"> The zero-based index in array at which copying begins. </param>
-    public virtual void CopyTo(T[] array, int arrayIndex)
-    {
-        _set.CopyTo(array, arrayIndex);
-    }
+    public virtual void CopyTo(T[] array, int arrayIndex) => _set.CopyTo(array, arrayIndex);
 
     /// <summary>
     ///     Removes the specified element from the hash set.
@@ -343,10 +337,7 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
     ///     The one-dimensional array that is the destination of the elements copied from
     ///     the hash set. The array must have zero-based indexing.
     /// </param>
-    public virtual void CopyTo([NotNull] T[] array)
-    {
-        _set.CopyTo(array);
-    }
+    public virtual void CopyTo([NotNull] T[] array) => _set.CopyTo(array);
 
     /// <summary>
     ///     Copies the specified number of elements of the hash set to an array, starting at the specified array index.
@@ -357,10 +348,7 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
     /// </param>
     /// <param name="arrayIndex"> The zero-based index in array at which copying begins. </param>
     /// <param name="count"> The number of elements to copy to array. </param>
-    public virtual void CopyTo([NotNull] T[] array, int arrayIndex, int count)
-    {
-        _set.CopyTo(array, arrayIndex, count);
-    }
+    public virtual void CopyTo([NotNull] T[] array, int arrayIndex, int count) => _set.CopyTo(array, arrayIndex, count);
 
     /// <summary>
     ///     Removes all elements that match the conditions defined by the specified predicate
@@ -392,10 +380,7 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
     ///     Sets the capacity of the hash set to the actual number of elements it contains, rounded up to a nearby,
     ///     implementation-specific value.
     /// </summary>
-    public virtual void TrimExcess()
-    {
-        _set.TrimExcess();
-    }
+    public virtual void TrimExcess() => _set.TrimExcess();
 
     protected override string[] GetPropertyChangedArgs() => PropertyChangedArgs;
 }

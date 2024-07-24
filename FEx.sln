@@ -5,15 +5,23 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9E910495-5F6B-497B-A751-AA6804459DE8}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DevConfigs", "DevConfigs", "{8869F1D1-1809-4CD8-8C77-311991C04AE9}"
 	ProjectSection(SolutionItems) = preProject
 		DevConfigs\.editorconfig = DevConfigs\.editorconfig
 		DevConfigs\Directory.Build.props = DevConfigs\Directory.Build.props
+		DevConfigs\Directory.Build.targets = DevConfigs\Directory.Build.targets
+		DevConfigs\Directory.Build.Tests.props = DevConfigs\Directory.Build.Tests.props
+		DevConfigs\Directory.Build.Tests.targets = DevConfigs\Directory.Build.Tests.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{0C749CE0-73C3-4C8D-8FE0-41F326506E05}"
+	ProjectSection(SolutionItems) = preProject
+		test\Directory.Build.props = test\Directory.Build.props
+		test\Directory.Build.targets = test\Directory.Build.targets
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D112AF0B-B9EF-4EDB-8CFB-1456689B197F}"
 EndProject
@@ -86,6 +94,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FEx.MVVM.Tests", "test\FEx.MVVM.Tests\FEx.MVVM.Tests.csproj", "{F5242682-62B7-498C-B0D1-1B8B22A1BCAC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FEx.AzureStorage.Test", "test\FEx.AzureStorage.Test\FEx.AzureStorage.Test.csproj", "{CF26A177-18CD-41DC-8FB1-D7F8674E0A44}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FEx.MVVM.Rx", "src\FEx.MVVM.Rx\FEx.MVVM.Rx.csproj", "{9BA0A557-68B3-4042-AC3E-8ED24798A9B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -233,6 +243,10 @@ Global
 		{CF26A177-18CD-41DC-8FB1-D7F8674E0A44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF26A177-18CD-41DC-8FB1-D7F8674E0A44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF26A177-18CD-41DC-8FB1-D7F8674E0A44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BA0A557-68B3-4042-AC3E-8ED24798A9B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BA0A557-68B3-4042-AC3E-8ED24798A9B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BA0A557-68B3-4042-AC3E-8ED24798A9B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BA0A557-68B3-4042-AC3E-8ED24798A9B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -274,6 +288,7 @@ Global
 		{C93EC58D-9F9F-4A12-9434-CA60C6379D3A} = {0C749CE0-73C3-4C8D-8FE0-41F326506E05}
 		{F5242682-62B7-498C-B0D1-1B8B22A1BCAC} = {0C749CE0-73C3-4C8D-8FE0-41F326506E05}
 		{CF26A177-18CD-41DC-8FB1-D7F8674E0A44} = {0C749CE0-73C3-4C8D-8FE0-41F326506E05}
+		{9BA0A557-68B3-4042-AC3E-8ED24798A9B9} = {D112AF0B-B9EF-4EDB-8CFB-1456689B197F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {65D337D3-34E3-430C-9F30-E50BF2429B72}

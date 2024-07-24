@@ -14,17 +14,11 @@ public class FExEFCoreModuleInitializer : InitializeModule<IFExEFCoreModule>
         _sqlDbHelper = sqlDbHelper;
     }
 
+    public override async Task OnCompleteInitializationAsync(IServiceCollection services) => await _sqlDbHelper.InitializeAsync();
+
     protected override void OnInitialize()
     {
     }
 
-    protected override void AddServices(IFExEFCoreModule container, IServiceCollection services)
-    {
-        FExEFCoreModule.AddServices(container, services);
-    }
-
-    public override async Task OnCompleteInitializationAsync()
-    {
-        await _sqlDbHelper.InitializationTask;
-    }
+    protected override void AddServices(IFExEFCoreModule container, IServiceCollection services) => FExEFCoreModule.AddServices(container, services);
 }

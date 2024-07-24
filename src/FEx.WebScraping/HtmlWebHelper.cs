@@ -1,5 +1,5 @@
-﻿using FEx.Asyncx;
-using FEx.Asyncx.Enums;
+﻿using FEx.Abstractions;
+using FEx.Abstractions.Enums;
 using FEx.WebScraping.Abstractions.Interfaces;
 using HtmlAgilityPack;
 using System;
@@ -41,7 +41,7 @@ public class HtmlWebHelper : IWebScraper
         var web = new HtmlWeb();
         configWeb?.Invoke(web);
 
-        Task<HtmlDocument> task = FExAsyncx.AsyncHelper
+        Task<HtmlDocument> task = FExFoundation.AsyncHelper
             .FireTaskAndForget(() => LoadAsync(web, pageLink, encoding, credential, cancellationToken),
                 AsyncMode.ThreadPool)
             .Task;

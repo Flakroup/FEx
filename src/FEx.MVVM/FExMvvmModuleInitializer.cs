@@ -13,13 +13,7 @@ public class FExMvvmModuleInitializer : InitializeModule<IFExMvvmModule>
         _messagePopupService = messagePopupService;
     }
 
-    protected override void OnInitialize()
-    {
-        FExMvvm.Init(_messagePopupService);
-    }
+    protected override void OnInitialize() => FExMvvm.Init(_messagePopupService);
 
-    protected override void AddServices(IFExMvvmModule container, IServiceCollection services)
-    {
-        FExMvvmModule.AddServices(container, services);
-    }
+    protected override void AddServices(IFExMvvmModule container, IServiceCollection services) => FExMvvmModule.AddServices(container, services);
 }

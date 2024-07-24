@@ -38,7 +38,8 @@ public class StackTraceInfo : IEquatable<StackTraceInfo>
         return obj.GetType() == typeof(StackTraceInfo) && Equals((StackTraceInfo)obj);
     }
 
-    public override int GetHashCode() => Frames is null
-        ? 0
-        : Frames.GetHashCode();
+    public override int GetHashCode() =>
+        Frames is null
+            ? 0
+            : Frames.GetHashCode();
 }

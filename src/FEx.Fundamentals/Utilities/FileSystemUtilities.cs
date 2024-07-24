@@ -1,11 +1,14 @@
-﻿using FEx.Asyncx;
-using FEx.Asyncx.Enums;
+﻿using FEx.Abstractions;
+using FEx.Abstractions.Enums;
+using FEx.Abstractions.Extensions;
+using FEx.Abstractions.Flow;
+using FEx.Abstractions.Flow.Errors;
 using FEx.Basics.Collections.Concurrent;
 using FEx.Basics.Extensions;
-using FEx.Basics.Flow;
+using FEx.Common.Extensions;
+using FEx.DI.Abstractions;
 using FEx.Extensions;
 using FEx.Extensions.Collections.Dictionaries;
-using FEx.Extensions.Collections.Enumerables;
 using FEx.Extensions.IO;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,6 +19,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+#if NETSTANDARD
+using FEx.Extensions.Collections.Enumerables;
+#endif
 
 namespace FEx.Fundamentals.Utilities;
 
@@ -29,8 +35,7 @@ public class FileSystemUtilities
     private static bool _isReporting;
     private static ILogger _logger;
 
-    protected static ILogger Logger =>
-        _logger ??= Foundation.StrongInjectServiceProvider.GetRequiredService<ILogger>();
+    protected static ILogger Logger => _logger ??= FExServiceProvider.Get<ILogger>();
 
     public static Result<DirectoryInfo, ExceptionError> DirectoryPathStringToDirectoryInfo(string source)
     {
@@ -244,7 +249,7 @@ public class FileSystemUtilities
 
                 var dirs = sourcePaths.Select(path => IsPathFile(path, false)
                         ? new FileInfo(path).Directory
-                        : new DirectoryInfo(path))
+                        : new(path))
                     .DistinctBy(x => x.FullName)
                     .ToList();
 
@@ -364,7 +369,7 @@ public class FileSystemUtilities
                 {
                     Interlocked.Increment(ref PrgValue);
 
-                    FExAsyncx.AsyncHelper.FireTaskAndForget(() => ReportProgressAsync(destFile, GetPercentage),
+                    FExFoundation.AsyncHelper.FireTaskAndForget(() => ReportProgressAsync(destFile, GetPercentage),
                         AsyncMode.ThreadPool);
                 }
             }
@@ -474,10 +479,7 @@ public class FileSystemUtilities
     /// </summary>
     /// <param name="fileName">Name of the file.</param>
     /// <returns></returns>
-    public static string FixFileName(string fileName)
-    {
-        return Path.GetInvalidFileNameChars().Aggregate(fileName, (current, ch) => current.Replace(ch.ToString(), "_"));
-    }
+    public static string FixFileName(string fileName) => Path.GetInvalidFileNameChars().Aggregate(fileName, (current, ch) => current.Replace(ch.ToString(), "_"));
 
     public static bool IsPathFile(string path, bool fallbackValue) => IsPathFile(path) ?? fallbackValue;
 
@@ -776,7 +778,8 @@ public class FileSystemUtilities
             DirectoryInfo[] subDirs = root.GetDirectories().Where(x => !exclusionPaths.Contains(x.FullName)).ToArray();
             Interlocked.Add(ref PrgValue, subDirs.Length);
 
-            FExAsyncx.AsyncHelper.FireTaskAndForget(() => ReportProgressAsync(root.FullName, () => PrgValue.ToString()),
+            FExFoundation.AsyncHelper.FireTaskAndForget(
+                () => ReportProgressAsync(root.FullName, () => PrgValue.ToString()),
                 AsyncMode.ThreadPool);
 
             if (subDirs.Length > 0)

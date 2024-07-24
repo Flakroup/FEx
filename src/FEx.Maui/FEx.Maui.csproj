@@ -6,12 +6,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
-		<ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
+		<PackageReference Update="Microsoft.Maui.Controls" Version="8.0.70" />
+		<PackageReference Update="Microsoft.Maui.Controls.Compatibility" Version="8.0.70" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" />
+	  <ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
+	  <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
 	</ItemGroup>
 
 </Project>

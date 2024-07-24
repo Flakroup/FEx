@@ -13,7 +13,6 @@ public class OneDriveClientTests
         _sut = new OneDriveClient();
     }
 
-
     [Fact]
     public async Task ListDrivesTest()
     {

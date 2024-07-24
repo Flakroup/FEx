@@ -44,8 +44,10 @@ public static class FileInfoExtensions
                                                 bool deleteTempDirectory = false,
                                                 bool overwrite = false) =>
         await file.ZipAsync(zipFilePath is not null
-            ? new FileInfo(zipFilePath)
-            : null, deleteTempDirectory, overwrite);
+                ? new FileInfo(zipFilePath)
+                : null,
+            deleteTempDirectory,
+            overwrite);
 
     public static async Task<FileInfo> ZipAsync(this FileInfo file,
                                                 FileInfo zipFile = null,
@@ -77,7 +79,7 @@ public static class FileInfoExtensions
 
             await sourceStream.CopyToAsync(targetStream);
 
-        zipFile ??= new FileInfo(Path.Combine(parentDirectory?.FullName, $"{file.Name}.zip"));
+        zipFile ??= new(Path.Combine(parentDirectory?.FullName, $"{file.Name}.zip"));
 
         if (zipFile.Exists && overwrite)
         {
@@ -102,7 +104,10 @@ public static class FileInfoExtensions
         byte[] hash = null;
 
         if (file.Exists)
-            using (var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite,
+            using (var stream = new FileStream(file.FullName,
+                       FileMode.Open,
+                       FileAccess.Read,
+                       FileShare.ReadWrite,
                        DefBufferSize))
             using (var md5 = MD5.Create())
                 hash = md5.ComputeHash(stream);

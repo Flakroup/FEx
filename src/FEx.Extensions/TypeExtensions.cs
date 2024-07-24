@@ -1,4 +1,4 @@
-﻿using FEx.Extensions.Collections.Enumerables;
+﻿using FEx.Common.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,8 +13,8 @@ public static class TypeExtensions
     /// </summary>
     /// <param name="interfaceType">Type of the interface.</param>
     /// <returns></returns>
-    public static IEnumerable<Type> GetImplementedInterfaces(this Type interfaceType) => GetAllNotSealedClasses()
-        .Where(type => type.GetInterface(interfaceType.Name) is not null);
+    public static IEnumerable<Type> GetImplementedInterfaces(this Type interfaceType) =>
+        GetAllNotSealedClasses().Where(type => type.GetInterface(interfaceType.Name) is not null);
 
     /// <summary>
     ///     Gets the implemented classes.
@@ -47,13 +47,15 @@ public static class TypeExtensions
         GetTypeCustomAttribute<DescriptionAttribute>(value)?.FindInEnumerable()?.Description;
 
     public static TAttributeType[] GetTypeCustomAttribute<TAttributeType>(this Type value)
-        where TAttributeType : Attribute => (TAttributeType[])value.GetCustomAttributes(typeof(TAttributeType), false);
+        where TAttributeType : Attribute =>
+        (TAttributeType[])value.GetCustomAttributes(typeof(TAttributeType), false);
 
     /// <summary>
     ///     Gets all not sealed classes.
     /// </summary>
     /// <returns></returns>
-    private static IEnumerable<Type> GetAllNotSealedClasses() => AppDomain.CurrentDomain.GetAssemblies()
-        .SelectMany(assembly => assembly.GetTypes())
-        .Where(t => t.IsClass && !t.IsSealed);
+    private static IEnumerable<Type> GetAllNotSealedClasses() =>
+        AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(assembly => assembly.GetTypes())
+            .Where(t => t.IsClass && !t.IsSealed);
 }

@@ -1,4 +1,4 @@
-﻿using FEx.Extensions;
+﻿using FEx.Common.Extensions;
 using FEx.Extensions.Collections.Lists;
 using FEx.Json.Extensions;
 using Microsoft.Extensions.Configuration;
@@ -162,28 +162,28 @@ public static class FExConfigurationExtensions
 
     private static void ReplaceWithArray(ExpandoObject parent, string key, ExpandoObject input)
     {
-        if (input is not null)
+        if (input is null)
+            return;
+
+        IDictionary<string, object> dict = input;
+        string[] keys = [.. dict.Keys];
+
+        // it's an array if all keys are integers
+        if (keys.All(k => int.TryParse(k, out int dummy)))
         {
-            IDictionary<string, object> dict = input;
-            string[] keys = [.. dict.Keys];
+            var array = new object[keys.Length];
 
-            // it's an array if all keys are integers
-            if (keys.All(k => int.TryParse(k, out int dummy)))
-            {
-                var array = new object[keys.Length];
+            foreach (KeyValuePair<string, object> kvp in dict)
+                array[int.Parse(kvp.Key)] = kvp.Value;
 
-                foreach (KeyValuePair<string, object> kvp in dict)
-                    array[int.Parse(kvp.Key)] = kvp.Value;
-
-                IDictionary<string, object> parentDict = parent;
-                parentDict?.Remove(key);
-                parentDict?.Add(key, array);
-            }
-            else
-            {
-                foreach (string childKey in dict.Keys.ToList())
-                    ReplaceWithArray(input, childKey, dict[childKey] as ExpandoObject);
-            }
+            IDictionary<string, object> parentDict = parent;
+            parentDict?.Remove(key);
+            parentDict?.Add(key, array);
+        }
+        else
+        {
+            foreach (string childKey in dict.Keys.ToList())
+                ReplaceWithArray(input, childKey, dict[childKey] as ExpandoObject);
         }
     }
 }

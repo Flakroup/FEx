@@ -1,5 +1,5 @@
-﻿using FEx.Asyncx;
-using FEx.Extensions;
+﻿using FEx.Asyncx.Helpers;
+using FEx.Common.Extensions;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -51,20 +51,17 @@ public abstract class MessagePopupServiceBase : IMessagePopupService
                                      bool wait = true,
                                      Stopwatch sw = null,
                                      LogLevel level = LogLevel.Information,
-                                     Exception exception = null)
-    {
-        return FExAsyncx.AsyncHelper.FireOrWait(() => ShowMessageAsync(txt,
-                caption,
-                messageBoxImage,
-                button,
-                ownerWindow,
-                informUser,
-                wait,
-                sw,
-                level,
-                exception),
+                                     Exception exception = null) => AsyncHelper.FireOrWait(() => ShowMessageAsync(txt,
+                                                                                 caption,
+                                                                                 messageBoxImage,
+                                                                                 button,
+                                                                                 ownerWindow,
+                                                                                 informUser,
+                                                                                 wait,
+                                                                                 sw,
+                                                                                 level,
+                                                                                 exception),
             wait);
-    }
 
     protected abstract Task<MessageResult> InternalShowMessageAsync(string txt,
                                                                     string caption = "Something wrong happened",

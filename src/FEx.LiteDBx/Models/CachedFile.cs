@@ -36,7 +36,7 @@ public sealed class CachedFile : NotifyPropertyChanged, ICachedFile, IDisposable
     public CachedFile(LiteFileInfo<string> file, Uri url)
     {
         Url = url;
-        _dataStream = new MemoryStream();
+        _dataStream = new();
         file.CopyTo(_dataStream);
         Timestamp = file.UploadDate.ToUniversalTime();
         Filename = file.Filename;
@@ -46,7 +46,7 @@ public sealed class CachedFile : NotifyPropertyChanged, ICachedFile, IDisposable
     {
         Url = url;
         using FileStream fileStream = file.OpenRead();
-        _dataStream = new MemoryStream();
+        _dataStream = new();
         fileStream.CopyTo(_dataStream);
         Timestamp = file.LastWriteTimeUtc;
         Filename = file.Name;
@@ -56,7 +56,7 @@ public sealed class CachedFile : NotifyPropertyChanged, ICachedFile, IDisposable
     {
         Timestamp = DateTime.UtcNow;
         Url = downloadResult.Url;
-        _dataStream = new MemoryStream();
+        _dataStream = new();
         downloadResult.UseDataStream(stream => stream.CopyTo(_dataStream));
         Filename = downloadResult.FileName;
     }

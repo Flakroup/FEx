@@ -1,5 +1,5 @@
-using FEx.Basics;
 using FEx.Json.Converters;
+using FEx.Logging.Abstractions;
 using FEx.Logging.Abstractions.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -22,7 +22,7 @@ public static class JsonExtensions
 
     static JsonExtensions()
     {
-        DefaultSettingsInstance = new JsonSerializerSettings
+        DefaultSettingsInstance = new()
         {
             MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
             DateParseHandling = DateParseHandling.None,
@@ -31,8 +31,7 @@ public static class JsonExtensions
             MissingMemberHandling = MissingMemberHandling.Ignore
         };
 
-        ((List<JsonConverter>)DefaultSettingsInstance.Converters).AddRange(
-        [
+        ((List<JsonConverter>)DefaultSettingsInstance.Converters).AddRange([
             ParseStringConverter.Singleton, new VersionConverter()
         ]);
 
@@ -64,7 +63,7 @@ public static class JsonExtensions
         }
         catch (Exception ex)
         {
-            FExBasics.Logger.LogError(ex);
+            FExLoggingFoundation.Logger.LogError(ex);
 
             if (Debugger.IsAttached)
                 File.WriteAllText(Path.Combine(Path.GetTempPath(), "error.json"), json);
@@ -161,6 +160,6 @@ public static class JsonExtensions
     public static void SerializeToFile(this FileInfo file,
                                        object self,
                                        JsonSerializerSettings settings = null,
-                                       Formatting formatting = Formatting.None) => File.WriteAllText(file.FullName,
-        self.ToJson(settings, formatting));
+                                       Formatting formatting = Formatting.None) =>
+        File.WriteAllText(file.FullName, self.ToJson(settings, formatting));
 }

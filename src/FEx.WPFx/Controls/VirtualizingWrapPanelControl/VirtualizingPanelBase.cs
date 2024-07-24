@@ -14,19 +14,27 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
 {
     public static readonly DependencyProperty ScrollLineDeltaProperty =
-        DependencyProperty.Register(nameof(ScrollLineDelta), typeof(double), typeof(VirtualizingPanelBase),
+        DependencyProperty.Register(nameof(ScrollLineDelta),
+            typeof(double),
+            typeof(VirtualizingPanelBase),
             new FrameworkPropertyMetadata(16.0));
 
     public static readonly DependencyProperty MouseWheelDeltaProperty =
-        DependencyProperty.Register(nameof(MouseWheelDelta), typeof(double), typeof(VirtualizingPanelBase),
+        DependencyProperty.Register(nameof(MouseWheelDelta),
+            typeof(double),
+            typeof(VirtualizingPanelBase),
             new FrameworkPropertyMetadata(48.0));
 
     public static readonly DependencyProperty ScrollLineDeltaItemProperty =
-        DependencyProperty.Register(nameof(ScrollLineDeltaItem), typeof(int), typeof(VirtualizingPanelBase),
+        DependencyProperty.Register(nameof(ScrollLineDeltaItem),
+            typeof(int),
+            typeof(VirtualizingPanelBase),
             new FrameworkPropertyMetadata(1));
 
     public static readonly DependencyProperty MouseWheelDeltaItemProperty =
-        DependencyProperty.Register(nameof(MouseWheelDeltaItem), typeof(int), typeof(VirtualizingPanelBase),
+        DependencyProperty.Register(nameof(MouseWheelDeltaItem),
+            typeof(int),
+            typeof(VirtualizingPanelBase),
             new FrameworkPropertyMetadata(3));
 
     private DependencyObject _itemsOwner;
@@ -130,7 +138,10 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
                  * GetItemsOwner method does always return the itmes control instead
                  * of the real items owner for example the group item when grouping */
                 MethodInfo getItemsOwnerInternalMethod = typeof(ItemsControl).GetMethod("GetItemsOwnerInternal",
-                    BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(DependencyObject)], null)!;
+                    BindingFlags.Static | BindingFlags.NonPublic,
+                    null,
+                    [typeof(DependencyObject)],
+                    null)!;
 
                 _itemsOwner = (DependencyObject)getItemsOwnerInternalMethod.Invoke(null, [this])!;
             }
@@ -193,7 +204,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
         double visibleRectWidth = Math.Min(rectangle.Width, ViewportWidth);
         double visibleRectHeight = Math.Min(rectangle.Height, ViewportHeight);
 
-        return new Rect(scrollAmountX, scrollAmountY, visibleRectWidth, visibleRectHeight);
+        return new(scrollAmountX, scrollAmountY, visibleRectWidth, visibleRectHeight);
     }
 
     public void LineUp() => BaseModel.LineUp();

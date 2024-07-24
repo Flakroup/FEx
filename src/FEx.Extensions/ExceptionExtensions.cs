@@ -1,9 +1,5 @@
-using FEx.Abstractions.Interfaces;
-using FEx.Extensions.Base;
-using FEx.Extensions.Base.Models;
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -20,7 +16,10 @@ public static class ExceptionExtensions
             Type traceFormatType = typeof(StackTrace).GetNestedType("TraceFormat", BindingFlags.NonPublic);
 
             MethodInfo toString = typeof(StackTrace).GetMethod("ToString",
-                BindingFlags.NonPublic | BindingFlags.Instance, null, [traceFormatType], null);
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                [traceFormatType],
+                null);
 
             object normalTraceFormat = Enum.GetValues(traceFormatType).GetValue(0);
 
@@ -45,29 +44,6 @@ public static class ExceptionExtensions
     /// <param name="stack">The stack trace.</param>
     /// <returns></returns>
     public static Exception SetStackTrace(this Exception target, StackTrace stack) => SetStackTraceFunc(target, stack);
-
-    public static void HandleException(this Exception exception) =>
-        FExExtensionsCommon.ExceptionHandler.Handle(exception);
-
-    public static void HandleException(this Exception exception, IExceptionHandlerOptions options) =>
-        FExExtensionsCommon.ExceptionHandler.Handle(exception, options);
-
-    public static void HandleException(this Exception ex,
-                                       bool informUser = false,
-                                       bool wait = false,
-                                       bool doNotReport = false,
-                                       params (string, object)[] custom)
-    {
-        var options = new ExceptionHandlerOptions
-        {
-            InformUser = informUser,
-            Wait = wait,
-            DoNotReport = doNotReport,
-            Custom = custom?.ToDictionary(x => x.Item1, x => x.Item2)
-        };
-
-        ex.HandleException(options);
-    }
 
     /// <summary>
     ///     Gets a formatted string from the exception.

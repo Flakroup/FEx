@@ -1,4 +1,6 @@
-﻿using FEx.Basics.Exceptions;
+﻿using FEx.Abstractions;
+using FEx.Basics.Exceptions;
+using FEx.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -19,7 +21,7 @@ public static class DeadlockMonitor
             return;
         }
 
-        StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
+        StackTrace stackTrace = FExFoundation.StackTraceProvider.GetStackTrace();
 
         var timer = new Timer(Callback, stackTrace, timeout, Timeout.Infinite);
 
@@ -41,7 +43,7 @@ public static class DeadlockMonitor
         var ex = new AttachedException("Deadlock assumed, as no action could've been performed during timeout.",
             stackTrace);
 
-        FExBasics.Logger.LogError(ex, ex.Message);
+        FExLoggingFoundation.Logger.LogError(ex, ex.Message);
 
         throw ex;
     }

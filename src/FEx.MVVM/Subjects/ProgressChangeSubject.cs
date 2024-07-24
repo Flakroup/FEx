@@ -1,4 +1,4 @@
-using FEx.Rx;
+using FEx.Rx.Subjects;
 
 namespace FEx.MVVM.Subjects;
 

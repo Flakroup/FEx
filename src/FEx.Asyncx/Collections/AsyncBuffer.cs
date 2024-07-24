@@ -15,7 +15,7 @@ public class AsyncBuffer<T> : IDisposable
     public AsyncBuffer()
     {
         _buffer = [];
-        _queueLock = new SemaphoreSlim(1, 1);
+        _queueLock = new(1, 1);
     }
 
     public async Task<IList<T>> RetrieveFromBufferAsync(CancellationToken cancellationToken)

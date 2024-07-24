@@ -1,14 +1,15 @@
-﻿using FEx.Basics;
-using FEx.Extensions;
+﻿using FEx.Abstractions;
+using FEx.Common.Extensions;
 using FEx.Extensions.Base.Converters;
 using FEx.Extensions.Base.Enums;
 using FEx.Extensions.DateTimes;
 using FEx.Extensions.Numericals;
+using FEx.Logging.Abstractions;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Enums;
 using FEx.MVVM.Subjects;
-using FEx.Rx;
 using FEx.Rx.Extensions;
+using FEx.Rx.Subjects;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -37,9 +38,9 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
     public ProgressAggregator()
     {
         Id = Guid.NewGuid().ToString();
-        Stopwatch = new Stopwatch();
+        Stopwatch = new();
         Timer = new FExTimer().WithCallback(TimerCallback);
-        _changedPropertiesSubject = new FExSubject<string>();
+        _changedPropertiesSubject = new();
         _subscriptions = [];
 
         //todo if needed Dispose and renew sub on progress Start/End
@@ -156,15 +157,9 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         nameof(IProgressStatus.State)
     ];
 
-    protected virtual void LogError(string message)
-    {
-        FExBasics.Logger.LogError(message);
-    }
+    protected virtual void LogError(string message) => FExLoggingFoundation.Logger.LogError(message);
 
-    protected virtual void ProcessEndPrg()
-    {
-        Value = Maximum;
-    }
+    protected virtual void ProcessEndPrg() => Value = Maximum;
 
     protected virtual void ProcessSetPrg(double? value, double? maximum)
     {
@@ -280,10 +275,9 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         if (ProgressPropertyChanged is null)
             return;
 
-        void EventDelegate() =>
-            InvokeProgressPropertyChanged(new ProgressPropertyChangedEventArgs(Id, propertyName, newValue));
+        void EventDelegate() => InvokeProgressPropertyChanged(new(Id, propertyName, newValue));
 
-        FExBasics.EventDeliverer.DeliverEvent(EventDelegate, this);
+        FExFoundation.EventDeliverer.DeliverEvent(EventDelegate, this);
     }
 
     private void OnExcludedPropertiesChanged(IEnumerable<string> propertyNames)

@@ -10,7 +10,7 @@ public abstract class XPathBuilderBase<T> where T : XPathBuilderBase<T>, new()
 
     protected XPathBuilderBase(HtmlNode node = null)
     {
-        SB = new StringBuilder();
+        SB = new();
 
         if (node is not null)
             SB.Append(node.XPath);
@@ -38,7 +38,7 @@ public abstract class XPathBuilderBase<T> where T : XPathBuilderBase<T>, new()
 
     public T First(int number) =>
         number < 1
-            ? throw new Exception("The number need to be greaten 0")
+            ? throw new("The number need to be greaten 0")
             : ConcatXPath($"[position()<{number + 1}]");
 
     public T Index(int index) => ConcatXPath($"[{index}]");
@@ -58,7 +58,7 @@ public abstract class XPathBuilderBase<T> where T : XPathBuilderBase<T>, new()
 
     public T WhereIndex(int number) =>
         number < 1
-            ? throw new Exception("The number needs to be greater than 0")
+            ? throw new("The number needs to be greater than 0")
             : ConcatXPath($"[{number}]");
 
     public T WhereInnerTextEquals(string value) => ConcatXPath($"[@text()='{value}']");
@@ -69,7 +69,7 @@ public abstract class XPathBuilderBase<T> where T : XPathBuilderBase<T>, new()
 
     public T WhereLastMinus(int number) =>
         number < 1
-            ? throw new Exception("The number need to be greater than 0")
+            ? throw new("The number need to be greater than 0")
             : ConcatXPath($"[last()-{number}]");
 
     public T WhereNotInnerTextContains(string value) => ConcatXPath($"[not(contains(text(), '{value}'))]");
@@ -81,7 +81,7 @@ public abstract class XPathBuilderBase<T> where T : XPathBuilderBase<T>, new()
 
     public T WhereStartWithId(string attributeValue) => WhereStartWith("id", attributeValue);
 
-    public T WithExpression(Func<T, T> xPath) => WithExpression(xPath(new T()));
+    public T WithExpression(Func<T, T> xPath) => WithExpression(xPath(new()));
 
     public T WithExpression(T xPath) => WithExpression(xPath.ToString());
 

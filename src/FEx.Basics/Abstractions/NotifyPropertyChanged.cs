@@ -1,4 +1,5 @@
-﻿using FEx.Basics.Abstractions.Interfaces;
+﻿using FEx.Abstractions;
+using FEx.Basics.Abstractions.Interfaces;
 using FEx.Extensions;
 using JetBrains.Annotations;
 using System.ComponentModel;
@@ -18,7 +19,7 @@ public abstract class NotifyPropertyChanged : PropertyChangeAware, IFExNotifyPro
             || PropertyChanged is null)
             return;
 
-        FExBasics.EventDeliverer.DeliverEvent(EventDelegate, this);
+        FExFoundation.EventDeliverer.DeliverEvent(EventDelegate, this);
 
         return;
 

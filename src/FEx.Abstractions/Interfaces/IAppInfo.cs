@@ -11,4 +11,5 @@ public interface IAppInfo
     bool IsUIApp { get; }
     DirectoryInfo UserData { get; }
     DirectoryInfo AppData { get; }
+    string LogDirPath { get; }
 }

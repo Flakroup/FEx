@@ -1,7 +1,8 @@
 ﻿#if NETSTANDARD
 using FEx.Extensions.Collections.Lists;
 #endif
-using FEx.Basics.Flow;
+using FEx.Abstractions.Flow;
+using FEx.Abstractions.Flow.Errors;
 using FEx.EFCore.Enums;
 using FEx.EFCore.Models;
 using FEx.Json.Converters;
@@ -34,7 +35,7 @@ public static class DbContextExtensions
 
     static DbContextExtensions()
     {
-        Settings = new JsonSerializerSettings
+        Settings = new()
         {
             MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
             DateParseHandling = DateParseHandling.None,

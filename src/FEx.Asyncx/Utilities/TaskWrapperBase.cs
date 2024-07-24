@@ -1,26 +1,61 @@
+using FEx.Abstractions;
+using FEx.Abstractions.Flow.Errors;
 using FEx.Abstractions.Interfaces;
-using FEx.Basics;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace FEx.Asyncx.Utilities;
 
-public abstract class TaskWrapperBase : ITaskWrapper
+public abstract class TaskWrapperBase<TTask, TResult> : ITaskWrapperBase<TTask, TResult> where TTask : Task
+    where TResult : class, IResult<ExceptionError>
 {
+    private TTask _task;
+    private TResult _result;
     public Guid Id { get; }
 
     public bool IsFinished { get; protected set; }
 
     public StackTrace TaskCreationStackTrace { get; }
 
+    public TResult Result
+    {
+        get => _result;
+        protected set
+        {
+            _result = value;
+            IsFinished = true;
+        }
+    }
+
+    public TTask Task
+    {
+        get => _task;
+        private set
+        {
+            if (_task is not null)
+                throw new InvalidOperationException($"{nameof(Task)} is already set");
+
+            _task = value;
+        }
+    }
+
     protected TaskWrapperBase(bool setStackTrace = false)
     {
         Id = Guid.NewGuid();
 
         TaskCreationStackTrace = setStackTrace
-            ? FExBasics.StackTraceProvider.GetStackTrace()
+            ? FExFoundation.StackTraceProvider.GetStackTrace()
             : null;
     }
 
-    public abstract void SetException(Exception exception);
+    public void SetException(Exception exception) => Result = ConvertExceptionToError(exception);
+
+    public void SetTask(Func<TTask> task) => Task = ExecuteTaskAsync(task);
+
+    protected abstract TResult ConvertExceptionToError(Exception exception);
+
+#pragma warning disable VSTHRD200
+    protected abstract TTask ExecuteTaskAsync(Func<TTask> task);
+#pragma warning restore VSTHRD200
 }

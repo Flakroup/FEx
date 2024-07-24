@@ -63,26 +63,6 @@ public static class EnumerableExtensions
     }
 
     /// <summary>
-    ///     Searches for an element that matches the conditions defined by the specified predicate, and returns the first
-    ///     occurrence.
-    /// </summary>
-    /// <typeparam name="T">Sequence element type.</typeparam>
-    /// <param name="source">The list itself.</param>
-    /// <param name="predicate">Condition of the element to search for.</param>
-    /// <returns>If found, an element of type T; otherwise default(T).</returns>
-    public static T FindInEnumerable<T>(this IEnumerable<T> source, Func<T, bool> predicate = null)
-    {
-        return source switch
-        {
-            T[] array => Array.Find(array, Predicate),
-            List<T> list => list.Find(Predicate),
-            _ => source.FirstOrDefault(Predicate)
-        };
-
-        bool Predicate(T i) => predicate?.Invoke(i) ?? true;
-    }
-
-    /// <summary>
     ///     Multiplies the items by given multiplier number.
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -223,8 +203,7 @@ public static class EnumerableExtensions
     /// </summary>
     /// <param name="enumerable">The enumerable.</param>
     /// <returns></returns>
-    public static Type GetItemType(this IEnumerable enumerable) =>
-        enumerable.GetType().GetElementType();
+    public static Type GetItemType(this IEnumerable enumerable) => enumerable.GetType().GetElementType();
 
     /// <summary>
     ///     Checks if two sequences contain the same elements without checking their order
@@ -232,9 +211,8 @@ public static class EnumerableExtensions
     /// <param name="first">The first sequence.</param>
     /// <param name="second">The second sequence.</param>
     /// <returns><c>true</c> if sequences contain the same elements; otherwise, <c>false</c>.</returns>
-    public static bool UnorderedSequenceEqual(this IEnumerable first, IEnumerable second) => first.Cast<object>()
-        .OrderBy(t => t)
-        .SequenceEqual(second.Cast<object>().OrderBy(t => t));
+    public static bool UnorderedSequenceEqual(this IEnumerable first, IEnumerable second) =>
+        first.Cast<object>().OrderBy(t => t).SequenceEqual(second.Cast<object>().OrderBy(t => t));
 
     /// <summary>
     ///     Checks if two sequences contain the same elements without checking their order

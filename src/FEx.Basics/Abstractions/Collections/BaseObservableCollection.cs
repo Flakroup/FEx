@@ -30,8 +30,7 @@ public abstract class BaseObservableCollection<T>
 
     public bool EventsSuppressed { get; protected set; }
 
-    protected ICollectionChangeNotifier Notifier =>
-        _notifier ??= new CollectionChangeNotifier(NotifyOnCreationContext);
+    protected ICollectionChangeNotifier Notifier => _notifier ??= new CollectionChangeNotifier(NotifyOnCreationContext);
 
     protected BaseObservableCollection(bool passIndexOfRemovedItem = false, bool sendAsyncEvents = true)
     {
@@ -54,10 +53,7 @@ public abstract class BaseObservableCollection<T>
         }
     }
 
-    public void SupressEvents()
-    {
-        EventsSuppressed = true;
-    }
+    public void SupressEvents() => EventsSuppressed = true;
 
     public void ResumeEvents()
     {
@@ -67,49 +63,29 @@ public abstract class BaseObservableCollection<T>
 
     protected abstract string[] GetPropertyChangedArgs();
 
-    protected virtual void OnAddToCollection(T item, int index)
-    {
-        OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index: index);
-    }
+    protected virtual void OnAddToCollection(T item, int index) => OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index: index);
 
-    protected virtual void OnAddToCollection(IList<T> items, int index)
-    {
-        OnCollectionChanged(NotifyCollectionChangedAction.Add, items, index: index);
-    }
+    protected virtual void OnAddToCollection(IList<T> items, int index) => OnCollectionChanged(NotifyCollectionChangedAction.Add, items, index: index);
 
-    protected virtual void OnRemoveFromCollection(T item, int index)
-    {
-        OnCollectionChanged(NotifyCollectionChangedAction.Remove, item, index: _passIndexOfRemovedItem
-            ? index
-            : null);
-    }
+    protected virtual void OnRemoveFromCollection(T item, int index) => OnCollectionChanged(NotifyCollectionChangedAction.Remove,
+            item,
+            index: _passIndexOfRemovedItem
+                ? index
+                : null);
 
-    protected virtual void OnRemoveFromCollection(IList<T> items, int index)
-    {
-        OnCollectionChanged(NotifyCollectionChangedAction.Remove, items, index: _passIndexOfRemovedItem
-            ? index
-            : null);
-    }
+    protected virtual void OnRemoveFromCollection(IList<T> items, int index) => OnCollectionChanged(NotifyCollectionChangedAction.Remove,
+            items,
+            index: _passIndexOfRemovedItem
+                ? index
+                : null);
 
-    protected virtual void OnMoveInCollection(T item, int index, int oldIndex)
-    {
-        OnCollectionChanged(NotifyCollectionChangedAction.Move, item, index: index, oldIndex: oldIndex);
-    }
+    protected virtual void OnMoveInCollection(T item, int index, int oldIndex) => OnCollectionChanged(NotifyCollectionChangedAction.Move, item, index: index, oldIndex: oldIndex);
 
-    protected virtual void OnReplaceInCollection(T item, T oldItem, int index)
-    {
-        OnCollectionChanged(NotifyCollectionChangedAction.Move, item, oldItem, index);
-    }
+    protected virtual void OnReplaceInCollection(T item, T oldItem, int index) => OnCollectionChanged(NotifyCollectionChangedAction.Move, item, oldItem, index);
 
-    protected virtual void OnCollectionReset()
-    {
-        OnCollectionChanged(NotifyCollectionChangedAction.Reset, null);
-    }
+    protected virtual void OnCollectionReset() => OnCollectionChanged(NotifyCollectionChangedAction.Reset, null);
 
-    protected virtual void OnCollectionChanged(IList newItems, IList oldItems)
-    {
-        OnCollectionChanged(NotifyCollectionChangedAction.Replace, newItems, oldItems);
-    }
+    protected virtual void OnCollectionChanged(IList newItems, IList oldItems) => OnCollectionChanged(NotifyCollectionChangedAction.Replace, newItems, oldItems);
 
     protected void OnCollectionChanged(NotifyCollectionChangedAction changeAction,
                                        object changedItem,
@@ -121,7 +97,13 @@ public abstract class BaseObservableCollection<T>
         if (EventsSuppressed)
             return;
 
-        Notifier.OnCollectionChanged(this, propertyChangedArgs ?? GetPropertyChangedArgs(), changeAction, changedItem,
-            oldItem, index, oldIndex, _sendAsyncEvents);
+        Notifier.OnCollectionChanged(this,
+            propertyChangedArgs ?? GetPropertyChangedArgs(),
+            changeAction,
+            changedItem,
+            oldItem,
+            index,
+            oldIndex,
+            _sendAsyncEvents);
     }
 }

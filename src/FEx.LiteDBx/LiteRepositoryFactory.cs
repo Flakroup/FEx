@@ -15,13 +15,13 @@ public class LiteRepositoryFactory
 
         try
         {
-            return new LiteRepository(connectionString);
+            return new(connectionString);
         }
         catch (LiteException) when (dropOnException) //that's an workaround for LiteDB issue
         {
             File.Delete(dbFilePath);
 
-            return new LiteRepository(connectionString);
+            return new(connectionString);
         }
     }
 }

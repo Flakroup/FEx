@@ -1,4 +1,4 @@
-﻿using FEx.Extensions;
+﻿using FEx.Basics.Extensions;
 using FEx.Extensions.Base.Models;
 using FEx.Extensions.Web;
 using FEx.MVVM.Enums;
@@ -36,15 +36,15 @@ public sealed class FlakWebClient : WebClient
     public FlakWebClient(WebRequestParams pars = null,
                          Action<object, DownloadProgressChangedEventArgs> downloadProgressHandler = null)
     {
-        pars ??= new WebRequestParams();
+        pars ??= new();
 
         Pars = pars;
 
-        Pars.Cookies ??= new CookieContainer();
+        Pars.Cookies ??= new();
 
         Pars.Timeout ??= 100000;
 
-        ProgressInfo = new NotifyProgressInfoChanged();
+        ProgressInfo = new();
         this.PrepareWebClient(Pars);
 
         if (downloadProgressHandler is not null)
@@ -59,15 +59,19 @@ public sealed class FlakWebClient : WebClient
     public List<Cookie> CookieMonster()
     {
         var table = (Hashtable)Pars.Cookies.GetType()
-            .InvokeMember("m_domainTable", BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance, null,
-                Pars.Cookies, []);
+            .InvokeMember("m_domainTable",
+                BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance,
+                null,
+                Pars.Cookies,
+                []);
 
         return table.Keys.Cast<object>()
-            .SelectMany(key => Pars.Cookies.GetCookies(new Uri($"http://{key}/"))
+            .SelectMany(key => Pars.Cookies.GetCookies(new($"http://{key}/"))
 #if NETSTANDARD
-                .Cast<Cookie>()
+                    .Cast<Cookie>()
 #endif
-                , (_, cookie) => cookie)
+                ,
+                (_, cookie) => cookie)
             .ToList();
     }
 
@@ -94,10 +98,7 @@ public sealed class FlakWebClient : WebClient
         }
     }
 
-    public async Task DownloadFileWithProgressAsync(string address, string filePath)
-    {
-        await DownloadFileWithProgressAsync(new Uri(address), filePath);
-    }
+    public async Task DownloadFileWithProgressAsync(string address, string filePath) => await DownloadFileWithProgressAsync(new Uri(address), filePath);
 
     protected override WebResponse GetWebResponse(WebRequest request)
     {
@@ -137,9 +138,8 @@ public sealed class FlakWebClient : WebClient
         //{
         WebResponse res = base.GetWebResponse(request, result);
         ReadCookies(res);
-        var req = request as HttpWebRequest;
 
-        if (req is null)
+        if (request is not HttpWebRequest)
             return res;
 
         var response = (HttpWebResponse)res;
@@ -196,12 +196,10 @@ public sealed class FlakWebClient : WebClient
 
     private void ReadCookies(WebResponse r)
     {
-        var response = r as HttpWebResponse;
+        if (r is not HttpWebResponse response)
+            return;
 
-        if (response is not null)
-        {
-            CookieCollection cookies = response.Cookies;
-            Pars.Cookies.Add(cookies);
-        }
+        CookieCollection cookies = response.Cookies;
+        Pars.Cookies.Add(cookies);
     }
 }

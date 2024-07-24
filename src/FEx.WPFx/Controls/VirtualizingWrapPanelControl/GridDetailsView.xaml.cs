@@ -13,16 +13,20 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 ///     of items.
 ///     If an item is clicked the item gots expanded until it is clicked again or an other item is clicked and gots
 ///     expanded.
-///     <p class="note">In order to work properly all items must have the same size.</p>
+/// <p class="note">In order to work properly all items must have the same size.</p>
 /// </summary>
 public partial class GridDetailsView : GridView
 {
     public static readonly DependencyProperty ExpandedItemTemplateProperty =
-        DependencyProperty.Register(nameof(ExpandedItemTemplate), typeof(DataTemplate), typeof(GridDetailsView),
+        DependencyProperty.Register(nameof(ExpandedItemTemplate),
+            typeof(DataTemplate),
+            typeof(GridDetailsView),
             new FrameworkPropertyMetadata(null));
 
     public static readonly DependencyProperty ExpandedItemProperty = DependencyProperty.Register(nameof(ExpandedItem),
-        typeof(object), typeof(GridDetailsView), new FrameworkPropertyMetadata(null));
+        typeof(object),
+        typeof(GridDetailsView),
+        new FrameworkPropertyMetadata(null));
 
     private FrameworkElement _expandedItemContainerRoot;
 

@@ -5,17 +5,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Avalonia.ReactiveUI" Version="11.0.10" />
+		<PackageReference Include="Avalonia.ReactiveUI" Version="11.1.0" />
 		<PackageReference Include="MessageBox.Avalonia" Version="3.1.5.1" />
-		<PackageReference Include="StrongInject" Version="1.4.4" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
-		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
-		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
-		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
-		<ProjectReference Include="..\FEx.Rx\FEx.Rx.csproj" />
+	  <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+	  <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
+	  <ProjectReference Include="..\FEx.DependencyInjection\FEx.DependencyInjection.csproj" />
+	  <ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
+	  <ProjectReference Include="..\FEx.MVVM.Rx\FEx.MVVM.Rx.csproj" />
+	  <ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
 	</ItemGroup>
 
 </Project>

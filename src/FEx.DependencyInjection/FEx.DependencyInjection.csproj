@@ -5,8 +5,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
-		<ProjectReference Include="..\FEx.DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
+		<PackageReference Include="StrongInject.Extensions.DependencyInjection" Version="1.4.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+	  <ProjectReference Include="..\FEx.DI.Abstractions\FEx.DI.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

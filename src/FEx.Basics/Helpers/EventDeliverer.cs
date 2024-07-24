@@ -13,8 +13,7 @@ public class EventDeliverer : IEventDeliverer
 
         return;
 
-        void EventDelegate() =>
-            InternalDeliverEvent(eventDelegate, sender, context);
+        void EventDelegate() => InternalDeliverEvent(eventDelegate, sender, context);
     }
 
     private static void InternalDeliverEvent(Action eventDelegate, object sender, SynchronizationContext context)

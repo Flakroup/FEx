@@ -1,5 +1,5 @@
 ﻿using FEx.AzureStorage.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
+using FEx.Common.Extensions;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using System;
@@ -37,22 +37,20 @@ public class CloudBlockBlobInfo
             Exists = exists.Value;
     }
 
-    public static implicit operator CloudBlockBlobInfo(CloudBlockBlob blob)
-    {
-        return new(blob);
-    }
+    public static implicit operator CloudBlockBlobInfo(CloudBlockBlob blob) => new(blob);
 
-    public string GetMetadata(string key)
-    {
-        return Metadata.TryGetKeyValue(key);
-    }
+    public string GetMetadata(string key) => Metadata.TryGetKeyValue(key);
 
-    public async Task<bool> EnsureExistsAsync(bool primaryOnly = false, BlobRequestOptions options = null, OperationContext operationContext = null, CancellationToken cancellationToken = default)
+    public async Task<bool> EnsureExistsAsync(bool primaryOnly = false,
+                                              BlobRequestOptions options = null,
+                                              OperationContext operationContext = null,
+                                              CancellationToken cancellationToken = default)
     {
         if (cancellationToken == default)
             cancellationToken = CancellationToken.None;
 
         Exists = await Blob.ExistsAsync(primaryOnly, options, operationContext, cancellationToken);
+
         return Exists;
     }
 
@@ -63,7 +61,10 @@ public class CloudBlockBlobInfo
     /// <param name="options">The options.</param>
     /// <param name="operationContext">The operation context.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    public async Task FetchAttributesAsync(AccessCondition accessCondition = null, BlobRequestOptions options = null, OperationContext operationContext = null, CancellationToken cancellationToken = default)
+    public async Task FetchAttributesAsync(AccessCondition accessCondition = null,
+                                           BlobRequestOptions options = null,
+                                           OperationContext operationContext = null,
+                                           CancellationToken cancellationToken = default)
     {
         if (cancellationToken == default)
             cancellationToken = CancellationToken.None;

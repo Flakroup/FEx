@@ -15,8 +15,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
-		<ProjectReference Include="..\FEx.Logging\FEx.Logging.csproj" />
+	  <ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
+	  <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
+	  <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+	  <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+	  <ProjectReference Include="..\FEx.Logging\FEx.Logging.csproj" />
 	</ItemGroup>
 
 </Project>

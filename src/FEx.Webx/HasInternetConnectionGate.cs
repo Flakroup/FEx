@@ -16,7 +16,7 @@ public class HasInternetConnectionGate
 
     public async Task<bool> CheckAsync(Uri url = null)
     {
-        url ??= new Uri("http://clients3.google.com/generate_204");
+        url ??= new("http://clients3.google.com/generate_204");
 
         try
         {

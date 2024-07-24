@@ -1,8 +1,7 @@
-﻿using FEx.AppSettings.Abstractions.Interfaces;
-using FEx.Asyncx;
-using FEx.Basics;
+﻿using FEx.Abstractions;
+using FEx.AppSettings.Abstractions.Interfaces;
+using FEx.Common.Extensions;
 using FEx.Encryption;
-using FEx.Extensions;
 using FEx.Json.Extensions;
 using Newtonsoft.Json;
 using System;
@@ -33,14 +32,14 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
     public virtual void Initialize(string persistencePath, (bool hasBeenReadFromFile, bool isAsync) tuple)
     {
         if (PersistencePath.IsNotNullOrEmptyString())
-            FExBasics.SynchronizedAccessService.RemoveLock(PersistencePath);
+            FExFoundation.SynchronizedAccessService.RemoveLock(PersistencePath);
 
         PersistencePath = persistencePath;
 
         if (PersistencePath.IsNotNullOrEmptyString())
         {
             Directory.CreateDirectory(Path.GetDirectoryName(PersistencePath)!);
-            SettingsLock = FExBasics.SynchronizedAccessService.EnsureLock(PersistencePath);
+            SettingsLock = FExFoundation.SynchronizedAccessService.EnsureLock(PersistencePath);
         }
 
         IsAsync = tuple.isAsync;
@@ -60,7 +59,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
                 if (PersistencePath.IsNotNullOrEmptyString())
                 {
                     if (IsAsync)
-                        FExAsyncx.AsyncHelper.FireTaskAndForget(SaveSettingsAsync);
+                        FExFoundation.AsyncHelper.FireTaskAndForget(SaveSettingsAsync);
                     else
                         SaveSettings();
                 }
@@ -96,7 +95,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
         try
         {
 #if NETSTANDARD
-                File.WriteAllText(PersistencePath, SerializedInstance());
+            File.WriteAllText(PersistencePath, SerializedInstance());
 #else
             await File.WriteAllTextAsync(PersistencePath, SerializedInstance());
 #endif
@@ -124,7 +123,7 @@ public abstract class BaseUserSettings<T> : BaseUserSettings where T : BaseUserS
 
         T config = content.IsNotNullOrEmptyString()
             ? content.FromJson<T>()
-            : new T();
+            : new();
 
         config.Initialize(persistencePath, (content.IsNotNullOrEmptyString(), isAsync));
 

@@ -1,4 +1,4 @@
-﻿using FEx.DependencyInjection.Abstractions.Interfaces;
+﻿using FEx.DI.Abstractions.Interfaces;
 using StrongInject;
 
 namespace FEx.Encryption;

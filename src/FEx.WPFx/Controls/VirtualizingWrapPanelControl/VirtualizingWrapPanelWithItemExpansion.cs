@@ -9,18 +9,21 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 ///     A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical
 ///     orientation.
 ///     In addition the panel allows to expand one specific item.
-///     <p class="note">In order to work properly all items must have the same size.</p>
+/// <p class="note">In order to work properly all items must have the same size.</p>
 /// </summary>
 public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
 {
     public static readonly DependencyProperty ExpandedItemTemplateProperty =
-        DependencyProperty.Register(nameof(ExpandedItemTemplate), typeof(DataTemplate),
+        DependencyProperty.Register(nameof(ExpandedItemTemplate),
+            typeof(DataTemplate),
             typeof(VirtualizingWrapPanelWithItemExpansion),
             new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     public static readonly DependencyProperty ExpandedItemProperty = DependencyProperty.Register(nameof(ExpandedItem),
-        typeof(object), typeof(VirtualizingWrapPanelWithItemExpansion),
-        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsMeasure,
+        typeof(object),
+        typeof(VirtualizingWrapPanelWithItemExpansion),
+        new FrameworkPropertyMetadata(null,
+            FrameworkPropertyMetadataOptions.AffectsMeasure,
             (o, a) => ((VirtualizingWrapPanelWithItemExpansion)o).ExpandedItemPropertyChanged(a)));
 
     private FrameworkElement _expandedItemChild;
@@ -191,9 +194,9 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
 
         if (expandedItemChildIndex != -1
             && childIndex > expandedItemChildIndex)
-            return new GeneratorPosition(childIndex - 1, 0);
+            return new(childIndex - 1, 0);
 
-        return new GeneratorPosition(childIndex, 0);
+        return new(childIndex, 0);
     }
 
     protected override void VirtualizeItems()

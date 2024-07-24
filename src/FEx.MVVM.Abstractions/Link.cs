@@ -1,5 +1,4 @@
-﻿using FEx.Extensions;
-using FEx.Extensions.Collections;
+﻿using FEx.Common.Extensions;
 using FEx.MVVM.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
@@ -85,7 +84,7 @@ public class Link : ILink
 
     public void AddChild(ILink link)
     {
-        _childLinks ??= new ConcurrentDictionary<Guid, ILink>();
+        _childLinks ??= new();
 
         if (!_childLinks.TryAdd(link.Id, link))
             throw new InvalidOperationException($"This link already has a child of {link.Id} id");

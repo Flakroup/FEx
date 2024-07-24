@@ -1,6 +1,6 @@
-﻿using System;
+﻿using FEx.Extensions.Base.IO;
+using System;
 using System.IO;
-using FEx.Extensions.Base.IO;
 
 namespace FEx.Extensions.IO;
 
@@ -25,22 +25,26 @@ public static class DirectoryInfoExtensions
     }
 
     public static FileInfo GetDescendantFile(this DirectoryInfo dir, params string[] descendants) =>
-        GetDescendantFileSystemObject(dir, path =>
-        {
-            var file = new FileInfo(path);
-            file.Directory?.Create();
+        GetDescendantFileSystemObject(dir,
+            path =>
+            {
+                var file = new FileInfo(path);
+                file.Directory?.Create();
 
-            return file;
-        }, descendants);
+                return file;
+            },
+            descendants);
 
     public static DirectoryInfo GetDescendantDirectory(this DirectoryInfo dir, params string[] descendants) =>
-        GetDescendantFileSystemObject(dir, path =>
-        {
-            var directory = new DirectoryInfo(path);
-            directory.Create();
+        GetDescendantFileSystemObject(dir,
+            path =>
+            {
+                var directory = new DirectoryInfo(path);
+                directory.Create();
 
-            return directory;
-        }, descendants);
+                return directory;
+            },
+            descendants);
 
     public static T GetDescendantFileSystemObject<T>(this string directoryPath,
                                                      Func<string, T> activator,

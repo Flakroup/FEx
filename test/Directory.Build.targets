@@ -1,0 +1,8 @@
+<Project>
+
+    <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.targets"/>
+
+    <Import Project="$(MSBuildThisFileDirectory)..\DevConfigs\Directory.Build.Tests.targets"/>
+
+</Project>
+    

@@ -1,16 +1,17 @@
-﻿using FEx.Asyncx.Helpers;
-using FEx.Basics;
-using FEx.Extensions;
+﻿using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
+using FEx.Asyncx.Helpers;
 
 namespace FEx.Asyncx;
 
-public class FExAsyncx
+public class FExAsyncx : IFExInitialize
 {
-    public static AsyncHelper AsyncHelper { get; private set; }
+    protected readonly FExFoundation _foundation;
 
-    public static void Init(AsyncHelper asyncHelper)
+    public FExAsyncx(FExFoundation foundation)
     {
-        AsyncHelper = asyncHelper.Guard(nameof(asyncHelper));
-        JoinableAsyncHelper.SetMainJoinableTaskFactory(FExBasics.MainThread);
+        _foundation = foundation;
     }
+
+    public void Initialize() => JoinableAsyncHelper.SetMainJoinableTaskFactory(FExFoundation.MainThread);
 }

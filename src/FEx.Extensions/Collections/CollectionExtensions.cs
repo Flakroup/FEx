@@ -16,8 +16,10 @@ public static class CollectionExtensions
     /// <param name="items">The sequence of items to add to the list.</param>
     public static void AddRangeToCollection<T>(this ICollection<T> source, IEnumerable<T> items)
     {
-        if (items is not null)
-            source.AddRangeToCollection(items as T[] ?? items.ToArray());
+        if (items is null)
+            return;
+
+        source.AddRangeToCollection(items as T[] ?? items.ToArray());
     }
 
     /// <summary>
@@ -53,12 +55,6 @@ public static class CollectionExtensions
                 : item);
         }
     }
-
-    [ContractAnnotation("null => false")]
-    public static bool IsNotNullOrEmptyCollection<T>(this ICollection<T> source) => source?.Count > 0;
-
-    [ContractAnnotation("null => true")]
-    public static bool IsNullOrEmptyCollection<T>(this ICollection<T> source) => source is null || source.Count == 0;
 
     [ContractAnnotation("null => false")]
     public static bool IsNotNullOrEmptyReadOnlyCollection<T>(this IReadOnlyCollection<T> source) => source?.Count > 0;

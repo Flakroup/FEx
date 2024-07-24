@@ -1,4 +1,6 @@
-﻿using FEx.Extensions;
+﻿using FEx.Abstractions;
+using FEx.Common.Extensions;
+using FEx.Extensions;
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -32,7 +34,7 @@ public static class EventsExtensions
         propertyChanged.Guard(nameof(propertyChanged));
         propertyName.Guard(nameof(propertyName));
 
-        FExBasics.EventDeliverer.DeliverEvent(EventDelegate, sender, context);
+        FExFoundation.EventDeliverer.DeliverEvent(EventDelegate, sender, context);
 
         return;
 

@@ -7,7 +7,7 @@ public sealed class AlphanumComparatorFast : IComparer<string>
 {
     private static AlphanumComparatorFast _instance;
 
-    public static AlphanumComparatorFast Instance => _instance ??= new AlphanumComparatorFast();
+    public static AlphanumComparatorFast Instance => _instance ??= new();
 
     private AlphanumComparatorFast()
     {

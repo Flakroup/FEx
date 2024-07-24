@@ -1,7 +1,10 @@
-﻿using FEx.Asyncx.Abstractions;
+﻿using FEx.Abstractions.Flow;
+using FEx.Abstractions.Flow.Errors;
+using FEx.Abstractions.Interfaces;
+using FEx.Asyncx.Abstractions;
 using FEx.Basics.Collections;
-using FEx.Basics.Flow;
-using FEx.DependencyInjection.Abstractions.Interfaces;
+using FEx.Common.Extensions;
+using FEx.DI.Abstractions.Interfaces;
 using FEx.EFCore.Extensions;
 using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
@@ -22,14 +25,12 @@ using System.Threading.Tasks;
 namespace FEx.EFCore.Services;
 
 /// <summary>
-/// 
 /// </summary>
 /// <typeparam name="TDbContext"></typeparam>
 /// <remarks>Requires <c>Initialize();</c> call in .ctor</remarks>
 public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledDbService<TDbContext>
     where TDbContext : DbContext
 {
-    protected readonly ILogger<PooledDbService<TDbContext>> _logger;
     protected readonly IFExDbConfig _dbConfig;
     private readonly IScopeProvider _scopeProvider;
     private readonly ResilientTransaction _transaction;
@@ -40,12 +41,12 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     public Map<string, string> TableMappings { get; private set; }
 
     protected PooledDbService(IScopeProvider scopeProvider,
-                              ILogger<PooledDbService<TDbContext>> logger,
                               ResilientTransaction transaction,
-                              IFExDbConfig dbConfig)
+                              IFExDbConfig dbConfig,
+                              IAsyncInitializable[] dependencies)
+        : base(dependencies)
     {
         _scopeProvider = scopeProvider;
-        _logger = logger;
         _transaction = transaction;
         _dbConfig = dbConfig;
     }
@@ -101,7 +102,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         }
 
         if (!hasNoPendingMigrations)
-            throw new Exception($"Applying migrations for {typeof(TDbContext).FullName} failed.");
+            throw new($"Applying migrations for {typeof(TDbContext).FullName} failed.");
     }
 
     public async Task RunActionInDbContextAsync(Action<TDbContext> func,
@@ -234,8 +235,10 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     {
     }
 
-    protected override async Task<bool> OnInitializationAsync(bool reInitialize)
+    protected override async Task OnInitializeAsync()
     {
+        await base.OnInitializeAsync();
+
         bool result = await SQLConnectionHelper.CheckMasterDbConnectionAsync(_dbConfig);
 
         if (result && _dbConfig.RunMigrations)
@@ -243,8 +246,6 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
 
         if (result && _dbConfig.GetMappings)
             await EnsureMappingSnapshotAsync();
-
-        return result;
     }
 
     protected async Task EnsureMappingSnapshotAsync() =>
@@ -260,7 +261,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                 .ToDictionary(mapping => mapping.ClrTypeName);
 
             Mappings = new ReadOnlyDictionary<string, Mapping>(mappings);
-            TableMappings = new Map<string, string>(Mappings.ToDictionary(x => x.Key, x => x.Value.TableName));
+            TableMappings = new(Mappings.ToDictionary(x => x.Key, x => x.Value.TableName));
         });
 
     protected Result<Error> ValidateAndSaveChanges(TDbContext dbContext,

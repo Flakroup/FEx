@@ -3,6 +3,6 @@ using StrongInject;
 
 namespace FEx.AppSettings;
 
-public interface IFExAppSettingsModule : IContainer<FExAppSettingsModuleInitializer>, IContainer<IConfigurationService>
+public interface IFExAppSettingsModule : IContainer<FExAppSettings>, IContainer<IConfigurationService>
 {
 }

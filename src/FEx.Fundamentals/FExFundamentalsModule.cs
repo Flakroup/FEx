@@ -1,15 +1,17 @@
-﻿using FEx.Abstractions.Interfaces;
+﻿using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
 using FEx.Asyncx.Helpers;
-using FEx.Basics.Abstractions.Interfaces;
+using FEx.Asyncx.Utilities;
 using FEx.Basics.Helpers;
 using FEx.Basics.Services;
 using FEx.Basics.Utilities;
 using FEx.Basics.Utilities.Comparers;
 using FEx.DependencyInjection;
-using FEx.DependencyInjection.Abstractions.Interfaces;
+using FEx.DI.Abstractions.Interfaces;
 using FEx.Fundamentals.StackTraces;
 using FEx.Fundamentals.Subjects;
 using FEx.Fundamentals.Utilities;
+using FEx.Logging.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StrongInject;
@@ -20,7 +22,9 @@ using System.Linq;
 namespace FEx.Fundamentals;
 
 [Register(typeof(AsyncHelper))]
-[Register(typeof(Foundation), Scope.SingleInstance)]
+[Register(typeof(SimpleTasksPool))]
+[Register(typeof(FExFoundation), Scope.SingleInstance)]
+[Register(typeof(FExLoggingFoundation), Scope.SingleInstance)]
 [Register(typeof(StackTraceGenerator), Scope.SingleInstance, typeof(IStackTraceProvider))]
 [Register(typeof(AppInfoProvider), Scope.SingleInstance, typeof(IAppInfoProvider))]
 [Register(typeof(EventDeliverer), Scope.SingleInstance, typeof(IEventDeliverer))]
@@ -44,7 +48,8 @@ public class FExFundamentalsModule : FExDependencyInjectionModule
         services.AddTransientServiceUsingContainer<AsyncHelper>(container);
         services.AddTransientServiceUsingContainer<ILogger>(container);
 
-        services.AddSingletonServiceUsingContainer<Foundation>(container);
+        services.AddSingletonServiceUsingContainer<FExFoundation>(container);
+        services.AddSingletonServiceUsingContainer<FExLoggingFoundation>(container);
         services.AddSingletonServiceUsingContainer<IStackTraceProvider>(container);
         services.AddSingletonServiceUsingContainer<IAppInfoProvider>(container);
         services.AddSingletonServiceUsingContainer<IEventDeliverer>(container);

@@ -16,7 +16,8 @@ public static class DoubleExtensions
     public static bool PreciseEquals(this double left, double right, int floatDigits = 7)
     {
         if (floatDigits is < 1 or > 7)
-            throw new ArgumentOutOfRangeException(nameof(floatDigits), floatDigits,
+            throw new ArgumentOutOfRangeException(nameof(floatDigits),
+                floatDigits,
                 "Only values between 1 and 7 are supported");
 
         double floatComparison = GetFloatComparison(floatDigits);
@@ -47,18 +48,19 @@ public static class DoubleExtensions
 
         return double.TryParse(value, out double l)
             ? l
-            : throw new Exception("Cannot unmarshal type double");
+            : throw new("Cannot unmarshal type double");
     }
 
-    private static double GetFloatComparison(int floatDigits) => floatDigits switch
-    {
-        1 => D1,
-        2 => D2,
-        3 => D3,
-        4 => D4,
-        5 => D5,
-        6 => D6,
-        7 => D7,
-        _ => 0
-    };
+    private static double GetFloatComparison(int floatDigits) =>
+        floatDigits switch
+        {
+            1 => D1,
+            2 => D2,
+            3 => D3,
+            4 => D4,
+            5 => D5,
+            6 => D6,
+            7 => D7,
+            _ => 0
+        };
 }

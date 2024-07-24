@@ -15,7 +15,7 @@ public class JoinableTaskFactoryHandler
     {
         ThreadId = threadId;
         _factory = jtf;
-        _semaphore = new SemaphoreSlim(1, 1);
+        _semaphore = new(1, 1);
     }
 
     /// <inheritdoc

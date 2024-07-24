@@ -46,7 +46,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         _itemContainerManager = itemContainerManager;
         _childrenCollection = childrenCollection;
         itemContainerManager.ItemsChanged += ItemContainerManager_ItemsChanged;
-        _items = new List<object>(itemContainerManager.Items);
+        _items = new(itemContainerManager.Items);
     }
 
     public Size OnMeasure(Size availableSize) => OnMeasure(availableSize, availableSize, ScrollOffset);
@@ -76,7 +76,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     public Size OnArrange(Size finalSize, bool hierarchical)
     {
         foreach (IItemContainerInfo cachedContainer in _itemContainerManager.CachedContainers)
-            cachedContainer.Arrange(new Rect(0, 0, 0, 0));
+            cachedContainer.Arrange(new(0, 0, 0, 0));
 
         double x = _startItemOffsetX + GetX(ScrollOffset);
 
@@ -150,6 +150,14 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
             else
                 SetHorizontalOffset(GetY(itemOffset));
         }
+    }
+
+    private static Size CalculateAverageSize(ICollection<Size> sizes)
+    {
+        if (sizes.Any())
+            return new(sizes.Average(size => size.Width), sizes.Average(size => size.Height));
+
+        return Size.Empty;
     }
 
     private void ItemContainerManager_ItemsChanged(object sender, ItemContainerManagerItemsChangedEventArgs e)
@@ -584,14 +592,6 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         }
     }
 
-    private Size CalculateAverageSize(ICollection<Size> sizes)
-    {
-        if (sizes.Any())
-            return new Size(sizes.Average(size => size.Width), sizes.Average(size => size.Height));
-
-        return Size.Empty;
-    }
-
     #region scroll info
     // TODO determine line height
 
@@ -629,32 +629,39 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     #endregion
 
     #region orientation aware helper methods
-    protected double GetX(Point point) => Orientation == Orientation.Horizontal
-        ? point.X
-        : point.Y;
+    protected double GetX(Point point) =>
+        Orientation == Orientation.Horizontal
+            ? point.X
+            : point.Y;
 
-    protected double GetY(Point point) => Orientation == Orientation.Horizontal
-        ? point.Y
-        : point.X;
+    protected double GetY(Point point) =>
+        Orientation == Orientation.Horizontal
+            ? point.Y
+            : point.X;
 
-    protected double GetWidth(Size size) => Orientation == Orientation.Horizontal
-        ? size.Width
-        : size.Height;
+    protected double GetWidth(Size size) =>
+        Orientation == Orientation.Horizontal
+            ? size.Width
+            : size.Height;
 
-    protected double GetHeight(Size size) => Orientation == Orientation.Horizontal
-        ? size.Height
-        : size.Width;
+    protected double GetHeight(Size size) =>
+        Orientation == Orientation.Horizontal
+            ? size.Height
+            : size.Width;
 
-    protected Point CreatePoint(double x, double y) => Orientation == Orientation.Horizontal
-        ? new Point(x, y)
-        : new Point(y, x);
+    protected Point CreatePoint(double x, double y) =>
+        Orientation == Orientation.Horizontal
+            ? new(x, y)
+            : new Point(y, x);
 
-    protected Size CreateSize(double width, double height) => Orientation == Orientation.Horizontal
-        ? new Size(width, height)
-        : new Size(height, width);
+    protected Size CreateSize(double width, double height) =>
+        Orientation == Orientation.Horizontal
+            ? new(width, height)
+            : new Size(height, width);
 
-    protected Rect CreateRect(double x, double y, double width, double height) => Orientation == Orientation.Horizontal
-        ? new Rect(x, y, width, height)
-        : new Rect(y, x, height, width);
+    protected Rect CreateRect(double x, double y, double width, double height) =>
+        Orientation == Orientation.Horizontal
+            ? new(x, y, width, height)
+            : new Rect(y, x, height, width);
     #endregion
 }

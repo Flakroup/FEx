@@ -81,7 +81,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> : BaseObservableCollec
                                           bool sendAsyncEvents = true)
         : base(passIndexOfRemovedItem, sendAsyncEvents)
     {
-        _dictionary = new ConcurrentDictionary<TKey, TValue>();
+        _dictionary = new();
         SetNotifyOnCreationContext(notifyOnCreationContext);
     }
 
@@ -90,44 +90,26 @@ public class ObservableConcurrentDictionary<TKey, TValue> : BaseObservableCollec
     {
     }
 
-    public void CopyTo(Array array, int index)
-    {
-        ((ICollection)_dictionary).CopyTo(array, index);
-    }
+    public void CopyTo(Array array, int index) => ((ICollection)_dictionary).CopyTo(array, index);
 
-    void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item)
-    {
-        TryAdd(item.Key, item.Value);
-    }
+    void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item) => TryAdd(item.Key, item.Value);
 
-    void ICollection<KeyValuePair<TKey, TValue>>.Clear()
-    {
-        Clear();
-    }
+    void ICollection<KeyValuePair<TKey, TValue>>.Clear() => Clear();
 
     bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item) =>
         ValueIsEqual(item.Key, item.Value);
 
     bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item) => Remove(item.Key);
 
-    void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
-    {
-        ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).CopyTo(array, arrayIndex);
-    }
+    void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex) => ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).CopyTo(array, arrayIndex);
 
-    public void Add(object key, object value)
-    {
-        TryAdd(key.GetObject<TKey>(), value.GetObject<TValue>());
-    }
+    public void Add(object key, object value) => TryAdd(key.GetObject<TKey>(), value.GetObject<TValue>());
 
     public bool Contains(object key) => ContainsKey(key.GetObject<TKey>());
 
     public IDictionaryEnumerator GetEnumerator() => ((IDictionary)_dictionary).GetEnumerator();
 
-    public void Remove(object key)
-    {
-        Remove(key.GetObject<TKey>());
-    }
+    public void Remove(object key) => Remove(key.GetObject<TKey>());
 
     public void Clear()
     {
@@ -135,10 +117,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> : BaseObservableCollec
         OnCollectionReset();
     }
 
-    public void Add(TKey key, TValue value)
-    {
-        TryAdd(key, value);
-    }
+    public void Add(TKey key, TValue value) => TryAdd(key, value);
 
     public bool ContainsKey(TKey key) => _dictionary.ContainsKey(key);
 

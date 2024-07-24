@@ -5,15 +5,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DynamicData" Version="8.4.1" />
-		<PackageReference Include="ReactiveUI" Version="19.6.1" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
-		<ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
-		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
-		<ProjectReference Include="..\FEx.Rx\FEx.Rx.csproj" />
+	  <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+	  <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+	  <ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
+	  <ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
+	  <ProjectReference Include="..\FEx.MVVM.Rx\FEx.MVVM.Rx.csproj" />
 	</ItemGroup>
 
 </Project>

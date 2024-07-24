@@ -63,7 +63,7 @@ public class FlakHttpClient : ProgressAggregator, IDisposable, IDownloadBase
                           CancellationTokenSource cancellationTokenSource = default)
     {
         Mode = ProgressOperationMode.Stream;
-        Client = new HttpClientEx(handler, disposeHandler, cancellationTokenSource);
+        Client = new(handler, disposeHandler, cancellationTokenSource);
         Client.PropertyChanged += Client_PropertyChanged;
     }
 
@@ -73,15 +73,9 @@ public class FlakHttpClient : ProgressAggregator, IDisposable, IDownloadBase
 
     public bool Equals(IDownloadBase other) => Client.Equals(other);
 
-    public async Task DelayAsync()
-    {
-        await Client.DelayAsync();
-    }
+    public async Task DelayAsync() => await Client.DelayAsync();
 
-    public async Task DoDownloadAsync(string filePath, HttpResponseMessage response, bool lockOnFilePath = true)
-    {
-        await Client.DoDownloadAsync(filePath, response, lockOnFilePath);
-    }
+    public async Task DoDownloadAsync(string filePath, HttpResponseMessage response, bool lockOnFilePath = true) => await Client.DoDownloadAsync(filePath, response, lockOnFilePath);
 
     public async Task<HttpResponseMessage> GetAsync(Uri requestUri,
                                                     HttpCompletionOption completionOption,

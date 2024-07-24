@@ -1,3 +1,4 @@
+using FEx.Common.Extensions;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
@@ -71,50 +72,6 @@ public static class StringExtensions
     /// <returns>A string.</returns>
     public static string Remove(this string source, IEnumerable<char> chars) =>
         new(source.Where(c => !chars.Contains(c)).ToArray());
-
-    /// <summary>
-    ///     Compare 2 strings, ignoring case.
-    /// </summary>
-    /// <param name="source">First value to compare with.</param>
-    /// <param name="value">Second value to compare with.</param>
-    /// <param name="comparisonType">Type of the comparison.</param>
-    /// <returns>
-    ///     True if equal otherwise False.
-    /// </returns>
-    public static bool IsEqual(this string source,
-                               string value,
-                               StringComparison comparisonType = StringComparison.OrdinalIgnoreCase) =>
-        string.Equals(source, value, comparisonType);
-
-    /// <summary>
-    ///     Determines whether string is not equal to the specified value.
-    /// </summary>
-    /// <param name="source">The source.</param>
-    /// <param name="value">The value.</param>
-    /// <param name="comparisonType">Type of the comparison.</param>
-    /// <returns>
-    ///     <c>true</c> if it is not equal to the specified value; otherwise, <c>false</c>.
-    /// </returns>
-    public static bool IsNotEqual(this string source,
-                                  string value,
-                                  StringComparison comparisonType = StringComparison.OrdinalIgnoreCase) =>
-        !source.IsEqual(value, comparisonType);
-
-    /// <summary>
-    ///     Gets a value indicating if the string is Null or Empty.
-    /// </summary>
-    /// <param name="value">string to test.</param>
-    /// <returns>True if string is Null or Empty otherwise False.</returns>
-    [ContractAnnotation("null => true")]
-    public static bool IsNullOrEmptyString(this string value) => value is null || string.IsNullOrEmpty(value);
-
-    /// <summary>
-    ///     Gets a value indicating if the string is NOT Null or Empty.
-    /// </summary>
-    /// <param name="value">string to test.</param>
-    /// <returns>True if string is Null or Empty otherwise False.</returns>
-    [ContractAnnotation("null => false")]
-    public static bool IsNotNullOrEmptyString(this string value) => value is not null && !string.IsNullOrEmpty(value);
 
     /// <summary>
     ///     Formats the value with the parameters using string.Format.
@@ -253,8 +210,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>Value divided by capital letter.</returns>
-    public static string DivideByCapital(this string value) =>
-        Regex.Replace(value, "([A-Z])", " $1").TrimStart(' ');
+    public static string DivideByCapital(this string value) => Regex.Replace(value, "([A-Z])", " $1").TrimStart(' ');
 
     /// <summary>
     ///     Determines whether the specified string is null or white space.
@@ -294,8 +250,7 @@ public static class StringExtensions
 
     public static bool ContainsOnlyLetters(this string text) => text.MatchesRegex(LettersRegex);
 
-    public static bool ContainsOnlyLettersAndNumbers(this string text) =>
-        text.MatchesRegex(LettersAndNumbersRegex);
+    public static bool ContainsOnlyLettersAndNumbers(this string text) => text.MatchesRegex(LettersAndNumbersRegex);
 
     public static bool ContainsOnlyLettersNumbersAndUnderscore(this string text) =>
         text.MatchesRegex(LettersNumbersAndUnderscoreRegex);
@@ -303,30 +258,32 @@ public static class StringExtensions
     public static bool Contains(this string source, string toCheck, StringComparison comp) =>
         source?.IndexOf(toCheck, comp) >= 0;
 
-    public static IEnumerable<string> GetPathParts(this string path) => path.Split(Path.DirectorySeparatorChar)
-        .SelectMany(x => x.Split(Path.AltDirectorySeparatorChar));
+    public static IEnumerable<string> GetPathParts(this string path) =>
+        path.Split(Path.DirectorySeparatorChar).SelectMany(x => x.Split(Path.AltDirectorySeparatorChar));
 
-    public static string FirstCharToUpper(this string input) => input switch
-    {
-        null => throw new ArgumentNullException(nameof(input)),
-        "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
+    public static string FirstCharToUpper(this string input) =>
+        input switch
+        {
+            null => throw new ArgumentNullException(nameof(input)),
+            "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
 #if NETSTANDARD
         _ => input[0].ToString().ToUpper() + input.Substring(1)
 #else
-        _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
+            _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
 #endif
-    };
+        };
 
-    public static string FirstCharToLower(this string input) => input switch
-    {
-        null => throw new ArgumentNullException(nameof(input)),
-        "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
+    public static string FirstCharToLower(this string input) =>
+        input switch
+        {
+            null => throw new ArgumentNullException(nameof(input)),
+            "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
 #if NETSTANDARD
         _ => input[0].ToString().ToLower() + input.Substring(1)
 #else
-        _ => string.Concat(input[0].ToString().ToLower(), input.AsSpan(1))
+            _ => string.Concat(input[0].ToString().ToLower(), input.AsSpan(1))
 #endif
-    };
+        };
 
     /// <summary>Returns a string containing a specified number of characters from the left side of a string.</summary>
     /// <param name="str">Required. <see langword="String" /> expression from which the leftmost characters are returned.</param>
@@ -481,19 +438,6 @@ public static class StringExtensions
         return Encoding.UTF8.GetString(mso.ToArray());
     }
 
-    public static bool CompareOrdinalIgnoreCase(this string source, string value) =>
-        string.Compare(source, value, StringComparison.OrdinalIgnoreCase) == 0;
-
-    /// <summary>
-    ///     Indicates whether a string contains another string under <see cref="StringComparison.OrdinalIgnoreCase" />
-    /// comparison.
-    /// </summary>
-    public static bool ContainsOrdinalIgnoreCase(this string str, string other) =>
-#if NETSTANDARD
-        str.IndexOf(other, StringComparison.OrdinalIgnoreCase) >= 0;
-#else
-        str.Contains(other, StringComparison.OrdinalIgnoreCase);
-#endif
     public static bool IsBothNullOrEqual(this string source,
                                          string value,
                                          StringComparison comparisonType = StringComparison.Ordinal) =>
@@ -502,7 +446,7 @@ public static class StringExtensions
     public static Uri ToUri(this string source, Uri baseUri = null, UriKind kind = UriKind.Absolute) =>
         source?.IsNotNullOrEmptyOrWhiteSpace() == true
             ? baseUri is not null
-                ? new Uri(baseUri, source)
+                ? new(baseUri, source)
                 : new Uri(source, kind)
             : null;
 

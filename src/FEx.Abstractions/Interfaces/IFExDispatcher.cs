@@ -22,6 +22,7 @@ public interface IFExDispatcher
     Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object sender = null);
     Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object sender = null);
     Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null);
+
     void SendInThisOrMainThreadContext(Action action,
                                        SynchronizationContext synchronizationContext = null,
                                        uint timeout = 10000);

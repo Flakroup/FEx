@@ -1,3 +1,4 @@
+using FEx.Common.Extensions;
 using FEx.Extensions.Base.Helpers;
 using FEx.Extensions.Collections.Enumerables;
 using JetBrains.Annotations;
@@ -6,7 +7,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Guardian = GuardNet.Guard;
 
 namespace FEx.Extensions;
 
@@ -106,43 +106,6 @@ public static class ObjectExtensions
     /// <returns>True, if specified value is a null reference; Otherwise False.</returns>
     [ContractAnnotation("null => true")]
     public static bool ReferenceIsNull<T>(this T value) => value is null;
-
-    /// <summary>
-    ///     Checks an value to ensure it isn't null.
-    /// </summary>
-    /// <typeparam name="T">Current type.</typeparam>
-    /// <param name="value">The value to check.</param>
-    /// <param name="paramName">Name of the parameter.</param>
-    /// <param name="message">The message to display.</param>
-    /// <returns>
-    ///     The value itself.
-    /// </returns>
-    /// <exception cref="ArgumentNullException"><paramref name="value" /> is a null reference.</exception>
-    [ContractAnnotation("value:null => stop; value:notnull=>notnull")]
-    public static T Guard<T>(this T value, [CallerMemberName] string paramName = null, string message = null) where T : class =>
-        value.Guard(v => v is null, paramName, message);
-
-    /// <summary>
-    ///     Checks an value to ensure it comply to the condition we provide.
-    /// </summary>
-    /// <typeparam name="T">Current type.</typeparam>
-    /// <param name="value">Current value.</param>
-    /// <param name="func">The condition to test.</param>
-    /// <param name="paramName">Name of the parameter.</param>
-    /// <param name="message">The message to display.</param>
-    /// <returns>
-    ///     The value itself.
-    /// </returns>
-    /// <exception cref="ArgumentNullException"></exception>
-    /// <remarks>
-    ///     Throws a <see cref="ArgumentNullException" /> if the condition is false.
-    /// </remarks>
-    public static T Guard<T>(this T value, Func<T, bool> func, string paramName, string message = null) where T : class
-    {
-        Guardian.For(() => func(value), new ArgumentNullException(paramName, message));
-
-        return value;
-    }
 
     /// <summary>
     ///     Execute a Action with TInput as parameter.

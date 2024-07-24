@@ -1,4 +1,4 @@
-﻿using FEx.DependencyInjection.Abstractions.Interfaces;
+﻿using FEx.DI.Abstractions.Interfaces;
 using FEx.Platforms.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
@@ -13,8 +13,5 @@ namespace FEx.Platforms;
     typeof(IInitializeModule))]
 public class FExPlatformsModule
 {
-    public static void AddServices(IFExPlatformsModule module, IServiceCollection services)
-    {
-        services.AddSingletonServiceUsingContainer<IRegistryService>(module);
-    }
+    public static void AddServices(IFExPlatformsModule module, IServiceCollection services) => services.AddSingletonServiceUsingContainer<IRegistryService>(module);
 }

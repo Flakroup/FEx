@@ -2,6 +2,6 @@
 
 public interface ITasksInfoSubject
 {
-    void AddTask(ITaskWrapper value);
-    void RemoveTask(ITaskWrapper value);
+    void AddTask(ITaskWrapperBase value);
+    void RemoveTask(ITaskWrapperBase value);
 }

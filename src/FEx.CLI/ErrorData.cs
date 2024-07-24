@@ -21,13 +21,19 @@ public class ErrorData
         private set
         {
             _nameInfo = value;
+
             NameInfoString = NameInfo != null
                 ? GetNameInfoString(NameInfo)
                 : null;
         }
     }
 
-    public ErrorData(ErrorType tag, NameInfo nameInfo = null, string token = null, string setName = null, string verb = null, Exception exception = null)
+    public ErrorData(ErrorType tag,
+                     NameInfo nameInfo = null,
+                     string token = null,
+                     string setName = null,
+                     string verb = null,
+                     Exception exception = null)
     {
         Tag = tag;
         NameInfo = nameInfo;
@@ -127,8 +133,6 @@ public class ErrorData
     {
     }
 
-    private static string GetNameInfoString(NameInfo nameInfo)
-    {
-        return $"{nameInfo.ShortName}|{nameInfo.LongName}|{nameInfo.NameText}";
-    }
+    private static string GetNameInfoString(NameInfo nameInfo) =>
+        $"{nameInfo.ShortName}|{nameInfo.LongName}|{nameInfo.NameText}";
 }

@@ -1,8 +1,8 @@
-﻿using FEx.Extensions;
+﻿using FEx.Common.Extensions;
+using FEx.Extensions;
 using FEx.Extensions.Base.Enums;
 using FEx.Extensions.Collections;
 using FEx.Extensions.Collections.Dictionaries;
-using FEx.Extensions.Collections.Enumerables;
 using FEx.Platforms.Abstractions;
 using MimeMapping;
 using System.Collections.Concurrent;

@@ -1,6 +1,7 @@
-﻿using FEx.EFCore.Helpers;
+﻿using FEx.Basics.Extensions;
+using FEx.Common.Extensions;
+using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
-using FEx.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
@@ -10,8 +11,8 @@ namespace FEx.EFCore.Extensions;
 public static class DbContextOptionsBuilderExtensions
 {
     public static bool ConfigureDbContext(this DbContextOptionsBuilder options,
-                                      IFExDbConfig config,
-                                      ISqlDbHelper sqlDbHelper)
+                                          IFExDbConfig config,
+                                          ISqlDbHelper sqlDbHelper)
     {
         if (!sqlDbHelper.IsInitialized)
             throw new InvalidOperationException();

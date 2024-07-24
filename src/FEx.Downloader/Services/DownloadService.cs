@@ -1,5 +1,7 @@
 ﻿using FEx.Asyncx.Helpers;
 using FEx.Basics.Collections.Concurrent;
+using FEx.Basics.Extensions;
+using FEx.Common.Extensions;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
 using FEx.Extensions;
@@ -37,7 +39,7 @@ public class DownloadService : ProgressAggregator
     {
         Subscriptions = [];
         Downloads = [];
-        Queue = new AsyncQueue<DownloadIndex, bool>(ex => ex.HandleException(), DefaultParallelDownloads);
+        Queue = new(ex => ex.HandleException(), DefaultParallelDownloads);
         SetFinished = true;
     }
 
@@ -119,18 +121,12 @@ public class DownloadService : ProgressAggregator
         return di;
     }
 
-    private void AttachListeners(IDownloadItem di)
-    {
-        Subscriptions.ReplaceAndDisposeOldValue(di.Url.AbsoluteUri.GenerateMd5OfString(),
+    private void AttachListeners(IDownloadItem di) => Subscriptions.ReplaceAndDisposeOldValue(di.Url.AbsoluteUri.GenerateMd5OfString(),
             () => di.WhenAnyValue(x => x.TotalPrg, x => x.DState)
                 .Sample(FExMvvm.DefaultUIRefreshInterval)
                 .Subscribe(_ => OnDownloadPropertyChanged()));
-    }
 
-    private void DetachListeners(IDownloadItem di)
-    {
-        Subscriptions.TryGetKeyValue(di.Url.AbsoluteUri.GenerateMd5OfString())?.Dispose();
-    }
+    private void DetachListeners(IDownloadItem di) => Subscriptions.TryGetKeyValue(di.Url.AbsoluteUri.GenerateMd5OfString())?.Dispose();
 
     private void OnDownloadPropertyChanged()
     {
@@ -152,7 +148,7 @@ public class DownloadService : ProgressAggregator
         this.SetCurrentDownloadState(val, max);
 
         if (SetFinished)
-           SetStatusInfo($"Finished: {finished} / {Downloads.Count}");
+            SetStatusInfo($"Finished: {finished} / {Downloads.Count}");
     }
 
     private (double value, double maximum, int finished) CalculateProgress()
@@ -176,13 +172,7 @@ public class DownloadService : ProgressAggregator
         return (val, max, finished);
     }
 
-    private void StartDownload(DownloadIndex idx)
-    {
-        Downloads[idx].DownloadFileTask = Queue.GetOrAddAsync(idx, () => Downloads[idx].DownloadFileAsync());
-    }
+    private void StartDownload(DownloadIndex idx) => Downloads[idx].DownloadFileTask = Queue.GetOrAddAsync(idx, () => Downloads[idx].DownloadFileAsync());
 
-    private Task[] GetUnfinishedDownloadsTasks()
-    {
-        return Downloads.Select(x => x.Value.DownloadFileTask).Where(x => x?.IsFinished() == false).ToArray();
-    }
+    private Task[] GetUnfinishedDownloadsTasks() => Downloads.Select(x => x.Value.DownloadFileTask).Where(x => x?.IsFinished() == false).ToArray();
 }

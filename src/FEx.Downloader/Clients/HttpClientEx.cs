@@ -1,5 +1,5 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Basics;
+﻿using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
 using FEx.Extensions;
@@ -106,7 +106,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
     protected byte[] Buffer { get; }
 
-    private static ISynchronizedAccessService LockSrv => FExBasics.SynchronizedAccessService;
+    private static ISynchronizedAccessService LockSrv => FExFoundation.SynchronizedAccessService;
 
     private CancellationToken CancellationToken => CancellationTokenSource.Token;
 
@@ -116,7 +116,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     /// <param name="pars">The <see cref="T:WebRequestParams" /> parameters for processing HTTP response messages.</param>
     /// <param name="disposeHandler">
     ///     <see langword="true" /> if the inner handler should be disposed of by Dispose(),
-    ///     <see langword="false" /> if you intend to reuse the inner handler.
+    /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public HttpClientEx(WebRequestParams pars = null,
@@ -135,7 +135,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     /// </param>
     /// <param name="disposeHandler">
     ///     <see langword="true" /> if the inner handler should be disposed of by Dispose(),
-    ///     <see langword="false" /> if you intend to reuse the inner handler.
+    /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public HttpClientEx(HttpClientHandler handler,
@@ -153,7 +153,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         else
         {
             _ownCTS = true;
-            CancellationTokenSource = new CancellationTokenSource();
+            CancellationTokenSource = new();
         }
     }
 
@@ -187,7 +187,8 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         {
             DState = DownloadState.Connecting;
 
-            using HttpResponseMessage res = await GetAsync(url, HttpCompletionOption.ResponseHeadersRead,
+            using HttpResponseMessage res = await GetAsync(url,
+                HttpCompletionOption.ResponseHeadersRead,
                 CancellationToken);
 
             try
@@ -244,7 +245,9 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
                     string dirPath = Directory.GetParent(filePath).FullName;
                     Directory.CreateDirectory(dirPath);
 
-                    using var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite,
+                    using var fileStream = new FileStream(filePath,
+                        FileMode.OpenOrCreate,
+                        FileAccess.ReadWrite,
                         FileShare.None);
 
                     if (fileStream.Length != length)
@@ -285,11 +288,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         }
     }
 
-    public async Task DelayAsync()
-    {
-        await Task.Delay(10, CancellationToken);
-        //delay for subsequent connections
-    }
+    public async Task DelayAsync() => await Task.Delay(10, CancellationToken);//delay for subsequent connections
 
     #region IDisposable
     protected override void Dispose(bool disposing)
@@ -310,7 +309,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
             return;
 
         void EventDelegate() => NotifyChanged(propertyName);
-        FExBasics.EventDeliverer.DeliverEvent(EventDelegate, this);
+        FExFoundation.EventDeliverer.DeliverEvent(EventDelegate, this);
     }
 
     protected virtual bool SetProperty<TRet>(ref TRet backingField,

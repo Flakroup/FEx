@@ -1,4 +1,5 @@
-﻿using FEx.Encryption.Abstractions.Interfaces;
+﻿using FEx.Common.Extensions;
+using FEx.Encryption.Abstractions.Interfaces;
 using FEx.Extensions;
 using System;
 
@@ -10,13 +11,9 @@ public class FExEncryption
 
     public static string PassPhrase
     {
-        get => _passPhrase.Guard();
+        get => _passPhrase.Guard(nameof(PassPhrase));
         private set => _passPhrase = value;
     }
 
-    public static void Initialize(IFExEncryptionSettings settings)
-    {
-        PassPhrase = settings?.PassPhrase
-                     ?? $"{Environment.UserName}@{Environment.MachineName}".GenerateMd5OfString();
-    }
+    public static void Initialize(IFExEncryptionSettings settings) => PassPhrase = settings?.PassPhrase ?? $"{Environment.UserName}@{Environment.MachineName}".GenerateMd5OfString();
 }

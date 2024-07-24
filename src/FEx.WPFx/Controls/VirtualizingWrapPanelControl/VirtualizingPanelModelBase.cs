@@ -30,7 +30,7 @@ internal abstract class VirtualizingPanelModelBase
 
         if (offset != ScrollOffset.Y)
         {
-            ScrollOffset = new Point(ScrollOffset.X, offset);
+            ScrollOffset = new(ScrollOffset.X, offset);
             InvalidateScrollInfo();
             InvalidateMeasure();
         }
@@ -46,39 +46,27 @@ internal abstract class VirtualizingPanelModelBase
 
         if (offset != ScrollOffset.X)
         {
-            ScrollOffset = new Point(offset, ScrollOffset.Y);
+            ScrollOffset = new(offset, ScrollOffset.Y);
             InvalidateScrollInfo();
             InvalidateMeasure();
         }
     }
 
-    public void LineUp()
-    {
-        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+    public void LineUp() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
             ? -ScrollLineDelta
             : GetLineUpScrollAmount());
-    }
 
-    public void LineDown()
-    {
-        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+    public void LineDown() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
             ? ScrollLineDelta
             : GetLineDownScrollAmount());
-    }
 
-    public void LineLeft()
-    {
-        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void LineLeft() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? -ScrollLineDelta
             : GetLineLeftScrollAmount());
-    }
 
-    public void LineRight()
-    {
-        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void LineRight() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? ScrollLineDelta
             : GetLineRightScrollAmount());
-    }
 
     public void MouseWheelUp()
     {
@@ -100,47 +88,29 @@ internal abstract class VirtualizingPanelModelBase
             MouseWheelRight();
     }
 
-    public void MouseWheelLeft()
-    {
-        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void MouseWheelLeft() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? -MouseWheelDelta
             : GetMouseWheelLeftScrollAmount());
-    }
 
-    public void MouseWheelRight()
-    {
-        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void MouseWheelRight() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? MouseWheelDelta
             : GetMouseWheelRightScrollAmount());
-    }
 
-    public void PageUp()
-    {
-        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+    public void PageUp() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
             ? -ViewportSize.Height
             : GetPageUpScrollAmount());
-    }
 
-    public void PageDown()
-    {
-        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+    public void PageDown() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
             ? ViewportSize.Height
             : GetPageDownScrollAmount());
-    }
 
-    public void PageLeft()
-    {
-        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void PageLeft() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? -ViewportSize.Width
             : GetPageLeftScrollAmount());
-    }
 
-    public void PageRight()
-    {
-        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void PageRight() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? ViewportSize.Width
             : GetPageRightScrollAmount());
-    }
 
     protected abstract double GetLineUpScrollAmount();
     protected abstract double GetLineDownScrollAmount();
@@ -157,23 +127,11 @@ internal abstract class VirtualizingPanelModelBase
     protected abstract double GetPageLeftScrollAmount();
     protected abstract double GetPageRightScrollAmount();
 
-    protected void InvalidateScrollInfo()
-    {
-        ScrollInfoInvalidated?.Invoke(this, EventArgs.Empty);
-    }
+    protected void InvalidateScrollInfo() => ScrollInfoInvalidated?.Invoke(this, EventArgs.Empty);
 
-    protected void InvalidateMeasure()
-    {
-        MeasureInvalidated?.Invoke(this, EventArgs.Empty);
-    }
+    protected void InvalidateMeasure() => MeasureInvalidated?.Invoke(this, EventArgs.Empty);
 
-    private void ScrollVertical(double amount)
-    {
-        SetVerticalOffset(ScrollOffset.Y + amount);
-    }
+    private void ScrollVertical(double amount) => SetVerticalOffset(ScrollOffset.Y + amount);
 
-    private void ScrollHorizontal(double amount)
-    {
-        SetHorizontalOffset(ScrollOffset.X + amount);
-    }
+    private void ScrollHorizontal(double amount) => SetHorizontalOffset(ScrollOffset.X + amount);
 }

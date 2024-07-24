@@ -1,8 +1,8 @@
 ﻿using Avalonia.Controls;
-using FEx.Asyncx;
-using FEx.Asyncx.Enums;
+using FEx.Abstractions;
+using FEx.Abstractions.Enums;
 using FEx.Avaloniax.Abstractions.Interfaces;
-using FEx.Rx.BaseObjects;
+using FEx.MVVM.Rx.BaseObjects;
 using ReactiveUI;
 using System;
 using System.Reactive.Disposables;
@@ -25,7 +25,7 @@ public abstract class FExAvaloniaViewModelBase : ReactiveNotifyPropertyChanged, 
     protected FExAvaloniaViewModelBase(INavigationService navigationService)
     {
         UrlPathSegment = $"{GetType().Name}_{Guid.NewGuid()}";
-        Activator = new ViewModelActivator();
+        Activator = new();
 
         if (Design.IsDesignMode)
             return;
@@ -34,7 +34,7 @@ public abstract class FExAvaloniaViewModelBase : ReactiveNotifyPropertyChanged, 
 
         this.WhenActivated(disposables =>
         {
-            FExAsyncx.AsyncHelper.FireTaskAndForget(OnActivatedAsync, AsyncMode.ThreadPool);
+            FExFoundation.AsyncHelper.FireTaskAndForget(OnActivatedAsync, AsyncMode.ThreadPool);
             Disposable.Create(OnDeactivated).DisposeWith(disposables);
         });
     }

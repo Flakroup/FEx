@@ -1,11 +1,10 @@
-using FEx.Asyncx;
-using FEx.Asyncx.Helpers;
-using FEx.Basics.Flow;
-using FEx.Extensions;
+using FEx.Abstractions.Flow;
+using FEx.Abstractions.Flow.Errors;
+using FEx.Basics.Extensions;
+using FEx.Common.Extensions;
 using FEx.Extensions.Base.Models;
 using FEx.Extensions.Collections;
-using FEx.Extensions.Collections.Dictionaries;
-using FEx.Extensions.Collections.Enumerables;
+using FEx.Extensions.Helpers;
 using FEx.Extensions.Web;
 using System;
 using System.Collections.Generic;
@@ -27,8 +26,6 @@ public static class UriExtensions
     private const string GetMethod = "GET";
     private const string AdditionalInfoKey = "additionalInfo";
     private const int DefaultTimeout = 100000000;
-
-    private static AsyncHelper AsyncHelper => FExAsyncx.AsyncHelper;
 
     /// <summary>
     ///     Determines whether the specified URL is reachable.
@@ -55,7 +52,7 @@ public static class UriExtensions
     {
         if (url is not null)
         {
-            pars ??= new WebRequestParams();
+            pars ??= new();
 
             pars.Method ??= GetMethod;
 
@@ -99,30 +96,29 @@ public static class UriExtensions
                                                         Stopwatch stopwatch = null) =>
         await url.DoHttpResponseFuncAsync((response, _) => response.ContentLength, pars, stopwatch);
 
-    public static async Task<Dictionary<string, string>> GetResponseHeadersAsync(
-        this Uri url,
-        WebRequestParams pars = null) =>
+    public static async Task<Dictionary<string, string>>
+        GetResponseHeadersAsync(this Uri url, WebRequestParams pars = null) =>
         await DoHttpResponseFuncAsync(url, (response, _) => response.GetAllHeaders(), pars);
 
     public static async Task<T> DoHttpResponseFuncTaskAsync<T>(this Uri url,
                                                                Func<HttpWebResponse, HttpWebRequest, Task<T>> func,
                                                                WebRequestParams pars = null,
                                                                Stopwatch stopwatch = null) =>
-        await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
+        await StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
             InternalDoHttpResponseFuncTaskAsync(url, func, pars, stopwatch));
 
     public static async Task<T> DoHttpResponseFuncAsync<T>(this Uri url,
                                                            Func<HttpWebResponse, HttpWebRequest, T> func,
                                                            WebRequestParams pars = null,
                                                            Stopwatch stopwatch = null) =>
-        await AsyncHelper.ExecuteTaskOnThreadPoolAsync(
-            () => InternalDoHttpResponseFuncAsync(url, func, pars, stopwatch));
+        await StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
+            InternalDoHttpResponseFuncAsync(url, func, pars, stopwatch));
 
     public static async Task DoHttpResponseActionAsync(this Uri url,
                                                        Action<HttpWebResponse, HttpWebRequest> action,
                                                        WebRequestParams pars = null,
                                                        Stopwatch stopwatch = null) =>
-        await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
+        await StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
             InternalDoHttpResponseActionAsync(url, action, pars, stopwatch));
 
     public static async Task<T> DoHttpClientResponseFuncTaskAsync<T>(this Uri url,
@@ -130,21 +126,21 @@ public static class UriExtensions
                                                                          func,
                                                                      WebRequestParams pars = null,
                                                                      Stopwatch stopwatch = null) =>
-        await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
+        await StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
             url.InternalDoHttpClientResponseFuncTaskAsync(func, pars, stopwatch));
 
     public static async Task<T> DoHttpClientResponseFuncAsync<T>(this Uri url,
                                                                  Func<HttpResponseMessage, HttpClient, T> func,
                                                                  WebRequestParams pars = null,
                                                                  Stopwatch stopwatch = null) =>
-        await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
+        await StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
             url.InternalDoHttpClientResponseFuncAsync(func, pars, stopwatch));
 
     public static async Task DoHttpClientResponseActionAsync(this Uri url,
                                                              Action<HttpResponseMessage, HttpClient> action,
                                                              WebRequestParams pars = null,
                                                              Stopwatch stopwatch = null) =>
-        await AsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
+        await StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
             url.InternalDoHttpClientResponseActionAsync(action, pars, stopwatch));
 
     public static async Task<bool> CheckIfLinkIsExpiredAsync(this Uri link, WebRequestParams pars = null)
@@ -152,7 +148,7 @@ public static class UriExtensions
         if (link is not null)
             try
             {
-                pars ??= new WebRequestParams();
+                pars ??= new();
                 pars.Method = HeadMethod;
 
                 return await link.DoHttpResponseFuncAsync((response, _) => response.ContentLength <= 0, pars);
@@ -211,10 +207,7 @@ public static class UriExtensions
         return new StackError($"Could not test url {url}.");
     }
 
-    public static async Task<string> GetFileNameAsync(this Uri url, WebRequestParams pars = null)
-    {
-        return await url.DoHttpResponseFuncAsync((response, _) => response.GetFileName(), pars);
-    }
+    public static async Task<string> GetFileNameAsync(this Uri url, WebRequestParams pars = null) => await url.DoHttpResponseFuncAsync((response, _) => response.GetFileName(), pars);
 
     public static string GetFileName(this HttpWebResponse response)
     {

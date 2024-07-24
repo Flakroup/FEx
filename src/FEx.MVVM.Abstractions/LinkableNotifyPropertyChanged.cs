@@ -1,6 +1,6 @@
-﻿using FEx.Basics;
-using FEx.Basics.Abstractions;
+﻿using FEx.Basics.Abstractions;
 using FEx.Extensions.Collections.Dictionaries;
+using FEx.Logging.Abstractions;
 using FEx.MVVM.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,13 +16,20 @@ public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILi
 
     protected LinkableNotifyPropertyChanged()
     {
-        Links = new ConcurrentDictionary<string, ConcurrentDictionary<Guid, ILink>>();
+        Links = new();
+    }
+
+    public override void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
+    {
+        base.OnPropertySet(oldValue, newValue, propertyName);
+
+        if (Links.TryGetValue(propertyName, out ConcurrentDictionary<Guid, ILink> links))
+            TriggerLinks(links.Values.ToList(), oldValue, newValue);
     }
 
     public void AddLink(ILink link)
     {
-        ConcurrentDictionary<Guid, ILink> links =
-            Links.GetOrAddValue(link.PropertyName, () => new ConcurrentDictionary<Guid, ILink>());
+        ConcurrentDictionary<Guid, ILink> links = Links.GetOrAddValue(link.PropertyName, () => new());
 
         if (!links.TryAdd(link.Id, link))
             throw new InvalidOperationException($"This {nameof(link)} has already been added");
@@ -38,7 +45,7 @@ public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILi
         if (!Links.TryGetValue(propertyName, out ConcurrentDictionary<Guid, ILink> links)
             || !links.TryRemove(linkId, out ILink link))
         {
-            FExBasics.Logger.LogError(
+            FExLoggingFoundation.Logger.LogError(
                 $"There is no link from {propertyType.FullName} to {GetType().FullName} on {propertyName} property of id {linkId}");
 
             return;
@@ -48,14 +55,6 @@ public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILi
 
         if (resetProperty)
             link.ResetProperty();
-    }
-
-    public override void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
-    {
-        base.OnPropertySet(oldValue, newValue, propertyName);
-
-        if (Links.TryGetValue(propertyName, out ConcurrentDictionary<Guid, ILink> links))
-            TriggerLinks(links.Values.ToList(), oldValue, newValue);
     }
 
     private static void TriggerLinks(IEnumerable<ILink> propertyLinks, object oldValue, object newValue)

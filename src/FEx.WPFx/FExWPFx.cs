@@ -11,7 +11,7 @@ public class FExWPFx
     /// </summary>
     /// <param name="culture">
     ///     The culture to use. If <c>null</c>,
-    ///     <see cref="System.Globalization.CultureInfo.CurrentCulture" /> is used.
+    /// <see cref="System.Globalization.CultureInfo.CurrentCulture" /> is used.
     /// </param>
     public static void OverrideFormattingOnUI(CultureInfo culture = null)
     {

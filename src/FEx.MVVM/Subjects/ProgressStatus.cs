@@ -114,7 +114,7 @@ public class ProgressStatus : LinkableNotifyPropertyChanged, IProgressStatus
     public ProgressStatus()
     {
         //todo reduce to only these delayed ones
-        ExcludedProperties = new ConcurrentHashSet<string>(ProgressAggregatorExtensions.ListenerPropertyNames);
+        ExcludedProperties = new(ProgressAggregatorExtensions.ListenerPropertyNames);
     }
 
     public override void OnPropertyChanged(string propertyName = null)
@@ -129,15 +129,9 @@ public class ProgressStatus : LinkableNotifyPropertyChanged, IProgressStatus
         InvokePropertyChanged(propertyName);
     }
 
-    protected virtual void InvokePropertyChanged(string propertyName)
-    {
-        base.OnPropertyChanged(propertyName);
-    }
+    protected virtual void InvokePropertyChanged(string propertyName) => base.OnPropertyChanged(propertyName);
 
-    protected virtual void OnStateChanged(ProgressState state)
-    {
-        IsBusy = state == ProgressState.Busy;
-    }
+    protected virtual void OnStateChanged(ProgressState state) => IsBusy = state == ProgressState.Busy;
 
     protected virtual void OnValueChanged(double value)
     {
@@ -154,19 +148,13 @@ public class ProgressStatus : LinkableNotifyPropertyChanged, IProgressStatus
         CalculateProgressPercentage();
     }
 
-    protected virtual void OnIsIndeterminateChanged(bool value)
-    {
-        RefreshIsPrgInfoVisible();
-    }
+    protected virtual void OnIsIndeterminateChanged(bool value) => RefreshIsPrgInfoVisible();
 
     protected virtual void OnExcludedPropertyChanged(string propertyName)
     {
     }
 
-    protected virtual void RefreshIsPrgInfoVisible()
-    {
-        IsInfoVisible = Value < Maximum && !IsIndeterminate;
-    }
+    protected virtual void RefreshIsPrgInfoVisible() => IsInfoVisible = Value < Maximum && !IsIndeterminate;
 
     protected virtual void CalculateProgressPercentage()
     {

@@ -90,11 +90,9 @@ public static class TimeSpanExtensions
     /// </summary>
     /// <param name="milliseconds">The milliseconds.</param>
     /// <returns>System.String.</returns>
-    public static string GetTime(this long milliseconds) =>
-        TimeSpan.FromMilliseconds(milliseconds).GetTime();
+    public static string GetTime(this long milliseconds) => TimeSpan.FromMilliseconds(milliseconds).GetTime();
 
-    public static string GetTime(this double milliseconds) =>
-        TimeSpan.FromMilliseconds(milliseconds).GetTime();
+    public static string GetTime(this double milliseconds) => TimeSpan.FromMilliseconds(milliseconds).GetTime();
 
     /// <summary>
     ///     Gets the time from <see cref="TimeSpan" />.

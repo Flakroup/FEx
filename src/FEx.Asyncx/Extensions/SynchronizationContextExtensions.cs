@@ -1,8 +1,10 @@
-﻿using FEx.Basics;
+﻿using FEx.Abstractions;
+using FEx.Abstractions.Flow;
+using FEx.Abstractions.Flow.Errors;
 using FEx.Basics.Exceptions;
-using FEx.Basics.Flow;
-using FEx.Extensions;
-using FEx.Extensions.Base;
+using FEx.Basics.Extensions;
+using FEx.Common.Extensions;
+using FEx.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -21,10 +23,10 @@ public static class SynchronizationContextExtensions
     {
         _ = context.Guard(nameof(context));
         action.Guard(nameof(action));
-        StackTrace stackTrace = FExBasics.StackTraceProvider.GetStackTrace();
+        StackTrace stackTrace = FExFoundation.StackTraceProvider.GetStackTrace();
         var postFinished = new TaskCompletionSource<bool>();
 
-        FExAsyncx.AsyncHelper.FireTaskAndForget(() =>
+        FExFoundation.AsyncHelper.FireTaskAndForget(() =>
             context.InternalPostInContextAsync(action, sender, postFinished, stackTrace, handleException));
 
         return postFinished;
@@ -37,7 +39,7 @@ public static class SynchronizationContextExtensions
         var ex = new AttachedException("Deadlock assumed, as no action could've been performed during timeout.",
             stackTrace);
 
-        FExBasics.Logger.LogError(ex, ex.Message);
+        FExLoggingFoundation.Logger.LogError(ex, ex.Message);
 
         throw ex;
     }
@@ -122,7 +124,7 @@ public static class SynchronizationContextExtensions
 
         if (onException is not null)
             onException(aEx);
-        else if (FExExtensionsCommon.ExceptionHandler is not null)
+        else if (FExFoundation.ExceptionHandler is not null)
             aEx.HandleException();
         else
             throw aEx;

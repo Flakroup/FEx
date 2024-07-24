@@ -1,7 +1,7 @@
 ﻿using FEx.Abstractions.Interfaces;
 using FEx.Avaloniax.Abstractions.Interfaces;
-using FEx.DependencyInjection.Abstractions.Interfaces;
-using FEx.Extensions;
+using FEx.Common.Extensions;
+using FEx.DI.Abstractions.Interfaces;
 using ReactiveUI;
 using System.Threading.Tasks;
 
@@ -19,7 +19,7 @@ public sealed class NavigationService : INavigationService
         _serviceProvider = serviceProvider.Guard(nameof(serviceProvider));
         _dispatcher = dispatcher.Guard(nameof(dispatcher));
 
-        Router = new RoutingState();
+        Router = new();
     }
 
     public async Task GoBackAsync()
@@ -30,8 +30,9 @@ public sealed class NavigationService : INavigationService
         await _dispatcher.InvokeOnMainThreadAsync(Router.NavigateBack.Execute);
     }
 
-    public async Task NavigateAsync<T>() where T : IRoutableViewModel => await _dispatcher.InvokeOnMainThreadAsync(() =>
-        Router.Navigate.Execute(_serviceProvider.GetRequiredService<T>()));
+    public async Task NavigateAsync<T>() where T : IRoutableViewModel =>
+        await _dispatcher.InvokeOnMainThreadAsync(() =>
+            Router.Navigate.Execute(_serviceProvider.GetRequiredService<T>()));
 
     public async Task NavigateAndResetAsync<T>() where T : IRoutableViewModel =>
         await _dispatcher.InvokeOnMainThreadAsync(() =>

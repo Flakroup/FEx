@@ -1,7 +1,9 @@
 ﻿using FEx.Abstractions.Interfaces;
 using FEx.Basics.Extensions;
-using FEx.Extensions;
-using FEx.Extensions.Base.Helpers;
+using FEx.Common.Extensions;
+using FEx.Common.Helpers;
+using FEx.Common.Utilities;
+using FEx.Extensions.IO;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -11,7 +13,6 @@ namespace FEx.Basics.Utilities;
 
 public record AppInfoProvider : IAppInfoProvider
 {
-    public static bool IsUIApp => AppInfo is { IsUIApp: true };
     public string EntryAssemblyName { get; }
     public Assembly EntryAssembly { get; }
     public FileInfo EntryAssemblyLocation { get; }
@@ -34,10 +35,11 @@ public record AppInfoProvider : IAppInfoProvider
     public string AppDataPath { get; }
 
     public string UserSettingsPath { get; }
+    public string LogDirPath { get; }
 
     public string LogFilePath { get; }
 
-    private static IAppInfo AppInfo { get; set; }
+    public IAppInfo AppInfo { get; private set; }
 
     private FileVersionInfo ProductVersionInfo { get; }
 
@@ -49,7 +51,7 @@ public record AppInfoProvider : IAppInfoProvider
 
             string mainModule = Process.GetCurrentProcess().MainModule?.FileName;
 
-            EntryAssemblyLocation = EntryAssembly?.Location is not null ? new FileInfo(EntryAssembly.Location) :
+            EntryAssemblyLocation = EntryAssembly?.Location is not null ? new(EntryAssembly.Location) :
                 mainModule is not null ? new FileInfo(mainModule) : null;
 
             EntryAssemblyName = EntryAssembly?.GetName().Name;
@@ -77,19 +79,16 @@ public record AppInfoProvider : IAppInfoProvider
 
         UserData = AppInfo?.UserData
                    ?? (PlatformInfoProvider.IsWindows
-                       ? new DirectoryInfo(
-                           Environment.SpecialFolder.ApplicationData.GetSpecialDirectoryPathDescendants(Company.Guard(
-                                   nameof(Company)),
-                               Name))
+                       ? new(Environment.SpecialFolder.ApplicationData.GetSpecialDirectoryPathDescendants(
+                           Company.Guard(nameof(Company)),
+                           Name))
                        : Environment.SpecialFolder.UserProfile.GetSpecialDirectory().Directory);
 
         AppData = AppInfo?.AppData
                   ?? (PlatformInfoProvider.IsWindows
-                      ? new DirectoryInfo(
-                          Environment.SpecialFolder.CommonApplicationData.GetSpecialDirectoryPathDescendants(
-                              Company.Guard(
-                                  nameof(Company)),
-                              Name))
+                      ? new(Environment.SpecialFolder.CommonApplicationData.GetSpecialDirectoryPathDescendants(
+                          Company.Guard(nameof(Company)),
+                          Name))
                       : Environment.SpecialFolder.LocalApplicationData.GetSpecialDirectory().Directory);
 
         UserDataPath = UserData.FullName;
@@ -97,18 +96,19 @@ public record AppInfoProvider : IAppInfoProvider
 
         AppDataPath = AppData.FullName;
         AppData.Create();
+        LogDirPath =
+            (AppInfo?.LogDirPath ?? UserData?.GetDescendantDirectory(".logs").FullName).Guard(
+                nameof(LogDirPath));
 
-        LogFilePath = Path.GetFullPath(Path.Combine(UserDataPath, ".logs", $"{Name}.log"));
+        Directory.CreateDirectory(LogDirPath);
+        LogFilePath = Path.Combine(LogDirPath, $"{Name}.log");
 
         UserSettingsPath = UserDataPath is not null
             ? Path.Combine(UserDataPath, $"{Name}.config")
             : null;
     }
 
-    public static void Initialize(IAppInfo appInfo)
-    {
-        AppInfo ??= appInfo;
-    }
+    public void Initialize(IAppInfo appInfo) => AppInfo ??= appInfo;
 
     private static Version ParseVersionString(string version) =>
         Version.TryParse(version, out Version result)

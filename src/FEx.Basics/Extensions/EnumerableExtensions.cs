@@ -22,5 +22,6 @@ public static class EnumerableExtensions
 
     public static IOrderedEnumerable<TSource> OrderAlphanumByDescending<TSource>(
         this IEnumerable<TSource> source,
-        Func<TSource, string> keySelector) => source.OrderByDescending(keySelector, AlphanumComparatorFast.Instance);
+        Func<TSource, string> keySelector) =>
+        source.OrderByDescending(keySelector, AlphanumComparatorFast.Instance);
 }

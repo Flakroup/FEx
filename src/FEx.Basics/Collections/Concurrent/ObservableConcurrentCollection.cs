@@ -90,10 +90,7 @@ public class ObservableConcurrentCollection<T> : ConcurrentCollection<T>, IChang
     ///     Clears the list and Loads the specified items.
     /// </summary>
     /// <param name="items">The items.</param>
-    public void Load(IEnumerable<T> items)
-    {
-        ReplaceRange(items);
-    }
+    public void Load(IEnumerable<T> items) => ReplaceRange(items);
 
     /// <summary>Moves the item at the specified index to a new location in the collection.</summary>
     /// <param name="oldIndex">The zero-based index specifying the location of the item to be moved.</param>
@@ -103,13 +100,17 @@ public class ObservableConcurrentCollection<T> : ConcurrentCollection<T>, IChang
         T obj = default;
 
         DoBulkOperation(coll =>
-        {
-            obj = coll[oldIndex];
-            coll.RemoveAt(oldIndex);
-            coll.Insert(newIndex, obj);
-        }, _ => false);
+            {
+                obj = coll[oldIndex];
+                coll.RemoveAt(oldIndex);
+                coll.Insert(newIndex, obj);
+            },
+            _ => false);
 
-        OnCollectionChanged(NotifyCollectionChangedAction.Move, obj, newIndex, oldIndex,
+        OnCollectionChanged(NotifyCollectionChangedAction.Move,
+            obj,
+            newIndex,
+            oldIndex,
             propertyChangedArgs: ["Item[]"]);
     }
 }

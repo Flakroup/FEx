@@ -31,10 +31,11 @@ public class LambdaEqualityHelper<T>
         unchecked
         {
             hashCode = _equalityContributorAccessors.Select(accessor => accessor(instance))
-                .Aggregate(hashCode, (current, item) => current * 397
-                                                        ^ (item != null
-                                                            ? item.GetHashCode()
-                                                            : 0));
+                .Aggregate(hashCode,
+                    (current, item) => current * 397
+                                       ^ (item != null
+                                           ? item.GetHashCode()
+                                           : 0));
         }
 
         return hashCode;

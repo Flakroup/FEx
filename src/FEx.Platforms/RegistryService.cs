@@ -1,5 +1,5 @@
-﻿using FEx.Basics.Utilities;
-using FEx.Extensions;
+﻿using FEx.Common.Extensions;
+using FEx.Common.Utilities;
 using FEx.Extensions.Base.Enums;
 using FEx.Platforms.Abstractions;
 using Microsoft.Win32;
@@ -16,7 +16,7 @@ public class RegistryService : IRegistryService
     private const string Release = "Release";
     private static RegistryService _instance;
 
-    public static RegistryService Instance => _instance ??= new RegistryService();
+    public static RegistryService Instance => _instance ??= new();
 
     private static bool Is64BitOperatingSystem => PlatformInfoProvider.Is64BitOperatingSystem;
 
@@ -69,10 +69,10 @@ public class RegistryService : IRegistryService
                 if (name.Length != 0)
                 {
                     if (install!.Length != 0) //no install info, must be later.
-                        versions.Add(new Version(name));
+                        versions.Add(new(name));
                     else if (sp!.Length != 0
                              && install == "1")
-                        versions.Add(new Version(name));
+                        versions.Add(new(name));
                     // versions.Add($"{versionKeyName}  {name}  SP{sp}");
                 }
                 else
@@ -91,12 +91,12 @@ public class RegistryService : IRegistryService
                             install = subKey?.GetValue("Install", "").ToString() ?? "";
 
                             if (install.Length == 0) //no install info, must be later.
-                                versions.Add(new Version(name)); //}  {name}");
+                                versions.Add(new(name)); //}  {name}");
                             else if (sp!.Length != 0
                                      && install == "1")
-                                versions.Add(new Version(name)); // }  {name}  SP{sp}");
+                                versions.Add(new(name)); // }  {name}  SP{sp}");
                             else if (install == "1")
-                                versions.Add(new Version(name)); //}  {name}");
+                                versions.Add(new(name)); //}  {name}");
                         }
                     }
                 }
@@ -117,33 +117,18 @@ public class RegistryService : IRegistryService
             : null;
     }
 
-    public RegistryKey GetClassesRootSubKey(string subKey, bool writable = true)
-    {
-        return RunClassesRootFunc(lm => GetSubKey(lm, subKey, writable));
-    }
+    public RegistryKey GetClassesRootSubKey(string subKey, bool writable = true) => RunClassesRootFunc(lm => GetSubKey(lm, subKey, writable));
 
-    public RegistryKey GetLocalMachineSubKey(string subKey, bool writable = true)
-    {
-        return RunLocalMachineFunc(lm => GetSubKey(lm, subKey, writable));
-    }
+    public RegistryKey GetLocalMachineSubKey(string subKey, bool writable = true) => RunLocalMachineFunc(lm => GetSubKey(lm, subKey, writable));
 
-    public RegistryKey GetCurrentUserSubKey(string subKey, bool writable = true)
-    {
-        return RunCurrentUserFunc(cu => GetSubKey(cu, subKey, writable));
-    }
+    public RegistryKey GetCurrentUserSubKey(string subKey, bool writable = true) => RunCurrentUserFunc(cu => GetSubKey(cu, subKey, writable));
 
     public RegistryKey GetSubKey(RegistryKey registry, string subKey, bool writable = true) =>
         registry.OpenSubKey(subKey, writable);
 
-    public RegistryKey GetOrAddCurrentUserSubKey(string subKey, bool writable = true)
-    {
-        return RunCurrentUserFunc(cu => GetOrAddSubKey(cu, subKey, writable));
-    }
+    public RegistryKey GetOrAddCurrentUserSubKey(string subKey, bool writable = true) => RunCurrentUserFunc(cu => GetOrAddSubKey(cu, subKey, writable));
 
-    public RegistryKey GetOrAddLocalMachineSubKey(string subKey, bool writable = true)
-    {
-        return RunLocalMachineFunc(lm => GetOrAddSubKey(lm, subKey, writable));
-    }
+    public RegistryKey GetOrAddLocalMachineSubKey(string subKey, bool writable = true) => RunLocalMachineFunc(lm => GetOrAddSubKey(lm, subKey, writable));
 
     public void SetStartup(string appName, string executablePath, bool enable, bool global = false)
     {
@@ -237,31 +222,31 @@ public class RegistryService : IRegistryService
         var versions = new List<Version>();
 
         if (releaseKey >= 461808)
-            versions.Add(new Version("4.7.2")); //or later;
+            versions.Add(new("4.7.2")); //or later;
 
         if (releaseKey >= 461308)
-            versions.Add(new Version("4.7.1"));
+            versions.Add(new("4.7.1"));
 
         if (releaseKey >= 460798)
-            versions.Add(new Version("4.7"));
+            versions.Add(new("4.7"));
 
         if (releaseKey >= 394802)
-            versions.Add(new Version("4.6.2"));
+            versions.Add(new("4.6.2"));
 
         if (releaseKey >= 394254)
-            versions.Add(new Version("4.6.1"));
+            versions.Add(new("4.6.1"));
 
         if (releaseKey >= 393295)
-            versions.Add(new Version("4.6"));
+            versions.Add(new("4.6"));
 
         if (releaseKey >= 379893)
-            versions.Add(new Version("4.5.2"));
+            versions.Add(new("4.5.2"));
 
         if (releaseKey >= 378675)
-            versions.Add(new Version("4.5.1"));
+            versions.Add(new("4.5.1"));
 
         if (releaseKey >= 378389)
-            versions.Add(new Version("4.5"));
+            versions.Add(new("4.5"));
 
         return versions;
     }

@@ -1,4 +1,4 @@
-﻿using FEx.Extensions;
+﻿using FEx.Common.Extensions;
 using FEx.Fundamentals.Utilities;
 using FEx.MVVM.Abstractions.Interfaces;
 using System;

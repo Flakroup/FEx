@@ -1,7 +1,7 @@
 ﻿using FEx.Abstractions.Interfaces;
 using FEx.Basics.Collections.Concurrent;
-using FEx.Rx;
 using FEx.Rx.Extensions;
+using FEx.Rx.Subjects;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -15,6 +15,8 @@ public sealed class TasksInfoSubject : FExBehaviorSubject<IList<Guid>>, ITasksIn
     private readonly ConcurrentList<Guid> _tasks;
     private readonly IDisposable _subscription;
 
+    private bool _isDisposed;
+
     public TasksInfoSubject(ILogger<TasksInfoSubject> logger)
     {
         _logger = logger;
@@ -27,13 +29,13 @@ public sealed class TasksInfoSubject : FExBehaviorSubject<IList<Guid>>, ITasksIn
         OnNext(_tasks);
     }
 
-    public void AddTask(ITaskWrapper value)
+    public void AddTask(ITaskWrapperBase value)
     {
         _tasks.Add(value.Id);
         OnNext(_tasks);
     }
 
-    public void RemoveTask(ITaskWrapper value)
+    public void RemoveTask(ITaskWrapperBase value)
     {
         _tasks.Remove(value.Id);
         OnNext(_tasks);
@@ -64,9 +66,14 @@ public sealed class TasksInfoSubject : FExBehaviorSubject<IList<Guid>>, ITasksIn
     #region IDisposable
     protected override void Dispose(bool isDisposing)
     {
+        if (_isDisposed)
+            return;
+
 #pragma warning disable IDISP023
-        _subscription?.Dispose();
+        _subscription.Dispose();
 #pragma warning restore IDISP023
+
+        _isDisposed = true;
         base.Dispose(isDisposing);
     }
     #endregion

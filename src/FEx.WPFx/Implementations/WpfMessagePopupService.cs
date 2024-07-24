@@ -1,5 +1,5 @@
-﻿using FEx.Basics.Collections.Concurrent;
-using FEx.Fundamentals;
+﻿using FEx.Abstractions;
+using FEx.Basics.Collections.Concurrent;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Services;
@@ -22,7 +22,7 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
         : base(logger)
     {
         MessagesCache = [];
-        MessagesCacheSemaphore = new SemaphoreSlim(1, 1);
+        MessagesCacheSemaphore = new(1, 1);
     }
 
     protected override async Task<MessageResult> InternalShowMessageAsync(string txt,
@@ -106,10 +106,10 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
         try
         {
             if (wait)
-                return (MessageResult)await Foundation.Dispatcher.InvokeOnMainThreadAsync(() =>
+                return (MessageResult)await FExFoundation.Dispatcher.InvokeOnMainThreadAsync(() =>
                     InternalShowMessageBox(message, caption, messageBoxImage, buttons, owner, sw));
 
-            Foundation.Dispatcher.BeginInvokeOnMainThread(() =>
+            FExFoundation.Dispatcher.BeginInvokeOnMainThread(() =>
                 InternalShowMessageBox(message, caption, messageBoxImage, buttons, owner, sw));
         }
         catch (Exception ex)
@@ -127,15 +127,9 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
         return MessageResult.None;
     }
 
-    private void Log(string txt, LogLevel level = LogLevel.Information, Exception exception = null)
-    {
-        _logger.Log(level, exception, txt);
-    }
+    private void Log(string txt, LogLevel level = LogLevel.Information, Exception exception = null) => _logger.Log(level, exception, txt);
 
     #region IDisposable
-    public void Dispose()
-    {
-        MessagesCacheSemaphore?.Dispose();
-    }
+    public void Dispose() => MessagesCacheSemaphore?.Dispose();
     #endregion
 }

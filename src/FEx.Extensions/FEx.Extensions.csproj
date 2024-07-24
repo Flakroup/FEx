@@ -2,23 +2,10 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
-		<NoWarn>$(NoWarn);NU1504</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
-	</ItemGroup>
-
-	<ItemGroup Condition="$(DefineConstants.Contains('ISNETSTANDARD'))">
-		<PackageReference Include="Guard.Net" Version="[1.2.0]" />
-	</ItemGroup>
-
-	<ItemGroup Condition="$(DefineConstants.Contains('ISNET'))">
-		<PackageReference Include="Guard.Net" Version="3.0.0" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
+	  <ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

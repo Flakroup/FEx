@@ -316,6 +316,6 @@ public static class EnumerableExtensions
 
         return children.IsNotNullOrEmptyEnumerable()
             ? children.Concat(children.SelectMany(x => GetAllItemChildren(x, getChildrenFunc)))
-            : Enumerable.Empty<T>();
+            : [];
     }
 }

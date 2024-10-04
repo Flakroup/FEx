@@ -2,6 +2,7 @@
 using FEx.Avaloniax.Abstractions;
 using ReactiveUI;
 using System;
+using System.Linq;
 using System.Reflection;
 
 namespace FEx.Avaloniax.Services;
@@ -29,8 +30,8 @@ public class AppViewLocator : IViewLocator
                 $"{vmType.Name} does not inherit from {nameof(FExAvaloniaViewModelBase)}");
 
         Assembly vmAssembly = vmType.Assembly;
-        string name = vmType.Name!.Replace("ViewModel", "View");//todo cache types and check inheritance 
-        Type type = vmAssembly.GetType(name) ?? throw new ArgumentOutOfRangeException(vmType.Name);
+        string name = vmType.Name!.Replace("ViewModel", "View"); //todo cache types and check inheritance
+        Type type = vmAssembly.GetTypes().First(t => name.Equals(t.Name));
         var view = (IViewFor)Activator.CreateInstance(type);
 
         if (view is StyledElement styledElement)

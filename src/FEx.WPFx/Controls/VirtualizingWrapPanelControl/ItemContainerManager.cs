@@ -101,8 +101,7 @@ internal class ItemContainerManager : IItemContainerManager
             _cachedContainers.Clear();
         }
 
-        if (e.Action == NotifyCollectionChangedAction.Remove
-            || e.Action == NotifyCollectionChangedAction.Replace)
+        if (e.Action is NotifyCollectionChangedAction.Remove or NotifyCollectionChangedAction.Replace)
         {
             var removedCotainers = _realizedContainers.Where(container => !Items.Contains(container.Item)).ToList();
             removedCotainers.ForEach(container => _realizedContainers.Remove(container));

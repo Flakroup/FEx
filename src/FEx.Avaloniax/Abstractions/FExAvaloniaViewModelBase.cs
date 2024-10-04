@@ -49,13 +49,16 @@ public abstract class FExAvaloniaViewModelBase : ReactiveNotifyPropertyChanged, 
     }
 
     #region IDisposable
-    protected virtual void ThrowIfDisposed() =>
+    protected virtual void ThrowIfDisposed()
+    {
 #if NETSTANDARD
         if (_isDisposed)
             throw new ObjectDisposedException(GetType().FullName);
 #else
         ObjectDisposedException.ThrowIf(_isDisposed, this);
 #endif
+    }
+
     public void Dispose()
     {
         Dispose(true);

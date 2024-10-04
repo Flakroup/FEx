@@ -116,6 +116,7 @@ public class FExFoundation : IFExInitialize
     /// </summary>
     public void Initialize()
     {
+        SetMainThread();
     }
 
     public static void SetMainThread()

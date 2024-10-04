@@ -27,31 +27,13 @@ public class FExLoggingModule
     public static ILoggerProvider[] LoggerProviders { get; set; } = [];
 
     [Factory(Scope.SingleInstance)]
-    public static SerilogLoggerFactory GetSerilogLoggerFactory(LoggerProviderCollection providerCollection) =>
-        new(null, true, providerCollection);
+    public static ILoggerFactory GetSerilogLoggerFactory(LoggerProviderCollection providerCollection) =>
+        new SerilogLoggerFactory(null, true, providerCollection);
 
-    [Factory]
-    public static ILogger<T> CreateLogger<T>(SerilogLoggerFactory factory) => factory.CreateLogger<T>();
-
-    public static ILogger<T> CreateLogger<T>() =>
-        GetSerilogLoggerFactory(GetLoggerProviderCollection(LoggerProviders)).CreateLogger<T>();
-
-    [Factory]
-    public static ILogger CreateLogger(LoggerProviderCollection providerCollection) =>
-        GetSerilogLoggerFactory(providerCollection).CreateLogger(string.Empty);
-
-    public static ILogger CreateLogger(Type senderType)
-    {
-        SerilogLoggerFactory loggerFactory = GetSerilogLoggerFactory(GetLoggerProviderCollection(LoggerProviders));
-
-        MethodInfo methodInfo = typeof(LoggerFactoryExtensions).GetMethods()
-            .Single(x => x.Name == nameof(LoggerFactoryExtensions.CreateLogger) && x.IsGenericMethod);
-
-        MethodInfo genericMethod = methodInfo.MakeGenericMethod(senderType);
-
-        return (ILogger)genericMethod.Invoke(loggerFactory, [loggerFactory]);
-    }
-
+    /// <summary>
+    /// Creating a `LoggerProviderCollection` lets Serilog optionally write
+    /// events through other dynamically-added MEL ILoggerProviders.
+    /// </summary>
     [Factory(Scope.SingleInstance)]
     public static LoggerProviderCollection GetLoggerProviderCollection(ILoggerProvider[] loggerProviders)
     {
@@ -63,29 +45,38 @@ public class FExLoggingModule
         return collection;
     }
 
+    [Factory]
+    public static ILogger<T> CreateLogger<T>(ILoggerFactory factory) => factory.CreateLogger<T>();
+
+    [Factory]
+    public static ILogger CreateLogger(LoggerProviderCollection providerCollection) =>
+        GetSerilogLoggerFactory(providerCollection).CreateLogger(string.Empty);
+
+    public static ILogger<T> CreateLogger<T>() =>
+        GetSerilogLoggerFactory(GetLoggerProviderCollection(LoggerProviders)).CreateLogger<T>();
+
+    public static ILogger CreateLogger(Type senderType)
+    {
+        var loggerFactory = (SerilogLoggerFactory)GetSerilogLoggerFactory(GetLoggerProviderCollection(LoggerProviders));
+
+        MethodInfo methodInfo = typeof(LoggerFactoryExtensions).GetMethods()
+            .Single(x => x.Name == nameof(LoggerFactoryExtensions.CreateLogger) && x.IsGenericMethod);
+
+        MethodInfo genericMethod = methodInfo.MakeGenericMethod(senderType);
+
+        return (ILogger)genericMethod.Invoke(loggerFactory, [loggerFactory]);
+    }
+
     public static void AddServices(IFExLoggingModule container, IServiceCollection services)
     {
+        services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog());
+
         services.AddTransientServiceUsingContainer<ILoggable>(container);
         services.AddTransientServiceUsingContainer<ILoggingService>(container);
+        services.AddTransientServiceUsingContainer<ILogger>(container);
 
-        // Creating a `LoggerProviderCollection` lets Serilog optionally write
-        // events through other dynamically-added MEL ILoggerProviders.
-        var providers = new LoggerProviderCollection();
-
-        services.AddSingleton(providers)
-            .AddSingleton<ILoggerFactory>(sc =>
-            {
-                LoggerProviderCollection providerCollection = sc.GetRequiredService<LoggerProviderCollection>();
-                var factory = new SerilogLoggerFactory(null, true, providerCollection);
-
-                foreach (ILoggerProvider provider in sc.GetServices<ILoggerProvider>())
-                    factory.AddProvider(provider);
-
-                return factory;
-            })
-            .AddLogging(loggingBuilder => loggingBuilder.AddSerilog())
-            .AddSingleton<ILoggingService, LoggingService>()
-            .AddTransient(x => x.GetRequiredService<SerilogLoggerFactory>().CreateLogger(string.Empty))
-            .AddTransient<ILoggable, Loggable>();
+        services.AddSingletonServiceUsingContainer<LoggerProviderCollection>(container);
+        services.AddSingletonServiceUsingContainer<ILoggerFactory>(container);
+        services.AddSingletonServiceUsingContainer<ILoggingService>(container);
     }
 }

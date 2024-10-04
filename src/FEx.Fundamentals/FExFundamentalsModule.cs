@@ -21,7 +21,7 @@ using System.Linq;
 
 namespace FEx.Fundamentals;
 
-[Register(typeof(AsyncHelper))]
+[Register(typeof(AsyncHelper), typeof(IAsyncHelper))]
 [Register(typeof(SimpleTasksPool))]
 [Register(typeof(FExFoundation), Scope.SingleInstance)]
 [Register(typeof(FExLoggingFoundation), Scope.SingleInstance)]
@@ -45,8 +45,9 @@ public class FExFundamentalsModule : FExDependencyInjectionModule
 
     public static void AddServices(IFExFundamentalsModule container, IServiceCollection services)
     {
-        services.AddTransientServiceUsingContainer<AsyncHelper>(container);
+        services.AddTransientServiceUsingContainer<IAsyncHelper>(container);
         services.AddTransientServiceUsingContainer<ILogger>(container);
+        services.AddTransientServiceUsingContainer<IFExDispatcher>(container);
 
         services.AddSingletonServiceUsingContainer<FExFoundation>(container);
         services.AddSingletonServiceUsingContainer<FExLoggingFoundation>(container);
@@ -56,7 +57,6 @@ public class FExFundamentalsModule : FExDependencyInjectionModule
         services.AddSingletonServiceUsingContainer<ITasksInfoSubject>(container);
         services.AddSingletonServiceUsingContainer<IExceptionHandler>(container);
         services.AddSingletonServiceUsingContainer<ISynchronizedAccessService>(container);
-        services.AddSingletonServiceUsingContainer<IFExDispatcher>(container);
         services.AddSingletonServiceUsingContainer<IStackTraceFilter[]>(container);
         services.AddSingletonServiceUsingContainer<IComparer<string>>(container);
     }

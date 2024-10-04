@@ -46,7 +46,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         _itemContainerManager = itemContainerManager;
         _childrenCollection = childrenCollection;
         itemContainerManager.ItemsChanged += ItemContainerManager_ItemsChanged;
-        _items = new(itemContainerManager.Items);
+        _items = [..itemContainerManager.Items];
     }
 
     public Size OnMeasure(Size availableSize) => OnMeasure(availableSize, availableSize, ScrollOffset);
@@ -162,8 +162,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
     private void ItemContainerManager_ItemsChanged(object sender, ItemContainerManagerItemsChangedEventArgs e)
     {
-        if (e.Action == NotifyCollectionChangedAction.Remove
-            || e.Action == NotifyCollectionChangedAction.Replace)
+        if (e.Action is NotifyCollectionChangedAction.Remove or NotifyCollectionChangedAction.Replace)
         {
             foreach (object item in _items.Except(_itemContainerManager.Items))
                 _itemSizesCache.Remove(item);

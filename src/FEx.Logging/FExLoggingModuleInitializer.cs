@@ -33,5 +33,6 @@ public class FExLoggingModuleInitializer : InitializeModule<IFExLoggingModule>
         FExLogging.Init(_loggingService, _configurator);
     }
 
-    protected override void AddServices(IFExLoggingModule container, IServiceCollection services) => FExLoggingModule.AddServices(container, services);
+    protected override void AddServices(IFExLoggingModule container, IServiceCollection services) =>
+        FExLoggingModule.AddServices(container, services);
 }

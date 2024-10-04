@@ -46,12 +46,14 @@ public abstract class FExAvaloniaReactiveUserControl<T> : ReactiveUserControl<T>
         GC.SuppressFinalize(this);
     }
 
-    protected virtual void ThrowIfDisposed() =>
+    protected virtual void ThrowIfDisposed()
+    {
 #if NETSTANDARD
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
 #else
         ObjectDisposedException.ThrowIf(_disposed, this);
 #endif
+    }
     #endregion
 }

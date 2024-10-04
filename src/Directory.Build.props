@@ -1,9 +1,9 @@
 ﻿<Project>
 
-	<Import Project="..\Directory.Build.props" />
+    <Import Project="..\Directory.Build.props"/>
 
-	<PropertyGroup>
-		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
-	</PropertyGroup>
+    <PropertyGroup>
+        <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+    </PropertyGroup>
 
 </Project>

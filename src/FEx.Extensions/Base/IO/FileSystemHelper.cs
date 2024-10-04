@@ -17,8 +17,10 @@ public static class FileSystemHelper
 
     public static char[] InvalidFileOrDirNameChars => _invalidFileOrDirNameChars ??= Path.GetInvalidFileNameChars();
 
-    public static HashSet<char> InvalidFileNameChars { get; } = new(InvalidFileOrDirNameChars.Concat(InvalidPathChars)
-        .Distinct());
+    public static HashSet<char> InvalidFileNameChars { get; } =
+    [
+        ..InvalidFileOrDirNameChars.Concat(InvalidPathChars).Distinct()
+    ];
 
     /// <summary>
     ///     Determines whether [is path NTFS] [the specified absolute file path].

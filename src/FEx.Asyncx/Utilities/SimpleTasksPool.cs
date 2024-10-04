@@ -1,5 +1,5 @@
 ﻿using FEx.Abstractions.Enums;
-using FEx.Asyncx.Helpers;
+using FEx.Abstractions.Interfaces;
 using FEx.Basics.Collections.Concurrent;
 using FEx.Extensions;
 using System;
@@ -10,11 +10,11 @@ namespace FEx.Asyncx.Utilities;
 
 public class SimpleTasksPool
 {
-    private readonly AsyncHelper _asyncHelper;
+    private readonly IAsyncHelper _asyncHelper;
 
     protected ConcurrentCollection<Task> Tasks { get; }
 
-    public SimpleTasksPool(AsyncHelper asyncHelper)
+    public SimpleTasksPool(IAsyncHelper asyncHelper)
     {
         _asyncHelper = asyncHelper;
 

@@ -1,15 +1,15 @@
-﻿using FEx.MVVM.Abstractions.Interfaces;
-using FEx.MVVM.Enums;
+﻿using FEx.MVVM.Abstractions.Enums;
+using FEx.MVVM.Abstractions.Events;
 using System;
 using System.Diagnostics;
 
-namespace FEx.MVVM.Utilities;
+namespace FEx.MVVM.Abstractions.Interfaces;
 
 public interface IProgressAggregator : IProgressStatus, IDisposable
 {
     event ProgressPropertyChangedEventHandler ProgressPropertyChanged;
     Stopwatch Stopwatch { get; }
-    FExTimer Timer { get; }
+    IFExTimer Timer { get; }
     string Id { get; }
     void Start();
     void Stop();

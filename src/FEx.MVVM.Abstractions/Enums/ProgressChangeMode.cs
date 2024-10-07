@@ -1,4 +1,4 @@
-﻿namespace FEx.MVVM.Enums;
+﻿namespace FEx.MVVM.Abstractions.Enums;
 
 public enum ProgressChangeMode
 {

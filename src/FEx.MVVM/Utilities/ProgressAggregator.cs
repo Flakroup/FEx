@@ -5,8 +5,9 @@ using FEx.Extensions.Base.Enums;
 using FEx.Extensions.DateTimes;
 using FEx.Extensions.Numericals;
 using FEx.Logging.Abstractions;
+using FEx.MVVM.Abstractions.Enums;
+using FEx.MVVM.Abstractions.Events;
 using FEx.MVVM.Abstractions.Interfaces;
-using FEx.MVVM.Enums;
 using FEx.MVVM.Subjects;
 using FEx.Rx.Extensions;
 using FEx.Rx.Subjects;
@@ -31,7 +32,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
     public event ProgressPropertyChangedEventHandler ProgressPropertyChanged;
     public Stopwatch Stopwatch { get; }
 
-    public FExTimer Timer { get; }
+    public IFExTimer Timer { get; }
 
     public string Id { get; }
 

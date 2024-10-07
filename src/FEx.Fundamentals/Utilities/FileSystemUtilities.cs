@@ -247,9 +247,10 @@ public class FileSystemUtilities
             {
                 var sourceDirectories = new Dictionary<string, List<DirectoryInfo>>();
 
-                var dirs = sourcePaths.Select(path => IsPathFile(path, false)
-                        ? new FileInfo(path).Directory
-                        : new(path))
+                var dirs = sourcePaths.Select(path => (Path: path, Result: IsPathFile(path)))
+                    .Select(tuple => tuple.Result.IsSuccess && tuple.Result.Data
+                        ? new FileInfo(tuple.Path).Directory
+                        : new(tuple.Path))
                     .DistinctBy(x => x.FullName)
                     .ToList();
 
@@ -479,27 +480,24 @@ public class FileSystemUtilities
     /// </summary>
     /// <param name="fileName">Name of the file.</param>
     /// <returns></returns>
-    public static string FixFileName(string fileName) => Path.GetInvalidFileNameChars().Aggregate(fileName, (current, ch) => current.Replace(ch.ToString(), "_"));
+    public static string FixFileName(string fileName) =>
+        Path.GetInvalidFileNameChars().Aggregate(fileName, (current, ch) => current.Replace(ch.ToString(), "_"));
 
-    public static bool IsPathFile(string path, bool fallbackValue) => IsPathFile(path) ?? fallbackValue;
-
-    public static bool? IsPathFile(string path)
+    public static Result<bool, ExceptionError> IsPathFile(string path)
     {
         try
         {
-            if (File.Exists(path))
-            {
-                FileAttributes attr = File.GetAttributes(path);
+            if (!File.Exists(path))
+                return false;
 
-                return !attr.HasFlag(FileAttributes.Directory);
-            }
+            FileAttributes attr = File.GetAttributes(path);
+
+            return !attr.HasFlag(FileAttributes.Directory);
         }
-        catch
+        catch (Exception ex)
         {
-            //ignore
+            return new ExceptionError(ex);
         }
-
-        return null;
     }
 
     /// <summary>
@@ -575,7 +573,7 @@ public class FileSystemUtilities
         }
     }
 
-    public static bool FileExistsSafe(string path) => IsPathFile(path) == true && File.Exists(path);
+    public static bool FileExistsSafe(string path) => IsPathFile(path).TryGetData(out bool isFile) && isFile;
 
     public static Result<AggregatedError> SafeDeleteDirectory(string source,
                                                               bool printPaths = true,

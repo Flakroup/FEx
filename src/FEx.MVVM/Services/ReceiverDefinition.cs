@@ -1,5 +1,5 @@
 ﻿using FEx.Extensions.Collections.Lists;
-using FEx.MVVM.Utilities;
+using FEx.MVVM.Abstractions.Interfaces;
 using System;
 using System.Collections.Generic;
 

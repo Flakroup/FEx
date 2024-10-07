@@ -25,4 +25,7 @@ public static class EnumerableExtensions
 
         bool Predicate(T i) => predicate?.Invoke(i) ?? true;
     }
+
+    public static bool None<T>(this IEnumerable<T> source, Func<T, bool> predicate = null) =>
+        FindInEnumerable(source, predicate) is null;
 }

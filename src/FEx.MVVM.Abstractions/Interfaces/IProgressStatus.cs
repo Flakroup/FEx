@@ -1,4 +1,4 @@
-﻿using FEx.MVVM.Enums;
+﻿using FEx.MVVM.Abstractions.Enums;
 
 namespace FEx.MVVM.Abstractions.Interfaces;
 

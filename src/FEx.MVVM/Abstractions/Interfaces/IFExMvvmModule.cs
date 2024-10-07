@@ -1,7 +1,9 @@
 ﻿using StrongInject;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.MVVM.Abstractions.Interfaces;
 
-public interface IFExMvvmModule : IContainer<FExMvvmModuleInitializer>, IContainer<IMessagePopupService>
+[SuppressMessage("ReSharper", "PossibleInterfaceMemberAmbiguity")]
+public interface IFExMvvmModule : IContainer<FExMvvm>, IContainer<IMessagePopupService>
 {
 }

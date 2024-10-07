@@ -1,5 +1,5 @@
 ﻿using FEx.Basics.Abstractions;
-using FEx.MVVM.Enums;
+using FEx.MVVM.Abstractions.Enums;
 
 namespace FEx.MVVM.Models;
 

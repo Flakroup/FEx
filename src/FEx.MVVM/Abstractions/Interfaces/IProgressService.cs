@@ -1,6 +1,4 @@
-﻿using FEx.MVVM.Utilities;
-
-namespace FEx.MVVM.Abstractions.Interfaces;
+﻿namespace FEx.MVVM.Abstractions.Interfaces;
 
 public interface IProgressService
 {

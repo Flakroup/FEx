@@ -1,7 +1,7 @@
 ﻿using FEx.Basics.Extensions;
 using FEx.Extensions.Base.Models;
 using FEx.Extensions.Web;
-using FEx.MVVM.Enums;
+using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Models;
 using System;
 using System.Collections;

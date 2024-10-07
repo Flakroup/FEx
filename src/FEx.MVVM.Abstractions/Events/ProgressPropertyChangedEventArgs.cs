@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FEx.MVVM.Utilities;
+namespace FEx.MVVM.Abstractions.Events;
 
 public class ProgressPropertyChangedEventArgs : EventArgs
 {

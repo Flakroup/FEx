@@ -1,8 +1,8 @@
 ﻿using FEx.Basics.Collections.Concurrent;
 using FEx.Extensions.Numericals;
 using FEx.MVVM.Abstractions;
+using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
-using FEx.MVVM.Enums;
 using FEx.MVVM.Extensions;
 using System;
 

@@ -2,7 +2,7 @@
 using FEx.Downloader.Enums;
 using FEx.Extensions.Base.Models;
 using FEx.Extensions.Web;
-using FEx.MVVM.Enums;
+using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Utilities;
 using System;
 using System.ComponentModel;

@@ -1,4 +1,5 @@
-﻿using FEx.MVVM.Rx.BaseObjects;
+﻿using FEx.MVVM.Abstractions.Interfaces;
+using FEx.MVVM.Rx.BaseObjects;
 using FEx.Rx.Extensions;
 using System;
 using System.Reactive.Concurrency;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace FEx.MVVM.Utilities;
 
-public class FExTimer : ReactiveNotifyPropertyChanged, IDisposable
+public class FExTimer : ReactiveNotifyPropertyChanged, IFExTimer
 {
     private bool _isDisposed;
     private bool _isRunning;
@@ -36,7 +37,7 @@ public class FExTimer : ReactiveNotifyPropertyChanged, IDisposable
         Interval = FExMvvm.DefaultUIRefreshInterval;
     }
 
-    public FExTimer WithCallback(Action callback)
+    public IFExTimer WithCallback(Action callback)
     {
         _timer?.Dispose();
         _timer = IntervalObservable.AsyncSubscribe(_ => ExecuteCallback(callback));
@@ -44,7 +45,7 @@ public class FExTimer : ReactiveNotifyPropertyChanged, IDisposable
         return this;
     }
 
-    public FExTimer WithAsyncCallback(Func<Task> asyncCallback, CancellationToken cancellationToken = default)
+    public IFExTimer WithAsyncCallback(Func<Task> asyncCallback, CancellationToken cancellationToken = default)
     {
         _timer?.Dispose();
 
@@ -54,9 +55,9 @@ public class FExTimer : ReactiveNotifyPropertyChanged, IDisposable
         return this;
     }
 
-    public FExTimer WithInterval(double milliseconds) => WithInterval(TimeSpan.FromMilliseconds(milliseconds));
+    public IFExTimer WithInterval(double milliseconds) => WithInterval(TimeSpan.FromMilliseconds(milliseconds));
 
-    public FExTimer WithInterval(TimeSpan interval)
+    public IFExTimer WithInterval(TimeSpan interval)
     {
         Interval = interval.TotalMilliseconds > 0
             ? interval

@@ -15,7 +15,7 @@ using FEx.Extensions.DateTimes;
 using FEx.Extensions.IO;
 using FEx.Extensions.Web;
 using FEx.Fundamentals.Utilities;
-using FEx.MVVM.Enums;
+using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Extensions;
 using FEx.MVVM.Utilities;
 using FEx.Webx.Extensions;

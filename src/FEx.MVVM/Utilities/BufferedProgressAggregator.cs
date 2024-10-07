@@ -1,5 +1,5 @@
-﻿using FEx.MVVM.Abstractions.Interfaces;
-using FEx.MVVM.Enums;
+﻿using FEx.MVVM.Abstractions.Enums;
+using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Subjects;
 using FEx.Rx.Extensions;
 using System;

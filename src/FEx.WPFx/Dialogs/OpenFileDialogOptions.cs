@@ -38,4 +38,11 @@ public class OpenFileDialogOptions : OpenFileDialogOptionsBase<OpenFileDialog>
                 : DefaultExt,
             Multiselect = Multiselect
         };
+
+    /// <inheritdoc />
+    protected override void MapFromDialog(OpenFileDialog dialog)
+    {
+        FileName = dialog.FileName;
+        FileNames = dialog.FileNames;
+    }
 }

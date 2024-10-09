@@ -64,13 +64,13 @@ public static class SynchronizationContextExtensions
             }
             finally
             {
-                timer?.Change(Timeout.Infinite, Timeout.Infinite);
+                timer.Change(Timeout.Infinite, Timeout.Infinite);
 
 #if NET
 #pragma warning disable VSTHRD103
 #endif
                 // ReSharper disable MethodHasAsyncOverload
-                timer?.Dispose();
+                timer.Dispose();
                 // ReSharper restore MethodHasAsyncOverload
 #if NET
 #pragma warning restore VSTHRD103

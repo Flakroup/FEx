@@ -45,7 +45,7 @@ public class ProgressState
         if (totalSize.HasValue)
             TotalSize = totalSize.Value;
 
-        if (name != null)
+        if (name is not null)
             Name = name;
 
         if (operation.HasValue)

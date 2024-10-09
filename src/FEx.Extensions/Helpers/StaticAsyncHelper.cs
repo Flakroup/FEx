@@ -206,6 +206,35 @@ public class StaticAsyncHelper
         action?.Invoke();
     }
 
+    public static object Wrap(Action action)
+    {
+        action();
+
+        return null;
+    }
+
+    public static async Task<object> WrapTaskAsync(Func<Task> task)
+    {
+        await task();
+
+        return null;
+    }
+
+    public static void RunAsThread(Action action, ApartmentState? state = null, bool? isBackground = false)
+    {
+        var thread = new Thread(() => action());
+
+        if (state.HasValue)
+            thread.SetApartmentState(state.Value);
+
+        thread.Start();
+
+        if (isBackground.HasValue)
+            thread.IsBackground = isBackground.Value;
+
+        thread.Join();
+    }
+
     private static async Task SafeDelayAsync(TimeSpan delay, CancellationToken cancellationToken)
     {
         try

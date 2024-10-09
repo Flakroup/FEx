@@ -1,5 +1,6 @@
 using FEx.Abstractions;
 using FEx.Abstractions.Interfaces;
+using FEx.Abstractions.Models;
 using FEx.Basics.Extensions;
 using FEx.Common.Extensions;
 using FEx.Downloader.Abstractions.Interfaces;
@@ -8,7 +9,6 @@ using FEx.Downloader.Enums;
 using FEx.Extensions;
 using FEx.Extensions.Base.Converters;
 using FEx.Extensions.Base.Enums;
-using FEx.Extensions.Base.Models;
 using FEx.Extensions.Collections.Enumerables;
 using FEx.Extensions.Collections.Lists;
 using FEx.Extensions.DateTimes;
@@ -788,9 +788,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         }
 
         int[] unfinishedRanges = Ranges?.Where(x => x.Value?.DState != DownloadState.Finished)
-            ?.Select(x => x.Key)
-            ?.OrderBy(x => x)
-            ?.ToArray();
+            .Select(x => x.Key)
+            .OrderBy(x => x)
+            .ToArray();
 
         while (unfinishedRanges.IsNotNullOrEmptyList())
         {
@@ -802,7 +802,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                     await Ranges[x].DoDownloadAsync();
 
             unfinishedRanges = Ranges?.Where(x => x.Value?.DState != DownloadState.Finished)
-                ?.Select(x => x.Key)
+                .Select(x => x.Key)
                 .OrderBy(x => x)
                 .ToArray();
         }
@@ -836,9 +836,13 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                 }
             }
         }
-
+#if ISNETSTANDARD
         using (var fileStream =
                new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+#else
+        await using (var fileStream =
+                     new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+#endif
             fileStream.SetLength(DataLength);
 
         DState = DownloadState.Cleanup;

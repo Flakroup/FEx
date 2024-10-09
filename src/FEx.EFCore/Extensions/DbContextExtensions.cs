@@ -46,7 +46,8 @@ public static class DbContextExtensions
         };
 
         ((List<JsonConverter>)Settings.Converters).AddRange([
-            ParseStringConverter.Singleton, new VersionConverter(), new StringEnumConverter()
+            ParseStringToDoubleConverter.Singleton, ParseStringToLongConverter.Singleton, new VersionConverter(),
+            new StringEnumConverter()
         ]);
 
         Settings.Error = (_, e) =>

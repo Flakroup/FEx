@@ -16,7 +16,7 @@ public abstract class MessagePopupServiceBase : IMessagePopupService
 
     public bool AppIsClosing { get; set; }
 
-    protected MessagePopupServiceBase(ILogger<IMessagePopupService> logger)
+    protected MessagePopupServiceBase(ILogger<MessagePopupServiceBase> logger)
     {
         _logger = logger.Guard(nameof(logger));
     }

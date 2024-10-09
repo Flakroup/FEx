@@ -1,17 +1,22 @@
 using FEx.Basics.Abstractions.Interfaces;
+using FEx.Common.Utilities;
 using System;
 
 namespace FEx.Basics.Utilities;
 
-public readonly struct SuppressEventsDisposable : IDisposable
+public sealed class SuppressEventsDisposable : DisposableAction
 {
-    private readonly ISuppressEvents _suppressedEventSource;
-
-    public SuppressEventsDisposable(ISuppressEvents suppressedEventSource)
+    public SuppressEventsDisposable(ISuppressEvents suppressedEventSource, Action onNoMoreSuppressedEvents = null)
+        : base(() => Act(suppressedEventSource, onNoMoreSuppressedEvents))
     {
-        _suppressedEventSource = suppressedEventSource;
         ++suppressedEventSource.SuppressedEvents;
     }
 
-    public void Dispose() => --_suppressedEventSource.SuppressedEvents;
+    private static void Act(ISuppressEvents suppressedEventSource, Action onNoMoreSuppressedEvents)
+    {
+        int suppressedEventsCount = --suppressedEventSource.SuppressedEvents;
+
+        if (suppressedEventsCount == 0)
+            onNoMoreSuppressedEvents?.Invoke();
+    }
 }

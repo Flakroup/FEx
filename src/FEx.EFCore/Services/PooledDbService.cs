@@ -2,9 +2,8 @@
 using FEx.Abstractions.Flow.Errors;
 using FEx.Abstractions.Interfaces;
 using FEx.Asyncx.Abstractions;
-using FEx.Basics.Collections;
+using FEx.Common.Collections;
 using FEx.Common.Extensions;
-using FEx.DI.Abstractions.Interfaces;
 using FEx.EFCore.Extensions;
 using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
@@ -27,7 +26,7 @@ namespace FEx.EFCore.Services;
 /// <summary>
 /// </summary>
 /// <typeparam name="TDbContext"></typeparam>
-/// <remarks>Requires <c>Initialize();</c> call in .ctor</remarks>
+/// <remarks>Requires <c>BeginInitialization();</c> call in .ctor</remarks>
 public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledDbService<TDbContext>
     where TDbContext : DbContext
 {
@@ -43,7 +42,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     protected PooledDbService(IScopeProvider scopeProvider,
                               ResilientTransaction transaction,
                               IFExDbConfig dbConfig,
-                              IAsyncInitializable[] dependencies)
+                              params IAsyncInitializable[] dependencies)
         : base(dependencies)
     {
         _scopeProvider = scopeProvider;

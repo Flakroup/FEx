@@ -1,17 +1,25 @@
 ﻿using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
 using FEx.Asyncx.Helpers;
+using FEx.Common.Abstractions.Interfaces;
 
 namespace FEx.Asyncx;
 
-public class FExAsyncx : IFExInitialize
+public class FExAsyncx : FExInitialize
 {
-    protected readonly FExFoundation _foundation;
+    private readonly IMainThreadContextProvider _mainThreadContextProvider;
 
-    public FExAsyncx(FExFoundation foundation)
+    public FExAsyncx(IMainThreadContextProvider mainThreadContextProvider)
     {
-        _foundation = foundation;
+        _mainThreadContextProvider = mainThreadContextProvider;
     }
 
-    public void Initialize() => JoinableAsyncHelper.SetMainJoinableTaskFactory(FExFoundation.MainThread);
+    protected override void OnInitialize()
+    {
+        base.OnInitialize();
+        SetMainJoinableTaskFactory();
+        _mainThreadContextProvider.ThreadHasChanged += (_, _) => SetMainJoinableTaskFactory();
+    }
+
+    private void SetMainJoinableTaskFactory() =>
+        JoinableAsyncHelper.SetMainJoinableTaskFactory(_mainThreadContextProvider.Thread);
 }

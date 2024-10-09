@@ -76,6 +76,13 @@ public abstract class FileDialogOptionsBase<TDialog> : DialogOptionsBase<TDialog
     /// </value>
     public bool CheckPathExists { get; set; }
 
+    /// <summary>Gets an array that contains one file name for each selected file.</summary>
+    /// <returns>
+    /// An array of <see cref="T:System.String" /> that contains one file name for each selected file. The default is
+    /// an array with a single item whose value is <see cref="F:System.String.Empty" />.
+    /// </returns>
+    public string[] FileNames { get; set; }
+
     protected FileDialogOptionsBase()
     {
         FilterIndex = 1;

@@ -5,13 +5,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="StrongInject" Version="1.4.4" />
-	  <PackageReference Include="StrongInject.Extensions.DependencyInjection" Version="1.4.4" />
+		<PackageReference Include="StrongInject.Extensions.DependencyInjection" Version="1.4.4" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$(DefineConstants.Contains('ISNETSTANDARD'))">
+		<PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FEx.DependencyInjection\FEx.DependencyInjection.csproj" />
-	  <ProjectReference Include="..\FEx.Platforms.Abstractions\FEx.Platforms.Abstractions.csproj" />
+		<ProjectReference Include="..\FEx.DI.Abstractions\FEx.DI.Abstractions.csproj" />
+		<ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
 	</ItemGroup>
 
 </Project>

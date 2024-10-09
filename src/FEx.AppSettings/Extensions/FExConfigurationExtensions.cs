@@ -155,7 +155,7 @@ public static class FExConfigurationExtensions
         // at this stage, all arrays are seen as dictionaries with integer keys
         ReplaceWithArray(null, null, result);
 
-        return result?.Any() == true
+        return result.Any()
             ? (ExpandoObject)((IDictionary<string, object>)result)[config.Key]
             : null;
     }

@@ -95,7 +95,7 @@ public static class ReflectionHelper
 
     public static string GetEntryAssemblyAttribute<T>(this Assembly assembly, Func<T, string> func)
         where T : Attribute =>
-        func((T)assembly?.GetCustomAttributes(typeof(T), false)?.FindInEnumerable());
+        func((T)assembly?.GetCustomAttributes(typeof(T), false).FindInEnumerable());
 
     public static T ToObject<T>(this IDictionary<string, object> source) where T : class, new()
     {

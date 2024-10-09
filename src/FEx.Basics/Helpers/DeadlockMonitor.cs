@@ -1,6 +1,6 @@
-﻿using FEx.Abstractions;
+﻿using FEx.Abstractions.Interfaces;
 using FEx.Basics.Exceptions;
-using FEx.Logging.Abstractions;
+using FEx.Logging.Abstractions.Extensions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -8,22 +8,22 @@ using System.Threading;
 
 namespace FEx.Basics.Helpers;
 
-public static class DeadlockMonitor
+public class DeadlockMonitor : IDeadlockMonitor
 {
-    public static bool IsDeadlockMonitoringEnabled { get; } = false;
+    private readonly IStackTraceProvider _stackTraceProvider;
+    private readonly ILogger _logger;
 
-    public static void Execute(Action action, uint timeout = 15000)
+    public DeadlockMonitor(IStackTraceProvider stackTraceProvider, ILogger logger)
     {
-        if (!IsDeadlockMonitoringEnabled)
-        {
-            action();
+        _stackTraceProvider = stackTraceProvider;
+        _logger = logger;
+    }
 
-            return;
-        }
+    public void Execute(Action action, StackTrace stackTrace = null, uint timeout = 3000)
+    {
+        stackTrace ??= _stackTraceProvider.GetStackTrace();
 
-        StackTrace stackTrace = FExFoundation.StackTraceProvider.GetStackTrace();
-
-        var timer = new Timer(Callback, stackTrace, timeout, Timeout.Infinite);
+        var timer = new Timer(state => Callback(state, timeout), stackTrace, timeout, Timeout.Infinite);
 
         try
         {
@@ -31,19 +31,20 @@ public static class DeadlockMonitor
         }
         finally
         {
-            timer?.Change(Timeout.Infinite, Timeout.Infinite);
-            timer?.Dispose();
+            timer.Change(Timeout.Infinite, Timeout.Infinite);
+            timer.Dispose();
         }
     }
 
-    private static void Callback(object state)
+    private void Callback(object state, uint timeout = 3000)
     {
         var stackTrace = (StackTrace)state;
 
-        var ex = new AttachedException("Deadlock assumed, as no action could've been performed during timeout.",
+        var ex = new AttachedException(
+            $"Deadlock assumed, as no action could've been performed during {TimeSpan.FromMilliseconds(timeout)} timeout.",
             stackTrace);
 
-        FExLoggingFoundation.Logger.LogError(ex, ex.Message);
+        _logger.LogError(ex);
 
         throw ex;
     }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace FEx.Common.Extensions;
@@ -28,4 +30,26 @@ public static class EnumerableExtensions
 
     public static bool None<T>(this IEnumerable<T> source, Func<T, bool> predicate = null) =>
         FindInEnumerable(source, predicate) is null;
+
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+    public static bool Any(this IEnumerable source)
+    {
+        source.Guard(nameof(source));
+
+        IEnumerator enumerator = source.GetEnumerator();
+        bool result;
+
+        try
+        {
+            result = enumerator.MoveNext();
+            enumerator.Reset();
+        }
+        finally
+        {
+            if (enumerator is IDisposable disposable)
+                disposable.Dispose();
+        }
+
+        return result;
+    }
 }

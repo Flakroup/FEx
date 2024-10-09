@@ -50,6 +50,12 @@ public sealed class FolderBrowserDialogOptions : FolderBrowserDialogOptionsBase<
             RootFolder = RootFolder
         };
 
+    /// <inheritdoc />
+    protected override void MapFromDialog(FolderBrowserDialog dialog)
+    {
+        SelectedPath = dialog.SelectedPath;
+    }
+
     #region IDisposable
     public void Dispose()
     {

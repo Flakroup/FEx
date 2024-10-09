@@ -23,7 +23,7 @@ public class DownloadService : ProgressAggregator
     public static int DefaultParallelDownloads { get; set; } = 10;
     public ConcurrentDictionary<string, IDisposable> Subscriptions { get; }
 
-    public ObservableConcurrentDictionary<DownloadIndex, IDownloadItem> Downloads { get; }
+    public ConcurrentObservableDictionary<DownloadIndex, IDownloadItem> Downloads { get; }
     public AsyncQueue<DownloadIndex, bool> Queue { get; }
     public bool IncludeFinished { get; set; }
     public bool SetFinished { get; set; }

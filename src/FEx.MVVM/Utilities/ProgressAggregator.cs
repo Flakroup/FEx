@@ -1,5 +1,4 @@
-﻿using FEx.Abstractions;
-using FEx.Common.Extensions;
+﻿using FEx.Common.Extensions;
 using FEx.Extensions.Base.Converters;
 using FEx.Extensions.Base.Enums;
 using FEx.Extensions.DateTimes;
@@ -229,36 +228,36 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         switch (Mode)
         {
             case ProgressOperationMode.Standard:
-            {
-                string avg = est.IsNotNullOrEmptyString()
-                    ? $"AVG: {avgMs.GetTime()}"
-                    : string.Empty;
+                {
+                    string avg = est.IsNotNullOrEmptyString()
+                        ? $"AVG: {avgMs.GetTime()}"
+                        : string.Empty;
 
-                Info =
-                    $"{percentage}% {value}/{maximum}{(Unit.IsNotNullOrEmptyString() ? $"{Unit}" : string.Empty)} {est} {avg}";
+                    Info =
+                        $"{percentage}% {value}/{maximum}{(Unit.IsNotNullOrEmptyString() ? $"{Unit}" : string.Empty)} {est} {avg}";
 
-                break;
-            }
+                    break;
+                }
             case ProgressOperationMode.Stream:
-            {
-                string curBt =
-                    FileLengthConverter.ConvertFileLengthToString(value, LengthType.Bytes, LengthType.AutoDetect);
+                {
+                    string curBt =
+                        FileLengthConverter.ConvertFileLengthToString(value, LengthType.Bytes, LengthType.AutoDetect);
 
-                string curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
-                    LengthType.Bytes,
-                    LengthType.AutoDetect);
+                    string curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
+                        LengthType.Bytes,
+                        LengthType.AutoDetect);
 
-                double curr = elapsed.TotalSeconds;
+                    double curr = elapsed.TotalSeconds;
 
-                string kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
-                    LengthType.Bytes,
-                    LengthType.AutoDetect,
-                    1);
+                    string kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
+                        LengthType.Bytes,
+                        LengthType.AutoDetect,
+                        1);
 
-                Info = $"{percentage}% {curBt}/{curTb} {kbPerSec}/sec {est}";
+                    Info = $"{percentage}% {curBt}/{curTb} {kbPerSec}/sec {est}";
 
-                break;
-            }
+                    break;
+                }
             default:
                 throw new ArgumentOutOfRangeException(nameof(Mode), $"{Mode} is not handled");
         }
@@ -276,9 +275,11 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         if (ProgressPropertyChanged is null)
             return;
 
-        void EventDelegate() => InvokeProgressPropertyChanged(new(Id, propertyName, newValue));
+        Dispatcher.InvokeOnMainThread(EventDelegate, this);
 
-        FExFoundation.EventDeliverer.DeliverEvent(EventDelegate, this);
+        return;
+
+        void EventDelegate() => InvokeProgressPropertyChanged(new(Id, propertyName, newValue));
     }
 
     private void OnExcludedPropertiesChanged(IEnumerable<string> propertyNames)

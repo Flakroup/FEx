@@ -1,0 +1,26 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:converters="clr-namespace:FEx.WPFx.Converters">
+    <converters:AdditionConverter x:Key="AdditionConverter" />
+    <converters:BoolAndConverter x:Key="BoolAndConverter" />
+    <converters:BoolAndToVisibilityConverter x:Key="BoolAndToVisibilityConverter" />
+    <converters:BoolInvertedConverter x:Key="BoolInvertedConverter" />
+    <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    <converters:BoolToVisibilityInvertedConverter x:Key="BoolToVisibilityInvertedConverter" />
+    <converters:ByteToSizeConverter x:Key="ByteToSizeConverter" />
+    <converters:CollectionIsNotNullOrEmptyToBoolConverter x:Key="CollectionIsNotNullOrEmptyToBoolConverter" />
+    <converters:CollectionIsNotNullOrEmptyToVisibilityConverter x:Key="CollectionIsNotNullOrEmptyToVisibilityConverter" />
+    <converters:CollectionIsNullOrEmptyToBoolConverter x:Key="CollectionIsNullOrEmptyToBoolConverter" />
+    <converters:DivisionConverter x:Key="DivisionConverter" />
+    <converters:EnumToStringConverter x:Key="EnumToStringConverter" />
+    <converters:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter" />
+    <converters:ItemsToFirstItemConverter x:Key="ItemsToFirstItemConverter" />
+    <converters:LongToTimeStringConverter x:Key="LongToTimeStringConverter" />
+    <converters:MultiplicationConverter x:Key="MultiplicationConverter" />
+    <converters:NullableBoolInvertedConverter x:Key="NullableBoolInvertedConverter" />
+    <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+    <converters:NullToVisibilityInvertedConverter x:Key="NullToVisibilityInvertedConverter" />
+    <converters:StringToBooleanConverter x:Key="StringToBooleanConverter" />
+    <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+    <converters:SubtractionConverter x:Key="SubtractionConverter" />
+</ResourceDictionary>

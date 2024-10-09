@@ -1,6 +1,4 @@
-﻿using FEx.Abstractions;
-using FEx.Common.Extensions;
-using FEx.Extensions.Base.Converters;
+﻿using FEx.Extensions.Base.Converters;
 using FEx.Extensions.Base.Enums;
 using FEx.Extensions.Collections.Lists;
 using FEx.Logging.Abstractions.Interfaces;
@@ -8,11 +6,8 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Events;
-using Serilog.Sinks.SystemConsole.Themes;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -28,42 +23,6 @@ public static class LoggerExtensions
 
     public static IList<string> DefaultOverrides { get; set; } = ["Microsoft", "Microsoft.Hosting.Lifetime", "System"];
 
-    public static LoggerConfiguration ConfigureSerilog(this LoggerConfiguration cfg,
-                                                       string logFilePath,
-                                                       bool forceConsole = false,
-                                                       LogEventLevel externalLoggingLevel = LogEventLevel.Warning,
-                                                       LogEventLevel externalDebugLoggingLevel =
-                                                           LogEventLevel.Information,
-                                                       Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null,
-                                                       params string[] overrides)
-    {
-        logFilePath ??= FExFoundation.AppInfoProvider.LogFilePath.Guard(nameof(logFilePath));
-
-        Directory.CreateDirectory(Path.GetDirectoryName(logFilePath)!);
-
-        if (Debugger.IsAttached)
-        {
-            cfg = cfg.MinimumLevel.Debug()
-                .AddOverrides(overrides, externalDebugLoggingLevel)
-                .Enrich.FromLogContext()
-                .WriteTo.Debug(outputTemplate: DefaultConsoleOutputTemplate)
-                .WriteTo.SetFileLogger(logFilePath)
-                .WriteTo.Console(outputTemplate: DefaultConsoleOutputTemplate, theme: AnsiConsoleTheme.Code);
-        }
-        else
-        {
-            cfg = cfg.MinimumLevel.Information()
-                .AddOverrides(overrides, externalLoggingLevel)
-                .Enrich.FromLogContext()
-                .WriteTo.Async(x => x.SetFileLogger(logFilePath));
-
-            if (forceConsole)
-                cfg = cfg.WriteTo.Console(outputTemplate: DefaultConsoleOutputTemplate, theme: AnsiConsoleTheme.Code);
-        }
-
-        return cfgFunc?.Invoke(cfg) ?? cfg;
-    }
-
     public static LoggerConfiguration AddOverrides(this LoggerConfiguration cfg,
                                                    IList<string> overrides,
                                                    LogEventLevel level)
@@ -73,20 +32,6 @@ public static class LoggerExtensions
 
         return overrides.Aggregate(cfg, (current, o) => current.MinimumLevel.Override(o, level));
     }
-
-    public static void SetLogger(string logFilePath = null,
-                                 bool forceConsole = false,
-                                 LogEventLevel externalLoggingLevel = LogEventLevel.Warning,
-                                 LogEventLevel externalDebugLoggingLevel = LogEventLevel.Information,
-                                 Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null,
-                                 params string[] overrides) =>
-        Serilog.Log.Logger = new LoggerConfiguration().ConfigureSerilog(logFilePath,
-                forceConsole,
-                externalLoggingLevel,
-                externalDebugLoggingLevel,
-                cfgFunc,
-                overrides)
-            .CreateLogger();
 
     public static void Log(this ILoggable loggable, LogLevel logLevel, string message, Exception exception = null)
     {
@@ -158,7 +103,7 @@ public static class LoggerExtensions
         }
     }
 
-    private static LoggerConfiguration
+    public static LoggerConfiguration
         SetFileLogger(this LoggerSinkConfiguration sinkConfiguration, string logFilePath) =>
         sinkConfiguration.File(logFilePath,
             outputTemplate: DefaultFileOutputTemplate,

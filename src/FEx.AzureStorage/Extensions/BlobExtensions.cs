@@ -1,4 +1,4 @@
-﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using FEx.Abstractions.Flow;
 using FEx.Abstractions.Flow.Errors;
@@ -21,11 +21,11 @@ namespace FEx.AzureStorage.Extensions;
 public static class BlobExtensions
 {
     public static string GetBlobChecksum(this CloudBlockBlob blob) =>
-        blob?.Properties?.ContentMD5 != null
+        blob?.Properties?.ContentMD5 is not null
             ? Convert.FromBase64String(blob.Properties.ContentMD5).GetHashString()
             : null;
 
-    public static Uri GetBlobUri(this CloudBlockBlob blob) => blob?.Uri?.AbsoluteUri?.ToUri();
+    public static Uri GetBlobUri(this CloudBlockBlob blob) => blob?.Uri?.AbsoluteUri.ToUri();
 
     public static string GetBlobChecksum(this BlobItem blob) => blob?.Properties?.ContentHash?.GetHashString();
 
@@ -48,7 +48,7 @@ public static class BlobExtensions
             BlobResultSegment response = await directory.ListBlobsSegmentedAsync(continuationToken, cancellationToken);
             continuationToken = response.ContinuationToken;
             results.AddRange(response.Results);
-        } while (continuationToken != null);
+        } while (continuationToken is not null);
 
         return results;
     }
@@ -67,7 +67,7 @@ public static class BlobExtensions
 
             continuationToken = response.ContinuationToken;
             results.AddRange(response.Results);
-        } while (continuationToken != null);
+        } while (continuationToken is not null);
 
         return results;
     }
@@ -107,7 +107,7 @@ public static class BlobExtensions
 
             continuationToken = response.ContinuationToken;
             results.AddRange(response.Results);
-        } while (continuationToken != null);
+        } while (continuationToken is not null);
 
         return results;
     }

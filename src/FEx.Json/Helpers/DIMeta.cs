@@ -1,4 +1,4 @@
-﻿using FEx.DependencyInjection.Abstractions;
+﻿using FEx.DI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -30,10 +30,6 @@ public sealed class DIMeta : InitializeOnlyModule
         return key is not null && _register.TryGetValue(key, out Type value)
             ? value
             : t;
-    }
-
-    protected override void OnInitialize()
-    {
     }
 
     protected override void AddServices(object container, IServiceCollection services) => RegisterServices(services);

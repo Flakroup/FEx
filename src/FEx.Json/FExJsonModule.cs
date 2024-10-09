@@ -12,16 +12,13 @@ namespace FEx.Json;
 
 [Register(typeof(DIMeta), Scope.SingleInstance, typeof(DIMeta), typeof(IInitializeModule))]
 [Register(typeof(DIContractResolver), Scope.SingleInstance, typeof(IContractResolver))]
-[Register(typeof(FExJsonModuleInitializer),
-    Scope.SingleInstance,
-    typeof(FExJsonModuleInitializer),
-    typeof(IInitializeModule))]
+[Register(typeof(FExJson), Scope.SingleInstance, typeof(FExJson), typeof(IInitializeModule))]
 public class FExJsonModule
 {
     [Factory]
     public static JsonSerializerSettings JsonSerializerSettingsFactory() => JsonExtensions.DefaultSettings;
 
-    public static void AddServices(IFExJsonModule container, IServiceCollection services)
+    public static void AddServices(IFExJsonContainer container, IServiceCollection services)
     {
         services.AddTransientServiceUsingContainer<DIMeta>(container);
         services.AddTransientServiceUsingContainer<JsonSerializerSettings>(container);

@@ -2,7 +2,8 @@
 using FEx.Abstractions.Interfaces;
 using FEx.Extensions.Base.Enums;
 using FEx.MVVM.Abstractions;
-using FEx.Platforms.Abstractions;
+using FEx.Platforms;
+using FEx.Platforms.Abstractions.Interfaces;
 using FEx.WPFx.Extensions;
 using FEx.WPFx.SVG;
 using System.Drawing;
@@ -15,7 +16,7 @@ namespace FEx.WPFx.Natives;
 public static class CommonWindowsImaging
 {
     private static ISynchronizedAccessService LockSrv => FExFoundation.SynchronizedAccessService;
-    private static IRegistryService RegistrySrv => Platform.RegistryService;
+    private static IRegistryService RegistrySrv => FExPlatforms.RegistryService;
 
     /// <summary>
     ///     Converts the byte array to bitmap image.

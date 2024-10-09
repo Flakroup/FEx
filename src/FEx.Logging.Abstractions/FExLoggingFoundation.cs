@@ -1,10 +1,10 @@
-﻿using FEx.Abstractions.Interfaces;
+﻿using FEx.Abstractions;
 using FEx.Common.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace FEx.Logging.Abstractions;
 
-public class FExLoggingFoundation : IFExInitialize
+public class FExLoggingFoundation : FExInitialize
 {
     private static ILoggerFactory _loggerFactory;
     private static ILogger _logger;
@@ -27,13 +27,6 @@ public class FExLoggingFoundation : IFExInitialize
         Logger = logger;
     }
 
-    public void Initialize()
-    {
-    }
-
-    public static void Init(ILoggerFactory loggerFactory, ILogger logger)
-    {
-        LoggerFactory = loggerFactory;
-        Logger = logger;
-    }
+    public static void Initialize(ILoggerFactory loggerFactory, ILogger logger) =>
+        new FExLoggingFoundation(loggerFactory, logger).Initialize();
 }

@@ -58,11 +58,6 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
     {
         _provider?.Dispose();
         _provider = new TContainer();
-        IInitializeModule[] modules = TryResolveService<IInitializeModule[]>();
-
-        if (modules?.Length > 0)
-            foreach (IInitializeModule initializer in modules)
-                initializer.Initialize();
 
         return (TContainer)_provider;
     }

@@ -1,8 +1,8 @@
-﻿using FEx.Basics.Abstractions;
+﻿using FEx.Abstractions.Models;
+using FEx.Basics.Abstractions;
 using FEx.Common.Extensions;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
-using FEx.Extensions.Base.Models;
 using FEx.Webx.Extensions;
 using System;
 using System.IO;

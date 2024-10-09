@@ -22,7 +22,7 @@ public interface IWebScraper
                          NetworkCredential credential = null,
                          CancellationToken cancellationToken = default);
 
-    Task<HtmlDocument> LoadAsync(HtmlWeb web,
+    Task<HtmlDocument> LoadHtmlDocumentAsync(HtmlWeb web,
                                  Uri pageLink,
                                  Encoding encoding = null,
                                  NetworkCredential credential = null,

@@ -1,9 +1,11 @@
 ﻿// Copyright (c) .NET FExFoundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using FEx.Basics.Abstractions.Collections;
-using FEx.Basics.Abstractions.Interfaces.Collections;
+using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
+using FEx.Basics.Abstractions;
 using FEx.Basics.Utilities.Collections;
+using FEx.Extensions;
 using JetBrains.Annotations;
 using System;
 using System.Collections;
@@ -24,29 +26,26 @@ namespace FEx.Basics.Collections;
 [DebuggerDisplay("Count={" + nameof(Count) + "}")]
 [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
 [Serializable]
-public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadOnlyCollection<T>, IChangeableCollection
+public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCollection<T>, INotifyCollectionChanged,
+    INotifyPropertyChanged
 {
-    protected static readonly string[] PropertyChangedArgs = [nameof(Count)];
+    [NonSerialized] private readonly IFExDispatcher _dispatcher;
 
     private HashSet<T> _set;
 
     /// <summary>
-    ///     Event raised when the collection changes.
+    ///     Occurs when the collection changes, either by adding or removing an item.
     /// </summary>
-    public event NotifyCollectionChangedEventHandler CollectionChanged
-    {
-        add => Notifier.CollectionChanged += value;
-        remove => Notifier.CollectionChanged -= value;
-    }
+    [field: NonSerialized]
+    public event NotifyCollectionChangedEventHandler CollectionChanged;
 
     /// <summary>
-    ///     Event raised when a property on the collection changes.
+    ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
-    public event PropertyChangedEventHandler PropertyChanged
-    {
-        add => Notifier.PropertyChanged += value;
-        remove => Notifier.PropertyChanged -= value;
-    }
+    [field: NonSerialized]
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    public static T[] NoItems { get; } = [];
 
     /// <summary>
     ///     Gets the number of elements that are contained in the hash set.
@@ -84,25 +83,20 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
     ///     comparing values in the set, or null to use the default <see cref="IEqualityComparer{T}" />
     /// implementation for the set type.
     /// </param>
-    /// <param name="notifyOnCreationContext">True if should notify on main thread context</param>
-    /// <param name="passIndexOfRemovedItem">if set to <c>true</c> [pass index of removed item].</param>
-    public ObservableHashSet(IEnumerable<T> collection = null,
-                             IEqualityComparer<T> comparer = null,
-                             bool notifyOnCreationContext = false,
-                             bool passIndexOfRemovedItem = false,
-                             bool sendAsyncEvents = true)
-        : base(passIndexOfRemovedItem, sendAsyncEvents)
+    public ObservableHashSet(IEnumerable<T> collection = null, IEqualityComparer<T> comparer = null)
     {
+#pragma warning disable CS0618 // Type or member is obsolete
+        _dispatcher = FExFoundation.Dispatcher;
+#pragma warning restore CS0618 // Type or member is obsolete
+
         comparer ??= EqualityComparer<T>.Default;
 
         _set = collection is null
-            ? new(comparer)
+            ? new HashSet<T>(comparer)
             : new HashSet<T>(collection, comparer);
-
-        SetNotifyOnCreationContext(notifyOnCreationContext);
     }
 
-    void ICollection<T>.Add(T item) => Add(item);
+    void ICollection<T>.Add(T item) => Add(item!);
 
     /// <summary>
     ///     Removes all elements from the hash set.
@@ -116,7 +110,7 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
 
         _set.Clear();
 
-        OnCollectionChanged(ObservableHashSetSingletons.NoItems, removed);
+        OnCollectionChanged(NoItems, removed);
     }
 
     /// <summary>
@@ -153,7 +147,7 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
 
         _set.Remove(item);
 
-        OnCollectionChanged(NotifyCollectionChangedAction.Remove, item);
+        OnRemoveFromCollection(item, -1);
 
         return true;
     }
@@ -173,12 +167,10 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
     /// </returns>
     public virtual bool Add(T item)
     {
-        if (_set.Contains(item))
+        if (!_set.Add(item))
             return false;
 
-        _set.Add(item);
-
-        OnCollectionChanged(NotifyCollectionChangedAction.Add, item);
+        OnAddToCollection(item, -1);
 
         return true;
     }
@@ -200,7 +192,7 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
 
         _set = copy;
 
-        OnCollectionChanged(added, ObservableHashSetSingletons.NoItems);
+        OnCollectionChanged(added, NoItems);
     }
 
     /// <summary>
@@ -221,7 +213,7 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
 
         _set = copy;
 
-        OnCollectionChanged(ObservableHashSetSingletons.NoItems, removed);
+        OnCollectionChanged(NoItems, removed);
     }
 
     /// <summary>
@@ -241,7 +233,7 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
 
         _set = copy;
 
-        OnCollectionChanged(ObservableHashSetSingletons.NoItems, removed);
+        OnCollectionChanged(NoItems, removed);
     }
 
     /// <summary>
@@ -371,7 +363,7 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
 
         _set = copy;
 
-        OnCollectionChanged(ObservableHashSetSingletons.NoItems, removed);
+        OnCollectionChanged(NoItems, removed);
 
         return removedCount;
     }
@@ -382,5 +374,24 @@ public class ObservableHashSet<T> : BaseObservableCollection<T>, ISet<T>, IReadO
     /// </summary>
     public virtual void TrimExcess() => _set.TrimExcess();
 
-    protected override string[] GetPropertyChangedArgs() => PropertyChangedArgs;
+    protected virtual void Dispatch(Action action) => _dispatcher.InvokeOnMainThread(action, this);
+
+    /// <summary>
+    ///     Raises a PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    /// </summary>
+    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        if (EventsAreSuppressed || PropertyChanged is null)
+            return;
+
+        Dispatch(() => PropertyChanged.HandlePropertyChanged(this, e));
+    }
+
+    protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+    {
+        if (EventsAreSuppressed || CollectionChanged is null)
+            return;
+
+        Dispatch(() => CollectionChanged.Invoke(this, e));
+    }
 }

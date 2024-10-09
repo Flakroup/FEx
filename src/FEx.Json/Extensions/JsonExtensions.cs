@@ -32,7 +32,7 @@ public static class JsonExtensions
         };
 
         ((List<JsonConverter>)DefaultSettingsInstance.Converters).AddRange([
-            ParseStringConverter.Singleton, new VersionConverter()
+            ParseStringToDoubleConverter.Singleton, new VersionConverter()
         ]);
 
         JsonConvert.DefaultSettings = () => DefaultSettingsInstance;

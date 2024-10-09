@@ -4,7 +4,6 @@ using FEx.Extensions;
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace FEx.Basics.Extensions;
 
@@ -14,12 +13,11 @@ public static class EventsExtensions
                                                      ref TRet backingField,
                                                      TRet newValue,
                                                      Action<string> propertyChanged,
-                                                     [CallerMemberName] string propertyName = null,
-                                                     SynchronizationContext context = null)
+                                                     [CallerMemberName] string propertyName = null)
         where TObj : INotifyPropertyChanged
     {
         Action<TObj, string, TRet> action = propertyChanged is not null && propertyName is not null
-            ? (s, p, _) => s.OnPropertyChangedStatic(propertyChanged, p, context)
+            ? (s, p, _) => s.OnPropertyChangedStatic(propertyChanged, p)
             : null;
 
         return sender.SetObjectProperty(ref backingField, newValue, action, propertyName);
@@ -27,17 +25,14 @@ public static class EventsExtensions
 
     public static void OnPropertyChangedStatic<TObj>(this TObj sender,
                                                      Action<string> propertyChanged,
-                                                     [CallerMemberName] string propertyName = null,
-                                                     SynchronizationContext context = null)
+                                                     [CallerMemberName] string propertyName = null)
         where TObj : INotifyPropertyChanged
     {
         propertyChanged.Guard(nameof(propertyChanged));
         propertyName.Guard(nameof(propertyName));
 
-        FExFoundation.EventDeliverer.DeliverEvent(EventDelegate, sender, context);
-
-        return;
-
-        void EventDelegate() => propertyChanged(propertyName);
+#pragma warning disable CS0618 // Type or member is obsolete
+        FExFoundation.Dispatcher.InvokeOnMainThread(() => propertyChanged(propertyName), sender);
+#pragma warning restore CS0618 // Type or member is obsolete
     }
 }

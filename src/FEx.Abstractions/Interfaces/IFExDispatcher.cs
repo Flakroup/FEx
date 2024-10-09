@@ -23,7 +23,12 @@ public interface IFExDispatcher
     Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object sender = null);
     Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null);
 
-    void SendInThisOrMainThreadContext(Action action,
-                                       SynchronizationContext synchronizationContext = null,
-                                       uint timeout = 10000);
+    /// <summary>
+    ///     Invokes action delegate in current, instance initialization or main thread <see cref="SynchronizationContext" />
+    /// depending on which is not null first
+    /// </summary>
+    /// <param name="action">Action to invoke</param>
+    /// <param name="sender">Action origin object</param>
+    /// <param name="timeout">Deadlock timeout</param>
+    void SendInContext(Action action, object sender, uint? timeout = 10000);
 }

@@ -15,7 +15,7 @@ public static class JoinableAsyncHelper
 
     private static JoinableTaskFactoryHandler MainJTF
     {
-        get => _mainJTF.Guard(nameof(MainJTF));
+        get => _mainJTF.Guard();
         set => _mainJTF = value;
     }
 

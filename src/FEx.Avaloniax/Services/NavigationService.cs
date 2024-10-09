@@ -1,7 +1,6 @@
 ﻿using FEx.Abstractions.Interfaces;
 using FEx.Avaloniax.Abstractions.Interfaces;
 using FEx.Common.Extensions;
-using FEx.DI.Abstractions.Interfaces;
 using ReactiveUI;
 using System.Threading.Tasks;
 
@@ -31,10 +30,18 @@ public sealed class NavigationService : INavigationService
     }
 
     public async Task NavigateAsync<T>() where T : IRoutableViewModel =>
-        await _dispatcher.InvokeOnMainThreadAsync(() =>
-            Router.Navigate.Execute(_serviceProvider.GetRequiredService<T>()));
+        await _dispatcher.InvokeOnMainThreadAsync(() => Router.Navigate.Execute(GetViewModel<T>()));
 
     public async Task NavigateAndResetAsync<T>() where T : IRoutableViewModel =>
-        await _dispatcher.InvokeOnMainThreadAsync(() =>
-            Router.NavigateAndReset.Execute(_serviceProvider.GetRequiredService<T>()));
+        await _dispatcher.InvokeOnMainThreadAsync(() => Router.NavigateAndReset.Execute(GetViewModel<T>()));
+
+    private T GetViewModel<T>() where T : IRoutableViewModel
+    {
+        T viewModel = _serviceProvider.GetRequiredService<T>();
+
+        if (viewModel is IAsyncInitializable asyncInitializable)
+            asyncInitializable.BeginInitialization();
+
+        return viewModel;
+    }
 }

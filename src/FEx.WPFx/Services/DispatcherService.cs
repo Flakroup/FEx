@@ -73,17 +73,20 @@ public static class DispatcherService
     ///     by checking if action should be invoked by dispatcher, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
+    /// <param name="cancellationToken"></param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
     public static async Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action,
                                                                   DispatcherObject sender = null,
-                                                                  DispatcherPriority priority = DispatcherPriority.Send)
+                                                                  DispatcherPriority priority = DispatcherPriority.Send,
+                                                                  CancellationToken cancellationToken =
+                                                                      default) //todo support ct
     {
         DispatcherObject dispatcherObject = sender.GetDispatcherObject();
 
         return CheckAccess(dispatcherObject)
             ? action()
-            : await dispatcherObject.Dispatcher.InvokeAsync(action, priority);
+            : await dispatcherObject.Dispatcher.InvokeAsync(action, priority, cancellationToken);
     }
 
     public static async Task ExecuteTaskInDispatcherContextAsync(Func<Task> funcTask,

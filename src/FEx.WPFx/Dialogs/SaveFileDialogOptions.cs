@@ -37,4 +37,11 @@ public class SaveFileDialogOptions : SaveFileDialogOptionsBase<SaveFileDialog>
                 ? Path.GetExtension(FileName)
                 : DefaultExt
         };
+
+    /// <inheritdoc />
+    protected override void MapFromDialog(SaveFileDialog dialog)
+    {
+        FileName = dialog.FileName;
+        FileNames = dialog.FileNames;
+    }
 }

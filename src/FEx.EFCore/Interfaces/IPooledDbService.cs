@@ -1,5 +1,5 @@
 ﻿using FEx.Abstractions.Interfaces;
-using FEx.Basics.Collections;
+using FEx.Common.Collections;
 using FEx.EFCore.Models;
 using Microsoft.EntityFrameworkCore;
 using System;

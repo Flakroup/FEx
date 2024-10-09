@@ -7,9 +7,9 @@ using StrongInject.Extensions.DependencyInjection;
 namespace FEx.Downloader;
 
 [Register(typeof(DownloadService), Scope.SingleInstance)]
-[Register(typeof(FExDownloaderModuleInitializer),
+[Register(typeof(FExDownloader),
     Scope.SingleInstance,
-    typeof(FExDownloaderModuleInitializer),
+    typeof(FExDownloader),
     typeof(IInitializeModule))]
 public class FExDownloaderModule
 {

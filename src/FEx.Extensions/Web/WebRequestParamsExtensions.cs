@@ -1,4 +1,4 @@
-﻿using FEx.Extensions.Base.Models;
+﻿using FEx.Abstractions.Models;
 using System.Net.Http;
 
 namespace FEx.Extensions.Web;

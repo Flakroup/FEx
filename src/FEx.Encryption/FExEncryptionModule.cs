@@ -3,9 +3,9 @@ using StrongInject;
 
 namespace FEx.Encryption;
 
-[Register(typeof(FExEncryptionModuleInitializer),
+[Register(typeof(FExEncryption),
     Scope.SingleInstance,
-    typeof(FExEncryptionModuleInitializer),
+    typeof(FExEncryption),
     typeof(IInitializeModule))]
 public class FExEncryptionModule
 {

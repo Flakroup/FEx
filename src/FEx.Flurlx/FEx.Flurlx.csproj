@@ -11,12 +11,12 @@
         <PackageReference Include="Polly" Version="8.4.2" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="StrongInject" Version="1.4.4" />
+        <PackageReference Include="System.Text.Json" Version="9.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\FEx.DependencyInjection\FEx.DependencyInjection.csproj" />
-      <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
-      <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+        <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+        <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
     </ItemGroup>
 
 </Project>

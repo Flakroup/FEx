@@ -1,9 +1,9 @@
+using FEx.Abstractions.Interfaces;
 using Flurl.Http;
 
 namespace FEx.Flurlx.Abstractions.Interfaces;
 
-public interface IFlurlConfigurator
+public interface IFlurlConfigurator : IFExInitialize
 {
-    void Configure();
     IFlurlClient GetClient();
 }

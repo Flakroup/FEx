@@ -1,153 +1,158 @@
 ﻿using FEx.Abstractions.Implementations;
 using FEx.Abstractions.Interfaces;
+using FEx.Common.Abstractions.Interfaces;
+using FEx.Common.Comparers;
 using FEx.Common.Extensions;
-using FEx.Common.Utilities;
+using FEx.Common.Providers;
 using System;
-using System.Threading;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.Abstractions;
 
-public class FExFoundation : IFExInitialize
+public class FExFoundation : FExInitialize, IFExPriorityInitialize
 {
-    private static IStackTraceProvider _stackTraceProvider;
-    private static IFExDispatcher _dispatcher;
-    private static IAsyncHelper _asyncHelper;
-    private static IExceptionHandler _exceptionHandler;
-    private static Thread _mainThread;
-    private static SynchronizationContext _mainSynchronizationContext;
-    private static IEventDeliverer _eventDeliverer;
-    private static ISynchronizedAccessService _synchronizedAccessService;
-    private static IAppInfoProvider _appInfoProvider;
+    private static readonly MainThreadContextProvider DefaultMainThreadContextProvider;
+    private static readonly DebugExceptionHandler DefaultExceptionHandler;
+    private static readonly DefaultStackTraceProvider DefaultStackTraceProvider;
 
-    public static IStackTraceProvider StackTraceProvider
-    {
-        get => _stackTraceProvider.Guard(nameof(StackTraceProvider));
-        private set => _stackTraceProvider = value.Guard(nameof(value));
-    }
+    private static Func<IStackTraceProvider> _stackTraceProviderFactory;
+    private static Func<IFExDispatcher> _dispatcherFactory;
+    private static Func<IAsyncHelper> _asyncHelperFactory;
+    private static Func<IExceptionHandler> _exceptionHandlerFactory;
+    private static Func<ISynchronizedAccessService> _synchronizedAccessServiceFactory;
+    private static Func<IAppInfoProvider> _appInfoProviderFactory;
+    private static Func<AlphanumComparatorFast> _alphanumComparatorFastFactory;
+    private static Func<IMainThreadContextProvider> _mainThreadContextProviderFactory;
+    private static FExFoundation _instance;
 
-    public static IFExDispatcher Dispatcher
-    {
-        get => _dispatcher.Guard(nameof(Dispatcher));
-        private set => _dispatcher = value.Guard(nameof(Dispatcher));
-    }
+    public static bool HasBeenInitialized => _instance.IsInitialized;
 
-    public static IAsyncHelper AsyncHelper
-    {
-        get => _asyncHelper.Guard(nameof(AsyncHelper));
-        private set => _asyncHelper = value.Guard(nameof(value));
-    }
+    [Obsolete("Discouraged - use only where DI is unavailable")]
+    public static IStackTraceProvider StackTraceProvider =>
+        (_stackTraceProviderFactory is not null
+            ? _stackTraceProviderFactory()
+            : ServiceProvider?.GetRequiredService<IStackTraceProvider>())
+        ?? DefaultStackTraceProvider;
 
-    public static IExceptionHandler ExceptionHandler
-    {
-        get => _exceptionHandler.Guard(nameof(ExceptionHandler));
-        private set => _exceptionHandler = value.Guard(nameof(value));
-    }
+    [Obsolete("Discouraged - use only where DI is unavailable")]
+    public static IFExDispatcher Dispatcher =>
+        (_dispatcherFactory is not null
+            ? _dispatcherFactory()
+            : ServiceProvider.GetRequiredService<IFExDispatcher>()).Guard();
 
-    public static IEventDeliverer EventDeliverer
-    {
-        get => _eventDeliverer.Guard(nameof(EventDeliverer));
-        private set => _eventDeliverer = value.Guard(nameof(value));
-    }
+    [Obsolete("Discouraged - use only where DI is unavailable")]
+    public static IAsyncHelper AsyncHelper =>
+        (_asyncHelperFactory is not null
+            ? _asyncHelperFactory()
+            : ServiceProvider.GetRequiredService<IAsyncHelper>()).Guard();
 
-    public static ISynchronizedAccessService SynchronizedAccessService
-    {
-        get => _synchronizedAccessService.Guard(nameof(SynchronizedAccessService));
-        private set => _synchronizedAccessService = value.Guard(nameof(value));
-    }
+    [Obsolete("Discouraged - use only where DI is unavailable")]
+    public static IExceptionHandler ExceptionHandler =>
+        (_exceptionHandlerFactory is not null
+            ? _exceptionHandlerFactory()
+            : ServiceProvider?.GetRequiredService<IExceptionHandler>())
+        ?? DefaultExceptionHandler;
 
-    public static IAppInfoProvider AppInfoProvider
-    {
-        get => _appInfoProvider.Guard(nameof(AppInfoProvider));
-        private set => _appInfoProvider = value.Guard(nameof(value));
-    }
+    [Obsolete("Discouraged - use only where DI is unavailable")]
+    public static ISynchronizedAccessService SynchronizedAccessService =>
+        (_synchronizedAccessServiceFactory is not null
+            ? _synchronizedAccessServiceFactory()
+            : ServiceProvider.GetRequiredService<ISynchronizedAccessService>()).Guard();
 
-    public static Thread MainThread
-    {
-        get => _mainThread.Guard(nameof(MainThread));
-        private set => _mainThread = value.Guard(nameof(value));
-    }
+    [Obsolete("Discouraged - use only where DI is unavailable")]
+    public static IAppInfoProvider AppInfoProvider =>
+        (_appInfoProviderFactory is not null
+            ? _appInfoProviderFactory()
+            : ServiceProvider.GetRequiredService<IAppInfoProvider>()).Guard();
 
-    public static SynchronizationContext MainSynchronizationContext
-    {
-        get
-        {
-            if (IsDispatcherContext)
-                return _mainSynchronizationContext;
+    [Obsolete("Discouraged - use only where DI is unavailable")]
+    public static AlphanumComparatorFast AlphanumComparatorFast =>
+        (_alphanumComparatorFastFactory is not null
+            ? _alphanumComparatorFastFactory()
+            : ServiceProvider.GetRequiredService<AlphanumComparatorFast>()).Guard();
 
-            SynchronizationContext context = MainThread.GetThreadSynchronizationContext();
+    [Obsolete("Discouraged - use only where DI is unavailable")]
+    public static IMainThreadContextProvider MainThreadContextProvider =>
+        (_mainThreadContextProviderFactory is not null
+            ? _mainThreadContextProviderFactory()
+            : ServiceProvider?.GetRequiredService<IMainThreadContextProvider>())
+        ?? DefaultMainThreadContextProvider;
 
-            if (context is not null)
-            {
-                _mainSynchronizationContext = context;
+    [Obsolete($"Discouraged - use {nameof(IAppInfoProvider)} where DI is available")]
+    public static bool IsUIApp => AppInfoProvider?.AppInfo is { IsUIApp: true };
 
-                if (_mainSynchronizationContext.GetType().Name == "DispatcherSynchronizationContext")
-                    IsDispatcherContext = true;
-            }
+    /// <inheritdoc />
+    public int Priority { get; }
 
-            return _mainSynchronizationContext;
-        }
-    }
+    private static IFExServiceProvider ServiceProvider { get; set; }
 
-    public static bool IsDispatcherContext { get; set; }
-    public static bool SendEventsInCreationContext { get; set; }
-    public static bool IsUIApp => AppInfoProvider.AppInfo is { IsUIApp: true };
-
-    public FExFoundation(IStackTraceProvider stackTraceProvider,
+    [SuppressMessage("ReSharper", "UnusedParameter.Local")]
+    public FExFoundation(IFExServiceProvider serviceProvider,
+                         IStackTraceProvider stackTraceProvider,
                          IFExDispatcher dispatcher,
                          IAsyncHelper asyncHelper,
-                         IExceptionHandler exceptionHandler)
+                         IExceptionHandler exceptionHandler,
+                         ISynchronizedAccessService synchronizedAccessService,
+                         IAppInfoProvider appInfoProvider,
+                         AlphanumComparatorFast alphanumComparatorFast,
+                         IMainThreadContextProvider mainThreadContextProvider)
     {
-        StackTraceProvider = stackTraceProvider;
-        Dispatcher = dispatcher;
-        AsyncHelper = asyncHelper;
-        ExceptionHandler = exceptionHandler;
-
-        SetMainThread();
+        ServiceProvider = serviceProvider;
+        Priority = -1;
+        _instance = this;
     }
 
     static FExFoundation()
     {
-        StackTraceProvider = new DefaultStackTraceProvider();
-        ExceptionHandler = new DebugExceptionHandler();
+        DefaultStackTraceProvider = new DefaultStackTraceProvider();
+        DefaultExceptionHandler = new DebugExceptionHandler();
+        DefaultMainThreadContextProvider = new MainThreadContextProvider(null);
+#pragma warning disable CS0618 // Type or member is obsolete
+        MainThreadContextProvider.SetMainThread(false);
+#pragma warning restore CS0618 // Type or member is obsolete
     }
 
-    /// <summary>
-    /// This is to be called by ServiceProvider
-    /// </summary>
-    public void Initialize()
+    public static void Initialize(Func<IStackTraceProvider> stackTraceProviderFactory,
+                                  Func<IFExDispatcher> dispatcherFactory,
+                                  Func<IAsyncHelper> asyncHelperFactory,
+                                  Func<IExceptionHandler> exceptionHandlerFactory,
+                                  Func<ISynchronizedAccessService> synchronizedAccessServiceFactory,
+                                  Func<IAppInfoProvider> appInfoProviderFactory,
+                                  Func<AlphanumComparatorFast> alphanumComparatorFastFactory,
+                                  Func<IMainThreadContextProvider> mainThreadContextProviderFactory)
     {
-        SetMainThread();
+        if (stackTraceProviderFactory is not null)
+            _stackTraceProviderFactory = stackTraceProviderFactory;
+
+        if (dispatcherFactory is not null)
+            _dispatcherFactory = dispatcherFactory;
+
+        if (asyncHelperFactory is not null)
+            _asyncHelperFactory = asyncHelperFactory;
+
+        if (exceptionHandlerFactory is not null)
+            _exceptionHandlerFactory = exceptionHandlerFactory;
+
+        if (synchronizedAccessServiceFactory is not null)
+            _synchronizedAccessServiceFactory = synchronizedAccessServiceFactory;
+
+        if (appInfoProviderFactory is not null)
+            _appInfoProviderFactory = appInfoProviderFactory;
+
+        if (alphanumComparatorFastFactory is not null)
+            _alphanumComparatorFastFactory = alphanumComparatorFastFactory;
+
+        if (mainThreadContextProviderFactory is not null)
+            _mainThreadContextProviderFactory = mainThreadContextProviderFactory;
+
+        new FExFoundation(null, null, null, null, null, null, null, null, null).Initialize();
     }
 
-    public static void SetMainThread()
+    protected override void OnInitialize()
     {
-        Thread currentThread = Thread.CurrentThread;
-
-        bool isMainThread = IsPlatformMainThread(currentThread)
-                            && !currentThread.IsBackground
-                            && currentThread.IsAlive
-                            && !currentThread.IsThreadPoolThread;
-
-        if (!isMainThread)
-            throw new InvalidOperationException("This method must be called from main thread.");
-
-        MainThread = currentThread;
-
-        if (IsUIApp)
-            _ = MainThread.GetThreadSynchronizationContext(true);
+        base.OnInitialize();
+#pragma warning disable CS0618 // Type or member is obsolete
+        MainThreadContextProvider.SetMainThread();
+#pragma warning restore CS0618 // Type or member is obsolete
     }
-
-    public virtual void Init(IStackTraceProvider stackTraceProvider,
-                             IFExDispatcher dispatcher,
-                             IAsyncHelper asyncHelper,
-                             IExceptionHandler exceptionHandler)
-    {
-        StackTraceProvider = stackTraceProvider;
-        Dispatcher = dispatcher;
-        AsyncHelper = asyncHelper;
-        ExceptionHandler = exceptionHandler;
-    }
-
-    private static bool IsPlatformMainThread(Thread currentThread) =>
-        !PlatformInfoProvider.IsWindows || !IsUIApp || currentThread.GetApartmentState() == ApartmentState.STA;
 }

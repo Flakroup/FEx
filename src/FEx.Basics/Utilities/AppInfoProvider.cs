@@ -1,9 +1,8 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Basics.Extensions;
+﻿using FEx.Basics.Extensions;
+using FEx.Common.Abstractions.Interfaces;
 using FEx.Common.Extensions;
 using FEx.Common.Helpers;
 using FEx.Common.Utilities;
-using FEx.Extensions.IO;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -35,16 +34,18 @@ public record AppInfoProvider : IAppInfoProvider
     public string AppDataPath { get; }
 
     public string UserSettingsPath { get; }
-    public string LogDirPath { get; }
 
+    public string LogDirPath { get; }
     public string LogFilePath { get; }
 
-    public IAppInfo AppInfo { get; private set; }
+    public IAppInfo AppInfo { get; }
 
     private FileVersionInfo ProductVersionInfo { get; }
 
-    public AppInfoProvider()
+    public AppInfoProvider(IAppInfo appInfo)
     {
+        AppInfo = appInfo;
+
         if (PlatformInfoProvider.IsWindows)
         {
             EntryAssembly = Assembly.GetEntryAssembly();
@@ -61,7 +62,8 @@ public record AppInfoProvider : IAppInfoProvider
                 : null;
         }
 
-        Name = AppInfo?.Name ?? TryGetProductName() ?? EntryAssembly?.EntryPoint?.DeclaringType?.Namespace;
+        Name = AppInfo!.Name
+               ?? TryGetProductName() ?? EntryAssemblyName ?? EntryAssembly?.EntryPoint?.DeclaringType?.Namespace;
 
         Version = AppInfo?.Version
                   ?? ParseVersionString(ProductVersionInfo?.ProductVersion) ?? EntryAssembly?.GetName().Version;
@@ -96,19 +98,11 @@ public record AppInfoProvider : IAppInfoProvider
 
         AppDataPath = AppData.FullName;
         AppData.Create();
-        LogDirPath =
-            (AppInfo?.LogDirPath ?? UserData?.GetDescendantDirectory(".logs").FullName).Guard(
-                nameof(LogDirPath));
-
-        Directory.CreateDirectory(LogDirPath);
-        LogFilePath = Path.Combine(LogDirPath, $"{Name}.log");
 
         UserSettingsPath = UserDataPath is not null
             ? Path.Combine(UserDataPath, $"{Name}.config")
             : null;
     }
-
-    public void Initialize(IAppInfo appInfo) => AppInfo ??= appInfo;
 
     private static Version ParseVersionString(string version) =>
         Version.TryParse(version, out Version result)

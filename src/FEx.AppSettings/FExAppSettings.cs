@@ -1,4 +1,4 @@
-﻿using FEx.DependencyInjection.Abstractions;
+﻿using FEx.DI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FEx.AppSettings;

@@ -11,7 +11,7 @@ public static class ConfigurationManagerExtensions
     public static void MergeAppSettings()
     {
         Configuration appConfig =
-            ConfigurationManager.OpenExeConfiguration(new Uri(Assembly.GetExecutingAssembly().CodeBase).AbsolutePath);
+            ConfigurationManager.OpenExeConfiguration(new Uri(Assembly.GetExecutingAssembly().Location).AbsolutePath);
 
         try
         {
@@ -40,10 +40,10 @@ public static class ConfigurationManagerExtensions
                 null);
 
             ConnectionStringSettings[] connStrs =
-                ConfigurationManager.ConnectionStrings.Cast<ConnectionStringSettings>().ToArray();
+                ConfigurationManager.ConnectionStrings.OfType<ConnectionStringSettings>().ToArray();
 
             foreach (ConnectionStringSettings connStr in appConfig.ConnectionStrings.ConnectionStrings
-                         .Cast<ConnectionStringSettings>()
+                         .OfType<ConnectionStringSettings>()
                          .Where(connStr => connStrs.All(x => x.Name != connStr.Name))
                          .ToArray())
                 baseAddMethod?.Invoke(ConfigurationManager.ConnectionStrings, [connStr]);

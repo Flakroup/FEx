@@ -1,10 +1,10 @@
 ﻿using FEx.Abstractions;
 using FEx.Abstractions.Interfaces;
+using FEx.Abstractions.Models;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
 using FEx.Extensions;
 using FEx.Extensions.Base.Helpers;
-using FEx.Extensions.Base.Models;
 using FEx.Extensions.Web;
 using JetBrains.Annotations;
 using System;
@@ -308,8 +308,11 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         if (propertyName is null)
             return;
 
+        FExFoundation.Dispatcher.InvokeOnMainThread(EventDelegate, this);
+
+        return;
+
         void EventDelegate() => NotifyChanged(propertyName);
-        FExFoundation.EventDeliverer.DeliverEvent(EventDelegate, this);
     }
 
     protected virtual bool SetProperty<TRet>(ref TRet backingField,

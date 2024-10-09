@@ -4,13 +4,4 @@
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
 	</PropertyGroup>
 
-	<ItemGroup Condition="$(DefineConstants.Contains('ISNETSTANDARD'))">
-		<PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
-	  <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
-	</ItemGroup>
-
 </Project>

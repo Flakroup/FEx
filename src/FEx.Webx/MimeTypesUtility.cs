@@ -3,7 +3,8 @@ using FEx.Extensions;
 using FEx.Extensions.Base.Enums;
 using FEx.Extensions.Collections;
 using FEx.Extensions.Collections.Dictionaries;
-using FEx.Platforms.Abstractions;
+using FEx.Platforms;
+using FEx.Platforms.Abstractions.Interfaces;
 using MimeMapping;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace FEx.Webx;
 
 public static class MimeTypesUtility
 {
-    public static IRegistryService RegistryService => Platform.RegistryService;
+    public static IRegistryService RegistryService => FExPlatforms.RegistryService;
     public static ConcurrentDictionary<string, string> TypeMap { get; }
     public static IReadOnlyDictionary<string, string> Mappings => TypeMap;
 

@@ -1,7 +1,8 @@
 ﻿using FEx.Common.Extensions;
 using FEx.Common.Utilities;
 using FEx.Extensions.Base.Enums;
-using FEx.Platforms.Abstractions;
+using FEx.Platforms.Abstractions.Interfaces;
+using FEx.Platforms.Extensions;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;

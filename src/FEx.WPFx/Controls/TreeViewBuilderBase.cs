@@ -3,6 +3,7 @@ using FEx.Common.Extensions;
 using FEx.Extensions.Collections.Dictionaries;
 using FEx.Extensions.Collections.Enumerables;
 using FEx.MVVM.Abstractions;
+using FEx.WPFx.Abstractions.Interfaces;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ using System.Windows.Media.Imaging;
 
 namespace FEx.WPFx.Controls;
 
-public abstract class TreeViewBuilderBase<TItem> where TItem : HeaderedItemsControl, new()
+public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where TItem : HeaderedItemsControl, new()
 {
     protected readonly IFExDispatcher _dispatcher;
     protected readonly FileSystemIconsProvider _fileSystemIconsProvider;
@@ -25,6 +26,42 @@ public abstract class TreeViewBuilderBase<TItem> where TItem : HeaderedItemsCont
         _fileSystemIconsProvider = fileSystemIconsProvider;
         TreeNodes = new();
     }
+
+    public void CreateNewNode(FExTreeViewNode node) => TreeNodes.TryAdd(node.NodeHeader, node);
+
+    public void AddChildNode(string rootNodeName,
+                             List<string> nodePath,
+                             string name = null,
+                             bool unique = true,
+                             string iconPath = null,
+                             bool isIconAttachedToFile = true,
+                             bool isExpanded = false)
+    {
+        FExTreeViewNode rootNodeStub = GetRootNodeStub(rootNodeName);
+        rootNodeStub.AddChildNode(nodePath, name, unique, iconPath, isIconAttachedToFile, isExpanded);
+    }
+
+    public void AddChildNodes(string rootNodeName, IEnumerable<FExTreeViewNode> childNodes, bool unique = true)
+    {
+        FExTreeViewNode rootNodeStub = GetRootNodeStub(rootNodeName);
+        rootNodeStub.AddChildNodes(childNodes, unique);
+    }
+
+    public void CreateNewNode(string nodePath) => CreateNewNode(new FExTreeViewNode(nodePath));
+
+    public void AddChildNode(string rootNodeName,
+                             string nodePath,
+                             string name = null,
+                             char pathSeparator = '\\',
+                             bool unique = true,
+                             string iconPath = null,
+                             bool isExpanded = false) =>
+        AddChildNode(rootNodeName,
+            FExTreeViewNode.GetNodePath(nodePath, pathSeparator),
+            name,
+            unique,
+            iconPath,
+            isExpanded);
 
     public abstract Task<TItem> GetTreeViewItemAsync(FExTreeViewNode nodeStub);
 
@@ -60,26 +97,6 @@ public abstract class TreeViewBuilderBase<TItem> where TItem : HeaderedItemsCont
             await GrowTreeAsync((TItem)tree.Items[location[i]], newNode, location, i + 1);
     }
 
-    public void CreateNewNode(FExTreeViewNode node) => TreeNodes.TryAdd(node.NodeHeader, node);
-
-    public void AddChildNode(string rootNodeName,
-                             List<string> nodePath,
-                             string name = null,
-                             bool unique = true,
-                             string iconPath = null,
-                             bool isIconAttachedToFile = true,
-                             bool isExpanded = false)
-    {
-        FExTreeViewNode rootNodeStub = GetRootNodeStub(rootNodeName);
-        rootNodeStub.AddChildNode(nodePath, name, unique, iconPath, isIconAttachedToFile, isExpanded);
-    }
-
-    public void AddChildNodes(string rootNodeName, IEnumerable<FExTreeViewNode> childNodes, bool unique = true)
-    {
-        FExTreeViewNode rootNodeStub = GetRootNodeStub(rootNodeName);
-        rootNodeStub.AddChildNodes(childNodes, unique);
-    }
-
     /// <summary>
     ///     Grows the tree.
     /// </summary>
@@ -113,7 +130,7 @@ public abstract class TreeViewBuilderBase<TItem> where TItem : HeaderedItemsCont
         //
         // //LockService.Instance.Release(header);
 
-        List<string> headers = await _dispatcher.InvokeOnMainThreadAsync(() => tree.Items.Cast<TItem>()
+        List<string> headers = await _dispatcher.InvokeOnMainThreadAsync(() => tree.Items.OfType<TItem>()
             .Select(x => x.Header.ToString())
             .ToList());
 
@@ -163,22 +180,6 @@ public abstract class TreeViewBuilderBase<TItem> where TItem : HeaderedItemsCont
             //LockSrv.Release(header);
         }
     }
-
-    public void CreateNewNode(string nodePath) => CreateNewNode(new FExTreeViewNode(nodePath));
-
-    public void AddChildNode(string rootNodeName,
-                             string nodePath,
-                             string name = null,
-                             char pathSeparator = '\\',
-                             bool unique = true,
-                             string iconPath = null,
-                             bool isExpanded = false) =>
-        AddChildNode(rootNodeName,
-            FExTreeViewNode.GetNodePath(nodePath, pathSeparator),
-            name,
-            unique,
-            iconPath,
-            isExpanded);
 
     public async Task<TItem> GetTreeNodeAsync(string rootNodeName, bool setDirectoriesIcons = false)
     {

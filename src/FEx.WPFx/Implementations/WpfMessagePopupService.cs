@@ -1,7 +1,6 @@
 ﻿using FEx.Abstractions;
 using FEx.Basics.Collections.Concurrent;
 using FEx.MVVM.Abstractions.Enums;
-using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Services;
 using Microsoft.Extensions.Logging;
 using System;
@@ -18,7 +17,7 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
     protected ConcurrentHashSet<string> MessagesCache { get; }
     protected SemaphoreSlim MessagesCacheSemaphore { get; }
 
-    public WpfMessagePopupService(ILogger<IMessagePopupService> logger)
+    public WpfMessagePopupService(ILogger<WpfMessagePopupService> logger)
         : base(logger)
     {
         MessagesCache = [];
@@ -127,7 +126,8 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
         return MessageResult.None;
     }
 
-    private void Log(string txt, LogLevel level = LogLevel.Information, Exception exception = null) => _logger.Log(level, exception, txt);
+    private void Log(string txt, LogLevel level = LogLevel.Information, Exception exception = null) =>
+        _logger.Log(level, exception, txt);
 
     #region IDisposable
     public void Dispose() => MessagesCacheSemaphore?.Dispose();

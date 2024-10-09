@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace FEx.Logging.Abstractions.Interfaces;
 
 [SuppressMessage("ReSharper", "PossibleInterfaceMemberAmbiguity")]
-public interface IFExLoggingModule : IContainer<ILogger>, IContainer<ILoggable>, IContainer<ILoggingService>,
+public interface IFExLoggingContainer : IContainer<ILogger>, IContainer<ILoggable>, IContainer<ILoggingService>,
     IContainer<FExLoggingConfigurator>, IContainer<ILoggerFactory>, IContainer<LoggerProviderCollection>
 {
 }

@@ -4,5 +4,5 @@ namespace FEx.Asyncx.Abstractions;
 
 public abstract class AsyncAutoInitializable : AsyncInitializable, IRequiresInitialization
 {
-    void IRequiresInitialization.Initialize() => Initialize();
+    void IRequiresInitialization.Initialize() => BeginInitialization();
 }

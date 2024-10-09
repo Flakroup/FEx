@@ -109,7 +109,7 @@ public class FileSystemUtilities
                     _ => string.Empty
                 };
 
-                ConcurrentCollection<FileInfo> files = GetSourceFiles(sourceDirectories);
+                ConcurrentList<FileInfo> files = GetSourceFiles(sourceDirectories);
 
                 Log(
                     $"There are {sourceDirectories.Keys.Count} directories with total {files.Count} files to be {operationString}",
@@ -224,12 +224,12 @@ public class FileSystemUtilities
         }
     }
 
-    public static ConcurrentCollection<FileInfo> GetSourceFiles(
+    public static ConcurrentList<FileInfo> GetSourceFiles(
         ConcurrentDictionary<DirectoryInfo, FileInfo[]> sourceDirectories)
     {
         if (sourceDirectories?.Count > 0)
         {
-            var result = new ConcurrentCollection<FileInfo>();
+            var result = new ConcurrentList<FileInfo>();
             Parallel.ForEach(sourceDirectories, sourceDirectory => result.AddRange(sourceDirectory.Value));
 
             return result;

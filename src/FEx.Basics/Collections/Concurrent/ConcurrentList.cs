@@ -1,58 +1,42 @@
-﻿using FEx.Basics.Abstractions.Interfaces;
+﻿using FEx.Basics.Abstractions;
+using FEx.Basics.Abstractions.Interfaces.Collections;
 using FEx.Basics.Utilities;
+using FEx.Common.Extensions;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+#if ISNETSTANDARD
+using FEx.Extensions.Collections.Enumerables;
+#endif
 
 namespace FEx.Basics.Collections.Concurrent;
 
 [DebuggerDisplay("Count={" + nameof(Count) + "}")]
 [Serializable]
-public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEvents
+public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<T>
 {
-#pragma warning disable IDISP006
     [NonSerialized] protected readonly ExtendedReaderWriterLockSlim _lock;
-#pragma warning restore IDISP006
-
-    public int SuppressedEvents { get; set; }
-
-    public bool EventsAreSuppressed => SuppressedEvents > 0;
-
-    public bool IsSynchronized => ((ICollection)Items).IsSynchronized;
-    public bool IsFixedSize => ((IList)Items).IsFixedSize;
-
-    public object SyncRoot => Items;
 
     public int Count => Read(() => Items.Count);
 
     public bool IsEmpty => Count == 0;
 
-    public bool IsReadOnly => ((IList)Items).IsReadOnly;
-
     public T this[int index]
     {
         get => Read(() => Items[index]);
-        set => WriteWithResult(() => SetItem(index, value));
+        set => SetItem(index, value);
     }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     protected List<T> Items { get; }
 
-    object IList.this[int index]
-    {
-        get => this[index];
-        set => this[index] = (T)value;
-    }
-
     public ConcurrentList(IEnumerable<T> collection = null)
     {
         Items = [];
-        _lock = new();
+        _lock = new(this);
 
         var items = collection?.ToList();
 
@@ -60,279 +44,181 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
             AddRange(items);
     }
 
-    public void CopyTo(Array array, int index) => Read(() => ((ICollection)Items).CopyTo(array, index));
+    /// <inheritdoc cref="List{T}.Add" />
+    public void Add(T item) => AddCoreWithEvents(item);
 
-    /// <summary>
-    ///     Adds an object to the end of the <see cref="ConcurrentList{T}" />.
-    /// </summary>
-    /// <param name="item">
-    ///     The object to be added to the end of the <see cref="ConcurrentList{T}" />.
-    ///     The value can be null for reference types
-    /// </param>
-    public void Add(T item) =>
-        Write(() =>
-        {
-            int index = Items.Count;
-            Items.Add(item);
-
-            OnCountPropertyChanged();
-            OnIndexerPropertyChanged();
-            OnCollectionChanged(new(NotifyCollectionChangedAction.Add, item, index));
-        });
-
-    public void Clear() =>
+    /// <inheritdoc cref="List{T}.Clear" />
+    public void Clear()
+    {
         Write(() =>
         {
             if (Items.Count == 0)
                 return;
 
             Items.Clear();
-
-            OnCountPropertyChanged();
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
         });
 
+        WhenCollectionHasBeenReset();
+    }
+
+    /// <inheritdoc cref="List{T}.Contains" />
     public bool Contains(T item) => Read(() => Items.Contains(item));
 
+    /// <inheritdoc cref="List{T}.CopyTo(T[])" />
     public void CopyTo(T[] array, int arrayIndex) => Read(() => Items.CopyTo(array, arrayIndex));
 
-    /// <summary>
-    ///     Removes the specified item.
-    /// </summary>
-    /// <param name="item">The item.</param>
-    public bool Remove(T item) =>
-        WriteWithResult(() =>
+    /// <inheritdoc cref="List{T}.Remove" />
+    public bool Remove(T item)
+    {
+        (int index, bool itemHasBeenRemoved) = Write(() =>
         {
             int index = Items.IndexOf(item);
 
-            if (index < 0)
-                return false;
+            if (index == -1)
+                return (-1, false);
 
-            RemoveAt(index);
+            RemoveAtCore(index);
 
-            return true;
+            return (index, true);
         });
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        if (!itemHasBeenRemoved)
+            return false;
 
-    public IEnumerator<T> GetEnumerator() => Read(Items.GetEnumerator);
+        WhenItemIsRemoved(index, item);
 
-    public int Add(object value)
-    {
-        var item = (T)value;
-
-        return WriteWithResult(() =>
-        {
-            Add(item);
-
-            return Items.Count;
-        });
+        return true;
     }
 
-    public bool Contains(object value) => Contains((T)value);
-
-    public int IndexOf(object value) => IndexOf((T)value);
-
-    public void Insert(int index, object value) => Insert(index, (T)value);
-
-    public void Remove(object value) => Remove((T)value);
-
-    public int IndexOf(T item) => Read(() => Items.IndexOf(item));
-
-    public void Insert(int index, T item) =>
-        Write(() =>
+    /// <inheritdoc />
+    public void AddRange(IEnumerable<T> collection)
+    {
+        (int startingIndex, List<T> itemsToAdd) = Write(() =>
         {
-            Items.Insert(index, item);
+            var itemsToAdd = collection?.ToList();
 
-            OnCountPropertyChanged();
-            OnIndexerPropertyChanged();
-            OnCollectionChanged(new(NotifyCollectionChangedAction.Add, item, index));
+            if (itemsToAdd.IsNullOrEmpty())
+                return (-1, itemsToAdd);
+
+            int count = Items.Count;
+            Items.AddRange(itemsToAdd);
+
+            return (count, itemsToAdd);
         });
 
-    public void RemoveAt(int index) =>
-        Write(() =>
-        {
-            T removedItem = Items[index];
-            Items.RemoveAt(index);
+        WhenRangeHasBeenAdded(startingIndex, itemsToAdd);
+    }
 
-            OnCountPropertyChanged();
-            OnIndexerPropertyChanged();
-
-            OnCollectionChanged(new(NotifyCollectionChangedAction.Remove, removedItem, index));
-        });
-
-    public SuppressEventsDisposable SuppressEvents() => new(this);
-
-    /// <summary>
-    ///     Adds the specified items to this collection.
-    /// </summary>
-    /// <param name="range">The items collection to add</param>
-    public void AddRange(IEnumerable<T> range) => WriteWithResult(() => InternalAddRange(range));
-
+    /// <inheritdoc cref="List{T}.AsReadOnly" />
     public ReadOnlyCollection<T> AsReadOnly() => Read(Items.AsReadOnly);
 
-    /// <summary>
-    ///     Adds an object to the end of the <see cref="ConcurrentList{T}" /> if it not exists in it yet.
-    /// </summary>
-    /// <param name="item">
-    ///     The object to be added to the end of the <see cref="ConcurrentList{T}" />.
-    ///     The value can be null for reference types
-    /// </param>
-    public bool AddUnique(T item) =>
-        WriteWithResult(() =>
+    /// <inheritdoc />
+    public bool AddUnique(T item)
+    {
+        int index = Write(() =>
         {
-            if (Items.Contains(item))
+            if (!Items.Contains(item))
+                return -1;
+
+            int count = Items.Count;
+            Items.Add(item);
+
+            return count;
+        });
+
+        return WhenItemHasBeenAdded(item, index);
+    }
+
+    /// <inheritdoc />
+    public void AddUniqueRange(IEnumerable<T> range) => AddRange(range.Distinct().Where(x => !Items.Contains(x)));
+
+    /// <inheritdoc />
+    public void AddUniqueRange<TKey>(IEnumerable<T> range,
+                                     Func<T, TKey> keySelector,
+                                     IEqualityComparer<TKey> comparer = null) =>
+        AddRange(range.DistinctBy(keySelector, comparer)
+            .Where(distinctItem => Items.All(item =>
+                !comparer?.Equals(keySelector(distinctItem), keySelector(item))
+                ?? !keySelector(distinctItem).Equals(keySelector(item))))
+            .ToList());
+
+    /// <inheritdoc />
+    public bool RemoveWhere(Func<T, bool> predicate, out List<T> removedItems)
+    {
+        List<(int index, T removedItem)> innerRemovedItems = Write(() =>
+        {
+            List<(int index, T removedItem)> removedItems = [];
+
+            for (int i = Items.Count - 1; i > -1; i--)
+            {
+                if (predicate(Items[i]))
+                    removedItems.Add((i, RemoveAtCore(i)));
+            }
+
+            return removedItems;
+        });
+
+        foreach ((int index, T removedItem) in innerRemovedItems)
+            WhenItemIsRemoved(index, removedItem);
+
+        removedItems = innerRemovedItems.Select(tuple => tuple.removedItem).ToList();
+
+        return !removedItems.IsNullOrEmpty();
+    }
+
+    /// <inheritdoc />
+    public void Replace(int index, T item) => SetItem(index, item);
+
+    /// <inheritdoc />
+    public void ReplaceWith(IEnumerable<T> collection)
+    {
+        var items = collection.ToList();
+
+        Combo(_ =>
+        {
+            if (items.SequenceEqual(Items))
                 return false;
 
-            Add(item);
+            Clear();
+            AddRange(items);
 
             return true;
         });
-
-    public void AddUniqueRange(IEnumerable<T> range) =>
-        WriteWithResult(() => InternalAddRange(range.Distinct().Where(x => !Items.Contains(x))));
-
-    public bool RemoveWhere(Func<T, bool> predicate)
-    {
-        var hasRemovedAny = false;
-
-        Write(() =>
-        {
-            for (int i = Items.Count - 1; i > -1; i--)
-            {
-                T item = Items[i];
-
-                if (predicate(item))
-                {
-                    RemoveAt(i);
-                    hasRemovedAny = true;
-                }
-            }
-        });
-
-        return hasRemovedAny;
     }
 
-    public void Replace(int index, T item) => WriteWithResult(() => SetItem(index, item));
+    /// <inheritdoc />
+    public void Sort()
+    {
+        Write(() => Items.Sort());
+        WhenCollectionHasBeenReordered();
+    }
 
-    public void ReplaceWith(IEnumerable<T> collection) => Write(() =>
-                                                               {
-                                                                   var items = collection.ToList();
+    /// <inheritdoc />
+    public void Sort(IComparer<T> comparer)
+    {
+        Write(() => Items.Sort(comparer));
+        WhenCollectionHasBeenReordered();
+    }
 
-                                                                   if (items.SequenceEqual(Items))
-                                                                       return;
+    /// <inheritdoc />
+    public void Sort(int index, int count, IComparer<T> comparer)
+    {
+        Write(() => Items.Sort(index, count, comparer));
+        WhenCollectionHasBeenReordered();
+    }
 
-                                                                   using (SuppressEvents())
-                                                                   {
-                                                                       Clear();
-                                                                       InternalAddRange(items);
-                                                                   }
+    /// <inheritdoc />
+    public void Sort(Comparison<T> comparison)
+    {
+        Write(() => Items.Sort(comparison));
+        WhenCollectionHasBeenReordered();
+    }
 
-                                                                   OnCountPropertyChanged();
-                                                                   OnIndexerPropertyChanged();
-                                                                   OnCollectionReset();
-                                                               });
-
-    /// <summary>
-    ///     Sorts the elements using the default comparer.
-    /// </summary>
-    /// <exception cref="T:System.InvalidOperationException">
-    ///     The default comparer
-    /// <see cref="P:System.Collections.Generic.Comparer`1.Default" /> cannot find an implementation of the
-    /// <see cref="T:System.IComparable`1" /> generic interface or the <see cref="T:System.IComparable" /> interface for
-    ///     type <typeparamref name="T" />.
-    /// </exception>
-    public void Sort() =>
-        Write(() =>
-        {
-            Items.Sort();
-
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
-        });
-
-    /// <summary>
-    ///     Sorts the elements using the specified comparer.
-    /// </summary>
-    /// <param name="comparer">
-    ///     The <see cref="T:System.Collections.Generic.IComparer`1" /> implementation to use when comparing
-    ///     elements, or null to use the default comparer <see cref="P:System.Collections.Generic.Comparer`1.Default" />.
-    /// </param>
-    /// <exception cref="T:System.InvalidOperationException">
-    ///     <paramref name="comparer" /> is null, and the default comparer
-    /// <see cref="P:System.Collections.Generic.Comparer`1.Default" /> cannot find implementation of the
-    /// <see cref="T:System.IComparable`1" /> generic interface or the <see cref="T:System.IComparable" /> interface for
-    ///     type <typeparamref name="T" />.
-    /// </exception>
-    /// <exception cref="T:System.ArgumentException">
-    ///     The implementation of <paramref name="comparer" /> caused an error during
-    ///     the sort. For example, <paramref name="comparer" /> might not return 0 when comparing an item with itself.
-    /// </exception>
-    public void Sort(IComparer<T> comparer) =>
-        Write(() =>
-        {
-            Items.Sort(comparer);
-
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
-        });
-
-    /// <summary>
-    ///     Sorts the elements in a range of elements using the specified comparer.
-    /// </summary>
-    /// <param name="index">The zero-based starting index of the range to sort.</param>
-    /// <param name="count">The length of the range to sort.</param>
-    /// <param name="comparer">
-    ///     The <see cref="T:System.Collections.Generic.IComparer`1" /> implementation to use when comparing
-    ///     elements, or null to use the default comparer <see cref="P:System.Collections.Generic.Comparer`1.Default" />.
-    /// </param>
-    /// <exception cref="T:System.ArgumentOutOfRangeException">
-    ///     <paramref name="index" /> is less than 0.-or-
-    /// <paramref name="count" /> is less than 0.
-    /// </exception>
-    /// <exception cref="T:System.ArgumentException">
-    ///     <paramref name="index" /> and <paramref name="count" /> do not specify a
-    ///     valid range in the <see cref="T:System.Collections.Generic.List`1" />.-or-The implementation of
-    /// <paramref name="comparer" /> caused an error during the sort. For example, <paramref name="comparer" /> might not
-    ///     return 0 when comparing an item with itself.
-    /// </exception>
-    /// <exception cref="T:System.InvalidOperationException">
-    ///     <paramref name="comparer" /> is null, and the default comparer
-    /// <see cref="P:System.Collections.Generic.Comparer`1.Default" /> cannot find implementation of the
-    /// <see cref="T:System.IComparable`1" /> generic interface or the <see cref="T:System.IComparable" /> interface for
-    ///     type <typeparamref name="T" />.
-    /// </exception>
-    public void Sort(int index, int count, IComparer<T> comparer) =>
-        Write(() =>
-        {
-            Items.Sort(index, count, comparer);
-
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
-        });
-
-    /// <summary>Sorts the elements using the specified <see cref="T:System.Comparison`1" />.</summary>
-    /// <param name="comparison">The <see cref="T:System.Comparison`1" /> to use when comparing elements.</param>
-    /// <exception cref="T:System.ArgumentNullException">
-    ///     <paramref name="comparison" /> is null.
-    /// </exception>
-    /// <exception cref="T:System.ArgumentException">
-    ///     The implementation of <paramref name="comparison" /> caused an error
-    ///     during the sort. For example, <paramref name="comparison" /> might not return 0 when comparing an item with itself.
-    /// </exception>
-    public void Sort(Comparison<T> comparison) =>
-        Write(() =>
-        {
-            Items.Sort(comparison);
-
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
-        });
-
+    /// <inheritdoc />
     public void SortBy<TKey>(Func<T, TKey> selector,
                              ListSortDirection order = ListSortDirection.Ascending,
-                             IComparer<TKey> comparer = null) =>
+                             IComparer<TKey> comparer = null)
+    {
         Write(() =>
         {
             var sortedItems = (order == ListSortDirection.Ascending
@@ -344,75 +230,187 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEve
                 for (var i = 0; i < sortedItems.Count; i++)
                     Items[i] = sortedItems[i];
             }
-
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
         });
 
-    /// <summary>
-    ///     Suppresses all events regarding this collection while executing the specified action.
-    /// <see cref="NotifyCollectionChangedAction.Reset" /> event is fired afterwards.
-    /// </summary>
-    /// <param name="action">The action.</param>
-    public void Combo(Action action) =>
-        Write(() =>
+        WhenCollectionHasBeenReordered();
+    }
+
+    /// <inheritdoc />
+    public void Combo(Action<IConcurrentList<T>> action, bool shouldTriggerCollectionReset = false) =>
+        Combo(items =>
+        {
+            action(items);
+
+            return shouldTriggerCollectionReset;
+        });
+
+    /// <inheritdoc />
+    public bool Combo(Func<IConcurrentList<T>, bool> shouldTriggerCollectionReset)
+    {
+        bool triggerCollectionReset = Write(() =>
         {
             using (SuppressEvents())
-                action();
-
-            OnCountPropertyChanged();
-            OnIndexerPropertyChanged();
-            OnCollectionReset();
+                return shouldTriggerCollectionReset(this);
         });
 
-    protected virtual void OnCountPropertyChanged()
-    {
+        if (!triggerCollectionReset)
+            return false;
+
+        WhenCollectionHasBeenReset();
+
+        return true;
     }
 
-    protected virtual void OnIndexerPropertyChanged()
+    /// <inheritdoc />
+    public void Move(int oldIndex, int newIndex) => MoveItem(oldIndex, newIndex);
+
+    /// <inheritdoc cref="List{T}.GetEnumerator" />
+    public IEnumerator<T> GetEnumerator() => Read(Items.GetEnumerator);
+
+    /// <inheritdoc cref="List{T}.Add" />
+    public int Add(object value) => AddCoreWithEvents((T)value);
+
+    /// <inheritdoc cref="List{T}.IndexOf(T)" />
+    public int IndexOf(T item) => Read(() => Items.IndexOf(item));
+
+    /// <inheritdoc cref="List{T}.Insert" />
+    public void Insert(int index, T item)
     {
+        Write(() => Items.Insert(index, item));
+        WhenItemIsInserted(index, item);
     }
 
-    protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+    /// <inheritdoc cref="List{T}.RemoveAt" />
+    public void RemoveAt(int index)
     {
+        T removedItem = RemoveAtCore(index);
+        WhenItemIsRemoved(index, removedItem);
     }
 
-    protected virtual void OnCollectionReset()
+    protected virtual void MoveItem(int oldIndex, int newIndex)
     {
+        T movedItem = Write(() =>
+        {
+            T movedItem = this[oldIndex];
+
+            using (SuppressEvents())
+            {
+                Remove(oldIndex);
+                Insert(newIndex, movedItem);
+            }
+
+            return movedItem;
+        });
+
+        WhenItemIsMoved(oldIndex, newIndex, movedItem);
     }
-
-    protected void Read(Action action) => _lock.Read(action);
-
-    protected TResult Read<TResult>(Func<TResult> action) => _lock.ReadWithResult(action);
-
-    protected void Write(Action action) => _lock.Write(action);
-
-    protected TResult WriteWithResult<TResult>(Func<TResult> action) => _lock.WriteWithResult(action);
 
     protected T SetItem(int index, T item)
     {
-        T originalItem = this[index];
-        Items[index] = item;
+        T replacedItem = Write(() =>
+        {
+            T replacedItem = Items[index];
+            Items[index] = item;
 
-        OnIndexerPropertyChanged();
+            return replacedItem;
+        });
 
-        OnCollectionChanged(new(NotifyCollectionChangedAction.Replace, originalItem, item, index));
+        WhenItemIsReplaced(index, item, replacedItem);
 
-        return originalItem;
+        return replacedItem;
     }
 
-    private (List<T> added, int startingIndex) InternalAddRange(IEnumerable<T> collection)
-    {
-        int startingIndex = Items.Count;
-        var itemsToAdd = collection.ToList();
+    private T RemoveAtCore(int index) =>
+        Write(() =>
+        {
+            T removedItem = Items[index];
+            Items.RemoveAt(index);
 
-        Items.AddRange(itemsToAdd);
+            return removedItem;
+        });
+
+    private int AddCoreWithEvents(T item)
+    {
+        int index = Write(() =>
+        {
+            int count = Items.Count;
+            Items.Add(item);
+
+            return count;
+        });
+
+        WhenItemHasBeenAdded(item, index);
+
+        return index;
+    }
+
+    private bool WhenItemHasBeenAdded(T item, int index)
+    {
+        if (index == -1)
+            return false;
+
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
+        OnAddToCollection(item, index);
+
+        return true;
+    }
+
+    private void WhenRangeHasBeenAdded(int startingIndex, List<T> itemsToAdd)
+    {
+        if (startingIndex == -1)
+            return;
 
         OnCountPropertyChanged();
         OnIndexerPropertyChanged();
 
-        OnCollectionChanged(new(NotifyCollectionChangedAction.Add, itemsToAdd, startingIndex));
+        if (itemsToAdd.Count >= startingIndex / 5)
+        {
+            OnCollectionReset();
 
-        return (itemsToAdd, startingIndex);
+            return;
+        }
+
+        for (var i = 0; i < itemsToAdd.Count; i++)
+            OnAddToCollection(itemsToAdd[i], startingIndex + i);
+    }
+
+    private void WhenCollectionHasBeenReordered()
+    {
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    }
+
+    private void WhenCollectionHasBeenReset()
+    {
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    }
+
+    private void WhenItemIsInserted(int index, T item)
+    {
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
+        OnAddToCollection(item, index);
+    }
+
+    private void WhenItemIsRemoved(int index, T removedItem)
+    {
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
+        OnRemoveFromCollection(removedItem, index);
+    }
+
+    private void WhenItemIsMoved(int oldIndex, int newIndex, T removedItem)
+    {
+        OnIndexerPropertyChanged();
+        OnMoveInCollection(removedItem, newIndex, oldIndex);
+    }
+
+    private void WhenItemIsReplaced(int index, T item, T replacedItem)
+    {
+        OnIndexerPropertyChanged();
+        OnReplaceInCollection(replacedItem, item, index);
     }
 }

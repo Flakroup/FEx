@@ -1,6 +1,6 @@
-﻿using FEx.Downloader.Abstractions.Interfaces;
+﻿using FEx.Abstractions.Models;
+using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
-using FEx.Extensions.Base.Models;
 using FEx.Extensions.Web;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Utilities;
@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Downloader.Clients;
 
-public class FlakHttpClient : ProgressAggregator, IDisposable, IDownloadBase
+public class FlakHttpClient : ProgressAggregator, IDownloadBase
 {
     public string FilePath => Client.FilePath;
 

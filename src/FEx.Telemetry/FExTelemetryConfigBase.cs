@@ -15,7 +15,7 @@ public abstract class FExTelemetryConfigBase : NotifyPropertyChanged, IFExTeleme
     public string AccessToken
     {
         get => _accessToken;
-        set => SetProperty(ref _accessToken, value.Guard(nameof(AccessToken)), OnAccessTokenChanged);
+        set => SetProperty(ref _accessToken, value.Guard(), OnAccessTokenChanged);
     }
 
     public string AppEnvironment => GetAppEnvironment();

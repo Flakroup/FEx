@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>$(WindowsTargetFrameworkIds)</TargetFrameworks>
@@ -33,8 +33,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="MaterialDesignThemes" Version="5.1.0" />
 		<PackageReference Include="SharpVectors.Reloaded" Version="1.8.4.2" />
-		<PackageReference Include="WpfBindingErrors" Version="1.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -44,6 +44,12 @@
 	  <ProjectReference Include="..\FEx.Logging\FEx.Logging.csproj" />
 	  <ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
 	  <ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
-	  <ProjectReference Include="..\FEx.Platforms.Abstractions\FEx.Platforms.Abstractions.csproj" />
+	  <ProjectReference Include="..\FEx.Platforms\FEx.Platforms.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Controls\BusyIndicator.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
 	</ItemGroup>
 </Project>

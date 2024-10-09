@@ -1,5 +1,5 @@
-﻿using FEx.Downloader.Enums;
-using FEx.Extensions.Base.Models;
+﻿using FEx.Abstractions.Models;
+using FEx.Downloader.Enums;
 using System;
 
 namespace FEx.Downloader.Abstractions.Interfaces;

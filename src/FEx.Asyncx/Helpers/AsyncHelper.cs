@@ -4,7 +4,7 @@ using FEx.Abstractions.Interfaces;
 using FEx.Asyncx.Utilities;
 using FEx.Common.Extensions;
 using FEx.Extensions.Helpers;
-using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,13 +17,15 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
 {
     private readonly ITasksInfoSubject _tasksInfoSubject;
     private readonly IFExDispatcher _dispatcher;
-    private readonly ILogger<AsyncHelper> _logger;
+    private readonly IExceptionHandler _exceptionHandler;
 
-    public AsyncHelper(IFExDispatcher dispatcher, ILogger<AsyncHelper> logger, ITasksInfoSubject tasksInfoSubject)
+    public AsyncHelper(IFExDispatcher dispatcher,
+                       ITasksInfoSubject tasksInfoSubject,
+                       IExceptionHandler exceptionHandler)
     {
         _dispatcher = dispatcher;
-        _logger = logger;
         _tasksInfoSubject = tasksInfoSubject;
+        _exceptionHandler = exceptionHandler;
     }
 
     public async Task ExecuteDeferredTaskOnMainThreadAsync(Func<Action> func,
@@ -48,58 +50,68 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
 
     public ITaskWrapper FireAndForget(Action action,
                                       AsyncMode asyncMode = AsyncMode.Default,
+                                      IExceptionHandlerOptions options = null,
                                       CancellationToken cancellationToken = default)
     {
         action.Guard(nameof(action));
-        var taskWrapper = new TaskWrapper(true);
-        taskWrapper.SetTask(() => ExecuteAndCatchAsync(() => Wrap(action), taskWrapper, asyncMode, cancellationToken));
+        var taskWrapper = new TaskWrapper();
+
+        taskWrapper.SetTask(() =>
+            ExecuteAndCatchAsync(() => Wrap(action), taskWrapper, asyncMode, options, cancellationToken));
 
         return taskWrapper;
     }
 
     public ITaskWrapper<T> FireAndForget<T>(Func<T> func,
                                             AsyncMode asyncMode = AsyncMode.Default,
+                                            IExceptionHandlerOptions options = null,
                                             CancellationToken cancellationToken = default)
     {
         func.Guard(nameof(func));
-        var taskWrapper = new TaskWrapper<T>(true);
-        taskWrapper.SetTask(() => ExecuteAndCatchAsync(func, taskWrapper, asyncMode, cancellationToken));
+        var taskWrapper = new TaskWrapper<T>();
+        taskWrapper.SetTask(() => ExecuteAndCatchAsync(func, taskWrapper, asyncMode, options, cancellationToken));
 
         return taskWrapper;
     }
 
-    public ITaskWrapper FireTaskAndForget(Func<Task> task, AsyncMode asyncMode = AsyncMode.Default)
+    public ITaskWrapper FireTaskAndForget(Func<Task> task,
+                                          AsyncMode asyncMode = AsyncMode.Default,
+                                          IExceptionHandlerOptions options = null)
     {
         task.Guard(nameof(task));
-        var taskWrapper = new TaskWrapper(true);
-        taskWrapper.SetTask(() => ExecuteTaskAndCatchAsync(() => WrapTaskAsync(task), taskWrapper, asyncMode));
+        var taskWrapper = new TaskWrapper();
+        taskWrapper.SetTask(() => ExecuteTaskAndCatchAsync(() => WrapTaskAsync(task), taskWrapper, asyncMode, options));
 
         return taskWrapper;
     }
 
-    public ITaskWrapper<T> FireTaskAndForget<T>(Func<Task<T>> task, AsyncMode asyncMode = AsyncMode.Default)
+    public ITaskWrapper<T> FireTaskAndForget<T>(Func<Task<T>> task,
+                                                AsyncMode asyncMode = AsyncMode.Default,
+                                                IExceptionHandlerOptions options = null)
     {
         task.Guard(nameof(task));
-        var taskWrapper = new TaskWrapper<T>(true);
-        taskWrapper.SetTask(() => ExecuteTaskAndCatchAsync(task, taskWrapper, asyncMode));
+        var taskWrapper = new TaskWrapper<T>();
+        taskWrapper.SetTask(() => ExecuteTaskAndCatchAsync(task, taskWrapper, asyncMode, options));
 
         return taskWrapper;
     }
 
     public IReadOnlyList<ITaskWrapper> FireTasksAndForget(IEnumerable<Func<Task>> tasks,
-                                                          AsyncMode asyncMode = AsyncMode.Default)
+                                                          AsyncMode asyncMode = AsyncMode.Default,
+                                                          IExceptionHandlerOptions options = null)
     {
         List<Func<Task>> deferredList = (tasks?.ToList()).Guard(nameof(tasks));
 
-        return deferredList.Select(x => FireTaskAndForget(x, asyncMode)).ToList().AsReadOnly();
+        return deferredList.Select(x => FireTaskAndForget(x, asyncMode, options)).ToList().AsReadOnly();
     }
 
     public IReadOnlyList<ITaskWrapper<T>> FireTasksAndForget<T>(IEnumerable<Func<Task<T>>> tasks,
-                                                                AsyncMode asyncMode = AsyncMode.Default)
+                                                                AsyncMode asyncMode = AsyncMode.Default,
+                                                                IExceptionHandlerOptions options = null)
     {
         List<Func<Task<T>>> deferredList = (tasks?.ToList()).Guard(nameof(tasks));
 
-        return deferredList.Select(x => FireTaskAndForget(x, asyncMode)).ToList().AsReadOnly();
+        return deferredList.Select(x => FireTaskAndForget(x, asyncMode, options)).ToList().AsReadOnly();
     }
 
     public static void FireOrWait(Func<Task> func, bool wait)
@@ -120,18 +132,17 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
         return default;
     }
 
-    private static object Wrap(Action action)
+    public static async Task SwitchToThreadPoolAsync(Func<Task> function)
     {
-        action();
-
-        return null;
+        await TaskScheduler.Default;
+        await function();
     }
 
-    private static async Task<object> WrapTaskAsync(Func<Task> task)
+    public static async Task<T> SwitchToThreadPoolAsync<T>(Func<Task<T>> function)
     {
-        await task();
+        await TaskScheduler.Default;
 
-        return null;
+        return await function();
     }
 
     private static void SetResult<T>(T result, ITaskWrapperBase taskWrapper)
@@ -153,8 +164,9 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
 
     private async Task<T> ExecuteAndCatchAsync<T>(Func<T> func,
                                                   ITaskWrapperBase taskWrapper,
-                                                  AsyncMode asyncMode,
-                                                  CancellationToken cancellationToken)
+                                                  AsyncMode asyncMode = AsyncMode.Default,
+                                                  IExceptionHandlerOptions options = null,
+                                                  CancellationToken cancellationToken = default)
     {
         _tasksInfoSubject.AddTask(taskWrapper);
         T result = default;
@@ -172,7 +184,7 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, ex.Message);
+            _exceptionHandler.Handle(ex, options);
             taskWrapper.SetException(ex);
         }
 
@@ -183,7 +195,8 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
 
     private async Task<T> ExecuteTaskAndCatchAsync<T>(Func<Task<T>> task,
                                                       ITaskWrapperBase taskWrapper,
-                                                      AsyncMode asyncMode)
+                                                      AsyncMode asyncMode = AsyncMode.Default,
+                                                      IExceptionHandlerOptions options = null)
     {
         _tasksInfoSubject.AddTask(taskWrapper);
         T result = default;
@@ -201,7 +214,7 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, ex.Message);
+            _exceptionHandler.Handle(ex, options);
             taskWrapper.SetException(ex);
         }
 

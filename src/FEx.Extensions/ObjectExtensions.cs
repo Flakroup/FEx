@@ -204,4 +204,21 @@ public static class ObjectExtensions
 
         return true;
     }
+
+    public static bool SetProperty<TSender, TRet>(this TSender _,
+                                                  ref TRet backingField,
+                                                  TRet newValue,
+                                                  Action<string, TRet> onPropertyChanged = null,
+                                                  [CallerMemberName] string propertyName = null)
+        where TSender : INotifyPropertyChanged
+    {
+        if (propertyName is null
+            || EqualityComparer<TRet>.Default.Equals(backingField, newValue))
+            return false;
+
+        backingField = newValue;
+        onPropertyChanged?.Invoke(propertyName, newValue);
+
+        return true;
+    }
 }

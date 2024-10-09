@@ -1,6 +1,7 @@
-﻿using FEx.Abstractions;
+﻿using FEx.Abstractions.Interfaces;
 using FEx.Basics.Abstractions;
 using FEx.Basics.Extensions;
+using FEx.Common.Abstractions.Interfaces;
 using FEx.Common.Extensions;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,12 +12,12 @@ namespace FEx.Fundamentals.Helpers;
 
 public class DefaultDispatcher : FExDispatcher
 {
-    private readonly Thread _originThread;
-
-    public DefaultDispatcher(ILogger logger)
-        : base(logger)
+    public DefaultDispatcher(ILogger logger,
+                             IMainThreadContextProvider mainThreadContextProvider,
+                             IDeadlockMonitor deadlockMonitor,
+                             IStackTraceProvider stackTraceProvider)
+        : base(logger, mainThreadContextProvider, deadlockMonitor, stackTraceProvider)
     {
-        _originThread = Thread.CurrentThread;
     }
 
     /// <summary>
@@ -49,7 +50,7 @@ public class DefaultDispatcher : FExDispatcher
     {
         SynchronizationContext context = sender is Thread thread
             ? thread.GetThreadSynchronizationContext()
-            : FExFoundation.MainSynchronizationContext;
+            : _mainThreadContextProvider.Context;
 
         if (CheckAccess(sender)
             || context is null)
@@ -62,7 +63,7 @@ public class DefaultDispatcher : FExDispatcher
     {
         SynchronizationContext context = sender is Thread thread
             ? thread.GetThreadSynchronizationContext()
-            : FExFoundation.MainSynchronizationContext;
+            : _mainThreadContextProvider.Context;
 
         if (CheckAccess(sender)
             || context is null)
@@ -75,7 +76,7 @@ public class DefaultDispatcher : FExDispatcher
     {
         SynchronizationContext context = sender is Thread thread
             ? thread.GetThreadSynchronizationContext()
-            : FExFoundation.MainSynchronizationContext;
+            : _mainThreadContextProvider.Context;
 
         return CheckAccess(sender) || context is null
             ? action()
@@ -86,7 +87,7 @@ public class DefaultDispatcher : FExDispatcher
     {
         SynchronizationContext context = sender is Thread thread
             ? thread.GetThreadSynchronizationContext()
-            : FExFoundation.MainSynchronizationContext;
+            : _mainThreadContextProvider.Context;
 
         return CheckAccess(sender) || context is null
             ? action()

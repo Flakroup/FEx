@@ -1,5 +1,4 @@
 ﻿using FEx.MVVM.Abstractions.Enums;
-using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Services;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,7 +10,7 @@ namespace FEx.Avaloniax;
 
 public class AvaloniaMessagePopupService : MessagePopupServiceBase
 {
-    public AvaloniaMessagePopupService(ILogger<IMessagePopupService> logger)
+    public AvaloniaMessagePopupService(ILogger<AvaloniaMessagePopupService> logger)
         : base(logger)
     {
     }

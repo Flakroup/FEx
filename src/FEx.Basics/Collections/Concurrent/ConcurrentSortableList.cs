@@ -1,10 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace FEx.Basics.Collections.Concurrent;
 
+[DebuggerDisplay("Count={" + nameof(Count) + "}")]
+[Serializable]
 public class ConcurrentSortableList<T> : ConcurrentList<T> where T : IComparable<T>
 {
+    public ConcurrentSortableList(IEnumerable<T> collection = null)
+        : base(collection)
+    {
+    }
+
     public void Sort(ListSortDirection order) =>
         Write(() =>
         {

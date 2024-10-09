@@ -1,4 +1,4 @@
-﻿using FEx.DI.Abstractions.Interfaces;
+﻿using FEx.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

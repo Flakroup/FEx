@@ -39,7 +39,7 @@ public static class UrlExtensions
         finally
         {
             if (dispose)
-                client?.Dispose();
+                client.Dispose();
         }
     }
 
@@ -114,7 +114,7 @@ public static class UrlExtensions
         finally
         {
             if (dispose)
-                client?.Dispose();
+                client.Dispose();
         }
     }
 

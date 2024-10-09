@@ -8,7 +8,7 @@ namespace FEx.Logging.Abstractions.Extensions;
 public static class LoggerExtensions
 {
     public static void LogError<T>(this ILogger logger, T exception) where T : Exception =>
-        logger.LogError(exception, exception.Message);
+        logger.LogError(exception, exception.ToString());
 
     public static ILogger GetLogger(this object sender) =>
         FExLoggingFoundation.LoggerFactory.CreateLogger(sender.GetType());

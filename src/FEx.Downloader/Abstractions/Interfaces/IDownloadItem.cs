@@ -1,6 +1,5 @@
 ﻿using FEx.MVVM.Abstractions.Interfaces;
 using System;
-using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Threading;
@@ -8,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Downloader.Abstractions.Interfaces;
 
-public interface IDownloadItem : IDownloadStub, IDisposable, INotifyPropertyChanged, IProgressStatus
+public interface IDownloadItem : IDownloadStub, IDisposable, IProgressStatus
 {
     CancellationTokenSource CancellationTokenSource { get; }
     Task DownloadFileTask { get; set; }

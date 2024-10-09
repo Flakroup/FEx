@@ -1,10 +1,10 @@
-﻿using FEx.Basics.Abstractions;
+﻿using FEx.Abstractions.Models;
+using FEx.Basics.Abstractions;
 using FEx.Basics.Extensions;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
 using FEx.Extensions.Base.Converters;
 using FEx.Extensions.Base.Enums;
-using FEx.Extensions.Base.Models;
 using FEx.Extensions.Collections.Enumerables;
 using FEx.Extensions.Web;
 using System;

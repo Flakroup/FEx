@@ -29,15 +29,21 @@ public sealed class TasksInfoSubject : FExBehaviorSubject<IList<Guid>>, ITasksIn
         OnNext(_tasks);
     }
 
-    public void AddTask(ITaskWrapperBase value)
+    public void AddTask(ITaskWrapperBase value) => AddTask(value.Id);
+
+    /// <inheritdoc />
+    public void AddTask(Guid taskId)
     {
-        _tasks.Add(value.Id);
+        _tasks.Add(taskId);
         OnNext(_tasks);
     }
 
-    public void RemoveTask(ITaskWrapperBase value)
+    public void RemoveTask(ITaskWrapperBase value) => RemoveTask(value.Id);
+
+    /// <inheritdoc />
+    public void RemoveTask(Guid taskId)
     {
-        _tasks.Remove(value.Id);
+        _tasks.Remove(taskId);
         OnNext(_tasks);
 
         if (_tasks.Count == 0)

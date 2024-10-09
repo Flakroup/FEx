@@ -1,4 +1,5 @@
 ﻿using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
 using FEx.Basics.Abstractions.Interfaces;
 using FEx.Extensions;
 using JetBrains.Annotations;
@@ -9,7 +10,16 @@ namespace FEx.Basics.Abstractions;
 
 public abstract class NotifyPropertyChanged : PropertyChangeAware, IFExNotifyPropertyChanged
 {
+    private IFExDispatcher _dispatcher;
+
     public event PropertyChangedEventHandler PropertyChanged;
+
+    protected IFExDispatcher Dispatcher =>
+        FExFoundation.HasBeenInitialized
+#pragma warning disable CS0618 // Type or member is obsolete
+            ? _dispatcher ??= FExFoundation.Dispatcher
+            : null;
+#pragma warning restore CS0618 // Type or member is obsolete
 
     public override void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
@@ -19,7 +29,10 @@ public abstract class NotifyPropertyChanged : PropertyChangeAware, IFExNotifyPro
             || PropertyChanged is null)
             return;
 
-        FExFoundation.EventDeliverer.DeliverEvent(EventDelegate, this);
+        if (FExFoundation.HasBeenInitialized)
+            Dispatcher.InvokeOnMainThread(EventDelegate, this);
+        else
+            EventDelegate();
 
         return;
 

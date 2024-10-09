@@ -7,8 +7,8 @@ using System.Diagnostics.CodeAnalysis;
 namespace FEx.DependencyInjection;
 
 [SuppressMessage("ReSharper", "PossibleInterfaceMemberAmbiguity")]
-public interface IFExDependencyInjectionModule : IContainer<FExStrongInjectServiceProvider>,
-    IContainer<FExMicrosoftDIServiceProvider>, IContainer<IScopeProvider>, IContainer<IInitializeModule[]>,
-    IContainer<IServiceProvider>, IContainer<IAsyncHelper>, IContainer<IFExServiceProvider>
+public interface IFExDependencyInjectionModule : IContainer<IScopeProvider>, IContainer<IInitializeModule[]>,
+    IContainer<IServiceProvider>, IContainer<IAsyncHelper>, IContainer<IFExServiceProvider>,
+    IContainer<IFExInitialize[]>, IContainer<FExMicrosoftDIServiceProvider>, IContainer<IFExPriorityInitialize[]>
 {
 }

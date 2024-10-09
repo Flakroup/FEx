@@ -185,9 +185,10 @@ public class AzureStorageService : IAzureStorageService
     public async Task<IList<CloudBlockBlobInfo>> GetCloudBlockBlobsInfoAsync(
         string containerName,
         string path,
-        bool useFlatBlobListing = false) => (await GetBlobsAsync<CloudBlockBlob>(containerName, path, useFlatBlobListing)).AsParallel()
-            .Select(x => new CloudBlockBlobInfo(x))
-            .ToArray();
+        bool useFlatBlobListing = false) =>
+        (await GetBlobsAsync<CloudBlockBlob>(containerName, path, useFlatBlobListing)).AsParallel()
+        .Select(x => new CloudBlockBlobInfo(x))
+        .ToArray();
 
     public async Task<IList<CloudBlockBlob>> GetCloudBlockBlobsAsync(string containerName,
                                                                      string path,
@@ -261,7 +262,7 @@ public class AzureStorageService : IAzureStorageService
                 null,
                 context);
 
-            if (blobAction != null)
+            if (blobAction is not null)
                 await blobAction(destinationBlob);
 
             return (destinationBlob, true);
@@ -341,12 +342,12 @@ public class AzureStorageService : IAzureStorageService
             operationContext,
             cancellationToken);
 
-    private string GetBlobName(string path, string fileName) =>
+    private static string GetBlobName(string path, string fileName) =>
         path.IsNotNullOrEmptyString()
             ? $"{path}/{fileName}"
             : fileName;
 
-    private void EnsureDefaultServiceVersion(string connectionString)
+    public static void EnsureDefaultServiceVersion(string connectionString)
     {
         var storageAccount = CloudStorageAccount.Parse(connectionString);
         CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
@@ -406,7 +407,8 @@ public class AzureStorageService : IAzureStorageService
         return (localFile, sourceBlob, shouldBeDownloaded);
     }
 
-    private ProgressState GetBlobProgressState(string blobName, StorageOperation operation) => ProgressStates.GetOrAddValue(blobName, () => new(ProgressReporter, operation));
+    private ProgressState GetBlobProgressState(string blobName, StorageOperation operation) =>
+        ProgressStates.GetOrAddValue(blobName, () => new(ProgressReporter, operation));
 
     private async Task RunBlobDownloadAsync(FileInfo localFile, CloudBlockBlob sourceBlob, bool shouldBeDownloaded)
     {
@@ -456,7 +458,7 @@ public class AzureStorageService : IAzureStorageService
             string remoteMD5 = sourceBlob.Properties.ContentMD5;
             var log = $"Local file {localFile.FullName} exists, ";
 
-            if (remoteMD5 == null)
+            if (remoteMD5 is null)
             {
                 result = false;
                 log += $"but it's not possible to compare its checksum - since blob {sourceBlob.Name} hash is missing";
@@ -497,7 +499,7 @@ public class AzureStorageService : IAzureStorageService
         return result;
     }
 
-    private void LogProgress(TransferStatus progress, ProgressState state) => state.LogProgress(progress);
+    private static void LogProgress(TransferStatus progress, ProgressState state) => state.LogProgress(progress);
 
     private void SaveResults(IDictionary<string, string> resDictionary)
     {
@@ -506,7 +508,7 @@ public class AzureStorageService : IAzureStorageService
         Log.LogInformation(resultJson);
     }
 
-    private void DeleteOldFiles(string downloadDir, string deleteFilesMask, params string[] except)
+    private static void DeleteOldFiles(string downloadDir, string deleteFilesMask, params string[] except)
     {
         FileInfo[] files = new DirectoryInfo(downloadDir).EnumerateFiles(deleteFilesMask)
             .Where(x => except?.Contains(x.FullName) != true)

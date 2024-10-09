@@ -1,3 +1,6 @@
+using FEx.Extensions.DateTimes;
+using FEx.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 
@@ -5,9 +8,13 @@ namespace FEx.Basics.Utilities;
 
 public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
 {
-    public ExtendedReaderWriterLockSlim(LockRecursionPolicy recursionPolicy = LockRecursionPolicy.SupportsRecursion)
+    private readonly Type _ownerType;
+
+    public ExtendedReaderWriterLockSlim(object owner,
+                                        LockRecursionPolicy recursionPolicy = LockRecursionPolicy.SupportsRecursion)
         : base(recursionPolicy)
     {
+        _ownerType = owner.GetType();
     }
 
     public void Read(Action action) => Execute(action, LockType.Read);
@@ -48,10 +55,23 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
 
     private void EnterLock(LockType type)
     {
-        if (type == LockType.Write)
-            EnterWriteLock();
-        else
-            EnterReadLock();
+        var retry = 0;
+        var timeout = TimeSpan.FromSeconds(30);
+
+        while (true)
+        {
+            bool hasLock = type == LockType.Write
+                ? TryEnterWriteLock(timeout)
+                : TryEnterUpgradeableReadLock(timeout);
+
+            if (hasLock)
+                break;
+
+            retry++;
+
+            FExLoggingFoundation.Logger.LogDebug(
+                $"Couldn't acquire lock for {_ownerType.FullName} in {timeout.GetTime()}. Retrying {retry} time...");
+        }
     }
 
     private void ExitLock(LockType type)
@@ -59,7 +79,7 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
         if (type == LockType.Write)
             ExitWriteLock();
         else
-            ExitReadLock();
+            ExitUpgradeableReadLock();
     }
 
     private enum LockType

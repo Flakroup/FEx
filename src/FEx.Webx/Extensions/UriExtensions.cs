@@ -1,8 +1,8 @@
 using FEx.Abstractions.Flow;
 using FEx.Abstractions.Flow.Errors;
+using FEx.Abstractions.Models;
 using FEx.Basics.Extensions;
 using FEx.Common.Extensions;
-using FEx.Extensions.Base.Models;
 using FEx.Extensions.Collections;
 using FEx.Extensions.Helpers;
 using FEx.Extensions.Web;
@@ -182,17 +182,15 @@ public static class UriExtensions
             using var httpResponse = (HttpWebResponse)response;
             var statusCode = (int)httpResponse.StatusCode;
 
-            switch (statusCode)
+            return statusCode switch
             {
                 //Good requests
-                case >= 100 and < 400:
-                    return Result<Error>.Success;
+                >= 100 and < 400 => Result<Error>.Success,
                 //Server Errors
-                case >= 500 and <= 510:
-                    return new StackError($"The remote server has thrown an internal error. Url is not valid: {url}");
-            }
-
-            return new StackError($"The remote server has thrown an unexpected code. Url is not valid: {url}");
+                >= 500 and <= 510 => new StackError(
+                    $"The remote server has thrown an internal error. Url is not valid: {url}"),
+                _ => new StackError($"The remote server has thrown an unexpected code. Url is not valid: {url}")
+            };
         }
         catch (WebException ex)
         {

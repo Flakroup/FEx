@@ -17,9 +17,9 @@ namespace FEx.Logging;
 [Register(typeof(Loggable), typeof(ILoggable))]
 [Register(typeof(LoggingService), Scope.SingleInstance, typeof(ILoggingService))]
 [Register(typeof(FExLoggingConfigurator), Scope.SingleInstance)]
-[Register(typeof(FExLoggingModuleInitializer),
+[Register(typeof(FExLogging),
     Scope.SingleInstance,
-    typeof(FExLoggingModuleInitializer),
+    typeof(FExLogging),
     typeof(IInitializeModule))]
 public class FExLoggingModule
 {
@@ -67,7 +67,7 @@ public class FExLoggingModule
         return (ILogger)genericMethod.Invoke(loggerFactory, [loggerFactory]);
     }
 
-    public static void AddServices(IFExLoggingModule container, IServiceCollection services)
+    public static void AddServices(IFExLoggingContainer container, IServiceCollection services)
     {
         services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog());
 

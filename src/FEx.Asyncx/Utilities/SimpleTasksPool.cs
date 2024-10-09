@@ -12,7 +12,7 @@ public class SimpleTasksPool
 {
     private readonly IAsyncHelper _asyncHelper;
 
-    protected ConcurrentCollection<Task> Tasks { get; }
+    protected ConcurrentList<Task> Tasks { get; }
 
     public SimpleTasksPool(IAsyncHelper asyncHelper)
     {
@@ -36,8 +36,7 @@ public class SimpleTasksPool
     public void RemoveTask(Task task) => Tasks.Remove(task);
 
     public bool AnyTaskIsRunning() =>
-        Tasks.DoBulkOperation(collection => collection.Count > 0 && collection.Any(task => task.IsRunning()),
-            _ => false);
+        Tasks.Write(() => Tasks.Count > 0 && Tasks.Any(task => task.IsRunning()));
 
     public async Task WhenAllAsync() => await Tasks.Where(t => t.IsRunning()).WhenAllAsync();
 

@@ -1,16 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="ReactiveUI" Version="20.1.63" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="ReactiveUI" Version="20.1.63" />
+        <PackageReference Include="StrongInject.Extensions.DependencyInjection" Version="1.4.4" />
+        <PackageReference Include="System.Text.Json" Version="9.0.0" />
+    </ItemGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\FEx.DependencyInjection\FEx.DependencyInjection.csproj" />
-	  <ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
-	</ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\FEx.DI.Abstractions\FEx.DI.Abstractions.csproj" />
+        <ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
+    </ItemGroup>
 
 </Project>

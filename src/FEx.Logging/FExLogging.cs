@@ -1,39 +1,68 @@
-﻿using FEx.Logging.Abstractions.Interfaces;
+﻿using FEx.Common.Extensions;
+using FEx.DI.Abstractions;
+using FEx.Fundamentals;
+using FEx.Json;
+using FEx.Logging.Abstractions.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Events;
 using System;
+using System.Diagnostics;
 
 namespace FEx.Logging;
 
-public class FExLogging
+public class FExLogging : InitializeModule<IFExLoggingContainer>
 {
-    public static ILoggingService LoggingSrv { get; private set; }
+    private static ILoggingService _loggingSrv;
 
-    public static FExLoggingConfigurator Configuration { get; private set; }
+    private static FExLoggingConfigurator _configuration;
 
-    public static void Init(ILoggingService loggingService, FExLoggingConfigurator configurator)
+    public static ILoggingService LoggingSrv
+    {
+        get => _loggingSrv.Guard();
+        private set => _loggingSrv = value.Guard(nameof(value));
+    }
+
+    public static FExLoggingConfigurator Configurator
+    {
+        get => _configuration.Guard();
+        private set => _configuration = value.Guard(nameof(value));
+    }
+
+    public FExLogging(FExFundamentals fundamentalsModule,
+                      FExJson jsonModule,
+                      ILoggingService loggingService,
+                      FExLoggingConfigurator configurator)
+        : base(fundamentalsModule, jsonModule)
     {
         LoggingSrv = loggingService;
-        configurator.ConfigureSerilog();
+        Configurator = configurator;
     }
 
     public static void Log(string message,
                            Type callerType,
                            LogLevel level = LogLevel.Information,
-                           Exception exception = null) => LoggingSrv.Log(callerType, level, message, exception);
+                           Exception exception = null) =>
+        LoggingSrv.Log(callerType, level, message, exception);
 
-    public static void Log<T>(string message, LogLevel level = LogLevel.Information, Exception exception = null) => LoggingSrv.Log<T>(level, message, exception);
+    public static void Log<T>(string message, LogLevel level = LogLevel.Information, Exception exception = null) =>
+        LoggingSrv.Log<T>(level, message, exception);
 
-    public static void Configure(bool forceConsole = false,
-                                 LogEventLevel externalLoggingLevel = LogEventLevel.Warning,
-                                 LogEventLevel externalDebugLoggingLevel = LogEventLevel.Information,
-                                 Func<LoggerConfiguration, LoggerConfiguration> cfgFunc = null,
-                                 params string[] overrides) => Configuration = new FExLoggingConfigurator().Set(
-                forceConsole,
-                externalLoggingLevel,
-                externalDebugLoggingLevel,
-                cfgFunc,
-                overrides)
-            .ConfigureSerilog();
+    public static LoggerConfiguration Configure(Action<FExLoggingConfigurator> configuration = null)
+    {
+        configuration?.Invoke(Configurator);
+
+        return Configurator.ConfigureSerilog().Configuration;
+    }
+
+    protected override void OnInitialize()
+    {
+        base.OnInitialize();
+        Configure();
+    }
+
+    protected override void AddServices(IFExLoggingContainer container, IServiceCollection services) =>
+        FExLoggingModule.AddServices(container, services);
+
+    public static void OpenLogFile() => Process.Start(Configurator.LogFilePath)?.Dispose();
 }

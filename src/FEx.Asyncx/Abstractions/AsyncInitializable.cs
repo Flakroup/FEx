@@ -6,6 +6,7 @@ using FEx.Asyncx.Extensions;
 using FEx.Asyncx.Helpers;
 using FEx.Basics.Abstractions;
 using FEx.Basics.Utilities;
+using FEx.Common.Extensions;
 using FEx.Extensions;
 using FEx.Extensions.Helpers;
 using FEx.Logging.Abstractions.Extensions;
@@ -42,8 +43,6 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
     /// </summary>
     protected bool SkipDependenciesInitialization { get; set; }
 
-    protected bool WaitSynchronouslyForInitialization { get; set; }
-
     protected AsyncInitializable(params IAsyncInitializable[] dependencies)
     {
         _logger = this.GetLogger();
@@ -53,9 +52,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         TypeName = instanceType.Name;
         TypeFullName = instanceType.FullName;
         _dependencies = new();
-
-        foreach (IAsyncInitializable dependency in dependencies)
-            AddDependency(dependency);
+        AddDependencies(dependencies);
     }
 
     public async Task InitializeAsync()
@@ -67,7 +64,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
         try
         {
-            _initializationTask ??= StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InternalInitializeAsync);
+            _initializationTask ??= StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InitializeCoreAsync);
         }
         finally
         {
@@ -81,6 +78,22 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
     {
         _initializationTask = null;
         IsInitialized = false;
+    }
+
+    public void BeginInitialization(bool waitSynchronouslyForInitialization = false)
+    {
+        if (waitSynchronouslyForInitialization)
+        {
+            JoinableAsyncHelper.AwaitWithoutDeadlock(InitFuncAsync);
+
+            return;
+        }
+
+        _ = Task.Run(InitFuncAsync);
+
+        return;
+
+        Task InitFuncAsync() => StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
     }
 
     protected static async Task<Result<ExceptionError>> SafeInitializeAsync(IAsyncInitializable dependency)
@@ -122,7 +135,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         throw new AggregateException(failed.Select(static fail => fail.Error.Exception));
     }
 
-    protected virtual async Task InternalInitializeAsync()
+    protected virtual async Task InitializeCoreAsync()
     {
         await _initializationSemaphore.WaitAsync();
 
@@ -145,7 +158,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, ex.Message);
+            _logger.LogError(ex);
 
             throw;
         }
@@ -153,22 +166,6 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         {
             _initializationSemaphore.SafeRelease();
         }
-    }
-
-    protected void Initialize()
-    {
-        if (WaitSynchronouslyForInitialization)
-        {
-            JoinableAsyncHelper.AwaitWithoutDeadlock(InitFuncAsync);
-
-            return;
-        }
-
-        _ = Task.Run(InitFuncAsync);
-
-        return;
-
-        Task InitFuncAsync() => StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
     }
 
     protected void ThrowIfNotInitialized()
@@ -180,10 +177,15 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
             $"This instance of {TypeFullName} is still not initialized, as should be before being used");
     }
 
-    protected void AddDependency(IAsyncInitializable dependency)
+    protected void AddDependencies(params IAsyncInitializable[] dependencies)
     {
-        if (!_dependencies.TryAdd(dependency.TypeFullName, dependency))
-            _logger.LogWarning($"{dependency.TypeFullName} is already referenced in {TypeFullName}");
+        foreach (IAsyncInitializable dependency in dependencies)
+        {
+            dependency.Guard(nameof(dependency));
+
+            if (!_dependencies.TryAdd(dependency.TypeFullName, dependency))
+                _logger.LogWarning($"{dependency.TypeFullName} is already referenced in {TypeFullName}");
+        }
     }
 
     #region IDisposable

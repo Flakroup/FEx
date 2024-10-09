@@ -9,9 +9,9 @@ namespace FEx.Flurlx;
 
 [Register(typeof(FlurlConfigurator), Scope.SingleInstance, typeof(IFlurlConfigurator))]
 [Register(typeof(FlurlClientCache), Scope.SingleInstance, typeof(IFlurlClientCache))]
-[Register(typeof(FExFlurlxModuleInitializer),
+[Register(typeof(FExFlurlx),
     Scope.SingleInstance,
-    typeof(FExFlurlxModuleInitializer),
+    typeof(FExFlurlx),
     typeof(IInitializeModule))]
 public class FExFlurlxModule
 {

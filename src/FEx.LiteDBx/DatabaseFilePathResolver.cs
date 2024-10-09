@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions.Interfaces;
+﻿using FEx.Common.Abstractions.Interfaces;
 using FEx.LiteDBx.Abstractions.Interfaces;
 using System.IO;
 

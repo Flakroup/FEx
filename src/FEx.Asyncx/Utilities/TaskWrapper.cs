@@ -8,8 +8,8 @@ namespace FEx.Asyncx.Utilities;
 
 public class TaskWrapper : TaskWrapperBase<Task, Result<ExceptionError>>, ITaskWrapper
 {
-    public TaskWrapper(bool setStackTrace = false)
-        : base(setStackTrace)
+    public TaskWrapper(Func<Task> task = null, bool setStackTrace = true)
+        : base(task, setStackTrace)
     {
     }
 
@@ -30,8 +30,8 @@ public class TaskWrapper : TaskWrapperBase<Task, Result<ExceptionError>>, ITaskW
 
 public class TaskWrapper<T> : TaskWrapperBase<Task<T>, Result<T, ExceptionError>>, ITaskWrapper<T>
 {
-    public TaskWrapper(bool setStackTrace = false)
-        : base(setStackTrace)
+    public TaskWrapper(Func<Task<T>> task = null, bool setStackTrace = true)
+        : base(task, setStackTrace)
     {
     }
 

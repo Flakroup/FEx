@@ -1,4 +1,5 @@
 ﻿using FEx.Abstractions;
+using FEx.Abstractions.Interfaces;
 using FEx.Basics.Abstractions.Interfaces;
 using FEx.Common.Extensions;
 using FEx.Extensions.Collections.Lists;
@@ -12,6 +13,15 @@ namespace FEx.MVVM.Rx.BaseObjects;
 
 public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyChanged
 {
+    private IFExDispatcher _dispatcher;
+
+    protected IFExDispatcher Dispatcher =>
+        FExFoundation.HasBeenInitialized
+#pragma warning disable CS0618 // Type or member is obsolete
+            ? _dispatcher ??= FExFoundation.Dispatcher
+            : null;
+#pragma warning restore CS0618 // Type or member is obsolete
+
     /// <summary>
     ///     Use this method in your ReactiveObject classes when creating custom
     ///     properties where raiseAndSetIfChanged doesn't suffice.
@@ -70,7 +80,7 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
     {
         ReactiveObject sender = this;
 
-        FExFoundation.EventDeliverer?.DeliverEvent(EventDelegate, this);
+        _dispatcher.InvokeOnMainThread(EventDelegate, this);
 
         return;
 
@@ -81,7 +91,7 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
     {
         ReactiveObject sender = this;
 
-        FExFoundation.EventDeliverer?.DeliverEvent(EventDelegate, this);
+        _dispatcher.InvokeOnMainThread(EventDelegate, this);
 
         return;
 

@@ -256,27 +256,27 @@ public static class ConverterLogic
     {
         var result = new List<PathGeometry>();
 
+        HandleDrawing(drawing);
+
+        return result;
+
         void HandleDrawing(Drawing aDrawing)
         {
             switch (aDrawing)
             {
                 case DrawingGroup group:
-                {
-                    foreach (Drawing d in group.Children)
-                        HandleDrawing(d);
+                    {
+                        foreach (Drawing d in group.Children)
+                            HandleDrawing(d);
 
-                    break;
-                }
+                        break;
+                    }
                 case GeometryDrawing { Geometry: PathGeometry item }:
                     result.Add(item);
 
                     break;
             }
         }
-
-        HandleDrawing(drawing);
-
-        return result;
     }
 
     public static void SizeGeometry(PathGeometry pg, Size size)

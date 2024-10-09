@@ -1,6 +1,7 @@
-﻿using FEx.Abstractions;
+﻿using DynamicData.Binding;
+using FEx.Abstractions;
 using FEx.Abstractions.Interfaces;
-using FEx.Basics.Utilities.Collections;
+using FEx.Basics.Utilities;
 using FEx.Extensions;
 using System;
 using System.Collections.Generic;
@@ -9,16 +10,14 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Threading;
 
 namespace FEx.Basics.Collections.Concurrent;
 
 [DebuggerDisplay("Count={" + nameof(Count) + "}")]
 [Serializable]
-public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionChanged, INotifyPropertyChanged
+public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollection<T>
 {
-    private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
-    private readonly bool _sendEventsInCreationContext;
+    [NonSerialized] private readonly IFExDispatcher _dispatcher;
 
     /// <summary>
     ///     Occurs when the collection changes, either by adding or removing an item.
@@ -30,23 +29,12 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
     [field: NonSerialized]
-    protected event PropertyChangedEventHandler PropertyChanged;
-
-    /// <summary>
-    ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
-    /// </summary>
-    event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
-    {
-        add => PropertyChanged += value;
-        remove => PropertyChanged -= value;
-    }
+    public event PropertyChangedEventHandler PropertyChanged;
 
     public IObservable<EventPattern<NotifyCollectionChangedEventArgs>> CollectionChangedObservable =>
         Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
             ev => CollectionChanged += ev,
             ev => CollectionChanged -= ev);
-
-    private static IEventDeliverer EventDeliverer => FExFoundation.EventDeliverer;
 
     /// <summary>
     ///     Initializes a new instance of the ConcurrentObservableList class that contains
@@ -54,77 +42,53 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, INotifyCollectionC
     ///     to accommodate the number of elements copied.
     /// </summary>
     /// <param name="collection">The collection whose elements are copied to the new list.</param>
-    /// <param name="sendEventsInCreationContext">
-    ///     Overrides setting from FExFoundation.SendEventsInCreationContext.
-    ///     If true sends all events using SynchronizationContext of thread in which was this constructor executed.
-    /// </param>
-    public ConcurrentObservableList(IEnumerable<T> collection = null, bool? sendEventsInCreationContext = null)
+    public ConcurrentObservableList(IEnumerable<T> collection = null)
         : base(collection)
     {
-        _sendEventsInCreationContext = sendEventsInCreationContext ?? FExFoundation.SendEventsInCreationContext;
+#pragma warning disable CS0618 // Type or member is obsolete
+        _dispatcher = FExFoundation.Dispatcher;
+#pragma warning restore CS0618 // Type or member is obsolete
     }
 
     /// <summary>
-    ///     Move item at oldIndex to newIndex.
+    ///     Suspends count notifications.
     /// </summary>
-    public void Move(int oldIndex, int newIndex) => MoveItem(oldIndex, newIndex);
+    /// <returns>A disposable when disposed will reset the count.</returns>
+    public IDisposable SuspendCount() => new SuppressEventsDisposable(this, ResumeEvents);
 
     /// <summary>
-    ///     Called by base class ObservableCollection&lt;T&gt; when an item is to be moved within the list;
-    ///     raises a CollectionChanged event to any listeners.
+    ///     Suspends notifications. When disposed, a reset notification is fired.
     /// </summary>
-    protected virtual void MoveItem(int oldIndex, int newIndex) =>
-        Write(() =>
-        {
-            T removedItem = this[oldIndex];
-
-            using (SuppressEvents())
-            {
-                Remove(oldIndex);
-                Insert(newIndex, removedItem);
-            }
-
-            OnIndexerPropertyChanged();
-
-            OnCollectionChanged(new(NotifyCollectionChangedAction.Move, removedItem, newIndex, oldIndex));
-        });
+    /// <returns>A disposable when disposed will reset notifications.</returns>
+    public IDisposable SuspendNotifications() => new SuppressEventsDisposable(this, ResumeEvents);
 
     /// <summary>
-    ///     Raises a PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    ///     Clears the list and Loads the specified items.
     /// </summary>
-    protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
+    /// <param name="items">The items.</param>
+    public void Load(IEnumerable<T> items) => ReplaceWith(items);
+
+    protected virtual void ResumeEvents()
     {
-        if (!EventsAreSuppressed
-            && PropertyChanged is not null)
-            Dispatch(() => PropertyChanged.HandlePropertyChanged(this, e));
+        if (!EventsAreSuppressed)
+            OnCollectionReset();
+    }
+
+    protected virtual void Dispatch(Action action) => _dispatcher.InvokeOnMainThread(action, this);
+
+    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        if (EventsAreSuppressed || PropertyChanged is null)
+            return;
+
+        Dispatch(() => PropertyChanged.HandlePropertyChanged(this, e));
     }
 
     protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
     {
-        if (!EventsAreSuppressed
-            && CollectionChanged is not null)
-            Dispatch(() => CollectionChanged.Invoke(this, e));
+        if (EventsAreSuppressed || CollectionChanged is null)
+            return;
+
+        Dispatch(() => CollectionChanged.Invoke(this, e));
     }
-
-    /// <summary>
-    ///     Helper to raise a PropertyChanged event for the Count property
-    /// </summary>
-    protected override void OnCountPropertyChanged() => OnPropertyChanged(EventArgsCache.CountPropertyChanged);
-
-    /// <summary>
-    ///     Helper to raise a PropertyChanged event for the Indexer property
-    /// </summary>
-    protected override void OnIndexerPropertyChanged() => OnPropertyChanged(EventArgsCache.IndexerPropertyChanged);
-
-    /// <summary>
-    ///     Helper to raise CollectionChanged event with action == Reset to any listeners
-    /// </summary>
-    protected override void OnCollectionReset() => OnCollectionChanged(EventArgsCache.ResetCollectionChanged);
-
-    private void Dispatch(Action action) =>
-        EventDeliverer.DeliverEvent(action,
-            this,
-            _sendEventsInCreationContext
-                ? _synchronizationContext
-                : null);
 }

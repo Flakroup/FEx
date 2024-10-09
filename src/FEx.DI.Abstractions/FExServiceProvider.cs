@@ -1,25 +1,27 @@
-﻿using FEx.Abstractions.Interfaces;
+﻿using FEx.Abstractions.Extensions;
+using FEx.Abstractions.Interfaces;
 using FEx.Common.Extensions;
 using FEx.DI.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace FEx.DI.Abstractions;
 
 public static class FExServiceProvider
 {
-    private static IFExServiceProvider _serviceProvider;
+    public static IFExServiceProvider ServiceProvider { get; private set; }
 
     public static TContainer Initialize<TContainer, TProvider>() where TContainer : class, IDisposable, new()
         where TProvider : class, IFExStrongInjectServiceProvider, new()
     {
-        _serviceProvider?.Dispose();
+        ServiceProvider?.Dispose();
         var serviceProvider = new TProvider();
 
         TContainer container = serviceProvider.ConfigureServiceProvider<TContainer>();
-        _serviceProvider = serviceProvider;
-        Initialize();
+        ServiceProvider = serviceProvider;
+        Initialize(serviceProvider);
 
         return container;
     }
@@ -29,25 +31,24 @@ public static class FExServiceProvider
                                                         IServiceCollection services = null)
         where TProvider : class, IFExMicrosoftDIServiceProvider
     {
-        _serviceProvider?.Dispose();
-        TProvider serviceProvider = _serviceProvider!.GetRequiredService<TProvider>();
+        TProvider serviceProvider = ServiceProvider!.GetRequiredService<TProvider>();
 
         await serviceProvider.ConfigureServiceProviderAsync(configuration, services);
-        _serviceProvider = serviceProvider;
-        Initialize();
+        ServiceProvider = serviceProvider;
+        Initialize(serviceProvider);
     }
 
     [Obsolete("Strongly advised against. Use DI instead!")]
-    public static T Get<T>() => _serviceProvider.GetRequiredService<T>();
+    public static T Get<T>() => ServiceProvider.GetRequiredService<T>();
 
     [Obsolete("Strongly advised against. Use DI instead!")]
-    public static object Get(Type serviceType) => _serviceProvider.GetRequiredService(serviceType);
+    public static object Get(Type serviceType) => ServiceProvider.GetRequiredService(serviceType);
 
     public static TModule GetDefaultContainer<TModule>() where TModule : class
     {
         try
         {
-            return _serviceProvider.GetContainer<TModule>();
+            return ServiceProvider.GetContainer<TModule>();
         }
         catch (Exception ex)
         {
@@ -55,7 +56,7 @@ public static class FExServiceProvider
 
             try
             {
-                provider = _serviceProvider.GetContainer<object>();
+                provider = ServiceProvider.GetContainer<object>();
             }
             catch
             {
@@ -64,10 +65,10 @@ public static class FExServiceProvider
 
             if (provider is not null)
                 throw new InvalidOperationException(
-                    $"Default container {provider?.GetType().FullName ?? "null"} does not implement interface or type {typeof(TModule).FullName}",
+                    $"Default container {provider.GetType().FullName ?? "null"} does not implement interface or type {typeof(TModule).FullName}",
                     ex);
 
-            if (_serviceProvider is null)
+            if (ServiceProvider is null)
                 throw new InvalidOperationException("Service provider wasn't initialized");
 
             throw;
@@ -86,11 +87,19 @@ public static class FExServiceProvider
         return provider;
     }
 
-    private static void Initialize()
+    private static void Initialize(IFExServiceProvider serviceProvider)
     {
-        IFExInitialize[] initializers = _serviceProvider.GetRequiredService<IFExInitialize[]>();
+        //todo move that to constructor/use SI interfaces to initailize
+        var priorityInitializers = serviceProvider.GetRequiredService<IFExPriorityInitialize[]>()
+            .OrderBy(initializer => initializer.Priority)
+            .ToList();
 
-        foreach (IFExInitialize initializer in initializers)
-            initializer.Initialize();
+        priorityInitializers.InitializeAll();
+
+        IFExInitialize[] initializers = serviceProvider.GetRequiredService<IFExInitialize[]>();
+        initializers.InitializeAll();
+
+        IInitializeModule[] modules = serviceProvider.GetRequiredService<IInitializeModule[]>();
+        modules.InitializeAll();
     }
 }

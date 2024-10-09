@@ -71,7 +71,7 @@ public abstract class FExAvaloniaViewModelBase : ReactiveNotifyPropertyChanged, 
             return;
 
         if (disposing)
-            Activator?.Dispose();
+            Activator.Dispose();
 
         _isDisposed = true;
     }

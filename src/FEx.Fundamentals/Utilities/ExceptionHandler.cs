@@ -1,14 +1,13 @@
 ﻿using FEx.Abstractions;
+using FEx.Abstractions.CustomEventArgs;
 using FEx.Abstractions.Enums;
 using FEx.Abstractions.Interfaces;
 using FEx.Basics.Implementations;
 using FEx.Extensions;
-using FEx.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,53 +18,30 @@ namespace FEx.Fundamentals.Utilities;
 /// </summary>
 public class ExceptionHandler : ExceptionHandlerBase
 {
-    public static EventHandler<ExceptionEventArgs> ExceptionOccured;
+    private readonly ILogger _logger;
 
-    private static bool? _consolePresent;
+    /// <inheritdoc />
+    public override event EventHandler<ExceptionEventArgs> ExceptionOccured;
 
-    /// <summary>
-    ///     The last exception
-    /// </summary>
-    public static Exception LastException { get; set; }
-
-    public static Func<string, bool, Task> Callback { get; set; }
-
-    public static bool ConsolePresent
+    public ExceptionHandler(ILogger logger)
     {
-        get
-        {
-            if (_consolePresent is null)
-            {
-                _consolePresent = true;
-
-                try
-                {
-                    _ = Console.WindowHeight;
-                }
-                catch
-                {
-                    _consolePresent = false;
-                }
-            }
-
-            return _consolePresent.Value;
-        }
+        _logger = logger;
     }
 
-    public override void Handle(Exception ex, IExceptionHandlerOptions options = null)
+    public override void Handle(Exception exception, IExceptionHandlerOptions options = null)
     {
         options ??= new ExceptionHandlerOptions();
 
         if (!options.InformUser
-            && ex is not TaskCanceledException)
-            base.Handle(ex, options);
+            && exception is not TaskCanceledException)
+            base.Handle(exception, options);
     }
 
     protected override void HandleException(Exception exception, IExceptionHandlerOptions options)
     {
         var args = new ExceptionEventArgs(exception, options.Custom);
-        ExceptionOccured?.Invoke(null, args);
         LastException = exception;
+        ExceptionOccured?.Invoke(null, args);
         var infoSb = new StringBuilder();
 
         var info = infoSb.AppendLine()
@@ -73,9 +49,43 @@ public class ExceptionHandler : ExceptionHandlerBase
             .AppendLine(exception.BuildMessage())
             .ToString();
 
-        if (FExLoggingFoundation.Logger is not null)
+        LogError(exception, info);
+
+        RunCallback(options, info);
+    }
+
+    private static void LogToFile(Exception exception)
+    {
+        try
         {
-            FExLoggingFoundation.Logger.LogError(exception, info);
+            var tempLog = new FileInfo(Path.Combine(Path.GetTempPath(),
+                $"{(FExFoundation.HasBeenInitialized ? FExFoundation.AppInfoProvider.Name : null) ?? "Flakroup"}.log"));
+
+            using FileStream str = tempLog.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            using var sw = new StreamWriter(str);
+            sw.BaseStream.Seek(0, SeekOrigin.End);
+            sw.WriteLine($"[{DateTime.Now}] {exception}");
+        }
+        catch
+        {
+            //ignored
+        }
+    }
+
+    private void RunCallback(IExceptionHandlerOptions options, string info)
+    {
+        if (Callback is null)
+            return;
+
+        FExFoundation.AsyncHelper.FireTaskAndForget(() => Callback(info, options.InformUser || Debugger.IsAttached),
+            AsyncMode.ThreadPool);
+    }
+
+    private void LogError(Exception exception, string info)
+    {
+        if (_logger is not null)
+        {
+            _logger.LogError(exception, info);
         }
         else
         {
@@ -86,30 +96,6 @@ public class ExceptionHandler : ExceptionHandlerBase
                 Console.WriteLine(exception);
 
             LogToFile(exception);
-        }
-
-        if (Callback is null)
-            return;
-
-        FExFoundation.AsyncHelper.FireTaskAndForget(() => Callback(info, options.InformUser || Debugger.IsAttached),
-            AsyncMode.ThreadPool);
-    }
-
-    private static void LogToFile(Exception exception)
-    {
-        try
-        {
-            var tempLog = new FileInfo(Path.Combine(Path.GetTempPath(),
-                $"{Assembly.GetEntryAssembly()?.GetName().Name ?? "Flakroup"}.log"));
-
-            using FileStream str = tempLog.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
-            using var sw = new StreamWriter(str);
-            sw.BaseStream.Seek(0, SeekOrigin.End);
-            sw.WriteLine($"[{DateTime.Now}] {exception}");
-        }
-        catch
-        {
-            //ignored
         }
     }
 }

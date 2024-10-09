@@ -12,6 +12,7 @@ public abstract class TaskWrapperBase<TTask, TResult> : ITaskWrapperBase<TTask, 
 {
     private TTask _task;
     private TResult _result;
+
     public Guid Id { get; }
 
     public bool IsFinished { get; protected set; }
@@ -40,9 +41,12 @@ public abstract class TaskWrapperBase<TTask, TResult> : ITaskWrapperBase<TTask, 
         }
     }
 
-    protected TaskWrapperBase(bool setStackTrace = false)
+    protected TaskWrapperBase(Func<TTask> task = null, bool setStackTrace = true)
     {
         Id = Guid.NewGuid();
+
+        if (task is not null)
+            SetTask(task);
 
         TaskCreationStackTrace = setStackTrace
             ? FExFoundation.StackTraceProvider.GetStackTrace()

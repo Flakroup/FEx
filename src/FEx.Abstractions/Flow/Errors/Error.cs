@@ -16,7 +16,7 @@ public class Error : IError
         get => _innerError;
         private set
         {
-            _innerError = value.Guard(nameof(InnerError));
+            _innerError = value.Guard();
             RootError = InnerError.RootError ?? InnerError;
         }
     }

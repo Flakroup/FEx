@@ -1,6 +1,7 @@
 ﻿using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Events;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace FEx.MVVM.Abstractions.Interfaces;
@@ -46,4 +47,6 @@ public interface IProgressAggregator : IProgressStatus, IDisposable
     void PrgSetMax(double max);
 
     void Report(string propertyName, object value);
+
+    List<string> GetProperties();
 }

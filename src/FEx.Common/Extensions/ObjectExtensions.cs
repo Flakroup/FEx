@@ -1,5 +1,7 @@
 ﻿using JetBrains.Annotations;
 using System;
+using System.Collections;
+using System.Runtime.CompilerServices;
 
 namespace FEx.Common.Extensions;
 
@@ -22,7 +24,9 @@ public static class ObjectExtensions
     /// <remarks>
     ///     Throws a <see cref="ArgumentNullException" /> when <paramref name="value" /> is a null reference.
     /// </remarks>
-    public static T Guard<T>([CanBeNull] this T value, string paramName, string message = null) =>
+    public static T Guard<T>([CanBeNull] this T value,
+                             [CallerMemberName] string paramName = null,
+                             string message = null) =>
         value.Guard(v => v is null, paramName, message);
 
     /// <summary>
@@ -43,7 +47,10 @@ public static class ObjectExtensions
     /// <remarks>
     ///     Throws a <see cref="ArgumentNullException" /> if the condition is false.
     /// </remarks>
-    public static T Guard<T>([CanBeNull] this T value, Func<T, bool> predicate, string paramName, string message = null)
+    public static T Guard<T>([CanBeNull] this T value,
+                             Func<T, bool> predicate,
+                             [CallerMemberName] string paramName = null,
+                             string message = null)
     {
         if (predicate is null)
             throw new ArgumentNullException(nameof(predicate));
@@ -53,4 +60,15 @@ public static class ObjectExtensions
 
         return value;
     }
+
+    [ContractAnnotation("null => true")]
+    public static bool IsNullOrEmpty(this object data) =>
+        data switch
+        {
+            string stringValue => string.IsNullOrEmpty(stringValue),
+            ICollection collection => collection.Count == 0,
+            IEnumerable enumerable => !enumerable.Any(),
+            null => true,
+            _ => false
+        };
 }

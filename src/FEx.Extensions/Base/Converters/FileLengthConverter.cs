@@ -91,4 +91,15 @@ public static class FileLengthConverter
             LengthType.AutoDetect => GetUnitShortcut(GetOutputLenghtType(size)),
             _ => null
         };
+
+    public static LengthType GetLengthType(string unitShortcut) =>
+        unitShortcut switch
+        {
+            "B" => LengthType.Bytes,
+            "KB" => LengthType.Kilobytes,
+            "MB" => LengthType.Megabytes,
+            "GB" => LengthType.Gigabytes,
+            "TB" => LengthType.Terabytes,
+            _ => LengthType.AutoDetect
+        };
 }

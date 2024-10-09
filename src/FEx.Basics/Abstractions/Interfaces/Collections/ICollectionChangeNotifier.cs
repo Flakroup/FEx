@@ -16,8 +16,7 @@ public interface ICollectionChangeNotifier : INotifyCollectionChanged, INotifyPr
                              object changedItem,
                              object oldItem,
                              int? index,
-                             int? oldIndex,
-                             bool sendAsync);
+                             int? oldIndex);
 
     void SetNotifyOnCreationContext(bool notifyOnCreationContext);
     Task WaitForCollectionEventsAsync();

@@ -1,49 +1,64 @@
 ﻿using FEx.Abstractions.Interfaces;
+using FEx.Asyncx.Helpers;
+using FEx.Basics.Extensions;
+using FEx.Common.Abstractions.Interfaces;
+using FEx.Common.Utilities;
+using FEx.DependencyInjection;
 using FEx.DI.Abstractions;
+using FEx.MVVM;
+using FEx.MVVM.Abstractions.Enums;
+using FEx.WPFx.Abstractions.Interfaces;
+using FEx.WPFx.WpfBindingErrors;
+using Serilog;
 using System;
+using System.Diagnostics;
+using System.IO;
+using System.Net;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using WpfBindingErrors;
 
 namespace FEx.WPFx.Abstractions;
 
-public abstract class AppBootstrapper : Application
+public abstract class AppBootstrapper<TContainer> : Application
+    where TContainer : class, IFExContainer, IDisposable, new()
 {
-    private readonly IExceptionHandler _exceptionHandler;
+    protected readonly TContainer _container;
+    protected readonly IAppInfoProvider _appInfoProvider;
+    protected readonly IExceptionHandler _exceptionHandler;
+    protected readonly IStatusService _statusService;
+    protected readonly IAppConfig _appConfig;
+
+    protected DirectoryInfo AppData => _appInfoProvider.AppData;
+    protected DirectoryInfo UserData => _appInfoProvider.UserData;
+    protected string UserSettingsPath => _appInfoProvider.UserSettingsPath;
+    protected string ApplicationName => _appInfoProvider.Name;
 
     protected AppBootstrapper()
     {
-        ConfigureServiceProvider();
+        try
+        {
+            AppDomain.CurrentDomain.UnhandledException += AppDomainUnhandledException;
+            DispatcherUnhandledException += OnAppDispatcherUnhandledException;
 
-        _exceptionHandler = FExServiceProvider.Get<IExceptionHandler>();
-        AppDomain.CurrentDomain.UnhandledException += AppDomainUnhandledException;
-        DispatcherUnhandledException += OnAppDispatcherUnhandledException;
+            SetNetwork();
+
+            _container = FExServiceProvider.Initialize<TContainer, FExStrongInjectServiceProvider>();
+            _appInfoProvider = FExServiceProvider.Get<IAppInfoProvider>();
+            _appConfig = FExServiceProvider.Get<IAppConfig>();
+            _exceptionHandler = FExServiceProvider.Get<IExceptionHandler>();
+            _exceptionHandler.ExceptionOccured += (_, _) => ExitApp();
+            _statusService = FExServiceProvider.Get<IStatusService>();
+            OnActivation();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
     }
 
     protected abstract void ComponentInitialize();
-
-    protected virtual void HandleAppException(Exception exception) => _exceptionHandler.Handle(exception);
-
-    protected virtual void BeforeStartup(StartupEventArgs e)
-    {
-        FExWPFx.OverrideFormattingOnUI();
-
-        //BeforeInitializationCheck();
-
-        ExitIfInitializationHasFailed();
-    }
-
-    protected virtual void ExitIfInitializationHasFailed()
-    {
-        if (HasInitializationFailed())
-            Environment.Exit(1);
-    }
-
-    protected virtual bool HasInitializationFailed() =>
-        //return !HasBeenInitialized || ExceptionHandler.LastException != null;
-        false;
-
-    protected virtual void AfterStartup(StartupEventArgs e) => BindingExceptionThrower.Attach();
+    protected abstract void OnActivation();
 
     /// <summary>
     ///     Raises the <see cref="E:System.Windows.Application.Startup" /> event.
@@ -54,78 +69,141 @@ public abstract class AppBootstrapper : Application
         try
         {
             EnsureSingleInstance();
-            //Guid s = LogToHub("Initializing app");
-            //OnConstruction(e);
-            Initialize();
-            //RemoveLog(s);
-            //s = LogToHub("Preparing app");
-            //BeforeStartup(e);
-            //RemoveLog(s);
-            //s = LogToHub("Initializing app components");
-            //Helper.ConfigureServiceProvider(services =>
-            //    ConfigureServices(services
-            //        .AddSingleton(DispatcherContextExecutor.Instance)
-            //        .AddSingleton<IUIContextExecutor>(DispatcherContextExecutor.Instance)
-            //        .AddSingleton(DefaultUIContextExecutor.Instance)));
-            //AfterServicesContainerBuild();
-            //RemoveLog(s);
-            //LogToHub("Window creation");
-            //base.OnStartup(e);
-            //WpfCommon.SetGlobalUIContextExecutor();
-            //s = LogToHub("Finalizing startup");
-            //AfterStartup(e);
-            //RemoveLog(s);
+
+            using (_ = LogToHub("Initializing app"))
+            {
+                OnConstruction(e);
+                BeforeInitializationCheck();
+                ComponentInitialize();
+            }
+
+            using (_ = LogToHub("Preparing app"))
+                BeforeStartup(e);
+
+            using (_ = LogToHub("Initializing app components"))
+            {
+                ConfigureServiceProvider();
+
+                AfterServicesContainerBuild();
+            }
+
+            _ = LogToHub("Showing window");
+            base.OnStartup(e);
+
+            using (_ = LogToHub("Finalizing startup"))
+                AfterStartup(e);
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex);
-            //HandleCriticalException(ex);
-            //HasBeenInitialized = false;
+            HandleException(ex);
+        }
+        finally
+        {
+            ExitIfInitializationHasFailed();
         }
     }
 
-    private static void ConfigureServiceProvider()
+    protected override void OnExit(ExitEventArgs e)
+    {
+        FExMvvm.MessagePopupService.AppIsClosing = true;
+        Log.CloseAndFlush();
+        base.OnExit(e);
+    }
+
+    protected virtual void ConfigureServiceProvider() =>
+        JoinableAsyncHelper.AwaitWithoutDeadlock(ConfigureServiceProviderAsync);//todo move to separate class
+
+    protected virtual async Task ConfigureServiceProviderAsync() =>
+        await FExServiceProvider.InitializeAsync<FExMicrosoftDIServiceProvider>();
+
+    protected virtual void AfterServicesContainerBuild()
     {
     }
 
-    private static void EnsureSingleInstance()
+    protected virtual void SetNetwork()
     {
-        //Guid s = LogToHub("Checking duplicated instances");
-        //if (!CommonServicesModule.EnsureSingleInstance())
-        //{
-        //    if (FExMvvm.MessagePopupService.ShowMessage(
-        //        $"{FExFoundation.AppInfoProvider.Name} is already running.{Environment.NewLine}Do you want to close it?",
-        //        buttons: MessageBoxButton.YesNo) == MessageBoxResult.No)
-        //    {
-        //        Environment.Exit(0);
-        //    }
-        //    else
-        //    {
-        //        foreach (int pid in CommonServicesModule.GetOtherInstances())
-        //        {
-        //            using (var p = Process.GetProcessById(pid))
-        //            {
-        //                p.Kill();
-        //            }
-        //        }
-        //    }
-        //}
-        //RemoveLog(s);
+        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
+                                               | SecurityProtocolType.Tls11
+                                               | SecurityProtocolType.Tls12
+                                               | SecurityProtocolType.Tls13;
+
+        ServicePointManager.UseNagleAlgorithm = false;
     }
 
-    private void OnAppDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    protected virtual void HandleException(Exception exception) => exception.HandleException(true, true);
+
+    protected virtual void BeforeStartup(StartupEventArgs e)
     {
-        if (e.Exception != null)
-            HandleAppException(e.Exception);
+        FExWpfx.OverrideFormattingOnUI();
+
+        _appConfig.Initialize();
+
+        ExitIfInitializationHasFailed();
+    }
+
+    protected virtual void ExitIfInitializationHasFailed(int exitCode = 1)
+    {
+        if (_exceptionHandler.LastException is null)
+            return;
+
+        ExitApp(exitCode);
+    }
+
+    protected virtual void ExitApp(int exitCode = 1) => Environment.Exit(exitCode);
+
+    protected virtual bool HasInitializationFailed() => _exceptionHandler.LastException is not null;
+
+    protected virtual void AfterStartup(StartupEventArgs e) =>
+        BindingExceptionThrower.Attach(_appInfoProvider?.AppData.FullName);
+
+    protected virtual void OnConstruction(StartupEventArgs e)
+    {
+    }
+
+    protected virtual void OnAppDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        if (e.Exception is not null)
+            HandleException(e.Exception);
 
         e.Handled = true;
     }
 
-    private void AppDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    protected virtual void AppDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        if (e.ExceptionObject is Exception exception)
-            HandleAppException(exception);
+        if (e.ExceptionObject is not Exception exception)
+            return;
+
+        HandleException(exception);
     }
 
-    private void Initialize() => ComponentInitialize();//HasBeenInitialized = true;
+    protected virtual void BeforeInitializationCheck()
+    {
+    }
+
+    protected virtual void EnsureSingleInstance()
+    {
+        using (_ = LogToHub("Checking duplicated instances"))
+        {
+            int[] otherInstances = AppUtility.GetOtherInstances();
+            bool isSingleInstance = otherInstances.Length == 0;
+
+            if (isSingleInstance)
+                return;
+
+            if (FExMvvm.MessagePopupService.ShowMessage(
+                    $"{_appInfoProvider?.Name ?? "App"} is already running.{Environment.NewLine}Do you want to close it?",
+                    "Duplicated instance",
+                    button: FExMessageButton.YesNo)
+                == MessageResult.No)
+                ExitApp(0);
+
+            foreach (int pid in otherInstances)
+            {
+                using var p = Process.GetProcessById(pid);
+                p.Kill();
+            }
+        }
+    }
+
+    protected DisposableAction LogToHub(string status) => _statusService.Log(status);
 }

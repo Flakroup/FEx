@@ -1,10 +1,11 @@
 ﻿using Avalonia.Threading;
 using FEx.Abstractions;
 using FEx.Abstractions.Enums;
+using FEx.Abstractions.Interfaces;
 using FEx.Basics.Abstractions;
+using FEx.Common.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.Avaloniax;
@@ -13,8 +14,11 @@ public class AvaloniaDispatcher : FExDispatcher
 {
     protected static Dispatcher Dispatcher => Dispatcher.UIThread;
 
-    public AvaloniaDispatcher(ILogger logger)
-        : base(logger)
+    public AvaloniaDispatcher(ILogger logger,
+                              IMainThreadContextProvider mainThreadContextProvider,
+                              IDeadlockMonitor deadlockMonitor,
+                              IStackTraceProvider stackTraceProvider)
+        : base(logger, mainThreadContextProvider, deadlockMonitor, stackTraceProvider)
     {
     }
 
@@ -51,8 +55,5 @@ public class AvaloniaDispatcher : FExDispatcher
     public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null) =>
         await Dispatcher.InvokeAsync(funcTask);
 
-    public override void SendInThisOrMainThreadContext(Action action,
-                                                       SynchronizationContext synchronizationContext = null,
-                                                       uint timeout = 10000) =>
-        Dispatcher.Invoke(action);
+    public override void SendInContext(Action action, object sender, uint? timeout = 3000) => Dispatcher.Invoke(action);
 }

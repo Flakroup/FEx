@@ -1,9 +1,11 @@
 using Flurl.Http.Configuration;
 using StrongInject;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.Flurlx.Abstractions.Interfaces;
 
-public interface IFExFlurlxModule : IContainer<FExFlurlxModuleInitializer>, IContainer<IFlurlConfigurator>,
+[SuppressMessage("ReSharper", "PossibleInterfaceMemberAmbiguity")]
+public interface IFExFlurlxModule : IContainer<FExFlurlx>, IContainer<IFlurlConfigurator>,
     IContainer<IFlurlClientCache>, IContainer<IApiConfiguration>
 {
 }

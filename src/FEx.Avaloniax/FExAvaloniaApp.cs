@@ -1,32 +1,26 @@
 ﻿using Avalonia;
 using Avalonia.Data;
-using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
+using FEx.Avaloniax.Abstractions.Interfaces;
 using FEx.Basics.Extensions;
 using FEx.DependencyInjection;
 using FEx.DI.Abstractions;
-using FEx.Fundamentals;
-using FEx.Fundamentals.Models;
 using System;
 
 namespace FEx.Avaloniax;
 
 public abstract class FExAvaloniaApp<TContainer> : Application
-    where TContainer : class, IFExFundamentalsModule, IDisposable, new()
+    where TContainer : class, IFExContainer, IDisposable, new()
 {
     public TContainer Container { get; }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="FExAvaloniaApp{TContainer}" /> class.
     /// </summary>
-    protected FExAvaloniaApp(IAppInfo appInfo = null)
+    protected FExAvaloniaApp()
     {
         try
         {
             FExServiceProvider.Initialize<TContainer, FExStrongInjectServiceProvider>();
-            appInfo ??= new AppInfo();
-            appInfo.IsUIApp = true;
-            FExFoundation.AppInfoProvider.Initialize(appInfo);
             OnActivation();
         }
         catch (Exception ex)

@@ -11,7 +11,7 @@ namespace FEx.Basics.Collections.Concurrent;
 /// </summary>
 public class ConcurrentHashSet<T> : HashSet<T>
 {
-    private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);
+    private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);//todo use extended
 
     public ConcurrentHashSet(IEnumerable<T> collection)
         : base(collection)

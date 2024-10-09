@@ -20,7 +20,7 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
     public List<string> NodePath { get; }
     public string NodeName { get; }
     public string NodeHeader { get; }
-    public ConcurrentCollection<FExTreeViewNode> ChildNodes { get; }
+    public ConcurrentList<FExTreeViewNode> ChildNodes { get; }
     public string IconPath { get; }
     public bool IsExpanded { get; }
 

@@ -108,7 +108,7 @@ public static class ListExtensions
             return list;
         }
 
-        return default;
+        return null;
     }
 
     public static IList<IList<T>> SplitList<T>(this IList<T> sourceList, int chunkSize)

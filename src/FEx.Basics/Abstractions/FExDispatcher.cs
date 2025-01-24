@@ -96,7 +96,7 @@ public abstract class FExDispatcher : IFExDispatcher
         try
         {
 #pragma warning disable VSTHRD001
-            context.Send(_ => action(), default);
+            context.Send(_ => action(), null);
 #pragma warning restore VSTHRD001
         }
         catch (Exception ex)

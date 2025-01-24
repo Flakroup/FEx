@@ -117,7 +117,7 @@ public static class ObjectExtensions
     public static TInput With<TInput>(this TInput value, params Action<TInput>[] actions) where TInput : class
     {
         if (value is null)
-            return default;
+            return null;
 
         actions.ForEachInEnumerable(a => a(value));
 

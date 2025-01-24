@@ -89,6 +89,10 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         }
     }
 
+    /// <summary>
+    /// Migrate does the same job that EnsureCreated, but also adds table with migrations history
+    /// </summary>
+    /// <returns></returns>
     public async Task MigrateAsync()
     {
         bool hasNoPendingMigrations = await HasNoPendingMigrationsAsync();
@@ -159,11 +163,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                                                       IsolationLevel isolationLevel = IsolationLevel.Unspecified)
     {
         using IServiceScope scope = _scopeProvider.CreateScope();
-#if NETSTANDARD
-        using TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
-#else
         await using TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
-#endif
         var id = Guid.NewGuid().ToString();
 
         try
@@ -191,11 +191,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                                                       IsolationLevel isolationLevel = IsolationLevel.Unspecified)
     {
         using IServiceScope scope = _scopeProvider.CreateScope();
-#if NETSTANDARD
-        using TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
-#else
         await using TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
-#endif
         var id = Guid.NewGuid().ToString();
 
         try

@@ -80,16 +80,6 @@ public static class StringExtensions
     /// <param name="parameters">The parameters.</param>
     public static string FormatWith(this string value, params object[] parameters) => string.Format(value, parameters);
 
-    /// <summary>
-    ///     Gets a int from a string.
-    /// </summary>
-    /// <param name="value">string with number.</param>
-    /// <returns>-1 if value is (Null or Empty or not Numeric) otherwise the number.</returns>
-    public static int ToInt(this string value) =>
-        int.TryParse(value, out int result)
-            ? result
-            : -1;
-
     public static int? ToNullableInt(this string value) =>
         value is not null
             ? int.TryParse(value, out int result)
@@ -101,12 +91,12 @@ public static class StringExtensions
     ///     Gets a int from a string.
     /// </summary>
     /// <param name="value">string with number.</param>
-    /// <param name="defaultResult">Number to return if parse fail.</param>
-    /// <returns>defaultResult if value is (Null or Empty or not Numeric) otherwise the number.</returns>
-    public static int ToInt(this string value, int defaultResult) =>
+    /// <param name="fallback">Number to return if parse fail.</param>
+    /// <returns>fallback if value is (Null or Empty or not Numeric) otherwise the number.</returns>
+    public static int ToInt(this string value, int fallback = -1) =>
         int.TryParse(value, out int result)
             ? result
-            : defaultResult;
+            : fallback;
 
     /// <summary>
     ///     Writes an unformatted string to the Trace output.
@@ -573,10 +563,10 @@ public static class StringExtensions
         var sb = new StringBuilder();
 
         foreach (char ch in formD.Select(ch => new
-                     {
-                         ch,
-                         uc = CharUnicodeInfo.GetUnicodeCategory(ch)
-                     })
+        {
+            ch,
+            uc = CharUnicodeInfo.GetUnicodeCategory(ch)
+        })
                      .Where(t => t.uc != UnicodeCategory.NonSpacingMark)
                      .Select(t => t.ch))
             sb.Append(ch);

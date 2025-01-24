@@ -53,7 +53,7 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
     }
 
     public static List<string> GetNodePath(string nodePath, char pathSeparator = '\\') =>
-        pathSeparator != default(char)
+        pathSeparator != '\0'
             ? [.. nodePath.Split(pathSeparator)]
             :
             [

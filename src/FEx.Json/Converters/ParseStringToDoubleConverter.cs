@@ -17,7 +17,7 @@ public class ParseStringToDoubleConverter : JsonConverter
 
         string value = serializer.Deserialize<string>(reader);
 
-        return value.FromString();
+        return value.ToDouble();
     }
 
     public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)

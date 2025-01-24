@@ -62,7 +62,7 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
         return (TContainer)_provider;
     }
 
-    public IServiceScope CreateScope() => default;
+    public IServiceScope CreateScope() => null;
 
     public object GetService(Type serviceType)
     {
@@ -73,7 +73,7 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
         catch
         {
             //ignored
-            return default;
+            return null;
         }
     }
 

@@ -46,7 +46,7 @@ public class CloudBlockBlobInfo
                                               OperationContext operationContext = null,
                                               CancellationToken cancellationToken = default)
     {
-        if (cancellationToken == default)
+        if (cancellationToken == CancellationToken.None)
             cancellationToken = CancellationToken.None;
 
         Exists = await Blob.ExistsAsync(primaryOnly, options, operationContext, cancellationToken);
@@ -66,7 +66,7 @@ public class CloudBlockBlobInfo
                                            OperationContext operationContext = null,
                                            CancellationToken cancellationToken = default)
     {
-        if (cancellationToken == default)
+        if (cancellationToken == CancellationToken.None)
             cancellationToken = CancellationToken.None;
 
         if (await EnsureExistsAsync(cancellationToken: cancellationToken))

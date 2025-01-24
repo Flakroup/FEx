@@ -99,7 +99,7 @@ public static class BlobExtensions
             BlobResultSegment response = await client.ListBlobsSegmentedAsync(prefix,
                 useFlatBlobListing,
                 blobListingDetails,
-                new int(),
+                0,
                 continuationToken,
                 options,
                 operationContext,

@@ -227,7 +227,7 @@ public class AzureStorageService : IAzureStorageService
                                         OperationContext operationContext = null,
                                         CancellationToken cancellationToken = default)
     {
-        if (cancellationToken == default)
+        if (cancellationToken == CancellationToken.None)
             cancellationToken = CancellationToken.None;
 
         return await blob.ExistsAsync(primaryOnly, options, operationContext, cancellationToken);

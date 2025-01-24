@@ -59,7 +59,7 @@ public static class ObservableExtensions
                                                                         func,
                                                                     CancellationToken cancellationToken = default) =>
         source.Select(value => Observable.FromAsync(token => func(value,
-                cancellationToken != default
+                cancellationToken != CancellationToken.None
 #pragma warning disable IDISP004
                     ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
 #pragma warning restore IDISP004
@@ -72,7 +72,7 @@ public static class ObservableExtensions
         source.Select(value => Observable.FromAsync(async token =>
             {
                 await func(value,
-                    cancellationToken != default
+                    cancellationToken != CancellationToken.None
 #pragma warning disable IDISP004
                         ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token).Token
 #pragma warning restore IDISP004

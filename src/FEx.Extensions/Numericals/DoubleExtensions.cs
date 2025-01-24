@@ -25,7 +25,7 @@ public static class DoubleExtensions
         return Math.Abs(left - right) < floatComparison;
     }
 
-    public static double FromString(this string value)
+    public static double ToDouble(this string value)
     {
         string numberDecimalSeparator = Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 

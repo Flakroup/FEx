@@ -5,13 +5,14 @@ using FEx.EFCore.Configuration;
 using FEx.EFCore.Interfaces;
 using Microsoft.Data.SqlClient;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.EFCore.Helpers;
 
 public static class SQLConnectionHelper
 {
-    public static async Task<bool> CheckDbConnectionAsync(string connectionString)
+    public static async Task<bool> CheckDbConnectionAsync(string connectionString, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -20,7 +21,7 @@ public static class SQLConnectionHelper
 #else
             await using var connection = new SqlConnection(connectionString);
 #endif
-            await connection.OpenAsync();
+            await connection.OpenAsync(cancellationToken);
 
             return true;
         }
@@ -49,12 +50,12 @@ public static class SQLConnectionHelper
         }
     }
 
-    public static async Task<bool> CheckMasterDbConnectionAsync(IFExDbConfig config)
+    public static async Task<bool> CheckMasterDbConnectionAsync(IFExDbConfig config, CancellationToken cancellationToken = default)
     {
         FExDbConfig testConfig = GetMasterDbConfig(config);
         string testConnectionString = GetConnectionString(testConfig);
 
-        return await CheckDbConnectionAsync(testConnectionString);
+        return await CheckDbConnectionAsync(testConnectionString, cancellationToken);
     }
 
     public static bool CheckMasterDbConnection(IFExDbConfig config)
@@ -88,7 +89,7 @@ public static class SQLConnectionHelper
             sB.Add("Trusted_Connection", "True");
         }
 
-        if (config.PoolSize > 0)
+        if (config.PoolSize > 1)
         {
             sB.Pooling = true;
             sB.MaxPoolSize = config.PoolSize;

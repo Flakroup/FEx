@@ -282,7 +282,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 #pragma warning restore VSTHRD012 // Provide JoinableTaskFactory where allowed
         }
 
-        CancellationTokenSource = cancellationToken == default
+        CancellationTokenSource = cancellationToken == CancellationToken.None
             ? new()
             : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 

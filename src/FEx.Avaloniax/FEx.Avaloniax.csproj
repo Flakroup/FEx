@@ -1,23 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
-    </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+	</PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.3" />
-        <PackageReference Include="MessageBox.Avalonia" Version="3.2.0" />
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Avalonia.ReactiveUI" Version="11.2.3" />
+		<PackageReference Include="MessageBox.Avalonia" Version="3.2.0" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
-        <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
-        <ProjectReference Include="..\FEx.DependencyInjection\FEx.DependencyInjection.csproj" />
-        <ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
-        <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
-        <ProjectReference Include="..\FEx.Logging\FEx.Logging.csproj" />
-        <ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
-        <ProjectReference Include="..\FEx.Platforms\FEx.Platforms.csproj" />
-    </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+		<ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
+		<ProjectReference Include="..\FEx.DependencyInjection\FEx.DependencyInjection.csproj" />
+		<ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
+		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+		<ProjectReference Include="..\FEx.Logging\FEx.Logging.csproj" />
+		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
+		<ProjectReference Include="..\FEx.Platforms\FEx.Platforms.csproj" />
+	</ItemGroup>
 
 </Project>

@@ -18,7 +18,7 @@ public class DelayedNotificationObserver<T> : IDisposable
         Get = getFunc;
         Set = setFunc;
 
-        if (delayTimeSpan == default
+        if (delayTimeSpan == TimeSpan.Zero
             || delayTimeSpan.TotalMilliseconds < 1D)
             delayTimeSpan = TimeSpan.FromMilliseconds(50);
 

@@ -123,6 +123,6 @@ public static class UrlExtensions
         const string contentLengthKey = "Content-Length";
         string contentLength = response.Headers.FirstOrDefault(contentLengthKey);
 
-        return contentLength.FromString();
+        return contentLength.ToDouble();
     }
 }

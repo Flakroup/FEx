@@ -1,8 +1,9 @@
-﻿using FEx.Basics.Abstractions;
+﻿using FEx.Abstractions.Interfaces;
+using FEx.Basics.Abstractions;
+using FEx.Common.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Dispatching;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.Maui;
@@ -11,8 +12,11 @@ public class FExMauiDispatcher : FExDispatcher
 {
     private readonly IDispatcher _dispatcher;
 
-    public FExMauiDispatcher(ILogger logger)
-        : base(logger)
+    public FExMauiDispatcher(ILogger logger,
+                             IMainThreadContextProvider mainThreadContextProvider,
+                             IDeadlockMonitor deadlockMonitor,
+                             IStackTraceProvider stackTraceProvider)
+        : base(logger, mainThreadContextProvider, deadlockMonitor, stackTraceProvider)
     {
         _dispatcher = Dispatcher.GetForCurrentThread();
     }
@@ -27,16 +31,6 @@ public class FExMauiDispatcher : FExDispatcher
 
     public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null) =>
         await _dispatcher.DispatchAsync(funcTask);
-
-    public override void SendInThisOrMainThreadContext(Action action,
-                                                       SynchronizationContext synchronizationContext = null,
-                                                       uint timeout = 10000)
-    {
-        SynchronizationContext context =
-            synchronizationContext ?? SynchronizationContext.Current ?? MainThreadSynchronizationContext;
-
-        context.Send(_ => action(), null);
-    }
 
     public override bool CheckAccess(object sender = null) => _dispatcher.IsDispatchRequired;
 

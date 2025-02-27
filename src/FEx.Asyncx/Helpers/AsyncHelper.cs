@@ -168,7 +168,7 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
                                                   IExceptionHandlerOptions options = null,
                                                   CancellationToken cancellationToken = default)
     {
-        _tasksInfoSubject.AddTask(taskWrapper);
+        //_tasksInfoSubject.AddTask(taskWrapper);
         T result = default;
 
         try
@@ -188,7 +188,7 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
             taskWrapper.SetException(ex);
         }
 
-        _tasksInfoSubject.RemoveTask(taskWrapper);
+        //_tasksInfoSubject.RemoveTask(taskWrapper);
 
         return result;
     }
@@ -198,7 +198,7 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
                                                       AsyncMode asyncMode = AsyncMode.Default,
                                                       IExceptionHandlerOptions options = null)
     {
-        _tasksInfoSubject.AddTask(taskWrapper);
+        //_tasksInfoSubject.AddTask(taskWrapper);
         T result = default;
 
         try
@@ -218,7 +218,7 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
             taskWrapper.SetException(ex);
         }
 
-        _tasksInfoSubject.RemoveTask(taskWrapper);
+        //_tasksInfoSubject.RemoveTask(taskWrapper);
 
         return result;
     }

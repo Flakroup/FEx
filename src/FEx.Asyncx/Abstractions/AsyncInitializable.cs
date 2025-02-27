@@ -1,4 +1,4 @@
-using FEx.Abstractions.Enums;
+﻿using FEx.Abstractions.Enums;
 using FEx.Abstractions.Flow;
 using FEx.Abstractions.Flow.Errors;
 using FEx.Abstractions.Interfaces;
@@ -30,7 +30,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
     private bool _isDisposed;
 
-    public bool IsInitialized { get; protected set; }
+    public bool IsInitialized { get; private set; }
     public bool HasFinishedInitialization => !IsInitializing;
 
     public bool IsInitializing => !IsInitialized && (_initializationTask is null || !_initializationTask.IsFinished());
@@ -46,8 +46,8 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
     protected AsyncInitializable(params IAsyncInitializable[] dependencies)
     {
         _logger = this.GetLogger();
-        _initializationSemaphore = new(1, 1);
-        _taskSemaphore = new(1, 1);
+        _initializationSemaphore = new();
+        _taskSemaphore = new();
         Type instanceType = GetType();
         TypeName = instanceType.Name;
         TypeFullName = instanceType.FullName;

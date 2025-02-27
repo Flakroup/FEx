@@ -20,7 +20,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 #if NETSTANDARD
-using FEx.Extensions.Collections.Enumerables;
+using FEx.Extensions.Interop;
 #endif
 
 namespace FEx.Fundamentals.Utilities;
@@ -142,50 +142,50 @@ public class FileSystemUtilities
                 switch (fileOperation)
                 {
                     case FileOperation.Copy or FileOperation.Move or FileOperation.SyncSrcToDest:
-                    {
-                        var results = new ConcurrentDictionary<DirectoryInfo, Result<ExceptionError>>();
-                        PrgMax = files.Count;
+                        {
+                            var results = new ConcurrentDictionary<DirectoryInfo, Result<ExceptionError>>();
+                            PrgMax = files.Count;
 
-                        Parallel.ForEach(files,
-                            file => ProcessFile(dest, file, sourceInfo, results, fileOperation, printPaths));
+                            Parallel.ForEach(files,
+                                file => ProcessFile(dest, file, sourceInfo, results, fileOperation, printPaths));
 
-                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+                            var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
 
-                        result = errors.Count > 0
-                            ? new AggregatedError(result.Error.InnerErrors.Concat(errors).ToList().AsReadOnly())
-                            : Result<AggregatedError>.Success;
+                            result = errors.Count > 0
+                                ? new AggregatedError(result.Error.InnerErrors.Concat(errors).ToList().AsReadOnly())
+                                : Result<AggregatedError>.Success;
 
-                        break;
-                    }
+                            break;
+                        }
                     case FileOperation.Delete:
-                    {
-                        var results = new ConcurrentDictionary<FileInfo, Result<ExceptionError>>();
+                        {
+                            var results = new ConcurrentDictionary<FileInfo, Result<ExceptionError>>();
 
-                        Parallel.ForEach(files,
-                            file =>
-                            {
-                                Result<ExceptionError> temp;
-
-                                try
+                            Parallel.ForEach(files,
+                                file =>
                                 {
-                                    temp = SafeDeleteFile(file);
-                                }
-                                catch (Exception ex)
-                                {
-                                    temp = new ExceptionError(ex);
-                                }
+                                    Result<ExceptionError> temp;
 
-                                results.AddOrUpdateValue(file, temp);
-                            });
+                                    try
+                                    {
+                                        temp = SafeDeleteFile(file);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        temp = new ExceptionError(ex);
+                                    }
 
-                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+                                    results.AddOrUpdateValue(file, temp);
+                                });
 
-                        result = errors.Count > 0
-                            ? new AggregatedError(errors)
-                            : Result<AggregatedError>.Success;
+                            var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
 
-                        break;
-                    }
+                            result = errors.Count > 0
+                                ? new AggregatedError(errors)
+                                : Result<AggregatedError>.Success;
+
+                            break;
+                        }
                 }
 
                 FinishProgress();
@@ -310,7 +310,7 @@ public class FileSystemUtilities
     public static Result<ConcurrentDictionary<DirectoryInfo, FileInfo[]>, AggregatedError> GetDirectoriesContents(
         DirectoryInfo source,
         params string[] exclusionPaths) =>
-        FlattenDirectoriesTree(source, exclusionPaths.ToList());
+        FlattenDirectoriesTree(source, [.. exclusionPaths]);
 
     public static Result<ExceptionError> CopyFileAndSetAttributes(FileSystemInfo destDir,
                                                                   FileInfo sourceFile,
@@ -556,8 +556,14 @@ public class FileSystemUtilities
 
                 var s = new StringBuilder(data, data.Length * 2);
                 s.Replace(oldValue, newValue);
+#if !NETSTANDARD2_0
+                await
+#endif
                 using FileStream fs = fileInfo.OpenWrite();
                 fs.SetLength(0);
+#if !NETSTANDARD2_0
+                await
+#endif
                 using var sw = new StreamWriter(fs);
                 await sw.WriteAsync(s.ToString());
                 await sw.FlushAsync();
@@ -720,11 +726,12 @@ public class FileSystemUtilities
     {
         if (sourceDirectories?.Count > 0)
         {
-            DirectoryInfo[] destDirectories = sourceDirectories
-                .Select(dir => new DirectoryInfo(Path.Combine(dest.GetDirectory().FullName,
-                    dir.FullName.Replace(sourceInfo.FullName, string.Empty).TrimStart('\\', '/'))))
-                .DistinctBy(x => x.FullName)
-                .ToArray();
+            DirectoryInfo[] destDirectories =
+            [
+                .. sourceDirectories.Select(dir => new DirectoryInfo(Path.Combine(dest.GetDirectory().FullName,
+                        dir.FullName.Replace(sourceInfo.FullName, string.Empty).TrimStart('\\', '/'))))
+                    .DistinctBy(x => x.FullName)
+            ];
 
             foreach (DirectoryInfo dir in destDirectories.Where(dir => !dir.Exists))
                 dir.Create();
@@ -768,12 +775,14 @@ public class FileSystemUtilities
         {
             flatTree.AddOrUpdate(root,
                 _ => root.GetFiles(),
-                (_, _) => root.GetFiles()
-                    .Where(file => !exclusionPaths.Any(exclusion =>
-                        exclusion.Equals(file.FullName, StringComparison.OrdinalIgnoreCase)))
-                    .ToArray());
+                (_, _) =>
+                [
+                    .. root.GetFiles()
+                        .Where(file => !exclusionPaths.Any(exclusion =>
+                            exclusion.Equals(file.FullName, StringComparison.OrdinalIgnoreCase)))
+                ]);
 
-            DirectoryInfo[] subDirs = root.GetDirectories().Where(x => !exclusionPaths.Contains(x.FullName)).ToArray();
+            DirectoryInfo[] subDirs = [.. root.GetDirectories().Where(x => !exclusionPaths.Contains(x.FullName))];
             Interlocked.Add(ref PrgValue, subDirs.Length);
 
             FExFoundation.AsyncHelper.FireTaskAndForget(

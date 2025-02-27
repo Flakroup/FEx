@@ -4,7 +4,6 @@ using FEx.Extensions.Base.VB;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 
 namespace FEx.Extensions.DateTimes;
 
@@ -250,7 +249,7 @@ public static class DateExtensions
                     'D'
                 })
                 .Split(separator.Value)
-            : source.Split(4).ToArray();
+            : [.. source.Split(4)];
 
         int year = parsed[0].ToInt();
         int week = parsed[1].ToInt();
@@ -408,59 +407,59 @@ public static class DateExtensions
         switch (interval)
         {
             case DateInterval.Year:
-            {
-                return DateTimeDefaults.CurrentCalendar.GetYear(date2)
-                       - DateTimeDefaults.CurrentCalendar.GetYear(date1);
-            }
+                {
+                    return DateTimeDefaults.CurrentCalendar.GetYear(date2)
+                           - DateTimeDefaults.CurrentCalendar.GetYear(date1);
+                }
             case DateInterval.Quarter:
-            {
-                return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
-                        - DateTimeDefaults.CurrentCalendar.GetYear(date1))
-                       * 4
-                       + (DateTimeDefaults.CurrentCalendar.GetMonth(date2) - 1) / 3
-                       - (DateTimeDefaults.CurrentCalendar.GetMonth(date1) - 1) / 3;
-            }
+                {
+                    return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
+                            - DateTimeDefaults.CurrentCalendar.GetYear(date1))
+                           * 4
+                           + (DateTimeDefaults.CurrentCalendar.GetMonth(date2) - 1) / 3
+                           - (DateTimeDefaults.CurrentCalendar.GetMonth(date1) - 1) / 3;
+                }
             case DateInterval.Month:
-            {
-                return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
-                        - DateTimeDefaults.CurrentCalendar.GetYear(date1))
-                       * 12
-                       + DateTimeDefaults.CurrentCalendar.GetMonth(date2)
-                       - DateTimeDefaults.CurrentCalendar.GetMonth(date1);
-            }
+                {
+                    return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
+                            - DateTimeDefaults.CurrentCalendar.GetYear(date1))
+                           * 12
+                           + DateTimeDefaults.CurrentCalendar.GetMonth(date2)
+                           - DateTimeDefaults.CurrentCalendar.GetMonth(date1);
+                }
             case DateInterval.DayOfYear:
             case DateInterval.Day:
-            {
-                return Math.Round(Conversion.Fix(timeSpan.TotalDays));
-            }
+                {
+                    return Math.Round(Conversion.Fix(timeSpan.TotalDays));
+                }
             case DateInterval.WeekOfYear:
-            {
-                date1 = date1.AddDays(0 - (int)date1.GetDayOfWeek(dayOfWeek));
-                date2 = date2.AddDays(0 - (int)date2.GetDayOfWeek(dayOfWeek));
-                timeSpan = date2.Subtract(date1);
+                {
+                    date1 = date1.AddDays(0 - (int)date1.GetDayOfWeek(dayOfWeek));
+                    date2 = date2.AddDays(0 - (int)date2.GetDayOfWeek(dayOfWeek));
+                    timeSpan = date2.Subtract(date1);
 
-                return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
-            }
+                    return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
+                }
             case DateInterval.Weekday:
-            {
-                return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
-            }
+                {
+                    return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
+                }
             case DateInterval.Hour:
-            {
-                return Math.Round(Conversion.Fix(timeSpan.TotalHours));
-            }
+                {
+                    return Math.Round(Conversion.Fix(timeSpan.TotalHours));
+                }
             case DateInterval.Minute:
-            {
-                return Math.Round(Conversion.Fix(timeSpan.TotalMinutes));
-            }
+                {
+                    return Math.Round(Conversion.Fix(timeSpan.TotalMinutes));
+                }
             case DateInterval.Second:
-            {
-                return Math.Round(Conversion.Fix(timeSpan.TotalSeconds));
-            }
+                {
+                    return Math.Round(Conversion.Fix(timeSpan.TotalSeconds));
+                }
             default:
-            {
-                throw new ArgumentException("Argument_InvalidValue1", nameof(interval));
-            }
+                {
+                    throw new ArgumentException("Argument_InvalidValue1", nameof(interval));
+                }
         }
     }
 

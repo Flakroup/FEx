@@ -22,7 +22,7 @@ public class FExDependencyInjectionModule
     [Instance(Options.AsEverythingPossible)]
     public static IFExServiceProvider ServiceProviderInstance => FExServiceProvider.ServiceProvider;
 
-    public static void AddServices(IFExDependencyInjectionModule container, IServiceCollection services)
+    public static void AddServices(IFExDependencyInjectionContainer container, IServiceCollection services)
     {
         services.AddSingletonServiceUsingContainer<IScopeProvider>(container);
         services.AddSingletonServiceUsingContainer<IServiceProvider>(container);

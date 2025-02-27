@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Asyncx;
+namespace FEx.Asyncx.Utilities;
 
 /// <summary>
 ///     An async manual reset event.

@@ -4,7 +4,7 @@ namespace FEx.Basics.Collections;
 
 public class PaginatedList<T>
 {
-    public static PaginatedList<T> Empty => new(new List<T>(), 0, 0, 0);
+    public static PaginatedList<T> Empty => new([], 0, 0, 0);
 
     public IList<T> Items { get; }
     public int PageIndex { get; }

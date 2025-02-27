@@ -68,7 +68,7 @@ public static class FileSystemHelper
 
     public static string FixPath(string path)
     {
-        char[] toReplace = path.Distinct().Where(x => InvalidPathChars.Contains(x)).ToArray();
+        char[] toReplace = [.. path.Distinct().Where(x => InvalidPathChars.Contains(x))];
 
         if (toReplace.Length > 0)
         {
@@ -84,7 +84,7 @@ public static class FileSystemHelper
 
         for (var i = 0; i < segments.Length; i++)
         {
-            char[] toBeReplaced = segments[i].Distinct().Where(x => InvalidFileOrDirNameChars.Contains(x)).ToArray();
+            char[] toBeReplaced = [.. segments[i].Distinct().Where(x => InvalidFileOrDirNameChars.Contains(x))];
 
             if (toBeReplaced.Length > 0)
                 foreach (char c in toBeReplaced)

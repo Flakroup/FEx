@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace FEx.Asyncx;
+namespace FEx.Asyncx.Utilities;
 
 public class AsyncTaskCompletionSource<TResult> : TaskCompletionSource<TResult>
 {

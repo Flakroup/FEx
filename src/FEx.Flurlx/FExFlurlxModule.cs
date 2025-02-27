@@ -15,7 +15,7 @@ namespace FEx.Flurlx;
     typeof(IInitializeModule))]
 public class FExFlurlxModule
 {
-    public static void AddServices(IFExFlurlxModule container, IServiceCollection services)
+    public static void AddServices(IFExFlurlxContainer container, IServiceCollection services)
     {
         services.AddSingletonServiceUsingContainer<IFlurlConfigurator>(container);
         services.AddSingletonServiceUsingContainer<IFlurlClientCache>(container);

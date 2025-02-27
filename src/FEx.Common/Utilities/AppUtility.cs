@@ -11,9 +11,8 @@ public static class AppUtility
     {
         var currentProcess = Process.GetCurrentProcess();
 
-        return Process.GetProcesses()
+        return [.. Process.GetProcesses()
             .Where(x => x.ProcessName == currentProcess.ProcessName && x.Id != currentProcess.Id && x.Threads.Count > 0)
-            .Select(x => x.Id)
-            .ToArray();
+            .Select(x => x.Id)];
     }
 }

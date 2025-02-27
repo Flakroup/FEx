@@ -8,8 +8,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-#if ISNETSTANDARD
-using FEx.Extensions.Collections.Enumerables;
+#if NETSTANDARD
+using FEx.Extensions.Interop;
 #endif
 
 namespace FEx.Basics.Collections.Concurrent;
@@ -161,7 +161,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
         foreach ((int index, T removedItem) in innerRemovedItems)
             WhenItemIsRemoved(index, removedItem);
 
-        removedItems = innerRemovedItems.Select(tuple => tuple.removedItem).ToList();
+        removedItems = [.. innerRemovedItems.Select(tuple => tuple.removedItem)];
 
         return !removedItems.IsNullOrEmpty();
     }

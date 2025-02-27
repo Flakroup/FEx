@@ -4,13 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FEx.Flurlx;
 
-public class FExFlurlx : InitializeModule<IFExFlurlxModule>
+public class FExFlurlx : InitializeModule<IFExFlurlxContainer>
 {
     public FExFlurlx(IFlurlConfigurator configurator)
         : base(configurator)
     {
     }
 
-    protected override void AddServices(IFExFlurlxModule container, IServiceCollection services) =>
+    protected override void AddServices(IFExFlurlxContainer container, IServiceCollection services) =>
         FExFlurlxModule.AddServices(container, services);
 }

@@ -144,7 +144,7 @@ public static class StreamExtensions
 
             if (disposeSource)
 #pragma warning disable IDISP007
-#if NETSTANDARD
+#if NETSTANDARD2_0
                 streamToCopy.Dispose();
 #else
                 await streamToCopy.DisposeAsync();

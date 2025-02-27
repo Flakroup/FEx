@@ -40,7 +40,7 @@ public static class ConfigurationManagerExtensions
                 null);
 
             ConnectionStringSettings[] connStrs =
-                ConfigurationManager.ConnectionStrings.OfType<ConnectionStringSettings>().ToArray();
+                [.. ConfigurationManager.ConnectionStrings.OfType<ConnectionStringSettings>()];
 
             foreach (ConnectionStringSettings connStr in appConfig.ConnectionStrings.ConnectionStrings
                          .OfType<ConnectionStringSettings>()

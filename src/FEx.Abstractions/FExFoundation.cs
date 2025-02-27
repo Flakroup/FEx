@@ -14,6 +14,7 @@ public class FExFoundation : FExInitialize, IFExPriorityInitialize
     private static readonly MainThreadContextProvider DefaultMainThreadContextProvider;
     private static readonly DebugExceptionHandler DefaultExceptionHandler;
     private static readonly DefaultStackTraceProvider DefaultStackTraceProvider;
+    private static readonly AlphanumComparatorFast DefaultAlphanumComparatorFast;
 
     private static Func<IStackTraceProvider> _stackTraceProviderFactory;
     private static Func<IFExDispatcher> _dispatcherFactory;
@@ -69,7 +70,7 @@ public class FExFoundation : FExInitialize, IFExPriorityInitialize
     public static AlphanumComparatorFast AlphanumComparatorFast =>
         (_alphanumComparatorFastFactory is not null
             ? _alphanumComparatorFastFactory()
-            : ServiceProvider.GetRequiredService<AlphanumComparatorFast>()).Guard();
+            : ServiceProvider?.GetRequiredService<AlphanumComparatorFast>() ?? DefaultAlphanumComparatorFast).Guard();
 
     [Obsolete("Discouraged - use only where DI is unavailable")]
     public static IMainThreadContextProvider MainThreadContextProvider =>
@@ -104,12 +105,13 @@ public class FExFoundation : FExInitialize, IFExPriorityInitialize
 
     static FExFoundation()
     {
-        DefaultStackTraceProvider = new DefaultStackTraceProvider();
-        DefaultExceptionHandler = new DebugExceptionHandler();
-        DefaultMainThreadContextProvider = new MainThreadContextProvider(null);
+        DefaultStackTraceProvider = new();
+        DefaultExceptionHandler = new();
+        DefaultMainThreadContextProvider = new(null);
 #pragma warning disable CS0618 // Type or member is obsolete
         MainThreadContextProvider.SetMainThread(false);
 #pragma warning restore CS0618 // Type or member is obsolete
+        DefaultAlphanumComparatorFast = new();
     }
 
     public static void Initialize(Func<IStackTraceProvider> stackTraceProviderFactory,

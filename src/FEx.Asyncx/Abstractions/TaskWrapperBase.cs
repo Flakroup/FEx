@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace FEx.Asyncx.Utilities;
+namespace FEx.Asyncx.Abstractions;
 
 public abstract class TaskWrapperBase<TTask, TResult> : ITaskWrapperBase<TTask, TResult> where TTask : Task
     where TResult : class, IResult<ExceptionError>

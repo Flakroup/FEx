@@ -1,4 +1,4 @@
-using FEx.Common.Extensions;
+﻿using FEx.Common.Extensions;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
@@ -71,7 +71,7 @@ public static class StringExtensions
     /// <param name="chars">The chars to remove.</param>
     /// <returns>A string.</returns>
     public static string Remove(this string source, IEnumerable<char> chars) =>
-        new(source.Where(c => !chars.Contains(c)).ToArray());
+        new([.. source.Where(c => !chars.Contains(c))]);
 
     /// <summary>
     ///     Formats the value with the parameters using string.Format.

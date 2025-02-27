@@ -1,7 +1,6 @@
 ﻿using FEx.Abstractions;
 using FEx.Abstractions.Interfaces;
 using FEx.Asyncx.Helpers;
-using FEx.Asyncx.Utilities;
 using FEx.Basics.Helpers;
 using FEx.Basics.Services;
 using FEx.Basics.Utilities;
@@ -24,7 +23,6 @@ using System.Linq;
 namespace FEx.Fundamentals;
 
 [Register(typeof(AsyncHelper), typeof(IAsyncHelper))]
-[Register(typeof(SimpleTasksPool))]
 [Register(typeof(FExFoundation), Scope.SingleInstance)]
 [Register(typeof(FExLoggingFoundation), Scope.SingleInstance, typeof(FExLoggingFoundation), typeof(IFExInitialize))]
 [Register(typeof(StackTraceGenerator), Scope.SingleInstance, typeof(IStackTraceProvider))]

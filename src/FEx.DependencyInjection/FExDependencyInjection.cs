@@ -3,8 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FEx.DependencyInjection;
 
-public class FExDependencyInjection : InitializeModule<IFExDependencyInjectionModule>
+public class FExDependencyInjection : InitializeModule<IFExDependencyInjectionContainer>
 {
-    protected override void AddServices(IFExDependencyInjectionModule container, IServiceCollection services) =>
+    protected override void AddServices(IFExDependencyInjectionContainer container, IServiceCollection services) =>
         FExDependencyInjectionModule.AddServices(container, services);
 }

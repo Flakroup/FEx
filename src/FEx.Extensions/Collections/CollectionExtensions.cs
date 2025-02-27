@@ -2,7 +2,6 @@
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FEx.Extensions.Collections;
 
@@ -19,7 +18,7 @@ public static class CollectionExtensions
         if (items is null)
             return;
 
-        source.AddRangeToCollection(items as T[] ?? items.ToArray());
+        source.AddRangeToCollection(items as T[] ?? [.. items]);
     }
 
     /// <summary>

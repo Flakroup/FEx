@@ -196,9 +196,7 @@ public static class DbContextExtensions
 
     public static IList<EntityEntry> GetChangedEntities<TDbContext>(this TDbContext dbContext)
         where TDbContext : DbContext =>
-        dbContext.ChangeTracker.Entries()
-            .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
-            .ToList();
+        [.. dbContext.ChangeTracker.Entries().Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)];
 
     public static bool IsSqlite<TDbContext>(this TDbContext context) where TDbContext : DbContext =>
         context.Database.ProviderName?.EndsWith(nameof(SqlDialect.Sqlite)) == true;
@@ -252,10 +250,9 @@ public static class DbContextExtensions
         Type type = typeof(TDbContext);
         Type dbSetType = typeof(DbSet<>);
 
-        string[] dbPropertyNames = type.GetProperties()
+        string[] dbPropertyNames = [.. type.GetProperties()
             .Where(p => p.PropertyType.Name == dbSetType.Name)
-            .Select(p => p.Name)
-            .ToArray();
+            .Select(p => p.Name)];
 
         foreach (string entityName in dbPropertyNames)
             CheckTableExistsAndCreateIfMissing(dbContext, entityName);
@@ -268,9 +265,7 @@ public static class DbContextExtensions
         IEntityType entityType = dbContext.Model.GetEntityTypes().First(x => x.Name == entityName);
         string tableName = entityType.GetTableName();
 
-        string[] columnNames = entityType.GetProperties()
-            .Select(propertyType => propertyType.GetColumnName())
-            .ToArray();
+        string[] columnNames = [.. entityType.GetProperties().Select(propertyType => propertyType.GetColumnName())];
 
         var sb = new StringBuilder();
 

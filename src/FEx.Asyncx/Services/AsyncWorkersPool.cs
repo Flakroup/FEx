@@ -1,7 +1,6 @@
 ﻿using FEx.Asyncx.Abstractions;
 using FEx.Asyncx.Helpers;
 using FEx.Basics.Collections.Concurrent;
-using FEx.Basics.Extensions;
 using System;
 using System.Linq;
 using System.Threading;
@@ -12,33 +11,32 @@ namespace FEx.Asyncx.Services;
 /// <summary>
 /// </summary>
 /// <typeparam name="TWorker"></typeparam>
-/// <typeparam name="TQueue"></typeparam>
 /// <remarks>Doesn't require <c>BeginInitialization();</c> call in .ctor</remarks>
-public abstract class AsyncWorkersPool<TWorker, TQueue> : AsyncInitializable
-    where TWorker : AsyncWorker<TWorker, TQueue>
+public abstract class AsyncWorkersPool<TWorker, TResult> : AsyncInitializable
+    where TWorker : AsyncWorker<TWorker, TResult>
 {
     public TWorker IdleWorker { get; protected set; }
 
-    protected AsyncQueue<string, TQueue> Queue { get; }
+    protected AsyncProcessingQueue ProcessingQueue { get; }
     protected ConcurrentList<TWorker> Workers { get; }
     private SemaphoreSlim Semaphore { get; }
 
-    protected AsyncWorkersPool(int poolSize)
+    protected AsyncWorkersPool(uint poolSize)
     {
-        Queue = new(ex => ex.HandleException(), poolSize);
+        ProcessingQueue = new(poolSize);
         Workers = [];
         Semaphore = new(1, 1);
 
         BeginInitialization();
     }
 
-    public async Task<TQueue> ExecuteOnPoolAsync(Func<TWorker, string, Task<TQueue>> func,
-                                                 Func<Guid, string> getId = null)
+    public async Task<TResult> ExecuteOnPoolAsync(Func<TWorker, string, Task<TResult>> func,
+                                                       Func<Guid, string> getId = null)
     {
         var guid = Guid.NewGuid();
         string id = getId?.Invoke(guid) ?? guid.ToString();
 
-        return await Queue.GetOrAddAsync(id, () => ExecuteAsync(w => func(w, id)));
+        return await ProcessingQueue.EnqueueAsync(() => ExecuteAsync(w => func(w, id)));
     }
 
     public async Task WaitForAllClientsAsync() => await Task.WhenAll(Workers.Select(x => x.CurrentTask));
@@ -48,8 +46,8 @@ public abstract class AsyncWorkersPool<TWorker, TQueue> : AsyncInitializable
     protected override async Task OnInitializeAsync()
     {
         await base.OnInitializeAsync();
-        InitializePool(Queue.Limit);
-        await Task.WhenAll(Workers.Select(x => x.InitializeAsync()).ToArray());
+        InitializePool((int)ProcessingQueue.ConcurrencyLimit);
+        await Task.WhenAll([.. Workers.Select(x => x.InitializeAsync())]);
     }
 
     protected void InitializePool(int poolSize)
@@ -59,9 +57,9 @@ public abstract class AsyncWorkersPool<TWorker, TQueue> : AsyncInitializable
         IdleWorker = GetNewWorker(0);
     }
 
-    private async Task<TQueue> ExecuteAsync(Func<TWorker, Task<TQueue>> func)
+    private async Task<TResult> ExecuteAsync(Func<TWorker, Task<TResult>> func)
     {
-        Task<TQueue> task;
+        Task<TResult> task;
         await Semaphore.WaitAsync();
 
         try

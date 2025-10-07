@@ -31,11 +31,11 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     protected HttpClientEx Client { get; }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
+    /// Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
     /// </summary>
     /// <param name="pars">The <see cref="T:WebRequestParams" /> parameters for processing HTTP response messages.</param>
     /// <param name="disposeHandler">
-    ///     <see langword="true" /> if the inner handler should be disposed of by Dispose(),
+    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
     /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
@@ -47,14 +47,14 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
+    /// Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
     /// </summary>
     /// <param name="handler">
-    ///     The <see cref="T:System.Net.Http.HttpMessageHandler" /> responsible for processing the HTTP
-    ///     response messages.
+    /// The <see cref="T:System.Net.Http.HttpMessageHandler" /> responsible for processing the HTTP
+    /// response messages.
     /// </param>
     /// <param name="disposeHandler">
-    ///     <see langword="true" /> if the inner handler should be disposed of by Dispose(),
+    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
     /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
@@ -75,7 +75,8 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
 
     public async Task DelayAsync() => await Client.DelayAsync();
 
-    public async Task DoDownloadAsync(string filePath, HttpResponseMessage response, bool lockOnFilePath = true) => await Client.DoDownloadAsync(filePath, response, lockOnFilePath);
+    public async Task DoDownloadAsync(string filePath, HttpResponseMessage response, bool lockOnFilePath = true) =>
+        await Client.DoDownloadAsync(filePath, response, lockOnFilePath);
 
     public async Task<HttpResponseMessage> GetAsync(Uri requestUri,
                                                     HttpCompletionOption completionOption,

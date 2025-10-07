@@ -7,12 +7,12 @@ using System.Windows.Input;
 namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 /// <summary>
-///     Simple control that displays a gird of items. Depending on the orientation, the items are either stacked
-///     horizontally or vertically
-///     until the items are wrapped to the next row or column. The control is using virtualization to support large amount
-///     of items.
-///     If an item is clicked the item gots expanded until it is clicked again or an other item is clicked and gots
-///     expanded.
+/// Simple control that displays a gird of items. Depending on the orientation, the items are either stacked
+/// horizontally or vertically
+/// until the items are wrapped to the next row or column. The control is using virtualization to support large amount
+/// of items.
+/// If an item is clicked the item gots expanded until it is clicked again or an other item is clicked and gots
+/// expanded.
 /// <p class="note">In order to work properly all items must have the same size.</p>
 /// </summary>
 public partial class GridDetailsView : GridView

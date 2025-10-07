@@ -8,10 +8,7 @@ using StrongInject.Extensions.DependencyInjection;
 namespace FEx.EFCore;
 
 [Register(typeof(ResilientTransaction))]
-[Register(typeof(FExEFCore),
-    Scope.SingleInstance,
-    typeof(FExEFCore),
-    typeof(IInitializeModule))]
+[Register(typeof(FExEFCore), Scope.SingleInstance, typeof(FExEFCore), typeof(IInitializeModule))]
 public class FExEFCoreModule
 {
     public static void AddServices(IFExEFCoreModule module, IServiceCollection services)

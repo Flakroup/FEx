@@ -7,11 +7,11 @@ using System.Threading;
 namespace FEx.Basics.Collections.Concurrent;
 
 /// <summary>
-///     https://stackoverflow.com/questions/18922985/concurrent-hashsett-in-net-framework
+/// https://stackoverflow.com/questions/18922985/concurrent-hashsett-in-net-framework
 /// </summary>
 public class ConcurrentHashSet<T> : HashSet<T>
 {
-    private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);//todo use extended
+    private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion); //todo use extended
 
     public ConcurrentHashSet(IEnumerable<T> collection)
         : base(collection)

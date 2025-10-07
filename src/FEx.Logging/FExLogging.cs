@@ -55,6 +55,8 @@ public class FExLogging : InitializeModule<IFExLoggingContainer>
         return Configurator.ConfigureSerilog().Configuration;
     }
 
+    public static void OpenLogFile() => Process.Start(Configurator.LogFilePath)?.Dispose();
+
     protected override void OnInitialize()
     {
         base.OnInitialize();
@@ -63,6 +65,4 @@ public class FExLogging : InitializeModule<IFExLoggingContainer>
 
     protected override void AddServices(IFExLoggingContainer container, IServiceCollection services) =>
         FExLoggingModule.AddServices(container, services);
-
-    public static void OpenLogFile() => Process.Start(Configurator.LogFilePath)?.Dispose();
 }

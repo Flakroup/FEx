@@ -81,18 +81,18 @@ public class StaticAsyncHelper
 
     /// <summary>Creates a cancellable task that completes after a time delay.</summary>
     /// <param name="millisecondsDelay">
-    ///     The number of milliseconds to wait before completing the returned task, or -1 to wait
-    ///     indefinitely.
+    /// The number of milliseconds to wait before completing the returned task, or -1 to wait
+    /// indefinitely.
     /// </param>
     /// <param name="cancellationToken">The cancellation token that will be checked prior to completing the returned task.</param>
     /// <returns>A task that represents the time delay.</returns>
     /// <exception cref="T:System.ArgumentOutOfRangeException">
-    ///     The
+    /// The
     /// <paramref name="millisecondsDelay">millisecondsDelay</paramref> argument is less than -1.
     /// </exception>
     /// <exception cref="T:System.Threading.Tasks.TaskCanceledException">The task has been canceled.</exception>
     /// <exception cref="T:System.ObjectDisposedException">
-    ///     The provided
+    /// The provided
     /// <paramref name="cancellationToken">cancellationToken</paramref> has already been disposed.
     /// </exception>
     public static async Task DelayAsync(int millisecondsDelay, CancellationToken cancellationToken = default) =>
@@ -100,36 +100,36 @@ public class StaticAsyncHelper
 
     /// <summary>Creates a cancellable task that completes after a specified time interval.</summary>
     /// <param name="delay">
-    ///     The time span to wait before completing the returned task, or
+    /// The time span to wait before completing the returned task, or
     /// <see langword="TimeSpan.FromMilliseconds(-1)" /> to wait indefinitely.
     /// </param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <exception cref="T:System.ArgumentOutOfRangeException">
-    ///     <paramref name="delay" /> represents a negative time interval other than
+    /// <paramref name="delay" /> represents a negative time interval other than
     /// <see langword="TimeSpan.FromMilliseconds(-1)" />.
-    ///     -or-
-    ///     The <paramref name="delay" /> argument's <see cref="P:System.TimeSpan.TotalMilliseconds" /> property is greater
-    ///     than 4294967294 on .NET 6 and later versions, or <see cref="F:System.Int32.MaxValue">Int32.MaxValue</see> on all
-    ///     previous versions.
+    /// -or-
+    /// The <paramref name="delay" /> argument's <see cref="P:System.TimeSpan.TotalMilliseconds" /> property is greater
+    /// than 4294967294 on .NET 6 and later versions, or <see cref="F:System.Int32.MaxValue">Int32.MaxValue</see> on all
+    /// previous versions.
     /// </exception>
     /// <exception cref="T:System.Threading.Tasks.TaskCanceledException">The task has been canceled.</exception>
     /// <exception cref="T:System.ObjectDisposedException">
-    ///     The provided <paramref name="cancellationToken" /> has already been
-    ///     disposed.
+    /// The provided <paramref name="cancellationToken" /> has already been
+    /// disposed.
     /// </exception>
     /// <returns>A task that represents the time delay.</returns>
     public static async Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken = default) =>
         await ExecuteTaskOnThreadPoolAsync(() => SafeDelayAsync(delay, cancellationToken));
 
     /// <summary>
-    ///     Waits asynchronously the specified amount of milliseconds.
+    /// Waits asynchronously the specified amount of milliseconds.
     /// </summary>
     /// <param name="predicate">The predicate.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <param name="action">The action to invoke after awaited amount of time.</param>
     /// <param name="milliseconds">The amount of time in milliseconds to await.</param>
     /// <returns>
-    ///     Task
+    /// Task
     /// </returns>
     public static async Task DelayUntilAsync(Func<bool> predicate,
                                              Action action = null,
@@ -172,7 +172,7 @@ public class StaticAsyncHelper
             DelayUntilCoreAsync(predicate, action, GetDelayTimeSpan(timeSpan), cancellationToken));
 
     /// <summary>
-    ///     Waits asynchronously the specified amount of milliseconds and invokes action.
+    /// Waits asynchronously the specified amount of milliseconds and invokes action.
     /// </summary>
     /// <param name="delayMilliseconds">The milliseconds.</param>
     /// <param name="action">The action.</param>

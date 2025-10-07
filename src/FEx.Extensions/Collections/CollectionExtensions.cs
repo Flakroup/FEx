@@ -8,7 +8,7 @@ namespace FEx.Extensions.Collections;
 public static class CollectionExtensions
 {
     /// <summary>
-    ///     Appends a sequence of items to an existing list
+    /// Appends a sequence of items to an existing list
     /// </summary>
     /// <typeparam name="T">The type of the items in the list.</typeparam>
     /// <param name="source">The list to modify.</param>
@@ -22,7 +22,7 @@ public static class CollectionExtensions
     }
 
     /// <summary>
-    ///     Appends a sequence of items to an existing list
+    /// Appends a sequence of items to an existing list
     /// </summary>
     /// <typeparam name="T">The type of the items in the list.</typeparam>
     /// <param name="source">The list to modify.</param>
@@ -37,7 +37,7 @@ public static class CollectionExtensions
     public static void Remove<T>(this ICollection<T> items, T item) where T : class => items.Remove(item);
 
     /// <summary>
-    ///     Adds the specified item many times.
+    /// Adds the specified item many times.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="items">The items.</param>

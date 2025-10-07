@@ -10,7 +10,7 @@ namespace FEx.Extensions.DateTimes;
 public static class DateExtensions
 {
     /// <summary>
-    ///     Gets a value indicating if value is between or equal Minimum - Maximum values for a SqlDateTime.
+    /// Gets a value indicating if value is between or equal Minimum - Maximum values for a SqlDateTime.
     /// </summary>
     /// <param name="value">The date to check.</param>
     /// <returns>True if in 1753-01-01 - 9999-12-31 range; otherwise False.</returns>
@@ -18,14 +18,14 @@ public static class DateExtensions
         InRange(value, DateTimeDefaults.SqlMin, DateTimeDefaults.SqlMax);
 
     /// <summary>
-    ///     Gets a value indicating if value is between or equal Minimum - Maximum values for a SqlDateTime or is null.
+    /// Gets a value indicating if value is between or equal Minimum - Maximum values for a SqlDateTime or is null.
     /// </summary>
     /// <param name="value">The date to check.</param>
     /// <returns>True if in 1753-01-01 - 9999-12-31 range; otherwise False.</returns>
     public static bool InSqlRangeOrNull(this DateTime? value) => value is null || InSqlRange(value.Value);
 
     /// <summary>
-    ///     Gets a value indicating if value is between or equal Minimum - Maximum values.
+    /// Gets a value indicating if value is between or equal Minimum - Maximum values.
     /// </summary>
     /// <param name="value">The date to check.</param>
     /// <param name="min">Minimum value to test against.</param>
@@ -34,7 +34,7 @@ public static class DateExtensions
     public static bool InRange(this DateTime value, DateTime min, DateTime max) => value >= min && value <= max;
 
     /// <summary>
-    ///     Gets current week number.
+    /// Gets current week number.
     /// </summary>
     /// <param name="current">Current date.</param>
     /// <returns>A week number.</returns>
@@ -44,7 +44,7 @@ public static class DateExtensions
             DateTimeDefaults.CurrentFirstDayOfWeek);
 
     /// <summary>
-    ///     Gets a value indicating whether a day is after a specified date.
+    /// Gets a value indicating whether a day is after a specified date.
     /// </summary>
     /// <param name="current">The current date.</param>
     /// <param name="target">The date to check against.</param>
@@ -52,7 +52,7 @@ public static class DateExtensions
     public static bool IsAfter(this DateTime? current, DateTime? target) => current > target;
 
     /// <summary>
-    ///     Gets a value indicating whether a day is after a specified date.
+    /// Gets a value indicating whether a day is after a specified date.
     /// </summary>
     /// <param name="current">The current date.</param>
     /// <param name="target">The date to check against.</param>
@@ -60,7 +60,7 @@ public static class DateExtensions
     public static bool IsAfter(this DateTime current, DateTime target) => current > target;
 
     /// <summary>
-    ///     Gets a value indicating whether a day is after or equal a specified date.
+    /// Gets a value indicating whether a day is after or equal a specified date.
     /// </summary>
     /// <param name="current">The current date.</param>
     /// <param name="target">The date to check against.</param>
@@ -70,34 +70,34 @@ public static class DateExtensions
     public static bool IsBeforeOrEqual(this DateTime current, DateTime target) => current <= target;
 
     /// <summary>
-    ///     Gets whether the the provided date is on a Weekend.
+    /// Gets whether the the provided date is on a Weekend.
     /// </summary>
     /// <param name="current">The current date.</param>
     /// <returns>
-    ///     Returns whether the DateTime is on a Weekend.
+    /// Returns whether the DateTime is on a Weekend.
     /// </returns>
     public static bool IsWeekend(this DateTime current) => current.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
 
     /// <summary>
-    ///     Gets whether the the provided date is on a Week Day.
+    /// Gets whether the the provided date is on a Week Day.
     /// </summary>
     /// <param name="current">The current date.</param>
     /// <returns>
-    ///     True if the DateTime is on a Week Day; otherwise False.
+    /// True if the DateTime is on a Week Day; otherwise False.
     /// </returns>
     public static bool IsWeekDay(this DateTime current) => !current.IsWeekend();
 
     /// <summary>
-    ///     Gets a value indicating whether the the provided date is in a leap year.
+    /// Gets a value indicating whether the the provided date is in a leap year.
     /// </summary>
     /// <param name="current">The current date.</param>
     /// <returns>
-    ///     True if the specified value is in a leap year; otherwise False.
+    /// True if the specified value is in a leap year; otherwise False.
     /// </returns>
     public static bool IsLeapYear(this DateTime current) => DateTime.IsLeapYear(current.Year);
 
     /// <summary>
-    ///     Gets the number of days in the month of the provided date.
+    /// Gets the number of days in the month of the provided date.
     /// </summary>
     /// <param name="current">The current date.</param>
     /// <returns>The number of days.</returns>
@@ -109,7 +109,7 @@ public static class DateExtensions
     }
 
     /// <summary>
-    ///     Gets a formatted datestring from a date.
+    /// Gets a formatted datestring from a date.
     /// </summary>
     /// <param name="current">The current date.</param>
     /// <returns>A date string with format HH:mm.</returns>
@@ -120,7 +120,7 @@ public static class DateExtensions
         current.ToString(DateTimeDefaults.A4DatetimeMask, DateTimeDefaults.DefaultCulture);
 
     /// <summary>
-    ///     Gets a valid A4D DateTimeString with default date and time removed
+    /// Gets a valid A4D DateTimeString with default date and time removed
     /// </summary>
     /// <param name="current">The current date.</param>
     /// <returns>A valid A4D DateTime string</returns>
@@ -138,7 +138,7 @@ public static class DateExtensions
     }
 
     /// <summary>
-    ///     Returns a DateTime adjusted to the beginning of the week.
+    /// Returns a DateTime adjusted to the beginning of the week.
     /// </summary>
     /// <param name="value">The DateTime to adjust</param>
     /// <returns>A DateTime instance adjusted to the beginning of the current week</returns>
@@ -157,7 +157,7 @@ public static class DateExtensions
     }
 
     /// <summary>
-    ///     Returns a DateTime adjusted to the beginning of the week.
+    /// Returns a DateTime adjusted to the beginning of the week.
     /// </summary>
     /// <param name="dateTime">The DateTime to adjust</param>
     /// <returns>A DateTime instance adjusted to the beginning of the current week</returns>
@@ -168,7 +168,7 @@ public static class DateExtensions
             : StartOfWeek(dateTime.Value);
 
     /// <summary>
-    ///     Returns a DateTime adjusted to the end of the week.
+    /// Returns a DateTime adjusted to the end of the week.
     /// </summary>
     /// <param name="dateTime">The DateTime to adjust</param>
     /// <returns>A DateTime instance adjusted to the end of the current week</returns>
@@ -176,7 +176,7 @@ public static class DateExtensions
     public static DateTime LastDayOfWeek(this DateTime dateTime) => dateTime.StartOfWeek().AddDays(6);
 
     /// <summary>
-    ///     Returns a DateTime adjusted to the end of the week.
+    /// Returns a DateTime adjusted to the end of the week.
     /// </summary>
     /// <param name="dateTime">The DateTime to adjust</param>
     /// <returns>A DateTime instance adjusted to the end of the current week</returns>
@@ -184,7 +184,7 @@ public static class DateExtensions
     public static DateTime? LastDayOfWeek(this DateTime? dateTime) => dateTime?.StartOfWeek().AddDays(6);
 
     /// <summary>
-    ///     Combines the date part of a DateTime with the time part from a TimeSpan
+    /// Combines the date part of a DateTime with the time part from a TimeSpan
     /// </summary>
     /// <param name="date"></param>
     /// <param name="time"></param>
@@ -199,7 +199,7 @@ public static class DateExtensions
             int.Parse(time.Milliseconds.ToString()));
 
     /// <summary>
-    ///     Combines the date part of a DateTime with the time part from another DateTime
+    /// Combines the date part of a DateTime with the time part from another DateTime
     /// </summary>
     /// <param name="date"></param>
     /// <param name="time"></param>
@@ -208,7 +208,7 @@ public static class DateExtensions
         new(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
 
     /// <summary>
-    ///     Gets first date of year/week using ISO8601.
+    /// Gets first date of year/week using ISO8601.
     /// </summary>
     /// <param name="year">The year.</param>
     /// <param name="weekOfYear">The week of year.</param>
@@ -218,19 +218,19 @@ public static class DateExtensions
         FirstDateOfWeekIso8601(year, weekOfYear).AddDays(GetDay(weekday));
 
     /// <summary>
-    ///     Gets first date of year/week using ISO8601.
+    /// Gets first date of year/week using ISO8601.
     /// </summary>
     /// <param name="source">The string with year/week data (format ex: 2015/W23).</param>
     /// <param name="date">The DateTime to adjust</param>
     /// <returns>A DateTime</returns>
     /// <remarks>
-    ///     AS separator we use / as default.
+    /// AS separator we use / as default.
     /// </remarks>
     public static bool TryGetDateFromYearWeek(this string source, out DateTime date) =>
         TryGetDateFromYearWeek(source, '/', out date);
 
     /// <summary>
-    ///     Gets first date of year/week using ISO8601.
+    /// Gets first date of year/week using ISO8601.
     /// </summary>
     /// <param name="source">The string with year/week data (format ex: 2015/W23).</param>
     /// <param name="separator">The separator to use.</param>
@@ -264,19 +264,19 @@ public static class DateExtensions
     }
 
     /// <summary>
-    ///     Gets first date of year/week using ISO8601.
+    /// Gets first date of year/week using ISO8601.
     /// </summary>
     /// <param name="source">The string with year/week data (format ex: 2015/W23/D3).</param>
     /// <param name="date">The DateTime to adjust</param>
     /// <returns>A DateTime</returns>
     /// <remarks>
-    ///     As separator we use / for default.
+    /// As separator we use / for default.
     /// </remarks>
     public static bool TryGetDateFromYearWeekDay(this string source, out DateTime date) =>
         source.TryGetDateFromYearWeekDay('/', out date);
 
     /// <summary>
-    ///     Gets first date of year/week/daynumber using ISO8601.
+    /// Gets first date of year/week/daynumber using ISO8601.
     /// </summary>
     /// <param name="source">The string with year/week data (format ex: 2015/W23/D2).</param>
     /// <param name="separator">The separator to use.</param>
@@ -322,7 +322,7 @@ public static class DateExtensions
     }
 
     /// <summary>
-    ///     Clears the milliseconds.
+    /// Clears the milliseconds.
     /// </summary>
     /// <param name="dateTime">The date time.</param>
     /// <returns>Truncated datetime.</returns>
@@ -372,30 +372,30 @@ public static class DateExtensions
         date1.DateDiff(date2, interval, dayOfWeek).IsBetween(min, max, inclusive);
 
     /// <summary>
-    ///     Returns a <see langword="Long" /> value specifying the number of time intervals between two
+    /// Returns a <see langword="Long" /> value specifying the number of time intervals between two
     /// <see langword="Date" /> values.
     /// </summary>
     /// <param name="date1">Required. <see langword="Date" />. The first date/time value you want to use in the calculation. </param>
     /// <param name="date2">Required. <see langword="Date" />. The second date/time value you want to use in the calculation.</param>
     /// <param name="interval">
-    ///     Required. <see langword="DateInterval" /> enumeration value or <see langword="String" />
+    /// Required. <see langword="DateInterval" /> enumeration value or <see langword="String" />
     /// expression representing the time interval you want to use as the unit of difference between
     /// <paramref name="date1" /> and <paramref name="date2" />.
     /// </param>
     /// <param name="dayOfWeek">
-    ///     Optional. A value chosen from the <see langword="FirstDayOfWeek" /> enumeration that specifies
-    ///     the first day of the week. If not specified, <see langword="FirstDayOfWeek.Sunday" /> is used.
+    /// Optional. A value chosen from the <see langword="FirstDayOfWeek" /> enumeration that specifies
+    /// the first day of the week. If not specified, <see langword="FirstDayOfWeek.Sunday" /> is used.
     /// </param>
     /// <returns>
-    ///     Returns a <see langword="Long" /> value specifying the number of time intervals between two
+    /// Returns a <see langword="Long" /> value specifying the number of time intervals between two
     /// <see langword="Date" /> values.
     /// </returns>
     /// <exception cref="T:System.ArgumentException">Invalid <paramref name="interval" />.</exception>
     /// <exception cref="T:System.ArgumentException">
-    ///     <paramref name="date1" />, <paramref name="date2" />, or <paramref name="dayOfWeek" /> is out of range.
+    /// <paramref name="date1" />, <paramref name="date2" />, or <paramref name="dayOfWeek" /> is out of range.
     /// </exception>
     /// <exception cref="T:System.InvalidCastException">
-    ///     <paramref name="date1" /> or <paramref name="date2" /> is of an invalid type.
+    /// <paramref name="date1" /> or <paramref name="date2" /> is of an invalid type.
     /// </exception>
     public static double DateDiff(this DateTime date1,
                                   DateTime date2,
@@ -407,59 +407,59 @@ public static class DateExtensions
         switch (interval)
         {
             case DateInterval.Year:
-                {
-                    return DateTimeDefaults.CurrentCalendar.GetYear(date2)
-                           - DateTimeDefaults.CurrentCalendar.GetYear(date1);
-                }
+            {
+                return DateTimeDefaults.CurrentCalendar.GetYear(date2)
+                       - DateTimeDefaults.CurrentCalendar.GetYear(date1);
+            }
             case DateInterval.Quarter:
-                {
-                    return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
-                            - DateTimeDefaults.CurrentCalendar.GetYear(date1))
-                           * 4
-                           + (DateTimeDefaults.CurrentCalendar.GetMonth(date2) - 1) / 3
-                           - (DateTimeDefaults.CurrentCalendar.GetMonth(date1) - 1) / 3;
-                }
+            {
+                return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
+                        - DateTimeDefaults.CurrentCalendar.GetYear(date1))
+                       * 4
+                       + (DateTimeDefaults.CurrentCalendar.GetMonth(date2) - 1) / 3
+                       - (DateTimeDefaults.CurrentCalendar.GetMonth(date1) - 1) / 3;
+            }
             case DateInterval.Month:
-                {
-                    return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
-                            - DateTimeDefaults.CurrentCalendar.GetYear(date1))
-                           * 12
-                           + DateTimeDefaults.CurrentCalendar.GetMonth(date2)
-                           - DateTimeDefaults.CurrentCalendar.GetMonth(date1);
-                }
+            {
+                return (DateTimeDefaults.CurrentCalendar.GetYear(date2)
+                        - DateTimeDefaults.CurrentCalendar.GetYear(date1))
+                       * 12
+                       + DateTimeDefaults.CurrentCalendar.GetMonth(date2)
+                       - DateTimeDefaults.CurrentCalendar.GetMonth(date1);
+            }
             case DateInterval.DayOfYear:
             case DateInterval.Day:
-                {
-                    return Math.Round(Conversion.Fix(timeSpan.TotalDays));
-                }
+            {
+                return Math.Round(Conversion.Fix(timeSpan.TotalDays));
+            }
             case DateInterval.WeekOfYear:
-                {
-                    date1 = date1.AddDays(0 - (int)date1.GetDayOfWeek(dayOfWeek));
-                    date2 = date2.AddDays(0 - (int)date2.GetDayOfWeek(dayOfWeek));
-                    timeSpan = date2.Subtract(date1);
+            {
+                date1 = date1.AddDays(0 - (int)date1.GetDayOfWeek(dayOfWeek));
+                date2 = date2.AddDays(0 - (int)date2.GetDayOfWeek(dayOfWeek));
+                timeSpan = date2.Subtract(date1);
 
-                    return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
-                }
+                return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
+            }
             case DateInterval.Weekday:
-                {
-                    return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
-                }
+            {
+                return Math.Round(Conversion.Fix(timeSpan.TotalDays)) / 7;
+            }
             case DateInterval.Hour:
-                {
-                    return Math.Round(Conversion.Fix(timeSpan.TotalHours));
-                }
+            {
+                return Math.Round(Conversion.Fix(timeSpan.TotalHours));
+            }
             case DateInterval.Minute:
-                {
-                    return Math.Round(Conversion.Fix(timeSpan.TotalMinutes));
-                }
+            {
+                return Math.Round(Conversion.Fix(timeSpan.TotalMinutes));
+            }
             case DateInterval.Second:
-                {
-                    return Math.Round(Conversion.Fix(timeSpan.TotalSeconds));
-                }
+            {
+                return Math.Round(Conversion.Fix(timeSpan.TotalSeconds));
+            }
             default:
-                {
-                    throw new ArgumentException("Argument_InvalidValue1", nameof(interval));
-                }
+            {
+                throw new ArgumentException("Argument_InvalidValue1", nameof(interval));
+            }
         }
     }
 
@@ -478,7 +478,7 @@ public static class DateExtensions
         culture.DateTimeFormat.GetDayName(dayOfWeek).FirstCharToUpper();
 
     /// <summary>
-    ///     Gets first date of year/week using ISO8601.
+    /// Gets first date of year/week using ISO8601.
     /// </summary>
     /// <param name="year">The year.</param>
     /// <param name="weekOfYear">The week of year.</param>

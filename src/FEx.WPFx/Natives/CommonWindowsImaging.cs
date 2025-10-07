@@ -19,7 +19,7 @@ public static class CommonWindowsImaging
     private static IRegistryService RegistrySrv => FExPlatforms.RegistryService;
 
     /// <summary>
-    ///     Converts the byte array to bitmap image.
+    /// Converts the byte array to bitmap image.
     /// </summary>
     /// <param name="imageStream">The image stream.</param>
     /// <returns></returns>

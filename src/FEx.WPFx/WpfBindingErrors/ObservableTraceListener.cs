@@ -5,13 +5,13 @@ using System.Text;
 namespace FEx.WPFx.WpfBindingErrors;
 
 /// <summary>
-///     A TraceListener that raise an event each time a trace is written
+/// A TraceListener that raise an event each time a trace is written
 /// </summary>
 /// <remarks>
-///     WPF Binding Error Testing
-///     Copyright 2013 Benoit Blanchon
-///     This has been inpired by
-///     http://tech.pro/tutorial/940/wpf-snippet-detecting-binding-errors
+/// WPF Binding Error Testing
+/// Copyright 2013 Benoit Blanchon
+/// This has been inpired by
+/// http://tech.pro/tutorial/940/wpf-snippet-detecting-binding-errors
 /// </remarks>
 internal sealed class ObservableTraceListener : TraceListener
 {

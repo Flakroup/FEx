@@ -7,7 +7,7 @@ using System.Linq;
 namespace FEx.Basics.Extensions;
 
 /// <summary>
-///     IEnumerable interface extensions.
+/// IEnumerable interface extensions.
 /// </summary>
 public static class EnumerableExtensions
 {

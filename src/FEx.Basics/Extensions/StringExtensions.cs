@@ -4,7 +4,7 @@ using System.Linq;
 namespace FEx.Basics.Extensions;
 
 /// <summary>
-///     String extensions class.
+/// String extensions class.
 /// </summary>
 public static class StringExtensions
 {

@@ -55,7 +55,7 @@ public class CloudBlockBlobInfo
     }
 
     /// <summary>
-    ///     Fetches the attributes asynchronous.
+    /// Fetches the attributes asynchronous.
     /// </summary>
     /// <param name="accessCondition">The access condition.</param>
     /// <param name="options">The options.</param>

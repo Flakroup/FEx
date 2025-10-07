@@ -53,7 +53,7 @@ public sealed class FExMicrosoftDIServiceProvider : IFExMicrosoftDIServiceProvid
     }
 
     /// <summary>
-    ///     Get service of type <typeparamref name="T" /> from the <see cref="IServiceProvider" />.
+    /// Get service of type <typeparamref name="T" /> from the <see cref="IServiceProvider" />.
     /// </summary>
     /// <typeparam name="T">The type of service object to get.</typeparam>
     /// <returns>A service object of type <typeparamref name="T" />.</returns>
@@ -63,12 +63,12 @@ public sealed class FExMicrosoftDIServiceProvider : IFExMicrosoftDIServiceProvid
     public T TryResolveService<T>() => _provider.GetService<T>();
 
     /// <summary>
-    ///     Get service of type <paramref name="serviceType" /> from the <see cref="IServiceProvider" />.
+    /// Get service of type <paramref name="serviceType" /> from the <see cref="IServiceProvider" />.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="serviceType">An object that specifies the type of service object to get.</param>
     /// <returns>
-    ///     A service object of type <paramref name="serviceType" />.
+    /// A service object of type <paramref name="serviceType" />.
     /// </returns>
     /// <exception cref="System.InvalidOperationException">There is no service of type <paramref name="serviceType" />.</exception>
     public T GetRequiredService<T>(Type serviceType) => (T)_provider.GetRequiredService(serviceType);

@@ -40,16 +40,16 @@ public class HtmlWebHelper : IWebScraper
         var web = new HtmlWeb();
         configWeb?.Invoke(web);
 
-        Task<HtmlDocument> task = StaticAsyncHelper
-            .ExecuteTaskOnThreadPoolAsync(() => LoadHtmlDocumentAsync(web, pageLink, encoding, credential, cancellationToken));
+        Task<HtmlDocument> task = StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
+            LoadHtmlDocumentAsync(web, pageLink, encoding, credential, cancellationToken));
 
         return (web, task);
     }
 
     public async Task<HtmlDocument> LoadHtmlDocumentAsync(HtmlWeb web,
-                                              Uri pageLink,
-                                              Encoding encoding = null,
-                                              NetworkCredential credential = null,
-                                              CancellationToken cancellationToken = default) =>
+                                                          Uri pageLink,
+                                                          Encoding encoding = null,
+                                                          NetworkCredential credential = null,
+                                                          CancellationToken cancellationToken = default) =>
         await web.LoadFromWebAsync(pageLink, encoding, credential, cancellationToken);
 }

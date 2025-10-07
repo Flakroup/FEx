@@ -12,8 +12,8 @@ public abstract partial class AsyncInitializableViewModelBase : FExAvaloniaViewM
         : base(navigationService)
     {
         _logger = this.GetLogger();
-        _initializationSemaphore = new(1, 1);
-        _taskSemaphore = new(1, 1);
+        _initializationSemaphore = new();
+        _taskSemaphore = new();
         Type instanceType = GetType();
         TypeName = instanceType.Name;
         TypeFullName = instanceType.FullName;

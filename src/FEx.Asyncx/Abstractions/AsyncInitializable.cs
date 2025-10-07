@@ -39,7 +39,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
     public string TypeFullName { get; protected set; }
 
     /// <summary>
-    ///     If <c>true</c> doesn't wait for dependencies initialization
+    /// If <c>true</c> doesn't wait for dependencies initialization
     /// </summary>
     protected bool SkipDependenciesInitialization { get; set; }
 

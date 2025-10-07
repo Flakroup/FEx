@@ -5,12 +5,12 @@ public class KeyVaultCredentials : IKeyVaultByCertCredentials, IKeyVaultByClient
     public string KeyVaultName { get; set; }
 
     /// <summary>
-    ///     Gets or sets the Directory (tenant) ID
+    /// Gets or sets the Directory (tenant) ID
     /// </summary>
     public string AzureADTenantId { get; set; }
 
     /// <summary>
-    ///     Gets or sets the Application (client) ID
+    /// Gets or sets the Application (client) ID
     /// </summary>
     public string AzureADClientId { get; set; }
 

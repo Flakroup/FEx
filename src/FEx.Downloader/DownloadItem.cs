@@ -320,7 +320,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     public void StartDownload() =>
         // ReSharper disable MethodSupportsCancellation
-        DownloadFileTask = Task.Run(DownloadFileAsync);// ReSharper restore MethodSupportsCancellation
+        DownloadFileTask = Task.Run(DownloadFileAsync); // ReSharper restore MethodSupportsCancellation
 
     public async Task<bool> DownloadFileAsync()
     {
@@ -636,7 +636,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                            File.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                     {
                         fileStream.SetLength(0);
-#if NETSTANDARD
+#if NETSTANDARD2_0
                         await streamResponse.CopyToAsync(fileStream);
 #else
                         await streamResponse.CopyToAsync(fileStream, CancellationToken);
@@ -836,7 +836,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                 }
             }
         }
-#if ISNETSTANDARD
+#if NETSTANDARD
         using (var fileStream =
                new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
 #else

@@ -16,7 +16,7 @@ public static class FileInfoExtensions
         Convert.ToInt32(FileLengthConverter.ConvertFileLength(128, LengthType.Kilobytes, LengthType.Bytes, 0));
 
     /// <summary>
-    ///     Compares the size.
+    /// Compares the size.
     /// </summary>
     /// <param name="file">The file.</param>
     /// <param name="otherFileSize">Size of the other file.</param>
@@ -29,12 +29,12 @@ public static class FileInfoExtensions
         file.Length < otherFileSize ? -1 : file.Length > otherFileSize ? 1 : 0;
 
     /// <summary>
-    ///     Creates ZIP archive from file.
+    /// Creates ZIP archive from file.
     /// </summary>
     /// <param name="file">The source file.</param>
     /// <param name="zipFilePath">
-    ///     The ZIP file path. If null - ZIP file will be created next to source file with the same name
-    ///     as original file.
+    /// The ZIP file path. If null - ZIP file will be created next to source file with the same name
+    /// as original file.
     /// </param>
     /// <param name="deleteTempDirectory">if set to <c>true</c> [delete temporary directory].</param>
     /// <param name="overwrite">if set to <c>true</c> [overwrite].</param>
@@ -118,7 +118,7 @@ public static class FileInfoExtensions
     public static bool IsNtfs(this FileInfo file) => FileSystemHelper.IsPathNtfs(file.FullName);
 
     /// <summary>
-    ///     Computes the md5 hash.
+    /// Computes the md5 hash.
     /// </summary>
     /// <param name="data">The data.</param>
     /// <param name="removeDashes">if set to <c>true</c> [remove dashes].</param>

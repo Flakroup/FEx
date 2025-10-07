@@ -4,11 +4,14 @@ namespace FEx.Fundamentals.Utilities;
 
 public enum FileOperation
 {
-    [Description("copy")] Copy = 1,
+    [Description("copy")]
+    Copy = 1,
 
-    [Description("move")] Move,
+    [Description("move")]
+    Move,
 
-    [Description("delete")] Delete,
+    [Description("delete")]
+    Delete,
 
     [Description("one-way synchronization from source to destination")]
     SyncSrcToDest

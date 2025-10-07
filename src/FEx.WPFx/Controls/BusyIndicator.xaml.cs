@@ -5,7 +5,7 @@ using System.Windows.Controls;
 namespace FEx.WPFx.Controls;
 
 /// <summary>
-///     Interaction logic for BusyIndicator.xaml
+/// Interaction logic for BusyIndicator.xaml
 /// </summary>
 public partial class BusyIndicator : ContentControl
 {

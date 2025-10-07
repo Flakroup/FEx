@@ -17,7 +17,7 @@ public interface IFExFundamentalsContainer : IFExDependencyInjectionContainer, I
     IContainer<FExLoggingFoundation>, IContainer<IMainThreadContextProvider>, IContainer<IExceptionHandler>,
     IContainer<ITasksInfoSubject>, IContainer<IStackTraceProvider>, IContainer<IFExDispatcher>,
     IContainer<ISynchronizedAccessService>, IContainer<IComparer<string>>, IContainer<IAppInfoProvider>,
-    IContainer<IStackTraceFilter[]>, IContainer<ILogger>, IContainer<IAppInfo>,
-    IContainer<IDeadlockMonitor>, IContainer<AlphanumComparatorFast>
+    IContainer<IStackTraceFilter[]>, IContainer<ILogger>, IContainer<IAppInfo>, IContainer<IDeadlockMonitor>,
+    IContainer<AlphanumComparatorFast>
 {
 }

@@ -36,7 +36,8 @@ public class SpecialDirectory
         EnsureSpecialDirectories();
     }
 
-    public static IDictionary<Environment.SpecialFolder, SpecialDirectory> GetExistingDirectories() => SpecialDirectories.Where(x => x.Value is not null && x.Value.Directory.Exists)
+    public static IDictionary<Environment.SpecialFolder, SpecialDirectory> GetExistingDirectories() =>
+        SpecialDirectories.Where(x => x.Value is not null && x.Value.Directory.Exists)
             .OrderBy(x => x.Value.FullName)
             .ToDictionary(x => x.Key, x => x.Value);
 

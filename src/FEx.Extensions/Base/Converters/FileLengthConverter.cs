@@ -7,7 +7,7 @@ namespace FEx.Extensions.Base.Converters;
 public static class FileLengthConverter
 {
     /// <summary>
-    ///     Converts the length of the file.
+    /// Converts the length of the file.
     /// </summary>
     /// <param name="length">The length.</param>
     /// <param name="input">The input.</param>
@@ -32,7 +32,7 @@ public static class FileLengthConverter
     }
 
     /// <summary>
-    ///     Converts the length of the file.
+    /// Converts the length of the file.
     /// </summary>
     /// <param name="size">The size.</param>
     /// <param name="input">The input.</param>
@@ -43,7 +43,7 @@ public static class FileLengthConverter
         ConvertFileLength(Convert.ToDouble(size), input, output, digits).length;
 
     /// <summary>
-    ///     Converts the length of the file.
+    /// Converts the length of the file.
     /// </summary>
     /// <param name="fi">The fi.</param>
     /// <param name="output">The output.</param>
@@ -80,6 +80,17 @@ public static class FileLengthConverter
 
     public static double GetLength(LengthType lengthType) => Math.Pow(1024, (double)lengthType);
 
+    public static LengthType GetLengthType(string unitShortcut) =>
+        unitShortcut switch
+        {
+            "B" => LengthType.Bytes,
+            "KB" => LengthType.Kilobytes,
+            "MB" => LengthType.Megabytes,
+            "GB" => LengthType.Gigabytes,
+            "TB" => LengthType.Terabytes,
+            _ => LengthType.AutoDetect
+        };
+
     private static string GetUnitShortcut(LengthType lengthType, double size = 0) =>
         lengthType switch
         {
@@ -90,16 +101,5 @@ public static class FileLengthConverter
             LengthType.Terabytes => "TB",
             LengthType.AutoDetect => GetUnitShortcut(GetOutputLenghtType(size)),
             _ => null
-        };
-
-    public static LengthType GetLengthType(string unitShortcut) =>
-        unitShortcut switch
-        {
-            "B" => LengthType.Bytes,
-            "KB" => LengthType.Kilobytes,
-            "MB" => LengthType.Megabytes,
-            "GB" => LengthType.Gigabytes,
-            "TB" => LengthType.Terabytes,
-            _ => LengthType.AutoDetect
         };
 }

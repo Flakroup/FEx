@@ -15,7 +15,7 @@ using System.Diagnostics;
 namespace FEx.Basics.Collections.Concurrent;
 
 /// <summary>
-///     Based on https://github.com/ChadBurggraf/parallel-extensions-extras
+/// Based on https://github.com/ChadBurggraf/parallel-extensions-extras
 /// </summary>
 /// <typeparam name="TKey">The type of the key.</typeparam>
 /// <typeparam name="TValue">The type of the value.</typeparam>
@@ -30,16 +30,17 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
 {
     private readonly ConcurrentDictionary<TKey, TValue> _dictionary;
 
-    [NonSerialized] private readonly IFExDispatcher _dispatcher;
+    [NonSerialized]
+    private readonly IFExDispatcher _dispatcher;
 
     /// <summary>
-    ///     Occurs when the collection changes, either by adding or removing an item.
+    /// Occurs when the collection changes, either by adding or removing an item.
     /// </summary>
     [field: NonSerialized]
     public event NotifyCollectionChangedEventHandler CollectionChanged;
 
     /// <summary>
-    ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    /// PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
     [field: NonSerialized]
     public event PropertyChangedEventHandler PropertyChanged;
@@ -77,7 +78,7 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
         _dispatcher = FExFoundation.Dispatcher;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-        _dictionary = new ConcurrentDictionary<TKey, TValue>();
+        _dictionary = new();
     }
 
     public void CopyTo(Array array, int index) => ((ICollection)_dictionary).CopyTo(array, index);
@@ -130,23 +131,23 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
         _dictionary.GetEnumerator();
 
     /// <summary>
-    ///     Attempts to add the specified key and value to the <see cref="ConcurrentDictionary{TKey, TValue}" />.
+    /// Attempts to add the specified key and value to the <see cref="ConcurrentDictionary{TKey, TValue}" />.
     /// </summary>
     /// <param name="key">The key of the element to add.</param>
     /// <param name="value">
-    ///     The value of the element to add. The value can be a null reference (Nothing
-    ///     in Visual Basic) for reference types.
+    /// The value of the element to add. The value can be a null reference (Nothing
+    /// in Visual Basic) for reference types.
     /// </param>
     /// <returns>
-    ///     true if the key/value pair was added to the <see cref="ConcurrentDictionary{TKey, TValue}" />
+    /// true if the key/value pair was added to the <see cref="ConcurrentDictionary{TKey, TValue}" />
     /// successfully; otherwise, false.
     /// </returns>
     /// <exception cref="T:System.ArgumentNullException">
-    ///     <paramref name="key" /> is null reference
-    ///     (Nothing in Visual Basic).
+    /// <paramref name="key" /> is null reference
+    /// (Nothing in Visual Basic).
     /// </exception>
     /// <exception cref="T:System.OverflowException">
-    ///     The <see cref="ConcurrentDictionary{TKey, TValue}" />
+    /// The <see cref="ConcurrentDictionary{TKey, TValue}" />
     /// contains too many elements.
     /// </exception>
     public bool TryAdd(TKey key, TValue value)
@@ -154,31 +155,31 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
         bool flag = _dictionary.TryAdd(key, value);
 
         if (flag)
-            OnAddToCollection(new KeyValuePair<TKey, TValue>(key, _dictionary[key]), -1);
+            OnAddToCollection(new(key, _dictionary[key]), -1);
 
         return flag;
     }
 
     /// <summary>
-    ///     Uses the specified functions to add a key/value pair to the
+    /// Uses the specified functions to add a key/value pair to the
     /// <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key does not already exist, or to
-    ///     update a key/value pair in the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
-    ///     already exists.
+    /// update a key/value pair in the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
+    /// already exists.
     /// </summary>
     /// <param name="key">The key to be added or whose value should be updated</param>
     /// <param name="addValueFactory">The function used to generate a value for an absent key</param>
     /// <param name="updateValueFactory">
-    ///     The function used to generate a new value for an existing key based on the key's
-    ///     existing value
+    /// The function used to generate a new value for an existing key based on the key's
+    /// existing value
     /// </param>
     /// <exception cref="T:System.ArgumentNullException">
-    ///     <paramref name="key" />, <paramref name="addValueFactory" />, or <paramref name="updateValueFactory" /> is
+    /// <paramref name="key" />, <paramref name="addValueFactory" />, or <paramref name="updateValueFactory" /> is
     /// <see langword="null" />.
     /// </exception>
     /// <exception cref="T:System.OverflowException">The dictionary contains too many elements.</exception>
     /// <returns>
-    ///     The new value for the key. This will be either be the result of <paramref name="addValueFactory" /> (if the
-    ///     key was absent) or the result of <paramref name="updateValueFactory" /> (if the key was present).
+    /// The new value for the key. This will be either be the result of <paramref name="addValueFactory" /> (if the
+    /// key was absent) or the result of <paramref name="updateValueFactory" /> (if the key was present).
     /// </returns>
     public TValue AddOrUpdate(TKey key,
                               Func<TKey, TValue> addValueFactory,
@@ -188,11 +189,9 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
         TValue value = _dictionary.AddOrUpdate(key, addValueFactory, updateValueFactory);
 
         if (hasKey)
-            OnReplaceInCollection(new KeyValuePair<TKey, TValue>(key, value),
-                new KeyValuePair<TKey, TValue>(key, oldValue),
-                -1);
+            OnReplaceInCollection(new(key, value), new(key, oldValue), -1);
         else
-            OnAddToCollection(new KeyValuePair<TKey, TValue>(key, value), -1);
+            OnAddToCollection(new(key, value), -1);
 
         return value;
     }
@@ -200,7 +199,7 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
     protected virtual void Dispatch(Action action) => _dispatcher.InvokeOnMainThread(action, this);
 
     /// <summary>
-    ///     Raises a PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    /// Raises a PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
@@ -222,8 +221,8 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
     protected override void OnIndexerPropertyChanged()
     {
         base.OnIndexerPropertyChanged();
-        OnPropertyChanged(new PropertyChangedEventArgs(nameof(Keys)));
-        OnPropertyChanged(new PropertyChangedEventArgs(nameof(Values)));
+        OnPropertyChanged(new(nameof(Keys)));
+        OnPropertyChanged(new(nameof(Values)));
     }
 
     private bool ValueIsEqual(TKey key, TValue val) =>
@@ -234,10 +233,8 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
         (bool hasBeenReplaced, TValue removedValue, TValue newValue) = _dictionary.AddOrReplaceValue(key, () => value);
 
         if (hasBeenReplaced)
-            OnReplaceInCollection(new KeyValuePair<TKey, TValue>(key, value),
-                new KeyValuePair<TKey, TValue>(key, removedValue),
-                -1);
+            OnReplaceInCollection(new(key, value), new(key, removedValue), -1);
         else
-            OnAddToCollection(new KeyValuePair<TKey, TValue>(key, value), -1);
+            OnAddToCollection(new(key, value), -1);
     }
 }

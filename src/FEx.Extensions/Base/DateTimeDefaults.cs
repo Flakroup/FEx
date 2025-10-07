@@ -5,7 +5,7 @@ using System.Threading;
 namespace FEx.Extensions.Base;
 
 /// <summary>
-///     Provides set of default datetime values.
+/// Provides set of default datetime values.
 /// </summary>
 public static class DateTimeDefaults
 {
@@ -22,22 +22,22 @@ public static class DateTimeDefaults
     public static DayOfWeek CurrentFirstDayOfWeek => CurrentDateTimeFormat.FirstDayOfWeek;
 
     /// <summary>
-    ///     Gets the SQL minimum allowed date.
+    /// Gets the SQL minimum allowed date.
     /// </summary>
     public static DateTime SqlMin { get; } = new(1753, 1, 1);
 
     /// <summary>
-    ///     Gets the SQL maximum allowed date.
+    /// Gets the SQL maximum allowed date.
     /// </summary>
     public static DateTime SqlMax { get; } = new(9999, 12, 31);
 
     /// <summary>
-    ///     Gets the default date.
+    /// Gets the default date.
     /// </summary>
     public static DateTime Default { get; } = new(0001, 01, 01, 0, 0, 0, 0);
 
     /// <summary>
-    ///     Gets the default minimum date.
+    /// Gets the default minimum date.
     /// </summary>
     public static DateTime DefaultMinDate { get; } = new(1900, 1, 1, 0, 0, 0, 0);
 

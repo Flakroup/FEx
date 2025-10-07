@@ -142,50 +142,50 @@ public class FileSystemUtilities
                 switch (fileOperation)
                 {
                     case FileOperation.Copy or FileOperation.Move or FileOperation.SyncSrcToDest:
-                        {
-                            var results = new ConcurrentDictionary<DirectoryInfo, Result<ExceptionError>>();
-                            PrgMax = files.Count;
+                    {
+                        var results = new ConcurrentDictionary<DirectoryInfo, Result<ExceptionError>>();
+                        PrgMax = files.Count;
 
-                            Parallel.ForEach(files,
-                                file => ProcessFile(dest, file, sourceInfo, results, fileOperation, printPaths));
+                        Parallel.ForEach(files,
+                            file => ProcessFile(dest, file, sourceInfo, results, fileOperation, printPaths));
 
-                            var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
 
-                            result = errors.Count > 0
-                                ? new AggregatedError(result.Error.InnerErrors.Concat(errors).ToList().AsReadOnly())
-                                : Result<AggregatedError>.Success;
+                        result = errors.Count > 0
+                            ? new AggregatedError(result.Error.InnerErrors.Concat(errors).ToList().AsReadOnly())
+                            : Result<AggregatedError>.Success;
 
-                            break;
-                        }
+                        break;
+                    }
                     case FileOperation.Delete:
-                        {
-                            var results = new ConcurrentDictionary<FileInfo, Result<ExceptionError>>();
+                    {
+                        var results = new ConcurrentDictionary<FileInfo, Result<ExceptionError>>();
 
-                            Parallel.ForEach(files,
-                                file =>
+                        Parallel.ForEach(files,
+                            file =>
+                            {
+                                Result<ExceptionError> temp;
+
+                                try
                                 {
-                                    Result<ExceptionError> temp;
+                                    temp = SafeDeleteFile(file);
+                                }
+                                catch (Exception ex)
+                                {
+                                    temp = new ExceptionError(ex);
+                                }
 
-                                    try
-                                    {
-                                        temp = SafeDeleteFile(file);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        temp = new ExceptionError(ex);
-                                    }
+                                results.AddOrUpdateValue(file, temp);
+                            });
 
-                                    results.AddOrUpdateValue(file, temp);
-                                });
+                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
 
-                            var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+                        result = errors.Count > 0
+                            ? new AggregatedError(errors)
+                            : Result<AggregatedError>.Success;
 
-                            result = errors.Count > 0
-                                ? new AggregatedError(errors)
-                                : Result<AggregatedError>.Success;
-
-                            break;
-                        }
+                        break;
+                    }
                 }
 
                 FinishProgress();
@@ -476,7 +476,7 @@ public class FileSystemUtilities
         !Directory.EnumerateFileSystemEntries(directoryPath).Any();
 
     /// <summary>
-    ///     Fixes the name of the file.
+    /// Fixes the name of the file.
     /// </summary>
     /// <param name="fileName">Name of the file.</param>
     /// <returns></returns>
@@ -501,7 +501,7 @@ public class FileSystemUtilities
     }
 
     /// <summary>
-    ///     Gets file encoding with or without Byte Order Mark
+    /// Gets file encoding with or without Byte Order Mark
     /// </summary>
     /// <param name="path">The path to file.</param>
     /// <param name="omitBom">if set to <c>true</c> omits BOM.</param>
@@ -531,7 +531,7 @@ public class FileSystemUtilities
     }
 
     /// <summary>
-    ///     Omits the bom.
+    /// Omits the bom.
     /// </summary>
     /// <param name="enc">The encoding.</param>
     /// <returns><see cref="Encoding" />.</returns>

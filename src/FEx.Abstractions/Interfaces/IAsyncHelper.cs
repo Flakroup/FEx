@@ -9,20 +9,16 @@ namespace FEx.Abstractions.Interfaces;
 public interface IAsyncHelper
 {
     Task ExecuteDeferredTaskOnMainThreadAsync(Func<Action> func,
-                                              AsyncHelperOptions options =
-                                                  AsyncHelperOptions.ImmediateStart);
+                                              AsyncHelperOptions options = AsyncHelperOptions.ImmediateStart);
 
     Task<T> ExecuteDeferredTaskOnMainThreadAsync<T>(Func<T> func,
-                                                    AsyncHelperOptions options =
-                                                        AsyncHelperOptions.ImmediateStart);
+                                                    AsyncHelperOptions options = AsyncHelperOptions.ImmediateStart);
 
     Task ExecuteDeferredTaskOnMainThreadAsync(Func<Task> func,
-                                              AsyncHelperOptions options =
-                                                  AsyncHelperOptions.ImmediateStart);
+                                              AsyncHelperOptions options = AsyncHelperOptions.ImmediateStart);
 
     Task<T> ExecuteDeferredTaskOnMainThreadAsync<T>(Func<Task<T>> func,
-                                                    AsyncHelperOptions options =
-                                                        AsyncHelperOptions.ImmediateStart);
+                                                    AsyncHelperOptions options = AsyncHelperOptions.ImmediateStart);
 
     ITaskWrapper FireAndForget(Action action,
                                AsyncMode asyncMode = AsyncMode.Default,

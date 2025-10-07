@@ -14,11 +14,11 @@ public class TreeViewBuilder : TreeViewBuilderBase<TreeViewItem>
     }
 
     /// <summary>
-    ///     Gets the TreeView item.
+    /// Gets the TreeView item.
     /// </summary>
     /// <param name="nodeStub">The node stub.</param>
     /// <returns>
-    ///     TreeViewItem
+    /// TreeViewItem
     /// </returns>
     public override async Task<TreeViewItem> GetTreeViewItemAsync(FExTreeViewNode nodeStub)
     {
@@ -26,7 +26,7 @@ public class TreeViewBuilder : TreeViewBuilderBase<TreeViewItem>
 
         return await _dispatcher.InvokeOnMainThreadAsync(() =>
         {
-            var item= new TreeViewItem
+            var item = new TreeViewItem
             {
                 Name = nodeStub.NodeName,
                 Header = nodeStub.NodeHeader,

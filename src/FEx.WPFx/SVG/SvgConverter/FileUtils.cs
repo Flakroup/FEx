@@ -12,7 +12,7 @@ public enum PathIs
 public static class FileUtils
 {
     /// <summary>
-    ///     Creates a relative path from one file or folder to another.
+    /// Creates a relative path from one file or folder to another.
     /// </summary>
     /// <param name="fromPath">Contains the directory that defines the start of the relative path.</param>
     /// <param name="fromIs">Is the fromPath a File or a Folder</param>

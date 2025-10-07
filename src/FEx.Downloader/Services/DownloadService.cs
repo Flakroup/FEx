@@ -20,26 +20,26 @@ namespace FEx.Downloader.Services;
 
 public class DownloadService : ProgressAggregator
 {
-    public static int DefaultParallelDownloads { get; set; } = 10;
+    public static uint DefaultParallelDownloads { get; set; } = 10;
     public ConcurrentDictionary<string, IDisposable> Subscriptions { get; }
 
     public ConcurrentObservableDictionary<DownloadIndex, IDownloadItem> Downloads { get; }
-    public AsyncQueue<DownloadIndex, bool> Queue { get; }
+    public AsyncProcessingQueue Queue { get; }
     public bool IncludeFinished { get; set; }
     public bool SetFinished { get; set; }
     public bool CalculateTotalProgress { get; set; }
 
-    public int ParallelDownloads
+    public uint ParallelDownloads
     {
-        get => Queue.Limit;
-        set => Queue.Limit = value;
+        get => Queue.ConcurrencyLimit;
+        set => Queue.ConcurrencyLimit = value;
     }
 
     public DownloadService()
     {
         Subscriptions = [];
         Downloads = [];
-        Queue = new(ex => ex.HandleException(), DefaultParallelDownloads);
+        Queue = new(DefaultParallelDownloads);
         SetFinished = true;
     }
 
@@ -121,12 +121,14 @@ public class DownloadService : ProgressAggregator
         return di;
     }
 
-    private void AttachListeners(IDownloadItem di) => Subscriptions.ReplaceAndDisposeOldValue(di.Url.AbsoluteUri.GenerateMd5OfString(),
+    private void AttachListeners(IDownloadItem di) =>
+        Subscriptions.ReplaceAndDisposeOldValue(di.Url.AbsoluteUri.GenerateMd5OfString(),
             () => di.WhenAnyValue(x => x.TotalPrg, x => x.DState)
                 .Sample(FExMvvm.DefaultUIRefreshInterval)
                 .Subscribe(_ => OnDownloadPropertyChanged()));
 
-    private void DetachListeners(IDownloadItem di) => Subscriptions.TryGetKeyValue(di.Url.AbsoluteUri.GenerateMd5OfString())?.Dispose();
+    private void DetachListeners(IDownloadItem di) =>
+        Subscriptions.TryGetKeyValue(di.Url.AbsoluteUri.GenerateMd5OfString())?.Dispose();
 
     private void OnDownloadPropertyChanged()
     {
@@ -172,7 +174,9 @@ public class DownloadService : ProgressAggregator
         return (val, max, finished);
     }
 
-    private void StartDownload(DownloadIndex idx) => Downloads[idx].DownloadFileTask = Queue.GetOrAddAsync(idx, () => Downloads[idx].DownloadFileAsync());
+    private void StartDownload(DownloadIndex idx) =>
+        Downloads[idx].DownloadFileTask = Queue.EnqueueAsync(() => Downloads[idx].DownloadFileAsync());
 
-    private Task[] GetUnfinishedDownloadsTasks() => Downloads.Select(x => x.Value.DownloadFileTask).Where(x => x?.IsFinished() == false).ToArray();
+    private Task[] GetUnfinishedDownloadsTasks() =>
+        Downloads.Select(x => x.Value.DownloadFileTask).Where(x => x?.IsFinished() == false).ToArray();
 }

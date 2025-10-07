@@ -167,13 +167,13 @@ public static class ObservableExtensions
     }
 
     /// <summary>
-    ///     Returns a task that will receive the last value or the exception produced by the observable sequence.
+    /// Returns a task that will receive the last value or the exception produced by the observable sequence.
     /// </summary>
     /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
     /// <param name="observable">Observable sequence to convert to a task.</param>
     /// <param name="cancellationToken">
-    ///     Cancellation token that can be used to cancel the task, causing unsubscription from the
-    ///     observable sequence.
+    /// Cancellation token that can be used to cancel the task, causing unsubscription from the
+    /// observable sequence.
     /// </param>
     /// <returns>A task that will receive the last element or the exception produced by the observable sequence.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="observable" /> is <c>null</c>.</exception>

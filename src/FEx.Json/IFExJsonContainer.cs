@@ -5,7 +5,7 @@ using StrongInject;
 
 namespace FEx.Json;
 
-public interface IFExJsonContainer : IContainer<FExJson>, IContainer<DIMeta>,
-    IContainer<IContractResolver>, IContainer<JsonSerializerSettings>
+public interface IFExJsonContainer : IContainer<FExJson>, IContainer<DIMeta>, IContainer<IContractResolver>,
+    IContainer<JsonSerializerSettings>
 {
 }

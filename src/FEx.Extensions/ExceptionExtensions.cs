@@ -38,7 +38,7 @@ public static class ExceptionExtensions
         })();
 
     /// <summary>
-    ///     Sets the stack trace of provided exception object
+    /// Sets the stack trace of provided exception object
     /// </summary>
     /// <param name="target">The exception to change stack trace.</param>
     /// <param name="stack">The stack trace.</param>
@@ -46,7 +46,7 @@ public static class ExceptionExtensions
     public static Exception SetStackTrace(this Exception target, StackTrace stack) => SetStackTraceFunc(target, stack);
 
     /// <summary>
-    ///     Gets a formatted string from the exception.
+    /// Gets a formatted string from the exception.
     /// </summary>
     /// <param name="ex">The exception to build.</param>
     /// <returns>A String.</returns>
@@ -59,7 +59,7 @@ public static class ExceptionExtensions
     }
 
     /// <summary>
-    ///     Appends exception details into a StringBuilder
+    /// Appends exception details into a StringBuilder
     /// </summary>
     /// <param name="ex">The exception to build.</param>
     /// <param name="message">The StringBuilder to receive the exception detail messages.</param>

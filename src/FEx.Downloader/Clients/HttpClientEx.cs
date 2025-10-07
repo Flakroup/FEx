@@ -111,11 +111,11 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     private CancellationToken CancellationToken => CancellationTokenSource.Token;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
+    /// Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
     /// </summary>
     /// <param name="pars">The <see cref="T:WebRequestParams" /> parameters for processing HTTP response messages.</param>
     /// <param name="disposeHandler">
-    ///     <see langword="true" /> if the inner handler should be disposed of by Dispose(),
+    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
     /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
@@ -127,14 +127,14 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
+    /// Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
     /// </summary>
     /// <param name="handler">
-    ///     The <see cref="T:System.Net.Http.HttpMessageHandler" /> responsible for processing the HTTP
-    ///     response messages.
+    /// The <see cref="T:System.Net.Http.HttpMessageHandler" /> responsible for processing the HTTP
+    /// response messages.
     /// </param>
     /// <param name="disposeHandler">
-    ///     <see langword="true" /> if the inner handler should be disposed of by Dispose(),
+    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
     /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
@@ -288,7 +288,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         }
     }
 
-    public async Task DelayAsync() => await Task.Delay(10, CancellationToken);//delay for subsequent connections
+    public async Task DelayAsync() => await Task.Delay(10, CancellationToken); //delay for subsequent connections
 
     #region IDisposable
     protected override void Dispose(bool disposing)

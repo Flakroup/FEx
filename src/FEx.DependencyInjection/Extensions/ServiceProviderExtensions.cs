@@ -8,5 +8,4 @@ public static class ServiceProviderExtensions
 #pragma warning disable IDISP004
         serviceProvider.Resolve<T>().Value;
 #pragma warning restore IDISP004
-
 }

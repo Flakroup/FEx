@@ -100,6 +100,7 @@ public class ResxManager : IResxManager
 
         using var writer = new StreamWriter(resxDesigner, false, Encoding.UTF8);
         codeProvider.GenerateCodeFromCompileUnit(code, writer, new());
+
         return unmatchedElements;
     }
 }

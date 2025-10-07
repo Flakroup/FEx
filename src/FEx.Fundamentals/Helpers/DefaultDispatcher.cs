@@ -21,7 +21,7 @@ public class DefaultDispatcher : FExDispatcher
     }
 
     /// <summary>
-    ///     Returns true if you're on the UI thread
+    /// Returns true if you're on the UI thread
     /// </summary>
     /// <param name="sender"></param>
     /// <returns></returns>

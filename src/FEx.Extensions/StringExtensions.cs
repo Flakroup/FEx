@@ -14,12 +14,12 @@ using System.Text.RegularExpressions;
 namespace FEx.Extensions;
 
 /// <summary>
-///     String extensions class.
+/// String extensions class.
 /// </summary>
 public static class StringExtensions
 {
     /// <summary>
-    ///     Wild card position.
+    /// Wild card position.
     /// </summary>
     public enum WildCardPosition
     {
@@ -30,32 +30,32 @@ public static class StringExtensions
     }
 
     /// <summary>
-    ///     The standard wild card 'any value'.
+    /// The standard wild card 'any value'.
     /// </summary>
     public const char StandardWildCardAnyValue = '*';
 
     /// <summary>
-    ///     The SQL wild card 'any value'.
+    /// The SQL wild card 'any value'.
     /// </summary>
     public const char SqlWildCardAnyValue = '%';
 
     /// <summary>
-    ///     The SQL wild card 'any value'.
+    /// The SQL wild card 'any value'.
     /// </summary>
     public const string SqlWildCardAnyValueEscaped = "[%]";
 
     /// <summary>
-    ///     The standard wild card 'any value'.
+    /// The standard wild card 'any value'.
     /// </summary>
     public const char StandardWildCardOneCharacter = '?';
 
     /// <summary>
-    ///     The SQL wild card 'any value'.
+    /// The SQL wild card 'any value'.
     /// </summary>
     public const char SqlWildCardOneCharacter = '_';
 
     /// <summary>
-    ///     The SQL wild card 'any value'.
+    /// The SQL wild card 'any value'.
     /// </summary>
     public const string SqlWildCardOneCharacterEscaped = "[_]";
 
@@ -65,7 +65,7 @@ public static class StringExtensions
     public static Regex LettersNumbersAndUnderscoreRegex { get; } = new("^[a-zA-Z0-9_]+$", RegexOptions.Compiled);
 
     /// <summary>
-    ///     Removes the specified chars from current string.
+    /// Removes the specified chars from current string.
     /// </summary>
     /// <param name="source">Current string.</param>
     /// <param name="chars">The chars to remove.</param>
@@ -74,7 +74,7 @@ public static class StringExtensions
         new([.. source.Where(c => !chars.Contains(c))]);
 
     /// <summary>
-    ///     Formats the value with the parameters using string.Format.
+    /// Formats the value with the parameters using string.Format.
     /// </summary>
     /// <param name="value">The input string.</param>
     /// <param name="parameters">The parameters.</param>
@@ -88,7 +88,7 @@ public static class StringExtensions
             : null;
 
     /// <summary>
-    ///     Gets a int from a string.
+    /// Gets a int from a string.
     /// </summary>
     /// <param name="value">string with number.</param>
     /// <param name="fallback">Number to return if parse fail.</param>
@@ -99,7 +99,7 @@ public static class StringExtensions
             : fallback;
 
     /// <summary>
-    ///     Writes an unformatted string to the Trace output.
+    /// Writes an unformatted string to the Trace output.
     /// </summary>
     /// <param name="value">string to output.</param>
     public static string ToTrace(this string value)
@@ -110,7 +110,7 @@ public static class StringExtensions
     }
 
     /// <summary>
-    ///     Determines whether given string has no wild cards.
+    /// Determines whether given string has no wild cards.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>True if string contains wild cards; otherwise false.</returns>
@@ -118,7 +118,7 @@ public static class StringExtensions
         !value.Contains(StandardWildCardAnyValue) && !value.Contains(StandardWildCardOneCharacter);
 
     /// <summary>
-    ///     Determines whether given string has no SQL wild cards.
+    /// Determines whether given string has no SQL wild cards.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>True if string contains SQL wild cards; otherwise false.</returns>
@@ -126,7 +126,7 @@ public static class StringExtensions
         !value.Contains(SqlWildCardAnyValue) && !value.Contains(SqlWildCardOneCharacter);
 
     /// <summary>
-    ///     Replaces the standard wild cards by SQL ones.
+    /// Replaces the standard wild cards by SQL ones.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>String with replaced wild cards.</returns>
@@ -135,7 +135,7 @@ public static class StringExtensions
             .Replace(StandardWildCardOneCharacter, SqlWildCardOneCharacter);
 
     /// <summary>
-    ///     Escape SQL wild cards characters.
+    /// Escape SQL wild cards characters.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>String with escaped wild card characters.</returns>
@@ -144,7 +144,7 @@ public static class StringExtensions
             .Replace(SqlWildCardOneCharacter.ToString(), SqlWildCardOneCharacterEscaped);
 
     /// <summary>
-    ///     Splits the specified string into parts.
+    /// Splits the specified string into parts.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <param name="elementLength">Length of the element.</param>
@@ -166,7 +166,7 @@ public static class StringExtensions
     }
 
     /// <summary>
-    ///     Gets the splited element.
+    /// Gets the splited element.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <param name="separator">The separator.</param>
@@ -178,7 +178,7 @@ public static class StringExtensions
             : string.Empty;
 
     /// <summary>
-    ///     Creates stream from the string.
+    /// Creates stream from the string.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>The stream.</returns>
@@ -196,14 +196,14 @@ public static class StringExtensions
     }
 
     /// <summary>
-    ///     Divides the by capital letter.
+    /// Divides the by capital letter.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>Value divided by capital letter.</returns>
     public static string DivideByCapital(this string value) => Regex.Replace(value, "([A-Z])", " $1").TrimStart(' ');
 
     /// <summary>
-    ///     Determines whether the specified string is null or white space.
+    /// Determines whether the specified string is null or white space.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns><c>true</c> if the specified string is null or white space; otherwise, <c>false</c>.</returns>
@@ -211,7 +211,7 @@ public static class StringExtensions
     public static bool IsNullOrWhiteSpace(this string value) => string.IsNullOrWhiteSpace(value);
 
     /// <summary>
-    ///     Determines whether the specified string is not null or white space.
+    /// Determines whether the specified string is not null or white space.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns><c>true</c> if the specified string is not null or white space; otherwise, <c>false</c>.</returns>
@@ -257,7 +257,7 @@ public static class StringExtensions
             null => throw new ArgumentNullException(nameof(input)),
             "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
 #if NETSTANDARD
-        _ => input[0].ToString().ToUpper() + input.Substring(1)
+            _ => input[0].ToString().ToUpper() + input.Substring(1)
 #else
             _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
 #endif
@@ -269,7 +269,7 @@ public static class StringExtensions
             null => throw new ArgumentNullException(nameof(input)),
             "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
 #if NETSTANDARD
-        _ => input[0].ToString().ToLower() + input.Substring(1)
+            _ => input[0].ToString().ToLower() + input.Substring(1)
 #else
             _ => string.Concat(input[0].ToString().ToLower(), input.AsSpan(1))
 #endif
@@ -278,14 +278,14 @@ public static class StringExtensions
     /// <summary>Returns a string containing a specified number of characters from the left side of a string.</summary>
     /// <param name="str">Required. <see langword="String" /> expression from which the leftmost characters are returned.</param>
     /// <param name="length">
-    ///     Required. <see langword="Integer" /> expression. Numeric expression indicating how many characters
-    ///     to return. If 0, a zero-length string ("") is returned. If greater than or equal to the number of characters in
+    /// Required. <see langword="Integer" /> expression. Numeric expression indicating how many characters
+    /// to return. If 0, a zero-length string ("") is returned. If greater than or equal to the number of characters in
     /// <paramref name="str" />, the entire string is returned.
     /// </param>
     /// <param name="trim">Trims provided string before processing.</param>
     /// <returns>Returns a string containing a specified number of characters from the left side of a string.</returns>
     /// <exception cref="T:System.ArgumentException">
-    ///     <paramref name="length" /> { 0.
+    /// <paramref name="length" /> { 0.
     /// </exception>
     public static string Left(this string str, int length, bool trim = false)
     {
@@ -302,14 +302,14 @@ public static class StringExtensions
     /// <summary>Returns a string that contains all the characters starting from a specified position in a string.</summary>
     /// <param name="str">Required. <see langword="String" /> expression from which characters are returned.</param>
     /// <param name="start">
-    ///     Required. <see langword="Integer" /> expression. Starting position of the characters to return. If
+    /// Required. <see langword="Integer" /> expression. Starting position of the characters to return. If
     /// <paramref name="start" /> is greater than the number of characters in <paramref name="str" />, the
     /// <see langword="Mid" /> function returns a zero-length string (""). <paramref name="start" /> is one-based.
     /// </param>
     /// <param name="trim">Trims provided string before processing.</param>
     /// <returns>A string that consists of all the characters starting from the specified position in the string.</returns>
     /// <exception cref="T:System.ArgumentException">
-    ///     <paramref name="start" /> {= 0.
+    /// <paramref name="start" /> {= 0.
     /// </exception>
     public static string Mid(this string str, int start, bool trim = false)
     {
@@ -324,27 +324,27 @@ public static class StringExtensions
     }
 
     /// <summary>
-    ///     Returns a string that contains a specified number of characters starting from a specified position in a
-    ///     string.
+    /// Returns a string that contains a specified number of characters starting from a specified position in a
+    /// string.
     /// </summary>
     /// <param name="str">Required. <see langword="String" /> expression from which characters are returned.</param>
     /// <param name="start">
-    ///     Required. <see langword="Integer" /> expression. Starting position of the characters to return. If
+    /// Required. <see langword="Integer" /> expression. Starting position of the characters to return. If
     /// <paramref name="start" /> is greater than the number of characters in <paramref name="str" />, the
     /// <see langword="Mid" /> function returns a zero-length string (""). <paramref name="start" /> is one based.
     /// </param>
     /// <param name="length">
-    ///     Optional. <see langword="Integer" /> expression. Number of characters to return. If omitted or if
-    ///     there are fewer than <paramref name="length" /> characters in the text (including the character at position
+    /// Optional. <see langword="Integer" /> expression. Number of characters to return. If omitted or if
+    /// there are fewer than <paramref name="length" /> characters in the text (including the character at position
     /// <paramref name="start" />), all characters from the start position to the end of the string are returned.
     /// </param>
     /// <param name="trim">Trims provided string before processing.</param>
     /// <returns>
-    ///     A string that consists of the specified number of characters starting from the specified position in the
-    ///     string.
+    /// A string that consists of the specified number of characters starting from the specified position in the
+    /// string.
     /// </returns>
     /// <exception cref="T:System.ArgumentException">
-    ///     <paramref name="start" /> {= 0 or <paramref name="length" /> { 0.
+    /// <paramref name="start" /> {= 0 or <paramref name="length" /> { 0.
     /// </exception>
     public static string Mid(this string str, int start, int length, bool trim = false)
     {
@@ -357,14 +357,14 @@ public static class StringExtensions
     /// <summary>Returns a string containing a specified number of characters from the right side of a string.</summary>
     /// <param name="str">Required. <see langword="String" /> expression from which the rightmost characters are returned.</param>
     /// <param name="length">
-    ///     Required. <see langword="Integer" />. Numeric expression indicating how many characters to return.
-    ///     If 0, a zero-length string ("") is returned. If greater than or equal to the number of characters in
+    /// Required. <see langword="Integer" />. Numeric expression indicating how many characters to return.
+    /// If 0, a zero-length string ("") is returned. If greater than or equal to the number of characters in
     /// <paramref name="str" />, the entire string is returned.
     /// </param>
     /// <param name="trim">Trims provided string before processing.</param>
     /// <returns>Returns a string containing a specified number of characters from the right side of a string.</returns>
     /// <exception cref="T:System.ArgumentException">
-    ///     <paramref name="length" /> { 0.
+    /// <paramref name="length" /> { 0.
     /// </exception>
     public static string Right(this string str, int length, bool trim = false)
     {
@@ -536,7 +536,7 @@ public static class StringExtensions
     }
 
     /// <summary>
-    ///     Generates the md5 of string.
+    /// Generates the md5 of string.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>MD5 of string</returns>
@@ -563,10 +563,10 @@ public static class StringExtensions
         var sb = new StringBuilder();
 
         foreach (char ch in formD.Select(ch => new
-        {
-            ch,
-            uc = CharUnicodeInfo.GetUnicodeCategory(ch)
-        })
+                     {
+                         ch,
+                         uc = CharUnicodeInfo.GetUnicodeCategory(ch)
+                     })
                      .Where(t => t.uc != UnicodeCategory.NonSpacingMark)
                      .Select(t => t.ch))
             sb.Append(ch);

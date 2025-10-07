@@ -8,12 +8,12 @@ using System.Linq;
 namespace FEx.Extensions.Collections.Enumerables;
 
 /// <summary>
-///     IEnumerable interface extensions.
+/// IEnumerable interface extensions.
 /// </summary>
 public static class EnumerableExtensions
 {
     /// <summary>
-    ///     Determines whether I'm null or empty.
+    /// Determines whether I'm null or empty.
     /// </summary>
     /// <typeparam name="T">The type of the items in the list.</typeparam>
     /// <param name="source">The source.</param>
@@ -25,7 +25,7 @@ public static class EnumerableExtensions
     public static bool IsNotNullOrEmptyEnumerable<T>(this IEnumerable<T> source) => source?.Any() == true;
 
     /// <summary>
-    ///     Appends a sequence of items to an existing list
+    /// Appends a sequence of items to an existing list
     /// </summary>
     /// <typeparam name="T">The type of the items in the list.</typeparam>
     /// <param name="source">The list to modify.</param>
@@ -34,7 +34,7 @@ public static class EnumerableExtensions
     public static void AddRange<T>(ref IEnumerable<T> source, IEnumerable<T> items) => source = source.Concat(items);
 
     /// <summary>
-    ///     Aggregates a list of strings.
+    /// Aggregates a list of strings.
     /// </summary>
     /// <param name="source">The source.</param>
     /// <returns>A comma separated string with values if any; Otherwise a empty string.</returns>
@@ -50,7 +50,7 @@ public static class EnumerableExtensions
     }
 
     /// <summary>
-    ///     Execute a action for each item in the list.
+    /// Execute a action for each item in the list.
     /// </summary>
     /// <typeparam name="T">Sequence element type.</typeparam>
     /// <param name="source">The list itself.</param>
@@ -63,7 +63,7 @@ public static class EnumerableExtensions
     }
 
     /// <summary>
-    ///     Multiplies the items by given multiplier number.
+    /// Multiplies the items by given multiplier number.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="items">The items.</param>
@@ -80,7 +80,7 @@ public static class EnumerableExtensions
     }
 
     /// <summary>
-    ///     Divides the specified set of items into sets of smaller ones (less than given maximum number of items).
+    /// Divides the specified set of items into sets of smaller ones (less than given maximum number of items).
     /// </summary>
     /// <typeparam name="T">Item type.</typeparam>
     /// <param name="items">The items.</param>
@@ -109,7 +109,7 @@ public static class EnumerableExtensions
     }
 
     /// <summary>
-    ///     Maximums the or default.
+    /// Maximums the or default.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <typeparam name="TResult">The type of the result.</typeparam>
@@ -122,7 +122,7 @@ public static class EnumerableExtensions
             : default;
 
     /// <summary>
-    ///     Builds the joined string.
+    /// Builds the joined string.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <param name="items">The items.</param>
@@ -131,7 +131,7 @@ public static class EnumerableExtensions
         string.Join(", ", [.. items.Select(i => i.ToString())]);
 
     /// <summary>
-    ///     Converts <see cref="IEnumerable{T}" /> to the <see cref="ObservableCollection{T}" />.
+    /// Converts <see cref="IEnumerable{T}" /> to the <see cref="ObservableCollection{T}" />.
     /// </summary>
     /// <typeparam name="T">Type of source</typeparam>
     /// <param name="source">The source.</param>
@@ -141,25 +141,25 @@ public static class EnumerableExtensions
     public static ObservableCollection<T> ToObservableCollection<T>(this IEnumerable<T> source) => new(source);
 
     /// <summary>
-    ///     Finds the index of the first occurrence of an item in an enumerable.
+    /// Finds the index of the first occurrence of an item in an enumerable.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="items">The enumerable to search.</param>
     /// <param name="item">The item to find.</param>
     /// <returns>
-    ///     The index of the first matching item, or -1 if the item was not found.
+    /// The index of the first matching item, or -1 if the item was not found.
     /// </returns>
     public static int IndexOf<T>(this IEnumerable<T> items, T item) =>
         items.IndexWhere(i => ObjectExtensions.IsEqual(ref item, i));
 
     /// <summary>
-    ///     Gets index of first element where condition is met.
+    /// Gets index of first element where condition is met.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="source">The source.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns>
-    ///     IEnumerable{System.Int32}
+    /// IEnumerable{System.Int32}
     /// </returns>
     public static int IndexWhere<T>(this IEnumerable<T> source, Func<T, bool> predicate)
     {
@@ -177,13 +177,13 @@ public static class EnumerableExtensions
     }
 
     /// <summary>
-    ///     Gets indexes of all elements where condition is met.
+    /// Gets indexes of all elements where condition is met.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="source">The source.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns>
-    ///     IEnumerable{System.Int32}
+    /// IEnumerable{System.Int32}
     /// </returns>
     public static IEnumerable<int> IndexesWhere<T>(this IEnumerable<T> source, Func<T, bool> predicate)
     {
@@ -199,14 +199,14 @@ public static class EnumerableExtensions
     }
 
     /// <summary>
-    ///     Gets the type of the item.
+    /// Gets the type of the item.
     /// </summary>
     /// <param name="enumerable">The enumerable.</param>
     /// <returns></returns>
     public static Type GetItemType(this IEnumerable enumerable) => enumerable.GetType().GetElementType();
 
     /// <summary>
-    ///     Checks if two sequences contain the same elements without checking their order
+    /// Checks if two sequences contain the same elements without checking their order
     /// </summary>
     /// <param name="first">The first sequence.</param>
     /// <param name="second">The second sequence.</param>
@@ -215,7 +215,7 @@ public static class EnumerableExtensions
         first.Cast<object>().OrderBy(t => t).SequenceEqual(second.Cast<object>().OrderBy(t => t));
 
     /// <summary>
-    ///     Checks if two sequences contain the same elements without checking their order
+    /// Checks if two sequences contain the same elements without checking their order
     /// </summary>
     /// <param name="first">The first sequence.</param>
     /// <param name="second">The second sequence.</param>
@@ -224,12 +224,12 @@ public static class EnumerableExtensions
         first.OrderBy(t => t).SequenceEqual(second.OrderBy(t => t));
 
     /// <summary>
-    ///     To the collection.
+    /// To the collection.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="source">The source.</param>
     /// <returns>
-    ///     Collection{T}
+    /// Collection{T}
     /// </returns>
     public static Collection<T> ToCollection<T>(this IEnumerable<T> source) => new([.. source]);
 
@@ -237,7 +237,7 @@ public static class EnumerableExtensions
         source.Skip(Math.Max(0, source.Count() - n));
 
     /// <summary>
-    ///     Multiplies the given IEnumerables by given one (builds cartesian result).
+    /// Multiplies the given IEnumerables by given one (builds cartesian result).
     /// </summary>
     /// <typeparam name="T">Type of the item</typeparam>
     /// <param name="origin">The origin.</param>

@@ -26,7 +26,7 @@ using FontFamily = System.Windows.Media.FontFamily;
 namespace FEx.WPFx.Controls;
 
 /// <summary>
-///     Interaction logic for MainWindow.xaml
+/// Interaction logic for MainWindow.xaml
 /// </summary>
 public partial class SplashScreenWindow : Window, INotifyPropertyChanged
 {

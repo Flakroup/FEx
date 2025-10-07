@@ -5,6 +5,6 @@ namespace FEx.Fundamentals;
 
 public class FExFundamentals : InitializeModule<IFExFundamentalsContainer>
 {
-
-    protected override void AddServices(IFExFundamentalsContainer container, IServiceCollection services) => FExFundamentalsModule.AddServices(container, services);
+    protected override void AddServices(IFExFundamentalsContainer container, IServiceCollection services) =>
+        FExFundamentalsModule.AddServices(container, services);
 }

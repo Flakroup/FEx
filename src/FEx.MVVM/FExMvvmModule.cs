@@ -9,5 +9,6 @@ namespace FEx.MVVM;
 [Register(typeof(FExMvvm), Scope.SingleInstance, typeof(FExMvvm), typeof(IInitializeModule))]
 public class FExMvvmModule
 {
-    public static void AddServices(IFExMvvmContainer container, IServiceCollection services) => services.AddTransientServiceUsingContainer<IMessagePopupService>(container);
+    public static void AddServices(IFExMvvmContainer container, IServiceCollection services) =>
+        services.AddTransientServiceUsingContainer<IMessagePopupService>(container);
 }

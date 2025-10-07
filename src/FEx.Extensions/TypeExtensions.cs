@@ -9,7 +9,7 @@ namespace FEx.Extensions;
 public static class TypeExtensions
 {
     /// <summary>
-    ///     Gets the implemented interfaces.
+    /// Gets the implemented interfaces.
     /// </summary>
     /// <param name="interfaceType">Type of the interface.</param>
     /// <returns></returns>
@@ -17,7 +17,7 @@ public static class TypeExtensions
         GetAllNotSealedClasses().Where(type => type.GetInterface(interfaceType.Name) is not null);
 
     /// <summary>
-    ///     Gets the implemented classes.
+    /// Gets the implemented classes.
     /// </summary>
     /// <param name="baseType">Type of the base.</param>
     /// <returns></returns>
@@ -25,7 +25,7 @@ public static class TypeExtensions
         GetAllNotSealedClasses().Where(type => type.GetBaseTypes().Contains(baseType));
 
     /// <summary>
-    ///     Gets the base types.
+    /// Gets the base types.
     /// </summary>
     /// <param name="baseType">Type of the base.</param>
     /// <param name="baseTypes">The base types.</param>
@@ -51,7 +51,7 @@ public static class TypeExtensions
         (TAttributeType[])value.GetCustomAttributes(typeof(TAttributeType), false);
 
     /// <summary>
-    ///     Gets all not sealed classes.
+    /// Gets all not sealed classes.
     /// </summary>
     /// <returns></returns>
     private static IEnumerable<Type> GetAllNotSealedClasses() =>

@@ -5,47 +5,47 @@ using System.Globalization;
 namespace FEx.Extensions.DateTimes;
 
 /// <summary>
-///     Extension methods for the TimeSpan
+/// Extension methods for the TimeSpan
 /// </summary>
 public static class TimeSpanExtensions
 {
     /// <summary>
-    ///     Gets a value indicating if the time is midnight (00:00:00).
+    /// Gets a value indicating if the time is midnight (00:00:00).
     /// </summary>
     /// <param name="value">Current Timespan.</param>
     /// <returns>True if midnight; otherwise False.</returns>
     public static bool IsMidnight(this TimeSpan value) => value.Hours == 0 && value is { Minutes: 0, Seconds: 0 };
 
     /// <summary>
-    ///     Gets a TimeSpan for n number of Days.
+    /// Gets a TimeSpan for n number of Days.
     /// </summary>
     /// <param name="number">Number of days.</param>
     /// <returns>A TimeSpan.</returns>
     public static TimeSpan Days(this int number) => new(number, 0, 0, 0);
 
     /// <summary>
-    ///     Gets a TimeSpan for n number of Hours.
+    /// Gets a TimeSpan for n number of Hours.
     /// </summary>
     /// <param name="number">Number of hours.</param>
     /// <returns>A TimeSpan.</returns>
     public static TimeSpan Hours(this int number) => new(0, number, 0, 0);
 
     /// <summary>
-    ///     Gets a TimeSpan for n number of Minutes.
+    /// Gets a TimeSpan for n number of Minutes.
     /// </summary>
     /// <param name="number">Number of minutes.</param>
     /// <returns>A TimeSpan.</returns>
     public static TimeSpan Minutes(this int number) => new(0, number, 0);
 
     /// <summary>
-    ///     Gets a TimeSpan for n number of Seconds.
+    /// Gets a TimeSpan for n number of Seconds.
     /// </summary>
     /// <param name="number">Number of seconds.</param>
     /// <returns>A TimeSpan.</returns>
     public static TimeSpan Seconds(this int number) => new(0, 0, number);
 
     /// <summary>
-    ///     Converts to the universal time.
+    /// Converts to the universal time.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>Universal time.</returns>
@@ -62,7 +62,7 @@ public static class TimeSpanExtensions
     }
 
     /// <summary>
-    ///     Converts to the local time.
+    /// Converts to the local time.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns></returns>
@@ -79,14 +79,14 @@ public static class TimeSpanExtensions
     }
 
     /// <summary>
-    ///     Gets the time from <see cref="Stopwatch" />.
+    /// Gets the time from <see cref="Stopwatch" />.
     /// </summary>
     /// <param name="stopwatch">The stopwatch.</param>
     /// <returns><see cref="System.String" />. with time.</returns>
     public static string GetTime(this Stopwatch stopwatch) => GetTime(stopwatch.Elapsed);
 
     /// <summary>
-    ///     Gets the time.
+    /// Gets the time.
     /// </summary>
     /// <param name="milliseconds">The milliseconds.</param>
     /// <returns>System.String.</returns>
@@ -95,7 +95,7 @@ public static class TimeSpanExtensions
     public static string GetTime(this double milliseconds) => TimeSpan.FromMilliseconds(milliseconds).GetTime();
 
     /// <summary>
-    ///     Gets the time from <see cref="TimeSpan" />.
+    /// Gets the time from <see cref="TimeSpan" />.
     /// </summary>
     /// <param name="timespan">The timespan.</param>
     /// <param name="decimals">The decimals.</param>
@@ -121,7 +121,7 @@ public static class TimeSpanExtensions
     }
 
     /// <summary>
-    ///     Fills the zeros.
+    /// Fills the zeros.
     /// </summary>
     /// <param name="toFill">To fill.</param>
     /// <param name="decimals">The decimals.</param>

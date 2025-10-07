@@ -80,9 +80,11 @@ public sealed class SynchronizedAccessService : ISynchronizedAccessService, IDis
 
     public void Release(string key) => EnsureLock(key).Release();
 
-    public async Task WaitAsync(string key, int maxParallel = 1, CancellationToken cancellationToken = default) => await EnsureLock(key, maxParallel).WaitAsync(cancellationToken);
+    public async Task WaitAsync(string key, int maxParallel = 1, CancellationToken cancellationToken = default) =>
+        await EnsureLock(key, maxParallel).WaitAsync(cancellationToken);
 
-    public void Wait(string key, int maxParallel = 1, CancellationToken cancellationToken = default) => EnsureLock(key, maxParallel).Wait(cancellationToken);
+    public void Wait(string key, int maxParallel = 1, CancellationToken cancellationToken = default) =>
+        EnsureLock(key, maxParallel).Wait(cancellationToken);
 
     public void RemoveLock(string key)
     {

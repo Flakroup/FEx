@@ -18,8 +18,8 @@ using System.Linq;
 namespace FEx.Basics.Collections;
 
 /// <summary>
-///     A hash set that implements the interfaces required for Entity Framework to use notification based change tracking
-///     for a collection navigation property.
+/// A hash set that implements the interfaces required for Entity Framework to use notification based change tracking
+/// for a collection navigation property.
 /// </summary>
 /// <typeparam name="T"> The type of elements in the hash set. </typeparam>
 /// [DebuggerDisplay("Count={" + nameof(Count) + "}")]
@@ -29,18 +29,19 @@ namespace FEx.Basics.Collections;
 public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCollection<T>, INotifyCollectionChanged,
     INotifyPropertyChanged
 {
-    [NonSerialized] private readonly IFExDispatcher _dispatcher;
+    [NonSerialized]
+    private readonly IFExDispatcher _dispatcher;
 
     private HashSet<T> _set;
 
     /// <summary>
-    ///     Occurs when the collection changes, either by adding or removing an item.
+    /// Occurs when the collection changes, either by adding or removing an item.
     /// </summary>
     [field: NonSerialized]
     public event NotifyCollectionChangedEventHandler CollectionChanged;
 
     /// <summary>
-    ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    /// PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
     [field: NonSerialized]
     public event PropertyChangedEventHandler PropertyChanged;
@@ -48,23 +49,23 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     public static T[] NoItems { get; } = [];
 
     /// <summary>
-    ///     Gets the number of elements that are contained in the hash set.
+    /// Gets the number of elements that are contained in the hash set.
     /// </summary>
     public virtual int Count => _set.Count;
 
     /// <summary>
-    ///     Gets a value indicating whether the hash set is read-only.
+    /// Gets a value indicating whether the hash set is read-only.
     /// </summary>
     public virtual bool IsReadOnly => ((ICollection<T>)_set).IsReadOnly;
 
     /// <summary>
-    ///     Gets the <see cref="IEqualityComparer{T}" /> object that is used to determine equality for the values in the set.
+    /// Gets the <see cref="IEqualityComparer{T}" /> object that is used to determine equality for the values in the set.
     /// </summary>
     public virtual IEqualityComparer<T> Comparer => _set.Comparer;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ObservableHashSet{T}" /> class
-    ///     that is empty and uses the default equality comparer for the set type.
+    /// Initializes a new instance of the <see cref="ObservableHashSet{T}" /> class
+    /// that is empty and uses the default equality comparer for the set type.
     /// </summary>
     public ObservableHashSet()
         : this(comparer: EqualityComparer<T>.Default)
@@ -72,15 +73,15 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ObservableHashSet{T}" /> class
-    ///     that uses the specified equality comparer for the set type, contains elements
-    ///     copied from the specified collection, and has sufficient capacity to accommodate
-    ///     the number of elements copied.
+    /// Initializes a new instance of the <see cref="ObservableHashSet{T}" /> class
+    /// that uses the specified equality comparer for the set type, contains elements
+    /// copied from the specified collection, and has sufficient capacity to accommodate
+    /// the number of elements copied.
     /// </summary>
     /// <param name="collection">The collection whose elements are copied to the new set.</param>
     /// <param name="comparer">
-    ///     The <see cref="IEqualityComparer{T}" /> implementation to use when
-    ///     comparing values in the set, or null to use the default <see cref="IEqualityComparer{T}" />
+    /// The <see cref="IEqualityComparer{T}" /> implementation to use when
+    /// comparing values in the set, or null to use the default <see cref="IEqualityComparer{T}" />
     /// implementation for the set type.
     /// </param>
     public ObservableHashSet(IEnumerable<T> collection = null, IEqualityComparer<T> comparer = null)
@@ -92,14 +93,14 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
         comparer ??= EqualityComparer<T>.Default;
 
         _set = collection is null
-            ? new HashSet<T>(comparer)
+            ? new(comparer)
             : new HashSet<T>(collection, comparer);
     }
 
     void ICollection<T>.Add(T item) => Add(item!);
 
     /// <summary>
-    ///     Removes all elements from the hash set.
+    /// Removes all elements from the hash set.
     /// </summary>
     public virtual void Clear()
     {
@@ -114,31 +115,31 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     }
 
     /// <summary>
-    ///     Determines whether the hash set object contains the
-    ///     specified element.
+    /// Determines whether the hash set object contains the
+    /// specified element.
     /// </summary>
     /// <param name="item">The element to locate in the hash set.</param>
     /// <returns>
-    ///     True if the hash set contains the specified element; otherwise, false.
+    /// True if the hash set contains the specified element; otherwise, false.
     /// </returns>
     public virtual bool Contains(T item) => _set.Contains(item);
 
     /// <summary>
-    ///     Copies the elements of the hash set to an array, starting at the specified array index.
+    /// Copies the elements of the hash set to an array, starting at the specified array index.
     /// </summary>
     /// <param name="array">
-    ///     The one-dimensional array that is the destination of the elements copied from
-    ///     the hash set. The array must have zero-based indexing.
+    /// The one-dimensional array that is the destination of the elements copied from
+    /// the hash set. The array must have zero-based indexing.
     /// </param>
     /// <param name="arrayIndex"> The zero-based index in array at which copying begins. </param>
     public virtual void CopyTo(T[] array, int arrayIndex) => _set.CopyTo(array, arrayIndex);
 
     /// <summary>
-    ///     Removes the specified element from the hash set.
+    /// Removes the specified element from the hash set.
     /// </summary>
     /// <param name="item"> The element to remove. </param>
     /// <returns>
-    ///     True if the element is successfully found and removed; otherwise, false.
+    /// True if the element is successfully found and removed; otherwise, false.
     /// </returns>
     public virtual bool Remove(T item)
     {
@@ -159,11 +160,11 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
 
     /// <summary>
-    ///     Adds the specified element to the hash set.
+    /// Adds the specified element to the hash set.
     /// </summary>
     /// <param name="item"> The element to add to the set. </param>
     /// <returns>
-    ///     true if the element is added to the hash set; false if the element is already present.
+    /// true if the element is added to the hash set; false if the element is already present.
     /// </returns>
     public virtual bool Add(T item)
     {
@@ -176,7 +177,7 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     }
 
     /// <summary>
-    ///     Modifies the hash set to contain all elements that are present in itself, the specified collection, or both.
+    /// Modifies the hash set to contain all elements that are present in itself, the specified collection, or both.
     /// </summary>
     /// <param name="other"> The collection to compare to the current hash set. </param>
     public virtual void UnionWith(IEnumerable<T> other)
@@ -196,8 +197,8 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     }
 
     /// <summary>
-    ///     Modifies the current hash set to contain only
-    ///     elements that are present in that object and in the specified collection.
+    /// Modifies the current hash set to contain only
+    /// elements that are present in that object and in the specified collection.
     /// </summary>
     /// <param name="other"> The collection to compare to the current hash set. </param>
     public virtual void IntersectWith(IEnumerable<T> other)
@@ -217,7 +218,7 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     }
 
     /// <summary>
-    ///     Removes all elements in the specified collection from the hash set.
+    /// Removes all elements in the specified collection from the hash set.
     /// </summary>
     /// <param name="other"> The collection of items to remove from the current hash set. </param>
     public virtual void ExceptWith(IEnumerable<T> other)
@@ -237,8 +238,8 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     }
 
     /// <summary>
-    ///     Modifies the current hash set to contain only elements that are present either in that
-    ///     object or in the specified collection, but not both.
+    /// Modifies the current hash set to contain only elements that are present either in that
+    /// object or in the specified collection, but not both.
     /// </summary>
     /// <param name="other"> The collection to compare to the current hash set. </param>
     public virtual void SymmetricExceptWith(IEnumerable<T> other)
@@ -260,94 +261,94 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     }
 
     /// <summary>
-    ///     Determines whether the hash set is a subset of the specified collection.
+    /// Determines whether the hash set is a subset of the specified collection.
     /// </summary>
     /// <param name="other"> The collection to compare to the current hash set. </param>
     /// <returns>
-    ///     True if the hash set is a subset of other; otherwise, false.
+    /// True if the hash set is a subset of other; otherwise, false.
     /// </returns>
     public virtual bool IsSubsetOf(IEnumerable<T> other) => _set.IsSubsetOf(other);
 
     /// <summary>
-    ///     Determines whether the hash set is a proper subset of the specified collection.
+    /// Determines whether the hash set is a proper subset of the specified collection.
     /// </summary>
     /// <param name="other"> The collection to compare to the current hash set. </param>
     /// <returns>
-    ///     True if the hash set is a proper subset of other; otherwise, false.
+    /// True if the hash set is a proper subset of other; otherwise, false.
     /// </returns>
     public virtual bool IsProperSubsetOf(IEnumerable<T> other) => _set.IsProperSubsetOf(other);
 
     /// <summary>
-    ///     Determines whether the hash set is a superset of the specified collection.
+    /// Determines whether the hash set is a superset of the specified collection.
     /// </summary>
     /// <param name="other"> The collection to compare to the current hash set. </param>
     /// <returns>
-    ///     True if the hash set is a superset of other; otherwise, false.
+    /// True if the hash set is a superset of other; otherwise, false.
     /// </returns>
     public virtual bool IsSupersetOf(IEnumerable<T> other) => _set.IsSupersetOf(other);
 
     /// <summary>
-    ///     Determines whether the hash set is a proper superset of the specified collection.
+    /// Determines whether the hash set is a proper superset of the specified collection.
     /// </summary>
     /// <param name="other"> The collection to compare to the current hash set. </param>
     /// <returns>
-    ///     True if the hash set is a proper superset of other; otherwise, false.
+    /// True if the hash set is a proper superset of other; otherwise, false.
     /// </returns>
     public virtual bool IsProperSupersetOf(IEnumerable<T> other) => _set.IsProperSupersetOf(other);
 
     /// <summary>
-    ///     Determines whether the current System.Collections.Generic.HashSet`1 object and a specified collection share common
-    ///     elements.
+    /// Determines whether the current System.Collections.Generic.HashSet`1 object and a specified collection share common
+    /// elements.
     /// </summary>
     /// <param name="other"> The collection to compare to the current hash set. </param>
     /// <returns>
-    ///     True if the hash set and other share at least one common element; otherwise, false.
+    /// True if the hash set and other share at least one common element; otherwise, false.
     /// </returns>
     public virtual bool Overlaps(IEnumerable<T> other) => _set.Overlaps(other);
 
     /// <summary>
-    ///     Determines whether the hash set and the specified collection contain the same elements.
+    /// Determines whether the hash set and the specified collection contain the same elements.
     /// </summary>
     /// <param name="other"> The collection to compare to the current hash set. </param>
     /// <returns>
-    ///     True if the hash set is equal to other; otherwise, false.
+    /// True if the hash set is equal to other; otherwise, false.
     /// </returns>
     public virtual bool SetEquals(IEnumerable<T> other) => _set.SetEquals(other);
 
     /// <summary>
-    ///     Returns an enumerator that iterates through the hash set.
+    /// Returns an enumerator that iterates through the hash set.
     /// </summary>
     /// <returns>
-    ///     An enumerator for the hash set.
+    /// An enumerator for the hash set.
     /// </returns>
     public virtual HashSet<T>.Enumerator GetEnumerator() => _set.GetEnumerator();
 
     /// <summary>
-    ///     Copies the elements of the hash set to an array.
+    /// Copies the elements of the hash set to an array.
     /// </summary>
     /// <param name="array">
-    ///     The one-dimensional array that is the destination of the elements copied from
-    ///     the hash set. The array must have zero-based indexing.
+    /// The one-dimensional array that is the destination of the elements copied from
+    /// the hash set. The array must have zero-based indexing.
     /// </param>
     public virtual void CopyTo([NotNull] T[] array) => _set.CopyTo(array);
 
     /// <summary>
-    ///     Copies the specified number of elements of the hash set to an array, starting at the specified array index.
+    /// Copies the specified number of elements of the hash set to an array, starting at the specified array index.
     /// </summary>
     /// <param name="array">
-    ///     The one-dimensional array that is the destination of the elements copied from
-    ///     the hash set. The array must have zero-based indexing.
+    /// The one-dimensional array that is the destination of the elements copied from
+    /// the hash set. The array must have zero-based indexing.
     /// </param>
     /// <param name="arrayIndex"> The zero-based index in array at which copying begins. </param>
     /// <param name="count"> The number of elements to copy to array. </param>
     public virtual void CopyTo([NotNull] T[] array, int arrayIndex, int count) => _set.CopyTo(array, arrayIndex, count);
 
     /// <summary>
-    ///     Removes all elements that match the conditions defined by the specified predicate
-    ///     from the hash set.
+    /// Removes all elements that match the conditions defined by the specified predicate
+    /// from the hash set.
     /// </summary>
     /// <param name="match">
-    ///     The <see cref="Predicate{T}" /> delegate that defines the conditions of the elements to remove.
+    /// The <see cref="Predicate{T}" /> delegate that defines the conditions of the elements to remove.
     /// </param>
     /// <returns> The number of elements that were removed from the hash set. </returns>
     public virtual int RemoveWhere([NotNull] Predicate<T> match)
@@ -369,15 +370,15 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     }
 
     /// <summary>
-    ///     Sets the capacity of the hash set to the actual number of elements it contains, rounded up to a nearby,
-    ///     implementation-specific value.
+    /// Sets the capacity of the hash set to the actual number of elements it contains, rounded up to a nearby,
+    /// implementation-specific value.
     /// </summary>
     public virtual void TrimExcess() => _set.TrimExcess();
 
     protected virtual void Dispatch(Action action) => _dispatcher.InvokeOnMainThread(action, this);
 
     /// <summary>
-    ///     Raises a PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    /// Raises a PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {

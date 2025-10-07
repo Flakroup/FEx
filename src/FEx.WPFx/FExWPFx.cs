@@ -42,10 +42,10 @@ public class FExWpfx : InitializeModule<IFExWpfxContainer>
     }
 
     /// <summary>
-    ///     Overrides formatting on UI.
+    /// Overrides formatting on UI.
     /// </summary>
     /// <param name="culture">
-    ///     The culture to use. If <c>null</c>,
+    /// The culture to use. If <c>null</c>,
     /// <see cref="System.Globalization.CultureInfo.CurrentCulture" /> is used.
     /// </param>
     public static void OverrideFormattingOnUI(CultureInfo culture = null)

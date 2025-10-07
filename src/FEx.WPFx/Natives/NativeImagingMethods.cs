@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace FEx.WPFx.Natives;
 
 /// <summary>
-///     Contains the external references to the unmanaged code.
+/// Contains the external references to the unmanaged code.
 /// </summary>
 public static class NativeImagingMethods
 {

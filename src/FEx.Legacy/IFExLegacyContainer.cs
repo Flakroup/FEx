@@ -5,5 +5,4 @@ namespace FEx.Legacy;
 
 public interface IFExLegacyContainer : IContainer<ITasksHandler>
 {
-
 }

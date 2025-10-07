@@ -24,34 +24,34 @@ using Microsoft.Win32;
 namespace FEx.Common.Utilities;
 
 /// <summary>
-///     Provides detailed information about the host operating system.
+/// Provides detailed information about the host operating system.
 /// </summary>
 public static class PlatformInfoProvider
 {
     private const int SmTabletPC = 86;
 
     /// <summary>
-    ///     Indicates whether the operating-system is arm64.
+    /// Indicates whether the operating-system is arm64.
     /// </summary>
     public static bool IsArm64 => RuntimeInformation.OSArchitecture == Architecture.Arm64;
 
     /// <summary>
-    ///     Indicates whether the operating-system is 64bit.
+    /// Indicates whether the operating-system is 64bit.
     /// </summary>
     public static bool Is64Bit => RuntimeInformation.OSArchitecture is Architecture.X64 or Architecture.Arm64;
 
     /// <summary>
-    ///     Indicates whether the operating-system is 32bit.
+    /// Indicates whether the operating-system is 32bit.
     /// </summary>
     public static bool Is32Bit => !Is64Bit;
 
     /// <summary>
-    ///     Indicates whether the operating-system is UNIX.
+    /// Indicates whether the operating-system is UNIX.
     /// </summary>
     public static bool IsUnix => IsLinux || IsMacOS || IsIOS;
 
     /// <summary>
-    ///     Indicates whether the current process is running under Windows Subsystem for Linux.
+    /// Indicates whether the current process is running under Windows Subsystem for Linux.
     /// </summary>
     public static bool IsWsl
     {
@@ -74,7 +74,7 @@ public static class PlatformInfoProvider
     }
 
     /// <summary>
-    ///     Indicates the target framework of the current process.
+    /// Indicates the target framework of the current process.
     /// </summary>
     public static FrameworkName Framework =>
         new(Assembly.GetEntryAssembly()
@@ -84,7 +84,7 @@ public static class PlatformInfoProvider
             .FrameworkName);
 
     /// <summary>
-    ///     Indicates the operating-system platform.
+    /// Indicates the operating-system platform.
     /// </summary>
     public static OSPlatformInfo Platform =>
         IsBrowser ? OSPlatformInfo.Browser :
@@ -113,7 +113,7 @@ public static class PlatformInfoProvider
 #endif
 
     /// <summary>
-    ///     Determines if the current application is 32 or 64-bit.
+    /// Determines if the current application is 32 or 64-bit.
     /// </summary>
     public static SoftwareArchitecture ProgramBits { get; }
 
@@ -122,14 +122,14 @@ public static class PlatformInfoProvider
     public static bool Is64BitOperatingSystem => OSBits == SoftwareArchitecture.Bit64;
 
     /// <summary>
-    ///     Determines if the current processor is 32 or 64-bit.
+    /// Determines if the current processor is 32 or 64-bit.
     /// </summary>
     public static OSProcessorArchitecture ProcessorBits { get; }
 
     public static OSEdition Edition { get; }
 
     /// <summary>
-    ///     Gets the edition of the operating system running on this computer.
+    /// Gets the edition of the operating system running on this computer.
     /// </summary>
     public static string EditionString =>
         Edition != OSEdition.Unknown
@@ -137,22 +137,22 @@ public static class PlatformInfoProvider
             : null;
 
     /// <summary>
-    ///     Gets the name of the operating system running on this computer.
+    /// Gets the name of the operating system running on this computer.
     /// </summary>
     public static string Name { get; }
 
     /// <summary>
-    ///     Gets the service pack information of the operating system running on this computer.
+    /// Gets the service pack information of the operating system running on this computer.
     /// </summary>
     public static string ServicePack { get; }
 
     /// <summary>
-    ///     Gets the build version number of the operating system running on this computer.
+    /// Gets the build version number of the operating system running on this computer.
     /// </summary>
     public static int BuildVersion { get; }
 
     /// <summary>
-    ///     Gets the full version of the operating system running on this computer.
+    /// Gets the full version of the operating system running on this computer.
     /// </summary>
     public static Version Version { get; }
 

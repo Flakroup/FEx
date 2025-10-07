@@ -161,7 +161,7 @@ public static class ConverterLogic
     }
 
     /// <summary>
-    ///     This one uses local and global colors
+    /// This one uses local and global colors
     /// </summary>
     /// <param name="rootElement"></param>
     /// <param name="resKeyInfo"></param>
@@ -265,12 +265,12 @@ public static class ConverterLogic
             switch (aDrawing)
             {
                 case DrawingGroup group:
-                    {
-                        foreach (Drawing d in group.Children)
-                            HandleDrawing(d);
+                {
+                    foreach (Drawing d in group.Children)
+                        HandleDrawing(d);
 
-                        break;
-                    }
+                    break;
+                }
                 case GeometryDrawing { Geometry: PathGeometry item }:
                     result.Add(item);
 
@@ -474,7 +474,7 @@ public static class ConverterLogic
     }
 
     /// <summary>
-    ///     Builds resources keys reference
+    /// Builds resources keys reference
     /// </summary>
     /// <param name="refName">ist der schon komplett fertige name mit prefix oder Reskey</param>
     /// <param name="dynamic"></param>

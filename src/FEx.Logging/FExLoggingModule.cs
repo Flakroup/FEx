@@ -17,10 +17,7 @@ namespace FEx.Logging;
 [Register(typeof(Loggable), typeof(ILoggable))]
 [Register(typeof(LoggingService), Scope.SingleInstance, typeof(ILoggingService))]
 [Register(typeof(FExLoggingConfigurator), Scope.SingleInstance)]
-[Register(typeof(FExLogging),
-    Scope.SingleInstance,
-    typeof(FExLogging),
-    typeof(IInitializeModule))]
+[Register(typeof(FExLogging), Scope.SingleInstance, typeof(FExLogging), typeof(IInitializeModule))]
 public class FExLoggingModule
 {
     [Instance]

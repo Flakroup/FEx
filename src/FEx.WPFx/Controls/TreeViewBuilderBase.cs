@@ -80,7 +80,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
     }
 
     /// <summary>
-    ///     Grows the tree.
+    /// Grows the tree.
     /// </summary>
     /// <param name="tree">The tree.</param>
     /// <param name="newNode">The new node.</param>
@@ -98,7 +98,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
     }
 
     /// <summary>
-    ///     Grows the tree.
+    /// Grows the tree.
     /// </summary>
     /// <param name="tree">The tree.</param>
     /// <param name="nodeStub">The node stub.</param>

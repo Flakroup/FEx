@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 namespace FEx.Basics.Extensions;
 
 /// <summary>
-///     Contains extension methods for <see cref="AsyncReaderWriterLockSlim" />.
+/// Contains extension methods for <see cref="AsyncReaderWriterLockSlim" />.
 /// </summary>
 public static class AsyncReaderWriterLockSlimExtension
 {
     /// <summary>
-    ///     Enters the lock in read mode.
+    /// Enters the lock in read mode.
     /// </summary>
     /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
@@ -28,14 +28,14 @@ public static class AsyncReaderWriterLockSlimExtension
     }
 
     /// <summary>
-    ///     Asynchronously enters the lock in read mode and returns a <see cref="IDisposableLock" /> that
-    ///     will release the lock when disposed.
+    /// Asynchronously enters the lock in read mode and returns a <see cref="IDisposableLock" /> that
+    /// will release the lock when disposed.
     /// </summary>
     /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
     /// <returns>
-    ///     A task that will complete with a <see cref="IDisposableLock" /> when the lock has been entered,
-    ///     which will release the lock when disposed.
+    /// A task that will complete with a <see cref="IDisposableLock" /> when the lock has been entered,
+    /// which will release the lock when disposed.
     /// </returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
@@ -48,21 +48,21 @@ public static class AsyncReaderWriterLockSlimExtension
     }
 
     /// <summary>
-    ///     Tries to enter the lock in read mode, with an optional integer time-out.
+    /// Tries to enter the lock in read mode, with an optional integer time-out.
     /// </summary>
     /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
     /// <param name="millisecondsTimeout">
-    ///     The number of milliseconds to wait, or -1
-    ///     (<see cref="Timeout.Infinite" />) to wait indefinitely.
+    /// The number of milliseconds to wait, or -1
+    /// (<see cref="Timeout.Infinite" />) to wait indefinitely.
     /// </param>
     /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
     /// <returns>
-    ///     A <see cref="IDisposableLock" /> that will release the lock when disposed if the lock
-    ///     could be entered, or <c>null</c> otherwise.
+    /// A <see cref="IDisposableLock" /> that will release the lock when disposed if the lock
+    /// could be entered, or <c>null</c> otherwise.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">
-    ///     <paramref name="millisecondsTimeout" /> is a negative number
-    ///     other than -1, which represents an infinite time-out.
+    /// <paramref name="millisecondsTimeout" /> is a negative number
+    /// other than -1, which represents an infinite time-out.
     /// </exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
@@ -78,21 +78,21 @@ public static class AsyncReaderWriterLockSlimExtension
     }
 
     /// <summary>
-    ///     Tries to asynchronously enter the lock in read mode, with an optional integer time-out.
+    /// Tries to asynchronously enter the lock in read mode, with an optional integer time-out.
     /// </summary>
     /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
     /// <param name="millisecondsTimeout">
-    ///     The number of milliseconds to wait, or -1
-    ///     (<see cref="Timeout.Infinite" />) to wait indefinitely.
+    /// The number of milliseconds to wait, or -1
+    /// (<see cref="Timeout.Infinite" />) to wait indefinitely.
     /// </param>
     /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
     /// <returns>
-    ///     A task that will complete with a <see cref="IDisposableLock" /> that will release the lock
-    ///     when disposed if the lock could be entered, or with <c>null</c> otherwise.
+    /// A task that will complete with a <see cref="IDisposableLock" /> that will release the lock
+    /// when disposed if the lock could be entered, or with <c>null</c> otherwise.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">
-    ///     <paramref name="millisecondsTimeout" /> is a negative number
-    ///     other than -1, which represents an infinite time-out.
+    /// <paramref name="millisecondsTimeout" /> is a negative number
+    /// other than -1, which represents an infinite time-out.
     /// </exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
@@ -108,7 +108,7 @@ public static class AsyncReaderWriterLockSlimExtension
     }
 
     /// <summary>
-    ///     Enters the lock in write mode.
+    /// Enters the lock in write mode.
     /// </summary>
     /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
@@ -124,13 +124,13 @@ public static class AsyncReaderWriterLockSlimExtension
     }
 
     /// <summary>
-    ///     Asynchronously enters the lock in write mode.
+    /// Asynchronously enters the lock in write mode.
     /// </summary>
     /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
     /// <returns>
-    ///     >A task that will complete with a <see cref="IDisposableLock" /> when the lock has been entered,
-    ///     which will release the lock when disposed.
+    /// >A task that will complete with a <see cref="IDisposableLock" /> when the lock has been entered,
+    /// which will release the lock when disposed.
     /// </returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
@@ -143,21 +143,21 @@ public static class AsyncReaderWriterLockSlimExtension
     }
 
     /// <summary>
-    ///     Tries to enter the lock in write mode, with an optional integer time-out.
+    /// Tries to enter the lock in write mode, with an optional integer time-out.
     /// </summary>
     /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
     /// <param name="millisecondsTimeout">
-    ///     The number of milliseconds to wait, or -1
-    ///     (<see cref="Timeout.Infinite" />) to wait indefinitely.
+    /// The number of milliseconds to wait, or -1
+    /// (<see cref="Timeout.Infinite" />) to wait indefinitely.
     /// </param>
     /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
     /// <returns>
-    ///     A <see cref="IDisposableLock" /> that will release the lock when disposed if the lock
-    ///     could be entered, or <c>null</c> otherwise.
+    /// A <see cref="IDisposableLock" /> that will release the lock when disposed if the lock
+    /// could be entered, or <c>null</c> otherwise.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">
-    ///     <paramref name="millisecondsTimeout" /> is a negative number
-    ///     other than -1, which represents an infinite time-out.
+    /// <paramref name="millisecondsTimeout" /> is a negative number
+    /// other than -1, which represents an infinite time-out.
     /// </exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
@@ -173,21 +173,21 @@ public static class AsyncReaderWriterLockSlimExtension
     }
 
     /// <summary>
-    ///     Tries to asynchronously enter the lock in write mode, with an optional integer time-out.
+    /// Tries to asynchronously enter the lock in write mode, with an optional integer time-out.
     /// </summary>
     /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
     /// <param name="millisecondsTimeout">
-    ///     The number of milliseconds to wait, or -1
-    ///     (<see cref="Timeout.Infinite" />) to wait indefinitely.
+    /// The number of milliseconds to wait, or -1
+    /// (<see cref="Timeout.Infinite" />) to wait indefinitely.
     /// </param>
     /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
     /// <returns>
-    ///     >A task that will complete with a <see cref="IDisposableLock" /> that will release the lock
-    ///     when disposed if the lock could be entered, or with <c>null</c> otherwise.
+    /// >A task that will complete with a <see cref="IDisposableLock" /> that will release the lock
+    /// when disposed if the lock could be entered, or with <c>null</c> otherwise.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">
-    ///     <paramref name="millisecondsTimeout" /> is a negative number
-    ///     other than -1, which represents an infinite time-out.
+    /// <paramref name="millisecondsTimeout" /> is a negative number
+    /// other than -1, which represents an infinite time-out.
     /// </exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
     /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
@@ -203,7 +203,7 @@ public static class AsyncReaderWriterLockSlimExtension
     }
 
     /// <summary>
-    ///     Downgrades the lock from write mode to read mode.
+    /// Downgrades the lock from write mode to read mode.
     /// </summary>
     /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
     /// <param name="readLock">The <see cref="IDisposableLock" /> which should be downgraded.</param>

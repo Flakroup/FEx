@@ -8,12 +8,12 @@ using System.Linq;
 namespace FEx.Extensions.Collections.Lists;
 
 /// <summary>
-///     Extensions for the IList interface.
+/// Extensions for the IList interface.
 /// </summary>
 public static class ListExtensions
 {
     /// <summary>
-    ///     Gets a value indicating if the collection contains data.
+    /// Gets a value indicating if the collection contains data.
     /// </summary>
     /// <typeparam name="T">Sequence element type.</typeparam>
     /// <param name="source">The list itself.</param>
@@ -21,7 +21,7 @@ public static class ListExtensions
     public static bool IsNotEmpty<T>(this IList<T> source) => (source?.Count ?? 0) > 0;
 
     /// <summary>
-    ///     Gets a value indicating if the collection contains data.
+    /// Gets a value indicating if the collection contains data.
     /// </summary>
     /// <typeparam name="T">Sequence element type.</typeparam>
     /// <param name="source">The list itself.</param>
@@ -30,18 +30,18 @@ public static class ListExtensions
     public static bool IsNullOrEmptyList<T>(this IList<T> source) => source is null || source.Count == 0;
 
     /// <summary>
-    ///     Determines whether [is not null neither is empty].
+    /// Determines whether [is not null neither is empty].
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="source">The source.</param>
     /// <returns>
-    ///     <c>true</c> if [is not null neither is empty] [the specified source]; otherwise, <c>false</c>.
+    /// <c>true</c> if [is not null neither is empty] [the specified source]; otherwise, <c>false</c>.
     /// </returns>
     [ContractAnnotation("null => false")]
     public static bool IsNotNullOrEmptyList<T>(this IList<T> source) => source?.Count > 0;
 
     /// <summary>
-    ///     Converts to a readonly collection.
+    /// Converts to a readonly collection.
     /// </summary>
     /// <typeparam name="T">The type of source.</typeparam>
     /// <param name="source">The source.</param>

@@ -6,12 +6,12 @@ using System.Windows.Data;
 namespace FEx.WPFx.Converters;
 
 /// <summary>
-///     String to visibility converter.
+/// String to visibility converter.
 /// </summary>
 public class StringToVisibilityConverter : IValueConverter
 {
     /// <summary>
-    ///     Converts a value.
+    /// Converts a value.
     /// </summary>
     /// <param name="value">The value produced by the binding source.</param>
     /// <param name="targetType">The type of the binding target property.</param>
@@ -24,7 +24,7 @@ public class StringToVisibilityConverter : IValueConverter
             : Visibility.Hidden;
 
     /// <summary>
-    ///     Converts a value.
+    /// Converts a value.
     /// </summary>
     /// <param name="value">The value that is produced by the binding target.</param>
     /// <param name="targetType">The type to convert to.</param>

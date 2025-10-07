@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 namespace FEx.EFCore.Helpers;
 
 /// <summary>
-///     Use of an EF Core resiliency strategy when using multiple DbContexts within an explicit BeginTransaction():
-///     See: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
+/// Use of an EF Core resiliency strategy when using multiple DbContexts within an explicit BeginTransaction():
+/// See: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
 /// </summary>
 public class ResilientTransaction
 {

@@ -37,7 +37,7 @@ public partial class ThreadingAwareViewModel
     public string TypeFullName { get; protected set; }
 
     /// <summary>
-    ///     If <c>true</c> doesn't wait for dependencies initialization
+    /// If <c>true</c> doesn't wait for dependencies initialization
     /// </summary>
     protected bool SkipDependenciesInitialization { get; set; }
 
@@ -64,6 +64,22 @@ public partial class ThreadingAwareViewModel
     {
         _initializationTask = null;
         IsInitialized = false;
+    }
+
+    public void BeginInitialization(bool waitSynchronouslyForInitialization = false)
+    {
+        if (waitSynchronouslyForInitialization)
+        {
+            JoinableAsyncHelper.AwaitWithoutDeadlock(InitFuncAsync);
+
+            return;
+        }
+
+        _ = Task.Run(InitFuncAsync);
+
+        return;
+
+        Task InitFuncAsync() => StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
     }
 
     protected static async Task<Result<ExceptionError>> SafeInitializeAsync(IAsyncInitializable dependency)
@@ -136,22 +152,6 @@ public partial class ThreadingAwareViewModel
         {
             _initializationSemaphore.SafeRelease();
         }
-    }
-
-    public void BeginInitialization(bool waitSynchronouslyForInitialization = false)
-    {
-        if (waitSynchronouslyForInitialization)
-        {
-            JoinableAsyncHelper.AwaitWithoutDeadlock(InitFuncAsync);
-
-            return;
-        }
-
-        _ = Task.Run(InitFuncAsync);
-
-        return;
-
-        Task InitFuncAsync() => StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
     }
 
     protected void ThrowIfNotInitialized()

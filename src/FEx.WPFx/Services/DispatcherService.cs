@@ -13,8 +13,8 @@ namespace FEx.WPFx.Services;
 public static class DispatcherService
 {
     /// <summary>
-    ///     Executes the action in dispatcher context
-    ///     by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
@@ -32,8 +32,8 @@ public static class DispatcherService
     }
 
     /// <summary>
-    ///     Executes the action in dispatcher context
-    ///     by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
@@ -51,8 +51,8 @@ public static class DispatcherService
     }
 
     /// <summary>
-    ///     Executes the action in dispatcher context
-    ///     by checking if action should be invoked by dispatcher, or directly, and running it.
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
@@ -69,8 +69,8 @@ public static class DispatcherService
     }
 
     /// <summary>
-    ///     Executes the action in dispatcher context
-    ///     by checking if action should be invoked by dispatcher, or directly, and running it.
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="cancellationToken"></param>
@@ -114,7 +114,7 @@ public static class DispatcherService
     }
 
     /// <summary>
-    ///     Shows the view and waits until it's closed.
+    /// Shows the view and waits until it's closed.
     /// </summary>
     /// <param name="viewFunc">The view function.</param>
     /// <param name="isModal">if set to <c>true</c> [is modal].</param>
@@ -134,7 +134,7 @@ public static class DispatcherService
             : Application.Current;
 
     /// <summary>
-    ///     Checks the access.
+    /// Checks the access.
     /// </summary>
     /// <param name="sender">The sender.</param>
     /// <returns>True if you're on the dispatcher thread, otherwise - false</returns>

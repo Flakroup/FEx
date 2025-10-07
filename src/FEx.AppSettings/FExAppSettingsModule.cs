@@ -10,5 +10,6 @@ namespace FEx.AppSettings;
 [Register(typeof(FExAppSettings), Scope.SingleInstance, typeof(FExAppSettings), typeof(IInitializeModule))]
 public class FExAppSettingsModule
 {
-    public static void AddServices(IFExAppSettingsModule container, IServiceCollection services) => services.AddSingletonServiceUsingContainer<IConfigurationService>(container);
+    public static void AddServices(IFExAppSettingsModule container, IServiceCollection services) =>
+        services.AddSingletonServiceUsingContainer<IConfigurationService>(container);
 }

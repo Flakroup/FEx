@@ -28,23 +28,23 @@ public static class UriExtensions
     private const int DefaultTimeout = 100000000;
 
     /// <summary>
-    ///     Determines whether the specified URL is reachable.
+    /// Determines whether the specified URL is reachable.
     /// </summary>
     /// <param name="url">The URL.</param>
     /// <param name="pars">The parameters.</param>
     /// <returns>
-    ///     <c>true</c> if the specified URL is reachable; otherwise, <c>false</c>.
+    /// <c>true</c> if the specified URL is reachable; otherwise, <c>false</c>.
     /// </returns>
     public static async Task<(bool, long)> IsUriReachableAsync(this string url, WebRequestParams pars = null) =>
         await new Uri(url).IsUriReachableAsync(pars);
 
     /// <summary>
-    ///     Determines whether the specified URL is reachable.
+    /// Determines whether the specified URL is reachable.
     /// </summary>
     /// <param name="url">The URL.</param>
     /// <param name="pars">The parameters.</param>
     /// <returns>
-    ///     <c>true</c> if the specified URL is reachable; otherwise, <c>false</c>.
+    /// <c>true</c> if the specified URL is reachable; otherwise, <c>false</c>.
     /// </returns>
     public static async Task<(bool isAvailable, long loadTime)> IsUriReachableAsync(
         this Uri url,
@@ -205,7 +205,8 @@ public static class UriExtensions
         return new StackError($"Could not test url {url}.");
     }
 
-    public static async Task<string> GetFileNameAsync(this Uri url, WebRequestParams pars = null) => await url.DoHttpResponseFuncAsync((response, _) => response.GetFileName(), pars);
+    public static async Task<string> GetFileNameAsync(this Uri url, WebRequestParams pars = null) =>
+        await url.DoHttpResponseFuncAsync((response, _) => response.GetFileName(), pars);
 
     public static string GetFileName(this HttpWebResponse response)
     {

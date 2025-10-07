@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace FEx.Fundamentals.Utilities;
 
 /// <summary>
-///     Exception extensions class.
+/// Exception extensions class.
 /// </summary>
 public class ExceptionHandler : ExceptionHandlerBase
 {

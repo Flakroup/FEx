@@ -8,12 +8,12 @@ using System.Linq;
 namespace FEx.Extensions.Collections.Dictionaries;
 
 /// <summary>
-///     IDictionary extensions class.
+/// IDictionary extensions class.
 /// </summary>
 public static class DictionaryExtensions
 {
     /// <summary>
-    ///     Adds the range.
+    /// Adds the range.
     /// </summary>
     /// <typeparam name="TK">The type of the key.</typeparam>
     /// <typeparam name="TV">The type of the element.</typeparam>
@@ -31,7 +31,7 @@ public static class DictionaryExtensions
     }
 
     /// <summary>
-    ///     Transforms to the merged dictionary.
+    /// Transforms to the merged dictionary.
     /// </summary>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TElement">The type of the element.</typeparam>
@@ -66,7 +66,7 @@ public static class DictionaryExtensions
     }
 
     /// <summary>
-    ///     Merges the specified dictionaries.
+    /// Merges the specified dictionaries.
     /// </summary>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TElement">The type of the element.</typeparam>
@@ -89,8 +89,8 @@ public static class DictionaryExtensions
     }
 
     /// <summary>
-    ///     Returns the value in an IDictionary at the given key, or creates a new value using the given delegate, adds it at
-    ///     the given key, and returns the new value.
+    /// Returns the value in an IDictionary at the given key, or creates a new value using the given delegate, adds it at
+    /// the given key, and returns the new value.
     /// </summary>
     /// <typeparam name="TK"></typeparam>
     /// <typeparam name="TV"></typeparam>
@@ -115,8 +115,8 @@ public static class DictionaryExtensions
     }
 
     /// <summary>
-    ///     Adds a key/value pair to the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
-    ///     does not already exist, or updates a key/value pair in the
+    /// Adds a key/value pair to the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
+    /// does not already exist, or updates a key/value pair in the
     /// <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
     /// </summary>
     /// <param name="dictionary"></param>
@@ -127,8 +127,8 @@ public static class DictionaryExtensions
         dictionary.AddOrUpdateValue(key, () => valueToAddOrUpdate);
 
     /// <summary>
-    ///     Adds a key/value pair to the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
-    ///     does not already exist, or updates a key/value pair in the
+    /// Adds a key/value pair to the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
+    /// does not already exist, or updates a key/value pair in the
     /// <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
     /// </summary>
     /// <param name="dictionary"></param>
@@ -149,8 +149,8 @@ public static class DictionaryExtensions
     }
 
     /// <summary>
-    ///     Adds a key/value pair to the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
-    ///     does not already exist, or updates a key/value pair in the
+    /// Adds a key/value pair to the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
+    /// does not already exist, or updates a key/value pair in the
     /// <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
     /// </summary>
     /// <param name="dictionary"></param>

@@ -6,7 +6,9 @@ public enum StorageOperation
 {
     None,
 
-    [Description("Downloaded")] Download,
+    [Description("Downloaded")]
+    Download,
 
-    [Description("Uploaded")] Upload
+    [Description("Uploaded")]
+    Upload
 }

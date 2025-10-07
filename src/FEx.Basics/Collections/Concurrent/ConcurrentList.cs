@@ -18,7 +18,8 @@ namespace FEx.Basics.Collections.Concurrent;
 [Serializable]
 public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<T>
 {
-    [NonSerialized] protected readonly ExtendedReaderWriterLockSlim _lock;
+    [NonSerialized]
+    protected readonly ExtendedReaderWriterLockSlim _lock;
 
     public int Count => Read(() => Items.Count);
 

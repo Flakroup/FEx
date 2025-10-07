@@ -13,8 +13,8 @@ public static class HtmlNodeExtensions
     public const string BodyPath = "/body[";
 
     /// <summary>
-    ///     Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will
-    ///     be returned.
+    /// Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will
+    /// be returned.
     /// </summary>
     /// <param name="value"></param>
     /// <param name="name">The name of the attribute to get. May not be <c>null</c>.</param>
@@ -44,24 +44,24 @@ public static class HtmlNodeExtensions
     public static bool IsInBody(this HtmlNode value) => value.XPath.Contains(BodyPath);
 
     /// <summary>
-    ///     Selects the first XmlNode that matches the XPath expression.
+    /// Selects the first XmlNode that matches the XPath expression.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <param name="xpath">The XPath expression. May not be null.</param>
     /// <returns>
-    ///     The first <see cref="T:HtmlAgilityPack.HtmlNode" /> that matches the XPath query or a null reference if no matching
-    ///     node was found.
+    /// The first <see cref="T:HtmlAgilityPack.HtmlNode" /> that matches the XPath query or a null reference if no matching
+    /// node was found.
     /// </returns>
     public static HtmlNode SelectSingleNode(this HtmlNode value, Func<XPathBuilderEx, XPathBuilderEx> xpath) =>
         value.SelectSingleNode(xpath(new()));
 
     /// <summary>
-    ///     Selects a list of nodes matching the <see cref="P:HtmlAgilityPack.HtmlNode.XPath" /> expression.
+    /// Selects a list of nodes matching the <see cref="P:HtmlAgilityPack.HtmlNode.XPath" /> expression.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <param name="xpath">The XPath expression.</param>
     /// <returns>
-    ///     An <see cref="T:HtmlAgilityPack.HtmlNodeCollection" /> containing a collection of nodes matching the
+    /// An <see cref="T:HtmlAgilityPack.HtmlNodeCollection" /> containing a collection of nodes matching the
     /// <see cref="P:HtmlAgilityPack.HtmlNode.XPath" /> query, or <c>null</c> if no node matched the XPath expression.
     /// </returns>
     public static HtmlNodeCollection SelectNodes(this HtmlNode value, Func<XPathBuilderEx, XPathBuilderEx> xpath) =>

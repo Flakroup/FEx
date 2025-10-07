@@ -14,7 +14,7 @@ public abstract class FExAvaloniaApp<TContainer> : Application
     public TContainer Container { get; }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="FExAvaloniaApp{TContainer}" /> class.
+    /// Initializes a new instance of the <see cref="FExAvaloniaApp{TContainer}" /> class.
     /// </summary>
     protected FExAvaloniaApp()
     {

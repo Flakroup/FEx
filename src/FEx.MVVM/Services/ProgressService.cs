@@ -136,9 +136,11 @@ public sealed class ProgressService : SubscriberBase, IProgressService
         return container;
     }
 
-    private void AttachContainer(IProgressAggregator container) => Subscriptions.ReplaceAndDisposeOldValue(container.Id, () => GetSubscription(container));
+    private void AttachContainer(IProgressAggregator container) =>
+        Subscriptions.ReplaceAndDisposeOldValue(container.Id, () => GetSubscription(container));
 
-    private IDisposable GetSubscription(IProgressAggregator container) => Observable
+    private IDisposable GetSubscription(IProgressAggregator container) =>
+        Observable
             .FromEventPattern<ProgressPropertyChangedEventHandler, ProgressPropertyChangedEventArgs>(
                 h => container.ProgressPropertyChanged += h,
                 h => container.ProgressPropertyChanged -= h)

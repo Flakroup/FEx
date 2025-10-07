@@ -9,13 +9,13 @@ using System.Threading;
 namespace FEx.WPFx.WpfBindingErrors;
 
 /// <summary>
-///     Converts WPF binding error into BindingException
+/// Converts WPF binding error into BindingException
 /// </summary>
 /// <remarks>
-///     WPF Binding Error Testing
-///     Copyright 2013 Benoit Blanchon
-///     This has been inpired by
-///     http://tech.pro/tutorial/940/wpf-snippet-detecting-binding-errors
+/// WPF Binding Error Testing
+/// Copyright 2013 Benoit Blanchon
+/// This has been inpired by
+/// http://tech.pro/tutorial/940/wpf-snippet-detecting-binding-errors
 /// </remarks>
 public static class BindingExceptionThrower
 {
@@ -30,10 +30,10 @@ public static class BindingExceptionThrower
     };
 
     /// <summary>
-    ///     Gets a value indicating whether this instance is attached.
+    /// Gets a value indicating whether this instance is attached.
     /// </summary>
     /// <value>
-    ///     <c>true</c> if this instance is attached; otherwise, <c>false</c>.
+    /// <c>true</c> if this instance is attached; otherwise, <c>false</c>.
     /// </value>
     public static bool IsAttached => _errorListener is not null;
 
@@ -44,7 +44,7 @@ public static class BindingExceptionThrower
     private static HashSet<BindingException> BindingErrorsCache { get; } = GetCachedBindingErrors();
 
     /// <summary>
-    ///     Start listening WPF binding error
+    /// Start listening WPF binding error
     /// </summary>
     public static void Attach(string bindingErrorsCacheDirectory)
     {
@@ -56,7 +56,7 @@ public static class BindingExceptionThrower
     }
 
     /// <summary>
-    ///     Stop listening WPF binding error
+    /// Stop listening WPF binding error
     /// </summary>
     public static void Detach()
     {
@@ -66,7 +66,7 @@ public static class BindingExceptionThrower
     }
 
     /// <summary>
-    ///     Called when [error catched].
+    /// Called when [error catched].
     /// </summary>
     /// <param name="eventCache">The event cache.</param>
     /// <param name="source">The source.</param>

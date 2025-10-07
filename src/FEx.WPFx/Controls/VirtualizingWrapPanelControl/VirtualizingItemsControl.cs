@@ -4,7 +4,7 @@ using System.Windows.Markup;
 namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 /// <summary>
-///     A ItemsControl supporting virtualization.
+/// A ItemsControl supporting virtualization.
 /// </summary>
 public class VirtualizingItemsControl : ItemsControl
 {

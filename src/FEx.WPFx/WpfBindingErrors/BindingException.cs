@@ -5,13 +5,13 @@ using System.Diagnostics;
 namespace FEx.WPFx.WpfBindingErrors;
 
 /// <summary>
-///     Exception thrown by the BindingExceptionThrower each time a WPF binding error occurs
+/// Exception thrown by the BindingExceptionThrower each time a WPF binding error occurs
 /// </summary>
 /// <remarks>
-///     WPF Binding Error Testing
-///     Copyright 2013 Benoit Blanchon
-///     This has been inpired by
-///     http://tech.pro/tutorial/940/wpf-snippet-detecting-binding-errors
+/// WPF Binding Error Testing
+/// Copyright 2013 Benoit Blanchon
+/// This has been inpired by
+/// http://tech.pro/tutorial/940/wpf-snippet-detecting-binding-errors
 /// </remarks>
 [Serializable]
 [JsonObject]

@@ -9,8 +9,8 @@ namespace FEx.Common.Extensions;
 public static class EnumerableExtensions
 {
     /// <summary>
-    ///     Searches for an element that matches the conditions defined by the specified predicate, and returns the first
-    ///     occurrence.
+    /// Searches for an element that matches the conditions defined by the specified predicate, and returns the first
+    /// occurrence.
     /// </summary>
     /// <typeparam name="T">Sequence element type.</typeparam>
     /// <param name="source">The list itself.</param>

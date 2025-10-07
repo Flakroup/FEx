@@ -27,8 +27,8 @@ namespace FEx.AzureStorage;
 public class AzureStorageService : IAzureStorageService
 {
     /// <summary>
-    ///     The latest version according to
-    ///     https://docs.microsoft.com/en-us/rest/api/storageservices/versioning-for-the-azure-storage-services
+    /// The latest version according to
+    /// https://docs.microsoft.com/en-us/rest/api/storageservices/versioning-for-the-azure-storage-services
     /// </summary>
     public const string LatestVersion = "2021-04-10";
 
@@ -342,11 +342,6 @@ public class AzureStorageService : IAzureStorageService
             operationContext,
             cancellationToken);
 
-    private static string GetBlobName(string path, string fileName) =>
-        path.IsNotNullOrEmptyString()
-            ? $"{path}/{fileName}"
-            : fileName;
-
     public static void EnsureDefaultServiceVersion(string connectionString)
     {
         var storageAccount = CloudStorageAccount.Parse(connectionString);
@@ -357,6 +352,42 @@ public class AzureStorageService : IAzureStorageService
         {
             props.DefaultServiceVersion = LatestVersion;
             blobClient.SetServiceProperties(props);
+        }
+    }
+
+    private static string GetBlobName(string path, string fileName) =>
+        path.IsNotNullOrEmptyString()
+            ? $"{path}/{fileName}"
+            : fileName;
+
+    private static void LogProgress(TransferStatus progress, ProgressState state) => state.LogProgress(progress);
+
+    private static void DeleteOldFiles(string downloadDir, string deleteFilesMask, params string[] except)
+    {
+        FileInfo[] files = new DirectoryInfo(downloadDir).EnumerateFiles(deleteFilesMask)
+            .Where(x => except?.Contains(x.FullName) != true)
+            .ToArray();
+
+        var exceptions = new List<Exception>();
+
+        foreach (FileInfo file in files)
+        {
+            try
+            {
+                file.Delete();
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+        }
+
+        if (exceptions.Count > 0)
+        {
+            if (exceptions.Count == 1)
+                throw exceptions[0];
+
+            throw new AggregateException(exceptions);
         }
     }
 
@@ -499,41 +530,10 @@ public class AzureStorageService : IAzureStorageService
         return result;
     }
 
-    private static void LogProgress(TransferStatus progress, ProgressState state) => state.LogProgress(progress);
-
     private void SaveResults(IDictionary<string, string> resDictionary)
     {
         string resultJson = resDictionary.ToJson(formatting: Formatting.Indented);
         File.WriteAllText("result.json", resultJson);
         Log.LogInformation(resultJson);
-    }
-
-    private static void DeleteOldFiles(string downloadDir, string deleteFilesMask, params string[] except)
-    {
-        FileInfo[] files = new DirectoryInfo(downloadDir).EnumerateFiles(deleteFilesMask)
-            .Where(x => except?.Contains(x.FullName) != true)
-            .ToArray();
-
-        var exceptions = new List<Exception>();
-
-        foreach (FileInfo file in files)
-        {
-            try
-            {
-                file.Delete();
-            }
-            catch (Exception ex)
-            {
-                exceptions.Add(ex);
-            }
-        }
-
-        if (exceptions.Count > 0)
-        {
-            if (exceptions.Count == 1)
-                throw exceptions[0];
-
-            throw new AggregateException(exceptions);
-        }
     }
 }

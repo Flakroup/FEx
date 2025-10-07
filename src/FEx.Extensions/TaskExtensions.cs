@@ -13,11 +13,11 @@ namespace FEx.Extensions;
 public static class TaskExtensions
 {
     /// <summary>
-    ///     Waits for task to start.
+    /// Waits for task to start.
     /// </summary>
     /// <param name="task">The task.</param>
     /// <returns>
-    ///     Task
+    /// Task
     /// </returns>
     public static async Task WaitForTaskToStartAsync(this Task task) =>
         await StaticAsyncHelper.DelayUntilAsync(task.IsNotStarted, milliseconds: 1);
@@ -222,8 +222,8 @@ public static class TaskExtensions
         {
             AsyncMode.Default => Task.Run(func, cancellationToken),
             AsyncMode.MainThread => options.HasFlagFast(AsyncHelperOptions.ImmediateStart)
-                ? FExFoundation.AsyncHelper.ExecuteDeferredTaskOnMainThreadAsync(
-                    () => Task.Run(func, cancellationToken))
+                ? FExFoundation.AsyncHelper.ExecuteDeferredTaskOnMainThreadAsync(() =>
+                    Task.Run(func, cancellationToken))
                 : FExFoundation.AsyncHelper.ExecuteDeferredTaskOnMainThreadAsync(func),
             AsyncMode.ThreadPool => StaticAsyncHelper.ExecuteOnThreadPoolAsync(func, options, cancellationToken),
             _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, $"Mode {mode} is not supported")

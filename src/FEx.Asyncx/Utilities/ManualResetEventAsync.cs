@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace FEx.Asyncx.Utilities;
 
 /// <summary>
-///     An async manual reset event.
+/// An async manual reset event.
 /// </summary>
 /// <remarks>https://badflyer.azurewebsites.net/asyncmanualresetevent</remarks>
 public sealed class ManualResetEventAsync
@@ -14,27 +14,27 @@ public sealed class ManualResetEventAsync
     // and the .net implementation of SemaphoreSlim
 
     /// <summary>
-    ///     The timeout in milliseconds to wait indefinitly.
+    /// The timeout in milliseconds to wait indefinitly.
     /// </summary>
     private const int WaitIndefinitly = -1;
 
     /// <summary>
-    ///     True to run synchronous continuations on the thread which invoked Set. False to run them in the threadpool.
+    /// True to run synchronous continuations on the thread which invoked Set. False to run them in the threadpool.
     /// </summary>
     private readonly bool _runSynchronousContinuationsOnSetThread;
 
     /// <summary>
-    ///     The current task completion source.
+    /// The current task completion source.
     /// </summary>
     private volatile TaskCompletionSource<bool> _completionSource;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ManualResetEventAsync" /> class.
+    /// Initializes a new instance of the <see cref="ManualResetEventAsync" /> class.
     /// </summary>
     /// <param name="isSet">True to set the task completion source on creation.</param>
     /// <param name="runSynchronousContinuationsOnSetThread">
-    ///     If you have synchronous continuations, they will run on the thread
-    ///     which invokes Set, unless you set this to false.
+    /// If you have synchronous continuations, they will run on the thread
+    /// which invokes Set, unless you set this to false.
     /// </param>
     public ManualResetEventAsync(bool isSet = false, bool runSynchronousContinuationsOnSetThread = true)
     {
@@ -46,13 +46,13 @@ public sealed class ManualResetEventAsync
     }
 
     /// <summary>
-    ///     Wait for the manual reset event.
+    /// Wait for the manual reset event.
     /// </summary>
     /// <param name="timeout">A timeout.</param>
     /// <param name="token">A cancellation token.</param>
     /// <returns>
-    ///     A task which waits for the manual reset event. Returns true if the timeout has not expired. Returns false if
-    ///     the timeout expired.
+    /// A task which waits for the manual reset event. Returns true if the timeout has not expired. Returns false if
+    /// the timeout expired.
     /// </returns>
     public async Task<bool> WaitAsync(TimeSpan? timeout = null, CancellationToken token = default) =>
         await AwaitCompletionAsync(timeout.HasValue
@@ -61,7 +61,7 @@ public sealed class ManualResetEventAsync
             token);
 
     /// <summary>
-    ///     Set the completion source.
+    /// Set the completion source.
     /// </summary>
     public void Set()
     {
@@ -73,7 +73,7 @@ public sealed class ManualResetEventAsync
     }
 
     /// <summary>
-    ///     Reset the manual reset event.
+    /// Reset the manual reset event.
     /// </summary>
     public void Reset()
     {
@@ -89,7 +89,7 @@ public sealed class ManualResetEventAsync
     }
 
     /// <summary>
-    ///     Await completion based on a timeout and a cancellation token.
+    /// Await completion based on a timeout and a cancellation token.
     /// </summary>
     /// <param name="timeoutMS">The timeout in milliseconds.</param>
     /// <param name="token">The cancellation token.</param>

@@ -3,23 +3,23 @@
 namespace FEx.WPFx.Natives;
 
 /// <summary>
-///     POINT aka POINTAPI
+/// POINT aka POINTAPI
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 public struct ScreenPoint
 {
     /// <summary>
-    ///     x coordinate of point.
+    /// x coordinate of point.
     /// </summary>
     public int X;
 
     /// <summary>
-    ///     y coordinate of point.
+    /// y coordinate of point.
     /// </summary>
     public int Y;
 
     /// <summary>
-    ///     Construct a point of coordinates (x,y).
+    /// Construct a point of coordinates (x,y).
     /// </summary>
     /// <param name="x">The x.</param>
     /// <param name="y">The y.</param>

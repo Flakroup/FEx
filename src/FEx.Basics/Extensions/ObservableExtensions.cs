@@ -11,14 +11,14 @@ namespace FEx.Basics.Extensions;
 public static class ObservableExtensions
 {
     /// <summary>
-    ///     Waits for the observable to retrieve a value and returns it wrapped in Result.
+    /// Waits for the observable to retrieve a value and returns it wrapped in Result.
     /// </summary>
     /// <param name="observable">Observable to get the value</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <typeparam name="T">Type of value</typeparam>
     /// <returns>
-    ///     Data from observable wrapped in Result class.
-    ///     Result property IsSuccess is false if task was cancelled.
+    /// Data from observable wrapped in Result class.
+    /// Result property IsSuccess is false if task was cancelled.
     /// </returns>
     public static async ValueTask<Result<T, Error>> GetResultAsync<T>(this IObservable<T> observable,
                                                                       CancellationToken cancellationToken = default)
@@ -43,13 +43,13 @@ public static class ObservableExtensions
     }
 
     /// <summary>
-    ///     Tries to get the value from the observable and returns it wrapped in Result.
+    /// Tries to get the value from the observable and returns it wrapped in Result.
     /// </summary>
     /// <param name="observable">Observable to get the value.</param>
     /// <typeparam name="T">Type of value</typeparam>
     /// <returns>
-    ///     Data from observable wrapped in Result class.
-    ///     Result property IsSuccess is false if no value was present in observable.
+    /// Data from observable wrapped in Result class.
+    /// Result property IsSuccess is false if no value was present in observable.
     /// </returns>
     public static Result<T, Error> GetResult<T>(this IObservable<T> observable)
     {

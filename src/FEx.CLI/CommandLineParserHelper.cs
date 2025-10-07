@@ -22,28 +22,29 @@ public static class CommandLineParserHelper
             : config;
     }
 
-    private static ErrorData GetErrorData(Error error) => error.Tag switch
-    {
-        ErrorType.BadFormatTokenError => new((BadFormatTokenError)error),
-        ErrorType.MissingValueOptionError => new((MissingValueOptionError)error),
-        ErrorType.UnknownOptionError => new((UnknownOptionError)error),
-        ErrorType.MissingRequiredOptionError => new((MissingRequiredOptionError)error),
-        ErrorType.MutuallyExclusiveSetError => new((MutuallyExclusiveSetError)error),
-        ErrorType.BadFormatConversionError => new((BadFormatConversionError)error),
-        ErrorType.SequenceOutOfRangeError => new((SequenceOutOfRangeError)error),
-        ErrorType.RepeatedOptionError => new((RepeatedOptionError)error),
-        ErrorType.NoVerbSelectedError => new((NoVerbSelectedError)error),
-        ErrorType.BadVerbSelectedError => new((BadVerbSelectedError)error),
-        ErrorType.HelpRequestedError => new((HelpRequestedError)error),
-        ErrorType.HelpVerbRequestedError => new((HelpVerbRequestedError)error),
-        ErrorType.VersionRequestedError => new((VersionRequestedError)error),
-        ErrorType.SetValueExceptionError => new((SetValueExceptionError)error),
-        ErrorType.InvalidAttributeConfigurationError => new((InvalidAttributeConfigurationError)error),
-        ErrorType.MissingGroupOptionError => new((MissingGroupOptionError)error),
-        ErrorType.GroupOptionAmbiguityError => new((GroupOptionAmbiguityError)error),
-        ErrorType.MultipleDefaultVerbsError => new((MultipleDefaultVerbsError)error),
-        _ => throw new ArgumentOutOfRangeException()
-    };
+    private static ErrorData GetErrorData(Error error) =>
+        error.Tag switch
+        {
+            ErrorType.BadFormatTokenError => new((BadFormatTokenError)error),
+            ErrorType.MissingValueOptionError => new((MissingValueOptionError)error),
+            ErrorType.UnknownOptionError => new((UnknownOptionError)error),
+            ErrorType.MissingRequiredOptionError => new((MissingRequiredOptionError)error),
+            ErrorType.MutuallyExclusiveSetError => new((MutuallyExclusiveSetError)error),
+            ErrorType.BadFormatConversionError => new((BadFormatConversionError)error),
+            ErrorType.SequenceOutOfRangeError => new((SequenceOutOfRangeError)error),
+            ErrorType.RepeatedOptionError => new((RepeatedOptionError)error),
+            ErrorType.NoVerbSelectedError => new((NoVerbSelectedError)error),
+            ErrorType.BadVerbSelectedError => new((BadVerbSelectedError)error),
+            ErrorType.HelpRequestedError => new((HelpRequestedError)error),
+            ErrorType.HelpVerbRequestedError => new((HelpVerbRequestedError)error),
+            ErrorType.VersionRequestedError => new((VersionRequestedError)error),
+            ErrorType.SetValueExceptionError => new((SetValueExceptionError)error),
+            ErrorType.InvalidAttributeConfigurationError => new((InvalidAttributeConfigurationError)error),
+            ErrorType.MissingGroupOptionError => new((MissingGroupOptionError)error),
+            ErrorType.GroupOptionAmbiguityError => new((GroupOptionAmbiguityError)error),
+            ErrorType.MultipleDefaultVerbsError => new((MultipleDefaultVerbsError)error),
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
     private static string GetErrorInfo(Error error)
     {

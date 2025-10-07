@@ -17,16 +17,17 @@ namespace FEx.Basics.Collections.Concurrent;
 [Serializable]
 public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollection<T>
 {
-    [NonSerialized] private readonly IFExDispatcher _dispatcher;
+    [NonSerialized]
+    private readonly IFExDispatcher _dispatcher;
 
     /// <summary>
-    ///     Occurs when the collection changes, either by adding or removing an item.
+    /// Occurs when the collection changes, either by adding or removing an item.
     /// </summary>
     [field: NonSerialized]
     public event NotifyCollectionChangedEventHandler CollectionChanged;
 
     /// <summary>
-    ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    /// PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
     [field: NonSerialized]
     public event PropertyChangedEventHandler PropertyChanged;
@@ -37,9 +38,9 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
             ev => CollectionChanged -= ev);
 
     /// <summary>
-    ///     Initializes a new instance of the ConcurrentObservableList class that contains
-    ///     elements copied from the specified collection and has sufficient capacity
-    ///     to accommodate the number of elements copied.
+    /// Initializes a new instance of the ConcurrentObservableList class that contains
+    /// elements copied from the specified collection and has sufficient capacity
+    /// to accommodate the number of elements copied.
     /// </summary>
     /// <param name="collection">The collection whose elements are copied to the new list.</param>
     public ConcurrentObservableList(IEnumerable<T> collection = null)
@@ -51,19 +52,19 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
     }
 
     /// <summary>
-    ///     Suspends count notifications.
+    /// Suspends count notifications.
     /// </summary>
     /// <returns>A disposable when disposed will reset the count.</returns>
     public IDisposable SuspendCount() => new SuppressEventsDisposable(this, ResumeEvents);
 
     /// <summary>
-    ///     Suspends notifications. When disposed, a reset notification is fired.
+    /// Suspends notifications. When disposed, a reset notification is fired.
     /// </summary>
     /// <returns>A disposable when disposed will reset notifications.</returns>
     public IDisposable SuspendNotifications() => new SuppressEventsDisposable(this, ResumeEvents);
 
     /// <summary>
-    ///     Clears the list and Loads the specified items.
+    /// Clears the list and Loads the specified items.
     /// </summary>
     /// <param name="items">The items.</param>
     public void Load(IEnumerable<T> items) => ReplaceWith(items);

@@ -8,7 +8,7 @@ namespace FEx.Common.Extensions;
 public static class EnumExtensions
 {
     /// <summary>
-    ///     Gets the enum value description.
+    /// Gets the enum value description.
     /// </summary>
     /// <param name="enumValue">The enum value.</param>
     /// <returns></returns>
@@ -16,7 +16,7 @@ public static class EnumExtensions
         enumValue.GetEnumValueAttribute<DescriptionAttribute>()?.Description;
 
     /// <summary>
-    ///     Generic method getting attribute object of the given type from enumerated value.
+    /// Generic method getting attribute object of the given type from enumerated value.
     /// </summary>
     /// <typeparam name="TAttributeType">Attribute type.</typeparam>
     /// <param name="enumValue">Enumerator type.</param>
@@ -26,7 +26,7 @@ public static class EnumExtensions
         GetEnumValueAttributes<TAttributeType>(enumValue).FindInEnumerable();
 
     /// <summary>
-    ///     Generic method getting attribute objects of the given type from enumerated value.
+    /// Generic method getting attribute objects of the given type from enumerated value.
     /// </summary>
     /// <typeparam name="TAttributeType">Attribute type.</typeparam>
     /// <param name="enumValue">Enumerator value.</param>

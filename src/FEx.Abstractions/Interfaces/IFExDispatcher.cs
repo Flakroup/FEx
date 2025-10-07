@@ -24,7 +24,7 @@ public interface IFExDispatcher
     Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null);
 
     /// <summary>
-    ///     Invokes action delegate in current, instance initialization or main thread <see cref="SynchronizationContext" />
+    /// Invokes action delegate in current, instance initialization or main thread <see cref="SynchronizationContext" />
     /// depending on which is not null first
     /// </summary>
     /// <param name="action">Action to invoke</param>

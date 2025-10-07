@@ -7,11 +7,9 @@ using StrongInject.Extensions.DependencyInjection;
 namespace FEx.Downloader;
 
 [Register(typeof(DownloadService), Scope.SingleInstance)]
-[Register(typeof(FExDownloader),
-    Scope.SingleInstance,
-    typeof(FExDownloader),
-    typeof(IInitializeModule))]
+[Register(typeof(FExDownloader), Scope.SingleInstance, typeof(FExDownloader), typeof(IInitializeModule))]
 public class FExDownloaderModule
 {
-    public static void AddServices(IFExDownloaderModule module, IServiceCollection services) => services.AddSingletonServiceUsingContainer<DownloadService>(module);
+    public static void AddServices(IFExDownloaderModule module, IServiceCollection services) =>
+        services.AddSingletonServiceUsingContainer<DownloadService>(module);
 }

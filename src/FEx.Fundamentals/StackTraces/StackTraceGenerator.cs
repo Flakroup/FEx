@@ -238,7 +238,7 @@ public class StackTraceGenerator : IStackTraceProvider
 
         // ReSharper disable UnusedMember.Local
         public static MethodHandleAndILOffset[] Create(IntPtr[] methods, int[] offsets)
-        // ReSharper restore UnusedMember.Local
+            // ReSharper restore UnusedMember.Local
         {
             var methodHandleAndILOffset = new MethodHandleAndILOffset[methods.Length];
 

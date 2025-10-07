@@ -94,7 +94,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
 
         try
         {
-#if NETSTANDARD
+#if NETSTANDARD2_0
             File.WriteAllText(PersistencePath, SerializedInstance());
 #else
             await File.WriteAllTextAsync(PersistencePath, SerializedInstance());

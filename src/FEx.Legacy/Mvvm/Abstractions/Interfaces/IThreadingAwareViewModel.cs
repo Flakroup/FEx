@@ -8,10 +8,10 @@ public interface IThreadingAwareViewModel : IRunAsync, IReactiveNotifyPropertyCh
     IHandleObservableErrors, IViewModelBase, IAsyncInitializable, ILinkableNotifyPropertyChanged
 {
     /// <summary>
-    ///     Gets or sets a value indicating whether View instance related with this ViewModel is unlocked.
+    /// Gets or sets a value indicating whether View instance related with this ViewModel is unlocked.
     /// </summary>
     /// <value>
-    ///     <c>true</c> if related instance of View is unlocked; otherwise, <c>false</c>.
+    /// <c>true</c> if related instance of View is unlocked; otherwise, <c>false</c>.
     /// </value>
     bool IsUiUnlocked { get; set; }
 

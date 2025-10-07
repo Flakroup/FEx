@@ -9,8 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace FEx.WPFx.Abstractions.Interfaces;
 
 [SuppressMessage("ReSharper", "PossibleInterfaceMemberAmbiguity")]
-public interface IFExContainer : IFExFundamentalsContainer, IFExMvvmContainer, IFExJsonContainer,
-    IFExLoggingContainer, IFExMvvmRxContainer, IFExPlatformsContainer, IFExWpfxContainer
+public interface IFExContainer : IFExFundamentalsContainer, IFExMvvmContainer, IFExJsonContainer, IFExLoggingContainer,
+    IFExMvvmRxContainer, IFExPlatformsContainer, IFExWpfxContainer
 {
-
 }

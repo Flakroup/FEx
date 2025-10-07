@@ -44,7 +44,7 @@ internal interface IItemContainerManager
 #endif
 
     /// <summary>
-    ///     Realizes the specified item. If the item is already realized, nothing happens.
+    /// Realizes the specified item. If the item is already realized, nothing happens.
     /// </summary>
     /// <param name="itemIndex">Index of the item to relaize</param>
     /// <param name="isNewlyRealized">Indicates whether the specified item is newly realized</param>

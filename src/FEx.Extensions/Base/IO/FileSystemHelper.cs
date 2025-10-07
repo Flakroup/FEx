@@ -23,11 +23,11 @@ public static class FileSystemHelper
     ];
 
     /// <summary>
-    ///     Determines whether [is path NTFS] [the specified absolute file path].
+    /// Determines whether [is path NTFS] [the specified absolute file path].
     /// </summary>
     /// <param name="absolutePath">The absolute path.</param>
     /// <returns>
-    ///     <c>true</c> if [is path NTFS] [the specified absolute file path]; otherwise, <c>false</c>.
+    /// <c>true</c> if [is path NTFS] [the specified absolute file path]; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsPathNtfs(string absolutePath)
     {
@@ -46,7 +46,7 @@ public static class FileSystemHelper
     }
 
     /// <summary>
-    ///     Generates the md5 of file.
+    /// Generates the md5 of file.
     /// </summary>
     /// <param name="filePath">The file path.</param>
     /// <returns></returns>

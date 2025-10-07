@@ -228,36 +228,36 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         switch (Mode)
         {
             case ProgressOperationMode.Standard:
-                {
-                    string avg = est.IsNotNullOrEmptyString()
-                        ? $"AVG: {avgMs.GetTime()}"
-                        : string.Empty;
+            {
+                string avg = est.IsNotNullOrEmptyString()
+                    ? $"AVG: {avgMs.GetTime()}"
+                    : string.Empty;
 
-                    Info =
-                        $"{percentage}% {value}/{maximum}{(Unit.IsNotNullOrEmptyString() ? $"{Unit}" : string.Empty)} {est} {avg}";
+                Info =
+                    $"{percentage}% {value}/{maximum}{(Unit.IsNotNullOrEmptyString() ? $"{Unit}" : string.Empty)} {est} {avg}";
 
-                    break;
-                }
+                break;
+            }
             case ProgressOperationMode.Stream:
-                {
-                    string curBt =
-                        FileLengthConverter.ConvertFileLengthToString(value, LengthType.Bytes, LengthType.AutoDetect);
+            {
+                string curBt =
+                    FileLengthConverter.ConvertFileLengthToString(value, LengthType.Bytes, LengthType.AutoDetect);
 
-                    string curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
-                        LengthType.Bytes,
-                        LengthType.AutoDetect);
+                string curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
+                    LengthType.Bytes,
+                    LengthType.AutoDetect);
 
-                    double curr = elapsed.TotalSeconds;
+                double curr = elapsed.TotalSeconds;
 
-                    string kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
-                        LengthType.Bytes,
-                        LengthType.AutoDetect,
-                        1);
+                string kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
+                    LengthType.Bytes,
+                    LengthType.AutoDetect,
+                    1);
 
-                    Info = $"{percentage}% {curBt}/{curTb} {kbPerSec}/sec {est}";
+                Info = $"{percentage}% {curBt}/{curTb} {kbPerSec}/sec {est}";
 
-                    break;
-                }
+                break;
+            }
             default:
                 throw new ArgumentOutOfRangeException(nameof(Mode), $"{Mode} is not handled");
         }
@@ -352,24 +352,24 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
     }
 
     /// <summary>
-    ///     Sets progress value of the ProgressBar to the maximal value
+    /// Sets progress value of the ProgressBar to the maximal value
     /// </summary>
     public void PrgSetEnd() => PrgSet(-1, mode: ProgressChangeMode.End);
 
     /// <summary>
-    ///     Increments current progress value of the ProgressBar
+    /// Increments current progress value of the ProgressBar
     /// </summary>
     /// <param name="addedValue">The added value.</param>
     public void PrgAdd(double addedValue = 1) => PrgSet(addedValue, mode: ProgressChangeMode.Add);
 
     /// <summary>
-    ///     Adds value to the maximum of progress value.
+    /// Adds value to the maximum of progress value.
     /// </summary>
     /// <param name="addedValue">The added value.</param>
     public void PrgMaxAdd(double addedValue) => PrgSet(null, addedValue, ProgressChangeMode.Add);
 
     /// <summary>
-    ///     Sets maximal allowed value of the ProgressBar and resets current progress
+    /// Sets maximal allowed value of the ProgressBar and resets current progress
     /// </summary>
     /// <param name="max"></param>
     public void PrgSetMax(double max) => PrgSet(0, max);

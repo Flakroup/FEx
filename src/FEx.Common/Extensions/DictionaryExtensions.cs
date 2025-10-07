@@ -6,7 +6,7 @@ namespace FEx.Common.Extensions;
 public static class DictionaryExtensions
 {
     /// <summary>
-    ///     Tries to get key value.
+    /// Tries to get key value.
     /// </summary>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
@@ -14,7 +14,7 @@ public static class DictionaryExtensions
     /// <param name="key">The key.</param>
     /// <param name="fallback">The fallback.</param>
     /// <returns>
-    ///     TValue
+    /// TValue
     /// </returns>
     public static TValue TryGetKeyValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary,
                                                       TKey key,

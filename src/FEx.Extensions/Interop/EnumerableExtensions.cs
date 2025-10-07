@@ -29,9 +29,9 @@ public static class EnumerableExtensions
     ///     </para>
     ///     <para>
     ///     The
-    /// <see cref="DistinctBy{TSource, TKey}(IEnumerable{TSource}, Func{TSource, TKey}, IEqualityComparer{TKey})" />
-    /// method returns an unordered sequence that contains no duplicate values. If <paramref name="comparer" /> is
-    /// <see langword="null" />, the default equality comparer, <see cref="EqualityComparer{T}.Default" />, is used to
+    ///     <see cref="DistinctBy{TSource, TKey}(IEnumerable{TSource}, Func{TSource, TKey}, IEqualityComparer{TKey})" />
+    ///     method returns an unordered sequence that contains no duplicate values. If <paramref name="comparer" /> is
+    ///     <see langword="null" />, the default equality comparer, <see cref="EqualityComparer{T}.Default" />, is used to
     ///     compare
     ///     values.
     ///     </para>

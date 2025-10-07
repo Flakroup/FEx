@@ -23,10 +23,10 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
     private Brush _borderBackground;
 
     /// <summary>
-    ///     Gets or sets the size of the font.
+    /// Gets or sets the size of the font.
     /// </summary>
     /// <value>
-    ///     The size of the font.
+    /// The size of the font.
     /// </value>
     public double FontSize
     {
@@ -41,10 +41,10 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
     }
 
     /// <summary>
-    ///     Gets or sets the background.
+    /// Gets or sets the background.
     /// </summary>
     /// <value>
-    ///     The background.
+    /// The background.
     /// </value>
     public Brush Background
     {
@@ -53,10 +53,10 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
     }
 
     /// <summary>
-    ///     Gets or sets the control background.
+    /// Gets or sets the control background.
     /// </summary>
     /// <value>
-    ///     The control background.
+    /// The control background.
     /// </value>
     public Brush ControlBackground
     {
@@ -65,10 +65,10 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
     }
 
     /// <summary>
-    ///     Gets or sets the foreground.
+    /// Gets or sets the foreground.
     /// </summary>
     /// <value>
-    ///     The foreground.
+    /// The foreground.
     /// </value>
     public Brush Foreground
     {
@@ -77,10 +77,10 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
     }
 
     /// <summary>
-    ///     Gets or sets the header background.
+    /// Gets or sets the header background.
     /// </summary>
     /// <value>
-    ///     The header background.
+    /// The header background.
     /// </value>
     public Brush HeaderBackground
     {

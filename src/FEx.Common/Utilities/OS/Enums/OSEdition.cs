@@ -7,436 +7,476 @@ public enum OSEdition
     Unknown = 0,
 
     /// <summary>
-    ///     Windows NT 4.0 Workstation
+    /// Windows NT 4.0 Workstation
     /// </summary>
-    [Description("Workstation")] Workstation,
+    [Description("Workstation")]
+    Workstation,
 
     /// <summary>
-    ///     Windows NT 4.0 and higher Server Enterprise
+    /// Windows NT 4.0 and higher Server Enterprise
     /// </summary>
-    [Description("Enterprise Server")] EnterpriseServer,
+    [Description("Enterprise Server")]
+    EnterpriseServer,
 
     /// <summary>
-    ///     Windows NT 4.0 and higher Server
+    /// Windows NT 4.0 and higher Server
     /// </summary>
-    [Description("Standard Server")] StandardServer,
+    [Description("Standard Server")]
+    StandardServer,
 
     /// <summary>
-    ///     Home
+    /// Home
     /// </summary>
-    [Description("Home")] Home,
+    [Description("Home")]
+    Home,
 
     /// <summary>
-    ///     Professional
+    /// Professional
     /// </summary>
-    [Description("Professional")] Professional,
+    [Description("Professional")]
+    Professional,
 
     /// <summary>
-    ///     Tablet Edition
+    /// Tablet Edition
     /// </summary>
-    [Description("Tablet Edition")] TabletEdition,
+    [Description("Tablet Edition")]
+    TabletEdition,
 
     /// <summary>
-    ///     Windows 2000 and higher Datacenter Server
+    /// Windows 2000 and higher Datacenter Server
     /// </summary>
-    [Description("Datacenter Server")] DatacenterServer,
+    [Description("Datacenter Server")]
+    DatacenterServer,
 
     /// <summary>
-    ///     Windows 2000 Advanced Server
+    /// Windows 2000 Advanced Server
     /// </summary>
-    [Description("Advanced Server")] AdvancedServer,
+    [Description("Advanced Server")]
+    AdvancedServer,
 
     /// <summary>
-    ///     Windows 2000 Server
+    /// Windows 2000 Server
     /// </summary>
-    [Description("Server")] Server,
+    [Description("Server")]
+    Server,
 
     /// <summary>
-    ///     Windows Server 2003 Datacenter Edition
+    /// Windows Server 2003 Datacenter Edition
     /// </summary>
-    [Description("Datacenter")] Datacenter,
+    [Description("Datacenter")]
+    Datacenter,
 
     /// <summary>
-    ///     Windows Server 2003 and higher Enterprise Edition
+    /// Windows Server 2003 and higher Enterprise Edition
     /// </summary>
-    [Description("Enterprise")] Enterprise,
+    [Description("Enterprise")]
+    Enterprise,
 
     /// <summary>
-    ///     Windows Server 2003 Web Edition
+    /// Windows Server 2003 Web Edition
     /// </summary>
-    [Description("Web Edition")] WebEdition,
+    [Description("Web Edition")]
+    WebEdition,
 
     /// <summary>
-    ///     Windows Server 2003 Standard Edition
+    /// Windows Server 2003 Standard Edition
     /// </summary>
-    [Description("Standard")] Standard,
+    [Description("Standard")]
+    Standard,
 
     /// <summary>
-    ///     Business
+    /// Business
     /// </summary>
-    [Description("Business")] Business,
+    [Description("Business")]
+    Business,
 
     /// <summary>
-    ///     Business N
+    /// Business N
     /// </summary>
-    [Description("Business N")] BusinessN,
+    [Description("Business N")]
+    BusinessN,
 
     /// <summary>
-    ///     HPC Edition
+    /// HPC Edition
     /// </summary>
-    [Description("HPC Edition")] HPCEdition,
+    [Description("HPC Edition")]
+    HPCEdition,
 
     /// <summary>
-    ///     HPC Edition without Hyper-V
+    /// HPC Edition without Hyper-V
     /// </summary>
     [Description("HPC Edition without Hyper-V")]
     HPCEditionWithoutHyperV,
 
     /// <summary>
-    ///     Datacenter Server (core installation)
+    /// Datacenter Server (core installation)
     /// </summary>
     [Description("Datacenter Server (core installation)")]
     DatacenterServerCoreInstallation,
 
     /// <summary>
-    ///     Datacenter Server without Hyper-V
+    /// Datacenter Server without Hyper-V
     /// </summary>
     [Description("Datacenter Server without Hyper-V")]
     DatacenterServerWithoutHyperV,
 
     /// <summary>
-    ///     Datacenter Server without Hyper-V (core installation)
+    /// Datacenter Server without Hyper-V (core installation)
     /// </summary>
     [Description("Datacenter Server without Hyper-V (core installation)")]
     DatacenterServerWithoutHyperVCoreInstallation,
 
     /// <summary>
-    ///     Embedded
+    /// Embedded
     /// </summary>
-    [Description("Embedded")] Embedded,
+    [Description("Embedded")]
+    Embedded,
 
     /// <summary>
-    ///     Enterprise N
+    /// Enterprise N
     /// </summary>
-    [Description("Enterprise N")] EnterpriseN,
+    [Description("Enterprise N")]
+    EnterpriseN,
 
     /// <summary>
-    ///     Enterprise E
+    /// Enterprise E
     /// </summary>
-    [Description("Enterprise E")] EnterpriseE,
+    [Description("Enterprise E")]
+    EnterpriseE,
 
     /// <summary>
-    ///     Enterprise Server (core installation)
+    /// Enterprise Server (core installation)
     /// </summary>
     [Description("Enterprise Server (core installation)")]
     EnterpriseServerCoreInstallation,
 
     /// <summary>
-    ///     Enterprise Server without Hyper-V (core installation)
+    /// Enterprise Server without Hyper-V (core installation)
     /// </summary>
     [Description("Enterprise Server without Hyper-V (core installation)")]
     EnterpriseServerWithoutHyperVCoreInstallation,
 
     /// <summary>
-    ///     Enterprise Server for Itanium-based Systems
+    /// Enterprise Server for Itanium-based Systems
     /// </summary>
     [Description("Enterprise Server for Itanium-based Systems)")]
     EnterpriseServerForItaniumBasedSystems,
 
     /// <summary>
-    ///     Enterprise Server without Hyper-V
+    /// Enterprise Server without Hyper-V
     /// </summary>
     [Description("Enterprise Server without Hyper-V")]
     EnterpriseServerWithoutHyperV,
 
     /// <summary>
-    ///     Essential Business Server MGMT
+    /// Essential Business Server MGMT
     /// </summary>
     [Description("Essential Business Server MGMT")]
     EssentialBusinessServerMGMT,
 
     /// <summary>
-    ///     Essential Business Server ADDL
+    /// Essential Business Server ADDL
     /// </summary>
     [Description("Essential Business Server ADDL")]
     EssentialBusinessServerADDL,
 
     /// <summary>
-    ///     Essential Business Server MGMTSVC
+    /// Essential Business Server MGMTSVC
     /// </summary>
     [Description("Essential Business Server MGMTSVC")]
     EssentialBusinessServerMGMTSVC,
 
     /// <summary>
-    ///     Essential Business Server ADDLSVC
+    /// Essential Business Server ADDLSVC
     /// </summary>
     [Description("Essential Business Server ADDLSVC")]
     EssentialBusinessServerADDLSVC,
 
     /// <summary>
-    ///     Home Basic
+    /// Home Basic
     /// </summary>
-    [Description("Home Basic")] HomeBasic,
+    [Description("Home Basic")]
+    HomeBasic,
 
     /// <summary>
-    ///     Home Basic N
+    /// Home Basic N
     /// </summary>
-    [Description("Home Basic N")] HomeBasicN,
+    [Description("Home Basic N")]
+    HomeBasicN,
 
     /// <summary>
-    ///     Home Basic E
+    /// Home Basic E
     /// </summary>
-    [Description("Home Basic E")] HomeBasicE,
+    [Description("Home Basic E")]
+    HomeBasicE,
 
     /// <summary>
-    ///     Home Premium
+    /// Home Premium
     /// </summary>
-    [Description("Home Premium")] HomePremium,
+    [Description("Home Premium")]
+    HomePremium,
 
     /// <summary>
-    ///     Home Premium N
+    /// Home Premium N
     /// </summary>
-    [Description("Home Premium N")] HomePremiumN,
+    [Description("Home Premium N")]
+    HomePremiumN,
 
     /// <summary>
-    ///     Home Premium E
+    /// Home Premium E
     /// </summary>
-    [Description("Home Premium E")] HomePremiumE,
+    [Description("Home Premium E")]
+    HomePremiumE,
 
     /// <summary>
-    ///     Home Premium Server
+    /// Home Premium Server
     /// </summary>
-    [Description("Home Premium Server")] HomePremiumServer,
+    [Description("Home Premium Server")]
+    HomePremiumServer,
 
     /// <summary>
-    ///     Microsoft Hyper-V Server
+    /// Microsoft Hyper-V Server
     /// </summary>
     [Description("Microsoft Hyper-V Server")]
     MicrosoftHyperVServer,
 
     /// <summary>
-    ///     Windows Essential Business Management Server
+    /// Windows Essential Business Management Server
     /// </summary>
     [Description("Windows Essential Business Management Server")]
     WindowsEssentialBusinessManagementServer,
 
     /// <summary>
-    ///     Windows Essential Business Messaging Server
+    /// Windows Essential Business Messaging Server
     /// </summary>
     [Description("Windows Essential Business Messaging Server")]
     WindowsEssentialBusinessMessagingServer,
 
     /// <summary>
-    ///     Windows Essential Business Security Server
+    /// Windows Essential Business Security Server
     /// </summary>
     [Description("Windows Essential Business Security Server")]
     WindowsEssentialBusinessSecurityServer,
 
     /// <summary>
-    ///     Professional N
+    /// Professional N
     /// </summary>
-    [Description("Professional N")] ProfessionalN,
+    [Description("Professional N")]
+    ProfessionalN,
 
     /// <summary>
-    ///     Professional E
+    /// Professional E
     /// </summary>
-    [Description("Professional E")] ProfessionalE,
+    [Description("Professional E")]
+    ProfessionalE,
 
     /// <summary>
-    ///     SB Solution Server
+    /// SB Solution Server
     /// </summary>
-    [Description("SB Solution Server")] SBSolutionServer,
+    [Description("SB Solution Server")]
+    SBSolutionServer,
 
     /// <summary>
-    ///     SB Solution Server EM
+    /// SB Solution Server EM
     /// </summary>
-    [Description("SB Solution Server EM")] SBSolutionServerEM,
+    [Description("SB Solution Server EM")]
+    SBSolutionServerEM,
 
     /// <summary>
-    ///     Server for SB Solutions
+    /// Server for SB Solutions
     /// </summary>
     [Description("Server for SB Solutions")]
     ServerForSBSolutions,
 
     /// <summary>
-    ///     Server for SB Solutions EM
+    /// Server for SB Solutions EM
     /// </summary>
     [Description("Server for SB Solutions EM")]
     ServerForSBSolutionsEM,
 
     /// <summary>
-    ///     Windows Essential Server Solutions
+    /// Windows Essential Server Solutions
     /// </summary>
     [Description("Windows Essential Server Solutions")]
     WindowsEssentialServerSolutions,
 
     /// <summary>
-    ///     Windows Essential Server Solutions without Hyper-V
+    /// Windows Essential Server Solutions without Hyper-V
     /// </summary>
     [Description("Windows Essential Server Solutions without Hyper-V")]
     WindowsEssentialServerSolutionsWithoutHyperV,
 
     /// <summary>
-    ///     Server Foundation
+    /// Server Foundation
     /// </summary>
-    [Description("Server Foundation")] ServerFoundation,
+    [Description("Server Foundation")]
+    ServerFoundation,
 
     /// <summary>
-    ///     Windows Small Business Server
+    /// Windows Small Business Server
     /// </summary>
     [Description("Windows Small Business Server")]
     WindowsSmallBusinessServer,
 
     /// <summary>
-    ///     Windows Small Business Server Premium
+    /// Windows Small Business Server Premium
     /// </summary>
     [Description("Windows Small Business Server Premium")]
     WindowsSmallBusinessServerPremium,
 
     /// <summary>
-    ///     Windows Small Business Server Premium (core installation)
+    /// Windows Small Business Server Premium (core installation)
     /// </summary>
     [Description("Windows Small Business Server Premium (core installation)")]
     WindowsSmallBusinessServerPremiumCoreInstallation,
 
     /// <summary>
-    ///     Solution Embedded Server
+    /// Solution Embedded Server
     /// </summary>
     [Description("Solution Embedded Server")]
     SolutionEmbeddedServer,
 
     /// <summary>
-    ///     Solution Embedded Server (core installation)
+    /// Solution Embedded Server (core installation)
     /// </summary>
     [Description("Solution Embedded Server (core installation)")]
     SolutionEmbeddedServerCoreInstallation,
 
     /// <summary>
-    ///     Standard Server (core installation)
+    /// Standard Server (core installation)
     /// </summary>
     [Description("Standard Server (core installation)")]
     StandardServerCoreInstallation,
 
     /// <summary>
-    ///     Standard Server Solutions
+    /// Standard Server Solutions
     /// </summary>
     [Description("Standard Server Solutions")]
     StandardServerSolutions,
 
     /// <summary>
-    ///     Standard Server Solutions (core installation)
+    /// Standard Server Solutions (core installation)
     /// </summary>
     [Description("Standard Server Solutions (core installation)")]
     StandardServerSolutionsCoreInstallation,
 
     /// <summary>
-    ///     Standard Server without Hyper-V (core installation)
+    /// Standard Server without Hyper-V (core installation)
     /// </summary>
     [Description("Standard Server without Hyper-V (core installation)")]
     StandardServerWithoutHyperVCoreInstallation,
 
     /// <summary>
-    ///     Standard Server without Hyper-V
+    /// Standard Server without Hyper-V
     /// </summary>
     [Description("Standard Server without Hyper-V")]
     StandardServerWithoutHyperV,
 
     /// <summary>
-    ///     Starter
+    /// Starter
     /// </summary>
-    [Description("Starter")] Starter,
+    [Description("Starter")]
+    Starter,
 
     /// <summary>
-    ///     Starter N
+    /// Starter N
     /// </summary>
-    [Description("Starter N")] StarterN,
+    [Description("Starter N")]
+    StarterN,
 
     /// <summary>
-    ///     Starter E
+    /// Starter E
     /// </summary>
-    [Description("Starter E")] StarterE,
+    [Description("Starter E")]
+    StarterE,
 
     /// <summary>
-    ///     Enterprise Storage Server
+    /// Enterprise Storage Server
     /// </summary>
     [Description("Enterprise Storage Server")]
     EnterpriseStorageServer,
 
     /// <summary>
-    ///     Enterprise Storage Server (core installation)
+    /// Enterprise Storage Server (core installation)
     /// </summary>
     [Description("Enterprise Storage Server (core installation)")]
     EnterpriseStorageServerCoreInstallation,
 
     /// <summary>
-    ///     Express Storage Server
+    /// Express Storage Server
     /// </summary>
     [Description("Express Storage Server")]
     ExpressStorageServer,
 
     /// <summary>
-    ///     Express Storage Server (core installation)
+    /// Express Storage Server (core installation)
     /// </summary>
     [Description("Express Storage Server (core installation)")]
     ExpressStorageServerCoreInstallation,
 
     /// <summary>
-    ///     Standard Storage Server
+    /// Standard Storage Server
     /// </summary>
     [Description("Standard Storage Server")]
     StandardStorageServer,
 
     /// <summary>
-    ///     Standard Storage Server (core installation)
+    /// Standard Storage Server (core installation)
     /// </summary>
     [Description("Standard Storage Server (core installation)")]
     StandardStorageServerCoreInstallation,
 
     /// <summary>
-    ///     Workgroup Storage Server
+    /// Workgroup Storage Server
     /// </summary>
     [Description("Workgroup Storage Server")]
     WorkgroupStorageServer,
 
     /// <summary>
-    ///     Workgroup Storage Server (core installation)
+    /// Workgroup Storage Server (core installation)
     /// </summary>
     [Description("Workgroup Storage Server (core installation)")]
     WorkgroupStorageServerCoreInstallation,
 
     /// <summary>
-    ///     Unknown product
+    /// Unknown product
     /// </summary>
-    [Description("Unknown product")] UnknownProduct,
+    [Description("Unknown product")]
+    UnknownProduct,
 
     /// <summary>
-    ///     Ultimate
+    /// Ultimate
     /// </summary>
-    [Description("Ultimate")] Ultimate,
+    [Description("Ultimate")]
+    Ultimate,
 
     /// <summary>
-    ///     Ultimate N
+    /// Ultimate N
     /// </summary>
-    [Description("Ultimate N")] UltimateN,
+    [Description("Ultimate N")]
+    UltimateN,
 
     /// <summary>
-    ///     Ultimate E
+    /// Ultimate E
     /// </summary>
-    [Description("Ultimate E")] UltimateE,
+    [Description("Ultimate E")]
+    UltimateE,
 
     /// <summary>
-    ///     Web Server
+    /// Web Server
     /// </summary>
-    [Description("Web Server")] WebServer,
+    [Description("Web Server")]
+    WebServer,
 
     /// <summary>
-    ///     Web Server (core installation)
+    /// Web Server (core installation)
     /// </summary>
     [Description("Web Server (core installation)")]
     WebServerCoreInstallation,
 
     /// <summary>
-    ///     Home Server
+    /// Home Server
     /// </summary>
-    [Description("Home Server")] HomeServer
+    [Description("Home Server")]
+    HomeServer
 }

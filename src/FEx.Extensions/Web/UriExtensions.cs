@@ -122,7 +122,8 @@ public static class UriExtensions
     }
 
     public static Uri TryGetUri(this string uri) =>
-        uri.IsNotNullOrEmptyString() && Uri.TryCreate(uri, UriKind.Absolute, out Uri uriResult)
+        uri.IsNotNullOrEmptyString()
+        && Uri.TryCreate(uri, UriKind.Absolute, out Uri uriResult)
 #if NETSTANDARD
         && uriResult is not null
 #endif

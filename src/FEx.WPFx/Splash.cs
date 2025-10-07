@@ -32,6 +32,8 @@ public class Splash : FExInitialize, IFExPriorityInitialize
         Priority = -2;
     }
 
+    public static void Close() => SplashScreenWindow.CloseIt?.Invoke(null, EventArgs.Empty);
+
     public void WaitForSplashAndClose()
     {
         if (SplashTask?.IsFinished() == false)
@@ -50,8 +52,6 @@ public class Splash : FExInitialize, IFExPriorityInitialize
         JoinableAsyncHelper.AwaitWithoutDeadlock(() => tcs.Task);
         JoinableAsyncHelper.AwaitWithoutDeadlock(() => SplashScreenWindow.InitializationTask);
     }
-
-    public static void Close() => SplashScreenWindow.CloseIt?.Invoke(null, EventArgs.Empty);
 
     /// <inheritdoc />
     protected override void OnInitialize()

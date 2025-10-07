@@ -112,8 +112,7 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
 
     public void PrgMaxAdd(double addedValue) => Progress.PrgMaxAdd(addedValue);
 
-    protected void SubscribeToProgressExcept<TProgress>(TProgress producer,
-                                                        params string[] iProgressReceiverProperties)
+    protected void SubscribeToProgressExcept<TProgress>(TProgress producer, params string[] iProgressReceiverProperties)
         where TProgress : IProgressAggregator
     {
         string[] props = ProgressAggregatorExtensions.ListenerPropertyNames.ToArray();

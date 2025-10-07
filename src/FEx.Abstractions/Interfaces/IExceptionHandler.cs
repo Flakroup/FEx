@@ -9,7 +9,7 @@ public interface IExceptionHandler
     event EventHandler<ExceptionEventArgs> ExceptionOccured;
 
     /// <summary>
-    ///     The last exception
+    /// The last exception
     /// </summary>
     Exception LastException { get; set; }
 

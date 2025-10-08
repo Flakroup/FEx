@@ -1,7 +1,7 @@
-﻿using FEx.Abstractions.Models;
+using FEx.Agnostics.Abstractions.Models;
 using System.Net.Http;
 
-namespace FEx.Extensions.Web;
+namespace FEx.Agnostics.Abstractions.Extensions.Web;
 
 public static class WebRequestParamsExtensions
 {

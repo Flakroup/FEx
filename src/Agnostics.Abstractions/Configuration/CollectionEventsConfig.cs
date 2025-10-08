@@ -1,4 +1,4 @@
-﻿namespace FEx.Basics.Collections.Concurrent;
+namespace FEx.Agnostics.Abstractions.Configuration;
 
 public class CollectionEventsConfig
 {

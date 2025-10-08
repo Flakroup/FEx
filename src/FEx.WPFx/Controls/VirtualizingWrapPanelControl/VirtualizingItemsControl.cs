@@ -1,4 +1,4 @@
-﻿using System.Windows.Controls;
+using System.Windows.Controls;
 using System.Windows.Markup;
 
 namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;

@@ -1,26 +1,26 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
-namespace FEx.Basics.Utilities;
+namespace FEx.Agnostics.Utilities;
 
 public abstract class FExSingleton : IDisposable
 {
-    private static readonly List<FExSingleton> Singletons = [];
+    private static readonly List<FExSingleton> _singletons = [];
 
     protected FExSingleton()
     {
-        lock (Singletons)
-            Singletons.Add(this);
+        lock (_singletons)
+            _singletons.Add(this);
     }
 
     public static void ClearAllSingletons()
     {
-        lock (Singletons)
+        lock (_singletons)
         {
-            foreach (FExSingleton s in Singletons)
+            foreach (FExSingleton s in _singletons)
                 s.Dispose();
 
-            Singletons.Clear();
+            _singletons.Clear();
         }
     }
 

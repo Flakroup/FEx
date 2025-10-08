@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Linq;
 
-namespace FEx.Common.Utilities;
+namespace FEx.Core.Abstractions.Utilities;
 
 public static class AppUtility
 {

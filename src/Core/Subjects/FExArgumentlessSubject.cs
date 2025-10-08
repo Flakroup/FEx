@@ -1,4 +1,6 @@
-﻿namespace FEx.Rx.Subjects;
+using FEx.Core.Abstractions.Subjects;
+
+namespace FEx.Core.Subjects;
 
 public class FExArgumentlessSubject : FExSubject<bool>
 {

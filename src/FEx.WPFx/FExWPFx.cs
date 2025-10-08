@@ -1,8 +1,7 @@
-﻿using FEx.Abstractions;
-using FEx.Common.Extensions;
-using FEx.DI.Abstractions;
+using FEx.Agnostics.Abstractions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions;
 using FEx.WPFx.Abstractions.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,7 +10,7 @@ using System.Windows.Markup;
 
 namespace FEx.WPFx;
 
-public class FExWpfx : InitializeModule<IFExWpfxContainer>
+public class FExWpfx : FExInitialize
 {
     public static EventHandler<RoutedEventArgs> WindowLoaded;
     public static List<string> ExcludedWindows { get; }
@@ -46,7 +45,7 @@ public class FExWpfx : InitializeModule<IFExWpfxContainer>
     /// </summary>
     /// <param name="culture">
     /// The culture to use. If <c>null</c>,
-    /// <see cref="System.Globalization.CultureInfo.CurrentCulture" /> is used.
+    /// <see cref="CultureInfo.CurrentCulture" /> is used.
     /// </param>
     public static void OverrideFormattingOnUI(CultureInfo culture = null)
     {
@@ -56,9 +55,10 @@ public class FExWpfx : InitializeModule<IFExWpfxContainer>
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
     }
 
-    /// <inheritdoc />
-    protected override void AddServices(IFExWpfxContainer container, IServiceCollection services) =>
-        FExWpfxModule.AddServices(container, services);
+    protected override void OnInitialize()
+    {
+        // WPFx-specific initialization if needed
+    }
 
     private static void WindowInitialized(object sender, RoutedEventArgs e)
     {
@@ -67,7 +67,7 @@ public class FExWpfx : InitializeModule<IFExWpfxContainer>
 
         IsMainWindowInitialized = true;
 #pragma warning disable CS0618 // Type or member is obsolete
-        FExFoundation.MainThreadContextProvider.SetMainThread();
+        FExCoreStatics.MainThreadContextProvider.SetMainThread();
 #pragma warning restore CS0618 // Type or member is obsolete
         Splash.WaitForSplashAndClose();
     }

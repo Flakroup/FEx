@@ -1,11 +1,10 @@
-﻿using FEx.DI.Abstractions;
+using FEx.Agnostics.Abstractions;
 using FEx.Json.Extensions;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Serialization;
 
 namespace FEx.Json;
 
-public class FExJson : InitializeModule<IFExJsonContainer>
+public class FExJson : FExInitialize
 {
     private readonly IContractResolver _contractResolver;
 
@@ -16,12 +15,7 @@ public class FExJson : InitializeModule<IFExJsonContainer>
 
     protected override void OnInitialize()
     {
-        base.OnInitialize();
-
         JsonExtensions.ConfigureDefaultSettings(defaultSettings =>
             defaultSettings.ContractResolver = _contractResolver);
     }
-
-    protected override void AddServices(IFExJsonContainer container, IServiceCollection services) =>
-        FExJsonModule.AddServices(container, services);
 }

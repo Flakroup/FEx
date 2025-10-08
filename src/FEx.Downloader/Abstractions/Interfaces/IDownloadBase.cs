@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions.Models;
+using FEx.Agnostics.Abstractions.Models;
 using FEx.Downloader.Enums;
 using System;
 

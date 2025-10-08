@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace FEx.Basics.Exceptions;
+namespace FEx.Agnostics.Exceptions;
 
 [Serializable]
 public class FExException : Exception

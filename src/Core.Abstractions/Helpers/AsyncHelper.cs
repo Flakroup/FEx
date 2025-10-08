@@ -1,51 +1,46 @@
-using FEx.Abstractions;
-using FEx.Abstractions.Enums;
-using FEx.Abstractions.Interfaces;
-using FEx.Asyncx.Utilities;
-using FEx.Common.Extensions;
-using FEx.Extensions.Helpers;
-using Microsoft.VisualStudio.Threading;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using static FEx.Agnostics.Abstractions.AsyncStatics;
 
-namespace FEx.Asyncx.Helpers;
+namespace FEx.Core.Abstractions.Helpers;
 
-public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
+public class AsyncHelper : IAsyncHelper
 {
-    private readonly ITasksInfoSubject _tasksInfoSubject;
+    //private readonly ITasksInfoSubject _tasksInfoSubject;
     private readonly IFExDispatcher _dispatcher;
     private readonly IExceptionHandler _exceptionHandler;
 
     public AsyncHelper(IFExDispatcher dispatcher,
-                       ITasksInfoSubject tasksInfoSubject,
+                       //ITasksInfoSubject tasksInfoSubject,
                        IExceptionHandler exceptionHandler)
     {
         _dispatcher = dispatcher;
-        _tasksInfoSubject = tasksInfoSubject;
+        //_tasksInfoSubject = tasksInfoSubject;
         _exceptionHandler = exceptionHandler;
     }
 
-    public async Task ExecuteDeferredTaskOnMainThreadAsync(Func<Action> func,
-                                                           AsyncHelperOptions options =
-                                                               AsyncHelperOptions.ImmediateStart) =>
+    public async Task ExecuteDeferredTaskOnMainThreadAsync(Action func,
+                                                           AsyncOptions options = AsyncOptions.ImmediateStart) =>
         await ExecuteTaskOnThreadPoolAsync(() => _dispatcher.InvokeOnMainThreadAsync(func), options);
 
     public async Task<T> ExecuteDeferredTaskOnMainThreadAsync<T>(Func<T> func,
-                                                                 AsyncHelperOptions options =
-                                                                     AsyncHelperOptions.ImmediateStart) =>
+                                                                 AsyncOptions options = AsyncOptions.ImmediateStart) =>
         await ExecuteTaskOnThreadPoolAsync(() => _dispatcher.InvokeOnMainThreadAsync(func), options);
 
     public async Task ExecuteDeferredTaskOnMainThreadAsync(Func<Task> func,
-                                                           AsyncHelperOptions options =
-                                                               AsyncHelperOptions.ImmediateStart) =>
+                                                           AsyncOptions options = AsyncOptions.ImmediateStart) =>
         await ExecuteTaskOnThreadPoolAsync(() => _dispatcher.InvokeOnMainThreadAsync(func), options);
 
     public async Task<T> ExecuteDeferredTaskOnMainThreadAsync<T>(Func<Task<T>> func,
-                                                                 AsyncHelperOptions options =
-                                                                     AsyncHelperOptions.ImmediateStart) =>
+                                                                 AsyncOptions options = AsyncOptions.ImmediateStart) =>
         await ExecuteTaskOnThreadPoolAsync(() => _dispatcher.InvokeOnMainThreadAsync(func), options);
 
     public ITaskWrapper FireAndForget(Action action,
@@ -57,7 +52,7 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
         var taskWrapper = new TaskWrapper();
 
         taskWrapper.SetTask(() =>
-            ExecuteAndCatchAsync(() => Wrap(action), taskWrapper, asyncMode, options, cancellationToken));
+            ExecuteAndCatchAsync(action.Wrap, taskWrapper, asyncMode, options, cancellationToken));
 
         return taskWrapper;
     }
@@ -80,7 +75,7 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
     {
         task.Guard(nameof(task));
         var taskWrapper = new TaskWrapper();
-        taskWrapper.SetTask(() => ExecuteTaskAndCatchAsync(() => WrapTaskAsync(task), taskWrapper, asyncMode, options));
+        taskWrapper.SetTask(() => ExecuteTaskAndCatchAsync(task.WrapTaskAsync, taskWrapper, asyncMode, options));
 
         return taskWrapper;
     }
@@ -112,37 +107,6 @@ public class AsyncHelper : StaticAsyncHelper, IAsyncHelper
         List<Func<Task<T>>> deferredList = (tasks?.ToList()).Guard(nameof(tasks));
 
         return deferredList.Select(x => FireTaskAndForget(x, asyncMode, options)).ToList().AsReadOnly();
-    }
-
-    public static void FireOrWait(Func<Task> func, bool wait)
-    {
-        if (wait)
-            JoinableAsyncHelper.AwaitWithoutDeadlock(func);
-        else
-            FExFoundation.AsyncHelper.FireTaskAndForget(func);
-    }
-
-    public static T FireOrWait<T>(Func<Task<T>> func, bool wait)
-    {
-        if (wait)
-            return JoinableAsyncHelper.AwaitWithoutDeadlock(func);
-
-        FExFoundation.AsyncHelper.FireTaskAndForget(func);
-
-        return default;
-    }
-
-    public static async Task SwitchToThreadPoolAsync(Func<Task> function)
-    {
-        await TaskScheduler.Default;
-        await function();
-    }
-
-    public static async Task<T> SwitchToThreadPoolAsync<T>(Func<Task<T>> function)
-    {
-        await TaskScheduler.Default;
-
-        return await function();
     }
 
     private static void SetResult<T>(T result, ITaskWrapperBase taskWrapper)

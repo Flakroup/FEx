@@ -1,20 +1,27 @@
-using FEx.Common.Extensions;
-using FEx.Extensions.Base.Helpers;
-using FEx.Extensions.Collections.Enumerables;
+using FEx.Agnostics.Abstractions.Utilities;
 using JetBrains.Annotations;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace FEx.Extensions;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
-/// <summary>
-/// Object extensions class.
-/// </summary>
 public static class ObjectExtensions
 {
+    [ContractAnnotation("null => true")]
+    public static bool IsNullOrEmpty(this object data) =>
+        data switch
+        {
+            null => true,
+            string stringValue => string.IsNullOrEmpty(stringValue),
+            ICollection collection => collection.Count == 0,
+            IEnumerable enumerable => !enumerable.Any(),
+            _ => false
+        };
+
     /// <summary>
     /// Indicates that the specified reference is not a null reference
     /// </summary>
@@ -37,7 +44,7 @@ public static class ObjectExtensions
     }
 
     /// <summary>
-    /// Execute a action if T Not null.
+    /// Execute an action if T Not null.
     /// </summary>
     /// <typeparam name="T">Current Type.</typeparam>
     /// <param name="value">Reference to be tested</param>
@@ -62,7 +69,7 @@ public static class ObjectExtensions
             : default;
 
     /// <summary>
-    /// Execute a action if T isnull.
+    /// Execute an action if T isnull.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="value">Reference to be tested</param>

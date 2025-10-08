@@ -1,11 +1,11 @@
-﻿using LiteDB;
+using LiteDB;
 using System.IO;
 
-namespace FEx.LiteDBx;
+namespace FEx.PersistentStorage.Extensions;
 
-public class LiteRepositoryFactory
+public class LiteRepositoryExtensions
 {
-    public static LiteRepository GetRepository(string dbFilePath, bool dropOnException = true)
+    public static LiteRepository GetRepository(string dbFilePath)
     {
         var connectionString = new ConnectionString("Mode=Exclusive")
         {
@@ -17,7 +17,7 @@ public class LiteRepositoryFactory
         {
             return new(connectionString);
         }
-        catch (LiteException) when (dropOnException) //that's an workaround for LiteDB issue
+        catch (LiteException) //that's an workaround for LiteDB issue
         {
             File.Delete(dbFilePath);
 

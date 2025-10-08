@@ -1,7 +1,6 @@
-﻿using FEx.Extensions.Collections.Dictionaries;
-using FEx.Logging.Abstractions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Logging;
 using FEx.MVVM.Abstractions.Interfaces;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -45,7 +44,7 @@ public abstract class LinkableReactiveNotifyPropertyChanged : ReactiveNotifyProp
         if (!Links.TryGetValue(propertyName, out ConcurrentDictionary<Guid, ILink> links)
             || !links.TryRemove(linkId, out ILink link))
         {
-            FExLoggingFoundation.Logger.LogError(
+            FExStaticLogger.Error(
                 $"There is no link from {propertyType.FullName} to {GetType().FullName} on {propertyName} property of id {linkId}");
 
             return;

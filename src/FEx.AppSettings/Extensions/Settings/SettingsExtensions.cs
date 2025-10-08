@@ -1,4 +1,4 @@
-﻿using System.Configuration;
+using System.Configuration;
 
 namespace FEx.AppSettings.Extensions.Settings;
 

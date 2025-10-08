@@ -1,4 +1,4 @@
-﻿namespace FEx.Downloader.Abstractions.Interfaces;
+namespace FEx.Downloader.Abstractions.Interfaces;
 
 public interface IDownloadStub : IDownloadBase
 {

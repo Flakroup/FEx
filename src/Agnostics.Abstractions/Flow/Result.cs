@@ -1,7 +1,7 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces.Flow;
 using System;
 
-namespace FEx.Abstractions.Flow;
+namespace FEx.Agnostics.Abstractions.Flow;
 
 public class Result<TError> : ResultBase<TError> where TError : class, IError, new()
 {
@@ -51,4 +51,6 @@ public class Result<TData, TError> : ResultBase<TError>, IResult<TData, TError> 
     public static implicit operator Result<TData, TError>(TData data) => new(data);
 
     public static implicit operator Result<TData, TError>(TError error) => new(error);
+
+    public static Result<TData, TError> Success(TData data) => data;
 }

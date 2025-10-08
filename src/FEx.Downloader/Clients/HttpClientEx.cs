@@ -1,11 +1,11 @@
-﻿using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
-using FEx.Abstractions.Models;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Extensions.Web;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Models;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Core.Abstractions;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
-using FEx.Extensions;
-using FEx.Extensions.Base.Helpers;
-using FEx.Extensions.Web;
 using JetBrains.Annotations;
 using System;
 using System.ComponentModel;
@@ -106,14 +106,14 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
     protected byte[] Buffer { get; }
 
-    private static ISynchronizedAccessService LockSrv => FExFoundation.SynchronizedAccessService;
+    private static ISynchronizedAccessService LockSrv => FExCoreStatics.SynchronizedAccessService;
 
     private CancellationToken CancellationToken => CancellationTokenSource.Token;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
+    /// Initializes a new instance of the <see cref="FlakHttpClient" /> class with a specific handler.
     /// </summary>
-    /// <param name="pars">The <see cref="T:WebRequestParams" /> parameters for processing HTTP response messages.</param>
+    /// <param name="pars">The <see cref="WebRequestParams" /> parameters for processing HTTP response messages.</param>
     /// <param name="disposeHandler">
     /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
     /// <see langword="false" /> if you intend to reuse the inner handler.
@@ -127,10 +127,10 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
+    /// Initializes a new instance of the <see cref="FlakHttpClient" /> class with a specific handler.
     /// </summary>
     /// <param name="handler">
-    /// The <see cref="T:System.Net.Http.HttpMessageHandler" /> responsible for processing the HTTP
+    /// The <see cref="HttpMessageHandler" /> responsible for processing the HTTP
     /// response messages.
     /// </param>
     /// <param name="disposeHandler">
@@ -308,7 +308,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         if (propertyName is null)
             return;
 
-        FExFoundation.Dispatcher.InvokeOnMainThread(EventDelegate, this);
+        FExCoreStatics.Dispatcher.InvokeOnMainThread(EventDelegate, this);
 
         return;
 

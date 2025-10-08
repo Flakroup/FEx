@@ -1,4 +1,4 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
 using System;
 
 namespace FEx.WebScraping.Extensions;
@@ -49,7 +49,7 @@ public static class HtmlNodeExtensions
     /// <param name="value">The value.</param>
     /// <param name="xpath">The XPath expression. May not be null.</param>
     /// <returns>
-    /// The first <see cref="T:HtmlAgilityPack.HtmlNode" /> that matches the XPath query or a null reference if no matching
+    /// The first <see cref="HtmlNode" /> that matches the XPath query or a null reference if no matching
     /// node was found.
     /// </returns>
     public static HtmlNode SelectSingleNode(this HtmlNode value, Func<XPathBuilderEx, XPathBuilderEx> xpath) =>
@@ -61,7 +61,7 @@ public static class HtmlNodeExtensions
     /// <param name="value">The value.</param>
     /// <param name="xpath">The XPath expression.</param>
     /// <returns>
-    /// An <see cref="T:HtmlAgilityPack.HtmlNodeCollection" /> containing a collection of nodes matching the
+    /// An <see cref="HtmlNodeCollection" /> containing a collection of nodes matching the
     /// <see cref="P:HtmlAgilityPack.HtmlNode.XPath" /> query, or <c>null</c> if no node matched the XPath expression.
     /// </returns>
     public static HtmlNodeCollection SelectNodes(this HtmlNode value, Func<XPathBuilderEx, XPathBuilderEx> xpath) =>

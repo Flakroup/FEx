@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.IO;
 
-namespace FEx.Common.Abstractions.Interfaces;
+namespace FEx.Core.Abstractions.Interfaces;
 
 public interface IAppInfo
 {

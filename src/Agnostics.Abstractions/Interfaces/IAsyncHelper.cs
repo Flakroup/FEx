@@ -1,25 +1,13 @@
-using FEx.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Enums;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Abstractions.Interfaces;
+namespace FEx.Agnostics.Abstractions.Interfaces;
 
 public interface IAsyncHelper
 {
-    Task ExecuteDeferredTaskOnMainThreadAsync(Func<Action> func,
-                                              AsyncHelperOptions options = AsyncHelperOptions.ImmediateStart);
-
-    Task<T> ExecuteDeferredTaskOnMainThreadAsync<T>(Func<T> func,
-                                                    AsyncHelperOptions options = AsyncHelperOptions.ImmediateStart);
-
-    Task ExecuteDeferredTaskOnMainThreadAsync(Func<Task> func,
-                                              AsyncHelperOptions options = AsyncHelperOptions.ImmediateStart);
-
-    Task<T> ExecuteDeferredTaskOnMainThreadAsync<T>(Func<Task<T>> func,
-                                                    AsyncHelperOptions options = AsyncHelperOptions.ImmediateStart);
-
     ITaskWrapper FireAndForget(Action action,
                                AsyncMode asyncMode = AsyncMode.Default,
                                IExceptionHandlerOptions options = null,
@@ -45,4 +33,13 @@ public interface IAsyncHelper
     IReadOnlyList<ITaskWrapper<T>> FireTasksAndForget<T>(IEnumerable<Func<Task<T>>> tasks,
                                                          AsyncMode asyncMode = AsyncMode.Default,
                                                          IExceptionHandlerOptions options = null);
+
+    Task ExecuteDeferredTaskOnMainThreadAsync(Action func, AsyncOptions options = AsyncOptions.ImmediateStart);
+
+    Task<T> ExecuteDeferredTaskOnMainThreadAsync<T>(Func<T> func, AsyncOptions options = AsyncOptions.ImmediateStart);
+
+    Task ExecuteDeferredTaskOnMainThreadAsync(Func<Task> func, AsyncOptions options = AsyncOptions.ImmediateStart);
+
+    Task<T> ExecuteDeferredTaskOnMainThreadAsync<T>(Func<Task<T>> func,
+                                                    AsyncOptions options = AsyncOptions.ImmediateStart);
 }

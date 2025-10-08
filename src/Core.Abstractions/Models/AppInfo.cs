@@ -1,8 +1,8 @@
-﻿using FEx.Common.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Interfaces;
 using System;
 using System.IO;
 
-namespace FEx.Common.Models;
+namespace FEx.Core.Abstractions.Models;
 
 public record AppInfo : IAppInfo
 {

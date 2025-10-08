@@ -1,17 +1,82 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-namespace FEx.Extensions.Collections.Enumerables;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
-/// <summary>
-/// IEnumerable interface extensions.
-/// </summary>
 public static class EnumerableExtensions
 {
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+    public static bool Any(this IEnumerable source)
+    {
+        source.Guard(nameof(source));
+
+        IEnumerator enumerator = source.GetEnumerator();
+        bool result;
+
+        try
+        {
+            result = enumerator.MoveNext();
+            enumerator.Reset();
+        }
+        finally
+        {
+            if (enumerator is IDisposable disposable)
+                disposable.Dispose();
+        }
+
+        return result;
+    }
+
+    [ContractAnnotation("enumerable: null => stop")]
+    public static bool HasAny(this IEnumerable enumerable) =>
+        enumerable switch
+        {
+            null => false,
+            Array readOnlyList => readOnlyList.Length > 0,
+            ICollection collection => collection.Count > 0,
+            _ => HasElements(enumerable)
+        };
+
+    [ContractAnnotation("enumerable: null => stop")]
+    public static bool HasAny<T>(this IEnumerable<T> enumerable) =>
+        enumerable switch
+        {
+            null => false,
+            T[] readOnlyList => readOnlyList.Length > 0,
+            IReadOnlyCollection<T> readOnlyCollection => readOnlyCollection.Count > 0,
+            ICollection<T> collection => collection.Count > 0,
+            _ => enumerable.Any()
+        };
+
+    /// <summary>
+    /// Searches for an element that matches the conditions defined by the specified predicate, and returns the first
+    /// occurrence.
+    /// </summary>
+    /// <typeparam name="T">Sequence element type.</typeparam>
+    /// <param name="source">The list itself.</param>
+    /// <param name="predicate">Condition of the element to search for.</param>
+    /// <returns>If found, an element of type T; otherwise default(T).</returns>
+    public static T FindInEnumerable<T>(this IEnumerable<T> source, Func<T, bool> predicate = null)
+    {
+        return source switch
+        {
+            T[] array => Array.Find(array, Predicate),
+            List<T> list => list.Find(Predicate),
+            _ => source.FirstOrDefault(Predicate)
+        };
+
+        bool Predicate(T i) => predicate?.Invoke(i) ?? true;
+    }
+
+    public static bool None<T>(this IEnumerable<T> source, Func<T, bool> predicate = null) =>
+        FindInEnumerable(source, predicate) is null;
+
     /// <summary>
     /// Determines whether I'm null or empty.
     /// </summary>
@@ -317,4 +382,40 @@ public static class EnumerableExtensions
             ? children.Concat(children.SelectMany(x => GetAllItemChildren(x, getChildrenFunc)))
             : [];
     }
+
+    public static IOrderedEnumerable<T> SortBy<T, TKey>(this IEnumerable<T> items,
+                                                        Func<T, TKey> selector,
+                                                        ListSortDirection order = ListSortDirection.Ascending,
+                                                        IComparer<TKey> comparer = null) =>
+        order == ListSortDirection.Ascending
+            ? items.OrderBy(selector, comparer)
+            : items.OrderByDescending(selector, comparer);
+
+    public static int IndexOfEnumerable<T>(this IEnumerable<T> items, T itemToFind)
+    {
+        int index = -1;
+
+        foreach ((T item, int counter) in items.Select(static (item, counter) => (item, counter)))
+        {
+            if (IsCompatibleObject(item)
+                && item.Equals(itemToFind))
+            {
+                index = counter;
+
+                break;
+            }
+        }
+
+        return index;
+    }
+
+    private static bool HasElements(IEnumerable enumerable)
+    {
+        IEnumerator enumerator = enumerable.GetEnumerator();
+        using var disposable = enumerator as IDisposable;
+
+        return enumerator.MoveNext();
+    }
+
+    private static bool IsCompatibleObject<T>(T value) => value is not null || default(T) == null;
 }

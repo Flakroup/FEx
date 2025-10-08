@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
 // <copyright file="ShellIcon.cs" company="Mauricio DIAZ ORLICH (madd0@madd0.com)">
 //   Distributed under Microsoft Public License (MS-PL).
 //   http://www.opensource.org/licenses/MS-PL

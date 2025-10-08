@@ -1,4 +1,4 @@
-﻿namespace FEx.Extensions.Base.Enums;
+namespace FEx.Agnostics.Abstractions.Enums;
 
 public enum LengthType
 {

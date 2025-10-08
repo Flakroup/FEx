@@ -1,11 +1,11 @@
-﻿//https://github.com/kpreisser/AsyncReaderWriterLockSlim
+//https://github.com/kpreisser/AsyncReaderWriterLockSlim
 
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Basics.Utilities;
+namespace FEx.Agnostics.Utilities;
 
 /// <summary>
 /// An alternative to <see cref="ReaderWriterLockSlim" /> which can be used in async methods.
@@ -748,7 +748,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
     {
         /// <summary>
         /// Gets or sets a value that indicates if the state is active. Only when <c>true</c>, the
-        /// <see cref="AsyncReaderWriterLockSlim._readLockReleaseSemaphore" /> will be released once the last read lock exits.
+        /// <see cref="_readLockReleaseSemaphore" /> will be released once the last read lock exits.
         /// </summary>
         public bool StateIsActive { get; set; }
 
@@ -765,14 +765,14 @@ public class AsyncReaderWriterLockSlim : IDisposable
         /// <summary>
         /// Gets or sets a value that indicates if a write lock that uses an existing
         /// <see cref="WriteLockState" /> must wait until the
-        /// <see cref="AsyncReaderWriterLockSlim._readLockReleaseSemaphore" /> is released.
+        /// <see cref="_readLockReleaseSemaphore" /> is released.
         /// </summary>
         public bool WaitForReadLocks { get; set; }
 
         /// <summary>
         /// Gets or sets a value that indicates if a read lock that is exited when
         /// there is a write lock present should not release the
-        /// <see cref="AsyncReaderWriterLockSlim._readLockReleaseSemaphore" /> as it has already been released
+        /// <see cref="_readLockReleaseSemaphore" /> as it has already been released
         /// (or there were no read locks present when the write lock was initially
         /// entered).
         /// </summary>

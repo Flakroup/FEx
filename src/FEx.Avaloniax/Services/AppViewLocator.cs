@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using FEx.Avaloniax.Abstractions;
 using ReactiveUI;
 using System;

@@ -1,11 +1,11 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace FEx.Extensions.Collections.Lists;
+namespace FEx.Agnostics.Abstractions.Extensions.Collections.Lists;
 
 /// <summary>
 /// Extensions for the IList interface.

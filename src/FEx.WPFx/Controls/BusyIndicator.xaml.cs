@@ -1,4 +1,4 @@
-﻿using FEx.WPFx.Extensions;
+using FEx.WPFx.Extensions;
 using System.Windows;
 using System.Windows.Controls;
 

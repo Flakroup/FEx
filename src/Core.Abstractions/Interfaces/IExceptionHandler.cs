@@ -1,8 +1,9 @@
-﻿using FEx.Abstractions.CustomEventArgs;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Core.Abstractions.CustomEventArgs;
 using System;
 using System.Threading.Tasks;
 
-namespace FEx.Abstractions.Interfaces;
+namespace FEx.Core.Abstractions.Interfaces;
 
 public interface IExceptionHandler
 {

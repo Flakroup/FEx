@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
-namespace FEx.Common.Comparers;
+namespace FEx.Agnostics.Comparers;
 
 public sealed class AlphanumComparatorFast : IComparer<string>, IEqualityComparer<string>
 {
@@ -31,8 +31,10 @@ public sealed class AlphanumComparatorFast : IComparer<string>, IEqualityCompare
             if (char.IsDigit(str1[0])
                 && char.IsDigit(str2[0]))
             {
-                var numeric1 = int.Parse(str1);
-                var numeric2 = int.Parse(str2);
+                // Use long instead of int to handle larger numbers (timestamps, hashes, etc.)
+                // Will throw OverflowException if number exceeds long.MaxValue - fix with BigInteger if needed
+                var numeric1 = long.Parse(str1);
+                var numeric2 = long.Parse(str2);
                 result = numeric1.CompareTo(numeric2);
             }
             else

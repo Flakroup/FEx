@@ -1,17 +1,16 @@
-﻿using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
-using FEx.Basics.Implementations;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Implementations;
 using System;
 using System.Linq;
 
-namespace FEx.Basics.Extensions;
+namespace FEx.Core.Abstractions.Extensions;
 
 public static class ExceptionExtensions
 {
-    public static void HandleException(this Exception exception) => FExFoundation.ExceptionHandler.Handle(exception);
+    public static void HandleException(this Exception exception) => FExCoreStatics.ExceptionHandler.Handle(exception);
 
     public static void HandleException(this Exception exception, IExceptionHandlerOptions options) =>
-        FExFoundation.ExceptionHandler.Handle(exception, options);
+        FExCoreStatics.ExceptionHandler.Handle(exception, options);
 
     public static void HandleException(this Exception ex,
                                        bool informUser = false,

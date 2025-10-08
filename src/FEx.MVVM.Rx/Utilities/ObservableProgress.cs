@@ -1,11 +1,11 @@
-﻿using FEx.MVVM.Rx.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Extensions;
+using FEx.MVVM.Rx.Abstractions.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
-using SynchronizationContextExtensions = FEx.Common.Extensions.SynchronizationContextExtensions;
 
 namespace FEx.MVVM.Rx.Utilities;
 

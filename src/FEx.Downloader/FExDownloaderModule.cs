@@ -1,4 +1,6 @@
-﻿using FEx.DI.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions;
+using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Downloader.Services;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
@@ -7,9 +9,12 @@ using StrongInject.Extensions.DependencyInjection;
 namespace FEx.Downloader;
 
 [Register(typeof(DownloadService), Scope.SingleInstance)]
-[Register(typeof(FExDownloader), Scope.SingleInstance, typeof(FExDownloader), typeof(IInitializeModule))]
-public class FExDownloaderModule
+[Register(typeof(FExDownloader), Scope.SingleInstance, typeof(FExDownloader), typeof(IFExInitialize))]
+[Register(typeof(FExDownloaderModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
+public class FExDownloaderModule : InitializeModule<IFExDownloaderModule, IServiceCollection>
 {
-    public static void AddServices(IFExDownloaderModule module, IServiceCollection services) =>
-        services.AddSingletonServiceUsingContainer<DownloadService>(module);
+    protected override void RegisterServices(IFExDownloaderModule container, IServiceCollection services)
+    {
+        services.AddSingletonServiceUsingContainer<DownloadService>(container);
+    }
 }

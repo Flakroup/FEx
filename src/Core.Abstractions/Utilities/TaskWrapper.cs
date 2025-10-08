@@ -1,11 +1,9 @@
-using FEx.Abstractions.Flow;
-using FEx.Abstractions.Flow.Errors;
-using FEx.Abstractions.Interfaces;
-using FEx.Asyncx.Abstractions;
+using FEx.Agnostics.Abstractions.Flow;
+using FEx.Agnostics.Abstractions.Interfaces;
 using System;
 using System.Threading.Tasks;
 
-namespace FEx.Asyncx.Utilities;
+namespace FEx.Core.Abstractions.Utilities;
 
 public class TaskWrapper : TaskWrapperBase<Task, Result<ExceptionError>>, ITaskWrapper
 {

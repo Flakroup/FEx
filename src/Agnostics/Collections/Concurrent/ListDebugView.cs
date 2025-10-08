@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace FEx.Basics.Utilities.Collections;
+namespace FEx.Agnostics.Collections.Concurrent;
 
 public sealed class ListDebugView<T>
 {

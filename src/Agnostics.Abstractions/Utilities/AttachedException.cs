@@ -1,8 +1,8 @@
-﻿using FEx.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using System;
 using System.Diagnostics;
 
-namespace FEx.Basics.Exceptions;
+namespace FEx.Agnostics.Abstractions.Utilities;
 
 public class AttachedException : Exception
 {

@@ -1,24 +1,19 @@
-using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
-using FEx.Abstractions.Models;
-using FEx.Basics.Extensions;
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Extensions.Collections.Lists;
+using FEx.Agnostics.Abstractions.Extensions.Web;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Models;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Utilities;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Clients;
 using FEx.Downloader.Enums;
-using FEx.Extensions;
-using FEx.Extensions.Base.Converters;
-using FEx.Extensions.Base.Enums;
-using FEx.Extensions.Collections.Enumerables;
-using FEx.Extensions.Collections.Lists;
-using FEx.Extensions.DateTimes;
-using FEx.Extensions.IO;
-using FEx.Extensions.Web;
-using FEx.Fundamentals.Utilities;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Extensions;
 using FEx.MVVM.Utilities;
-using FEx.Webx.Extensions;
 using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Generic;
@@ -43,7 +38,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     private int _openConnections;
     private string _filePath;
     private string _elapsedTime;
-    private long _elapsedMiliseconds;
+    private long _elapsedMilliseconds;
     private bool _isRunning;
     private string _dirPath;
     private string _fileName;
@@ -230,8 +225,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     public long ElapsedMiliseconds
     {
-        get => _elapsedMiliseconds;
-        protected set => SetProperty(ref _elapsedMiliseconds, value);
+        get => _elapsedMilliseconds;
+        protected set => SetProperty(ref _elapsedMilliseconds, value);
     }
 
     public bool IsRunning
@@ -261,7 +256,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     }
 
     protected CancellationToken CancellationToken => CancellationTokenSource.Token;
-    private static ISynchronizedAccessService LockSrv => FExFoundation.SynchronizedAccessService;
+    private static ISynchronizedAccessService LockSrv => FExCoreStatics.SynchronizedAccessService;
 
     private DownloadItem(Uri url,
                          string filePath,
@@ -796,7 +791,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         {
             if (ParallelRanges > 1
                 && unfinishedRanges.Length > 1)
-                await unfinishedRanges.RunWithWhenAllTasksAsync(x => Ranges[x].DoDownloadAsync());
+                await unfinishedRanges.WithWhenAllTasksAsync(x => Ranges[x].DoDownloadAsync());
             else
                 foreach (int x in unfinishedRanges)
                     await Ranges[x].DoDownloadAsync();
@@ -836,13 +831,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                 }
             }
         }
-#if NETSTANDARD
+#if !NETSTANDARD2_0
+        await
+#endif
         using (var fileStream =
                new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
-#else
-        await using (var fileStream =
-                     new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
-#endif
             fileStream.SetLength(DataLength);
 
         DState = DownloadState.Cleanup;

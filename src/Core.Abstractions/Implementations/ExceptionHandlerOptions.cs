@@ -1,7 +1,7 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
 using System.Collections.Generic;
 
-namespace FEx.Basics.Implementations;
+namespace FEx.Core.Abstractions.Implementations;
 
 public class ExceptionHandlerOptions : IExceptionHandlerOptions
 {

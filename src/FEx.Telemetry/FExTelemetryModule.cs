@@ -1,4 +1,4 @@
-﻿using FEx.Telemetry.Subjects;
+using FEx.Telemetry.Subjects;
 using StrongInject;
 
 namespace FEx.Telemetry;

@@ -1,5 +1,5 @@
-using FEx.Abstractions.Interfaces;
-using FEx.Extensions.Collections.Lists;
+using FEx.Agnostics.Abstractions.Extensions.Collections.Lists;
+using FEx.Core.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
 
-namespace FEx.Fundamentals.StackTraces;
+namespace FEx.Core.StackTraces;
 
 public class StackTraceGenerator : IStackTraceProvider
 {

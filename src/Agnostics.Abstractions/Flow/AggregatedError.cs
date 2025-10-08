@@ -1,14 +1,14 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces.Flow;
 using System.Collections.Generic;
 
-namespace FEx.Abstractions.Flow.Errors;
+namespace FEx.Agnostics.Abstractions.Flow;
 
 public class AggregatedError : Error
 {
     public IReadOnlyCollection<IError> InnerErrors { get; }
 
     public AggregatedError()
-        : this(new List<IError>())
+        : this(new List<IError>().AsReadOnly())
     {
     }
 

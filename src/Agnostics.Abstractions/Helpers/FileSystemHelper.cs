@@ -1,12 +1,11 @@
-﻿using FEx.Common.Extensions;
-using FEx.Extensions.IO;
+using FEx.Agnostics.Abstractions.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace FEx.Extensions.Base.IO;
+namespace FEx.Agnostics.Abstractions.Helpers;
 
 public static class FileSystemHelper
 {

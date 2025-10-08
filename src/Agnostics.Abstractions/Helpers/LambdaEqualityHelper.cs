@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Linq;
 
-namespace FEx.Extensions.Base.Helpers;
+namespace FEx.Agnostics.Abstractions.Helpers;
 
 public class LambdaEqualityHelper<T>
 {

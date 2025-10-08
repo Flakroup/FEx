@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using System.Threading.Tasks;
 
 namespace FEx.Avaloniax.Abstractions.Interfaces;

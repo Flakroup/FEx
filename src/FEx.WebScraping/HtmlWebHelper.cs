@@ -1,4 +1,4 @@
-﻿using FEx.Extensions.Helpers;
+using FEx.Agnostics.Abstractions;
 using FEx.WebScraping.Abstractions.Interfaces;
 using HtmlAgilityPack;
 using System;
@@ -40,7 +40,7 @@ public class HtmlWebHelper : IWebScraper
         var web = new HtmlWeb();
         configWeb?.Invoke(web);
 
-        Task<HtmlDocument> task = StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(() =>
+        Task<HtmlDocument> task = AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
             LoadHtmlDocumentAsync(web, pageLink, encoding, credential, cancellationToken));
 
         return (web, task);

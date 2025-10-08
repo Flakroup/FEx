@@ -1,6 +1,6 @@
-﻿using FEx.Common.Extensions;
-using FEx.Common.Utilities;
-using FEx.Extensions.Base.Enums;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Utilities;
 using FEx.Platforms.Abstractions.Interfaces;
 using FEx.Platforms.Extensions;
 using Microsoft.Win32;

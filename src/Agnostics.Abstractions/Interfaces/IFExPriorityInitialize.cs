@@ -1,4 +1,4 @@
-﻿namespace FEx.Abstractions.Interfaces;
+namespace FEx.Agnostics.Abstractions.Interfaces;
 
 public interface IFExPriorityInitialize : IFExInitialize
 {

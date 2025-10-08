@@ -1,11 +1,11 @@
-using FEx.Abstractions;
-using FEx.Abstractions.Flow.Errors;
-using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Flow;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces.Flow;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace FEx.Asyncx.Abstractions;
+namespace FEx.Core.Abstractions.Utilities;
 
 public abstract class TaskWrapperBase<TTask, TResult> : ITaskWrapperBase<TTask, TResult> where TTask : Task
     where TResult : class, IResult<ExceptionError>
@@ -49,7 +49,7 @@ public abstract class TaskWrapperBase<TTask, TResult> : ITaskWrapperBase<TTask, 
             SetTask(task);
 
         TaskCreationStackTrace = setStackTrace
-            ? FExFoundation.StackTraceProvider.GetStackTrace()
+            ? FExCoreStatics.StackTraceProvider.GetStackTrace()
             : null;
     }
 

@@ -1,6 +1,6 @@
-﻿using FEx.Abstractions.Models;
-using FEx.Basics.Extensions;
-using FEx.Extensions.Web;
+using FEx.Agnostics.Abstractions.Extensions.Web;
+using FEx.Agnostics.Abstractions.Models;
+using FEx.Core.Abstractions.Extensions;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Models;
 using System;

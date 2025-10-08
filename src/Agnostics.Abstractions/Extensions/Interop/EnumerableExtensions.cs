@@ -1,12 +1,10 @@
-﻿#if NET6_0_OR_GREATER
-using System.Linq;
-#else
-using FEx.Common.Extensions;
-#endif
 using System;
 using System.Collections.Generic;
+#if NET6_0_OR_GREATER
+using System.Linq;
+#endif
 
-namespace FEx.Extensions.Interop;
+namespace FEx.Agnostics.Abstractions.Extensions.Interop;
 
 public static class EnumerableExtensions
 {

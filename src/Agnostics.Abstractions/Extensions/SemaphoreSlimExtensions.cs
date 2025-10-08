@@ -1,8 +1,8 @@
-﻿using FEx.Basics.Utilities;
+using FEx.Agnostics.Abstractions.Utilities;
 using System;
 using System.Threading;
 
-namespace FEx.Asyncx.Extensions;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
 public static class SemaphoreSlimExtensions
 {
@@ -14,15 +14,15 @@ public static class SemaphoreSlimExtensions
     /// <returns>
     /// The previous count of the <see cref="SemaphoreSlim" />.
     /// </returns>
-    /// <exception cref="T:System.ArgumentOutOfRangeException">
+    /// <exception cref="ArgumentOutOfRangeException">
     /// <paramref name="releaseCount" /> is less
     /// than 1.
     /// </exception>
-    /// <exception cref="T:System.Threading.SemaphoreFullException">
+    /// <exception cref="SemaphoreFullException">
     /// The <see cref="SemaphoreSlim" /> has
     /// already reached its maximum size.
     /// </exception>
-    /// <exception cref="T:System.ObjectDisposedException">
+    /// <exception cref="ObjectDisposedException">
     /// The current instance has already been
     /// disposed.
     /// </exception>

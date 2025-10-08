@@ -1,8 +1,8 @@
-using FEx.Abstractions.Interfaces;
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces.Flow;
 using System;
 
-namespace FEx.Abstractions.Flow.Errors;
+namespace FEx.Agnostics.Abstractions.Flow;
 
 public class Error : IError
 {
@@ -16,7 +16,7 @@ public class Error : IError
         get => _innerError;
         private set
         {
-            _innerError = value.Guard();
+            _innerError = value.GuardProperty();
             RootError = InnerError.RootError ?? InnerError;
         }
     }

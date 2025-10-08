@@ -1,6 +1,6 @@
-﻿using System.Threading;
+using System.Threading;
 
-namespace FEx.Basics.Utilities;
+namespace FEx.Agnostics.Abstractions.Utilities;
 
 public class FExSemaphoreSlim : SemaphoreSlim
 {

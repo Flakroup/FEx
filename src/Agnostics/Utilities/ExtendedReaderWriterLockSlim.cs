@@ -1,10 +1,9 @@
-using FEx.Extensions.DateTimes;
-using FEx.Logging.Abstractions;
-using Microsoft.Extensions.Logging;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Logging;
 using System;
 using System.Threading;
 
-namespace FEx.Basics.Utilities;
+namespace FEx.Agnostics.Utilities;
 
 public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
 {
@@ -69,7 +68,7 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
 
             retry++;
 
-            FExLoggingFoundation.Logger.LogDebug(
+            FExStaticLogger.Warning(
                 $"Couldn't acquire lock for {_ownerType.FullName} in {timeout.GetTime()}. Retrying {retry} time...");
         }
     }

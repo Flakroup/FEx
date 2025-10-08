@@ -1,8 +1,8 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Basics.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Common.Abstractions.Interfaces;
-using FEx.Common.Extensions;
-using FEx.Extensions;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.WPFx.Abstractions.Interfaces;
 using FEx.WPFx.Extensions;
 using FEx.WPFx.Helpers;

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 
-namespace FEx.Extensions.DateTimes;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
 /// <summary>
 /// Extension methods for the TimeSpan
@@ -119,6 +119,20 @@ public static class TimeSpanExtensions
 
         return Math.Floor(i * power) / power;
     }
+
+    public static TimeSpan RoundUp(this TimeSpan timeSpan, int roundToMinutes)
+    {
+        var totalMinutes = (int)timeSpan.TotalMinutes;
+
+        int remainder = totalMinutes % roundToMinutes;
+
+        if (remainder != 0)
+            totalMinutes += roundToMinutes - remainder;
+
+        return TimeSpan.FromMinutes(totalMinutes);
+    }
+
+    public static bool IsAm(this TimeSpan timeSpan) => timeSpan.Hours < 12;
 
     /// <summary>
     /// Fills the zeros.

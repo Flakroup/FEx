@@ -1,8 +1,6 @@
-﻿using FEx.Common.Extensions;
-using FEx.Extensions;
-using FEx.Extensions.Base.Enums;
-using FEx.Extensions.Collections;
-using FEx.Extensions.Collections.Dictionaries;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Extensions.Collections.Dictionaries;
 using FEx.Platforms;
 using FEx.Platforms.Abstractions.Interfaces;
 using MimeMapping;
@@ -13,7 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 
-namespace FEx.Webx;
+namespace FEx.Webx.Utilities;
 
 public static class MimeTypesUtility
 {

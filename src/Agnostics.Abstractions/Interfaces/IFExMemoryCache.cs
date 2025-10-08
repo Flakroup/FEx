@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-namespace FEx.Abstractions.Interfaces;
+namespace FEx.Agnostics.Abstractions.Interfaces;
 
 [SuppressMessage("ReSharper", "PossibleInterfaceMemberAmbiguity")]
 public interface IFExMemoryCache<TKey, TValue> : IDictionary<TKey, TValue>, IDictionary where TKey : notnull

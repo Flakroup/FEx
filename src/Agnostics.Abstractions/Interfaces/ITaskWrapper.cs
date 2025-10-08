@@ -1,8 +1,7 @@
-using FEx.Abstractions.Flow;
-using FEx.Abstractions.Flow.Errors;
+using FEx.Agnostics.Abstractions.Flow;
 using System.Threading.Tasks;
 
-namespace FEx.Abstractions.Interfaces;
+namespace FEx.Agnostics.Abstractions.Interfaces;
 
 public interface ITaskWrapper : ITaskWrapperBase<Task, Result<ExceptionError>>
 {

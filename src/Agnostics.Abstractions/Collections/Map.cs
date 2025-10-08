@@ -1,8 +1,8 @@
-﻿using FEx.Common.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces.Collections;
 using System;
 using System.Collections.Generic;
 
-namespace FEx.Common.Collections;
+namespace FEx.Agnostics.Abstractions.Collections;
 
 public class Map<TForwardKey, TReverseKey> : IMap<TForwardKey, TReverseKey>
 {

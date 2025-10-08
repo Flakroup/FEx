@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace FEx.Extensions.Base.Helpers;
+namespace FEx.Agnostics.Abstractions.Utilities;
 
 public static class EqualityHelper
 {

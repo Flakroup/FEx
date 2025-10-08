@@ -1,14 +1,13 @@
-﻿using FEx.Basics.Extensions;
-using FEx.Common.Abstractions.Interfaces;
-using FEx.Common.Extensions;
-using FEx.Common.Helpers;
-using FEx.Common.Utilities;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Helpers;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Utilities;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
-namespace FEx.Basics.Utilities;
+namespace FEx.Core.Utilities;
 
 public record AppInfoProvider : IAppInfoProvider
 {

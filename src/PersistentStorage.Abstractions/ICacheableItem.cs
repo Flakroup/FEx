@@ -1,6 +1,6 @@
-﻿using LiteDB;
+using LiteDB;
 
-namespace FEx.LiteDBx.Abstractions.Interfaces;
+namespace FEx.PersistentStorage.Abstractions;
 
 public interface ICacheableItem
 {

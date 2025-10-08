@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace FEx.Extensions.Collections.Dictionaries;
+namespace FEx.Agnostics.Abstractions.Extensions.Collections.Dictionaries;
 
 /// <summary>
 /// IReadOnlyDictionary extensions class.

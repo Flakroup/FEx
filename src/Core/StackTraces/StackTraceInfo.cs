@@ -1,6 +1,6 @@
 using System;
 
-namespace FEx.Fundamentals.StackTraces;
+namespace FEx.Core.StackTraces;
 
 [Serializable]
 public class StackTraceInfo : IEquatable<StackTraceInfo>

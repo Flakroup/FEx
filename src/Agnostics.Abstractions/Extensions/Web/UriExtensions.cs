@@ -1,12 +1,11 @@
-using FEx.Abstractions.Models;
-using FEx.Common.Extensions;
-using FEx.Extensions.Base.Enums;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Models;
 using System;
 using System.Diagnostics;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace FEx.Extensions.Web;
+namespace FEx.Agnostics.Abstractions.Extensions.Web;
 
 public static class UriExtensions
 {
@@ -120,13 +119,4 @@ public static class UriExtensions
 
         return await resp.TryGetRangeAsync(rangeFrom, rangeTo, pars);
     }
-
-    public static Uri TryGetUri(this string uri) =>
-        uri.IsNotNullOrEmptyString()
-        && Uri.TryCreate(uri, UriKind.Absolute, out Uri uriResult)
-#if NETSTANDARD
-        && uriResult is not null
-#endif
-            ? uriResult
-            : null;
 }

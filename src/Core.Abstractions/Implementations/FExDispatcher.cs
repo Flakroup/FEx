@@ -1,14 +1,15 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Basics.Exceptions;
-using FEx.Common.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.Logging.Abstractions.Extensions;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Basics.Abstractions;
+namespace FEx.Core.Abstractions.Implementations;
 
 public abstract class FExDispatcher : IFExDispatcher
 {
@@ -38,17 +39,58 @@ public abstract class FExDispatcher : IFExDispatcher
     }
 
     public abstract bool CheckAccess(object sender = null);
-    public abstract void BeginInvokeOnMainThread(Action action);
-    public abstract void InvokeOnIdleMainThread(Action action, object sender = null);
-    public abstract T InvokeOnIdleMainThread<T>(Func<T> action, object sender = null);
-    public abstract void InvokeOnMainThread(Action action, object sender = null);
-    public abstract T InvokeOnMainThread<T>(Func<T> action, object sender = null);
-    public abstract Task InvokeOnIdleMainThreadAsync(Action action, object sender = null);
-    public abstract Task<T> InvokeOnIdleMainThreadAsync<T>(Func<T> action, object sender = null);
+    public abstract void BeginInvokeOnMainThread(Action action, object sender = null);
     public abstract Task InvokeOnMainThreadAsync(Action action, object sender = null);
     public abstract Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object sender = null);
     public abstract Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object sender = null);
     public abstract Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null);
+
+    public virtual void InvokeOnIdleMainThread(Action action, object sender = null) =>
+        //this implementation is not able to determine wherever UI context is idle
+        InvokeOnMainThread(action, sender);
+
+    public virtual T InvokeOnIdleMainThread<T>(Func<T> action, object sender = null) =>
+        //this implementation is not able to determine wherever UI context is idle
+        InvokeOnMainThread(action, sender);
+
+    public virtual async Task<T> InvokeOnIdleMainThreadAsync<T>(Func<T> action, object sender = null) =>
+        //this implementation is not able to determine wherever UI context is idle
+        await InvokeOnMainThreadAsync(action, sender);
+
+    public virtual async Task InvokeOnIdleMainThreadAsync(Action action, object sender = null) =>
+        //this implementation is not able to determine wherever UI context is idle
+        await InvokeOnMainThreadAsync(action, sender);
+
+    public virtual void InvokeOnMainThread(Action action, object sender = null)
+    {
+        SynchronizationContext context = sender is Thread thread
+            ? thread.GetThreadSynchronizationContext()
+            : _mainThreadContextProvider.Context;
+
+        if (CheckAccess(sender)
+            || context is null)
+            action();
+        else
+            context.SendInContext(sender, action);
+    }
+
+    public virtual T InvokeOnMainThread<T>(Func<T> action, object sender = null)
+    {
+        SynchronizationContext context = sender is Thread thread
+            ? thread.GetThreadSynchronizationContext()
+            : _mainThreadContextProvider.Context;
+
+        return CheckAccess(sender) || context is null
+            ? action()
+            : context.SendInContext(sender, action);
+    }
+
+    public virtual void EnableCollectionSynchronization(IEnumerable collection,
+                                                        object context,
+                                                        Action<IEnumerable, object, Action, bool> callback)
+    {
+        // Default implementation - override in derived classes if needed
+    }
 
     /// <inheritdoc />
     public virtual void SendInContext(Action action, object sender, uint? timeout = 3000)

@@ -1,9 +1,9 @@
-﻿using FEx.Abstractions.CustomEventArgs;
-using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Core.Abstractions.CustomEventArgs;
 using System;
 using System.Diagnostics;
 
-namespace FEx.Abstractions.Implementations;
+namespace FEx.Core.Abstractions.Helpers;
 
 public class DebugExceptionHandler : ExceptionHandlerBase
 {

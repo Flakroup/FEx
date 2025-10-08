@@ -1,12 +1,11 @@
-﻿using FEx.Common.Extensions;
-using FEx.Extensions.Base.Helpers;
+using FEx.Agnostics.Abstractions.Helpers;
 using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Extensions.IO;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
 public static class StreamExtensions
 {
@@ -133,7 +132,8 @@ public static class StreamExtensions
 
         try
         {
-            streamToCopy.Guard(nameof(streamToCopy));
+            if (streamToCopy is null)
+                return null;
 
             if (streamToCopy.CanSeek)
                 streamToCopy.Seek(0, SeekOrigin.Begin);
@@ -163,7 +163,8 @@ public static class StreamExtensions
     {
         const int defaultBufferSize = 81920;
 
-        streamToCopy.Guard(nameof(streamToCopy));
+        if (streamToCopy is null)
+            return null;
 
         if (streamToCopy.CanSeek)
             streamToCopy.Seek(0, SeekOrigin.Begin);
@@ -179,6 +180,10 @@ public static class StreamExtensions
 
         return stream;
     }
+
+    public static async Task<Stream> CopyToStreamAsync(this Stream streamToCopy,
+                                                       CancellationToken cancellationToken = default) =>
+        await streamToCopy.CopyToMemoryStreamAsync(false, cancellationToken);
 
     public static string ComputeMd5Hash(this Stream data,
                                         bool removeDashes = true,

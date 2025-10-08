@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -261,7 +261,7 @@ public static class NativeMethods
     /// <returns>
     /// System.Boolean
     /// </returns>
-    /// <exception cref="System.InvalidCastException">GCHandle Target could not be cast as List{IntPtr}</exception>
+    /// <exception cref="InvalidCastException">GCHandle Target could not be cast as List{IntPtr}</exception>
     private static bool EnumWindow(IntPtr handle, IntPtr pointer)
     {
         var gch = GCHandle.FromIntPtr(pointer);

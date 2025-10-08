@@ -1,4 +1,4 @@
-﻿using FEx.Basics.Abstractions;
+using FEx.Agnostics.BaseObjects;
 using FEx.MVVM.Abstractions.Enums;
 
 namespace FEx.MVVM.Models;

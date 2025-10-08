@@ -1,6 +1,6 @@
-using FEx.LiteDBx.Enums;
+using FEx.PersistentStorage.Abstractions.Enums;
 
-namespace FEx.LiteDBx.Extensions;
+namespace FEx.PersistentStorage.Abstractions.Extensions;
 
 public static class ClearCacheReasonExtensions
 {

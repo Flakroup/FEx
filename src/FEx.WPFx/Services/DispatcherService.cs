@@ -1,5 +1,5 @@
-﻿using FEx.Abstractions;
-using FEx.Basics.Extensions;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.Extensions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -146,7 +146,7 @@ public static class DispatcherService
     {
         DispatcherObject dispatcherObject = sender.GetDispatcherObject();
 
-        FExFoundation.AsyncHelper.FireTaskAndForget(async () =>
+        FExCoreStatics.AsyncHelper.FireTaskAndForget(async () =>
             await dispatcherObject.Dispatcher.BeginInvoke(action, priority));
     }
 

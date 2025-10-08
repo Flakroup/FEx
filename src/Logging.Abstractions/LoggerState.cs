@@ -1,16 +1,15 @@
-﻿using FEx.Common.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
-using FEx.Json.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Logging.Abstractions.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
-namespace FEx.Logging;
+namespace FEx.Logging.Abstractions;
 
 public class LoggerState : Dictionary<string, object>, ILoggerState
 {
     public LoggerState(params (string, object)[] state)
-        : this(state.ToDictionary(x => x.Item1, x => x.Item2))
+        : this(state.ToDictionary(static x => x.Item1, static x => x.Item2))
     {
     }
 
@@ -25,6 +24,6 @@ public class LoggerState : Dictionary<string, object>, ILoggerState
 
     public override string ToString() =>
         this.IsNotNullOrEmptyCollection()
-            ? this.ToJson()
+            ? JsonSerializer.Serialize(this)
             : string.Empty;
 }

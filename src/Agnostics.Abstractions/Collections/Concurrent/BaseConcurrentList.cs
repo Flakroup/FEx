@@ -1,13 +1,13 @@
-﻿using FEx.Basics.Abstractions.Interfaces;
-using FEx.Basics.Collections.Concurrent;
-using FEx.Basics.Utilities;
-using FEx.Basics.Utilities.Collections;
+using FEx.Agnostics.Abstractions.Configuration;
+using FEx.Agnostics.Abstractions.Helpers;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Utilities;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
-namespace FEx.Basics.Abstractions;
+namespace FEx.Agnostics.Abstractions.Collections.Concurrent;
 
 public abstract class BaseConcurrentList<T> : ISuppressEvents
 {

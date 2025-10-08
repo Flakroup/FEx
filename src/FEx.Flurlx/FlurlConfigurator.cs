@@ -1,4 +1,4 @@
-using FEx.Abstractions;
+using FEx.Agnostics.Abstractions;
 using FEx.Flurlx.Abstractions.Interfaces;
 using FEx.Json.Extensions;
 using Flurl.Http;

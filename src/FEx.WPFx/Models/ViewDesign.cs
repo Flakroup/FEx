@@ -1,4 +1,4 @@
-﻿using FEx.Basics.Abstractions;
+using FEx.Agnostics.BaseObjects;
 using FEx.WPFx.Abstractions.Interfaces;
 using MaterialDesignThemes.Wpf;
 using System;

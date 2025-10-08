@@ -1,7 +1,6 @@
-﻿using FEx.Abstractions.Interfaces;
 using System;
 
-namespace FEx.DI.Abstractions.Interfaces;
+namespace FEx.DependencyInjection.Abstractions.Interfaces;
 
 public interface IFExStrongInjectServiceProvider : IFExServiceProvider
 {

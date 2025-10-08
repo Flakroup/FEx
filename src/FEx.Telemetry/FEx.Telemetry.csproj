@@ -9,9 +9,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
-	  <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
-	  <ProjectReference Include="..\FEx.Rx\FEx.Rx.csproj" />
+	  <ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+	  <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+	  <ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

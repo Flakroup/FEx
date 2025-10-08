@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Common.Abstractions.Interfaces;
 using StrongInject;
 using System.Diagnostics.CodeAnalysis;
 

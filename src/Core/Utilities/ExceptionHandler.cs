@@ -1,9 +1,10 @@
-﻿using FEx.Abstractions;
-using FEx.Abstractions.CustomEventArgs;
-using FEx.Abstractions.Enums;
-using FEx.Abstractions.Interfaces;
-using FEx.Basics.Implementations;
-using FEx.Extensions;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.CustomEventArgs;
+using FEx.Core.Abstractions.Helpers;
+using FEx.Core.Abstractions.Implementations;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -11,7 +12,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FEx.Fundamentals.Utilities;
+namespace FEx.Core.Utilities;
 
 /// <summary>
 /// Exception extensions class.
@@ -59,7 +60,7 @@ public class ExceptionHandler : ExceptionHandlerBase
         try
         {
             var tempLog = new FileInfo(Path.Combine(Path.GetTempPath(),
-                $"{(FExFoundation.HasBeenInitialized ? FExFoundation.AppInfoProvider.Name : null) ?? "Flakroup"}.log"));
+                $"{FExCoreStatics.AppInfoProvider?.Name ?? "Flakroup"}.log"));
 
             using FileStream str = tempLog.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             using var sw = new StreamWriter(str);
@@ -77,7 +78,7 @@ public class ExceptionHandler : ExceptionHandlerBase
         if (Callback is null)
             return;
 
-        FExFoundation.AsyncHelper.FireTaskAndForget(() => Callback(info, options.InformUser || Debugger.IsAttached),
+        FExCoreStatics.AsyncHelper.FireTaskAndForget(() => Callback(info, options.InformUser || Debugger.IsAttached),
             AsyncMode.ThreadPool);
     }
 

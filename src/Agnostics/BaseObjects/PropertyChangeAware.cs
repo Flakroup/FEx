@@ -1,8 +1,8 @@
-﻿using FEx.Extensions.Base.Helpers;
+using FEx.Agnostics.Abstractions.Utilities;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace FEx.Basics.Abstractions;
+namespace FEx.Agnostics.BaseObjects;
 
 public class PropertyChangeAware
 {

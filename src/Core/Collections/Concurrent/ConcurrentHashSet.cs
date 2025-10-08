@@ -1,10 +1,10 @@
-﻿using FEx.Extensions.Collections.Lists;
+using FEx.Agnostics.Abstractions.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace FEx.Basics.Collections.Concurrent;
+namespace FEx.Core.Collections.Concurrent;
 
 /// <summary>
 /// https://stackoverflow.com/questions/18922985/concurrent-hashsett-in-net-framework
@@ -105,7 +105,7 @@ public class ConcurrentHashSet<T> : HashSet<T>
     {
         var deferredList = items?.ToList();
 
-        if (deferredList.IsNullOrEmptyList())
+        if (deferredList.IsNullOrEmpty())
             return;
 
         RunLocked(() =>

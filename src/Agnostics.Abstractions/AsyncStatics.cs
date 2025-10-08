@@ -1,22 +1,22 @@
-﻿using FEx.Abstractions.Enums;
-using FEx.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Extensions.Helpers;
+namespace FEx.Agnostics.Abstractions;
 
-public class StaticAsyncHelper
+public static class AsyncStatics
 {
     public static TimeSpan DefaultDelay { get; set; } = TimeSpan.FromMilliseconds(25); //todo move to conf class
 
     public static async Task ExecuteOnThreadPoolAsync(Action action,
-                                                      AsyncHelperOptions options = AsyncHelperOptions.ImmediateStart,
+                                                      AsyncOptions options = AsyncOptions.ImmediateStart,
                                                       CancellationToken cancellationToken = default)
     {
-        if (options.HasFlagFast(AsyncHelperOptions.ImmediateStart))
+        if (options.HasFlagFast(AsyncOptions.ImmediateStart))
         {
-            await ExecuteTaskOnThreadPoolAsync(() => Task.Run(action, cancellationToken), AsyncHelperOptions.None);
+            await ExecuteTaskOnThreadPoolAsync(() => Task.Run(action, cancellationToken), AsyncOptions.None);
 
             return;
         }
@@ -28,8 +28,7 @@ public class StaticAsyncHelper
     }
 
     public static async Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func,
-                                                            AsyncHelperOptions options =
-                                                                AsyncHelperOptions.ImmediateStart,
+                                                            AsyncOptions options = AsyncOptions.ImmediateStart,
                                                             CancellationToken cancellationToken = default)
     {
         Type argumentType = typeof(T);
@@ -38,8 +37,8 @@ public class StaticAsyncHelper
             || argumentType.IsGenericType && argumentType.GetGenericTypeDefinition() == typeof(Task<>))
             throw new ArgumentException("Invalid generic type. It cannot be Task or Task<T>.");
 
-        if (options.HasFlagFast(AsyncHelperOptions.ImmediateStart))
-            return await ExecuteTaskOnThreadPoolAsync(() => Task.Run(func, cancellationToken), AsyncHelperOptions.None);
+        if (options.HasFlagFast(AsyncOptions.ImmediateStart))
+            return await ExecuteTaskOnThreadPoolAsync(() => Task.Run(func, cancellationToken), AsyncOptions.None);
 
         if (Thread.CurrentThread.IsThreadPoolThread)
             return func();
@@ -48,10 +47,9 @@ public class StaticAsyncHelper
     }
 
     public static async Task ExecuteTaskOnThreadPoolAsync(Func<Task> func,
-                                                          AsyncHelperOptions options =
-                                                              AsyncHelperOptions.ImmediateStart)
+                                                          AsyncOptions options = AsyncOptions.ImmediateStart)
     {
-        Func<Task> effectiveFunc = options.HasFlagFast(AsyncHelperOptions.ImmediateStart)
+        Func<Task> effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
             ? () => Task.Run(func)
             : func;
 
@@ -66,10 +64,9 @@ public class StaticAsyncHelper
     }
 
     public static async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> func,
-                                                                AsyncHelperOptions options =
-                                                                    AsyncHelperOptions.ImmediateStart)
+                                                                AsyncOptions options = AsyncOptions.ImmediateStart)
     {
-        Func<Task<T>> effectiveFunc = options.HasFlagFast(AsyncHelperOptions.ImmediateStart)
+        Func<Task<T>> effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
             ? () => Task.Run(func)
             : func;
 
@@ -86,12 +83,12 @@ public class StaticAsyncHelper
     /// </param>
     /// <param name="cancellationToken">The cancellation token that will be checked prior to completing the returned task.</param>
     /// <returns>A task that represents the time delay.</returns>
-    /// <exception cref="T:System.ArgumentOutOfRangeException">
+    /// <exception cref="ArgumentOutOfRangeException">
     /// The
     /// <paramref name="millisecondsDelay">millisecondsDelay</paramref> argument is less than -1.
     /// </exception>
-    /// <exception cref="T:System.Threading.Tasks.TaskCanceledException">The task has been canceled.</exception>
-    /// <exception cref="T:System.ObjectDisposedException">
+    /// <exception cref="TaskCanceledException">The task has been canceled.</exception>
+    /// <exception cref="ObjectDisposedException">
     /// The provided
     /// <paramref name="cancellationToken">cancellationToken</paramref> has already been disposed.
     /// </exception>
@@ -104,7 +101,7 @@ public class StaticAsyncHelper
     /// <see langword="TimeSpan.FromMilliseconds(-1)" /> to wait indefinitely.
     /// </param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
-    /// <exception cref="T:System.ArgumentOutOfRangeException">
+    /// <exception cref="ArgumentOutOfRangeException">
     /// <paramref name="delay" /> represents a negative time interval other than
     /// <see langword="TimeSpan.FromMilliseconds(-1)" />.
     /// -or-
@@ -112,8 +109,8 @@ public class StaticAsyncHelper
     /// than 4294967294 on .NET 6 and later versions, or <see cref="F:System.Int32.MaxValue">Int32.MaxValue</see> on all
     /// previous versions.
     /// </exception>
-    /// <exception cref="T:System.Threading.Tasks.TaskCanceledException">The task has been canceled.</exception>
-    /// <exception cref="T:System.ObjectDisposedException">
+    /// <exception cref="TaskCanceledException">The task has been canceled.</exception>
+    /// <exception cref="ObjectDisposedException">
     /// The provided <paramref name="cancellationToken" /> has already been
     /// disposed.
     /// </exception>
@@ -204,20 +201,6 @@ public class StaticAsyncHelper
 
         await DelayAsync(delayTimeSpan.Value, cancellationToken);
         action?.Invoke();
-    }
-
-    public static object Wrap(Action action)
-    {
-        action();
-
-        return null;
-    }
-
-    public static async Task<object> WrapTaskAsync(Func<Task> task)
-    {
-        await task();
-
-        return null;
     }
 
     public static void RunAsThread(Action action, ApartmentState? state = null, bool? isBackground = false)

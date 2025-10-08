@@ -1,4 +1,4 @@
-﻿using FEx.MVVM.Abstractions.Dialogs;
+using FEx.MVVM.Abstractions.Dialogs;
 using FEx.MVVM.Abstractions.Interfaces;
 using System;
 using System.Windows;
@@ -16,7 +16,7 @@ public sealed class FolderBrowserDialogOptions : FolderBrowserDialogOptionsBase<
     /// Shows the dialog.
     /// </summary>
     /// <param name="owner">
-    /// Any object that implements <see cref="T:System.Windows.Forms.IWin32Window" /> that represents the
+    /// Any object that implements <see cref="IWin32Window" /> that represents the
     /// top-level window that will own the modal dialog box.
     /// </param>
     /// <param name="viewModel">The view model.</param>
@@ -27,7 +27,7 @@ public sealed class FolderBrowserDialogOptions : FolderBrowserDialogOptionsBase<
     /// Shows the dialog.
     /// </summary>
     /// <param name="owner">
-    /// Any object that implements <see cref="T:System.Windows.Forms.IWin32Window" /> that represents the
+    /// Any object that implements <see cref="IWin32Window" /> that represents the
     /// top-level window that will own the modal dialog box.
     /// </param>
     /// <param name="viewModel">The view model.</param>

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 
-namespace FEx.Extensions.Base.VB;
+namespace FEx.Agnostics.Abstractions.Utilities;
 
-public static class Conversion
+public static class FExConversion
 {
     /// <summary>Return the integer portion of a number.</summary>
     /// <param name="number">
@@ -10,8 +10,8 @@ public static class Conversion
     /// <paramref name="number" /> contains <see langword="Nothing" />, <see langword="Nothing" /> is returned.
     /// </param>
     /// <returns>Return the integer portion of a number.</returns>
-    /// <exception cref="T:System.ArgumentNullException">Number is not specified.</exception>
-    /// <exception cref="T:System.ArgumentException">Number is not a numeric type.</exception>
+    /// <exception cref="ArgumentNullException">Number is not specified.</exception>
+    /// <exception cref="ArgumentException">Number is not a numeric type.</exception>
     public static double Fix(double number) =>
         number < 0.0
             ? -Math.Floor(-number)

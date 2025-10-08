@@ -1,6 +1,6 @@
-﻿using FEx.Common.Extensions;
-using FEx.Common.Utilities.OS;
-using FEx.Common.Utilities.OS.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Utilities.OS;
+using FEx.Core.Abstractions.Utilities.OS.Enums;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -9,10 +9,11 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
-#if !NETSTANDARD
+#if NET9_0_OR_GREATER
 using Microsoft.Win32;
 #endif
 
+//todo: refactor (use NUKE approach)
 // http://www.codeproject.com/Articles/73000/Getting-Operating-System-Version-Info-Even-for-Win
 //https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions
 
@@ -21,7 +22,7 @@ using Microsoft.Win32;
 
 //Thanks to Brisingr Aerowing for help with the Windows 10 adaptation
 
-namespace FEx.Common.Utilities;
+namespace FEx.Core.Abstractions.Utilities;
 
 /// <summary>
 /// Provides detailed information about the host operating system.

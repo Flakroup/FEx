@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ namespace FEx.Legacy.Mvvm.Observables;
 /// Based on https://github.com/ChadBurggraf/parallel-extensions-extras
 /// </summary>
 /// <typeparam name="T">Specifies the type of elements in the collection.</typeparam>
-/// <seealso cref="System.Collections.Concurrent.IProducerConsumerCollection{T}" />
+/// <seealso cref="IProducerConsumerCollection{T}" />
 [Serializable]
 public abstract class ProducerConsumerCollectionBase<T> : IProducerConsumerCollection<T>
 {

@@ -1,7 +1,7 @@
-﻿using FEx.MVVM.Abstractions.Enums;
+using FEx.Core.Abstractions.Extensions;
+using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Subjects;
-using FEx.Rx.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;

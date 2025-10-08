@@ -1,5 +1,5 @@
-using FEx.Abstractions.Interfaces;
 using FEx.Avaloniax.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.Logging.Abstractions.Extensions;
 using System;
 

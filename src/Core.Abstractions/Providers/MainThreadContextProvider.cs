@@ -1,9 +1,10 @@
-﻿using FEx.Common.Abstractions.Interfaces;
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
 using System;
 using System.Threading;
 
-namespace FEx.Common.Providers;
+namespace FEx.Core.Abstractions.Providers;
 
 public class MainThreadContextProvider : IMainThreadContextProvider
 {
@@ -14,7 +15,7 @@ public class MainThreadContextProvider : IMainThreadContextProvider
 
     public Thread Thread
     {
-        get => _mainThread.Guard();
+        get => _mainThread.GuardProperty();
         private set
         {
             _mainThread = value.Guard(nameof(value));

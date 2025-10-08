@@ -1,4 +1,4 @@
-﻿namespace FEx.Common.Utilities.OS;
+namespace FEx.Core.Abstractions.Utilities.OS;
 
 public enum OSProduct : uint
 {

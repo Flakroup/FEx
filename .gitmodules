@@ -1,3 +1,6 @@
 [submodule "DevConfigs"]
 	path = DevConfigs
 	url = https://gitlab.com/flakroup/devconfigs.git
+[submodule "flakessentials"]
+	path = flakessentials
+	url = https://gitlab.com/flakroup/flakessentials.git

@@ -79,7 +79,7 @@ public class AsyncProcessingQueue : IDisposable
         ConcurrencyLimit = limit;
 
 #if NETSTANDARD2_0
-        _taskQueue = new();
+        _taskQueue = [];
 #else
         _taskChannel = Channel.CreateUnbounded<TaskCompletionSource<bool>>();
 #endif

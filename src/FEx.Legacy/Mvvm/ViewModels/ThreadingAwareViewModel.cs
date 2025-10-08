@@ -1,3 +1,4 @@
+using FEx.Core.Abstractions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Core.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions;
@@ -30,6 +31,7 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
     }
 
     protected SynchronizationContext OriginSynchronizationContext { get; }
+    protected IFExDispatcher Dispatcher { get; }
 
     public ThreadingAwareViewModel(params IAsyncInitializable[] dependencies)
     {
@@ -46,6 +48,7 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
             AddDependency(dependency);
 
         OriginSynchronizationContext = SynchronizationContextExtensions.Get(true);
+        Dispatcher = FExCoreStatics.Dispatcher;
 
         IsUiUnlocked = true;
     }

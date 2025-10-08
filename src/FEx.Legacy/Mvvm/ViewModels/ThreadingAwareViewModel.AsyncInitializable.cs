@@ -1,14 +1,11 @@
-﻿using FEx.Abstractions.Enums;
-using FEx.Abstractions.Flow;
-using FEx.Abstractions.Flow.Errors;
-using FEx.Abstractions.Interfaces;
-using FEx.Asyncx.Extensions;
+using FEx.Agnostics.Abstractions;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Flow;
+using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Asyncx.Helpers;
-using FEx.Basics.Utilities;
-using FEx.Common.Extensions;
-using FEx.Extensions;
-using FEx.Extensions.Helpers;
-using Microsoft.Extensions.Logging;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.Logging.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -18,7 +15,7 @@ namespace FEx.Legacy.Mvvm.ViewModels;
 
 public partial class ThreadingAwareViewModel
 {
-    protected readonly ILogger _logger;
+    protected readonly ILoggable _logger;
     protected readonly ConcurrentDictionary<string, IAsyncInitializable> _dependencies;
 
     protected Task _initializationTask;
@@ -50,7 +47,7 @@ public partial class ThreadingAwareViewModel
 
         try
         {
-            _initializationTask ??= StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InitializeCoreAsync);
+            _initializationTask ??= AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeCoreAsync);
         }
         finally
         {
@@ -79,7 +76,7 @@ public partial class ThreadingAwareViewModel
 
         return;
 
-        Task InitFuncAsync() => StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
+        Task InitFuncAsync() => AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
     }
 
     protected static async Task<Result<ExceptionError>> SafeInitializeAsync(IAsyncInitializable dependency)
@@ -108,7 +105,7 @@ public partial class ThreadingAwareViewModel
     {
         Result<ExceptionError>[] results = await _dependencies.Values
             .Where(static dependency => !dependency.IsInitialized)
-            .RunWithWhenAllTasksAsync(SafeInitializeAsync, AsyncMode.ThreadPool);
+            .WithWhenAllTasksAsync(SafeInitializeAsync, AsyncMode.ThreadPool);
 
         if (!results.Any())
             return;
@@ -144,7 +141,7 @@ public partial class ThreadingAwareViewModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, ex.Message);
+            _logger.LogError(ex);
 
             throw;
         }

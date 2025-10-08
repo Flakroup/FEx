@@ -1,10 +1,11 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Asyncx.Helpers;
-using FEx.Basics.Extensions;
 using FEx.Common.Abstractions.Interfaces;
-using FEx.Common.Utilities;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Utilities;
 using FEx.DependencyInjection;
-using FEx.DI.Abstractions;
+using FEx.DependencyInjection.Abstractions;
 using FEx.MVVM;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.WPFx.Abstractions.Interfaces;
@@ -158,7 +159,7 @@ public abstract class AppBootstrapper<TContainer> : Application
     /// <summary>
     /// Raises the <see cref="E:System.Windows.Application.Startup" /> event.
     /// </summary>
-    /// <param name="e">A <see cref="T:System.Windows.StartupEventArgs" /> that contains the event data.</param>
+    /// <param name="e">A <see cref="StartupEventArgs" /> that contains the event data.</param>
     protected override void OnStartup(StartupEventArgs e)
     {
         try

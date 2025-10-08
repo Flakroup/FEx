@@ -1,6 +1,7 @@
+using FEx.Agnostics.Abstractions.Flow;
 using System.Net;
 
-namespace FEx.Abstractions.Flow.Errors;
+namespace FEx.Core.Abstractions.Flow.Errors;
 
 public class ApiError : StackError<HttpStatusCode?>
 {

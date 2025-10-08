@@ -1,10 +1,11 @@
-﻿using FEx.Basics.Utilities;
-using FEx.LiteDBx.Abstractions.Interfaces;
+using FEx.Agnostics.Utilities;
+using FEx.PersistentStorage.Abstractions;
+using FEx.PersistentStorage.Extensions;
 using LiteDB;
 using System;
 using System.IO;
 
-namespace FEx.LiteDBx;
+namespace FEx.PersistentStorage;
 
 public sealed class DatabaseProvider : IDatabaseProvider, IDisposable
 {
@@ -21,12 +22,13 @@ public sealed class DatabaseProvider : IDatabaseProvider, IDisposable
 
     private static LiteRepository GetRepository(IDatabaseFilePathResolver filePathResolver)
     {
+        //we need to detect whether it is already registered 
         const string dbFileName = "localLiteDb.db";
 
         string databaseDirectoryPath = filePathResolver.GetDatabasesFolderPath();
         string dbFilePath = Path.Combine(databaseDirectoryPath, dbFileName);
 
-        return LiteRepositoryFactory.GetRepository(dbFilePath);
+        return LiteRepositoryExtensions.GetRepository(dbFilePath);
     }
 
     #region IDisposable
@@ -36,10 +38,7 @@ public sealed class DatabaseProvider : IDatabaseProvider, IDisposable
             return;
 
         if (disposing)
-        {
             Repository.Dispose();
-            DbLock.Dispose();
-        }
 
         _isDisposed = true;
     }

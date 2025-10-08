@@ -1,4 +1,4 @@
-﻿namespace FEx.Common.Utilities.OS.Enums;
+namespace FEx.Core.Abstractions.Utilities.OS.Enums;
 
 public enum OSProcessorArchitecture
 {

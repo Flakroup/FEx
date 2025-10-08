@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace FEx.Extensions.Collections.Arrays;
+namespace FEx.Agnostics.Abstractions.Extensions.Collections.Arrays;
 
 public static class ArrayExtensions
 {

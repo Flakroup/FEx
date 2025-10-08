@@ -1,16 +1,14 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Basics.Exceptions;
-using FEx.Basics.Utilities;
+using FEx.Agnostics.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Basics.Services;
+namespace FEx.Core.Abstractions.Services;
 
 public sealed class SynchronizedAccessService : ISynchronizedAccessService, IDisposable
 {
-    private ConcurrentDictionary<string, FExSemaphoreSlim> AccessSemaphores { get; }
+    private ConcurrentDictionary<string, SemaphoreSlim> AccessSemaphores { get; }
 
     public SynchronizedAccessService()
     {
@@ -88,13 +86,13 @@ public sealed class SynchronizedAccessService : ISynchronizedAccessService, IDis
 
     public void RemoveLock(string key)
     {
-        if (!AccessSemaphores.TryGetValue(key, out FExSemaphoreSlim accessSemaphore))
+        if (!AccessSemaphores.TryGetValue(key, out SemaphoreSlim accessSemaphore))
             return;
 
-        if (!accessSemaphore.IsIdle)
-            throw new FExException($"Key {key} is still busy");
+        if (accessSemaphore.CurrentCount == 0)
+            throw new InvalidOperationException($"Key {key} is still busy");
 
-        if (AccessSemaphores.TryRemove(key, out FExSemaphoreSlim semaphore))
+        if (AccessSemaphores.TryRemove(key, out SemaphoreSlim semaphore))
             semaphore.Dispose();
     }
 

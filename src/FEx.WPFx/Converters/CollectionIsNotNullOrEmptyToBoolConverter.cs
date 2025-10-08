@@ -1,4 +1,4 @@
-﻿using FEx.Extensions.Collections.Enumerables;
+using FEx.Agnostics.Abstractions.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,7 +10,7 @@ namespace FEx.WPFx.Converters;
 /// Represents the converter that converts the inverse of a Boolean values to and from System.Windows.Visibility
 /// enumeration values.
 /// </summary>
-/// <seealso cref="System.Windows.Data.IValueConverter" />
+/// <seealso cref="IValueConverter" />
 public class CollectionIsNotNullOrEmptyToBoolConverter : IValueConverter
 {
     /// <summary>

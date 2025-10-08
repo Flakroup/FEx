@@ -1,6 +1,6 @@
-﻿using FEx.Basics.Extensions;
-using FEx.Common.Extensions;
-using FEx.Common.Utilities;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Utilities;
 using FEx.EFCore.Configuration;
 using FEx.EFCore.Interfaces;
 using Microsoft.Data.SqlClient;

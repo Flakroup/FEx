@@ -1,5 +1,6 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.DI.Abstractions;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions;
 using FEx.Legacy.Asyncx.Abstractions.Interfaces;
 using FEx.Legacy.Asyncx.Enums;
 using FEx.Legacy.Mvvm.Abstractions.Interfaces;
@@ -8,7 +9,6 @@ using FEx.MVVM.Abstractions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using SynchronizationContextExtensions = FEx.Common.Extensions.SynchronizationContextExtensions;
 
 namespace FEx.Legacy.Mvvm.ViewModels;
 

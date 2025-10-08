@@ -1,9 +1,9 @@
-﻿using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FEx.Abstractions.CustomEventArgs;
+namespace FEx.Core.Abstractions.CustomEventArgs;
 
 public class ExceptionEventArgs : EventArgs
 {

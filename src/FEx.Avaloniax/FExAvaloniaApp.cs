@@ -1,9 +1,9 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Data;
 using FEx.Avaloniax.Abstractions.Interfaces;
-using FEx.Basics.Extensions;
+using FEx.Core.Abstractions.Extensions;
 using FEx.DependencyInjection;
-using FEx.DI.Abstractions;
+using FEx.DependencyInjection.Abstractions;
 using System;
 
 namespace FEx.Avaloniax;

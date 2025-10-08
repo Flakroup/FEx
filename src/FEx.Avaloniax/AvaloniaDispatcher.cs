@@ -1,9 +1,8 @@
-﻿using Avalonia.Threading;
-using FEx.Abstractions;
-using FEx.Abstractions.Enums;
-using FEx.Abstractions.Interfaces;
-using FEx.Basics.Abstractions;
-using FEx.Common.Abstractions.Interfaces;
+using Avalonia.Threading;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.Implementations;
+using FEx.Core.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -46,8 +45,8 @@ public class AvaloniaDispatcher : FExDispatcher
     public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object sender = null) =>
         await Dispatcher.InvokeAsync(action);
 
-    public override void BeginInvokeOnMainThread(Action action) =>
-        FExFoundation.AsyncHelper.FireAndForget(() => Dispatcher.Invoke(action), AsyncMode.ThreadPool);
+    public override void BeginInvokeOnMainThread(Action action, object sender = null) =>
+        FExCoreStatics.AsyncHelper.FireAndForget(() => Dispatcher.Invoke(action), AsyncMode.ThreadPool);
 
     public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object sender = null) =>
         await Dispatcher.InvokeAsync(funcTask);

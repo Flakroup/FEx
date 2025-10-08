@@ -1,6 +1,5 @@
+using FEx.Agnostics.Abstractions.Logging;
 using FEx.Json.Converters;
-using FEx.Logging.Abstractions;
-using FEx.Logging.Abstractions.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -63,7 +62,7 @@ public static class JsonExtensions
         }
         catch (Exception ex)
         {
-            FExLoggingFoundation.Logger.LogError(ex);
+            FExStaticLogger.Error(ex); //todo use ExceptionHandler
 
             if (Debugger.IsAttached)
                 File.WriteAllText(Path.Combine(Path.GetTempPath(), "error.json"), json);

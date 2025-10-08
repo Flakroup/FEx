@@ -1,8 +1,9 @@
-﻿using FEx.Rx.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Reactive.Subjects;
 
-namespace FEx.Rx.Subjects;
+namespace FEx.Core.Abstractions.Subjects;
 
 public class FExBehaviorSubject<T> : FExSubject<T>, IFExBehaviorSubject<T>
 {
@@ -40,4 +41,6 @@ public class FExBehaviorSubject<T> : FExSubject<T>, IFExBehaviorSubject<T>
         _behaviorSubject = (BehaviorSubject<T>)_subject;
         _defaultValue = defaultValue;
     }
+
+    protected virtual bool ValueIsEqualTo(T value) => EqualityComparer<T>.Default.Equals(Value, value);
 }

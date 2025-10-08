@@ -1,8 +1,8 @@
-﻿using FEx.Abstractions.Models;
+using FEx.Agnostics.Abstractions.Models;
 using System.Collections.Generic;
 using System.Net;
 
-namespace FEx.Extensions.Web;
+namespace FEx.Agnostics.Abstractions.Extensions.Web;
 
 public static class WebRequestExtensions
 {

@@ -1,11 +1,9 @@
-﻿using FEx.Abstractions;
-using FEx.Common.Extensions;
-using FEx.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace FEx.Basics.Extensions;
+namespace FEx.Core.Abstractions.Extensions;
 
 public static class EventsExtensions
 {
@@ -32,7 +30,7 @@ public static class EventsExtensions
         propertyName.Guard(nameof(propertyName));
 
 #pragma warning disable CS0618 // Type or member is obsolete
-        FExFoundation.Dispatcher.InvokeOnMainThread(() => propertyChanged(propertyName), sender);
+        FExCoreStatics.Dispatcher.InvokeOnMainThread(() => propertyChanged(propertyName), sender);
 #pragma warning restore CS0618 // Type or member is obsolete
     }
 }

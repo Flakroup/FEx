@@ -1,7 +1,7 @@
-﻿using FEx.Common.Utilities;
+using FEx.Core.Abstractions.Utilities;
 using System.Threading;
 
-namespace FEx.Common.Extensions;
+namespace FEx.Core.Abstractions.Extensions;
 
 public static class ThreadExtensions
 {

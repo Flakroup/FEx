@@ -1,7 +1,9 @@
-﻿using FEx.DI.Abstractions;
+using FEx.DependencyInjection.Abstractions;
+using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Json.Helpers;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Reflection;
 
 namespace FEx.Json.Resolvers;
 
@@ -19,7 +21,14 @@ public class DIContractResolver : DefaultContractResolver
         if (_diMeta.IsRegistred(objectType))
         {
             JsonObjectContract contract = DIResolveContract(objectType);
-            contract.DefaultCreator = () => FExServiceProvider.Get(objectType);
+
+            contract.DefaultCreator = () =>
+            {
+                MethodInfo method = typeof(IFExServiceContainer).GetMethod(nameof(IFExServiceContainer.ResolveService))
+                    ?.MakeGenericMethod(objectType);
+
+                return method?.Invoke(FExServiceProvider.ServiceContainer, null);
+            };
 
             return contract;
         }

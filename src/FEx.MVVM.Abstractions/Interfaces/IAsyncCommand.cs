@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace FEx.MVVM.Abstractions.Interfaces;

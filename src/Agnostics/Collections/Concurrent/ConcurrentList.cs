@@ -1,20 +1,21 @@
-﻿using FEx.Basics.Abstractions;
-using FEx.Basics.Abstractions.Interfaces.Collections;
-using FEx.Basics.Utilities;
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Collections.Concurrent;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-#if NETSTANDARD
-using FEx.Extensions.Interop;
+#if !NET6_0_OR_GREATER
+using FEx.Agnostics.Abstractions.Extensions.Interop;
 #endif
 
-namespace FEx.Basics.Collections.Concurrent;
+namespace FEx.Agnostics.Collections.Concurrent;
 
 [DebuggerDisplay("Count={" + nameof(Count) + "}")]
+[DebuggerTypeProxy(typeof(CollectionDebugView<>))]
 [Serializable]
 public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<T>
 {
@@ -162,7 +163,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
         foreach ((int index, T removedItem) in innerRemovedItems)
             WhenItemIsRemoved(index, removedItem);
 
-        removedItems = [.. innerRemovedItems.Select(tuple => tuple.removedItem)];
+        removedItems = innerRemovedItems.Select(static tuple => tuple.removedItem).ToList();
 
         return !removedItems.IsNullOrEmpty();
     }

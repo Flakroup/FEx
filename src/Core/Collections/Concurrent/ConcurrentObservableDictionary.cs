@@ -1,9 +1,8 @@
-﻿using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
-using FEx.Basics.Abstractions;
-using FEx.Extensions;
-using FEx.Extensions.Base.Helpers;
-using FEx.Extensions.Collections.Dictionaries;
+using FEx.Agnostics.Abstractions.Collections.Concurrent;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.Interfaces;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -12,16 +11,16 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 
-namespace FEx.Basics.Collections.Concurrent;
+namespace FEx.Core.Collections.Concurrent;
 
 /// <summary>
 /// Based on https://github.com/ChadBurggraf/parallel-extensions-extras
 /// </summary>
 /// <typeparam name="TKey">The type of the key.</typeparam>
 /// <typeparam name="TValue">The type of the value.</typeparam>
-/// <seealso cref="System.Collections.Generic.IDictionary{TKey, TValue}" />
-/// <seealso cref="System.Collections.Specialized.INotifyCollectionChanged" />
-/// <seealso cref="System.ComponentModel.INotifyPropertyChanged" />
+/// <seealso cref="IDictionary{TKey,TValue}" />
+/// <seealso cref="INotifyCollectionChanged" />
+/// <seealso cref="INotifyPropertyChanged" />
 [DebuggerDisplay("Count={" + nameof(Count) + "}")]
 [Serializable]
 public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<KeyValuePair<TKey, TValue>>,
@@ -75,7 +74,7 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
     public ConcurrentObservableDictionary()
     {
 #pragma warning disable CS0618 // Type or member is obsolete
-        _dispatcher = FExFoundation.Dispatcher;
+        _dispatcher = FExCoreStatics.Dispatcher;
 #pragma warning restore CS0618 // Type or member is obsolete
 
         _dictionary = new();
@@ -142,11 +141,11 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
     /// true if the key/value pair was added to the <see cref="ConcurrentDictionary{TKey, TValue}" />
     /// successfully; otherwise, false.
     /// </returns>
-    /// <exception cref="T:System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// <paramref name="key" /> is null reference
     /// (Nothing in Visual Basic).
     /// </exception>
-    /// <exception cref="T:System.OverflowException">
+    /// <exception cref="OverflowException">
     /// The <see cref="ConcurrentDictionary{TKey, TValue}" />
     /// contains too many elements.
     /// </exception>
@@ -162,8 +161,8 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
 
     /// <summary>
     /// Uses the specified functions to add a key/value pair to the
-    /// <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key does not already exist, or to
-    /// update a key/value pair in the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
+    /// <see cref="System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key does not already exist, or to
+    /// update a key/value pair in the <see cref="System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
     /// already exists.
     /// </summary>
     /// <param name="key">The key to be added or whose value should be updated</param>
@@ -172,11 +171,11 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
     /// The function used to generate a new value for an existing key based on the key's
     /// existing value
     /// </param>
-    /// <exception cref="T:System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// <paramref name="key" />, <paramref name="addValueFactory" />, or <paramref name="updateValueFactory" /> is
     /// <see langword="null" />.
     /// </exception>
-    /// <exception cref="T:System.OverflowException">The dictionary contains too many elements.</exception>
+    /// <exception cref="OverflowException">The dictionary contains too many elements.</exception>
     /// <returns>
     /// The new value for the key. This will be either be the result of <paramref name="addValueFactory" /> (if the
     /// key was absent) or the result of <paramref name="updateValueFactory" /> (if the key was present).

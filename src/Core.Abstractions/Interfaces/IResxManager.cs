@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace FEx.Abstractions.Interfaces;
+namespace FEx.Core.Abstractions.Interfaces;
 
 public interface IResxManager
 {

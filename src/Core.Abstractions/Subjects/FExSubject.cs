@@ -1,14 +1,14 @@
-﻿using FEx.Rx.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Interfaces;
 using System;
 using System.Reactive.Subjects;
 
-namespace FEx.Rx.Subjects;
+namespace FEx.Core.Abstractions.Subjects;
 
 public class FExSubject<T> : IFExSubject<T>
 {
-#pragma warning disable IDISP008
+#pragma warning disable IDISP008 // Don't assign member with injected and created disposables
     protected readonly ISubject<T> _subject;
-#pragma warning restore IDISP008
+#pragma warning restore IDISP008 // Don't assign member with injected and created disposables
 
     private bool _isDisposed;
 
@@ -18,6 +18,8 @@ public class FExSubject<T> : IFExSubject<T>
     }
 
     public virtual void OnNext(T value) => SynchronizedOnNext(value);
+
+    public virtual void OnCompleted() => SynchronizedOnCompleted();
 
     /// <summary>Notifies the provider that an observer is to receive notifications.</summary>
     /// <param name="observer">The object that is to receive notifications.</param>
@@ -29,13 +31,9 @@ public class FExSubject<T> : IFExSubject<T>
 
     protected void SynchronizedOnNext(T value) => Subject.Synchronize(_subject).OnNext(value);
 
-    #region IDisposable
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
+    protected void SynchronizedOnCompleted() => Subject.Synchronize(_subject).OnCompleted();
 
+    #region IDisposable
     protected virtual void Dispose(bool isDisposing)
     {
         if (_isDisposed)
@@ -45,6 +43,12 @@ public class FExSubject<T> : IFExSubject<T>
             disposable.Dispose();
 
         _isDisposed = true;
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
     #endregion
 }

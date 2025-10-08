@@ -1,4 +1,4 @@
-﻿namespace FEx.MVVM.Abstractions.Interfaces;
+namespace FEx.MVVM.Abstractions.Interfaces;
 
 public interface IAttachToContainerReceiver
 {

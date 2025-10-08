@@ -1,4 +1,4 @@
-﻿using FEx.Extensions.Numericals;
+using FEx.Agnostics.Abstractions.Extensions.Numericals;
 using Newtonsoft.Json;
 using System;
 

@@ -1,5 +1,4 @@
-using FEx.DI.Abstractions.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
+using FEx.DependencyInjection.Abstractions.Interfaces;
 using StrongInject;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -32,10 +31,19 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
     }
 
 #pragma warning disable IDISP004
-    public T TryResolveService<T>() =>
-        _provider is not IContainer<T> container
-            ? default
-            : container.Resolve<T>().Value;
+    public T TryResolveService<T>()
+    {
+        try
+        {
+            return _provider is IContainer<T> container
+                ? container.Resolve<T>().Value
+                : default;
+        }
+        catch
+        {
+            return default;
+        }
+    }
 #pragma warning restore IDISP004
 
     public T GetRequiredService<T>(Type serviceType)
@@ -54,6 +62,17 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
 
     public TContainer GetContainer<TContainer>() where TContainer : class => (TContainer)_provider;
 
+    public IScopeProvider CreateScope() => null;
+
+    public T GetInstance<T>() => GetRequiredService<T>();
+
+    public object GetInstance(Type serviceType) => GetRequiredService(serviceType);
+
+    /// <summary>
+    /// No-op for StrongInject provider as it doesn't need external engine configuration.
+    /// </summary>
+    public ValueTask ConfigureServiceProviderAsync() => new();
+
     public TContainer ConfigureServiceProvider<TContainer>() where TContainer : class, IDisposable, new()
     {
         _provider?.Dispose();
@@ -61,8 +80,6 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
 
         return (TContainer)_provider;
     }
-
-    public IServiceScope CreateScope() => null;
 
     public object GetService(Type serviceType)
     {

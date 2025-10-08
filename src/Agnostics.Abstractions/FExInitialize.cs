@@ -1,7 +1,7 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
 using System.Linq;
 
-namespace FEx.Abstractions;
+namespace FEx.Agnostics.Abstractions;
 
 public abstract class FExInitialize : IFExInitialize
 {

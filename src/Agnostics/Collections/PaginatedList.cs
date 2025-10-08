@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace FEx.Basics.Collections;
+namespace FEx.Agnostics.Collections;
 
 public class PaginatedList<T>
 {

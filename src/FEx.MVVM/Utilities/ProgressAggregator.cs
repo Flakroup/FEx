@@ -1,16 +1,15 @@
-﻿using FEx.Common.Extensions;
-using FEx.Extensions.Base.Converters;
-using FEx.Extensions.Base.Enums;
-using FEx.Extensions.DateTimes;
-using FEx.Extensions.Numericals;
-using FEx.Logging.Abstractions;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Extensions.Numericals;
+using FEx.Agnostics.Abstractions.Logging;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Subjects;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Events;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Subjects;
-using FEx.Rx.Extensions;
-using FEx.Rx.Subjects;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -46,9 +45,9 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         //todo if needed Dispose and renew sub on progress Start/End
         _changedPropertiesSubject.Where(ExcludedProperties.Contains)
             .Buffer(FExMvvm.DefaultUIRefreshInterval)
-            .Where(propertyNames => propertyNames.Count > 0)
-            .Select(propertyNames => propertyNames.Distinct().ToList())
-            .AsyncSubscribe(_subscriptions, OnExcludedPropertiesChanged);
+            .Where(static propertyNames => propertyNames.Count > 0)
+            .Select(static propertyNames => propertyNames.Distinct().ToList())
+            .AsyncSubscribe(OnExcludedPropertiesChanged, _subscriptions);
     }
 
     public override bool SetProperty<TRet>(ref TRet backingField,
@@ -157,7 +156,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         nameof(IProgressStatus.State)
     ];
 
-    protected virtual void LogError(string message) => FExLoggingFoundation.Logger.LogError(message);
+    protected virtual void LogError(string message) => FExStaticLogger.Error(message);
 
     protected virtual void ProcessEndPrg() => Value = Maximum;
 
@@ -275,7 +274,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         if (ProgressPropertyChanged is null)
             return;
 
-        Dispatcher.InvokeOnMainThread(EventDelegate, this);
+        FExCoreStatics.Dispatcher.InvokeOnMainThread(EventDelegate, this);
 
         return;
 

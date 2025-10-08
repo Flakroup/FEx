@@ -1,5 +1,5 @@
-﻿using FEx.Basics.Extensions;
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Extensions;
 using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using Microsoft.EntityFrameworkCore;

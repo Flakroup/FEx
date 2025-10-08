@@ -1,4 +1,4 @@
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using SharpVectors.Converters;
 using SharpVectors.Renderers.Wpf;
 using System;

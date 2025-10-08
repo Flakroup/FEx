@@ -1,5 +1,5 @@
-﻿using FEx.Asyncx.Helpers;
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Asyncx.Extensions;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -52,7 +52,7 @@ public abstract class MessagePopupServiceBase : IMessagePopupService
                                      Stopwatch sw = null,
                                      LogLevel level = LogLevel.Information,
                                      Exception exception = null) =>
-        AsyncHelper.FireOrWait(() => ShowMessageAsync(txt,
+        JoinableTaskExtensions.FireOrWait(() => ShowMessageAsync(txt,
                 caption,
                 messageBoxImage,
                 button,

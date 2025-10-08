@@ -1,4 +1,4 @@
-﻿namespace FEx.MVVM.Abstractions.Enums;
+namespace FEx.MVVM.Abstractions.Enums;
 
 /// <summary>
 /// Specifies the buttons that are displayed on a message box.

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.IO;
 
-namespace FEx.LiteDBx.Abstractions.Interfaces;
+namespace FEx.PersistentStorage.Abstractions;
 
-public interface IDownloadResult : IDisposable
+public interface IFExDownloadResult : IDisposable
 {
     Uri Url { get; }
     string FileName { get; }

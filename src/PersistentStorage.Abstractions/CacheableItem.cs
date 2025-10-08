@@ -1,8 +1,7 @@
-using FEx.LiteDBx.Abstractions.Interfaces;
 using LiteDB;
 using System;
 
-namespace FEx.LiteDBx.Abstractions;
+namespace FEx.PersistentStorage.Abstractions;
 
 public abstract class CacheableItem : ICacheableItem
 {

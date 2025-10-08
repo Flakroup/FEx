@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -9,7 +9,7 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 {
-    private static readonly Size FallbackSize = new(48, 48);
+    private static readonly Size _fallbackSize = new(48, 48);
 
     private readonly IItemContainerManager _itemContainerManager;
     private readonly IChildrenCollection _childrenCollection;
@@ -124,13 +124,13 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
             return FixedItemSize;
 
         if (!AllowDifferentSizedItems)
-            return _sizeOfFirstItem ?? FallbackSize;
+            return _sizeOfFirstItem ?? _fallbackSize;
 
         if (_averageItemSizeCache is null
             && _itemSizesCache.Values.Any())
             _averageItemSizeCache = CalculateAverageSize(_itemSizesCache.Values);
 
-        return _averageItemSizeCache ?? FallbackSize;
+        return _averageItemSizeCache ?? _fallbackSize;
     }
 
     public void BringIndexIntoView(int itemIndex)
@@ -416,13 +416,13 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         {
             extent = FixedItemSize != Size.Empty
                 ? CalculateExtentForSameSizeItems(FixedItemSize)
-                : CalculateExtentForSameSizeItems(_sizeOfFirstItem ?? FallbackSize);
+                : CalculateExtentForSameSizeItems(_sizeOfFirstItem ?? _fallbackSize);
         }
         else
         {
             if (_itemsInKnownExtend == 0)
             {
-                extent = CalculateExtentForSameSizeItems(FallbackSize);
+                extent = CalculateExtentForSameSizeItems(_fallbackSize);
             }
             else
             {

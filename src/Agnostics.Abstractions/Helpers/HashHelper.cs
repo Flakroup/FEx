@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace FEx.Extensions.Base.Helpers;
+namespace FEx.Agnostics.Abstractions.Helpers;
 
 public static class HashHelper
 {

@@ -1,11 +1,10 @@
-﻿using FEx.Common.Extensions;
-using FEx.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Logging.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 
-namespace FEx.Logging;
+namespace FEx.Logging.Abstractions;
 
 public class Loggable : ILoggable
 {
@@ -25,6 +24,8 @@ public class Loggable : ILoggable
         _logger.LogCritical(exception, Combine(message));
 
     public void LogDebug(string message, Exception exception = null) => _logger.LogDebug(exception, Combine(message));
+
+    public void LogError(Exception exception) => _logger.LogError(exception, Combine(exception.Message));
 
     public void LogError(string message, Exception exception = null) => _logger.LogError(exception, Combine(message));
 
@@ -52,7 +53,7 @@ public class Loggable : ILoggable
 
     public void AddOrUpdateLabel(string key, object value)
     {
-        if (State is not LoggerState lS)
+        if (State is not ILoggerState lS)
             return;
 
         lS.AddOrUpdateLabel(key, value);
@@ -60,7 +61,7 @@ public class Loggable : ILoggable
 
     public void RemoveLabel(string key)
     {
-        if (State is not LoggerState lS)
+        if (State is not ILoggerState lS)
             return;
 
         lS.RemoveLabel(key);

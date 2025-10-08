@@ -1,4 +1,4 @@
-﻿using FEx.WPFx.SVG.SvgConverter;
+using FEx.WPFx.SVG.SvgConverter;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;

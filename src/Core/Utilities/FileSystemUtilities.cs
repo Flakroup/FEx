@@ -1,15 +1,10 @@
-﻿using FEx.Abstractions;
-using FEx.Abstractions.Enums;
-using FEx.Abstractions.Extensions;
-using FEx.Abstractions.Flow;
-using FEx.Abstractions.Flow.Errors;
-using FEx.Basics.Collections.Concurrent;
-using FEx.Basics.Extensions;
-using FEx.Common.Extensions;
-using FEx.DI.Abstractions;
-using FEx.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
-using FEx.Extensions.IO;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Flow;
+using FEx.Agnostics.Collections.Concurrent;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.Extensions;
+using FEx.DependencyInjection.Abstractions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -20,18 +15,18 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 #if NETSTANDARD
-using FEx.Extensions.Interop;
+using FEx.Agnostics.Abstractions.Extensions.Interop;
 #endif
 
-namespace FEx.Fundamentals.Utilities;
+namespace FEx.Core.Utilities;
 
 public class FileSystemUtilities
 {
     public static int PrgValue;
     public static int PrgMax;
-    private static readonly SemaphoreSlim ProgressSemaphore = new(1, 1);
+    private static readonly SemaphoreSlim _progressSemaphore = new(1, 1);
 
-    private static readonly bool IsReportingCapable = !Console.IsOutputRedirected;
+    private static readonly bool _isReportingCapable = !Console.IsOutputRedirected;
     private static bool _isReporting;
     private static ILogger _logger;
 
@@ -370,7 +365,7 @@ public class FileSystemUtilities
                 {
                     Interlocked.Increment(ref PrgValue);
 
-                    FExFoundation.AsyncHelper.FireTaskAndForget(() => ReportProgressAsync(destFile, GetPercentage),
+                    FExCoreStatics.AsyncHelper.FireTaskAndForget(() => ReportProgressAsync(destFile, GetPercentage),
                         AsyncMode.ThreadPool);
                 }
             }
@@ -559,12 +554,14 @@ public class FileSystemUtilities
 #if !NETSTANDARD2_0
                 await
 #endif
-                using FileStream fs = fileInfo.OpenWrite();
+                    using FileStream fs = fileInfo.OpenWrite();
+
                 fs.SetLength(0);
 #if !NETSTANDARD2_0
                 await
 #endif
-                using var sw = new StreamWriter(fs);
+                    using var sw = new StreamWriter(fs);
+
                 await sw.WriteAsync(s.ToString());
                 await sw.FlushAsync();
 
@@ -596,9 +593,9 @@ public class FileSystemUtilities
 
     private static void FinishProgress(bool printLog = true)
     {
-        if (IsReportingCapable)
+        if (_isReportingCapable)
         {
-            ProgressSemaphore.Wait();
+            _progressSemaphore.Wait();
             _isReporting = true;
             Log("\r" + new string(' ', Console.WindowWidth - 1) + "\r", printLog);
 
@@ -610,7 +607,7 @@ public class FileSystemUtilities
             PrgValue = 0;
             PrgMax = 0;
             _isReporting = false;
-            ProgressSemaphore.Release();
+            _progressSemaphore.Release();
         }
     }
 
@@ -785,7 +782,7 @@ public class FileSystemUtilities
             DirectoryInfo[] subDirs = [.. root.GetDirectories().Where(x => !exclusionPaths.Contains(x.FullName))];
             Interlocked.Add(ref PrgValue, subDirs.Length);
 
-            FExFoundation.AsyncHelper.FireTaskAndForget(
+            FExCoreStatics.AsyncHelper.FireTaskAndForget(
                 () => ReportProgressAsync(root.FullName, () => PrgValue.ToString()),
                 AsyncMode.ThreadPool);
 
@@ -835,9 +832,9 @@ public class FileSystemUtilities
 
     private static async Task ReportProgressAsync(string msg, Func<string> msgPrefix = null, bool printLog = true)
     {
-        if (IsReportingCapable && !_isReporting)
+        if (_isReportingCapable && !_isReporting)
         {
-            await ProgressSemaphore.WaitAsync();
+            await _progressSemaphore.WaitAsync();
             _isReporting = true;
 
             Log("\r"
@@ -854,7 +851,7 @@ public class FileSystemUtilities
                     : Console.CursorTop);
 
             _isReporting = false;
-            ProgressSemaphore.Release();
+            _progressSemaphore.Release();
         }
     }
 

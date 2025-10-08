@@ -1,6 +1,6 @@
-﻿using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
-using FEx.Extensions.Base.Enums;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Core.Abstractions;
 using FEx.MVVM.Abstractions;
 using FEx.Platforms;
 using FEx.Platforms.Abstractions.Interfaces;
@@ -15,7 +15,7 @@ namespace FEx.WPFx.Natives;
 
 public static class CommonWindowsImaging
 {
-    private static ISynchronizedAccessService LockSrv => FExFoundation.SynchronizedAccessService;
+    private static ISynchronizedAccessService LockSrv => FExCoreStatics.SynchronizedAccessService;
     private static IRegistryService RegistrySrv => FExPlatforms.RegistryService;
 
     /// <summary>

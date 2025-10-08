@@ -1,12 +1,12 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Basics.Exceptions;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.Logging.Abstractions.Extensions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.Threading;
 
-namespace FEx.Basics.Helpers;
+namespace FEx.Core.Abstractions.Helpers;
 
 public class DeadlockMonitor : IDeadlockMonitor
 {

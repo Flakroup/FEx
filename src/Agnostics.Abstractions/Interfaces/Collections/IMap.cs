@@ -1,4 +1,4 @@
-﻿namespace FEx.Common.Abstractions.Interfaces;
+namespace FEx.Agnostics.Abstractions.Interfaces.Collections;
 
 public interface IMap<TForwardKey, TReverseKey>
 {

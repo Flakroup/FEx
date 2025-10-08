@@ -1,9 +1,9 @@
-﻿using FEx.Basics.Collections;
+using FEx.Agnostics.Collections;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FEx.Basics.Extensions;
+namespace FEx.Agnostics.Extensions;
 
 public static class ListExtensions
 {

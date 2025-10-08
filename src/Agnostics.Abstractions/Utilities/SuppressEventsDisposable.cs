@@ -1,8 +1,7 @@
-using FEx.Basics.Abstractions.Interfaces;
-using FEx.Common.Utilities;
+using FEx.Agnostics.Abstractions.Interfaces;
 using System;
 
-namespace FEx.Basics.Utilities;
+namespace FEx.Agnostics.Abstractions.Utilities;
 
 public sealed class SuppressEventsDisposable : DisposableAction
 {

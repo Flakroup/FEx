@@ -1,9 +1,10 @@
-using FEx.Abstractions.Flow.Errors;
+using FEx.Agnostics.Abstractions.Flow;
+using FEx.Agnostics.Abstractions.Interfaces.Flow;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace FEx.Abstractions.Interfaces;
+namespace FEx.Agnostics.Abstractions.Interfaces;
 
 public interface ITaskWrapperBase<TTask, out TResult> : ITaskWrapperBase
     where TTask : Task where TResult : class, IResult<ExceptionError>

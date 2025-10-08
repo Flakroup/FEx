@@ -1,7 +1,7 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Interfaces;
 using System.Diagnostics;
 
-namespace FEx.Abstractions.Implementations;
+namespace FEx.Core.Abstractions.Implementations;
 
 public class DefaultStackTraceProvider : IStackTraceProvider
 {

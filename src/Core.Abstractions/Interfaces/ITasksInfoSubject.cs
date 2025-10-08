@@ -1,6 +1,7 @@
-﻿using System;
+using FEx.Agnostics.Abstractions.Interfaces;
+using System;
 
-namespace FEx.Abstractions.Interfaces;
+namespace FEx.Core.Abstractions.Interfaces;
 
 public interface ITasksInfoSubject
 {

@@ -1,4 +1,4 @@
-﻿using FEx.MVVM.Abstractions.Interfaces;
+using FEx.MVVM.Abstractions.Interfaces;
 using System.Collections.Generic;
 using System.Net;
 

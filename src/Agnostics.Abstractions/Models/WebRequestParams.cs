@@ -1,9 +1,9 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Security;
 
-namespace FEx.Abstractions.Models;
+namespace FEx.Agnostics.Abstractions.Models;
 
 public class WebRequestParams
 {

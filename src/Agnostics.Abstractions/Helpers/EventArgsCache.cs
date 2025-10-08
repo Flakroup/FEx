@@ -1,7 +1,7 @@
-﻿using System.Collections.Specialized;
+using System.Collections.Specialized;
 using System.ComponentModel;
 
-namespace FEx.Basics.Utilities.Collections;
+namespace FEx.Agnostics.Abstractions.Helpers;
 
 public static class EventArgsCache
 {

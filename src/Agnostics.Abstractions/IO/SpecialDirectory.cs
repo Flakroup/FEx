@@ -1,12 +1,11 @@
-﻿using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using EnumExtensions = FEx.Extensions.EnumExtensions;
 
-namespace FEx.Basics.IO;
+namespace FEx.Agnostics.Abstractions.IO;
 
 public class SpecialDirectory
 {

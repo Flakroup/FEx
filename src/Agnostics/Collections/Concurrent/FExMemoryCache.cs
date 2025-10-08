@@ -1,12 +1,12 @@
-using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace FEx.Basics.Collections.Concurrent;
+namespace FEx.Agnostics.Collections.Concurrent;
 
-public class FExMemoryCache<TKey, TValue> : IFExMemoryCache<TKey, TValue>
+public class FExMemoryCache<TKey, TValue> : IFExMemoryCache<TKey, TValue>, IDictionary<TKey, TValue>, IDictionary
 {
     private readonly ConcurrentDictionary<TKey, TValue> _cache;
 
@@ -36,13 +36,13 @@ public class FExMemoryCache<TKey, TValue> : IFExMemoryCache<TKey, TValue>
     public bool IsSynchronized => ((ICollection)_cache).IsSynchronized;
     public object SyncRoot => ((ICollection)_cache).SyncRoot;
 
-    ICollection<TKey> IDictionary<TKey, TValue>.Keys => _cache.Keys;
+    public ICollection<TKey> Keys => _cache.Keys;
 
     ICollection IDictionary.Values => ((IDictionary)_cache).Values;
 
     ICollection IDictionary.Keys => ((IDictionary)_cache).Keys;
 
-    ICollection<TValue> IDictionary<TKey, TValue>.Values => _cache.Values;
+    public ICollection<TValue> Values => _cache.Values;
 
     bool IDictionary.IsReadOnly => ((IDictionary)_cache).IsReadOnly;
 
@@ -79,7 +79,7 @@ public class FExMemoryCache<TKey, TValue> : IFExMemoryCache<TKey, TValue>
 
     public void Add(TKey key, TValue value) => ((IDictionary<TKey, TValue>)_cache).Add(key, value);
 
-    bool IDictionary<TKey, TValue>.ContainsKey(TKey key) => _cache.ContainsKey(key);
+    public bool ContainsKey(TKey key) => _cache.ContainsKey(key);
 
     public bool Remove(TKey key) => ((IDictionary<TKey, TValue>)_cache).Remove(key);
 

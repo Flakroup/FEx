@@ -1,4 +1,4 @@
-﻿using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.MVVM.Abstractions.Dialogs;
 using FEx.MVVM.Abstractions.Interfaces;
 using Microsoft.Win32;
@@ -13,7 +13,7 @@ public class SaveFileDialogOptions : SaveFileDialogOptionsBase<SaveFileDialog>
     /// Shows the dialog.
     /// </summary>
     /// <param name="owner">
-    /// Any object that implements <see cref="T:System.Windows.Window" /> that represents the
+    /// Any object that implements <see cref="Window" /> that represents the
     /// top-level window that will own the modal dialog box.
     /// </param>
     /// <param name="viewModel">The view model.</param>

@@ -1,11 +1,11 @@
-﻿using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace FEx.Common.Helpers;
+namespace FEx.Core.Abstractions.Helpers;
 
 public static class ReflectionHelper
 {

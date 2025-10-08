@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 
-namespace FEx.Common.Utilities;
+namespace FEx.Agnostics.Abstractions.Utilities;
 
 /// <summary>
 /// Models a disposable action that is guaranteed to be invoked
 /// at least on disposal (if not explicitly invoked).
 /// </summary>
-/// <seealso cref="System.IDisposable" />
+/// <seealso cref="IDisposable" />
 public class DisposableAction : IDisposable
 {
     private Action _action;

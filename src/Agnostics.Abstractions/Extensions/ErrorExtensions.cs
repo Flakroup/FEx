@@ -1,10 +1,10 @@
-using FEx.Abstractions.Flow.Errors;
-using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Flow;
+using FEx.Agnostics.Abstractions.Interfaces.Flow;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FEx.Abstractions.Extensions;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
 public static class ErrorExtensions
 {
@@ -47,5 +47,5 @@ public static class ErrorExtensions
         }.AsReadOnly());
 
     public static AggregateException ToAggregateException(this AggregatedError error) =>
-        new(error.InnerErrors.OfType<IExceptionError>().Select(x => x.Exception));
+        new(error.InnerErrors.OfType<IExceptionError>().Select(static x => x.Exception));
 }

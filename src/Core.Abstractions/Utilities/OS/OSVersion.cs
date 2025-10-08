@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace FEx.Common.Utilities.OS;
+namespace FEx.Core.Abstractions.Utilities.OS;
 
 internal class OSVersion : IEquatable<OSVersion>
 {
@@ -110,6 +110,7 @@ internal class OSVersion : IEquatable<OSVersion>
         }
     }
 #else
-        => HashCode.Combine(Major, Minor, ProductType);
+        =>
+            HashCode.Combine(Major, Minor, ProductType);
 #endif
 }

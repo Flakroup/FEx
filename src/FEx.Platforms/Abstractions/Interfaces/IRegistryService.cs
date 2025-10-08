@@ -1,4 +1,4 @@
-﻿using FEx.Extensions.Base.Enums;
+using FEx.Agnostics.Abstractions.Enums;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;

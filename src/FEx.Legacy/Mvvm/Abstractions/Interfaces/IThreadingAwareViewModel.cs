@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.MVVM.Abstractions.Interfaces;
 using ReactiveUI;
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace FEx.Logging.Abstractions.Interfaces;
@@ -13,6 +13,7 @@ public interface ILoggable
     void EndScope();
     void LogCritical(string message, Exception exception = null);
     void LogDebug(string message, Exception exception = null);
+    void LogError(Exception exception);
     void LogError(string message, Exception exception = null);
     void LogInformation(string message, Exception exception = null);
     void LogTrace(string message, Exception exception = null);

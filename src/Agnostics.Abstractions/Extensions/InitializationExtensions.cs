@@ -1,9 +1,9 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
 using System.Collections.Generic;
 
-namespace FEx.Abstractions.Extensions;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
-public static class AbstractionsExtensions
+public static class InitializationExtensions
 {
     public static void InitializeAll<T>(this ICollection<T> initializers) where T : IFExInitialize
     {

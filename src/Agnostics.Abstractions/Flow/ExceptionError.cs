@@ -1,8 +1,8 @@
-﻿using FEx.Abstractions.Extensions;
-using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces.Flow;
 using System;
 
-namespace FEx.Abstractions.Flow.Errors;
+namespace FEx.Agnostics.Abstractions.Flow;
 
 public class ExceptionError : Error, IExceptionError
 {

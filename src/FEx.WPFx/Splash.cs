@@ -1,10 +1,10 @@
-﻿using FEx.Abstractions;
-using FEx.Abstractions.Enums;
-using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Asyncx.Helpers;
-using FEx.Common.Extensions;
-using FEx.DI.Abstractions;
-using FEx.Extensions;
+using FEx.Common.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions;
 using FEx.WPFx.Abstractions.Interfaces;
 using FEx.WPFx.Controls;
 using FEx.WPFx.Services;

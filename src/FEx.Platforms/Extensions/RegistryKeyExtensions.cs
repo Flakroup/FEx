@@ -1,4 +1,4 @@
-﻿using FEx.Common.Utilities;
+using FEx.Core.Abstractions.Utilities;
 using Microsoft.Win32;
 
 namespace FEx.Platforms.Extensions;

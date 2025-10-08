@@ -1,4 +1,4 @@
-﻿using StrongInject;
+using StrongInject;
 using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.MVVM.Abstractions.Interfaces;

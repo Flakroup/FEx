@@ -1,6 +1,6 @@
-﻿using FEx.Basics.Abstractions;
-using FEx.Common.Extensions;
-using FEx.Common.Utilities;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.BaseObjects;
+using FEx.Core.Abstractions.Utilities;
 using System;
 using System.Diagnostics;
 using System.Globalization;
@@ -15,7 +15,7 @@ public abstract class FExTelemetryConfigBase : NotifyPropertyChanged, IFExTeleme
     public string AccessToken
     {
         get => _accessToken;
-        set => SetProperty(ref _accessToken, value.Guard(), OnAccessTokenChanged);
+        set => SetProperty(ref _accessToken, value.Guard(nameof(value)), OnAccessTokenChanged);
     }
 
     public string AppEnvironment => GetAppEnvironment();

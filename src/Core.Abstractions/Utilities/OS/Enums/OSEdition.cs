@@ -1,6 +1,6 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
-namespace FEx.Common.Utilities.OS.Enums;
+namespace FEx.Core.Abstractions.Utilities.OS.Enums;
 
 public enum OSEdition
 {

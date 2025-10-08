@@ -1,7 +1,7 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces.Flow;
 
-namespace FEx.Abstractions.Flow;
+namespace FEx.Agnostics.Abstractions.Flow;
 
 public abstract class ResultBase<TError> : IResult<TError> where TError : class, IError, new()
 {

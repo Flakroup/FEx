@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
-namespace FEx.Fundamentals.StackTraces;
+namespace FEx.Core.StackTraces;
 
 [DebuggerDisplay("{Namespace} {Type} {Method} {Line}:{Column}")]
 [Serializable]

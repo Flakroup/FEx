@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace FEx.Legacy.Mvvm.Observables;
 

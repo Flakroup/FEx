@@ -1,13 +1,14 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Basics.Collections.Concurrent;
-using FEx.Rx.Extensions;
-using FEx.Rx.Subjects;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Collections.Concurrent;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Subjects;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
 
-namespace FEx.Fundamentals.Subjects;
+namespace FEx.Core.Subjects;
 
 public sealed class TasksInfoSubject : FExBehaviorSubject<IList<Guid>>, ITasksInfoSubject
 {

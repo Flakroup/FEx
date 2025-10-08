@@ -1,4 +1,4 @@
-﻿using FEx.Json.Helpers;
+using FEx.Json.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using StrongInject;

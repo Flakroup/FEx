@@ -1,11 +1,9 @@
-﻿using FEx.Asyncx.Helpers;
-using FEx.Basics.Collections.Concurrent;
-using FEx.Basics.Extensions;
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Asyncx.Helpers;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Collections.Concurrent;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
-using FEx.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
 using FEx.MVVM;
 using FEx.MVVM.Extensions;
 using FEx.MVVM.Utilities;
@@ -49,13 +47,11 @@ public class DownloadService : ProgressAggregator
     {
         var idx = new DownloadIndex(stub);
 
-        if (Downloads.ContainsKey(idx)
+        if (Downloads.TryGetValue(idx, out IDownloadItem value)
             && !cancelAndReplaceOldOne)
-            return Downloads[idx];
+            return value;
 
-        IDownloadItem di = stub is IDownloadItem idi
-            ? idi
-            : await DownloadItem.CreateAsync(stub, true);
+        IDownloadItem di = stub as IDownloadItem ?? await DownloadItem.CreateAsync(stub, true);
 
         return await AddDownloadAsync(di, idx, cancelAndReplaceOldOne, startDownload);
     }

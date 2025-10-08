@@ -1,15 +1,16 @@
-﻿using FEx.Logging.Abstractions.Interfaces;
-using FEx.Logging.Extensions;
+using FEx.Logging.Abstractions;
+using FEx.Logging.Abstractions.Extensions;
+using FEx.Logging.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace FEx.Logging.Services;
+namespace FEx.Logging;
 
-public class LoggingService : ILoggingService
+public class FExLoggingService : IFExLoggingService
 {
     protected ILogger DefaultLogger { get; }
 
-    public LoggingService(ILogger<LoggingService> defaultLogger)
+    public FExLoggingService(ILogger<FExLoggingService> defaultLogger)
     {
         DefaultLogger = defaultLogger;
     }

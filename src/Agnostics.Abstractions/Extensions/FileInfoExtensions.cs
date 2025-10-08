@@ -1,18 +1,17 @@
-﻿using FEx.Extensions.Base.Converters;
-using FEx.Extensions.Base.Enums;
-using FEx.Extensions.Base.Helpers;
-using FEx.Extensions.Base.IO;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Helpers;
+using FEx.Agnostics.Abstractions.Utilities;
 using System;
 using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
-namespace FEx.Extensions.IO;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
 public static class FileInfoExtensions
 {
-    private static readonly int DefBufferSize =
+    private static readonly int _defBufferSize =
         Convert.ToInt32(FileLengthConverter.ConvertFileLength(128, LengthType.Kilobytes, LengthType.Bytes, 0));
 
     /// <summary>
@@ -108,7 +107,7 @@ public static class FileInfoExtensions
                        FileMode.Open,
                        FileAccess.Read,
                        FileShare.ReadWrite,
-                       DefBufferSize))
+                       _defBufferSize))
             using (var md5 = MD5.Create())
                 hash = md5.ComputeHash(stream);
 
@@ -146,7 +145,7 @@ public static class FileInfoExtensions
         return !file.Exists
             ? null
 #pragma warning disable IDISP004
-            : await new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefBufferSize)
+            : await new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, _defBufferSize)
 #pragma warning restore IDISP004
                 .CopyToMemoryStreamAsync(true);
     }

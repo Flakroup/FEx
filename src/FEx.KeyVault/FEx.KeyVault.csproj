@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
@@ -6,9 +6,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="Arcus.Security.Providers.AzureKeyVault" Version="2.0.0" />
-		<PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.3.2" />
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
-		<PackageReference Include="Polly" Version="8.4.2" />
+		<PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
+		<PackageReference Include="Azure.Identity" Version="1.16.0" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(DotNetNugetsVersion)" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(DotNetNugetsVersion)" />
+		<PackageReference Include="Polly" Version="8.6.4" />
 		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 	</ItemGroup>
 

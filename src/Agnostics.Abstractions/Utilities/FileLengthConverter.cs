@@ -1,8 +1,8 @@
-﻿using FEx.Extensions.Base.Enums;
+using FEx.Agnostics.Abstractions.Enums;
 using System;
 using System.IO;
 
-namespace FEx.Extensions.Base.Converters;
+namespace FEx.Agnostics.Abstractions.Utilities;
 
 public static class FileLengthConverter
 {

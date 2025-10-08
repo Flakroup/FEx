@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 /* Unmerged change from project 'FEx.Common (netstandard2.0)'
 Before:
@@ -10,7 +10,7 @@ using FEx.Basics.Utilities;
 using FEx.Common.Utilities.OS;
 */
 
-namespace FEx.Common.Utilities.OS;
+namespace FEx.Core.Abstractions.Utilities.OS;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct SystemInfo

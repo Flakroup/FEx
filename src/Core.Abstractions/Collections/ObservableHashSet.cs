@@ -1,11 +1,10 @@
-﻿// Copyright (c) .NET FExFoundation. All rights reserved.
+// Copyright (c) .NET FExFoundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
-using FEx.Basics.Abstractions;
-using FEx.Basics.Utilities.Collections;
-using FEx.Extensions;
+using FEx.Agnostics.Abstractions.Collections.Concurrent;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Collections.Concurrent;
+using FEx.Core.Abstractions.Interfaces;
 using JetBrains.Annotations;
 using System;
 using System.Collections;
@@ -15,7 +14,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 
-namespace FEx.Basics.Collections;
+namespace FEx.Core.Abstractions.Collections;
 
 /// <summary>
 /// A hash set that implements the interfaces required for Entity Framework to use notification based change tracking
@@ -87,7 +86,7 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     public ObservableHashSet(IEnumerable<T> collection = null, IEqualityComparer<T> comparer = null)
     {
 #pragma warning disable CS0618 // Type or member is obsolete
-        _dispatcher = FExFoundation.Dispatcher;
+        _dispatcher = FExCoreStatics.Dispatcher;
 #pragma warning restore CS0618 // Type or member is obsolete
 
         comparer ??= EqualityComparer<T>.Default;
@@ -297,7 +296,7 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     public virtual bool IsProperSupersetOf(IEnumerable<T> other) => _set.IsProperSupersetOf(other);
 
     /// <summary>
-    /// Determines whether the current System.Collections.Generic.HashSet`1 object and a specified collection share common
+    /// Determines whether the current <see cref="ObservableHashSet{T}" /> object and a specified collection share common
     /// elements.
     /// </summary>
     /// <param name="other"> The collection to compare to the current hash set. </param>

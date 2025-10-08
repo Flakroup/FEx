@@ -1,4 +1,4 @@
-﻿namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
+namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 /// <summary>
 /// Specifies how remaining space is distributed.

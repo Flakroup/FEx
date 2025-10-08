@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace FEx.Abstractions.Interfaces;
+namespace FEx.Agnostics.Abstractions.Interfaces.Flow;
 
 public interface IExceptionError : IStackError
 {

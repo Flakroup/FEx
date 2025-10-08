@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 
-namespace FEx.Abstractions.Interfaces;
+namespace FEx.Core.Abstractions.Interfaces;
 
 public interface IDeadlockMonitor
 {

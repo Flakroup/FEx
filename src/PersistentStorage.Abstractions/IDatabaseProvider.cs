@@ -1,7 +1,7 @@
-using FEx.Basics.Utilities;
+using FEx.Agnostics.Utilities;
 using LiteDB;
 
-namespace FEx.LiteDBx.Abstractions.Interfaces;
+namespace FEx.PersistentStorage.Abstractions;
 
 public interface IDatabaseProvider
 {

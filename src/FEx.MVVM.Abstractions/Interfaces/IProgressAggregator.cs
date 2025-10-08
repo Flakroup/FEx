@@ -1,4 +1,4 @@
-﻿using FEx.MVVM.Abstractions.Enums;
+using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Events;
 using System;
 using System.Collections.Generic;

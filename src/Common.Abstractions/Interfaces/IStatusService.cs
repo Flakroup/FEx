@@ -1,7 +1,7 @@
-﻿using FEx.Common.Utilities;
+using FEx.Agnostics.Abstractions.Utilities;
 using System;
 
-namespace FEx.Abstractions.Interfaces;
+namespace FEx.Common.Abstractions.Interfaces;
 
 public interface IStatusService
 {

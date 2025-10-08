@@ -1,4 +1,4 @@
-﻿namespace FEx.Extensions.Base.Enums;
+namespace FEx.Agnostics.Abstractions.Enums;
 
 /// <summary>Indicates how to determine and format date intervals when calling date-related functions.</summary>
 public enum DateInterval

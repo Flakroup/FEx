@@ -1,8 +1,6 @@
-﻿using FEx.Basics.Collections.Concurrent;
-using FEx.Common.Helpers;
-using FEx.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
-using FEx.Extensions.Collections.Enumerables;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Helpers;
+using FEx.Core.Collections.Concurrent;
 using FEx.MVVM.Abstractions;
 using FEx.MVVM.Abstractions.Events;
 using FEx.MVVM.Abstractions.Interfaces;

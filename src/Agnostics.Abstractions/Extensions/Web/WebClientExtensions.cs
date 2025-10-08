@@ -1,12 +1,11 @@
-﻿using FEx.Abstractions.Models;
-using FEx.Common.Extensions;
-using FEx.Extensions.Base.Enums;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Models;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 
-namespace FEx.Extensions.Web;
+namespace FEx.Agnostics.Abstractions.Extensions.Web;
 
 public static class WebClientExtensions
 {

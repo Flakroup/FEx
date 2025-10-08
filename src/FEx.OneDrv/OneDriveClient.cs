@@ -1,4 +1,4 @@
-﻿using Azure.Identity;
+using Azure.Identity;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Identity.Client;
@@ -16,7 +16,7 @@ public class OneDriveClient
 
     public OneDriveClient()
     {
-        _scopes = new[] { "User.Read", "Files.Read", "Files.Read.All" };
+        _scopes = ["User.Read", "Files.Read", "Files.Read.All"];
 
         _appConfiguration = new()
         {

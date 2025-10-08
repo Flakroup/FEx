@@ -1,6 +1,7 @@
-﻿using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Utilities;
 using JetBrains.Annotations;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -11,10 +12,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace FEx.Extensions;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
 /// <summary>
-/// String extensions class.
+/// String extensions class - comprehensive utilities for string manipulation.
 /// </summary>
 public static class StringExtensions
 {
@@ -59,49 +60,316 @@ public static class StringExtensions
     /// </summary>
     public const string SqlWildCardOneCharacterEscaped = "[_]";
 
+    private static readonly Regex _phoneNumberRegex = new("[^.0-9]", RegexOptions.Compiled);
+    private static readonly int[] _doubledValues = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9];
+
     public static Regex WordRegex { get; } = new(@"\b[\w']+\b", RegexOptions.Compiled);
     public static Regex LettersRegex { get; } = new("^[a-zA-Z]+$", RegexOptions.Compiled);
     public static Regex LettersAndNumbersRegex { get; } = new("^[a-zA-Z0-9]+$", RegexOptions.Compiled);
     public static Regex LettersNumbersAndUnderscoreRegex { get; } = new("^[a-zA-Z0-9_]+$", RegexOptions.Compiled);
 
+    public static string ToCamel(this string text) =>
+        !string.IsNullOrWhiteSpace(text)
+            ? $"{char.ToUpperInvariant(text[0])}{text.Substring(1).ToLowerInvariant()}"
+            : null;
+
+    public static string ToNiceString(this string text)
+    {
+        if (!string.IsNullOrWhiteSpace(text))
+            return new(text.Where(static c => char.IsLetter(c) || c == '\'' || char.IsWhiteSpace(c)).ToArray());
+
+        return null;
+    }
+
+    public static string ToFormattedPhoneNumber(this string phoneNumber)
+    {
+        if (!string.IsNullOrWhiteSpace(phoneNumber))
+            return phoneNumber[0] == '+'
+                ? _phoneNumberRegex.Replace(phoneNumber.Substring(2), string.Empty).Trim()
+                : _phoneNumberRegex.Replace(phoneNumber, string.Empty).Trim();
+
+        return null;
+    }
+
+    public static void AppendJoin(this StringBuilder stringBuilder, IEnumerable collection)
+    {
+        foreach (object value in collection)
+            stringBuilder.Append(value);
+    }
+
+    /// <summary>
+    /// Generate MD5 hash from the specified string
+    /// </summary>
+    /// <param name="value">Value to generate MD5 Hash</param>
+    /// <returns>Calculated MD5 hash from the specified string</returns>
+    public static string ComputeMd5Hash(this string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        using var md5 = MD5.Create();
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(value));
+
+#if NET9_0_OR_GREATER
+        return Convert.ToHexStringLower(md5.ComputeHash(stream));
+#else
+        return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty).ToLower();
+#endif
+    }
+
+    /// <summary>
+    /// Returns a value indicating whether any of a set of specified substrings occurs within this string.
+    /// </summary>
+    /// <param name="value">The string value.</param>
+    /// <param name="toCheck">The set of strings to look for.</param>
+    /// <param name="comparisonType">Type of the comparison.</param>
+    /// <returns>
+    /// true if any element from the <paramref name="toCheck">value</paramref> parameter occurs within this string or is
+    /// empty; otherwise, false.
+    /// </returns>
+    /// <exception cref="ArgumentNullException"><paramref name="toCheck">value</paramref> is null.</exception>
+    public static bool ContainsAny(this string value, IEnumerable<string> toCheck, StringComparison comparisonType)
+    {
+        if (value is null
+            || toCheck.IsNullOrEmpty())
+            return false;
+
+#if NETSTANDARD2_0
+        return toCheck.Any(x => value.IndexOf(x, comparisonType) >= 0);
+#else
+        return toCheck.Any(x => value.Contains(x, comparisonType));
+#endif
+    }
+
+    /// <summary>
+    /// Searches for the index of the first occurrence of the specified strings in the input string.
+    /// </summary>
+    /// <param name="value">The input string to search in.</param>
+    /// <param name="matchCandidates">The strings to search for.</param>
+    /// <returns>The index of the first occurrence of the specified strings, or -1 if no match was found.</returns>
+    public static int IndexOf(this string value, params string[] matchCandidates)
+    {
+        foreach (string checkValue in matchCandidates)
+        {
+            int index = value.IndexOf(checkValue, StringComparison.Ordinal);
+
+            if (index != -1)
+                return index;
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// Converts string to decimal value and replace symbols with CurrentCulture NumberDecimalSeparator
+    /// </summary>
+    /// <param name="value">Decimal number in string format</param>
+    /// <returns>Decimal value with correct separator</returns>
+    /// <exception cref="Exception">Throw an exception when string is in incorrect format</exception>
+    public static decimal FromString(this string value)
+    {
+        string numberDecimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+        const string dot = ".";
+        const string comma = ",";
+
+        if (value.Contains(dot)
+            && dot != numberDecimalSeparator)
+            value = value.Replace(dot, numberDecimalSeparator);
+        else if (value.Contains(comma)
+                 && comma != numberDecimalSeparator)
+            value = value.Replace(comma, numberDecimalSeparator);
+
+        return decimal.TryParse(value, out decimal result)
+            ? result
+            : throw new("Cannot unmarshal type decimal");
+    }
+
+    public static Uri ToUri(this string source, Uri baseUri = null, UriKind kind = UriKind.Absolute)
+    {
+        if (source?.IsNotNullOrEmptyOrWhiteSpace() != true)
+            return null;
+
+        return baseUri switch
+        {
+            not null => new(baseUri, source),
+            _ => Uri.TryCreate(source, kind, out Uri result)
+                ? result
+                : null
+        };
+    }
+
+    /// <summary>
+    /// Modulus 10 algorithm created by Hans Peter Luhn. Uses a weight of 2 which
+    /// is applied to every odd position digit.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///     Valid characters are decimal digits (0-9).
+    ///     </para>
+    ///     <para>
+    ///     Check digit calculated by the algorithm is a decimal digit (0-9).
+    ///     </para>
+    ///     <para>
+    ///     Assumes that the check digit (if present) is the right-most digit in the
+    ///     input value.
+    ///     </para>
+    ///     <para>
+    ///     Will detect all single-digit transcription errors and most two digit
+    ///     transpositions of adjacent digits (except 09 - 90). Will detect most
+    ///     twin errors (i.e. 11 - 44) except 22 - 55,  33 - 66 and 44 - 77.
+    ///     </para>
+    /// </remarks>
+    /// <param name="value">Value to check</param>
+    /// <returns>True if provided string contains valid number</returns>
+    public static bool ValidateCheckDigit(this string value)
+    {
+        const char zeroChar = '0';
+
+        if (string.IsNullOrEmpty(value)
+            || value.Length < 2
+            || value.Any(static element => !char.IsDigit(element)))
+            return false;
+
+        var sum = 0;
+        var shouldApplyDouble = true;
+
+        for (int index = value.Length - 2; index >= 0; index--)
+        {
+            int currentDigit = value[index] - zeroChar;
+
+            if (currentDigit is < 0 or > 9)
+                return false;
+
+            sum += shouldApplyDouble
+                ? _doubledValues[currentDigit]
+                : currentDigit;
+
+            shouldApplyDouble = !shouldApplyDouble;
+        }
+
+        int checkDigit = (10 - sum % 10) % 10;
+
+        return
+#if NETSTANDARD2_0
+            value[value.Length - 1]
+#else
+            value[^1]
+#endif
+            - zeroChar
+            == checkDigit;
+    }
+
+    /// <summary>
+    /// Converts a string to proper case, handling special cases for names, Scottish prefixes, and Roman numerals.
+    /// </summary>
+    /// <param name="input">The input string to convert to proper case.</param>
+    /// <returns>String converted to proper case with special handling for names.</returns>
+    public static string ToProperCase(this string input)
+    {
+        if (input.IsAllUpperOrAllLower())
+            // fix the ALL UPPERCASE or all lowercase names
+            return string.Join(" ", input.Split(' ').Select(StringUtilities.WordToProperCase));
+
+        // leave the CamelCase or Propercase names alone
+        return input;
+    }
+
+    public static bool IsAllUpperOrAllLower(this string input) =>
+        input.ToLower().Equals(input) || input.ToUpper().Equals(input);
+
+    public static bool CompareOrdinalIgnoreCase(this string source, string value) =>
+        string.Compare(source, value, StringComparison.OrdinalIgnoreCase) == 0;
+
+    /// <summary>
+    /// Indicates whether a string contains another string under <see cref="StringComparison.OrdinalIgnoreCase" />
+    /// comparison.
+    /// </summary>
+    public static bool ContainsOrdinalIgnoreCase(this string str, string other) =>
+#if NETSTANDARD
+        str.IndexOf(other, StringComparison.OrdinalIgnoreCase) >= 0;
+#else
+        str.Contains(other, StringComparison.OrdinalIgnoreCase);
+#endif
+
+    /// <summary>
+    /// Compare 2 strings, ignoring case.
+    /// </summary>
+    /// <param name="source">First value to compare with.</param>
+    /// <param name="value">Second value to compare with.</param>
+    /// <param name="comparisonType">Type of the comparison.</param>
+    /// <returns>
+    /// True if equal otherwise False.
+    /// </returns>
+    public static bool IsEqual(this string source,
+                               string value,
+                               StringComparison comparisonType = StringComparison.OrdinalIgnoreCase) =>
+        string.Equals(source, value, comparisonType);
+
+    /// <summary>
+    /// Determines whether string is not equal to the specified value.
+    /// </summary>
+    /// <param name="source">The source.</param>
+    /// <param name="value">The value.</param>
+    /// <param name="comparisonType">Type of the comparison.</param>
+    /// <returns>
+    /// <c>true</c> if it is not equal to the specified value; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool IsNotEqual(this string source,
+                                  string value,
+                                  StringComparison comparisonType = StringComparison.OrdinalIgnoreCase) =>
+        !source.IsEqual(value, comparisonType);
+
+    /// <summary>
+    /// Gets a value indicating if the string is Null or Empty.
+    /// </summary>
+    /// <param name="value">string to test.</param>
+    /// <returns>True if string is Null or Empty otherwise False.</returns>
+    [ContractAnnotation("null => true")]
+    public static bool IsNullOrEmptyString(this string value) => value is null || string.IsNullOrEmpty(value);
+
+    /// <summary>
+    /// Gets a value indicating if the string is NOT Null or Empty.
+    /// </summary>
+    /// <param name="value">string to test.</param>
+    /// <returns>True if string is Null or Empty otherwise False.</returns>
+    [ContractAnnotation("null => false")]
+    public static bool IsNotNullOrEmptyString(this string value) => value is not null && !string.IsNullOrEmpty(value);
+
     /// <summary>
     /// Removes the specified chars from current string.
     /// </summary>
-    /// <param name="source">Current string.</param>
-    /// <param name="chars">The chars to remove.</param>
-    /// <returns>A string.</returns>
-    public static string Remove(this string source, IEnumerable<char> chars) =>
-        new([.. source.Where(c => !chars.Contains(c))]);
+    /// <param name="text">The text.</param>
+    /// <param name="chars">The chars.</param>
+    /// <returns>String with chars removed.</returns>
+    public static string Remove(this string text, params char[] chars) =>
+        chars.Aggregate(text, (current, c) => current.Replace(c.ToString(), string.Empty));
 
     /// <summary>
-    /// Formats the value with the parameters using string.Format.
+    /// Removes the specified strings from current string.
     /// </summary>
-    /// <param name="value">The input string.</param>
-    /// <param name="parameters">The parameters.</param>
-    public static string FormatWith(this string value, params object[] parameters) => string.Format(value, parameters);
-
-    public static int? ToNullableInt(this string value) =>
-        value is not null
-            ? int.TryParse(value, out int result)
-                ? result
-                : null
-            : null;
+    /// <param name="text">The text.</param>
+    /// <param name="strings">The strings.</param>
+    /// <returns>String with strings removed.</returns>
+    public static string Remove(this string text, params string[] strings) =>
+        strings.Aggregate(text, (current, c) => current.Replace(c, string.Empty));
 
     /// <summary>
-    /// Gets a int from a string.
+    /// Writes value to the debug output.
     /// </summary>
-    /// <param name="value">string with number.</param>
-    /// <param name="fallback">Number to return if parse fail.</param>
-    /// <returns>fallback if value is (Null or Empty or not Numeric) otherwise the number.</returns>
-    public static int ToInt(this string value, int fallback = -1) =>
-        int.TryParse(value, out int result)
-            ? result
-            : fallback;
+    /// <param name="value">The value.</param>
+    /// <returns>Value passed.</returns>
+    public static string ToDebug(this string value)
+    {
+        Debug.WriteLine(value);
+
+        return value;
+    }
 
     /// <summary>
-    /// Writes an unformatted string to the Trace output.
+    /// Writes value to the trace output.
     /// </summary>
-    /// <param name="value">string to output.</param>
+    /// <param name="value">The value.</param>
+    /// <returns>Value passed.</returns>
     public static string ToTrace(this string value)
     {
         Trace.WriteLine(value);
@@ -146,49 +414,55 @@ public static class StringExtensions
     /// <summary>
     /// Splits the specified string into parts.
     /// </summary>
-    /// <param name="value">The value.</param>
-    /// <param name="elementLength">Length of the element.</param>
-    /// <returns>Value splitted into parts.</returns>
-    public static IEnumerable<string> Split(this string value, int elementLength)
+    /// <param name="value">The value to split.</param>
+    /// <param name="splitValue">The split value.</param>
+    /// <param name="stringLength">Length of the string.</param>
+    /// <returns>List of string chunks.</returns>
+    public static IList<string> Split(this string value, string splitValue, int stringLength)
     {
-        int fullLength = value.Length;
-        var elements = new List<string>();
+        var chunks = new List<string>();
+        var start = 0;
 
-        for (var startIndex = 0; startIndex < value.Length; startIndex += elementLength)
+        while (start < value.Length)
         {
-            if (startIndex + elementLength > fullLength)
-                elementLength = fullLength - startIndex;
+            if (start + stringLength >= value.Length)
+            {
+                chunks.Add(value.Substring(start));
 
-            elements.Add(value.Substring(startIndex, elementLength));
+                break;
+            }
+
+            string chunk = value.Substring(start, stringLength);
+            int splitIndex = chunk.LastIndexOf(splitValue, StringComparison.Ordinal);
+
+            if (splitIndex == -1
+                || splitIndex == 0)
+            {
+                // No split found or at beginning, take the full chunk
+                chunks.Add(chunk);
+                start += stringLength;
+            }
+            else
+            {
+                // Split found, take up to and including the split
+                chunks.Add(chunk.Substring(0, splitIndex + splitValue.Length));
+                start += splitIndex + splitValue.Length;
+            }
         }
 
-        return elements;
+        return chunks;
     }
 
     /// <summary>
-    /// Gets the splited element.
+    /// Converts the specified string to stream.
     /// </summary>
-    /// <param name="value">The value.</param>
-    /// <param name="separator">The separator.</param>
-    /// <param name="index">The index.</param>
-    /// <returns>The splited element.</returns>
-    public static string GetSplitedElement(this string value, char separator, int index) =>
-        !string.IsNullOrWhiteSpace(value)
-            ? value.Split(separator)[index]
-            : string.Empty;
-
-    /// <summary>
-    /// Creates stream from the string.
-    /// </summary>
-    /// <param name="value">The value.</param>
-    /// <returns>The stream.</returns>
-    public static Stream ToStream(this string value)
+    /// <param name="str">The string.</param>
+    /// <returns>Stream of the string.</returns>
+    public static Stream ToStream(this string str)
     {
         var stream = new MemoryStream();
-#pragma warning disable IDISP001
         var writer = new StreamWriter(stream);
-#pragma warning restore IDISP001
-        writer.Write(value);
+        writer.Write(str);
         writer.Flush();
         stream.Position = 0;
 
@@ -284,7 +558,7 @@ public static class StringExtensions
     /// </param>
     /// <param name="trim">Trims provided string before processing.</param>
     /// <returns>Returns a string containing a specified number of characters from the left side of a string.</returns>
-    /// <exception cref="T:System.ArgumentException">
+    /// <exception cref="ArgumentException">
     /// <paramref name="length" /> { 0.
     /// </exception>
     public static string Left(this string str, int length, bool trim = false)
@@ -308,7 +582,7 @@ public static class StringExtensions
     /// </param>
     /// <param name="trim">Trims provided string before processing.</param>
     /// <returns>A string that consists of all the characters starting from the specified position in the string.</returns>
-    /// <exception cref="T:System.ArgumentException">
+    /// <exception cref="ArgumentException">
     /// <paramref name="start" /> {= 0.
     /// </exception>
     public static string Mid(this string str, int start, bool trim = false)
@@ -343,7 +617,7 @@ public static class StringExtensions
     /// A string that consists of the specified number of characters starting from the specified position in the
     /// string.
     /// </returns>
-    /// <exception cref="T:System.ArgumentException">
+    /// <exception cref="ArgumentException">
     /// <paramref name="start" /> {= 0 or <paramref name="length" /> { 0.
     /// </exception>
     public static string Mid(this string str, int start, int length, bool trim = false)
@@ -363,7 +637,7 @@ public static class StringExtensions
     /// </param>
     /// <param name="trim">Trims provided string before processing.</param>
     /// <returns>Returns a string containing a specified number of characters from the right side of a string.</returns>
-    /// <exception cref="T:System.ArgumentException">
+    /// <exception cref="ArgumentException">
     /// <paramref name="length" /> { 0.
     /// </exception>
     public static string Right(this string str, int length, bool trim = false)
@@ -399,7 +673,6 @@ public static class StringExtensions
     public static void CopyTo(this Stream src, Stream dest)
     {
         var bytes = new byte[4096];
-
         int cnt;
 
         while ((cnt = src.Read(bytes, 0, bytes.Length)) != 0)
@@ -432,13 +705,6 @@ public static class StringExtensions
                                          string value,
                                          StringComparison comparisonType = StringComparison.Ordinal) =>
         source is null && value is null || source?.Equals(value, comparisonType) == true;
-
-    public static Uri ToUri(this string source, Uri baseUri = null, UriKind kind = UriKind.Absolute) =>
-        source?.IsNotNullOrEmptyOrWhiteSpace() == true
-            ? baseUri is not null
-                ? new(baseUri, source)
-                : new Uri(source, kind)
-            : null;
 
     public static string ByteArrayToString(this byte[] ba)
     {
@@ -549,7 +815,6 @@ public static class StringExtensions
 
 #if NETSTANDARD
         using var md5 = MD5.Create();
-
         byte[] hash = md5.ComputeHash(stream);
 #else
         byte[] hash = MD5.HashData(stream);
@@ -573,4 +838,14 @@ public static class StringExtensions
 
         return sb.ToString().Normalize(NormalizationForm.FormC);
     }
+
+    /// <summary>
+    /// Converts string to int, returns -1 if conversion fails
+    /// </summary>
+    /// <param name="value">String value to convert</param>
+    /// <returns>Converted integer or -1 if conversion fails</returns>
+    public static int ToInt(this string value) =>
+        int.TryParse(value, out int result)
+            ? result
+            : -1;
 }

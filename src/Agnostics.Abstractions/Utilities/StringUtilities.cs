@@ -1,17 +1,16 @@
-﻿using System;
+using System;
 using System.Text.RegularExpressions;
 
-namespace FEx.Basics.Helpers.Strings;
+namespace FEx.Agnostics.Abstractions.Utilities;
 
-// http://stackoverflow.com/questions/32149/does-anyone-have-a-good-proper-case-algorithm
-public static class ProperCaseHelper
+/// <summary>
+/// String utility methods for advanced string processing.
+/// </summary>
+public static class StringUtilities
 {
     public static Regex RomanNumeralsRegex { get; } = new(
         @"\b(?!Xi\b)(X|XX|XXX|XL|L|LX|LXX|LXXX|XC|C)?(I|II|III|IV|V|VI|VII|VIII|IX)?\b",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-    public static bool IsAllUpperOrAllLower(this string input) =>
-        input.ToLower().Equals(input) || input.ToUpper().Equals(input);
 
     public static string WordToProperCase(string word)
     {

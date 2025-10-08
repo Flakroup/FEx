@@ -1,6 +1,6 @@
-﻿using System.IO;
+using System.IO;
 
-namespace FEx.Extensions.IO;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
 public static class FileSystemInfoExtensions
 {

@@ -1,5 +1,5 @@
-﻿using FEx.Common.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Extensions;
 using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Concurrent;
@@ -15,7 +15,7 @@ public static class JoinableAsyncHelper
 
     private static JoinableTaskFactoryHandler MainJTF
     {
-        get => _mainJTF.Guard();
+        get => _mainJTF.GuardProperty();
         set => _mainJTF = value;
     }
 

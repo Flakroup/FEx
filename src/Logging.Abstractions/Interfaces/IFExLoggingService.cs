@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace FEx.Logging.Abstractions.Interfaces;
 
-public interface ILoggingService
+public interface IFExLoggingService
 {
     ILoggable GetLogger<T>();
     ILoggable GetLogger(object sender);

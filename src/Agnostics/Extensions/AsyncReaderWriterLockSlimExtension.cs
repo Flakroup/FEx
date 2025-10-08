@@ -1,10 +1,10 @@
-﻿using FEx.Basics.Utilities;
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Utilities;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FEx.Basics.Extensions;
+namespace FEx.Agnostics.Extensions;
 
 /// <summary>
 /// Contains extension methods for <see cref="AsyncReaderWriterLockSlim" />.

@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Threading;
 
-namespace FEx.Extensions.Numericals;
+namespace FEx.Agnostics.Abstractions.Extensions.Numericals;
 
 public static class DoubleExtensions
 {

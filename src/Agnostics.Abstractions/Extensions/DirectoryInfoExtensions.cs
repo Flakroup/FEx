@@ -1,8 +1,10 @@
-﻿using FEx.Extensions.Base.IO;
+using FEx.Agnostics.Abstractions.Extensions.Collections.Dictionaries;
+using FEx.Agnostics.Abstractions.Helpers;
+using FEx.Agnostics.Abstractions.IO;
 using System;
 using System.IO;
 
-namespace FEx.Extensions.IO;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
 public static class DirectoryInfoExtensions
 {
@@ -55,4 +57,11 @@ public static class DirectoryInfoExtensions
                                                      Func<string, T> activator,
                                                      params string[] descendants) =>
         activator(GetDescendantPath(dir, descendants));
+
+    public static string GetSpecialDirectoryPathDescendants(this Environment.SpecialFolder folder,
+                                                            params string[] descendants) =>
+        GetSpecialDirectory(folder).Directory.GetDescendantPath(descendants);
+
+    public static SpecialDirectory GetSpecialDirectory(this Environment.SpecialFolder folder) =>
+        SpecialDirectory.SpecialDirectories.TryGetReadOnlyKeyValue(folder);
 }

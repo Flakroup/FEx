@@ -1,4 +1,4 @@
-namespace FEx.Fundamentals.StackTraces;
+namespace FEx.Core.StackTraces;
 
 public class StackTraceFilter : IStackTraceFilter
 {

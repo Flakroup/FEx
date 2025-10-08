@@ -1,8 +1,9 @@
-﻿using DynamicData.Binding;
-using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
-using FEx.Basics.Utilities;
-using FEx.Extensions;
+using DynamicData.Binding;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Agnostics.Collections.Concurrent;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -11,13 +12,13 @@ using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
 
-namespace FEx.Basics.Collections.Concurrent;
+namespace FEx.Core.Collections.Concurrent;
 
 [DebuggerDisplay("Count={" + nameof(Count) + "}")]
+[DebuggerTypeProxy(typeof(CollectionDebugView<>))]
 [Serializable]
 public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollection<T>
 {
-    [NonSerialized]
     private readonly IFExDispatcher _dispatcher;
 
     /// <summary>
@@ -33,8 +34,8 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
     public event PropertyChangedEventHandler PropertyChanged;
 
     public IObservable<EventPattern<NotifyCollectionChangedEventArgs>> CollectionChangedObservable =>
-        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
-            ev => CollectionChanged += ev,
+        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(ev =>
+                CollectionChanged += ev,
             ev => CollectionChanged -= ev);
 
     /// <summary>
@@ -47,7 +48,7 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
         : base(collection)
     {
 #pragma warning disable CS0618 // Type or member is obsolete
-        _dispatcher = FExFoundation.Dispatcher;
+        _dispatcher = FExCoreStatics.Dispatcher;
 #pragma warning restore CS0618 // Type or member is obsolete
     }
 
@@ -75,14 +76,12 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
             OnCollectionReset();
     }
 
-    protected virtual void Dispatch(Action action) => _dispatcher.InvokeOnMainThread(action, this);
-
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         if (EventsAreSuppressed || PropertyChanged is null)
             return;
 
-        Dispatch(() => PropertyChanged.HandlePropertyChanged(this, e));
+        _dispatcher.SendInContext(() => PropertyChanged.HandlePropertyChanged(this, e), this);
     }
 
     protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
@@ -90,6 +89,6 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
         if (EventsAreSuppressed || CollectionChanged is null)
             return;
 
-        Dispatch(() => CollectionChanged.Invoke(this, e));
+        _dispatcher.SendInContext(() => CollectionChanged.Invoke(this, e), this);
     }
 }

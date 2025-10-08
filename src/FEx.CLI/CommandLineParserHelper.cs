@@ -1,5 +1,5 @@
-﻿using CommandLine;
-using FEx.Extensions.Collections.Lists;
+using CommandLine;
+using FEx.Agnostics.Abstractions.Extensions.Collections.Lists;
 using System;
 using System.Collections.Generic;
 using System.Linq;

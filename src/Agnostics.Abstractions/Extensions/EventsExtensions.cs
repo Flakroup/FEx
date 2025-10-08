@@ -2,7 +2,7 @@ using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
-namespace FEx.Extensions;
+namespace FEx.Agnostics.Abstractions.Extensions;
 
 public static class EventsExtensions
 {

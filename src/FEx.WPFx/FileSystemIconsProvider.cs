@@ -1,9 +1,8 @@
-using FEx.Abstractions.Flow;
-using FEx.Abstractions.Flow.Errors;
-using FEx.Abstractions.Interfaces;
-using FEx.Common.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
-using FEx.Fundamentals.Utilities;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Flow;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.Core.Utilities;
 using FEx.WPFx.Natives;
 using System;
 using System.Drawing;
@@ -12,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
+using ExceptionError = FEx.Agnostics.Abstractions.Flow.ExceptionError;
 
 namespace FEx.WPFx;
 

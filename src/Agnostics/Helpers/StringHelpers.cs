@@ -1,11 +1,10 @@
-﻿using JetBrains.Annotations;
 using System.IO;
 
-namespace FEx.Extensions.Base.Helpers;
+namespace FEx.Agnostics.Helpers;
 
 public static class StringHelpers
 {
-    public static long CountLinesMaybe([NotNull] Stream stream)
+    public static long CountLinesMaybe(Stream stream)
     {
         var lineCount = 0L;
 

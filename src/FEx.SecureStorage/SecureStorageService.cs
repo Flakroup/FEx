@@ -1,7 +1,6 @@
-﻿using FEx.Basics.IO;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.IO;
 using FEx.Encryption;
-using FEx.Extensions;
-using FEx.Extensions.IO;
 using FEx.Json.Extensions;
 using System;
 using System.IO;

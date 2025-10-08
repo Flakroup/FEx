@@ -1,4 +1,4 @@
-﻿namespace FEx.AzureStorage;
+namespace FEx.AzureStorage;
 
 public class AzureStorageConfiguration
 {

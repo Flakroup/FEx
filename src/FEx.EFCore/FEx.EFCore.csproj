@@ -5,8 +5,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Azure.Identity" Version="1.13.2" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
+		<PackageReference Include="Azure.Identity" Version="1.16.0" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EFCoreVersion)" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(EFCoreVersion)" />
@@ -21,11 +21,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
-		<ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
-		<ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
 		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
-		<ProjectReference Include="..\FEx.Logging\FEx.Logging.csproj" />
 	</ItemGroup>
 
 </Project>

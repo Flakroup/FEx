@@ -1,8 +1,6 @@
-﻿using FEx.Basics.Collections.Concurrent;
-using FEx.Common.Helpers;
-using FEx.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
-using FEx.Extensions.Collections.Enumerables;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Helpers;
+using FEx.Core.Collections.Concurrent;
 using FEx.MVVM.Abstractions;
 using FEx.MVVM.Abstractions.Events;
 using FEx.MVVM.Abstractions.Interfaces;
@@ -136,9 +134,11 @@ public sealed class ProgressService : SubscriberBase, IProgressService
         return container;
     }
 
-    private void AttachContainer(IProgressAggregator container) => Subscriptions.ReplaceAndDisposeOldValue(container.Id, () => GetSubscription(container));
+    private void AttachContainer(IProgressAggregator container) =>
+        Subscriptions.ReplaceAndDisposeOldValue(container.Id, () => GetSubscription(container));
 
-    private IDisposable GetSubscription(IProgressAggregator container) => Observable
+    private IDisposable GetSubscription(IProgressAggregator container) =>
+        Observable
             .FromEventPattern<ProgressPropertyChangedEventHandler, ProgressPropertyChangedEventArgs>(
                 h => container.ProgressPropertyChanged += h,
                 h => container.ProgressPropertyChanged -= h)

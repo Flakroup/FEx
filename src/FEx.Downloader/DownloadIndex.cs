@@ -1,4 +1,4 @@
-﻿using FEx.Downloader.Abstractions.Interfaces;
+using FEx.Downloader.Abstractions.Interfaces;
 using System;
 
 namespace FEx.Downloader;

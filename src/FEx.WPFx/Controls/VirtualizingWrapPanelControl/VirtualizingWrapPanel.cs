@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -6,9 +6,9 @@ using System.Windows.Controls.Primitives;
 namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 /// <summary>
-///     A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical
-///     orientation.
-///     https://github.com/sbaeumlisberger/VirtualizingWrapPanel
+/// A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical
+/// orientation.
+/// https://github.com/sbaeumlisberger/VirtualizingWrapPanel
 /// </summary>
 public class VirtualizingWrapPanel : VirtualizingPanelBase
 {
@@ -58,7 +58,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
     private VirtualizingWrapPanelModel _model;
 
     /// <summary>
-    ///     Gets or sets a value that specifies the orientation in which items are arranged. The default value is
+    /// Gets or sets a value that specifies the orientation in which items are arranged. The default value is
     /// <see cref="Orientation.Horizontal" />.
     /// </summary>
     public Orientation Orientation
@@ -68,8 +68,8 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
     }
 
     /// <summary>
-    ///     Gets or sets a value that specifies the size of the items. The default value is <see cref="Size.Empty" />.
-    ///     If the value is <see cref="Size.Empty" /> the item size is determined by measuring the first realized item.
+    /// Gets or sets a value that specifies the size of the items. The default value is <see cref="Size.Empty" />.
+    /// If the value is <see cref="Size.Empty" /> the item size is determined by measuring the first realized item.
     /// </summary>
     public Size ItemSize
     {
@@ -78,8 +78,8 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
     }
 
     /// <summary>
-    ///     Specifies an instance of <see cref="IItemSizeProvider" /> which provides the size of the items. In order to allow
-    ///     different sized items, also enable the <see cref="AllowDifferentSizedItems" /> property.
+    /// Specifies an instance of <see cref="IItemSizeProvider" /> which provides the size of the items. In order to allow
+    /// different sized items, also enable the <see cref="AllowDifferentSizedItems" /> property.
     /// </summary>
     public IItemSizeProvider ItemSizeProvider
     {
@@ -88,9 +88,9 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
     }
 
     /// <summary>
-    ///     Specifies whether items can have different sizes. The default value is false. If this property is enabled,
-    ///     it is strongly recommended to also set the <see cref="ItemSizeProvider" /> property. Otherwise, the position
-    ///     of the items is not always guaranteed to be correct.
+    /// Specifies whether items can have different sizes. The default value is false. If this property is enabled,
+    /// it is strongly recommended to also set the <see cref="ItemSizeProvider" /> property. Otherwise, the position
+    /// of the items is not always guaranteed to be correct.
     /// </summary>
     public bool AllowDifferentSizedItems
     {
@@ -99,7 +99,7 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
     }
 
     /// <summary>
-    ///     Gets or sets the spacing mode used when arranging the items. The default value is
+    /// Gets or sets the spacing mode used when arranging the items. The default value is
     /// <see cref="SpacingMode.Uniform" />.
     /// </summary>
     public SpacingMode SpacingMode
@@ -109,12 +109,12 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
     }
 
     /// <summary>
-    ///     Gets or sets a value that specifies if the items get stretched to fill up remaining space. The default value is
-    ///     false.
+    /// Gets or sets a value that specifies if the items get stretched to fill up remaining space. The default value is
+    /// false.
     /// </summary>
     /// <remarks>
-    ///     The MaxWidth and MaxHeight properties of the ItemContainerStyle can be used to limit the stretching.
-    ///     In this case the use of the remaining space will be determined by the SpacingMode property.
+    /// The MaxWidth and MaxHeight properties of the ItemContainerStyle can be used to limit the stretching.
+    /// In this case the use of the remaining space will be determined by the SpacingMode property.
     /// </remarks>
     public bool StretchItems
     {
@@ -129,8 +129,8 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
     }
 
     /// <summary>
-    ///     Gets value that indicates whether the <see cref="VirtualizingPanel" /> can virtualize items
-    ///     that are grouped or organized in a hierarchy.
+    /// Gets value that indicates whether the <see cref="VirtualizingPanel" /> can virtualize items
+    /// that are grouped or organized in a hierarchy.
     /// </summary>
     /// <returns>always true for <see cref="VirtualizingWrapPanel" /></returns>
     protected override bool CanHierarchicallyScrollAndVirtualizeCore => true;
@@ -228,7 +228,8 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
 
     private void Model_MeasureInvalidated(object sender, EventArgs e) => InvalidateMeasure();
 
-    private void Orientation_Changed() => MouseWheelScrollDirection = Orientation == Orientation.Horizontal
+    private void Orientation_Changed() =>
+        MouseWheelScrollDirection = Orientation == Orientation.Horizontal
             ? ScrollDirection.Vertical
             : ScrollDirection.Horizontal;
 }

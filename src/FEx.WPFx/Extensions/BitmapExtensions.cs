@@ -1,4 +1,4 @@
-﻿using FEx.Extensions.IO;
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.MVVM.Abstractions;
 using System;
 using System.Drawing;
@@ -72,7 +72,7 @@ public static class BitmapExtensions
     }
 
     /// <summary>
-    ///     To the bitmap source.
+    /// To the bitmap source.
     /// </summary>
     /// <param name="bitmap">The bitmap.</param>
     /// <returns></returns>
@@ -99,7 +99,7 @@ public static class BitmapExtensions
     }
 
     /// <summary>
-    ///     Saves to file.
+    /// Saves to file.
     /// </summary>
     /// <param name="image">The image.</param>
     /// <param name="filePath">The file path.</param>
@@ -120,13 +120,13 @@ public static class BitmapExtensions
     }
 
     /// <summary>
-    ///     Takes a bitmap and converts it to an image that can be handled by WPF ImageBrush
+    /// Takes a bitmap and converts it to an image that can be handled by WPF ImageBrush
     /// </summary>
     /// <param name="image">A bitmap image</param>
     /// <param name="imageFormat">The format.</param>
     /// <param name="forceLoad">if set to <c>true</c> [force load].</param>
     /// <returns>
-    ///     The image as a BitmapImage for WPF
+    /// The image as a BitmapImage for WPF
     /// </returns>
     public static async Task<BitmapImage> ToBitmapImageAsync(this Image image,
                                                              ImageFormat imageFormat = null,

@@ -2,4 +2,8 @@
 
     <Import Project="$(MSBuildThisFileDirectory)\DevConfigs\Directory.Build.props"/>
 
+	<PropertyGroup>
+		<NoWarn>$(NoWarn);NU1701</NoWarn>
+	</PropertyGroup>
+
 </Project>

@@ -1,16 +1,13 @@
-﻿using FEx.Abstractions.Enums;
-using FEx.Abstractions.Flow;
-using FEx.Abstractions.Flow.Errors;
-using FEx.Abstractions.Interfaces;
-using FEx.Asyncx.Extensions;
+using FEx.Agnostics.Abstractions;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Flow;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Agnostics.BaseObjects;
 using FEx.Asyncx.Helpers;
-using FEx.Basics.Abstractions;
-using FEx.Basics.Utilities;
-using FEx.Common.Extensions;
-using FEx.Extensions;
-using FEx.Extensions.Helpers;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.Logging.Abstractions.Extensions;
-using Microsoft.Extensions.Logging;
+using FEx.Logging.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -20,7 +17,7 @@ namespace FEx.Asyncx.Abstractions;
 
 public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitializable
 {
-    protected readonly ILogger _logger;
+    protected readonly ILoggable _logger;
     protected readonly ConcurrentDictionary<string, IAsyncInitializable> _dependencies;
 
     protected Task _initializationTask;
@@ -39,7 +36,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
     public string TypeFullName { get; protected set; }
 
     /// <summary>
-    ///     If <c>true</c> doesn't wait for dependencies initialization
+    /// If <c>true</c> doesn't wait for dependencies initialization
     /// </summary>
     protected bool SkipDependenciesInitialization { get; set; }
 
@@ -64,7 +61,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
         try
         {
-            _initializationTask ??= StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InitializeCoreAsync);
+            _initializationTask ??= AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeCoreAsync);
         }
         finally
         {
@@ -93,7 +90,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
         return;
 
-        Task InitFuncAsync() => StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
+        Task InitFuncAsync() => AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
     }
 
     protected static async Task<Result<ExceptionError>> SafeInitializeAsync(IAsyncInitializable dependency)
@@ -122,7 +119,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
     {
         Result<ExceptionError>[] results = await _dependencies.Values
             .Where(static dependency => !dependency.IsInitialized)
-            .RunWithWhenAllTasksAsync(SafeInitializeAsync, AsyncMode.ThreadPool);
+            .WithWhenAllTasksAsync(SafeInitializeAsync, AsyncMode.ThreadPool);
 
         if (!results.Any())
             return;

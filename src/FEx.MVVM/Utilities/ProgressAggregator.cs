@@ -1,16 +1,15 @@
-﻿using FEx.Common.Extensions;
-using FEx.Extensions.Base.Converters;
-using FEx.Extensions.Base.Enums;
-using FEx.Extensions.DateTimes;
-using FEx.Extensions.Numericals;
-using FEx.Logging.Abstractions;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Extensions.Numericals;
+using FEx.Agnostics.Abstractions.Logging;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Subjects;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Events;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Subjects;
-using FEx.Rx.Extensions;
-using FEx.Rx.Subjects;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -46,9 +45,9 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         //todo if needed Dispose and renew sub on progress Start/End
         _changedPropertiesSubject.Where(ExcludedProperties.Contains)
             .Buffer(FExMvvm.DefaultUIRefreshInterval)
-            .Where(propertyNames => propertyNames.Count > 0)
-            .Select(propertyNames => propertyNames.Distinct().ToList())
-            .AsyncSubscribe(_subscriptions, OnExcludedPropertiesChanged);
+            .Where(static propertyNames => propertyNames.Count > 0)
+            .Select(static propertyNames => propertyNames.Distinct().ToList())
+            .AsyncSubscribe(OnExcludedPropertiesChanged, _subscriptions);
     }
 
     public override bool SetProperty<TRet>(ref TRet backingField,
@@ -157,7 +156,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         nameof(IProgressStatus.State)
     ];
 
-    protected virtual void LogError(string message) => FExLoggingFoundation.Logger.LogError(message);
+    protected virtual void LogError(string message) => FExStaticLogger.Error(message);
 
     protected virtual void ProcessEndPrg() => Value = Maximum;
 
@@ -228,36 +227,36 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         switch (Mode)
         {
             case ProgressOperationMode.Standard:
-                {
-                    string avg = est.IsNotNullOrEmptyString()
-                        ? $"AVG: {avgMs.GetTime()}"
-                        : string.Empty;
+            {
+                string avg = est.IsNotNullOrEmptyString()
+                    ? $"AVG: {avgMs.GetTime()}"
+                    : string.Empty;
 
-                    Info =
-                        $"{percentage}% {value}/{maximum}{(Unit.IsNotNullOrEmptyString() ? $"{Unit}" : string.Empty)} {est} {avg}";
+                Info =
+                    $"{percentage}% {value}/{maximum}{(Unit.IsNotNullOrEmptyString() ? $"{Unit}" : string.Empty)} {est} {avg}";
 
-                    break;
-                }
+                break;
+            }
             case ProgressOperationMode.Stream:
-                {
-                    string curBt =
-                        FileLengthConverter.ConvertFileLengthToString(value, LengthType.Bytes, LengthType.AutoDetect);
+            {
+                string curBt =
+                    FileLengthConverter.ConvertFileLengthToString(value, LengthType.Bytes, LengthType.AutoDetect);
 
-                    string curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
-                        LengthType.Bytes,
-                        LengthType.AutoDetect);
+                string curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
+                    LengthType.Bytes,
+                    LengthType.AutoDetect);
 
-                    double curr = elapsed.TotalSeconds;
+                double curr = elapsed.TotalSeconds;
 
-                    string kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
-                        LengthType.Bytes,
-                        LengthType.AutoDetect,
-                        1);
+                string kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
+                    LengthType.Bytes,
+                    LengthType.AutoDetect,
+                    1);
 
-                    Info = $"{percentage}% {curBt}/{curTb} {kbPerSec}/sec {est}";
+                Info = $"{percentage}% {curBt}/{curTb} {kbPerSec}/sec {est}";
 
-                    break;
-                }
+                break;
+            }
             default:
                 throw new ArgumentOutOfRangeException(nameof(Mode), $"{Mode} is not handled");
         }
@@ -275,7 +274,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         if (ProgressPropertyChanged is null)
             return;
 
-        Dispatcher.InvokeOnMainThread(EventDelegate, this);
+        FExCoreStatics.Dispatcher.InvokeOnMainThread(EventDelegate, this);
 
         return;
 
@@ -352,24 +351,24 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
     }
 
     /// <summary>
-    ///     Sets progress value of the ProgressBar to the maximal value
+    /// Sets progress value of the ProgressBar to the maximal value
     /// </summary>
     public void PrgSetEnd() => PrgSet(-1, mode: ProgressChangeMode.End);
 
     /// <summary>
-    ///     Increments current progress value of the ProgressBar
+    /// Increments current progress value of the ProgressBar
     /// </summary>
     /// <param name="addedValue">The added value.</param>
     public void PrgAdd(double addedValue = 1) => PrgSet(addedValue, mode: ProgressChangeMode.Add);
 
     /// <summary>
-    ///     Adds value to the maximum of progress value.
+    /// Adds value to the maximum of progress value.
     /// </summary>
     /// <param name="addedValue">The added value.</param>
     public void PrgMaxAdd(double addedValue) => PrgSet(null, addedValue, ProgressChangeMode.Add);
 
     /// <summary>
-    ///     Sets maximal allowed value of the ProgressBar and resets current progress
+    /// Sets maximal allowed value of the ProgressBar and resets current progress
     /// </summary>
     /// <param name="max"></param>
     public void PrgSetMax(double max) => PrgSet(0, max);

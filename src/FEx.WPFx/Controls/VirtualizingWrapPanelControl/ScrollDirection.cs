@@ -1,4 +1,4 @@
-﻿namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
+namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 public enum ScrollDirection
 {

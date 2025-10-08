@@ -1,5 +1,5 @@
-﻿using FEx.Abstractions;
-using FEx.Basics.Collections.Concurrent;
+using FEx.Core.Abstractions;
+using FEx.Core.Collections.Concurrent;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Services;
 using Microsoft.Extensions.Logging;
@@ -105,10 +105,10 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
         try
         {
             if (wait)
-                return (MessageResult)await FExFoundation.Dispatcher.InvokeOnMainThreadAsync(() =>
+                return (MessageResult)await FExCoreStatics.Dispatcher.InvokeOnMainThreadAsync(() =>
                     InternalShowMessageBox(message, caption, messageBoxImage, buttons, owner, sw));
 
-            FExFoundation.Dispatcher.BeginInvokeOnMainThread(() =>
+            FExCoreStatics.Dispatcher.BeginInvokeOnMainThread(() =>
                 InternalShowMessageBox(message, caption, messageBoxImage, buttons, owner, sw));
         }
         catch (Exception ex)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace FEx.MVVM.Abstractions.Events;
 
@@ -7,12 +7,12 @@ public class ProgressPropertyChangedEventArgs : EventArgs
     public virtual string ContainerId { get; }
 
     /// <summary>
-    ///     Indicates the name of the property that changed.
+    /// Indicates the name of the property that changed.
     /// </summary>
     public virtual string PropertyName { get; }
 
     /// <summary>
-    ///     Contains the value of the property that changed.
+    /// Contains the value of the property that changed.
     /// </summary>
     public virtual object Value { get; }
 

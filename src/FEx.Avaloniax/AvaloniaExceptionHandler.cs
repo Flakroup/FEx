@@ -1,5 +1,6 @@
-﻿using FEx.Abstractions.CustomEventArgs;
-using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Core.Abstractions.CustomEventArgs;
+using FEx.Core.Abstractions.Interfaces;
 using System;
 using System.Threading.Tasks;
 

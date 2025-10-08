@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Interfaces;
 using System;
 using System.Net;
 using System.Threading.Tasks;

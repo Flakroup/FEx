@@ -1,7 +1,5 @@
-using FEx.Abstractions.Interfaces;
-using FEx.Common.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
-using FEx.Extensions.Collections.Enumerables;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.MVVM.Abstractions;
 using FEx.WPFx.Abstractions.Interfaces;
 using System.Collections.Concurrent;
@@ -80,7 +78,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
     }
 
     /// <summary>
-    ///     Grows the tree.
+    /// Grows the tree.
     /// </summary>
     /// <param name="tree">The tree.</param>
     /// <param name="newNode">The new node.</param>
@@ -98,7 +96,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
     }
 
     /// <summary>
-    ///     Grows the tree.
+    /// Grows the tree.
     /// </summary>
     /// <param name="tree">The tree.</param>
     /// <param name="nodeStub">The node stub.</param>

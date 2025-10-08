@@ -1,11 +1,12 @@
-﻿using Avalonia.Controls;
-using FEx.Abstractions;
-using FEx.Abstractions.Enums;
+using Avalonia.Controls;
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Avaloniax.Abstractions.Interfaces;
+using FEx.Core.Abstractions;
 using FEx.MVVM.Rx.BaseObjects;
 using ReactiveUI;
 using System;
 using System.Reactive.Disposables;
+using System.Reactive.Disposables.Fluent;
 using System.Threading.Tasks;
 
 namespace FEx.Avaloniax.Abstractions;
@@ -32,11 +33,7 @@ public abstract class FExAvaloniaViewModelBase : ReactiveNotifyPropertyChanged, 
 
         NavigationService = navigationService;
 
-        this.WhenActivated(disposables =>
-        {
-            FExFoundation.AsyncHelper.FireTaskAndForget(OnActivatedAsync, AsyncMode.ThreadPool);
-            Disposable.Create(OnDeactivated).DisposeWith(disposables);
-        });
+        this.WhenActivated(HandleActivation);
     }
 
     protected virtual void OnDeactivated()
@@ -46,6 +43,12 @@ public abstract class FExAvaloniaViewModelBase : ReactiveNotifyPropertyChanged, 
     protected virtual async Task OnActivatedAsync()
     {
         await Task.CompletedTask;
+    }
+
+    private void HandleActivation(CompositeDisposable disposables)
+    {
+        FExCoreStatics.AsyncHelper.FireTaskOnThreadPoolAndForget(OnActivatedAsync);
+        Disposable.Create(OnDeactivated).DisposeWith(disposables);
     }
 
     #region IDisposable

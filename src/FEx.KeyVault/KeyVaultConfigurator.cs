@@ -1,4 +1,4 @@
-﻿using Arcus.Security.Providers.AzureKeyVault.Configuration;
+using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;

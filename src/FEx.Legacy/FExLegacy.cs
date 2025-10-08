@@ -1,13 +1,11 @@
-﻿using FEx.DI.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
+using FEx.Agnostics.Abstractions;
 
 namespace FEx.Legacy;
 
-public class FExLegacy : InitializeModule<IFExLegacyContainer>
+public class FExLegacy : FExInitialize
 {
-    /// <inheritdoc />
-    protected override void AddServices(IFExLegacyContainer container, IServiceCollection services)
+    protected override void OnInitialize()
     {
-        FExLegacyModule.AddServices(container, services);
+        // Legacy initialization if needed
     }
 }

@@ -1,4 +1,4 @@
-﻿using FEx.Legacy.Asyncx.Enums;
+using FEx.Legacy.Asyncx.Enums;
 using System;
 using System.Threading.Tasks;
 

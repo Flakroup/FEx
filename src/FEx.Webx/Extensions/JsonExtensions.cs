@@ -1,4 +1,4 @@
-﻿using FEx.Extensions.Web;
+using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Json.Extensions;
 using Newtonsoft.Json;
 using System;
@@ -7,7 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using FExUriExtensions = FEx.Extensions.Web.UriExtensions;
+using FExUriExtensions = FEx.Agnostics.Abstractions.Extensions.Web.UriExtensions;
 
 namespace FEx.Webx.Extensions;
 

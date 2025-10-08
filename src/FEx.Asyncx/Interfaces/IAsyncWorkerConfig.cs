@@ -1,4 +1,4 @@
-﻿namespace FEx.Asyncx.Interfaces;
+namespace FEx.Asyncx.Interfaces;
 
 public interface IAsyncWorkerConfig
 {

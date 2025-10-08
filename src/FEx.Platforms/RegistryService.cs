@@ -1,6 +1,6 @@
-﻿using FEx.Common.Extensions;
-using FEx.Common.Utilities;
-using FEx.Extensions.Base.Enums;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Utilities;
 using FEx.Platforms.Abstractions.Interfaces;
 using FEx.Platforms.Extensions;
 using Microsoft.Win32;
@@ -118,18 +118,23 @@ public class RegistryService : IRegistryService
             : null;
     }
 
-    public RegistryKey GetClassesRootSubKey(string subKey, bool writable = true) => RunClassesRootFunc(lm => GetSubKey(lm, subKey, writable));
+    public RegistryKey GetClassesRootSubKey(string subKey, bool writable = true) =>
+        RunClassesRootFunc(lm => GetSubKey(lm, subKey, writable));
 
-    public RegistryKey GetLocalMachineSubKey(string subKey, bool writable = true) => RunLocalMachineFunc(lm => GetSubKey(lm, subKey, writable));
+    public RegistryKey GetLocalMachineSubKey(string subKey, bool writable = true) =>
+        RunLocalMachineFunc(lm => GetSubKey(lm, subKey, writable));
 
-    public RegistryKey GetCurrentUserSubKey(string subKey, bool writable = true) => RunCurrentUserFunc(cu => GetSubKey(cu, subKey, writable));
+    public RegistryKey GetCurrentUserSubKey(string subKey, bool writable = true) =>
+        RunCurrentUserFunc(cu => GetSubKey(cu, subKey, writable));
 
     public RegistryKey GetSubKey(RegistryKey registry, string subKey, bool writable = true) =>
         registry.OpenSubKey(subKey, writable);
 
-    public RegistryKey GetOrAddCurrentUserSubKey(string subKey, bool writable = true) => RunCurrentUserFunc(cu => GetOrAddSubKey(cu, subKey, writable));
+    public RegistryKey GetOrAddCurrentUserSubKey(string subKey, bool writable = true) =>
+        RunCurrentUserFunc(cu => GetOrAddSubKey(cu, subKey, writable));
 
-    public RegistryKey GetOrAddLocalMachineSubKey(string subKey, bool writable = true) => RunLocalMachineFunc(lm => GetOrAddSubKey(lm, subKey, writable));
+    public RegistryKey GetOrAddLocalMachineSubKey(string subKey, bool writable = true) =>
+        RunLocalMachineFunc(lm => GetOrAddSubKey(lm, subKey, writable));
 
     public void SetStartup(string appName, string executablePath, bool enable, bool global = false)
     {

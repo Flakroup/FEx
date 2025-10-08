@@ -1,9 +1,9 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Data;
 using FEx.Avaloniax.Abstractions.Interfaces;
-using FEx.Basics.Extensions;
+using FEx.Core.Abstractions.Extensions;
 using FEx.DependencyInjection;
-using FEx.DI.Abstractions;
+using FEx.DependencyInjection.Abstractions;
 using System;
 
 namespace FEx.Avaloniax;
@@ -14,7 +14,7 @@ public abstract class FExAvaloniaApp<TContainer> : Application
     public TContainer Container { get; }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="FExAvaloniaApp{TContainer}" /> class.
+    /// Initializes a new instance of the <see cref="FExAvaloniaApp{TContainer}" /> class.
     /// </summary>
     protected FExAvaloniaApp()
     {

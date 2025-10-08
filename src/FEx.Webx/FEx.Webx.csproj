@@ -9,8 +9,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
-	  <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
 	  <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
 	  <ProjectReference Include="..\FEx.Platforms\FEx.Platforms.csproj" />
 	</ItemGroup>

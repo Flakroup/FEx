@@ -1,4 +1,4 @@
-﻿using FEx.EFCore.Interfaces;
+using FEx.EFCore.Interfaces;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Diagnostics;

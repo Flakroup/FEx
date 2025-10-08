@@ -1,6 +1,6 @@
-﻿using FEx.Abstractions;
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.AppSettings.Abstractions.Interfaces;
-using FEx.Common.Extensions;
+using FEx.Core.Abstractions;
 using FEx.Encryption;
 using FEx.Json.Extensions;
 using Newtonsoft.Json;
@@ -32,14 +32,14 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
     public virtual void Initialize(string persistencePath, (bool hasBeenReadFromFile, bool isAsync) tuple)
     {
         if (PersistencePath.IsNotNullOrEmptyString())
-            FExFoundation.SynchronizedAccessService.RemoveLock(PersistencePath);
+            FExCoreStatics.SynchronizedAccessService.RemoveLock(PersistencePath);
 
         PersistencePath = persistencePath;
 
         if (PersistencePath.IsNotNullOrEmptyString())
         {
             Directory.CreateDirectory(Path.GetDirectoryName(PersistencePath)!);
-            SettingsLock = FExFoundation.SynchronizedAccessService.EnsureLock(PersistencePath);
+            SettingsLock = FExCoreStatics.SynchronizedAccessService.EnsureLock(PersistencePath);
         }
 
         IsAsync = tuple.isAsync;
@@ -59,7 +59,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
                 if (PersistencePath.IsNotNullOrEmptyString())
                 {
                     if (IsAsync)
-                        FExFoundation.AsyncHelper.FireTaskAndForget(SaveSettingsAsync);
+                        FExCoreStatics.AsyncHelper.FireTaskAndForget(SaveSettingsAsync);
                     else
                         SaveSettings();
                 }
@@ -94,7 +94,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
 
         try
         {
-#if NETSTANDARD
+#if NETSTANDARD2_0
             File.WriteAllText(PersistencePath, SerializedInstance());
 #else
             await File.WriteAllTextAsync(PersistencePath, SerializedInstance());

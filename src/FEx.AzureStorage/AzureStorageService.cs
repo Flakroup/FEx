@@ -1,10 +1,7 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.AzureStorage.Extensions;
-using FEx.Common.Extensions;
-using FEx.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
-using FEx.Extensions.IO;
 using FEx.Json.Extensions;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
@@ -27,8 +24,8 @@ namespace FEx.AzureStorage;
 public class AzureStorageService : IAzureStorageService
 {
     /// <summary>
-    ///     The latest version according to
-    ///     https://docs.microsoft.com/en-us/rest/api/storageservices/versioning-for-the-azure-storage-services
+    /// The latest version according to
+    /// https://docs.microsoft.com/en-us/rest/api/storageservices/versioning-for-the-azure-storage-services
     /// </summary>
     public const string LatestVersion = "2021-04-10";
 
@@ -96,17 +93,17 @@ public class AzureStorageService : IAzureStorageService
         Directory.CreateDirectory(downloadDir);
 
         (string fileName, FileInfo localFile)[] blobsInfo =
-            await paths.RunWithWhenAllTasksAsync(path => ProcessBlobAsync(containerName, downloadDir, path));
+            await paths.WithWhenAllTasksAsync(path => ProcessBlobAsync(containerName, downloadDir, path));
 
         if (deleteOldFiles)
             DeleteOldFiles(downloadDir, deleteFilesMask, blobsInfo.Select(x => x.localFile.FullName).ToArray());
 
         (FileInfo localFile, CloudBlockBlob sourceBlob, bool shouldBeDownloaded)[] preparedBlobs =
-            await blobsInfo.RunWithWhenAllTasksAsync(x =>
+            await blobsInfo.WithWhenAllTasksAsync(x =>
                 PrepareBlobDownloadAsync(containerName, x.fileName, x.localFile, noDownload));
 
         if (!noDownload)
-            await preparedBlobs.RunWithWhenAllTasksAsync(x =>
+            await preparedBlobs.WithWhenAllTasksAsync(x =>
                 RunBlobDownloadAsync(x.localFile, x.sourceBlob, x.shouldBeDownloaded));
 
         IDictionary<string, string> resDictionary = new Dictionary<string, string>();
@@ -201,7 +198,7 @@ public class AzureStorageService : IAzureStorageService
         CloudBlobContainer container = GetCloudBlobContainer(containerName);
         T[] blobs = container.ListBlobs(path, useFlatBlobListing, BlobListingDetails.Metadata).Cast<T>().ToArray();
 
-        await blobs.RunWithWhenAllTasksAsync(x => x.FetchAttributesAsync());
+        await blobs.WithWhenAllTasksAsync(x => x.FetchAttributesAsync());
 
         return blobs;
     }
@@ -284,7 +281,7 @@ public class AzureStorageService : IAzureStorageService
         CloudBlobContainer container = GetCloudBlobContainer(containerName);
 
         if (!oneByOne)
-            return (await files.RunWithWhenAllTasksAsync(file =>
+            return (await files.WithWhenAllTasksAsync(file =>
                 UploadFileAsync(path, overwrite, file, containerName, container))).ToDictionary(x => x.file,
                 x => x.blob);
 
@@ -342,11 +339,6 @@ public class AzureStorageService : IAzureStorageService
             operationContext,
             cancellationToken);
 
-    private static string GetBlobName(string path, string fileName) =>
-        path.IsNotNullOrEmptyString()
-            ? $"{path}/{fileName}"
-            : fileName;
-
     public static void EnsureDefaultServiceVersion(string connectionString)
     {
         var storageAccount = CloudStorageAccount.Parse(connectionString);
@@ -357,6 +349,42 @@ public class AzureStorageService : IAzureStorageService
         {
             props.DefaultServiceVersion = LatestVersion;
             blobClient.SetServiceProperties(props);
+        }
+    }
+
+    private static string GetBlobName(string path, string fileName) =>
+        path.IsNotNullOrEmptyString()
+            ? $"{path}/{fileName}"
+            : fileName;
+
+    private static void LogProgress(TransferStatus progress, ProgressState state) => state.LogProgress(progress);
+
+    private static void DeleteOldFiles(string downloadDir, string deleteFilesMask, params string[] except)
+    {
+        FileInfo[] files = new DirectoryInfo(downloadDir).EnumerateFiles(deleteFilesMask)
+            .Where(x => except?.Contains(x.FullName) != true)
+            .ToArray();
+
+        var exceptions = new List<Exception>();
+
+        foreach (FileInfo file in files)
+        {
+            try
+            {
+                file.Delete();
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+        }
+
+        if (exceptions.Count > 0)
+        {
+            if (exceptions.Count == 1)
+                throw exceptions[0];
+
+            throw new AggregateException(exceptions);
         }
     }
 
@@ -499,41 +527,10 @@ public class AzureStorageService : IAzureStorageService
         return result;
     }
 
-    private static void LogProgress(TransferStatus progress, ProgressState state) => state.LogProgress(progress);
-
     private void SaveResults(IDictionary<string, string> resDictionary)
     {
         string resultJson = resDictionary.ToJson(formatting: Formatting.Indented);
         File.WriteAllText("result.json", resultJson);
         Log.LogInformation(resultJson);
-    }
-
-    private static void DeleteOldFiles(string downloadDir, string deleteFilesMask, params string[] except)
-    {
-        FileInfo[] files = new DirectoryInfo(downloadDir).EnumerateFiles(deleteFilesMask)
-            .Where(x => except?.Contains(x.FullName) != true)
-            .ToArray();
-
-        var exceptions = new List<Exception>();
-
-        foreach (FileInfo file in files)
-        {
-            try
-            {
-                file.Delete();
-            }
-            catch (Exception ex)
-            {
-                exceptions.Add(ex);
-            }
-        }
-
-        if (exceptions.Count > 0)
-        {
-            if (exceptions.Count == 1)
-                throw exceptions[0];
-
-            throw new AggregateException(exceptions);
-        }
     }
 }

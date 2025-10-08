@@ -1,12 +1,12 @@
-﻿#if NETSTANDARD2_0
+#if NETSTANDARD2_0
 using System.Collections.Concurrent;
 #else
 using System.Threading.Channels;
 #endif
-using FEx.Abstractions;
-using FEx.Asyncx.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Asyncx.Utilities;
-using FEx.Basics.Utilities;
+using FEx.Core.Abstractions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,7 +41,7 @@ public class AsyncProcessingQueue : IDisposable
             ArgumentOutOfRangeException.ThrowIfLessThanOrEqual((int)value, 0, nameof(ConcurrencyLimit));
 #endif
             Interlocked.Exchange(ref _concurrencyLimit, (int)value);
-            FExFoundation.AsyncHelper.FireTaskAndForget(TryReleasePollingAsync);
+            FExCoreStatics.AsyncHelper.FireTaskAndForget(TryReleasePollingAsync);
         }
     }
 
@@ -84,7 +84,7 @@ public class AsyncProcessingQueue : IDisposable
         _taskChannel = Channel.CreateUnbounded<TaskCompletionSource<bool>>();
 #endif
 
-        FExFoundation.AsyncHelper.FireTaskAndForget(ProcessQueueAsync);
+        FExCoreStatics.AsyncHelper.FireTaskAndForget(ProcessQueueAsync);
     }
 
     /// <summary>

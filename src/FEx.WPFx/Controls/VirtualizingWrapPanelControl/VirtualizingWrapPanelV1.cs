@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -7,8 +7,8 @@ using System.Windows.Controls.Primitives;
 namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 /// <summary>
-///     A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical
-///     orientation.
+/// A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical
+/// orientation.
 /// <p class="note">In order to work properly all items must have the same size.</p>
 /// </summary>
 public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
@@ -42,7 +42,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     protected int _itemsPerRowCount;
 
     /// <summary>
-    ///     Gets or sets the spacing mode used when arranging the items. The default value is
+    /// Gets or sets the spacing mode used when arranging the items. The default value is
     /// <see cref="SpacingMode.Uniform" />.
     /// </summary>
     public SpacingMode SpacingMode
@@ -52,7 +52,7 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     }
 
     /// <summary>
-    ///     Gets or sets a value that specifies the orientation in which items are arranged. The default value is
+    /// Gets or sets a value that specifies the orientation in which items are arranged. The default value is
     /// <see cref="Orientation.Vertical" />.
     /// </summary>
     public Orientation Orientation
@@ -62,8 +62,8 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     }
 
     /// <summary>
-    ///     Gets or sets a value that specifies the size of the items. The default value is <see cref="Size.Empty" />.
-    ///     If the value is <see cref="Size.Empty" /> the size of the items gots measured by the first realized item.
+    /// Gets or sets a value that specifies the size of the items. The default value is <see cref="Size.Empty" />.
+    /// If the value is <see cref="Size.Empty" /> the size of the items gots measured by the first realized item.
     /// </summary>
     public Size ItemSize
     {
@@ -72,12 +72,12 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     }
 
     /// <summary>
-    ///     Gets or sets a value that specifies if the items get stretched to fill up remaining space. The default value is
-    ///     false.
+    /// Gets or sets a value that specifies if the items get stretched to fill up remaining space. The default value is
+    /// false.
     /// </summary>
     /// <remarks>
-    ///     The MaxWidth and MaxHeight properties of the ItemContainerStyle can be used to limit the stretching.
-    ///     In this case the use of the remaining space will be determined by the SpacingMode property.
+    /// The MaxWidth and MaxHeight properties of the ItemContainerStyle can be used to limit the stretching.
+    /// In this case the use of the remaining space will be determined by the SpacingMode property.
     /// </remarks>
     public bool StretchItems
     {
@@ -389,7 +389,8 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
             ? new(x, y, width, height)
             : new Rect(y, x, width, height);
 
-    private void Orientation_Changed() => MouseWheelScrollDirection = Orientation == Orientation.Horizontal
+    private void Orientation_Changed() =>
+        MouseWheelScrollDirection = Orientation == Orientation.Horizontal
             ? ScrollDirection.Vertical
             : ScrollDirection.Horizontal;
 
@@ -460,7 +461,8 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     }
 
     #region Deprecated properties
-    [Obsolete("Use SpacingMode")] public static readonly DependencyProperty IsSpacingEnabledProperty =
+    [Obsolete("Use SpacingMode")]
+    public static readonly DependencyProperty IsSpacingEnabledProperty =
         DependencyProperty.Register(nameof(IsSpacingEnabled),
             typeof(bool),
             typeof(VirtualizingWrapPanelV1),
@@ -474,9 +476,9 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     }
 
     /// <summary>
-    ///     Gets or sets a value that specifies whether the items are distributed evenly across the width (horizontal
-    ///     orientation)
-    ///     or height (vertical orientation). The default value is true.
+    /// Gets or sets a value that specifies whether the items are distributed evenly across the width (horizontal
+    /// orientation)
+    /// or height (vertical orientation). The default value is true.
     /// </summary>
     [Obsolete("Use SpacingMode")]
     public bool IsSpacingEnabled

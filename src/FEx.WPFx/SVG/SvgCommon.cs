@@ -1,4 +1,4 @@
-﻿using FEx.WPFx.SVG.SvgConverter;
+using FEx.WPFx.SVG.SvgConverter;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -9,7 +9,7 @@ namespace FEx.WPFx.SVG;
 public static class SvgCommon
 {
     /// <summary>
-    ///     Converts the SVG file to <see cref="DrawingImage" />.
+    /// Converts the SVG file to <see cref="DrawingImage" />.
     /// </summary>
     /// <param name="filepath">The path to SVG file.</param>
     /// <returns>
@@ -24,12 +24,12 @@ public static class SvgCommon
     }
 
     /// <summary>
-    ///     Converts the SVG to image source.
+    /// Converts the SVG to image source.
     /// </summary>
     /// <param name="svg">The SVG.</param>
     /// <param name="fileName">Name of the file.</param>
     /// <returns>
-    ///     ImageSource
+    /// ImageSource
     /// </returns>
     public static DrawingImage ConvertSvgToDrawingImage(string svg, string fileName)
     {

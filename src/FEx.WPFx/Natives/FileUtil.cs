@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +11,14 @@ public static class FileUtil
     private const int RmRebootReasonNone = 0;
 
     /// <summary>
-    ///     Find out what process(es) have a lock on the specified file.
+    /// Find out what process(es) have a lock on the specified file.
     /// </summary>
     /// <param name="path">Path of the file.</param>
     /// <returns>Processes locking the file</returns>
     /// <remarks>
-    ///     See also:
-    ///     http://msdn.microsoft.com/en-us/library/windows/desktop/aa373661(v=vs.85).aspx
-    ///     http://wyupdate.googlecode.com/svn-history/r401/trunk/frmFilesInUse.cs (no copyright in code at time of viewing)
+    /// See also:
+    /// http://msdn.microsoft.com/en-us/library/windows/desktop/aa373661(v=vs.85).aspx
+    /// http://wyupdate.googlecode.com/svn-history/r401/trunk/frmFilesInUse.cs (no copyright in code at time of viewing)
     /// </remarks>
     public static List<Process> WhoIsLocking(string path)
     {
@@ -154,7 +154,9 @@ public static class FileUtil
         public readonly RM_APP_TYPE ApplicationType;
         public readonly uint AppStatus;
         public readonly uint TSSessionId;
-        [MarshalAs(UnmanagedType.Bool)] public readonly bool bRestartable;
+
+        [MarshalAs(UnmanagedType.Bool)]
+        public readonly bool bRestartable;
     }
 
     // ReSharper disable InconsistentNaming

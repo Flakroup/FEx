@@ -1,8 +1,8 @@
-using FEx.Basics.Abstractions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Extensions.Web;
+using FEx.Agnostics.BaseObjects;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
-using FEx.Extensions.IO;
-using FEx.Extensions.Web;
 using System;
 using System.IO;
 using System.Net.Http.Headers;

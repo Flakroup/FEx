@@ -1,6 +1,6 @@
-﻿using FEx.Abstractions.Models;
-using FEx.Basics.Extensions;
-using FEx.Extensions.Web;
+using FEx.Agnostics.Abstractions.Extensions.Web;
+using FEx.Agnostics.Abstractions.Models;
+using FEx.Core.Abstractions.Extensions;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Models;
 using System;
@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 namespace FEx.Downloader.Clients;
 
 /// <summary>
-///     An extended WebClient that i.e. will store authentication cookie information and persist it through subsequent
-///     requests.
+/// An extended WebClient that i.e. will store authentication cookie information and persist it through subsequent
+/// requests.
 /// </summary>
 public sealed class FlakWebClient : WebClient
 {
@@ -53,7 +53,7 @@ public sealed class FlakWebClient : WebClient
     }
 
     /// <summary>
-    ///     Returns list of cookies.
+    /// Returns list of cookies.
     /// </summary>
     /// <returns></returns>
     public List<Cookie> CookieMonster()
@@ -98,7 +98,8 @@ public sealed class FlakWebClient : WebClient
         }
     }
 
-    public async Task DownloadFileWithProgressAsync(string address, string filePath) => await DownloadFileWithProgressAsync(new Uri(address), filePath);
+    public async Task DownloadFileWithProgressAsync(string address, string filePath) =>
+        await DownloadFileWithProgressAsync(new Uri(address), filePath);
 
     protected override WebResponse GetWebResponse(WebRequest request)
     {

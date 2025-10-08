@@ -1,15 +1,15 @@
-﻿using System;
+using System;
 using System.Globalization;
 
 namespace FEx.WPFx.Converters;
 
 /// <summary>
-///     Bool to Visibility Invert Converter.
+/// Bool to Visibility Invert Converter.
 /// </summary>
 public class BoolToVisibilityInvertedConverter : BoolToVisibilityConverter
 {
     /// <summary>
-    ///     Converts a value.
+    /// Converts a value.
     /// </summary>
     /// <param name="value">The value produced by the binding source.</param>
     /// <param name="targetType">The type of the binding target property.</param>

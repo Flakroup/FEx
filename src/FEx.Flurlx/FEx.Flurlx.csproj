@@ -8,14 +8,13 @@
 		<PackageReference Include="Flurl" Version="4.0.0" />
 		<PackageReference Include="Flurl.Http" Version="4.0.2" />
 		<PackageReference Include="Flurl.Http.Newtonsoft" Version="0.9.1" />
-		<PackageReference Include="Polly" Version="8.5.2" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="Polly" Version="8.6.4" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="StrongInject" Version="1.4.4" />
 		<PackageReference Include="System.Text.Json" Version="$(DotNetNugetsVersion)" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
 		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
 	</ItemGroup>
 

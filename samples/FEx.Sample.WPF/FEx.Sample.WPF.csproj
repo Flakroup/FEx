@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="StrongInject" Version="1.4.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Core\FEx.Core.csproj" />
+    <ProjectReference Include="..\..\src\DependencyInjection\FEx.DependencyInjection.csproj" />
+    <ProjectReference Include="..\..\src\FEx.WPFx\FEx.WPFx.csproj" />
+    <ProjectReference Include="..\..\src\Logging\FEx.Logging.csproj" />
+  </ItemGroup>
+
+</Project>

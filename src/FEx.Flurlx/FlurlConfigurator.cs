@@ -1,4 +1,4 @@
-using FEx.Abstractions;
+using FEx.Agnostics.Abstractions;
 using FEx.Flurlx.Abstractions.Interfaces;
 using FEx.Json.Extensions;
 using Flurl.Http;
@@ -19,6 +19,8 @@ public class FlurlConfigurator : FExInitialize, IFlurlConfigurator
         _flurlClientCache = flurlClientCache;
     }
 
+    public IFlurlClient GetClient() => _flurlClientCache.Get(_apiConfiguration.ClientName);
+
     protected override void OnInitialize()
     {
         base.OnInitialize();
@@ -26,8 +28,6 @@ public class FlurlConfigurator : FExInitialize, IFlurlConfigurator
         FlurlHttp.Clients.WithDefaults(DefaultClientConfiguration);
         _flurlClientCache.Add(_apiConfiguration.ClientName, _apiConfiguration.BaseUrl, DefaultClientConfiguration);
     }
-
-    public IFlurlClient GetClient() => _flurlClientCache.Get(_apiConfiguration.ClientName);
 
     private void DefaultClientConfiguration(IFlurlClientBuilder builder)
     {

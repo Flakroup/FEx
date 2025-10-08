@@ -1,4 +1,4 @@
-﻿using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Media;
@@ -13,7 +13,7 @@ namespace FEx.WPFx.Extensions;
 public static class WindowsExtensions
 {
     /// <summary>
-    ///     Gets the screen on which window is present.
+    /// Gets the screen on which window is present.
     /// </summary>
     /// <param name="window">The window.</param>
     /// <returns>The screen</returns>
@@ -21,7 +21,7 @@ public static class WindowsExtensions
         Screen.FromRectangle(new((int)window.Left, (int)window.Top, (int)window.Width, (int)window.Height));
 
     /// <summary>
-    ///     Centers the window on the screen.
+    /// Centers the window on the screen.
     /// </summary>
     /// <param name="window">The window.</param>
     /// <param name="screen">The screen.</param>
@@ -43,7 +43,7 @@ public static class WindowsExtensions
     }
 
     /// <summary>
-    ///     Centers the window on top of the owner.
+    /// Centers the window on top of the owner.
     /// </summary>
     /// <param name="window">The window.</param>
     public static void CenterWindowOnTopOfTheOwner(this Window window)
@@ -56,7 +56,7 @@ public static class WindowsExtensions
     }
 
     /// <summary>
-    ///     Places to primary monitor.
+    /// Places to primary monitor.
     /// </summary>
     /// <param name="window">The window.</param>
     public static void PlaceToPrimaryMonitor(this Window window)

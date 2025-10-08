@@ -1,6 +1,6 @@
-﻿using FEx.AppSettings.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.AppSettings.Abstractions.Interfaces;
 using FEx.AppSettings.ConfigurationEx;
-using FEx.Common.Extensions;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;

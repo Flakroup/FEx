@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -6,9 +6,9 @@ using System.Windows.Controls.Primitives;
 namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 /// <summary>
-///     A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical
-///     orientation.
-///     In addition the panel allows to expand one specific item.
+/// A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical
+/// orientation.
+/// In addition the panel allows to expand one specific item.
 /// <p class="note">In order to work properly all items must have the same size.</p>
 /// </summary>
 public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
@@ -31,7 +31,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
     private int _itemIndexFollwingExpansion;
 
     /// <summary>
-    ///     Gets or sets the data template used for the item expansion.
+    /// Gets or sets the data template used for the item expansion.
     /// </summary>
     public DataTemplate ExpandedItemTemplate
     {
@@ -40,7 +40,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
     }
 
     /// <summary>
-    ///     Gets or set the expanded item. The default value is null.
+    /// Gets or set the expanded item. The default value is null.
     /// </summary>
     public object ExpandedItem
     {

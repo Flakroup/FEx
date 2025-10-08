@@ -1,8 +1,8 @@
-﻿using FEx.Extensions.Base.Converters;
-using FEx.Extensions.Base.Enums;
-using FEx.Extensions.IO;
-using FEx.Extensions.Numericals;
-using FEx.Extensions.Web;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Extensions.Numericals;
+using FEx.Agnostics.Abstractions.Extensions.Web;
+using FEx.Agnostics.Abstractions.Utilities;
 using Flurl;
 using Flurl.Http;
 using System.Collections.Generic;

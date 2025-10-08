@@ -1,4 +1,4 @@
-﻿using FEx.MVVM.Abstractions.Enums;
+using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Events;
 using System;
 using System.Collections.Generic;
@@ -24,24 +24,24 @@ public interface IProgressAggregator : IProgressStatus, IDisposable
     void PrgSet(double? value, double? maximum = null, ProgressChangeMode mode = ProgressChangeMode.Set);
 
     /// <summary>
-    ///     Sets progress value of the ProgressBar to the maximal value
+    /// Sets progress value of the ProgressBar to the maximal value
     /// </summary>
     void PrgSetEnd();
 
     /// <summary>
-    ///     Increments current progress value of the ProgressBar
+    /// Increments current progress value of the ProgressBar
     /// </summary>
     /// <param name="addedValue">The added value.</param>
     void PrgAdd(double addedValue = 1);
 
     /// <summary>
-    ///     Adds value to the maximum of progress value.
+    /// Adds value to the maximum of progress value.
     /// </summary>
     /// <param name="addedValue">The added value.</param>
     void PrgMaxAdd(double addedValue);
 
     /// <summary>
-    ///     Sets maximal allowed value of the ProgressBar and resets current progress
+    /// Sets maximal allowed value of the ProgressBar and resets current progress
     /// </summary>
     /// <param name="max"></param>
     void PrgSetMax(double max);

@@ -1,0 +1,274 @@
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Utilities;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace FEx.Agnostics.Extensions;
+
+/// <summary>
+/// Contains extension methods for <see cref="AsyncReaderWriterLockSlim" />.
+/// </summary>
+public static class AsyncReaderWriterLockSlimExtension
+{
+    /// <summary>
+    /// Enters the lock in read mode.
+    /// </summary>
+    /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
+    /// <returns>A <see cref="IDisposableLock" /> that will release the lock when disposed.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
+    /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
+    public static IDisposableLock GetReadLock(this AsyncReaderWriterLockSlim lockInstance,
+                                              CancellationToken cancellationToken = default)
+    {
+        lockInstance.EnterReadLock(cancellationToken);
+
+        return new ActionDisposableLock(lockInstance.ExitReadLock, lockInstance, false);
+    }
+
+    /// <summary>
+    /// Asynchronously enters the lock in read mode and returns a <see cref="IDisposableLock" /> that
+    /// will release the lock when disposed.
+    /// </summary>
+    /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
+    /// <returns>
+    /// A task that will complete with a <see cref="IDisposableLock" /> when the lock has been entered,
+    /// which will release the lock when disposed.
+    /// </returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
+    /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
+    public static async Task<IDisposableLock> GetReadLockAsync(this AsyncReaderWriterLockSlim lockInstance,
+                                                               CancellationToken cancellationToken = default)
+    {
+        await lockInstance.EnterReadLockAsync(cancellationToken);
+
+        return new ActionDisposableLock(lockInstance.ExitReadLock, lockInstance, false);
+    }
+
+    /// <summary>
+    /// Tries to enter the lock in read mode, with an optional integer time-out.
+    /// </summary>
+    /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
+    /// <param name="millisecondsTimeout">
+    /// The number of milliseconds to wait, or -1
+    /// (<see cref="Timeout.Infinite" />) to wait indefinitely.
+    /// </param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
+    /// <returns>
+    /// A <see cref="IDisposableLock" /> that will release the lock when disposed if the lock
+    /// could be entered, or <c>null</c> otherwise.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="millisecondsTimeout" /> is a negative number
+    /// other than -1, which represents an infinite time-out.
+    /// </exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
+    /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
+    public static IDisposableLock TryGetReadLock(this AsyncReaderWriterLockSlim lockInstance,
+                                                 int millisecondsTimeout,
+                                                 CancellationToken cancellationToken = default)
+    {
+        bool returnValue = lockInstance.TryEnterReadLock(millisecondsTimeout, cancellationToken);
+
+        return returnValue
+            ? new ActionDisposableLock(lockInstance.ExitReadLock, lockInstance, false)
+            : (IDisposableLock)null;
+    }
+
+    /// <summary>
+    /// Tries to asynchronously enter the lock in read mode, with an optional integer time-out.
+    /// </summary>
+    /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
+    /// <param name="millisecondsTimeout">
+    /// The number of milliseconds to wait, or -1
+    /// (<see cref="Timeout.Infinite" />) to wait indefinitely.
+    /// </param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
+    /// <returns>
+    /// A task that will complete with a <see cref="IDisposableLock" /> that will release the lock
+    /// when disposed if the lock could be entered, or with <c>null</c> otherwise.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="millisecondsTimeout" /> is a negative number
+    /// other than -1, which represents an infinite time-out.
+    /// </exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
+    /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
+    public static async Task<IDisposableLock> TryGetReadLockAsync(this AsyncReaderWriterLockSlim lockInstance,
+                                                                  int millisecondsTimeout,
+                                                                  CancellationToken cancellationToken = default)
+    {
+        bool returnValue = await lockInstance.TryEnterReadLockAsync(millisecondsTimeout, cancellationToken);
+
+        return returnValue
+            ? new ActionDisposableLock(lockInstance.ExitReadLock, lockInstance, false)
+            : (IDisposableLock)null;
+    }
+
+    /// <summary>
+    /// Enters the lock in write mode.
+    /// </summary>
+    /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
+    /// <returns>A <see cref="IDisposableLock" /> that will release the lock when disposed.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
+    /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
+    public static IDisposableLock GetWriteLock(this AsyncReaderWriterLockSlim lockInstance,
+                                               CancellationToken cancellationToken = default)
+    {
+        lockInstance.EnterWriteLock(cancellationToken);
+
+        return new ActionDisposableLock(lockInstance.ExitWriteLock, lockInstance, true);
+    }
+
+    /// <summary>
+    /// Asynchronously enters the lock in write mode.
+    /// </summary>
+    /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
+    /// <returns>
+    /// >A task that will complete with a <see cref="IDisposableLock" /> when the lock has been entered,
+    /// which will release the lock when disposed.
+    /// </returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
+    /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
+    public static async Task<IDisposableLock> GetWriteLockAsync(this AsyncReaderWriterLockSlim lockInstance,
+                                                                CancellationToken cancellationToken = default)
+    {
+        await lockInstance.EnterWriteLockAsync(cancellationToken);
+
+        return new ActionDisposableLock(lockInstance.ExitWriteLock, lockInstance, true);
+    }
+
+    /// <summary>
+    /// Tries to enter the lock in write mode, with an optional integer time-out.
+    /// </summary>
+    /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
+    /// <param name="millisecondsTimeout">
+    /// The number of milliseconds to wait, or -1
+    /// (<see cref="Timeout.Infinite" />) to wait indefinitely.
+    /// </param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
+    /// <returns>
+    /// A <see cref="IDisposableLock" /> that will release the lock when disposed if the lock
+    /// could be entered, or <c>null</c> otherwise.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="millisecondsTimeout" /> is a negative number
+    /// other than -1, which represents an infinite time-out.
+    /// </exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
+    /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
+    public static IDisposableLock TryGetWriteLock(this AsyncReaderWriterLockSlim lockInstance,
+                                                  int millisecondsTimeout,
+                                                  CancellationToken cancellationToken = default)
+    {
+        bool returnValue = lockInstance.TryEnterWriteLock(millisecondsTimeout, cancellationToken);
+
+        return returnValue
+            ? new ActionDisposableLock(lockInstance.ExitWriteLock, lockInstance, true)
+            : (IDisposableLock)null;
+    }
+
+    /// <summary>
+    /// Tries to asynchronously enter the lock in write mode, with an optional integer time-out.
+    /// </summary>
+    /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
+    /// <param name="millisecondsTimeout">
+    /// The number of milliseconds to wait, or -1
+    /// (<see cref="Timeout.Infinite" />) to wait indefinitely.
+    /// </param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken" /> to observe.</param>
+    /// <returns>
+    /// >A task that will complete with a <see cref="IDisposableLock" /> that will release the lock
+    /// when disposed if the lock could be entered, or with <c>null</c> otherwise.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="millisecondsTimeout" /> is a negative number
+    /// other than -1, which represents an infinite time-out.
+    /// </exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken" /> was canceled.</exception>
+    /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
+    public static async Task<IDisposableLock> TryGetWriteLockAsync(this AsyncReaderWriterLockSlim lockInstance,
+                                                                   int millisecondsTimeout,
+                                                                   CancellationToken cancellationToken = default)
+    {
+        bool returnValue = await lockInstance.TryEnterWriteLockAsync(millisecondsTimeout, cancellationToken);
+
+        return returnValue
+            ? new ActionDisposableLock(lockInstance.ExitWriteLock, lockInstance, true)
+            : (IDisposableLock)null;
+    }
+
+    /// <summary>
+    /// Downgrades the lock from write mode to read mode.
+    /// </summary>
+    /// <param name="lockInstance">The <see cref="AsyncReaderWriterLockSlim" /> instance.</param>
+    /// <param name="readLock">The <see cref="IDisposableLock" /> which should be downgraded.</param>
+    /// <exception cref="ObjectDisposedException">The current instance has already been disposed.</exception>
+    public static void DowngradeWriteLockToReadLock(this AsyncReaderWriterLockSlim lockInstance,
+                                                    IDisposableLock readLock)
+    {
+        readLock.Guard(nameof(readLock));
+
+        if (readLock is not ActionDisposableLock myReadLock
+            || myReadLock.LockOrigin != lockInstance
+            || !myReadLock.IsWriteLock
+            || myReadLock.IsDisposed)
+            throw new ArgumentException(null, nameof(readLock));
+
+        // Downgrade the lock.
+        lockInstance.DowngradeWriteLockToReadLock();
+
+        // Now mark the lock as being a read lock.
+        myReadLock.IsWriteLock = false;
+    }
+
+    public interface IDisposableLock : IDisposable
+    {
+    }
+
+    private class ActionDisposableLock : IDisposableLock
+    {
+        private readonly Action _action;
+
+        public AsyncReaderWriterLockSlim LockOrigin { get; }
+
+        public bool IsWriteLock { get; set; }
+
+        public bool IsDisposed { get; private set; }
+
+        public ActionDisposableLock(Action action, AsyncReaderWriterLockSlim lockOrigin, bool isWriteLock)
+        {
+            _action = action;
+            LockOrigin = lockOrigin;
+            IsWriteLock = isWriteLock;
+        }
+
+        ~ActionDisposableLock()
+        {
+            Dispose(false);
+        }
+
+        #region IDisposable
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                    _action();
+
+                IsDisposed = true;
+            }
+        }
+        #endregion
+    }
+}

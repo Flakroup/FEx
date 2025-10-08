@@ -1,4 +1,4 @@
-﻿namespace FEx.Downloader.Enums;
+namespace FEx.Downloader.Enums;
 
 public enum DownloadState
 {

@@ -1,10 +1,11 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Asyncx.Helpers;
-using FEx.Basics.Extensions;
 using FEx.Common.Abstractions.Interfaces;
-using FEx.Common.Utilities;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Utilities;
 using FEx.DependencyInjection;
-using FEx.DI.Abstractions;
+using FEx.DependencyInjection.Abstractions;
 using FEx.MVVM;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.WPFx.Abstractions.Interfaces;
@@ -60,58 +61,8 @@ public abstract class AppBootstrapper<TContainer> : Application
     protected abstract void ComponentInitialize();
     protected abstract void OnActivation();
 
-    /// <summary>
-    ///     Raises the <see cref="E:System.Windows.Application.Startup" /> event.
-    /// </summary>
-    /// <param name="e">A <see cref="T:System.Windows.StartupEventArgs" /> that contains the event data.</param>
-    protected override void OnStartup(StartupEventArgs e)
-    {
-        try
-        {
-            EnsureSingleInstance();
-
-            using (_ = LogToHub("Initializing app"))
-            {
-                OnConstruction(e);
-                BeforeInitializationCheck();
-                ComponentInitialize();
-            }
-
-            using (_ = LogToHub("Preparing app"))
-                BeforeStartup(e);
-
-            using (_ = LogToHub("Initializing app components"))
-            {
-                ConfigureServiceProvider();
-
-                AfterServicesContainerBuild();
-            }
-
-            _ = LogToHub("Showing window");
-            base.OnStartup(e);
-
-            using (_ = LogToHub("Finalizing startup"))
-                AfterStartup(e);
-        }
-        catch (Exception ex)
-        {
-            HandleException(ex);
-        }
-        finally
-        {
-            ExitIfInitializationHasFailed();
-        }
-    }
-
-    protected override void OnExit(ExitEventArgs e)
-    {
-        FExMvvm.MessagePopupService.AppIsClosing = true;
-        Log.CloseAndFlush();
-        base.OnExit(e);
-    }
-
     protected virtual void ConfigureServiceProvider() =>
-        JoinableAsyncHelper.AwaitWithoutDeadlock(ConfigureServiceProviderAsync);//todo move to separate class
+        JoinableAsyncHelper.AwaitWithoutDeadlock(ConfigureServiceProviderAsync); //todo move to separate class
 
     protected virtual async Task ConfigureServiceProviderAsync() =>
         await FExServiceProvider.InitializeAsync<FExMicrosoftDIServiceProvider>();
@@ -203,6 +154,56 @@ public abstract class AppBootstrapper<TContainer> : Application
                 p.Kill();
             }
         }
+    }
+
+    /// <summary>
+    /// Raises the <see cref="E:System.Windows.Application.Startup" /> event.
+    /// </summary>
+    /// <param name="e">A <see cref="StartupEventArgs" /> that contains the event data.</param>
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        try
+        {
+            EnsureSingleInstance();
+
+            using (_ = LogToHub("Initializing app"))
+            {
+                OnConstruction(e);
+                BeforeInitializationCheck();
+                ComponentInitialize();
+            }
+
+            using (_ = LogToHub("Preparing app"))
+                BeforeStartup(e);
+
+            using (_ = LogToHub("Initializing app components"))
+            {
+                ConfigureServiceProvider();
+
+                AfterServicesContainerBuild();
+            }
+
+            _ = LogToHub("Showing window");
+            base.OnStartup(e);
+
+            using (_ = LogToHub("Finalizing startup"))
+                AfterStartup(e);
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+        finally
+        {
+            ExitIfInitializationHasFailed();
+        }
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        FExMvvm.MessagePopupService.AppIsClosing = true;
+        Log.CloseAndFlush();
+        base.OnExit(e);
     }
 
     protected DisposableAction LogToHub(string status) => _statusService.Log(status);

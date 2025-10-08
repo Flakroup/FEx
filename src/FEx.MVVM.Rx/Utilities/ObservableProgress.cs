@@ -1,16 +1,16 @@
-﻿using FEx.MVVM.Rx.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Extensions;
+using FEx.MVVM.Rx.Abstractions.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
-using SynchronizationContextExtensions = FEx.Common.Extensions.SynchronizationContextExtensions;
 
 namespace FEx.MVVM.Rx.Utilities;
 
 /// <summary>
-///     A progress reporter that exposes progress updates as an observable stream. This is a hot observable.
+/// A progress reporter that exposes progress updates as an observable stream. This is a hot observable.
 /// </summary>
 /// <typeparam name="T">The type of progress updates.</typeparam>
 public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<T>
@@ -31,8 +31,8 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
     }
 
     /// <summary>
-    ///     Creates an observable progress that uses a replay subject with a single-element buffer, ensuring all new
-    ///     subscriptions immediately receive the last progress update.
+    /// Creates an observable progress that uses a replay subject with a single-element buffer, ensuring all new
+    /// subscriptions immediately receive the last progress update.
     /// </summary>
     public ObservableProgress()
         : this(new ReplaySubject<T>(1))
@@ -40,8 +40,8 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
     }
 
     /// <summary>
-    ///     Creates an observable progress that uses a replay subject with a single-element buffer, ensuring all new
-    ///     subscriptions immediately receive the last progress update.
+    /// Creates an observable progress that uses a replay subject with a single-element buffer, ensuring all new
+    /// subscriptions immediately receive the last progress update.
     /// </summary>
     /// <param name="scheduler">The scheduler to inject into the replay subject.</param>
     public ObservableProgress(IScheduler scheduler)
@@ -50,7 +50,7 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
     }
 
     /// <summary>
-    ///     Creates an observable progress that uses the specified subject.
+    /// Creates an observable progress that uses the specified subject.
     /// </summary>
     /// <param name="subject">The subject used for progress updates.</param>
     public ObservableProgress(ISubject<T> subject)
@@ -67,10 +67,10 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
     }
 
     /// <summary>
-    ///     Creates a progress handler with common UI options: updates are buffered in <paramref name="sampleTimeSpan" />
+    /// Creates a progress handler with common UI options: updates are buffered in <paramref name="sampleTimeSpan" />
     /// intervals, and the <paramref name="handler" /> is executed on the UI thread. This method must be called from the UI
-    ///     thread. The UI should already be initialized with the default state; <paramref name="handler" /> is not invoked
-    ///     with an initial value.
+    /// thread. The UI should already be initialized with the default state; <paramref name="handler" /> is not invoked
+    /// with an initial value.
     /// </summary>
     /// <param name="sampleTimeSpan">The time span interval to sample progress updates.</param>
     /// <param name="handler">The progress update handler that updates the UI.</param>
@@ -90,10 +90,10 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
             p => Subscribe(subFunc(p), handler, limitToCurrentThread));
 
     /// <summary>
-    ///     Creates a progress handler with common UI options: updates are sampled on <paramref name="sampleTimeSpan" />
+    /// Creates a progress handler with common UI options: updates are sampled on <paramref name="sampleTimeSpan" />
     /// intervals, and the <paramref name="handler" /> is executed on the UI thread. This method must be called from the UI
-    ///     thread. The UI should already be initialized with the default state; <paramref name="handler" /> is not invoked
-    ///     with an initial value.
+    /// thread. The UI should already be initialized with the default state; <paramref name="handler" /> is not invoked
+    /// with an initial value.
     /// </summary>
     /// <param name="sampleTimeSpan">The time span interval to sample progress updates.</param>
     /// <param name="handler">The progress update handler that updates the UI.</param>
@@ -106,10 +106,10 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
         Create(handler, p => p.Sample(sampleTimeSpan, scheduler ?? DefaultScheduler.Instance), limitToCurrentThread);
 
     /// <summary>
-    ///     Creates a progress handler with common UI options: updates are sampled on 100ms intervals, and the
+    /// Creates a progress handler with common UI options: updates are sampled on 100ms intervals, and the
     /// <paramref name="handler" /> is executed on the UI thread. This method must be called from the UI thread. The UI
-    ///     should already be initialized with the default state; <paramref name="handler" /> is not invoked with an initial
-    ///     value.
+    /// should already be initialized with the default state; <paramref name="handler" /> is not invoked with an initial
+    /// value.
     /// </summary>
     /// <param name="handler">The progress update handler that updates the UI.</param>
     /// <param name="limitToCurrentThread">Subscription triggering will be limited to current thread by ObserveOn statement.</param>
@@ -117,10 +117,10 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
         CreateForUiWithSample(TimeSpan.FromMilliseconds(100), handler, null, limitToCurrentThread);
 
     /// <summary>
-    ///     Creates a progress handler with common UI options: updates are sampled on 100ms intervals, and the
+    /// Creates a progress handler with common UI options: updates are sampled on 100ms intervals, and the
     /// <paramref name="handler" /> is executed on the UI thread. This method must be called from the UI thread. The UI
-    ///     should already be initialized with the default state; <paramref name="handler" /> is not invoked with an initial
-    ///     value.
+    /// should already be initialized with the default state; <paramref name="handler" /> is not invoked with an initial
+    /// value.
     /// </summary>
     /// <param name="handler">The progress update handler that updates the UI.</param>
     /// <param name="scheduler">The scheduler to inject into the <c>Sample</c> operator.</param>

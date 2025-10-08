@@ -1,4 +1,4 @@
-﻿using FEx.EFCore.Helpers;
+using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using StrongInject;
 

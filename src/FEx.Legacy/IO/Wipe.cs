@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 
 namespace FEx.Legacy.IO;
 
 /// <summary>
-///     https://www.codeproject.com/Articles/22736/Securely-Delete-a-File-using-NET
+/// https://www.codeproject.com/Articles/22736/Securely-Delete-a-File-using-NET
 /// </summary>
 public class Wipe
 {
@@ -24,8 +24,8 @@ public class Wipe
     }
 
     /// <summary>
-    ///     Deletes a file in a secure way by overwriting it with
-    ///     random garbage data n times.
+    /// Deletes a file in a secure way by overwriting it with
+    /// random garbage data n times.
     /// </summary>
     /// <param name="filename">Full path of the file to be deleted</param>
     /// <param name="timesToWrite">Specifies the number of times the file should be overwritten</param>

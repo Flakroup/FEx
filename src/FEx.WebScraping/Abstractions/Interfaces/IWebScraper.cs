@@ -1,4 +1,4 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
 using System;
 using System.Net;
 using System.Text;
@@ -23,10 +23,10 @@ public interface IWebScraper
                          CancellationToken cancellationToken = default);
 
     Task<HtmlDocument> LoadHtmlDocumentAsync(HtmlWeb web,
-                                 Uri pageLink,
-                                 Encoding encoding = null,
-                                 NetworkCredential credential = null,
-                                 CancellationToken cancellationToken = default);
+                                             Uri pageLink,
+                                             Encoding encoding = null,
+                                             NetworkCredential credential = null,
+                                             CancellationToken cancellationToken = default);
 
     (HtmlWeb web, Task<HtmlDocument> docTask) Load(Uri pageLink,
                                                    Action<HtmlWeb> configWeb = null,

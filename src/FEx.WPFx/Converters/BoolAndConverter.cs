@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
@@ -9,7 +9,7 @@ public class BoolAndConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        bool[] booleans = values.Select(x =>
+        bool[] booleans = values.Select(static x =>
             {
                 var b = x as bool?;
 
@@ -17,7 +17,7 @@ public class BoolAndConverter : IMultiValueConverter
             })
             .ToArray();
 
-        return booleans.All(x => x);
+        return booleans.All(static x => x);
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) =>

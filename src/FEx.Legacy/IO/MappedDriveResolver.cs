@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,38 +8,38 @@ using System.Management;
 namespace FEx.Legacy.IO;
 
 /// <summary>
-///     A static class to help with resolving a mapped drive path to a UNC network path.
-///     If a local drive path or a UNC network path are passed in, they will just be returned.
+/// A static class to help with resolving a mapped drive path to a UNC network path.
+/// If a local drive path or a UNC network path are passed in, they will just be returned.
 /// </summary>
 /// <example>
-///     using System;
-///     using System.IO;
-///     using System.Management;    // Reference System.Management.dll
-///     // Example/Test paths, these will need to be adjusted to match your environment.
-///     string[] paths = new string[] {
-///     @"Z:\ShareName\Sub-Folder",
-///     @"\\ACME-FILE\ShareName\Sub-Folder",
-///     @"\\ACME.COM\ShareName\Sub-Folder", // DFS
-///     @"C:\Temp",
-///     @"\\localhost\c$\temp",
-///     @"\\workstation\Temp",
-///     @"Z:", // Mapped drive pointing to \\workstation\Temp
-///     @"C:\",
-///     @"Temp",
-///     @".\Temp",
-///     @"..\Temp",
-///     "",
-///     "    ",
-///     null
-///     };
-///     foreach (var curPath in paths) {
-///     try {
-///     Console.WriteLine($"{curPath} = {MappedDriveResolver.ResolveToUNC(curPath)}");
-///     }
-///     catch (Exception ex) {
-///     Console.WriteLine($"{curPath} = {ex.Message}");
-///     }
-///     }
+/// using System;
+/// using System.IO;
+/// using System.Management;    // Reference System.Management.dll
+/// // Example/Test paths, these will need to be adjusted to match your environment.
+/// string[] paths = new string[] {
+/// @"Z:\ShareName\Sub-Folder",
+/// @"\\ACME-FILE\ShareName\Sub-Folder",
+/// @"\\ACME.COM\ShareName\Sub-Folder", // DFS
+/// @"C:\Temp",
+/// @"\\localhost\c$\temp",
+/// @"\\workstation\Temp",
+/// @"Z:", // Mapped drive pointing to \\workstation\Temp
+/// @"C:\",
+/// @"Temp",
+/// @".\Temp",
+/// @"..\Temp",
+/// "",
+/// "    ",
+/// null
+/// };
+/// foreach (var curPath in paths) {
+/// try {
+/// Console.WriteLine($"{curPath} = {MappedDriveResolver.ResolveToUNC(curPath)}");
+/// }
+/// catch (Exception ex) {
+/// Console.WriteLine($"{curPath} = {ex.Message}");
+/// }
+/// }
 /// </example>
 public static class MappedDriveResolver
 {
@@ -77,8 +77,8 @@ public static class MappedDriveResolver
     }
 
     /// <summary>
-    ///     Resolves the given path to a full UNC path if the path is a mapped drive.
-    ///     Otherwise, just returns the given path.
+    /// Resolves the given path to a full UNC path if the path is a mapped drive.
+    /// Otherwise, just returns the given path.
     /// </summary>
     /// <param name="path">The path to resolve.</param>
     /// <returns></returns>
@@ -104,7 +104,7 @@ public static class MappedDriveResolver
     }
 
     /// <summary>
-    ///     Given a local mapped drive letter, determine if it is a network drive. If so, return the server share.
+    /// Given a local mapped drive letter, determine if it is a network drive. If so, return the server share.
     /// </summary>
     /// <param name="mappedDrive"></param>
     /// <returns>The server path that the drive maps to ~ "////XXXXXX//ZZZZ"</returns>
@@ -147,8 +147,8 @@ public static class MappedDriveResolver
     }
 
     /// <summary>
-    ///     Resolves the given path to a root UNC path if the path is a mapped drive.
-    ///     Otherwise, just returns the given path.
+    /// Resolves the given path to a root UNC path if the path is a mapped drive.
+    /// Otherwise, just returns the given path.
     /// </summary>
     /// <param name="path">The path to resolve.</param>
     /// <returns></returns>
@@ -167,7 +167,7 @@ public static class MappedDriveResolver
     }
 
     /// <summary>
-    ///     Checks if the given path is a network drive.
+    /// Checks if the given path is a network drive.
     /// </summary>
     /// <param name="path">The path to check.</param>
     /// <returns></returns>
@@ -184,7 +184,7 @@ public static class MappedDriveResolver
     }
 
     /// <summary>
-    ///     Given a path will extract just the drive letter with volume separator.
+    /// Given a path will extract just the drive letter with volume separator.
     /// </summary>
     /// <param name="path"></param>
     /// <returns>C:</returns>

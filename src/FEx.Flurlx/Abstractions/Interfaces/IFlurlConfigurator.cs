@@ -1,4 +1,4 @@
-using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
 using Flurl.Http;
 
 namespace FEx.Flurlx.Abstractions.Interfaces;

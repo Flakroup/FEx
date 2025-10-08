@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Windows;
@@ -9,7 +9,7 @@ using System.Windows.Media;
 namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 /// <summary>
-///     Base class for panels which are supporting virtualization.
+/// Base class for panels which are supporting virtualization.
 /// </summary>
 public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
 {
@@ -49,7 +49,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     public bool CanHorizontallyScroll { get; set; }
 
     /// <summary>
-    ///     Scroll line delta for pixel based scrolling. The default value is 16 dp.
+    /// Scroll line delta for pixel based scrolling. The default value is 16 dp.
     /// </summary>
     public double ScrollLineDelta
     {
@@ -58,7 +58,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     }
 
     /// <summary>
-    ///     Mouse wheel delta for pixel based scrolling. The default value is 48 dp.
+    /// Mouse wheel delta for pixel based scrolling. The default value is 48 dp.
     /// </summary>
     public double MouseWheelDelta
     {
@@ -67,7 +67,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     }
 
     /// <summary>
-    ///     Scroll line delta for item based scrolling. The default value is 1 item.
+    /// Scroll line delta for item based scrolling. The default value is 1 item.
     /// </summary>
     public int ScrollLineDeltaItem
     {
@@ -76,7 +76,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     }
 
     /// <summary>
-    ///     Mouse wheel delta for item based scrolling. The default value is 3 items.
+    /// Mouse wheel delta for item based scrolling. The default value is 3 items.
     /// </summary>
     public int MouseWheelDeltaItem
     {
@@ -96,7 +96,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     protected ScrollUnit ScrollUnit => GetScrollUnit(ItemsControl);
 
     /// <summary>
-    ///     The direction in which the panel scrolls when user turns the mouse wheel.
+    /// The direction in which the panel scrolls when user turns the mouse wheel.
     /// </summary>
     protected ScrollDirection MouseWheelScrollDirection { get; set; } = ScrollDirection.Vertical;
 
@@ -105,28 +105,28 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     protected VirtualizationMode VirtualizationMode => GetVirtualizationMode(ItemsControl);
 
     /// <summary>
-    ///     Returns true if the panel is in VirtualizationMode.Recycling, otherwise false.
+    /// Returns true if the panel is in VirtualizationMode.Recycling, otherwise false.
     /// </summary>
     protected bool IsRecycling => VirtualizationMode == VirtualizationMode.Recycling;
 
     /// <summary>
-    ///     The cache length before and after the viewport.
+    /// The cache length before and after the viewport.
     /// </summary>
     protected VirtualizationCacheLength CacheLength => GetCacheLength(ItemsControl);
 
     /// <summary>
-    ///     The Unit of the cache length. Can be Pixel, Item or Page.
-    ///     When the ItemsOwner is a group item it can only be pixel or item.
+    /// The Unit of the cache length. Can be Pixel, Item or Page.
+    /// When the ItemsOwner is a group item it can only be pixel or item.
     /// </summary>
     protected VirtualizationCacheLengthUnit CacheLengthUnit => GetCacheLengthUnit(ItemsControl);
 
     /// <summary>
-    ///     The ItemsControl (e.g. ListView).
+    /// The ItemsControl (e.g. ListView).
     /// </summary>
     protected ItemsControl ItemsControl => ItemsControl.GetItemsOwner(this);
 
     /// <summary>
-    ///     The ItemsControl (e.g. ListView) or if the ItemsControl is grouping a GroupItem.
+    /// The ItemsControl (e.g. ListView) or if the ItemsControl is grouping a GroupItem.
     /// </summary>
     protected DependencyObject ItemsOwner
     {

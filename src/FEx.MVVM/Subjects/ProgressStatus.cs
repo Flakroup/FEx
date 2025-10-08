@@ -1,5 +1,5 @@
-﻿using FEx.Basics.Collections.Concurrent;
-using FEx.Extensions.Numericals;
+using FEx.Agnostics.Abstractions.Extensions.Numericals;
+using FEx.Core.Collections.Concurrent;
 using FEx.MVVM.Abstractions;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Interfaces;

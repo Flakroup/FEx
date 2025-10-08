@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using ConfigurationManager = System.Configuration.ConfigurationManager;
 

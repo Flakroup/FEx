@@ -1,4 +1,4 @@
-﻿using FEx.AppSettings.Abstractions.Interfaces;
+using FEx.AppSettings.Abstractions.Interfaces;
 using StrongInject;
 
 namespace FEx.AppSettings;

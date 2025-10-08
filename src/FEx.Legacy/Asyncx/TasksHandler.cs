@@ -1,16 +1,18 @@
-﻿using FEx.Abstractions.Enums;
-using FEx.Abstractions.Interfaces;
-using FEx.Basics.Extensions;
-using FEx.Extensions.Helpers;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.Legacy.Asyncx.Abstractions.Interfaces;
 using FEx.Legacy.Asyncx.Enums;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using static FEx.Agnostics.Abstractions.AsyncStatics;
 
 namespace FEx.Legacy.Asyncx;
 
-public class TasksHandler : StaticAsyncHelper, ITasksHandler
+public class TasksHandler : ITasksHandler
 {
     private readonly IAsyncHelper _asyncHelper;
     private readonly ITasksInfoSubject _tasksInfoSubject;
@@ -27,7 +29,7 @@ public class TasksHandler : StaticAsyncHelper, ITasksHandler
                                Action<bool, JobSpecs?> post = null,
                                AsyncMode asyncMode = AsyncMode.ThreadPool,
                                CancellationToken cancellationToken = default) =>
-        await RunFuncAsync(() => Wrap(task), specs, pre, post, asyncMode, cancellationToken);
+        await RunFuncAsync(task.Wrap, specs, pre, post, asyncMode, cancellationToken);
 
     public async Task<T> RunTaskAsync<T>(Func<Task<T>> task,
                                          JobSpecs? specs = null,
@@ -107,5 +109,5 @@ public class TasksHandler : StaticAsyncHelper, ITasksHandler
                                    Action<JobSpecs?> pre = null,
                                    Action<bool, JobSpecs?> post = null,
                                    AsyncMode asyncMode = AsyncMode.ThreadPool) =>
-        await RunTaskAsync(() => WrapTaskAsync(task), specs, pre, post, asyncMode);
+        await RunTaskAsync(task.WrapTaskAsync, specs, pre, post, asyncMode);
 }

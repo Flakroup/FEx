@@ -1,5 +1,5 @@
-﻿using FEx.Extensions.Base.Converters;
-using FEx.Extensions.Base.Enums;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Utilities;
 using System;
 using System.Globalization;
 using System.Windows.Data;

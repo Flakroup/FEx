@@ -1,9 +1,9 @@
-﻿namespace FEx.MVVM.Abstractions.Dialogs;
+namespace FEx.MVVM.Abstractions.Dialogs;
 
 public abstract class OpenFileDialogOptionsBase<TDialog> : FileDialogOptionsBase<TDialog>
 {
     /// <summary>
-    /// Gets or sets an option indicating whether <see cref="T:Microsoft.Win32.OpenFileDialog" /> allows users to
+    /// Gets or sets an option indicating whether <see cref="Microsoft.Win32.OpenFileDialog" /> allows users to
     /// select multiple files.
     /// </summary>
     /// <returns>

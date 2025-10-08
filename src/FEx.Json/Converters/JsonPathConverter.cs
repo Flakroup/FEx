@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
@@ -40,5 +40,6 @@ public class JsonPathConverter : JsonConverter
         // CanConvert is not called when [JsonConverter] attribute is used
         false;
 
-    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) =>
+        throw new NotImplementedException();
 }

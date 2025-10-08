@@ -65,7 +65,7 @@ public class FExServiceContainer : IFExServiceContainer
 #pragma warning restore IDISP004
         }
 
-        return Enumerable.Empty<T>();
+        return [];
     }
 
     public async Task<T> ResolveServiceAsync<T>() =>

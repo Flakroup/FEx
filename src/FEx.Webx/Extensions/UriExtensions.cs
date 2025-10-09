@@ -33,6 +33,13 @@ public static class UriExtensions
         return GetFileName(response.RequestMessage!.RequestUri, responseHeaders);
     }
 
+    public static async Task<string> DownloadStringAsync(this Uri url)
+    {
+        using var a = new HttpClient();
+
+        return await a.GetStringAsync(url);
+    }
+
     private static string GetFileName(Uri responseUri, IDictionary<string, string> responseHeaders)
     {
         string contentDispositionHeader = responseHeaders.Keys.FindInEnumerable(x => x.IsEqual("content-disposition"));

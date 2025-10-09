@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 using FEx.Agnostics.Abstractions.Extensions.Interop;
 #endif
 
-namespace FEx.Core.Utilities;
+namespace FEx.FileSystem;
 
 public class FileSystemUtilities
 {
@@ -137,50 +137,50 @@ public class FileSystemUtilities
                 switch (fileOperation)
                 {
                     case FileOperation.Copy or FileOperation.Move or FileOperation.SyncSrcToDest:
-                    {
-                        var results = new ConcurrentDictionary<DirectoryInfo, Result<ExceptionError>>();
-                        PrgMax = files.Count;
+                        {
+                            var results = new ConcurrentDictionary<DirectoryInfo, Result<ExceptionError>>();
+                            PrgMax = files.Count;
 
-                        Parallel.ForEach(files,
-                            file => ProcessFile(dest, file, sourceInfo, results, fileOperation, printPaths));
+                            Parallel.ForEach(files,
+                                file => ProcessFile(dest, file, sourceInfo, results, fileOperation, printPaths));
 
-                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+                            var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
 
-                        result = errors.Count > 0
-                            ? new AggregatedError(result.Error.InnerErrors.Concat(errors).ToList().AsReadOnly())
-                            : Result<AggregatedError>.Success;
+                            result = errors.Count > 0
+                                ? new AggregatedError(result.Error.InnerErrors.Concat(errors).ToList().AsReadOnly())
+                                : Result<AggregatedError>.Success;
 
-                        break;
-                    }
+                            break;
+                        }
                     case FileOperation.Delete:
-                    {
-                        var results = new ConcurrentDictionary<FileInfo, Result<ExceptionError>>();
+                        {
+                            var results = new ConcurrentDictionary<FileInfo, Result<ExceptionError>>();
 
-                        Parallel.ForEach(files,
-                            file =>
-                            {
-                                Result<ExceptionError> temp;
-
-                                try
+                            Parallel.ForEach(files,
+                                file =>
                                 {
-                                    temp = SafeDeleteFile(file);
-                                }
-                                catch (Exception ex)
-                                {
-                                    temp = new ExceptionError(ex);
-                                }
+                                    Result<ExceptionError> temp;
 
-                                results.AddOrUpdateValue(file, temp);
-                            });
+                                    try
+                                    {
+                                        temp = SafeDeleteFile(file);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        temp = new ExceptionError(ex);
+                                    }
 
-                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+                                    results.AddOrUpdateValue(file, temp);
+                                });
 
-                        result = errors.Count > 0
-                            ? new AggregatedError(errors)
-                            : Result<AggregatedError>.Success;
+                            var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
 
-                        break;
-                    }
+                            result = errors.Count > 0
+                                ? new AggregatedError(errors)
+                                : Result<AggregatedError>.Success;
+
+                            break;
+                        }
                 }
 
                 FinishProgress();

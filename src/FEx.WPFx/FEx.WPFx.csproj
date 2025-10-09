@@ -40,6 +40,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\Common\FEx.Common.csproj" />
 	  <ProjectReference Include="..\DependencyInjection\FEx.DependencyInjection.csproj" />
+	  <ProjectReference Include="..\FEx.FileSystem\FEx.FileSystem.csproj" />
 	  <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
 	  <ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
 	  <ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />

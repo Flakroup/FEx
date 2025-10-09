@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Interfaces;
 using JetBrains.Annotations;
 using System;
 using System.Collections;
@@ -190,5 +191,94 @@ public static class ListExtensions
         T item = source[oldIndex];
         source.RemoveAt(oldIndex);
         source.Insert(newIndex, item);
+    }
+
+    /// <summary>
+    ///     Synchronizes two lists in one way mode.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="sourceList">The source list.</param>
+    /// <param name="syncedList">The list which state will be reflected in source.</param>
+    /// <param name="equalityComparator">The equality comparator - must match unique objects.</param>
+    /// <param name="syncAction">Action to be invoked on equal objects.</param>
+    public static bool SyncWith<T>(this IList<T> sourceList,
+                                   IList<T> syncedList,
+                                   Func<T, T, bool> equalityComparator,
+                                   Action<T, T> syncAction = null)
+    {
+        var t = sourceList as IConcurrentList<T>;
+
+        if (t is not null)
+            return t.Combo(items => items.SyncWith(syncedList, equalityComparator, syncAction));
+
+        bool hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !equalityComparator(x, y)));
+
+        if (syncAction is not null)
+            for (var i = 0; i < sourceList.Count; i++)
+            {
+                T f = sourceList[i];
+                int[] match = syncedList.IndexesWhere(x => equalityComparator(f, x)).ToArray();
+
+                if (match.Length == 1)
+                {
+                    syncAction(f, syncedList[match[0]]);
+
+                    if (!ReferenceEquals(f, sourceList[i]))
+                        hasChanged = true;
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"{nameof(equalityComparator)} function doesn't provide unique objects.");
+                }
+            }
+
+        int c = sourceList.Count;
+        sourceList.AddRangeToList(syncedList.Where(x => sourceList.All(y => !equalityComparator(x, y))));
+
+        if (c != sourceList.Count)
+            hasChanged = true;
+
+        return hasChanged;
+    }
+
+    public static bool SyncWith<T>(this IList<T> sourceList, IList<T> syncedList, Action<T, T> syncAction = null)
+        where T : IEquatable<T>
+    {
+        var t = sourceList as IConcurrentList<T>;
+
+        if (t is not null)
+            return t.Combo(items => items.SyncWith(syncedList, syncAction));
+
+        bool hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !x.Equals(y)));
+
+        if (syncAction is not null)
+            for (var i = 0; i < sourceList.Count; i++)
+            {
+                T f = sourceList[i];
+                int[] match = syncedList.IndexesWhere(f.Equals).ToArray();
+
+                if (match.Length == 1)
+                {
+                    syncAction(f, syncedList[match[0]]);
+
+                    if (!ReferenceEquals(f, sourceList[i]))
+                        hasChanged = true;
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"{nameof(Equals)} function doesn't provide unique objects.");
+                }
+            }
+
+        int c = sourceList.Count;
+
+        sourceList.AddRangeToList(syncedList.Where(x => sourceList.All(y => !x.Equals(y))));
+
+        if (c != sourceList.Count)
+            hasChanged = true;
+
+        return hasChanged;
     }
 }

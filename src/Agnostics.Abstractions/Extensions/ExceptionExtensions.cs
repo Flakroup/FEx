@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -94,5 +95,50 @@ public static class ExceptionExtensions
             message.AppendLine("Inner Exception:");
             BuildMessage(ex.InnerException, ref message);
         }
+    }
+
+    /// <summary>
+    ///     Stacks the specified self.
+    /// </summary>
+    /// <typeparam name="T">Type of exception</typeparam>
+    /// <param name="self">Current instance.</param>
+    /// <returns>A string.</returns>
+    public static string Stack<T>(this T self) where T : Exception
+    {
+        Exception inner = self;
+        var stackTrace = new StringBuilder();
+
+        while (inner is not null)
+        {
+            stackTrace.AppendLine(inner.StackTrace);
+
+            break;
+        }
+
+        return stackTrace.ToString();
+    }
+
+    /// <summary>
+    ///     Gets the innerexceptions from a exception.
+    /// </summary>
+    /// <typeparam name="T">Type of exception</typeparam>
+    /// <param name="self">Current instance.</param>
+    /// <returns>A list of exceptions.</returns>
+    public static IEnumerable<Exception> History<T>(this T self) where T : Exception
+    {
+        var exceptions = new List<Exception>();
+        Exception inner = self;
+
+        while (inner is not null)
+        {
+            exceptions.Add(inner);
+
+            if (inner.InnerException is not null)
+                inner = inner.InnerException;
+            else
+                break;
+        }
+
+        return exceptions;
     }
 }

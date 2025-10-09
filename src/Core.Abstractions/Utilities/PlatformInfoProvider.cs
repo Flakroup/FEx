@@ -605,11 +605,8 @@ public static class PlatformInfoProvider
         return productName?.StartsWith("Windows 10", StringComparison.OrdinalIgnoreCase) == true;
     }
 
-#if NET
     [SuppressMessage("Interoperability", "CA1416:Walidacja zgodności z platformą")]
-#else
     [SuppressMessage("ReSharper", "UnusedParameter.Local")]
-#endif
     private static string RegistryRead(string registryPath, string field, string defaultValue)
     {
 #if NET

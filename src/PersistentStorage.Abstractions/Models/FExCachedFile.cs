@@ -92,7 +92,10 @@ public class FExCachedFile : NotifyPropertyChanged, IFExCachedFile, IAsyncDispos
 
         if (disposing)
 #if NETSTANDARD2_0
+        {
             _dataStream?.Dispose();
+            await Task.CompletedTask;
+        }
 #else
             await _dataStream.DisposeAsync();
 #endif

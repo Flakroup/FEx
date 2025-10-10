@@ -9,6 +9,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\Core\FEx.Core.csproj" />
 	  <ProjectReference Include="..\FEx.FileSystem\FEx.FileSystem.csproj" />
 	  <ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
 	  <ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />

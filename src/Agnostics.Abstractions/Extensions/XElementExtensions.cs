@@ -1,5 +1,4 @@
-﻿using FEx.Agnostics.Abstractions.Extensions;
-using FEx.Agnostics.Abstractions.Extensions.Numericals;
+﻿using FEx.Agnostics.Abstractions.Extensions.Numericals;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;

@@ -52,16 +52,16 @@ public static class CommandLineParserHelper
 
         var info = e.Tag.ToString();
 
-        if (e.SetName != null)
+        if (e.SetName is not null)
             info += $" {e.SetName}";
 
-        if (e.Verb != null)
+        if (e.Verb is not null)
             info += $" {e.Verb}";
 
-        if (e.NameInfoString != null)
+        if (e.NameInfoString is not null)
             info += $" {e.NameInfoString}";
 
-        if (e.Exception != null)
+        if (e.Exception is not null)
             info += $" {e.Exception}";
 
         return info;

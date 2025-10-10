@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="FluentFTP" Version="35.0.4" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+		<ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+		<ProjectReference Include="..\Logging\FEx.Logging.csproj" />
+		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
+	</ItemGroup>
+</Project>
+

@@ -22,7 +22,7 @@ public class ErrorData
         {
             _nameInfo = value;
 
-            NameInfoString = NameInfo != null
+            NameInfoString = NameInfo is not null
                 ? GetNameInfoString(NameInfo)
                 : null;
         }

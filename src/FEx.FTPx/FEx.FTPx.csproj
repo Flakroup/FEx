@@ -13,6 +13,7 @@
 		<ProjectReference Include="..\Logging\FEx.Logging.csproj" />
 		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
 		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
+		<ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
 	</ItemGroup>
 </Project>
 

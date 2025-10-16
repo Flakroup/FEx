@@ -8,6 +8,7 @@ using FEx.Downloader.Clients;
 using FEx.MVVM;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Extensions;
+using FEx.Webx.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -262,7 +263,7 @@ public static class FtpDownloader
             {
                 var request = (FtpWebRequest)serverUri.GetWebRequest();
                 request.Proxy = null;
-                request.Credentials = GetCredentials(username, password);
+                request.Credentials = NetworkUtilities.GetCredentials(username, password);
                 request.Method = WebRequestMethods.Ftp.GetFileSize;
 
                 using var response = (FtpWebResponse)await request.GetResponseAsync();
@@ -279,11 +280,6 @@ public static class FtpDownloader
             : FileLengthConverter.ConvertFileLength(bytesTotal, LengthType.Bytes, unit).length;
     }
 
-    public static ICredentials GetCredentials(string username = "", string password = "") =>
-        username.IsNotNullOrWhiteSpace() && password.IsNotNullOrWhiteSpace()
-            ? new NetworkCredential(username, password)
-            : (ICredentials)CredentialCache.DefaultNetworkCredentials;
-
     private static async Task<KeyValuePair<bool, FtpWebResponse>> TryGetResponseAsync(
         Uri serverUri,
         string username,
@@ -293,7 +289,7 @@ public static class FtpDownloader
         // Get the object used to communicate with the server.
         var request = (FtpWebRequest)serverUri.GetWebRequest();
         request.Method = WebRequestMethods.Ftp.DownloadFile;
-        request.Credentials = GetCredentials(username, password);
+        request.Credentials = NetworkUtilities.GetCredentials(username, password);
         request.ContentOffset = offset;
         FtpWebResponse response = null;
 

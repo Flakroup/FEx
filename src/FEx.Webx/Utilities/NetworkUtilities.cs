@@ -1,5 +1,7 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
@@ -39,4 +41,15 @@ public static class NetworkUtilities
 
         return dictionary;
     }
+
+    /// <summary>
+    /// Creates network credentials from username and password, or returns default credentials if not provided.
+    /// </summary>
+    /// <param name="username">The username for authentication.</param>
+    /// <param name="password">The password for authentication.</param>
+    /// <returns>Network credentials or default credentials.</returns>
+    public static ICredentials GetCredentials(string username = "", string password = "") =>
+        username.IsNotNullOrWhiteSpace() && password.IsNotNullOrWhiteSpace()
+            ? new(username, password)
+            : CredentialCache.DefaultNetworkCredentials;
 }

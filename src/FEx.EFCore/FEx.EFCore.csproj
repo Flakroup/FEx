@@ -1,12 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Azure.Identity" Version="1.16.0" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
+		<PackageReference Include="Azure.Identity" Version="1.17.0" />
+		<PackageReference Include="EFCore.BulkExtensions" Version="$(BulkExtensionsVersion)" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EFCoreVersion)" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(EFCoreVersion)" />
@@ -15,13 +16,14 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(DotNetNugetsVersion)" />
-		<PackageReference Include="System.Drawing.Common" Version="$(DotNetNugetsVersion)" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
 		<PackageReference Include="System.Formats.Asn1" Version="$(DotNetNugetsVersion)" />
 		<PackageReference Include="System.Text.Json" Version="$(DotNetNugetsVersion)" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+		<ProjectReference Include="..\Core\FEx.Core.csproj" />
 		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
 	</ItemGroup>
 

@@ -19,5 +19,13 @@ public class FExFlurlxModule : InitializeModule<IFExFlurlxContainer, IServiceCol
     {
         services.AddSingletonServiceUsingContainer<IFlurlConfigurator>(container);
         services.AddSingletonServiceUsingContainer<IFlurlClientCache>(container);
+
+        // Register Polly policy as factory from configurator
+        services.AddSingleton(sp =>
+        {
+            IFlurlConfigurator configurator = sp.GetRequiredService<IFlurlConfigurator>();
+
+            return configurator.GetResiliencePolicy();
+        });
     }
 }

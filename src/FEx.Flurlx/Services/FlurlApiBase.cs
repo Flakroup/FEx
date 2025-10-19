@@ -1,0 +1,105 @@
+﻿using FEx.Asyncx.Abstractions;
+using FEx.Flurlx.Extensions;
+using FEx.Flurlx.Models;
+using FEx.Json.Extensions;
+using Flurl.Http;
+using Polly;
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace FEx.Flurlx.Services;
+
+/// <summary>
+/// Abstract base class for building typed API clients with Polly resilience.
+/// </summary>
+/// <remarks>
+/// Provides HTTP request/response handling with built-in resilience patterns (Retry, Circuit Breaker, Timeout, etc.).
+/// Doesn't require <c>Initialize();</c> call in .ctor
+/// </remarks>
+public abstract class FlurlApiBase : AsyncInitializable
+{
+    protected IFlurlClient FlurlClient { get; }
+    protected IAsyncPolicy<HttpResponseMessage> ResiliencePolicy { get; }
+
+    protected FlurlApiBase(IFlurlClient flurlClient, IAsyncPolicy<HttpResponseMessage> resiliencePolicy)
+        : base(null) // No dependency on AsyncInitializable parent
+    {
+        FlurlClient = flurlClient ?? throw new ArgumentNullException(nameof(flurlClient));
+        ResiliencePolicy = resiliencePolicy ?? throw new ArgumentNullException(nameof(resiliencePolicy));
+
+        BeginInitialization();
+    }
+
+    protected static string GetStatusMessage(HttpStatusCode statusCode) => statusCode.ToString();
+
+    protected static bool IsSuccess(IFlurlResponse response) => response.IsSuccessStatusCode();
+
+    protected virtual async Task<T> GetResponseAsync<T, TReq>(string apiPath,
+                                                              Func<IFlurlRequest, IFlurlRequest> func = null,
+                                                              RequestMethod method = RequestMethod.GET,
+                                                              TReq requestContent = default,
+                                                              CancellationToken cancellationToken = default)
+    {
+        IFlurlRequest req = FlurlClient.Request(apiPath);
+
+        if (func is not null)
+            req = func(req).FixBooleanQueryParameters();
+
+        req = AddConstantsToRequest(req);
+
+        var responseUri = req.Url.ToUri();
+
+        // Execute with Polly resilience
+        HttpResponseMessage httpResponse = await ResiliencePolicy.ExecuteAsync(async ct =>
+            {
+                IFlurlResponse flurlResponse = method switch
+                {
+                    RequestMethod.GET => await req.GetAsync(cancellationToken: ct),
+                    RequestMethod.POST => await req.PostJsonAsync(requestContent, cancellationToken: ct),
+                    RequestMethod.PUT => await req.PutJsonAsync(requestContent, cancellationToken: ct),
+                    RequestMethod.DELETE => await req.DeleteAsync(cancellationToken: ct),
+                    RequestMethod.PATCH => await req.PatchJsonAsync(requestContent, cancellationToken: ct),
+                    RequestMethod.HEAD => await req.HeadAsync(cancellationToken: ct),
+                    RequestMethod.OPTIONS => await req.OptionsAsync(cancellationToken: ct),
+                    _ => throw new NotImplementedException($"{method} is not implemented")
+                };
+
+                return flurlResponse.ResponseMessage;
+            },
+            cancellationToken);
+
+#if NET5_0_OR_GREATER
+        string content = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
+#else
+        string content = await httpResponse.Content.ReadAsStringAsync();
+#endif
+
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+#if NET5_0_OR_GREATER
+            throw new HttpRequestException(
+                $"Request {method} {responseUri} has failed. {GetStatusMessage(httpResponse.StatusCode)}{Environment.NewLine}{content.PrettyPrintJson()}",
+                null,
+                httpResponse.StatusCode);
+#else
+            throw new HttpRequestException(
+                $"Request {method} {responseUri} has failed. {GetStatusMessage(httpResponse.StatusCode)}{Environment.NewLine}{content.PrettyPrintJson()}");
+#endif
+        }
+
+        T res = content.FromJson<T>();
+
+        return res;
+    }
+
+    protected virtual IFlurlRequest AddConstantsToRequest(IFlurlRequest req) => req;
+
+    protected async Task<T> GetResponseAsync<T>(string apiPath,
+                                                Func<IFlurlRequest, IFlurlRequest> func = null,
+                                                RequestMethod method = RequestMethod.GET,
+                                                CancellationToken cancellationToken = default) =>
+        await GetResponseAsync<T, T>(apiPath, func, method, cancellationToken: cancellationToken);
+}

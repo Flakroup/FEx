@@ -1,7 +1,7 @@
 using FEx.Flurlx.Configuration;
 using FEx.Flurlx.Services;
 using FEx.Logging.Abstractions.Interfaces;
-using Moq;
+using NSubstitute;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Timeout;
@@ -17,13 +17,13 @@ namespace FEx.Flurlx.Tests;
 
 public class FExPollyPolicyBuilderTests
 {
-    private readonly Mock<ILoggable> _mockLogger;
+    private readonly ILoggable _mockLogger;
     private readonly FExPollyPolicyBuilder _policyBuilder;
 
     public FExPollyPolicyBuilderTests()
     {
-        _mockLogger = new Mock<ILoggable>();
-        _policyBuilder = new FExPollyPolicyBuilder(_mockLogger.Object);
+        _mockLogger = Substitute.For<ILoggable>();
+        _policyBuilder = new FExPollyPolicyBuilder(_mockLogger);
     }
 
     [Fact]
@@ -321,10 +321,9 @@ public class FExPollyPolicyBuilderTests
 
         // Assert
         result.StatusCode.ShouldBe(HttpStatusCode.OK);
-        _mockLogger.Verify(
-            x => x.LogWarning(It.IsRegex(".*Retry.*"), null),
-            Times.AtLeastOnce(),
-            "Logger should log retry attempts");
+        _mockLogger.Received().LogWarning(
+            Arg.Is<string>(s => s.Contains("Retry")), 
+            null);
     }
 }
 

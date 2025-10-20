@@ -65,8 +65,8 @@ dotnet test test/FEx.Flurlx.Tests/FEx.Flurlx.Tests.csproj --filter "FullyQualifi
 
 - **xUnit v3**: Test framework
 - **Moq**: Mocking framework for unit tests
+- **Shouldly**: Fluent assertion library
 - **WireMock.Net**: HTTP mock server for integration tests
-- **FluentAssertions**: Better assertions (auto-included)
 - **NSubstitute**: Alternative mocking (auto-included)
 
 ## Notes

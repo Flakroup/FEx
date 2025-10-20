@@ -3,7 +3,9 @@ using FEx.Flurlx.Models;
 using FEx.Flurlx.Services;
 using Flurl.Http;
 using Polly;
+using Shouldly;
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -62,9 +64,9 @@ public class FlurlApiBaseIntegrationTests : IDisposable
         var result = await _testApi.GetDataAsync();
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(123, result.Id);
-        Assert.Equal("Test", result.Name);
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(123);
+        result.Name.ShouldBe("Test");
     }
 
     [Fact]
@@ -98,9 +100,9 @@ public class FlurlApiBaseIntegrationTests : IDisposable
         var result = await _testApi.GetDataAsync();
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(456, result.Id);
-        Assert.Equal("Retry Success", result.Name);
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(456);
+        result.Name.ShouldBe("Retry Success");
         // Verify it went through the retry scenario successfully
     }
 
@@ -119,7 +121,7 @@ public class FlurlApiBaseIntegrationTests : IDisposable
         var result = await _testApi.GetDataAsync();
         
         // Fallback should have activated, returning error response
-        Assert.NotNull(result);
+        result.ShouldNotBeNull();
     }
 
     [Fact]
@@ -138,13 +140,13 @@ public class FlurlApiBaseIntegrationTests : IDisposable
         var result = await _testApi.CreateDataAsync(requestBody);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(789, result.Id);
-        Assert.Equal("Created", result.Name);
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(789);
+        result.Name.ShouldBe("Created");
 
         // Verify request was sent
         var requests = _mockServer.LogEntries;
-        Assert.Single(requests);
+        requests.Count().ShouldBe(1);
     }
 
     [Fact]
@@ -166,9 +168,9 @@ public class FlurlApiBaseIntegrationTests : IDisposable
         var result = await _testApi.SearchDataAsync("active", 10);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(999, result.Id);
-        Assert.Equal("Filtered", result.Name);
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(999);
+        result.Name.ShouldBe("Filtered");
     }
 
     [Fact]
@@ -192,7 +194,7 @@ public class FlurlApiBaseIntegrationTests : IDisposable
                 .WithBody("{\"id\":1,\"name\":\"Slow\"}"));
 
         // Act & Assert
-        await Assert.ThrowsAnyAsync<Exception>(async () =>
+        await Should.ThrowAsync<Exception>(async () =>
         {
             await timeoutApi.GetSlowDataAsync();
         });
@@ -230,7 +232,7 @@ public class FlurlApiBaseIntegrationTests : IDisposable
         var results = await Task.WhenAll(tasks);
 
         // Assert - All should complete, but some might have been rejected/queued
-        Assert.NotEmpty(results);
+        results.ShouldNotBeEmpty();
     }
 
     public void Dispose()

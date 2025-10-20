@@ -5,6 +5,7 @@ using Moq;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Timeout;
+using Shouldly;
 using System;
 using System.Net;
 using System.Net.Http;
@@ -35,7 +36,7 @@ public class FExPollyPolicyBuilderTests
         var policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Assert
-        Assert.NotNull(policy);
+        policy.ShouldNotBeNull();
     }
 
     [Fact]
@@ -51,7 +52,7 @@ public class FExPollyPolicyBuilderTests
         var attemptCount = 0;
 
         // Act & Assert
-        await Assert.ThrowsAsync<HttpRequestException>(async () =>
+        await Should.ThrowAsync<HttpRequestException>(async () =>
         {
             await policy.ExecuteAsync(async ct =>
             {
@@ -62,7 +63,7 @@ public class FExPollyPolicyBuilderTests
         });
 
         // Should attempt initial + 3 retries = 4 total
-        Assert.Equal(4, attemptCount);
+        attemptCount.ShouldBe(4);
     }
 
     [Fact]
@@ -90,8 +91,8 @@ public class FExPollyPolicyBuilderTests
         }, CancellationToken.None);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, result.StatusCode);
-        Assert.Equal(3, attemptCount); // Initial + 2 retries
+        result.StatusCode.ShouldBe(HttpStatusCode.OK);
+        attemptCount.ShouldBe(3); // Initial + 2 retries
     }
 
     [Fact]
@@ -115,8 +116,8 @@ public class FExPollyPolicyBuilderTests
         }, CancellationToken.None);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, result.StatusCode);
-        Assert.Equal(1, attemptCount); // No retries for 4xx
+        result.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        attemptCount.ShouldBe(1); // No retries for 4xx
     }
 
     [Fact]
@@ -145,7 +146,7 @@ public class FExPollyPolicyBuilderTests
         }, CancellationToken.None);
 
         // Assert - Circuit should be open, next request should fail immediately
-        await Assert.ThrowsAsync<BrokenCircuitException>(async () =>
+        await Should.ThrowAsync<BrokenCircuitException>(async () =>
         {
             await policy.ExecuteAsync(async ct =>
             {
@@ -167,7 +168,7 @@ public class FExPollyPolicyBuilderTests
         var policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Act & Assert
-        await Assert.ThrowsAnyAsync<TimeoutException>(async () =>
+        await Should.ThrowAsync<TimeoutException>(async () =>
         {
             await policy.ExecuteAsync(async ct =>
             {
@@ -230,7 +231,7 @@ public class FExPollyPolicyBuilderTests
         await Task.WhenAll(tasks);
 
         // Assert - Max concurrent should not exceed bulkhead limit
-        Assert.True(maxConcurrentCount <= config.MaxParallelization,
+        maxConcurrentCount.ShouldBeLessThanOrEqualTo(config.MaxParallelization,
             $"Max concurrent count {maxConcurrentCount} exceeded bulkhead limit {config.MaxParallelization}");
     }
 
@@ -255,9 +256,9 @@ public class FExPollyPolicyBuilderTests
         }, CancellationToken.None);
 
         // Assert
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, result.StatusCode);
+        result.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
         var content = await result.Content.ReadAsStringAsync();
-        Assert.Contains("Service temporarily unavailable", content);
+        content.ShouldContain("Service temporarily unavailable");
     }
 
     [Fact]
@@ -267,14 +268,14 @@ public class FExPollyPolicyBuilderTests
         var config = PollyPolicyConfiguration.SlowApiDefaults();
 
         // Assert
-        Assert.Equal(5, config.MaxRetryAttempts);
-        Assert.Equal(TimeSpan.FromSeconds(2), config.InitialRetryDelay);
-        Assert.Equal(TimeSpan.FromMinutes(2), config.RequestTimeout);
-        Assert.Equal(10, config.CircuitBreakerFailureThreshold);
-        Assert.Equal(TimeSpan.FromMinutes(5), config.CircuitBreakerDuration);
-        Assert.Equal(3, config.MaxParallelization);
-        Assert.Equal(10, config.MaxQueuingActions);
-        Assert.True(config.EnableFallback);
+        config.MaxRetryAttempts.ShouldBe(5);
+        config.InitialRetryDelay.ShouldBe(TimeSpan.FromSeconds(2));
+        config.RequestTimeout.ShouldBe(TimeSpan.FromMinutes(2));
+        config.CircuitBreakerFailureThreshold.ShouldBe(10);
+        config.CircuitBreakerDuration.ShouldBe(TimeSpan.FromMinutes(5));
+        config.MaxParallelization.ShouldBe(3);
+        config.MaxQueuingActions.ShouldBe(10);
+        config.EnableFallback.ShouldBeTrue();
     }
 
     [Fact]
@@ -284,14 +285,14 @@ public class FExPollyPolicyBuilderTests
         var config = PollyPolicyConfiguration.FastApiDefaults();
 
         // Assert
-        Assert.Equal(2, config.MaxRetryAttempts);
-        Assert.Equal(TimeSpan.FromMilliseconds(500), config.InitialRetryDelay);
-        Assert.Equal(TimeSpan.FromSeconds(10), config.RequestTimeout);
-        Assert.Equal(3, config.CircuitBreakerFailureThreshold);
-        Assert.Equal(TimeSpan.FromSeconds(30), config.CircuitBreakerDuration);
-        Assert.Equal(20, config.MaxParallelization);
-        Assert.Equal(50, config.MaxQueuingActions);
-        Assert.False(config.EnableFallback);
+        config.MaxRetryAttempts.ShouldBe(2);
+        config.InitialRetryDelay.ShouldBe(TimeSpan.FromMilliseconds(500));
+        config.RequestTimeout.ShouldBe(TimeSpan.FromSeconds(10));
+        config.CircuitBreakerFailureThreshold.ShouldBe(3);
+        config.CircuitBreakerDuration.ShouldBe(TimeSpan.FromSeconds(30));
+        config.MaxParallelization.ShouldBe(20);
+        config.MaxQueuingActions.ShouldBe(50);
+        config.EnableFallback.ShouldBeFalse();
     }
 
     [Fact]
@@ -319,7 +320,7 @@ public class FExPollyPolicyBuilderTests
         }, CancellationToken.None);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+        result.StatusCode.ShouldBe(HttpStatusCode.OK);
         _mockLogger.Verify(
             x => x.LogWarning(It.IsRegex(".*Retry.*"), null),
             Times.AtLeastOnce(),

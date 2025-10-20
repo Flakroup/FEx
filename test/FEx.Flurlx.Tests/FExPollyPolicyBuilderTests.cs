@@ -4,7 +4,6 @@ using FEx.Logging.Abstractions.Interfaces;
 using NSubstitute;
 using Polly;
 using Polly.CircuitBreaker;
-using Polly.Timeout;
 using Shouldly;
 using System;
 using System.Net;
@@ -23,7 +22,7 @@ public class FExPollyPolicyBuilderTests
     public FExPollyPolicyBuilderTests()
     {
         _mockLogger = Substitute.For<ILoggable>();
-        _policyBuilder = new FExPollyPolicyBuilder(_mockLogger);
+        _policyBuilder = new(_mockLogger);
     }
 
     [Fact]
@@ -33,7 +32,7 @@ public class FExPollyPolicyBuilderTests
         var config = new PollyPolicyConfiguration();
 
         // Act
-        var policy = _policyBuilder.BuildFullSuitePolicy(config);
+        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Assert
         policy.ShouldNotBeNull();
@@ -48,18 +47,21 @@ public class FExPollyPolicyBuilderTests
             MaxRetryAttempts = 3,
             InitialRetryDelay = TimeSpan.FromMilliseconds(10)
         };
-        var policy = _policyBuilder.BuildFullSuitePolicy(config);
+
+        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
         var attemptCount = 0;
 
         // Act & Assert
         await Should.ThrowAsync<HttpRequestException>(async () =>
         {
-            await policy.ExecuteAsync(async ct =>
-            {
-                attemptCount++;
-                await Task.CompletedTask;
-                throw new HttpRequestException("Test failure");
-            }, CancellationToken.None);
+            await policy.ExecuteAsync(async _ =>
+                {
+                    attemptCount++;
+                    await Task.CompletedTask;
+
+                    throw new HttpRequestException("Test failure");
+                },
+                CancellationToken.None);
         });
 
         // Should attempt initial + 3 retries = 4 total
@@ -75,20 +77,22 @@ public class FExPollyPolicyBuilderTests
             MaxRetryAttempts = 2,
             InitialRetryDelay = TimeSpan.FromMilliseconds(10)
         };
-        var policy = _policyBuilder.BuildFullSuitePolicy(config);
+
+        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
         var attemptCount = 0;
 
         // Act
-        var result = await policy.ExecuteAsync(async ct =>
-        {
-            attemptCount++;
-            await Task.CompletedTask;
-            
-            if (attemptCount < 3)
-                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
-            
-            return new HttpResponseMessage(HttpStatusCode.OK);
-        }, CancellationToken.None);
+        HttpResponseMessage result = await policy.ExecuteAsync(async _ =>
+            {
+                attemptCount++;
+                await Task.CompletedTask;
+
+                if (attemptCount < 3)
+                    return new(HttpStatusCode.InternalServerError);
+
+                return new(HttpStatusCode.OK);
+            },
+            CancellationToken.None);
 
         // Assert
         result.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -104,16 +108,19 @@ public class FExPollyPolicyBuilderTests
             MaxRetryAttempts = 3,
             InitialRetryDelay = TimeSpan.FromMilliseconds(10)
         };
-        var policy = _policyBuilder.BuildFullSuitePolicy(config);
+
+        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
         var attemptCount = 0;
 
         // Act
-        var result = await policy.ExecuteAsync(async ct =>
-        {
-            attemptCount++;
-            await Task.CompletedTask;
-            return new HttpResponseMessage(HttpStatusCode.BadRequest);
-        }, CancellationToken.None);
+        HttpResponseMessage result = await policy.ExecuteAsync(async _ =>
+            {
+                attemptCount++;
+                await Task.CompletedTask;
+
+                return new(HttpStatusCode.BadRequest);
+            },
+            CancellationToken.None);
 
         // Assert
         result.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -130,29 +137,36 @@ public class FExPollyPolicyBuilderTests
             CircuitBreakerDuration = TimeSpan.FromSeconds(1),
             MaxRetryAttempts = 0 // Disable retry to test circuit breaker in isolation
         };
-        var policy = _policyBuilder.BuildFullSuitePolicy(config);
+
+        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Act - Cause failures to open circuit
-        await policy.ExecuteAsync(async ct =>
-        {
-            await Task.CompletedTask;
-            return new HttpResponseMessage(HttpStatusCode.InternalServerError);
-        }, CancellationToken.None);
+        await policy.ExecuteAsync(async _ =>
+            {
+                await Task.CompletedTask;
 
-        await policy.ExecuteAsync(async ct =>
-        {
-            await Task.CompletedTask;
-            return new HttpResponseMessage(HttpStatusCode.InternalServerError);
-        }, CancellationToken.None);
+                return new(HttpStatusCode.InternalServerError);
+            },
+            CancellationToken.None);
+
+        await policy.ExecuteAsync(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new(HttpStatusCode.InternalServerError);
+            },
+            CancellationToken.None);
 
         // Assert - Circuit should be open, next request should fail immediately
         await Should.ThrowAsync<BrokenCircuitException>(async () =>
         {
-            await policy.ExecuteAsync(async ct =>
-            {
-                await Task.CompletedTask;
-                return new HttpResponseMessage(HttpStatusCode.OK);
-            }, CancellationToken.None);
+            await policy.ExecuteAsync(async _ =>
+                {
+                    await Task.CompletedTask;
+
+                    return new(HttpStatusCode.OK);
+                },
+                CancellationToken.None);
         });
     }
 
@@ -165,16 +179,19 @@ public class FExPollyPolicyBuilderTests
             RequestTimeout = TimeSpan.FromMilliseconds(100),
             MaxRetryAttempts = 0 // Disable retry
         };
-        var policy = _policyBuilder.BuildFullSuitePolicy(config);
+
+        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Act & Assert
         await Should.ThrowAsync<TimeoutException>(async () =>
         {
             await policy.ExecuteAsync(async ct =>
-            {
-                await Task.Delay(TimeSpan.FromSeconds(5), ct);
-                return new HttpResponseMessage(HttpStatusCode.OK);
-            }, CancellationToken.None);
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5), ct);
+
+                    return new(HttpStatusCode.OK);
+                },
+                CancellationToken.None);
         });
     }
 
@@ -188,42 +205,48 @@ public class FExPollyPolicyBuilderTests
             MaxQueuingActions = 0,
             RequestTimeout = TimeSpan.FromSeconds(10)
         };
-        var policy = _policyBuilder.BuildFullSuitePolicy(config);
+
+        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
         var concurrentCount = 0;
         var maxConcurrentCount = 0;
         var semaphore = new SemaphoreSlim(1, 1);
 
         // Act - Try to run 5 requests concurrently
         var tasks = new Task<HttpResponseMessage>[5];
-        for (int i = 0; i < 5; i++)
+
+        for (var i = 0; i < 5; i++)
         {
             tasks[i] = Task.Run(async () =>
             {
                 try
                 {
                     return await policy.ExecuteAsync(async ct =>
-                    {
-                        await semaphore.WaitAsync();
-                        try
                         {
-                            concurrentCount++;
-                            if (concurrentCount > maxConcurrentCount)
-                                maxConcurrentCount = concurrentCount;
+                            await semaphore.WaitAsync(ct);
 
-                            await Task.Delay(50, ct);
+                            try
+                            {
+                                concurrentCount++;
 
-                            concurrentCount--;
-                            return new HttpResponseMessage(HttpStatusCode.OK);
-                        }
-                        finally
-                        {
-                            semaphore.Release();
-                        }
-                    }, CancellationToken.None);
+                                if (concurrentCount > maxConcurrentCount)
+                                    maxConcurrentCount = concurrentCount;
+
+                                await Task.Delay(50, ct);
+
+                                concurrentCount--;
+
+                                return new(HttpStatusCode.OK);
+                            }
+                            finally
+                            {
+                                semaphore.Release();
+                            }
+                        },
+                        CancellationToken.None);
                 }
                 catch
                 {
-                    return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+                    return new(HttpStatusCode.ServiceUnavailable);
                 }
             });
         }
@@ -246,18 +269,21 @@ public class FExPollyPolicyBuilderTests
             InitialRetryDelay = TimeSpan.FromMilliseconds(10),
             CircuitBreakerFailureThreshold = 10 // High threshold to not trigger
         };
-        var policy = _policyBuilder.BuildFullSuitePolicy(config);
+
+        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Act - All retries should fail, fallback should activate
-        var result = await policy.ExecuteAsync(async ct =>
-        {
-            await Task.CompletedTask;
-            throw new HttpRequestException("Complete failure");
-        }, CancellationToken.None);
+        HttpResponseMessage result = await policy.ExecuteAsync(async _ =>
+            {
+                await Task.CompletedTask;
+
+                throw new HttpRequestException("Complete failure");
+            },
+            CancellationToken.None);
 
         // Assert
         result.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
-        var content = await result.Content.ReadAsStringAsync();
+        string content = await result.Content.ReadAsStringAsync();
         content.ShouldContain("Service temporarily unavailable");
     }
 
@@ -304,26 +330,25 @@ public class FExPollyPolicyBuilderTests
             MaxRetryAttempts = 2,
             InitialRetryDelay = TimeSpan.FromMilliseconds(10)
         };
-        var policy = _policyBuilder.BuildFullSuitePolicy(config);
+
+        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
         var attemptCount = 0;
 
         // Act
-        var result = await policy.ExecuteAsync(async ct =>
-        {
-            attemptCount++;
-            await Task.CompletedTask;
-            
-            if (attemptCount < 2)
-                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
-            
-            return new HttpResponseMessage(HttpStatusCode.OK);
-        }, CancellationToken.None);
+        HttpResponseMessage result = await policy.ExecuteAsync(async _ =>
+            {
+                attemptCount++;
+                await Task.CompletedTask;
+
+                if (attemptCount < 2)
+                    return new(HttpStatusCode.InternalServerError);
+
+                return new(HttpStatusCode.OK);
+            },
+            CancellationToken.None);
 
         // Assert
         result.StatusCode.ShouldBe(HttpStatusCode.OK);
-        _mockLogger.Received().LogWarning(
-            Arg.Is<string>(s => s.Contains("Retry")), 
-            null);
+        _mockLogger.Received().LogWarning(Arg.Is<string>(s => s.Contains("Retry")));
     }
 }
-

@@ -470,3 +470,5 @@ ehthumbs_vista.db
 .specstory/
 
 .cursorindexingignore
+
+.cursor/plans/

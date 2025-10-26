@@ -1,4 +1,6 @@
-﻿using FEx.Asyncx.Abstractions;
+﻿using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Asyncx.Abstractions;
+using FEx.Flurlx.Abstractions.Interfaces;
 using FEx.Flurlx.Extensions;
 using FEx.Flurlx.Models;
 using FEx.Json.Extensions;
@@ -21,14 +23,16 @@ namespace FEx.Flurlx.Services;
 /// </remarks>
 public abstract class FlurlApiBase : AsyncInitializable
 {
+#pragma warning disable IDISP006 // Implement IDisposable - done by FlurlCache
     protected IFlurlClient FlurlClient { get; }
+#pragma warning restore IDISP006 // Implement IDisposable
     protected IAsyncPolicy<HttpResponseMessage> ResiliencePolicy { get; }
 
-    protected FlurlApiBase(IFlurlClient flurlClient, IAsyncPolicy<HttpResponseMessage> resiliencePolicy)
+    protected FlurlApiBase(IFlurlConfigurator flurlConfigurator)
         : base(null) // No dependency on AsyncInitializable parent
     {
-        FlurlClient = flurlClient ?? throw new ArgumentNullException(nameof(flurlClient));
-        ResiliencePolicy = resiliencePolicy ?? throw new ArgumentNullException(nameof(resiliencePolicy));
+        FlurlClient = flurlConfigurator.Guard(nameof(flurlConfigurator)).GetClient();
+        ResiliencePolicy = flurlConfigurator.GetResiliencePolicy();
 
         BeginInitialization();
     }

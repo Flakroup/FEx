@@ -1,7 +1,9 @@
+using FEx.Flurlx.Abstractions.Interfaces;
 using FEx.Flurlx.Configuration;
 using FEx.Flurlx.Models;
 using FEx.Flurlx.Services;
 using Flurl.Http;
+using NSubstitute;
 using Polly;
 using Shouldly;
 using System;
@@ -48,8 +50,10 @@ public class FlurlApiBaseIntegrationTests : IDisposable
 
         _resiliencePolicy = policyBuilder.BuildFullSuitePolicy(config);
 
+        IFlurlConfigurator flurlConfigurator = GetMocks(_flurlClient, _resiliencePolicy);
+
         // Create test API instance
-        _testApi = new(_flurlClient, _resiliencePolicy);
+        _testApi = new(flurlConfigurator);
     }
 
     [Fact]
@@ -186,7 +190,10 @@ public class FlurlApiBaseIntegrationTests : IDisposable
 
         var policyBuilder = new FExPollyPolicyBuilder();
         IAsyncPolicy<HttpResponseMessage> timeoutPolicy = policyBuilder.BuildFullSuitePolicy(shortTimeoutConfig);
-        var timeoutApi = new TestApi(_flurlClient, timeoutPolicy);
+
+        IFlurlConfigurator flurlConfigurator = GetMocks(_flurlClient, timeoutPolicy);
+
+        var timeoutApi = new TestApi(flurlConfigurator);
 
         _mockServer.Given(Request.Create().WithPath("/api/slow").UsingGet())
             .RespondWith(Response.Create()
@@ -211,7 +218,10 @@ public class FlurlApiBaseIntegrationTests : IDisposable
 
         var policyBuilder = new FExPollyPolicyBuilder();
         IAsyncPolicy<HttpResponseMessage> bulkheadPolicy = policyBuilder.BuildFullSuitePolicy(bulkheadConfig);
-        var bulkheadApi = new TestApi(_flurlClient, bulkheadPolicy);
+
+        IFlurlConfigurator flurlConfigurator = GetMocks(_flurlClient, bulkheadPolicy);
+
+        var bulkheadApi = new TestApi(flurlConfigurator);
 
         _mockServer.Given(Request.Create().WithPath("/api/concurrent").UsingGet())
             .RespondWith(Response.Create()
@@ -232,6 +242,16 @@ public class FlurlApiBaseIntegrationTests : IDisposable
         results.ShouldNotBeEmpty();
     }
 
+    private static IFlurlConfigurator GetMocks(IFlurlClient flurlClient,
+                                               IAsyncPolicy<HttpResponseMessage> resiliencePolicy)
+    {
+        IFlurlConfigurator flurlConfigurator = Substitute.For<IFlurlConfigurator>();
+        flurlConfigurator.GetClient().Returns(flurlClient);
+        flurlConfigurator.GetResiliencePolicy().Returns(resiliencePolicy);
+
+        return flurlConfigurator;
+    }
+
     #region IDisposable
     public void Dispose()
     {
@@ -245,8 +265,8 @@ public class FlurlApiBaseIntegrationTests : IDisposable
     [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Local")]
     private class TestApi : FlurlApiBase
     {
-        public TestApi(IFlurlClient flurlClient, IAsyncPolicy<HttpResponseMessage> resiliencePolicy)
-            : base(flurlClient, resiliencePolicy)
+        public TestApi(IFlurlConfigurator flurlConfigurator)
+            : base(flurlConfigurator)
         {
         }
 

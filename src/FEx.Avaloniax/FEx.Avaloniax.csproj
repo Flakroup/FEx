@@ -5,12 +5,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Avalonia.ReactiveUI" Version="11.3.7" />
+		<PackageReference Include="ReactiveUI.Avalonia" Version="14.7.1" />
 		<PackageReference Include="MessageBox.Avalonia" Version="3.2.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Common.Abstractions\FEx.Common.Abstractions.csproj" />
+		<ProjectReference Include="..\Common\FEx.Common.csproj" />
 		<ProjectReference Include="..\DependencyInjection\FEx.DependencyInjection.csproj" />
 		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
 		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />

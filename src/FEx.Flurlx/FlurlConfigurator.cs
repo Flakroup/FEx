@@ -16,7 +16,7 @@ public class FlurlConfigurator : FExInitialize, IFlurlConfigurator
     private readonly IApiConfiguration _apiConfiguration;
     private readonly IFlurlClientCache _flurlClientCache;
     private readonly ILoggable _logger;
-    private IAsyncPolicy<HttpResponseMessage> _resiliencePolicy;
+    private readonly IAsyncPolicy<HttpResponseMessage> _resiliencePolicy;
 
     public FlurlConfigurator(IApiConfiguration apiConfiguration,
                              IFlurlClientCache flurlClientCache,
@@ -25,15 +25,6 @@ public class FlurlConfigurator : FExInitialize, IFlurlConfigurator
         _apiConfiguration = apiConfiguration;
         _flurlClientCache = flurlClientCache;
         _logger = logger;
-    }
-
-    public IFlurlClient GetClient() => _flurlClientCache.Get(_apiConfiguration.ClientName);
-
-    public IAsyncPolicy<HttpResponseMessage> GetResiliencePolicy() => _resiliencePolicy;
-
-    protected override void OnInitialize()
-    {
-        base.OnInitialize();
 
         // Build Polly policy from configuration
         var policyBuilder = new FExPollyPolicyBuilder(_logger);
@@ -42,6 +33,10 @@ public class FlurlConfigurator : FExInitialize, IFlurlConfigurator
         FlurlHttp.Clients.WithDefaults(DefaultClientConfiguration);
         _flurlClientCache.Add(_apiConfiguration.ClientName, _apiConfiguration.BaseUrl, DefaultClientConfiguration);
     }
+
+    public IFlurlClient GetClient() => _flurlClientCache.Get(_apiConfiguration.ClientName);
+
+    public IAsyncPolicy<HttpResponseMessage> GetResiliencePolicy() => _resiliencePolicy;
 
     private void DefaultClientConfiguration(IFlurlClientBuilder builder)
     {

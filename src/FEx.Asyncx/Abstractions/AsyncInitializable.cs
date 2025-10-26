@@ -176,6 +176,9 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
     protected void AddDependencies(params IAsyncInitializable[] dependencies)
     {
+        if(dependencies is null)
+            return;
+
         foreach (IAsyncInitializable dependency in dependencies)
         {
             dependency.Guard(nameof(dependency));

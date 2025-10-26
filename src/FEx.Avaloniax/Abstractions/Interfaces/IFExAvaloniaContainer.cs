@@ -1,7 +1,6 @@
-using FEx.Avaloniax.Abstractions.Interfaces;
 using StrongInject;
 
-namespace FEx.Avaloniax;
+namespace FEx.Avaloniax.Abstractions.Interfaces;
 
 public interface IFExAvaloniaContainer : IContainer<INavigationService>
 {

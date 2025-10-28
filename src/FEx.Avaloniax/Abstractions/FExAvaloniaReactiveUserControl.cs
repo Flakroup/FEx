@@ -1,5 +1,5 @@
-using Avalonia.ReactiveUI;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 using System;
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;

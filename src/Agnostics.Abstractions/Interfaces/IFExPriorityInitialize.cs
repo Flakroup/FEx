@@ -1,6 +1,6 @@
 namespace FEx.Agnostics.Abstractions.Interfaces;
 
-public interface IFExPriorityInitialize : IFExInitialize
+public interface IFExPriorityInitialize : IFExInitializable
 {
     /// <summary>
     /// Priority of initialization - lower value is higher priority

@@ -307,12 +307,12 @@ public class FExServiceProvider : IFExServiceProvider
     private static void InitializeInternal(IFExServiceProvider serviceProvider)
     {
         var priorityInitializers = (serviceProvider.TryResolveService<IFExPriorityInitialize[]>() ?? [])
-            .OrderBy(initializer => initializer.Priority)
+            .OrderBy(static initializer => initializer.Priority)
             .ToList();
 
         priorityInitializers.InitializeAll();
 
-        var initializers = serviceProvider.TryResolveService<IFExInitialize[]>() ?? [];
+        var initializers = serviceProvider.TryResolveService<IFExInitializable[]>() ?? [];
         initializers.InitializeAll();
 
         // Note: Engine-specific modules (IInitializeModule<TEngineContext>) are handled by 

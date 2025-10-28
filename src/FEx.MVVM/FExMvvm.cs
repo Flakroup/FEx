@@ -6,7 +6,7 @@ using System;
 
 namespace FEx.MVVM;
 
-public class FExMvvm : FExInitialize
+public class FExMvvm : FExInitializable
 {
     private readonly IExceptionHandler _exceptionHandler;
     private static IMessagePopupService _messagePopupService;

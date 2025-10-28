@@ -9,7 +9,7 @@ using StrongInject.Extensions.DependencyInjection;
 namespace FEx.Platforms;
 
 [Register(typeof(RegistryService), Scope.SingleInstance, typeof(IRegistryService))]
-[Register(typeof(FExPlatforms), Scope.SingleInstance, typeof(FExPlatforms), typeof(IFExInitialize))]
+[Register(typeof(FExPlatforms), Scope.SingleInstance, typeof(FExPlatforms), typeof(IFExInitializable))]
 [Register(typeof(FExPlatformsModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExPlatformsModule : InitializeModule<IFExPlatformsContainer, IServiceCollection>
 {

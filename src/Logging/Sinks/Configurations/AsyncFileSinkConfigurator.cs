@@ -1,6 +1,9 @@
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Logging.Abstractions;
 using FEx.Logging.Abstractions.Enums;
 using FEx.Logging.Abstractions.Interfaces;
+using Nuke.Common.IO;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Events;
@@ -13,7 +16,7 @@ namespace FEx.Logging.Sinks.Configurations;
 public class AsyncFileSinkConfigurator : SinkConfiguratorBase, IFileSinkConfigurator
 {
     private const int OneHundredMegabytesLimit = 104857600;
-    private const string DefaultLogFileName = "Log.txt";
+    private readonly IAppInfoProvider _appInfoProvider;
 
     private readonly DirectoryInfo _logsDirectory;
 
@@ -25,17 +28,27 @@ public class AsyncFileSinkConfigurator : SinkConfiguratorBase, IFileSinkConfigur
     public int RetainedFileCountLimit { get; set; } = 48;
     public TimeSpan RetainedFileTimeLimit { get; set; } = TimeSpan.FromDays(2);
     public LogEventLevel MinimumLevel { get; set; } = LogEventLevel.Verbose;
-    public string LogFileName { get; set; } = DefaultLogFileName;
+    public string LogFileName { get; set; }
     public string CustomLogFilePath { get; set; }
 
-    public AsyncFileSinkConfigurator(ILoggingConfiguration loggingConfiguration)
+    public AsyncFileSinkConfigurator(ILoggingConfiguration loggingConfiguration, IAppInfoProvider appInfoProvider)
         : base(loggingConfiguration, LoggingOptions.File)
     {
-        _logsDirectory = new(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
+        _appInfoProvider = appInfoProvider;
+        LogFileName = $"{_appInfoProvider.Name}_.log";
+
+        var loggingDirectory = AbsolutePath.Create(Environment.GetFolderPath(PlatformInfoProvider.IsWindows
+                             ? Environment.SpecialFolder.ApplicationData
+                             : Environment.SpecialFolder.Personal))
+                         / appInfoProvider.Company
+                         / appInfoProvider.Name;
+
+        _logsDirectory = new(loggingDirectory);
+
         _logsDirectory.Create();
     }
 
-    public IEnumerable<FileInfo> GetLogFiles() => _logsDirectory.GetFiles("Log*.txt");
+    public IEnumerable<FileInfo> GetLogFiles() => _logsDirectory.GetFiles($"{_appInfoProvider.Name}*.log");
 
     public override LoggerConfiguration ConfigureSink(LoggerSinkConfiguration writeTo)
     {

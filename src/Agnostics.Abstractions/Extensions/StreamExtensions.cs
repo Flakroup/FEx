@@ -27,7 +27,7 @@ public static class StreamExtensions
 
         sourceStream.Guard(nameof(sourceStream));
 
-#if NETSTANDARD
+#if NETSTANDARD2_0
 #pragma warning disable IDISP007
         using var stream = sourceStream;
 #pragma warning restore IDISP007
@@ -110,7 +110,7 @@ public static class StreamExtensions
     public static async Task<byte[]> ReadFullyAsync(this Stream input)
     {
         //todo refactor it
-#if NETSTANDARD
+#if NETSTANDARD2_0
 #pragma warning disable IDISP007
         using (input)
 #pragma warning restore IDISP007

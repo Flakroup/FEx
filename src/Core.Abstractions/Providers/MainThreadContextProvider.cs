@@ -1,4 +1,5 @@
 using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Core.Abstractions.Interfaces;
 using System;

@@ -4,7 +4,7 @@ using FEx.Core.Abstractions.Interfaces;
 
 namespace FEx.Asyncx;
 
-public class FExAsyncx : FExInitialize
+public class FExAsyncx : FExInitializable
 {
     private readonly IMainThreadContextProvider _mainThreadContextProvider;
 

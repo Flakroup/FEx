@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 
 namespace FEx.DependencyInjection.Abstractions;
 
-public abstract class InitializeModule<TContainer, TEngineContext> : FExInitialize, IInitializeModule<TEngineContext>
+public abstract class InitializeModule<TContainer, TEngineContext> : FExInitializable, IInitializeModule<TEngineContext>
     where TContainer : class
 {
     public bool HasBeenCompleted { get; private set; }
 
-    protected InitializeModule(params IFExInitialize[] dependencies)
+    protected InitializeModule(params IFExInitializable[] dependencies)
         : base(dependencies)
     {
     }

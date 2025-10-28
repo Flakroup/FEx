@@ -6,7 +6,7 @@ using System.Reactive.Concurrency;
 
 namespace FEx.MVVM.Rx;
 
-public class FExMvvmRx : FExInitialize
+public class FExMvvmRx : FExInitializable
 {
     public static IStatusService StatusService { get; private set; }
 

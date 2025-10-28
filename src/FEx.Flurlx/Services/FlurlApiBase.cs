@@ -26,7 +26,7 @@ public abstract class FlurlApiBase : AsyncInitializable
 #pragma warning disable IDISP006 // Implement IDisposable - done by FlurlCache
     protected IFlurlClient FlurlClient { get; }
 #pragma warning restore IDISP006 // Implement IDisposable
-    protected IAsyncPolicy<HttpResponseMessage> ResiliencePolicy { get; }
+    protected IAsyncPolicy<IFlurlResponse> ResiliencePolicy { get; }
 
     protected FlurlApiBase(IFlurlConfigurator flurlConfigurator)
         : base(null) // No dependency on AsyncInitializable parent
@@ -57,46 +57,44 @@ public abstract class FlurlApiBase : AsyncInitializable
         var responseUri = req.Url.ToUri();
 
         // Execute with Polly resilience
-        using var httpResponse = await ResiliencePolicy.ExecuteAsync(async ct =>
-            {
-                using var flurlResponse = method switch
-                {
-                    RequestMethod.GET => await req.GetAsync(cancellationToken: ct),
-                    RequestMethod.POST => await req.PostJsonAsync(requestContent, cancellationToken: ct),
-                    RequestMethod.PUT => await req.PutJsonAsync(requestContent, cancellationToken: ct),
-                    RequestMethod.DELETE => await req.DeleteAsync(cancellationToken: ct),
-                    RequestMethod.PATCH => await req.PatchJsonAsync(requestContent, cancellationToken: ct),
-                    RequestMethod.HEAD => await req.HeadAsync(cancellationToken: ct),
-                    RequestMethod.OPTIONS => await req.OptionsAsync(cancellationToken: ct),
-                    _ => throw new NotImplementedException($"{method} is not implemented")
-                };
-
-                return flurlResponse.ResponseMessage;
-            },
-            cancellationToken);
-
-#if NET5_0_OR_GREATER
-        var content = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
-#else
-        var content = await httpResponse.Content.ReadAsStringAsync();
-#endif
-
-        if (!httpResponse.IsSuccessStatusCode)
+#pragma warning disable IDE0063
+        // ReSharper disable ConvertToUsingDeclaration
+        using (var httpResponse = await ResiliencePolicy.ExecuteAsync(async ct =>
+                       // ReSharper restore ConvertToUsingDeclaration
+#pragma warning restore IDE0063
+                       method switch
+                       {
+                           RequestMethod.GET => await req.GetAsync(cancellationToken: ct),
+                           RequestMethod.POST => await req.PostJsonAsync(requestContent, cancellationToken: ct),
+                           RequestMethod.PUT => await req.PutJsonAsync(requestContent, cancellationToken: ct),
+                           RequestMethod.DELETE => await req.DeleteAsync(cancellationToken: ct),
+                           RequestMethod.PATCH => await req.PatchJsonAsync(requestContent, cancellationToken: ct),
+                           RequestMethod.HEAD => await req.HeadAsync(cancellationToken: ct),
+                           RequestMethod.OPTIONS => await req.OptionsAsync(cancellationToken: ct),
+                           _ => throw new NotImplementedException($"{method} is not implemented")
+                       },
+                   cancellationToken))
         {
+            var content = await httpResponse.GetStringAsync();
+
+            if (!httpResponse.IsSuccessStatusCode())
+            {
+                var statusCode = (HttpStatusCode)httpResponse.StatusCode;
 #if NET5_0_OR_GREATER
-            throw new HttpRequestException(
-                $"Request {method} {responseUri} has failed. {GetStatusMessage(httpResponse.StatusCode)}{Environment.NewLine}{content.PrettyPrintJson()}",
-                null,
-                httpResponse.StatusCode);
+                throw new HttpRequestException(
+                    $"Request {method} {responseUri} has failed. {GetStatusMessage(statusCode)}{Environment.NewLine}{content.PrettyPrintJson()}",
+                    null,
+                    statusCode);
 #else
-            throw new HttpRequestException(
-                $"Request {method} {responseUri} has failed. {GetStatusMessage(httpResponse.StatusCode)}{Environment.NewLine}{content.PrettyPrintJson()}");
+                throw new HttpRequestException(
+                    $"Request {method} {responseUri} has failed. {GetStatusMessage(statusCode)}{Environment.NewLine}{content.PrettyPrintJson()}");
 #endif
+            }
+
+            var res = content.FromJson<T>();
+
+            return res;
         }
-
-        var res = content.FromJson<T>();
-
-        return res;
     }
 
     protected virtual IFlurlRequest AddConstantsToRequest(IFlurlRequest req) => req;

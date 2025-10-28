@@ -1,4 +1,4 @@
-using FEx.Core.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
 using System;
 using System.IO;
 

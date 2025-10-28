@@ -3,13 +3,13 @@ using System.Linq;
 
 namespace FEx.Agnostics.Abstractions;
 
-public abstract class FExInitialize : IFExInitialize
+public abstract class FExInitializable : IFExInitializable
 {
-    private readonly IFExInitialize[] _dependencies;
+    private readonly IFExInitializable[] _dependencies;
 
     public bool IsInitialized { get; private set; }
 
-    protected FExInitialize(params IFExInitialize[] dependencies)
+    protected FExInitializable(params IFExInitializable[] dependencies)
     {
         _dependencies = dependencies;
     }

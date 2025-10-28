@@ -80,7 +80,7 @@ public static class UrlExtensions
 
                     var toBytes = fromBytes + length;
                     request = request.WithHeader("Range", $"bytes={fromBytes}-{toBytes}");
-#if NETSTANDARD
+#if NETSTANDARD2_0
                     using var rangedStream = await request.GetStreamAsync();
 #else
                     await using var rangedStream = await request.GetStreamAsync();
@@ -90,7 +90,7 @@ public static class UrlExtensions
                     return ms;
                 }
 
-#if NETSTANDARD
+#if NETSTANDARD2_0
                 using var seekableStream = await request.GetStreamAsync();
 #else
                 await using var seekableStream = await request.GetStreamAsync();
@@ -101,7 +101,7 @@ public static class UrlExtensions
                 return ms;
             }
 
-#if NETSTANDARD
+#if NETSTANDARD2_0
             using var stream = await request.GetStreamAsync();
 #else
             await using var stream = await request.GetStreamAsync();

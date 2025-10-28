@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace FEx.Core.Abstractions.Utilities.OS;
+namespace FEx.Agnostics.Abstractions.Utilities.OS;
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct OSVersionInfoEx

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace FEx.EFCore;
 
-public class FExEFCore : FExInitialize
+public class FExEFCore : FExInitializable
 {
     private readonly ISqlDbHelper _sqlDbHelper;
 

@@ -3,7 +3,7 @@ using FEx.Flurlx.Abstractions.Interfaces;
 
 namespace FEx.Flurlx;
 
-public class FExFlurlx : FExInitialize
+public class FExFlurlx : FExInitializable
 {
     public FExFlurlx(IFlurlConfigurator configurator)
         : base(configurator)

@@ -1,6 +1,6 @@
 using FEx.Agnostics.Abstractions.Extensions;
-using FEx.Core.Abstractions.Utilities.OS;
-using FEx.Core.Abstractions.Utilities.OS.Enums;
+using FEx.Agnostics.Abstractions.Utilities.OS;
+using FEx.Agnostics.Abstractions.Utilities.OS.Enums;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -22,7 +22,7 @@ using Microsoft.Win32;
 
 //Thanks to Brisingr Aerowing for help with the Windows 10 adaptation
 
-namespace FEx.Core.Abstractions.Utilities;
+namespace FEx.Agnostics.Abstractions.Utilities;
 
 /// <summary>
 /// Provides detailed information about the host operating system.

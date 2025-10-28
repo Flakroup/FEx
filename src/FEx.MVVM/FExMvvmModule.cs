@@ -8,7 +8,7 @@ using StrongInject.Extensions.DependencyInjection;
 
 namespace FEx.MVVM;
 
-[Register(typeof(FExMvvm), Scope.SingleInstance, typeof(FExMvvm), typeof(IFExInitialize))]
+[Register(typeof(FExMvvm), Scope.SingleInstance, typeof(FExMvvm), typeof(IFExInitializable))]
 [Register(typeof(FExMvvmModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExMvvmModule : InitializeModule<IFExMvvmContainer, IServiceCollection>
 {

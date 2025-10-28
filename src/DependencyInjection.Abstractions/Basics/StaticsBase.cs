@@ -1,12 +1,12 @@
+using FEx.Agnostics.Abstractions;
 using FEx.Agnostics.Abstractions.Extensions;
-using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using System;
 using System.Runtime.CompilerServices;
 
 namespace FEx.DependencyInjection.Abstractions.Basics;
 
-public abstract class StaticsBase : IFExInitializable
+public abstract class StaticsBase : FExInitializable
 {
     private static IFExServiceProvider _serviceProvider;
 
@@ -26,10 +26,6 @@ public abstract class StaticsBase : IFExInitializable
             _serviceProvider = value;
         }
     }
-
-    protected bool HasBeenInitialized { get; private set; }
-
-    public virtual void Initialize() => HasBeenInitialized = true;
 
     protected static T Get<T>(Func<T> localFactory, Func<T> fallback = null, [CallerMemberName] string paramName = null)
         where T : class

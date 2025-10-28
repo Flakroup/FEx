@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace FEx.DependencyInjection.Abstractions.Interfaces;
 
-public interface IInitializeModule<in TEngineContext> : IFExInitialize
+public interface IInitializeModule<in TEngineContext> : IFExInitializable
 {
     bool HasBeenCompleted { get; }
 

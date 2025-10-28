@@ -1,4 +1,6 @@
 using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Models;
 using FEx.Logging.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;

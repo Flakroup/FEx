@@ -1,11 +1,14 @@
 using FEx.Agnostics.Abstractions.Extensions;
-using FEx.Logging.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 
-namespace FEx.Logging.Abstractions;
+namespace FEx.Agnostics.Models;
 
+/// <summary>
+/// Default implementation of ILoggerState for structured logging scopes.
+/// </summary>
 public class LoggerState : Dictionary<string, object>, ILoggerState
 {
     public LoggerState(params (string, object)[] state)
@@ -27,3 +30,4 @@ public class LoggerState : Dictionary<string, object>, ILoggerState
             ? JsonSerializer.Serialize(this)
             : string.Empty;
 }
+

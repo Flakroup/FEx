@@ -55,10 +55,10 @@ public class FExStaticLogger : FExInitializable
     public static void Error(Exception exception, string message = null) =>
         Logger.Error(exception, message ?? exception.Message);
 
-    public static void Fatal(string message) => Logger.Fatal(message);
+    public static void Critical(string message) => Logger.Critical(message);
 
-    public static void Fatal(Exception exception, string message = null) =>
-        Logger.Fatal(exception, message ?? exception.Message);
+    public static void Critical(Exception exception, string message = null) =>
+        Logger.Critical(exception, message ?? exception.Message);
 
     public static void Configure(Func<IFExLogger> loggerFactory = null)
     {

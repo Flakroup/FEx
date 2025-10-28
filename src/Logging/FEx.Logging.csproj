@@ -16,6 +16,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+        <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
         <ProjectReference Include="..\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
     </ItemGroup>
 

@@ -152,6 +152,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FEx.Platforms.Windows", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FEx.Sample.Avalonia", "samples\FEx.Sample.Avalonia\FEx.Sample.Avalonia.csproj", "{034B3C79-E577-8049-D847-FAD31399F366}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.csproj", "{3763F11E-643A-4A46-B0B8-1C3EF8F2043C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -162,6 +164,8 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3763F11E-643A-4A46-B0B8-1C3EF8F2043C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3763F11E-643A-4A46-B0B8-1C3EF8F2043C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56FAE642-9AA9-4AB4-BD8F-C582049E30C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{56FAE642-9AA9-4AB4-BD8F-C582049E30C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{56FAE642-9AA9-4AB4-BD8F-C582049E30C5}.Debug|x64.ActiveCfg = Debug|Any CPU

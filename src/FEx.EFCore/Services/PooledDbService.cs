@@ -147,7 +147,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         }
         catch (Exception e)
         {
-            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
+            _logger.Error(e, $"[{id}]\t{errorMessage ?? ""} {e.Message}");
 
             throw;
         }
@@ -175,7 +175,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         }
         catch (Exception e)
         {
-            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
+            _logger.Error(e, $"[{id}]\t{errorMessage ?? ""} {e.Message}");
 
             throw;
         }
@@ -203,7 +203,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         }
         catch (Exception e)
         {
-            _logger.LogError($"[{id}]\t{errorMessage ?? ""} {e.Message}", e);
+            _logger.Error(e, $"[{id}]\t{errorMessage ?? ""} {e.Message}");
 
             throw;
         }
@@ -271,7 +271,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         if (result.IsFailure)
             return result;
 
-        _logger.LogInformation($"[{id}]\tSaving changes to database");
+        _logger.Information($"[{id}]\tSaving changes to database");
 
         var res = 0;
         var saved = false;
@@ -312,7 +312,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
             }
         }
 
-        _logger.LogInformation($"[{id}]\t{res} rows affected");
+        _logger.Information($"[{id}]\t{res} rows affected");
 
         return result;
     }
@@ -332,7 +332,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         if (result.IsFailure)
             return result;
 
-        _logger.LogInformation($"[{id}]\tSaving changes to database");
+        _logger.Information($"[{id}]\tSaving changes to database");
 
         var res = 0;
         var saved = false;
@@ -373,7 +373,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
             }
         }
 
-        _logger.LogInformation($"[{id}]\t{res} rows affected");
+        _logger.Information($"[{id}]\t{res} rows affected");
 
         return result;
     }

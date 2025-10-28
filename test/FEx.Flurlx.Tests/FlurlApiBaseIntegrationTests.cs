@@ -1,9 +1,9 @@
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Flurlx.Abstractions.Interfaces;
 using FEx.Flurlx.Configuration;
 using FEx.Flurlx.Models;
 using FEx.Flurlx.Services;
 using FEx.Logging.Abstractions;
-using FEx.Logging.Abstractions.Interfaces;
 using Flurl.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
@@ -252,7 +252,7 @@ public class FlurlApiBaseIntegrationTests : IDisposable
         results.Count(r => r != null).ShouldBeLessThanOrEqualTo(3); // Max 3 can succeed (2 parallel + 1 queued)
     }
 
-    private static FExPollyPolicyBuilder GetPolicyBuilder() => new(Substitute.For<ILoggable>());
+    private static FExPollyPolicyBuilder GetPolicyBuilder() => new(Substitute.For<IFExLogger>());
 
     private static IFlurlConfigurator GetMocks(IFlurlClient flurlClient,
                                                IAsyncPolicy<IFlurlResponse> resiliencePolicy)

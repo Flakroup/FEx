@@ -2,12 +2,12 @@ using FEx.Agnostics.Abstractions;
 using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Flow;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Logging;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Agnostics.BaseObjects;
 using FEx.Asyncx.Helpers;
 using FEx.Core.Abstractions.Interfaces;
-using FEx.Logging.Abstractions.Extensions;
-using FEx.Logging.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -17,7 +17,7 @@ namespace FEx.Asyncx.Abstractions;
 
 public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitializable
 {
-    protected readonly ILoggable _logger;
+    protected readonly IFExLogger _logger;
     protected readonly ConcurrentDictionary<string, IAsyncInitializable> _dependencies;
 
     protected Task _initializationTask;
@@ -42,7 +42,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
     protected AsyncInitializable(params IAsyncInitializable[] dependencies)
     {
-        _logger = this.GetLogger();
+        _logger = FExStaticLogger.Instance;
         _initializationSemaphore = new();
         _taskSemaphore = new();
         var instanceType = GetType();
@@ -112,7 +112,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         if (!SkipDependenciesInitialization)
             await InitializeDependenciesAsync();
 
-        _logger.LogDebug($"Initializing {TypeName}");
+        _logger.Debug($"Initializing {TypeName}");
     }
 
     protected virtual async Task InitializeDependenciesAsync()
@@ -139,7 +139,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         {
             if (IsInitialized)
             {
-                _logger.LogWarning($"{TypeName} has been already initialized");
+                _logger.Warning($"{TypeName} has been already initialized");
 
                 return;
             }
@@ -150,11 +150,11 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
             IsInitialized = true;
 
-            _logger.LogDebug($"{TypeName} initialized");
+            _logger.Debug($"{TypeName} initialized");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex);
+            _logger.Error(ex);
 
             throw;
         }
@@ -183,7 +183,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
             dependency.Guard(nameof(dependency));
 
             if (!_dependencies.TryAdd(dependency.TypeFullName, dependency))
-                _logger.LogWarning($"{dependency.TypeFullName} is already referenced in {TypeFullName}");
+                _logger.Warning($"{dependency.TypeFullName} is already referenced in {TypeFullName}");
         }
     }
 

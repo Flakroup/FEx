@@ -5,7 +5,6 @@ using FEx.Core.Abstractions;
 using FEx.Core.Abstractions.CustomEventArgs;
 using FEx.Core.Abstractions.Helpers;
 using FEx.Core.Abstractions.Implementations;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -19,12 +18,12 @@ namespace FEx.Core.Utilities;
 /// </summary>
 public class ExceptionHandler : ExceptionHandlerBase
 {
-    private readonly ILogger _logger;
+    private readonly IFExLogger _logger;
 
     /// <inheritdoc />
     public override event EventHandler<ExceptionEventArgs> ExceptionOccured;
 
-    public ExceptionHandler(ILogger logger)
+    public ExceptionHandler(IFExLogger logger)
     {
         _logger = logger;
     }
@@ -86,7 +85,7 @@ public class ExceptionHandler : ExceptionHandlerBase
     {
         if (_logger is not null)
         {
-            _logger.LogError(exception, info);
+            _logger.Error(exception, info);
         }
         else
         {

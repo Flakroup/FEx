@@ -10,6 +10,8 @@ public class FExStaticLogger : FExInitializable
 
     public static event EventHandler<FExErrorEventArgs> ErrorLogged;
 
+    public static IFExLogger Instance => Logger;
+
     protected static IFExLogger Logger
     {
         get => _logger;

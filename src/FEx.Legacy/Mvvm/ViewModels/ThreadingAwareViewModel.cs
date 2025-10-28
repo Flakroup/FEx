@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Logging;
 using FEx.Core.Abstractions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Core.Abstractions.Interfaces;
@@ -5,7 +6,6 @@ using FEx.DependencyInjection.Abstractions;
 using FEx.Legacy.Asyncx.Abstractions.Interfaces;
 using FEx.Legacy.Asyncx.Enums;
 using FEx.Legacy.Mvvm.Abstractions.Interfaces;
-using FEx.Logging.Abstractions.Extensions;
 using FEx.MVVM.Abstractions;
 using System;
 using System.Threading;
@@ -36,7 +36,7 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
     public ThreadingAwareViewModel(params IAsyncInitializable[] dependencies)
     {
         _tasksHandler = FExServiceProvider.Get<ITasksHandler>();
-        _logger = this.GetLogger();
+        _logger = FExStaticLogger.Instance;
         _initializationSemaphore = new();
         _taskSemaphore = new();
         var instanceType = GetType();

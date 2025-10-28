@@ -1,6 +1,6 @@
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Flurlx.Configuration;
 using FEx.Flurlx.Services;
-using FEx.Logging.Abstractions.Interfaces;
 using Flurl.Http;
 using NSubstitute;
 using Polly.CircuitBreaker;
@@ -17,12 +17,12 @@ namespace FEx.Flurlx.Tests;
 
 public class FExPollyPolicyBuilderTests
 {
-    private readonly ILoggable _mockLogger;
+    private readonly IFExLogger _mockLogger;
     private readonly FExPollyPolicyBuilder _policyBuilder;
 
     public FExPollyPolicyBuilderTests()
     {
-        _mockLogger = Substitute.For<ILoggable>();
+        _mockLogger = Substitute.For<IFExLogger>();
         _policyBuilder = new(_mockLogger);
     }
 
@@ -354,7 +354,7 @@ public class FExPollyPolicyBuilderTests
 
         // Assert
         result.StatusCode.ShouldBe((int)HttpStatusCode.OK);
-        _mockLogger.Received().LogWarning(Arg.Is<string>(s => s.Contains("Retry")));
+        _mockLogger.Received().Warning(Arg.Is<string>(s => s.Contains("Retry")));
     }
 
     private static IFlurlResponse CreateResponse(int statusCode, string content = null)

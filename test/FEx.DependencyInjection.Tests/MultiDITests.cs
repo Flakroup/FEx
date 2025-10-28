@@ -18,7 +18,7 @@ public class MultiDITests : IDisposable
         FExServiceProvider.Release();
 
         // Act
-        TestContainer container = FExServiceProvider.Initialize<TestContainer, FExStrongInjectServiceProvider>();
+        TestContainer container = FExServiceProvider.Initialize<TestContainer>();
 
         // Assert
         FExServiceProvider.ServiceContainer.ShouldNotBeNull();
@@ -30,7 +30,7 @@ public class MultiDITests : IDisposable
     {
         // Arrange - Need fresh initialization for this test
         FExServiceProvider.Release();
-        FExServiceProvider.Initialize<TestContainer, FExStrongInjectServiceProvider>();
+        FExServiceProvider.Initialize<TestContainer>();
 
         // Act
         await FExServiceProvider.InitializeAsync<FExMicrosoftDIServiceProvider>();
@@ -67,7 +67,7 @@ public class MultiDITests : IDisposable
     {
         // Arrange - Start with StrongInject
         FExServiceProvider.Release();
-        FExServiceProvider.Initialize<TestContainer, FExStrongInjectServiceProvider>();
+        FExServiceProvider.Initialize<TestContainer>();
 
         // Verify initial state
         IFExServiceContainer serviceFromStrongInject = FExServiceProvider.Get<IFExServiceContainer>();

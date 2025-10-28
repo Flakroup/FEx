@@ -6,6 +6,7 @@ using FEx.Asyncx.Abstractions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Core.Abstractions.Helpers;
 using FEx.Core.Collections.Concurrent;
+using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
 using Microsoft.EntityFrameworkCore;
@@ -113,17 +114,23 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         return true;
     }
 
-    public async Task RemoveWhereAsync(Func<TKey, TValue, bool> func) => await ForAllAsync((k, v) => RemoveIfMatch(k, v, func));
+    public async Task RemoveWhereAsync(Func<TKey, TValue, bool> func) =>
+        await ForAllAsync((k, v) => RemoveIfMatch(k, v, func));
 
-    public async Task ForAllTaskAsync(Func<TKey, TValue, Task> func) => await Cache.KeyValues.WithWhenAllTasksAsync(x => func(x.Key, x.Value));
+    public async Task ForAllTaskAsync(Func<TKey, TValue, Task> func) =>
+        await Cache.KeyValues.WithWhenAllTasksAsync(x => func(x.Key, x.Value));
 
-    public async Task<T[]> ForAllTaskAsync<T>(Func<TKey, TValue, Task<T>> func) => await Cache.KeyValues.WithWhenAllTasksAsync(x => func(x.Key, x.Value));
+    public async Task<T[]> ForAllTaskAsync<T>(Func<TKey, TValue, Task<T>> func) =>
+        await Cache.KeyValues.WithWhenAllTasksAsync(x => func(x.Key, x.Value));
 
-    public async Task<T[]> ForAllFuncAsync<T>(Func<TKey, TValue, T> func) => await Cache.KeyValues.WithWhenAllAsync(x => func(x.Key, x.Value));
+    public async Task<T[]> ForAllFuncAsync<T>(Func<TKey, TValue, T> func) =>
+        await Cache.KeyValues.WithWhenAllAsync(x => func(x.Key, x.Value));
 
-    public async Task ForAllAsync(Action<TKey, TValue> func) => await Cache.KeyValues.WithWhenAllAsync(x => func(x.Key, x.Value));
+    public async Task ForAllAsync(Action<TKey, TValue> func) =>
+        await Cache.KeyValues.WithWhenAllAsync(x => func(x.Key, x.Value));
 
-    public async Task<T[]> ForAllAsync<T>(Func<TKey, TValue, T> func) => await Cache.KeyValues.WithWhenAllAsync(x => func(x.Key, x.Value));
+    public async Task<T[]> ForAllAsync<T>(Func<TKey, TValue, T> func) =>
+        await Cache.KeyValues.WithWhenAllAsync(x => func(x.Key, x.Value));
 
     public async Task<bool> ContainsKeyAsync(TKey key)
     {
@@ -137,7 +144,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             : await _dbSrv.RunTaskInDbContextAsync(dbContext => ExistsInDbAsync(dbContext, key));
     }
 
-    public async Task<bool> CacheIsEmptyAsync() => !Cache.Items.Any() && !await _dbSrv.RunTaskInDbContextAsync(ctx => DbSetAccessor(ctx).AnyAsync());
+    public async Task<bool> CacheIsEmptyAsync() =>
+        !Cache.Items.Any() && !await _dbSrv.RunTaskInDbContextAsync(ctx => DbSetAccessor(ctx).AnyAsync());
 
     public void AddOrUpdateValue(TValue value) => Cache.AddOrUpdate(value);
 
@@ -166,7 +174,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     protected abstract DbSet<TValue> DbSetAccessor(TDbCtx ctx);
     protected abstract TValue GetNew(TKey key, IDictionary<string, object> param = null);
 
-    protected virtual async Task OnChangesDetectedAsync(ICollection<ChangeInfo<TKey, TValue>> changes) => await _dbSrv.RunTaskInDbContextAsync(ctx => SaveCacheChangesAsync(ctx, changes));
+    protected virtual async Task OnChangesDetectedAsync(ICollection<ChangeInfo<TKey, TValue>> changes) =>
+        await _dbSrv.RunTaskInDbContextAsync(ctx => SaveCacheChangesAsync(ctx, changes));
 
     protected virtual IQueryable<TValue> IncludeInEntity(IQueryable<TValue> query) => query;
 
@@ -249,7 +258,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     }
 
     protected Expression<Func<TValue, bool>> HasKey(TKey key) =>
-        Helpers.EFCoreHelper.HasKey<TKey, TValue>(key, KeyPropertyName);
+        EFCoreHelper.HasKey<TKey, TValue>(key, KeyPropertyName);
 
     protected async Task<(TValue entity, bool existsInDb)> TryFindEntityAsync(TDbCtx dbContext, TValue e) =>
         (e, await ExistsInDbAsync(dbContext, KeyRetriver(e)));

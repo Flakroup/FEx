@@ -73,12 +73,9 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
     /// </summary>
     public ValueTask ConfigureServiceProviderAsync() => new();
 
-    public TContainer ConfigureServiceProvider<TContainer>() where TContainer : class, IDisposable, new()
+    public void SetServiceProvider<TContainer>(TContainer container) where TContainer : class, IDisposable
     {
-        _provider?.Dispose();
-        _provider = new TContainer();
-
-        return (TContainer)_provider;
+        _provider = container ?? throw new ArgumentNullException(nameof(container));
     }
 
     public object GetService(Type serviceType)
@@ -103,6 +100,8 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
             : GetRequiredService<T>();
 
     #region IDisposable
-    public void Dispose() => _provider?.Dispose();
+    public void Dispose()
+    {
+    }
     #endregion
 }

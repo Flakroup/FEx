@@ -4,5 +4,9 @@ namespace FEx.Webx;
 
 public class FExWebx
 {
-    public static int DefaultConnectionLimit { get => ServicePointManager.DefaultConnectionLimit; set => ServicePointManager.DefaultConnectionLimit = value; }
+    public static int DefaultConnectionLimit
+    {
+        get => ServicePointManager.DefaultConnectionLimit;
+        set => ServicePointManager.DefaultConnectionLimit = value;
+    }
 }

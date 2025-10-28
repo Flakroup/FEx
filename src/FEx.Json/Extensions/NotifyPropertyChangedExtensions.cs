@@ -13,7 +13,10 @@ public static class NotifyPropertyChangedExtensions
                                                             Action<TEntity> onDeserializedAction = null,
                                                             JsonSerializerSettings settings = null,
                                                             [CallerMemberName] string propertyName = null) =>
-        obj.SetProperty(ref backingField, jsonValue.TrimJsonString(), onDeserializedAction is not null
-            ? v => onDeserializedAction(v.FromJson<TEntity>(settings))
-            : null, propertyName);
+        obj.SetProperty(ref backingField,
+            jsonValue.TrimJsonString(),
+            onDeserializedAction is not null
+                ? v => onDeserializedAction(v.FromJson<TEntity>(settings))
+                : null,
+            propertyName);
 }

@@ -14,7 +14,7 @@ namespace FEx.Json;
 
 [Register(typeof(DIMeta), Scope.SingleInstance, typeof(DIMeta), typeof(IInitializeModule<IServiceCollection>))]
 [Register(typeof(DIContractResolver), Scope.SingleInstance, typeof(IContractResolver))]
-[Register(typeof(FExJson), Scope.SingleInstance, typeof(FExJson), typeof(IFExInitialize))]
+[Register(typeof(FExJson), Scope.SingleInstance, typeof(FExJson), typeof(IFExInitializable))]
 [Register(typeof(FExJsonModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExJsonModule : InitializeModule<IFExJsonContainer, IServiceCollection>
 {

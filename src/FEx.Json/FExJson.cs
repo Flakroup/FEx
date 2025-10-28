@@ -4,7 +4,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace FEx.Json;
 
-public class FExJson : FExInitialize
+public class FExJson : FExInitializable
 {
     private readonly IContractResolver _contractResolver;
 

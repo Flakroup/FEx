@@ -10,7 +10,7 @@ using FEx.Basics.Utilities;
 using FEx.Common.Utilities.OS;
 */
 
-namespace FEx.Core.Abstractions.Utilities.OS;
+namespace FEx.Agnostics.Abstractions.Utilities.OS;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct SystemInfo

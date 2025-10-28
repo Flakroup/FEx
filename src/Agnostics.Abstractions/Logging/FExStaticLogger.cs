@@ -4,7 +4,7 @@ using System;
 
 namespace FEx.Agnostics.Abstractions.Logging;
 
-public class FExStaticLogger : IFExInitializable
+public class FExStaticLogger : FExInitializable
 {
     private static IFExLogger _logger;
 
@@ -33,10 +33,6 @@ public class FExStaticLogger : IFExInitializable
     static FExStaticLogger()
     {
         Logger = new FExDebugLogger();
-    }
-
-    public void Initialize()
-    {
     }
 
     public static void Debug(string message) => Logger.Debug(message);

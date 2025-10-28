@@ -35,14 +35,15 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
     {
         try
         {
-            return _provider is IContainer<T> container
-                ? container.Resolve<T>().Value
-                : default;
+            if (_provider is IContainer<T> container)
+                return container.Resolve<T>().Value;
         }
         catch
         {
-            return default;
+            //ignored
         }
+
+        return default;
     }
 #pragma warning restore IDISP004
 

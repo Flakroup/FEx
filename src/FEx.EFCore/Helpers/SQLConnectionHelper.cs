@@ -1,4 +1,5 @@
 using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Core.Abstractions.Utilities;
 using FEx.EFCore.Configuration;
@@ -17,7 +18,7 @@ public static class SQLConnectionHelper
     {
         try
         {
-#if NETSTANDARD
+#if NETSTANDARD2_0
             using var connection = new SqlConnection(connectionString);
 #else
             await using var connection = new SqlConnection(connectionString);

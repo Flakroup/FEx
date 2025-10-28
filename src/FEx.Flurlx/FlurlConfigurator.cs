@@ -6,15 +6,14 @@ using Flurl.Http;
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;
 using Polly;
-using System.Net.Http;
 
 namespace FEx.Flurlx;
 
-public class FlurlConfigurator : FExInitialize, IFlurlConfigurator
+public class FlurlConfigurator : FExInitializable, IFlurlConfigurator
 {
     private readonly IApiConfiguration _apiConfiguration;
     private readonly IFlurlClientCache _flurlClientCache;
-    private readonly IAsyncPolicy<HttpResponseMessage> _resiliencePolicy;
+    private readonly IAsyncPolicy<IFlurlResponse> _resiliencePolicy;
 
     public FlurlConfigurator(IApiConfiguration apiConfiguration,
                              IFlurlClientCache flurlClientCache,
@@ -32,7 +31,7 @@ public class FlurlConfigurator : FExInitialize, IFlurlConfigurator
 
     public IFlurlClient GetClient() => _flurlClientCache.Get(_apiConfiguration.ClientName);
 
-    public IAsyncPolicy<HttpResponseMessage> GetResiliencePolicy() => _resiliencePolicy;
+    public IAsyncPolicy<IFlurlResponse> GetResiliencePolicy() => _resiliencePolicy;
 
     private void DefaultClientConfiguration(IFlurlClientBuilder builder)
     {

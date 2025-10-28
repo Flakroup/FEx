@@ -27,8 +27,10 @@ public static class JsonExtensions
                 using var client = new HttpClient();
                 using var response = await client.GetAsync(url, cancellationToken);
                 using var ensuredResponse = response.EnsureSuccessStatusCode();
-#if NETSTANDARD
+#if NETSTANDARD2_0
                 using var jsonStream = await ensuredResponse.Content.ReadAsStreamAsync();
+#elif NETSTANDARD2_1
+                await using var jsonStream = await ensuredResponse.Content.ReadAsStreamAsync();
 #else
                 await using var jsonStream = await ensuredResponse.Content.ReadAsStreamAsync(cancellationToken);
 #endif
@@ -38,7 +40,7 @@ public static class JsonExtensions
             else
             {
                 using var response = await url.GetUriResponseAsync();
-#if NETSTANDARD
+#if NETSTANDARD2_0
                 using var jsonStream = response.GetResponseStream();
 #else
                 await using var jsonStream = response.GetResponseStream();

@@ -11,7 +11,7 @@ using StrongInject.Extensions.DependencyInjection;
 namespace FEx.MVVM.Rx;
 
 [Register(typeof(StatusService), Scope.SingleInstance, typeof(IStatusService))]
-[Register(typeof(FExMvvmRx), Scope.SingleInstance, typeof(FExMvvmRx), typeof(IFExInitialize))]
+[Register(typeof(FExMvvmRx), Scope.SingleInstance, typeof(FExMvvmRx), typeof(IFExInitializable))]
 [Register(typeof(FExMvvmRxModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExMvvmRxModule : InitializeModule<IFExMvvmRxContainer, IServiceCollection>
 {

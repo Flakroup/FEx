@@ -22,7 +22,7 @@ namespace FEx.Logging;
 
 [Register(typeof(FExLoggingModule),
     Scope.SingleInstance,
-    typeof(IFExInitialize),
+    typeof(IFExInitializable),
     typeof(IInitializeModule<IServiceCollection>))]
 [Register(typeof(FExStaticLogger), Scope.SingleInstance, typeof(IFExInitializable))]
 [Register(typeof(Loggable), typeof(ILoggable))]

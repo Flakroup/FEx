@@ -1,6 +1,6 @@
 using System;
 
-namespace FEx.Core.Abstractions.Utilities.OS;
+namespace FEx.Agnostics.Abstractions.Utilities.OS;
 
 internal class OSVersion : IEquatable<OSVersion>
 {

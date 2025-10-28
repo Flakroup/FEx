@@ -4,7 +4,7 @@ using FEx.Platforms.Abstractions.Interfaces;
 
 namespace FEx.Platforms;
 
-public class FExPlatforms : FExInitialize
+public class FExPlatforms : FExInitializable
 {
     private static IRegistryService _registryService;
 

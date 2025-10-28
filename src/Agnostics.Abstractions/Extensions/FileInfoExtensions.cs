@@ -66,7 +66,7 @@ public static class FileInfoExtensions
         tempDirectory.Create();
         var targetFilePath = Path.Combine(tempDirectory.FullName, file.Name);
 
-#if NETSTANDARD
+#if NETSTANDARD2_0
         using (var sourceStream = file.OpenRead())
         using (var targetStream = File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
 #else

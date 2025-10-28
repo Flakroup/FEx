@@ -13,7 +13,7 @@ namespace FEx.Flurlx;
 [Register(typeof(FlurlConfigurator), Scope.SingleInstance, typeof(IFlurlConfigurator))]
 [Register(typeof(FlurlClientCache), Scope.SingleInstance, typeof(IFlurlClientCache))]
 [Register(typeof(FExPollyPolicyBuilder), Scope.SingleInstance, typeof(IFExPollyPolicyBuilder))]
-[Register(typeof(FExFlurlx), Scope.SingleInstance, typeof(FExFlurlx), typeof(IFExInitialize))]
+[Register(typeof(FExFlurlx), Scope.SingleInstance, typeof(FExFlurlx), typeof(IFExInitializable))]
 [Register(typeof(FExFlurlxModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExFlurlxModule : InitializeModule<IFExFlurlxContainer, IServiceCollection>
 {

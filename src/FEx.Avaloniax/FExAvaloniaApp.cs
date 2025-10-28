@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Data;
 using FEx.Avaloniax.Abstractions.Interfaces;
 using FEx.Core.Abstractions.Extensions;
-using FEx.DependencyInjection;
 using FEx.DependencyInjection.Abstractions;
 using System;
 
@@ -20,7 +19,7 @@ public abstract class FExAvaloniaApp<TContainer> : Application
     {
         try
         {
-            FExServiceProvider.Initialize<TContainer, FExStrongInjectServiceProvider>();
+            FExServiceProvider.Initialize<TContainer>();
             OnActivation();
         }
         catch (Exception ex)

@@ -6,7 +6,7 @@ public static class VBConversion
 {
     /// <summary>Return the integer portion of a number.</summary>
     /// <param name="number">
-    ///     Required. A number of type <see langword="Double" /> or any valid numeric expression. If
+    /// Required. A number of type <see langword="Double" /> or any valid numeric expression. If
     /// <paramref name="number" /> contains <see langword="Nothing" />, <see langword="Nothing" /> is returned.
     /// </param>
     /// <returns>Return the integer portion of a number.</returns>

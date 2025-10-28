@@ -5,7 +5,7 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 public static class BooleanExtensions
 {
     /// <summary>
-    ///     Combines 2 boolean (And Not operation).
+    /// Combines 2 boolean (And Not operation).
     /// </summary>
     /// <param name="first">The first boolean.</param>
     /// <param name="second">The second boolean.</param>
@@ -13,7 +13,7 @@ public static class BooleanExtensions
     public static bool AndNot(this bool first, bool second) => first && !second;
 
     /// <summary>
-    ///     Combines 2 boolean (And operation).
+    /// Combines 2 boolean (And operation).
     /// </summary>
     /// <param name="first">The first boolean.</param>
     /// <param name="second">The second boolean.</param>
@@ -21,7 +21,7 @@ public static class BooleanExtensions
     public static bool AndAlso(this bool first, bool second) => first && second;
 
     /// <summary>
-    ///     Combines 2 boolean (Or operation).
+    /// Combines 2 boolean (Or operation).
     /// </summary>
     /// <param name="first">The first boolean.</param>
     /// <param name="second">The second boolean.</param>
@@ -29,7 +29,7 @@ public static class BooleanExtensions
     public static bool OrElse(this bool first, bool second) => first || second;
 
     /// <summary>
-    ///     Gets a int from a boolean.
+    /// Gets a int from a boolean.
     /// </summary>
     /// <param name="value">The boolean itself.</param>
     /// <returns>1 if value is True otherwise 0.</returns>
@@ -39,21 +39,21 @@ public static class BooleanExtensions
             : 0;
 
     /// <summary>
-    ///     Gets a value indicating if the value is False
+    /// Gets a value indicating if the value is False
     /// </summary>
     /// <param name="value">The boolean itself.</param>
     /// <returns>True if value is False otherwise True.</returns>
     public static bool IsFalse(this bool value) => !value;
 
     /// <summary>
-    ///     Execute func if value is True.
+    /// Execute func if value is True.
     /// </summary>
     /// <typeparam name="T">Type of return value.</typeparam>
     /// <param name="value">The boolean itself.</param>
     /// <param name="func">Function to execute.</param>
     /// <returns>T if value is True; otherwise default value of T.</returns>
     /// <remarks>
-    ///     Ex: var test = (true.IfTrue(() => false));
+    /// Ex: var test = (true.IfTrue(() => false));
     /// </remarks>
     public static T IfTrue<T>(this bool value, Func<T> func) =>
         value
@@ -61,12 +61,12 @@ public static class BooleanExtensions
             : default;
 
     /// <summary>
-    ///     Execute action if value is True.
+    /// Execute action if value is True.
     /// </summary>
     /// <param name="value">The boolean itself.</param>
     /// <param name="action">Action to execute.</param>
     /// <remarks>
-    ///     Ex: true.IfTrue(() => MyMethod()));
+    /// Ex: true.IfTrue(() => MyMethod()));
     /// </remarks>
     public static void IfTrue(this bool value, Action action)
     {
@@ -75,14 +75,14 @@ public static class BooleanExtensions
     }
 
     /// <summary>
-    ///     Execute func if value is False.
+    /// Execute func if value is False.
     /// </summary>
     /// <typeparam name="T">Type of return value.</typeparam>
     /// <param name="value">The boolean itself.</param>
     /// <param name="func">Function to execute.</param>
     /// <returns>T if value is False; otherwise default value of T.</returns>
     /// <remarks>
-    ///     Ex: var test = (false.IfFalse(() => true));
+    /// Ex: var test = (false.IfFalse(() => true));
     /// </remarks>
     public static T IfFalse<T>(this bool value, Func<T> func) =>
         !value
@@ -90,12 +90,12 @@ public static class BooleanExtensions
             : default;
 
     /// <summary>
-    ///     Execute action if value is False.
+    /// Execute action if value is False.
     /// </summary>
     /// <param name="value">The boolean itself.</param>
     /// <param name="action">Action to execute.</param>
     /// <remarks>
-    ///     Ex: false.IfFalse(() => MyMethod()));
+    /// Ex: false.IfFalse(() => MyMethod()));
     /// </remarks>
     public static void IfFalse(this bool value, Action action)
     {
@@ -104,17 +104,17 @@ public static class BooleanExtensions
     }
 
     /// <summary>
-    ///     Execute action if value is True/False.
+    /// Execute action if value is True/False.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="value">The boolean itself.</param>
     /// <param name="funcTrue">Function to execute if expression is True.</param>
     /// <param name="funcFalse">Function to execute if expression is False.</param>
     /// <returns>
-    ///     T
+    /// T
     /// </returns>
     /// <remarks>
-    ///     Ex: true.IfTrueOrFalse(() =} MyMethodTrue(), () =} MyMethodFalse());
+    /// Ex: true.IfTrueOrFalse(() =} MyMethodTrue(), () =} MyMethodFalse());
     /// </remarks>
     public static T IfTrueOrFalse<T>(this bool value, Func<T> funcTrue, Func<T> funcFalse) =>
         value
@@ -122,13 +122,13 @@ public static class BooleanExtensions
             : funcFalse();
 
     /// <summary>
-    ///     Execute action if value is True/False.
+    /// Execute action if value is True/False.
     /// </summary>
     /// <param name="value">The boolean itself.</param>
     /// <param name="actionTrue">Action to execute if expression is True.</param>
     /// <param name="actionFalse">Action to execute if expression is False.</param>
     /// <remarks>
-    ///     Ex: true.IfTrueOrFalse(() => MyMethodTrue(), () => MyMethodFalse());
+    /// Ex: true.IfTrueOrFalse(() => MyMethodTrue(), () => MyMethodFalse());
     /// </remarks>
     public static void IfTrueOrFalse(this bool value, Action actionTrue, Action actionFalse)
     {
@@ -139,7 +139,7 @@ public static class BooleanExtensions
     }
 
     /// <summary>
-    ///     Checks an condition for True/False.
+    /// Checks an condition for True/False.
     /// </summary>
     /// <param name="condition">Condition to test.</param>
     /// <param name="argumentName">The name of the argument.</param>
@@ -151,14 +151,14 @@ public static class BooleanExtensions
     }
 
     /// <summary>
-    ///     Converts the nullable boolean to a boolean.
+    /// Converts the nullable boolean to a boolean.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>The value as bool it not null; Otherwise false.</returns>
     public static bool ToBooleanSafe(this bool? value) => value ?? false;
 
     /// <summary>
-    ///     Converts the nullable boolean to a boolean.
+    /// Converts the nullable boolean to a boolean.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <param name="defaultValue">The default value.</param>
@@ -166,7 +166,7 @@ public static class BooleanExtensions
     public static bool ToBooleanSafe(this bool? value, bool defaultValue) => value ?? defaultValue;
 
     /// <summary>
-    ///     Converts the nullable boolean to a string.
+    /// Converts the nullable boolean to a string.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>The value as string it not null; Otherwise an false string.</returns>

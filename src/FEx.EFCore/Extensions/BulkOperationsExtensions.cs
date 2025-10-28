@@ -25,7 +25,8 @@ public static class BulkOperationsExtensions
                                                             IList<T> entities,
                                                             string errorMessage = null,
                                                             CancellationToken cancellationToken = default)
-        where TDbContext : DbContext where T : class => await DoBulkDbContextTaskAsync(entities,
+        where TDbContext : DbContext where T : class =>
+        await DoBulkDbContextTaskAsync(entities,
             service,
             ctx => ctx.BulkInsertAsync,
             service.BulkConfig,
@@ -37,7 +38,8 @@ public static class BulkOperationsExtensions
                                                             IList<T> entities,
                                                             string errorMessage = null,
                                                             CancellationToken cancellationToken = default)
-        where TDbContext : DbContext where T : class => await DoBulkDbContextTaskAsync(entities,
+        where TDbContext : DbContext where T : class =>
+        await DoBulkDbContextTaskAsync(entities,
             service,
             ctx => ctx.BulkDeleteAsync,
             service.BulkConfig,
@@ -49,7 +51,8 @@ public static class BulkOperationsExtensions
                                                                     IList<T> entities,
                                                                     string errorMessage = null,
                                                                     CancellationToken cancellationToken = default)
-        where TDbContext : DbContext where T : class => await DoBulkDbContextTaskAsync(entities,
+        where TDbContext : DbContext where T : class =>
+        await DoBulkDbContextTaskAsync(entities,
             service,
             ctx => ctx.BulkInsertOrUpdateAsync,
             service.BulkConfig,
@@ -82,7 +85,8 @@ public static class BulkOperationsExtensions
                                                           IList<T> entities,
                                                           string errorMessage = null,
                                                           CancellationToken cancellationToken = default)
-        where TDbContext : DbContext where T : class => await DoBulkDbContextTaskAsync(entities,
+        where TDbContext : DbContext where T : class =>
+        await DoBulkDbContextTaskAsync(entities,
             service,
             ctx => ctx.BulkReadAsync,
             service.BulkConfig,
@@ -94,7 +98,8 @@ public static class BulkOperationsExtensions
                                                             IList<T> entities,
                                                             string errorMessage = null,
                                                             CancellationToken cancellationToken = default)
-        where TDbContext : DbContext where T : class => await DoBulkDbContextTaskAsync(entities,
+        where TDbContext : DbContext where T : class =>
+        await DoBulkDbContextTaskAsync(entities,
             service,
             ctx => ctx.BulkUpdateAsync,
             service.BulkConfig,

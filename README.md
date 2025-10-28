@@ -106,7 +106,7 @@ public class Program
     public static void Main()
     {
         // Initialize FEx with StrongInject
-        FExServiceProvider.Initialize<AppContainer, FExStrongInjectServiceProvider>();
+        FExServiceProvider.Initialize<AppContainer>();
         
         // Use services
         var logger = FExLoggingModule.Log<Program>();
@@ -138,7 +138,7 @@ public class Program
     public static async Task Main()
     {
         // 1. Initialize StrongInject (foundation)
-        FExServiceProvider.Initialize<AppContainer, FExStrongInjectServiceProvider>();
+        FExServiceProvider.Initialize<AppContainer>();
         
         // 2. Initialize Microsoft DI (optional, for ASP.NET Core integration)
         await FExServiceProvider.InitializeAsync<FExMicrosoftDIServiceProvider>();

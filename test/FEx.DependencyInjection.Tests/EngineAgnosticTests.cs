@@ -60,7 +60,7 @@ public class EngineAgnosticTests : IDisposable
     public void BaseModuleClass_ShouldProvideContainerAccess()
     {
         // Arrange
-        FExServiceProvider.Initialize<TestContainer, FExStrongInjectServiceProvider>();
+        FExServiceProvider.Initialize<TestContainer>();
 
         // Act & Assert - Test module should be able to access its container
         Should.NotThrow(() =>

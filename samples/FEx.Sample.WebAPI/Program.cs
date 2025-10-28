@@ -12,7 +12,7 @@ public class Program
     public static async Task Main(string[] args)
     {
         // Step 1: Initialize StrongInject (FEx foundation)
-        using AppContainer? container = FExServiceProvider.Initialize<AppContainer, FExStrongInjectServiceProvider>();
+        using AppContainer? container = FExServiceProvider.Initialize<AppContainer>();
 
         // Step 2: Initialize Microsoft DI (integrates FEx modules into ASP.NET)
         await FExServiceProvider.InitializeAsync<FExMicrosoftDIServiceProvider>();

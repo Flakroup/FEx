@@ -7,7 +7,7 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 public static class LambdaExtensions<T>
 {
     /// <summary>
-    ///     Returns a expression that always returns true
+    /// Returns a expression that always returns true
     /// </summary>
     /// <returns>A expression that always returns true</returns>
     public static Expression<Func<T, bool>> TrueExp
@@ -16,7 +16,7 @@ public static class LambdaExtensions<T>
     }
 
     /// <summary>
-    ///     Returns a expression that always returns false
+    /// Returns a expression that always returns false
     /// </summary>
     /// <returns>A expression that always returns false</returns>
     public static Expression<Func<T, bool>> FalseExp
@@ -28,7 +28,7 @@ public static class LambdaExtensions<T>
 public static class LambdaExtensions
 {
     /// <summary>
-    ///     Combines 2 expressions with an logical AND.
+    /// Combines 2 expressions with an logical AND.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="first">First expression.</param>
@@ -54,7 +54,7 @@ public static class LambdaExtensions
     }
 
     /// <summary>
-    ///     Combines 2 expressions with an logical OR.
+    /// Combines 2 expressions with an logical OR.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="first">First expression.</param>

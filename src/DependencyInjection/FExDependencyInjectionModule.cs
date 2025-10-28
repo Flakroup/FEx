@@ -10,6 +10,9 @@ namespace FEx.DependencyInjection;
 [Register(typeof(FExDependencyInjectionModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExDependencyInjectionModule : InitializeModule<IFExDependencyInjectionContainer, IServiceCollection>
 {
+    [Instance(Options.AsEverythingPossible)]
+    public static FExStrongInjectServiceProvider ServiceProvider { get; } = new();
+
     protected override void RegisterServices(IFExDependencyInjectionContainer container, IServiceCollection services)
     {
         services.AddSingletonServiceUsingContainer<IFExServiceContainer>(container);

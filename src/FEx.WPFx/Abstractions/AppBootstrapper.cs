@@ -44,7 +44,7 @@ public abstract class AppBootstrapper<TContainer> : Application
 
             SetNetwork();
 
-            _container = FExServiceProvider.Initialize<TContainer, FExStrongInjectServiceProvider>();
+            _container = FExServiceProvider.Initialize<TContainer>();
             _appInfoProvider = FExServiceProvider.Get<IAppInfoProvider>();
             _appConfig = FExServiceProvider.Get<IAppConfig>();
             _exceptionHandler = FExServiceProvider.Get<IExceptionHandler>();

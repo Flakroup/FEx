@@ -103,28 +103,6 @@ public class FExServiceProvider : IFExServiceProvider
     public object GetService(Type serviceType) => ServiceContainer.ResolveOrDefault<object>();
 
     /// <summary>
-    /// Default startup point of application. Creates DI container instance and wraps into service,
-    /// that allows to distribute its registrations around the app.
-    /// </summary>
-    /// <typeparam name="TContainer"></typeparam>
-    /// <returns></returns>
-    public static TContainer Initialize<TContainer>(IServiceCollection services = null,
-                                                    Action<TContainer> configureContainer = null)
-        where TContainer : class, IDisposable, IContainer<IFExServiceContainer>, new()
-    {
-        Release();
-        var container = new TContainer();
-        configureContainer?.Invoke(container);
-#pragma warning disable IDISP004 // Don't ignore created IDisposable
-        ServiceContainer = container.Resolve<IFExServiceContainer>().Value;
-#pragma warning restore IDISP004 // Don't ignore created IDisposable
-
-        ServiceContainer.RegisterServices(container, services);
-
-        return container;
-    }
-
-    /// <summary>
     /// Retrieves the <see cref="T" /> instance.
     /// <br />
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
@@ -134,7 +112,7 @@ public class FExServiceProvider : IFExServiceProvider
     {
         if (ServiceContainer == null)
             throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer, TProvider>() first.");
+                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
 
         return ServiceContainer.ResolveService<T>();
     }
@@ -149,7 +127,7 @@ public class FExServiceProvider : IFExServiceProvider
     {
         if (ServiceContainer == null)
             throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer, TProvider>() first.");
+                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
 
         return await ServiceContainer.ResolveServiceAsync<T>();
     }
@@ -164,7 +142,7 @@ public class FExServiceProvider : IFExServiceProvider
     {
         if (ServiceContainer == null)
             throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer, TProvider>() first.");
+                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
 
         return ServiceContainer.ResolveServices<T>();
     }
@@ -179,7 +157,7 @@ public class FExServiceProvider : IFExServiceProvider
     {
         if (ServiceContainer == null)
             throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer, TProvider>() first.");
+                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
 
         return ServiceContainer.TryResolveServices<T>();
     }
@@ -194,7 +172,7 @@ public class FExServiceProvider : IFExServiceProvider
     {
         if (ServiceContainer == null)
             throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer, TProvider>() first.");
+                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
 
         return await ServiceContainer.ResolveServicesAsync<T>();
     }
@@ -212,14 +190,22 @@ public class FExServiceProvider : IFExServiceProvider
     public static void Release()
     {
         ServiceContainer?.Release();
+        ServiceContainer = null;
         ServiceProvider?.Dispose();
         ServiceProvider = null;
-        ServiceContainer = null;
+        _containerInstance?.Dispose();
         _containerInstance = null;
     }
 
-    public static TContainer Initialize<TContainer, TProvider>() where TContainer : class, IDisposable, new()
-        where TProvider : class, IFExStrongInjectServiceProvider, new()
+    /// <summary>
+    /// Default startup point of application. Creates DI container instance and wraps into service,
+    /// that allows to distribute its registrations around the app.
+    /// </summary>
+    /// <typeparam name="TContainer"></typeparam>
+    /// <returns></returns>
+    public static TContainer Initialize<TContainer>(IServiceCollection services = null,
+                                                    Action<TContainer> configureContainer = null)
+        where TContainer : class, IDisposable, new()
     {
         // Idempotent: return existing container if already initialized with same type
         if (_containerInstance is TContainer existingContainer)
@@ -233,12 +219,17 @@ public class FExServiceProvider : IFExServiceProvider
                 return existing;
 
             // Dispose previously set multi-di provider if any
-            ServiceProvider?.Dispose();
-            var serviceProvider = new TProvider();
-
-            TContainer container = serviceProvider.ConfigureServiceProvider<TContainer>();
-            ServiceProvider = serviceProvider;
+            Release();
+            var container = new TContainer();
+            configureContainer?.Invoke(container);
             _containerInstance = container;
+
+            IFExStrongInjectServiceProvider serviceProvider = ((IContainer<IFExStrongInjectServiceProvider>)container)
+                .Resolve<IFExStrongInjectServiceProvider>()
+                .Value;
+
+            serviceProvider.SetServiceProvider(container);
+            ServiceProvider = serviceProvider;
 
             // Set ServiceContainer by resolving from the new container
 #pragma warning disable IDISP004 // Don't ignore created IDisposable
@@ -249,7 +240,7 @@ public class FExServiceProvider : IFExServiceProvider
 #pragma warning restore IDISP004
 
             // Register services with the container
-            ServiceContainer.RegisterServices(container);
+            ServiceContainer.RegisterServices(container, services);
 
             InitializeInternal(serviceProvider);
 
@@ -262,7 +253,7 @@ public class FExServiceProvider : IFExServiceProvider
         if (ServiceProvider == null
             || ServiceContainer == null)
             throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer, TProvider>() first.");
+                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
 
         // Resolve the external DI provider from current provider
         TProvider serviceProvider = ServiceProvider.GetInstance<TProvider>();

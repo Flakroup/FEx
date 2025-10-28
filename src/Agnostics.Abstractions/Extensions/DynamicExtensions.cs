@@ -6,12 +6,12 @@ using System.Reflection;
 namespace FEx.Agnostics.Abstractions.Extensions;
 
 /// <summary>
-///     Extension methods for the Dynamic
+/// Extension methods for the Dynamic
 /// </summary>
 public static class DynamicExtensions
 {
     /// <summary>
-    ///     Gets the dynamic member names.
+    /// Gets the dynamic member names.
     /// </summary>
     /// <param name="expandoObject">The expando object.</param>
     /// <returns></returns>
@@ -19,12 +19,12 @@ public static class DynamicExtensions
         ((IDictionary<string, object>)expandoObject).Keys;
 
     /// <summary>
-    ///     Adds the properties from dictionary.
+    /// Adds the properties from dictionary.
     /// </summary>
     /// <param name="eo">The eo.</param>
     /// <param name="propsDictionary">The props dictionary.</param>
     /// <returns>
-    ///     dynamic
+    /// dynamic
     /// </returns>
     public static dynamic AddPropertiesFromDictionary(this ExpandoObject eo,
                                                       IDictionary<string, object> propsDictionary)
@@ -37,7 +37,8 @@ public static class DynamicExtensions
         return eo;
     }
 
-    public static IDictionary<string, object> DynamicObjectToDictionary(dynamic src) => src is not null
+    public static IDictionary<string, object> DynamicObjectToDictionary(dynamic src) =>
+        src is not null
             ? ((PropertyInfo[])src.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)).ToDictionary(
                 prop => prop.Name,
                 prop => prop.GetValue(src, null))

@@ -194,7 +194,7 @@ public static class ListExtensions
     }
 
     /// <summary>
-    ///     Synchronizes two lists in one way mode.
+    /// Synchronizes two lists in one way mode.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="sourceList">The source list.</param>
@@ -267,8 +267,7 @@ public static class ListExtensions
                 }
                 else
                 {
-                    throw new InvalidOperationException(
-                        $"{nameof(Equals)} function doesn't provide unique objects.");
+                    throw new InvalidOperationException($"{nameof(Equals)} function doesn't provide unique objects.");
                 }
             }
 

@@ -53,47 +53,8 @@ public static class LoggerExtensions
         }
     }
 
-    public static void Log(this ILoggable loggable, LogLevel logLevel, string message, Exception exception = null)
-    {
-        switch (logLevel)
-        {
-            case LogLevel.Trace:
-                loggable.LogTrace(message, exception);
-
-                break;
-            case LogLevel.Debug:
-                loggable.LogDebug(message, exception);
-
-                break;
-            case LogLevel.Information:
-                loggable.LogInformation(message, exception);
-
-                break;
-            case LogLevel.Warning:
-                loggable.LogWarning(message, exception);
-
-                break;
-            case LogLevel.Error:
-                loggable.LogError(message, exception);
-
-                break;
-            case LogLevel.Critical:
-                loggable.LogCritical(message, exception);
-
-                break;
-            case LogLevel.None:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);
-        }
-    }
-
     public static void LogError<T>(this ILogger logger, T exception) where T : Exception =>
         logger.LogError(exception, exception.ToString());
-
-    public static ILoggable GetLogger(this object sender) => new Loggable(sender.GetMicrosoftLogger());
-
-    public static ILoggable GetLogger<T>() => new Loggable(FExLoggingStatics.LoggerFactory.CreateLogger<T>());
 
     public static ILogger GetMicrosoftLogger(this object sender) =>
         FExLoggingStatics.LoggerFactory.CreateLogger(sender.GetType());

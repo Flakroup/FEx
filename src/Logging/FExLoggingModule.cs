@@ -25,7 +25,6 @@ namespace FEx.Logging;
     typeof(IFExInitializable),
     typeof(IInitializeModule<IServiceCollection>))]
 [Register(typeof(FExStaticLogger), Scope.SingleInstance, typeof(IFExInitializable))]
-[Register(typeof(Loggable), typeof(ILoggable))]
 [Register(typeof(FExLoggingService), Scope.SingleInstance, typeof(IFExLoggingService))]
 [Register(typeof(FExSerilogLogger), typeof(IFExLogger))]
 [Register(typeof(FExLoggingConfigurator), typeof(IFExLoggingConfigurator), typeof(IConfigurator))]
@@ -145,7 +144,6 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
     {
         services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog());
 
-        services.AddTransientServiceUsingContainer<ILoggable>(container);
         services.AddTransientServiceUsingContainer<IFExLoggingService>(container);
         services.AddTransientServiceUsingContainer<IFExLogger>(container);
         services.AddTransientServiceUsingContainer<ILogger>(container);

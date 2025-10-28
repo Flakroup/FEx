@@ -48,7 +48,7 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
                     if (statusInfo.IsNullOrEmptyOrWhiteSpace())
                         return;
 
-                    _logger.LogInformation(statusInfo);
+                    _logger.Information(statusInfo);
                 });
     }
 

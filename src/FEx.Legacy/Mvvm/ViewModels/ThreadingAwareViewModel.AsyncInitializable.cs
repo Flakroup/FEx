@@ -3,9 +3,9 @@ using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Flow;
 using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Asyncx.Helpers;
 using FEx.Core.Abstractions.Interfaces;
-using FEx.Logging.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -15,7 +15,7 @@ namespace FEx.Legacy.Mvvm.ViewModels;
 
 public partial class ThreadingAwareViewModel
 {
-    protected readonly ILoggable _logger;
+    protected readonly IFExLogger _logger;
     protected readonly ConcurrentDictionary<string, IAsyncInitializable> _dependencies;
 
     protected Task _initializationTask;
@@ -98,7 +98,7 @@ public partial class ThreadingAwareViewModel
         if (!SkipDependenciesInitialization)
             await InitializeDependenciesAsync();
 
-        _logger.LogDebug($"Initializing {TypeName}");
+        _logger.Debug($"Initializing {TypeName}");
     }
 
     protected virtual async Task InitializeDependenciesAsync()
@@ -125,7 +125,7 @@ public partial class ThreadingAwareViewModel
         {
             if (IsInitialized)
             {
-                _logger.LogWarning($"{TypeName} has been already initialized");
+                _logger.Warning($"{TypeName} has been already initialized");
 
                 return;
             }
@@ -136,11 +136,11 @@ public partial class ThreadingAwareViewModel
 
             IsInitialized = true;
 
-            _logger.LogDebug($"{TypeName} initialized");
+            _logger.Debug($"{TypeName} initialized");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex);
+            _logger.Error(ex);
 
             throw;
         }
@@ -164,7 +164,7 @@ public partial class ThreadingAwareViewModel
         dependency.Guard(nameof(dependency));
 
         if (!_dependencies.TryAdd(dependency.TypeFullName, dependency))
-            _logger.LogWarning($"{dependency.TypeFullName} is already referenced in {TypeFullName}");
+            _logger.Warning($"{dependency.TypeFullName} is already referenced in {TypeFullName}");
     }
 
     #region IDisposable

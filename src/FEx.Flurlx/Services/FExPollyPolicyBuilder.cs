@@ -1,5 +1,5 @@
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Flurlx.Configuration;
-using FEx.Logging.Abstractions.Interfaces;
 using Flurl.Http;
 using Flurl.Util;
 using Polly;
@@ -31,9 +31,9 @@ namespace FEx.Flurlx.Services;
 /// </remarks>
 public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
 {
-    private readonly ILoggable _logger;
+    private readonly IFExLogger _logger;
 
-    public FExPollyPolicyBuilder(ILoggable logger)
+    public FExPollyPolicyBuilder(IFExLogger logger)
     {
         _logger = logger;
     }
@@ -91,7 +91,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
                 retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) * config.InitialRetryDelay.TotalSeconds),
                 (outcome, timespan, retryCount, _) =>
                 {
-                    _logger.LogWarning(
+                    _logger.Warning(
                         $"[FExPolly] Retry {retryCount}/{config.MaxRetryAttempts} after {timespan.TotalSeconds:F1}s due to {(outcome.Exception is not null ? $"exception: {outcome.Exception.Message}" : $"status code: {outcome.Result?.StatusCode}")}");
                 });
 
@@ -109,11 +109,11 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
                 config.CircuitBreakerDuration,
                 (_, duration) =>
                 {
-                    _logger.LogError(
+                    _logger.Error(
                         $"[FExPolly] Circuit breaker OPENED for {duration.TotalSeconds:F0}s after {config.CircuitBreakerFailureThreshold} failures");
                 },
-                () => { _logger.LogInformation("[FExPolly] Circuit breaker CLOSED - endpoint recovered"); },
-                () => { _logger?.LogInformation("[FExPolly] Circuit breaker HALF-OPEN - testing endpoint"); });
+                () => { _logger.Information("[FExPolly] Circuit breaker CLOSED - endpoint recovered"); },
+                () => { _logger?.Information("[FExPolly] Circuit breaker HALF-OPEN - testing endpoint"); });
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
             TimeoutStrategy.Pessimistic,
             (_, timespan, _) =>
             {
-                _logger.LogWarning($"[FExPolly] Request timed out after {timespan.TotalSeconds:F1}s");
+                _logger.Warning($"[FExPolly] Request timed out after {timespan.TotalSeconds:F1}s");
 
                 return Task.CompletedTask;
             });
@@ -138,10 +138,10 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
     private AsyncBulkheadPolicy<IFlurlResponse> BuildBulkheadPolicy(PollyPolicyConfiguration config)
     {
         return Policy.BulkheadAsync<IFlurlResponse>(config.MaxParallelization,
-            config.MaxQueuingActions,
+                config.MaxQueuingActions,
             _ =>
             {
-                _logger.LogWarning(
+                _logger.Warning(
                     $"[FExPolly] Bulkhead rejected request - {config.MaxParallelization} concurrent + {config.MaxQueuingActions} queued limit reached");
 
                 return Task.CompletedTask;
@@ -157,12 +157,12 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
         return Policy<IFlurlResponse>.Handle<Exception>()
             .FallbackAsync((result, context, _) =>
                 {
-                    _logger?.LogError(
+                    _logger?.Error(
                         $"[FExPolly] Fallback activated due to: {result.Exception?.Message ?? "Unknown error"}");
 
                     // Future enhancement: Try to get cached response
-                    if (context.TryGetValue("CacheKey", out var cacheKey))
-                        _logger?.LogInformation($"[FExPolly] Attempting to retrieve cached data for key: {cacheKey}");
+                        if (context.TryGetValue("CacheKey", out var cacheKey))
+                        _logger?.Information($"[FExPolly] Attempting to retrieve cached data for key: {cacheKey}");
 
                     // Create a fallback response with 503 Service Unavailable
                     var fallbackResponse = CreateServiceUnavailableResponse();

@@ -5,7 +5,6 @@ using FEx.Asyncx.Helpers;
 using FEx.Core.Abstractions.CustomEventArgs;
 using FEx.Core.Abstractions.Interfaces;
 using FEx.Core.Collections.Concurrent;
-using FEx.Logging.Abstractions;
 using FEx.Telemetry.Rollbar.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using Rollbar;
@@ -20,10 +19,11 @@ using RollbarLogger = Rollbar.ILogger;
 
 namespace FEx.Telemetry.Rollbar.Services;
 
-public class RollbarService : Loggable, IRollbarService
+public class RollbarService : IRollbarService
 {
     private readonly IRollbarConfig _config;
     private readonly IAsyncHelper _asyncHelper;
+    protected readonly IFExLogger _logger;
 
     public static IRollbar RollbarInstance => RollbarLocator.RollbarInstance;
 
@@ -32,12 +32,12 @@ public class RollbarService : Loggable, IRollbarService
     private SemaphoreSlim LoggingSemaphore { get; }
     private ConcurrentHashSet<string> LoggedExceptions { get; }
 
-    public RollbarService(ILogger<RollbarService> logger,
+    public RollbarService(IFExLogger logger,
                           IRollbarConfig config,
                           IAsyncHelper asyncHelper,
                           IExceptionHandler exceptionHandler)
-        : base(logger)
     {
+        _logger = logger;
         _config = config;
         _asyncHelper = asyncHelper;
 
@@ -143,11 +143,11 @@ public class RollbarService : Loggable, IRollbarService
         switch (e)
         {
             case RollbarApiErrorEventArgs or CommunicationErrorEventArgs or InternalErrorEventArgs:
-                LogError(message);
+                _logger.Error(message);
 
                 break;
             default:
-                LogInformation(message);
+                _logger.Information(message);
 
                 break;
         }

@@ -1,7 +1,7 @@
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Asyncx.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Data;
 using System.Threading;
@@ -15,9 +15,9 @@ namespace FEx.EFCore.Helpers;
 /// </summary>
 public class ResilientTransaction
 {
-    private readonly ILogger<ResilientTransaction> _logger;
+    private readonly IFExLogger _logger;
 
-    public ResilientTransaction(ILogger<ResilientTransaction> logger)
+    public ResilientTransaction(IFExLogger logger)
     {
         _logger = logger;
     }
@@ -77,7 +77,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                _logger.Error(ex, $"[{id}]\t{ex.Message}");
                 //ignored
             }
         }
@@ -111,7 +111,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                _logger.Error(ex, $"[{id}]\t{ex.Message}");
                 //ignored
             }
         }
@@ -145,7 +145,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                _logger.Error(ex, $"[{id}]\t{ex.Message}");
                 //ignored
             }
         }
@@ -173,7 +173,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                _logger.Error(ex, $"[{id}]\t{ex.Message}");
                 //ignored
             }
 
@@ -195,7 +195,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                _logger.Error(ex, $"[{id}]\t{ex.Message}");
                 //ignored
             }
 

@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 
@@ -5,8 +6,8 @@ namespace FEx.Logging.Abstractions.Interfaces;
 
 public interface IFExLoggingService
 {
-    ILoggable GetLogger<T>();
-    ILoggable GetLogger(object sender);
+    IFExLogger GetLogger<T>();
+    IFExLogger GetLogger(object sender);
     void LogCritical<T>(string message, Exception exception = null);
     void LogDebug<T>(string message, Exception exception = null);
     void LogError<T>(string message, Exception exception = null);

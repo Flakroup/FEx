@@ -46,7 +46,7 @@ public abstract class BulkDbServiceBase<TDbContext> : DbServiceBase<TDbContext>,
             ? "Completed"
             : $"{Math.Floor(progress * 100)}%";
 
-        _logger.LogDebug($"[BulkOperation] [{tableName}] [{type}] {opIdStr}{prgStr}");
+        _logger.Debug($"[BulkOperation] [{tableName}] [{type}] {opIdStr}{prgStr}");
     }
 
     #region IDisposable

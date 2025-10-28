@@ -8,5 +8,5 @@ public interface IInitializeModule<in TEngineContext> : IFExInitializable
     bool HasBeenCompleted { get; }
 
     void RegisterServices(TEngineContext context);
-    Task CompleteInitializationAsync(TEngineContext context);
+    ValueTask CompleteInitializationAsync(TEngineContext context);
 }

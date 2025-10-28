@@ -15,7 +15,7 @@ public sealed class DIMeta : InitializeOnlyModule
         _register = [];
     }
 
-    public override async Task OnCompleteInitializationAsync(IServiceCollection services)
+    public override async ValueTask OnCompleteInitializationAsync(IServiceCollection services)
     {
         await base.OnCompleteInitializationAsync(services);
         ProcessRegisteredServices(services);

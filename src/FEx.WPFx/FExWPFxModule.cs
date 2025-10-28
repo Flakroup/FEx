@@ -15,7 +15,7 @@ using System.Windows.Media.Imaging;
 
 namespace FEx.WPFx;
 
-[Register(typeof(FExWpfx), Scope.SingleInstance, typeof(FExWpfx), typeof(IFExInitialize))]
+[Register(typeof(FExWpfx), Scope.SingleInstance, typeof(FExWpfx), typeof(IFExInitializable))]
 [Register(typeof(FExWpfxModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 [Register(typeof(Splash), Scope.SingleInstance, typeof(Splash), typeof(IFExPriorityInitialize))]
 [Register(typeof(FExMemoryCache<string, BitmapSource>),

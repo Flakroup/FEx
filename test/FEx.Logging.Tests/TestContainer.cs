@@ -1,4 +1,6 @@
 using FEx.Agnostics.TestMocks;
+using FEx.Core;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.DependencyInjection;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Logging.Abstractions.Interfaces;
@@ -13,10 +15,12 @@ namespace FEx.Logging.Tests;
 [RegisterModule(typeof(CollectionsModule))]
 [RegisterModule(typeof(FExDependencyInjectionModule))]
 [RegisterModule(typeof(FExLoggingModule))]
+[RegisterModule(typeof(FExCoreModule))]
 [Register(typeof(FExStrongInjectServiceProvider), Scope.SingleInstance, typeof(IFExServiceProvider))]
 [Register(typeof(FExMicrosoftDIServiceProvider), Scope.SingleInstance)]
-public partial class TestContainer : TestBase, IFExLoggingContainer, IContainer<IFExServiceContainer>,
-    IContainer<IFExServiceProvider>, IContainer<FExMicrosoftDIServiceProvider>
+public partial class TestContainer : TestBase, IFExLoggingContainer, IFExDependencyInjectionContainer,
+    IFExCoreContainer, IContainer<IFExServiceContainer>, IContainer<IFExServiceProvider>,
+    IContainer<FExMicrosoftDIServiceProvider>
 {
     [Factory]
     public static ILogger CreateLogger() => NullLogger.Instance;

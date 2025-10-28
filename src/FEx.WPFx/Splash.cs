@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace FEx.WPFx;
 
-public class Splash : FExInitialize, IFExPriorityInitialize
+public class Splash : FExInitializable, IFExPriorityInitialize
 {
     private readonly IAppConfig _appConfig;
     private readonly IAsyncHelper _asyncHelper;

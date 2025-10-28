@@ -28,7 +28,7 @@ public class FlurlApiBaseIntegrationTests : IDisposable
 {
     private readonly WireMockServer _mockServer;
     private readonly IFlurlClient _flurlClient;
-    private readonly IAsyncPolicy<HttpResponseMessage> _resiliencePolicy;
+    private readonly IAsyncPolicy<IFlurlResponse> _resiliencePolicy;
     private readonly TestApi _testApi;
 
     public FlurlApiBaseIntegrationTests()
@@ -254,7 +254,7 @@ public class FlurlApiBaseIntegrationTests : IDisposable
     private static FExPollyPolicyBuilder GetPolicyBuilder() => new(Substitute.For<ILoggable>());
 
     private static IFlurlConfigurator GetMocks(IFlurlClient flurlClient,
-                                               IAsyncPolicy<HttpResponseMessage> resiliencePolicy)
+                                               IAsyncPolicy<IFlurlResponse> resiliencePolicy)
     {
         var flurlConfigurator = Substitute.For<IFlurlConfigurator>();
         flurlConfigurator.GetClient().Returns(flurlClient);

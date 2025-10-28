@@ -9,6 +9,6 @@ namespace FEx.Core.Abstractions.Interfaces;
 public interface IFExCoreContainer : IContainer<IAsyncHelper>, IContainer<IDeadlockMonitor>,
     IContainer<IStackTraceProvider>, IContainer<IFExDispatcher>, IContainer<IAppVersionProvider>,
     IContainer<INavigationFlowSubject>, IContainer<IAppThreadingSettings>, IContainer<AlphanumComparatorFast>,
-    IContainer<ISynchronizedAccessService>
+    IContainer<ISynchronizedAccessService>, IContainer<IExceptionHandler>, IContainer<IAppInfoProvider>
 {
 }

@@ -19,7 +19,7 @@ public abstract class FExAvaloniaApp<TContainer> : Application
     {
         try
         {
-            FExServiceProvider.Initialize<TContainer>();
+            FExServiceProvider.InitializeAsync<TContainer>().GetAwaiter().GetResult();
             OnActivation();
         }
         catch (Exception ex)

@@ -29,7 +29,7 @@ namespace FEx.Core;
 [Register(typeof(DeadlockMonitor), typeof(IDeadlockMonitor))]
 [Register(typeof(DefaultAppVersionProvider), typeof(IAppVersionProvider))]
 [Register(typeof(DefaultDispatcher), typeof(IFExDispatcher))]
-[Register(typeof(DebugExceptionHandler), typeof(IExceptionHandler))] //todo what with ExceptionHandler?
+[Register(typeof(ExceptionHandler), typeof(IExceptionHandler))] //todo what with DebugExceptionHandler?
 [Register(typeof(MainThreadContextProvider), typeof(IMainThreadContextProvider))]
 [Register(typeof(AppInfoProvider), typeof(IAppInfoProvider))]
 [Register(typeof(AppInfo), typeof(IAppInfo))]

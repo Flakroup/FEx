@@ -10,7 +10,7 @@ using StrongInject.Extensions.DependencyInjection;
 namespace FEx.Legacy;
 
 [Register(typeof(TasksHandler), typeof(ITasksHandler))]
-[Register(typeof(FExLegacy), Scope.SingleInstance, typeof(FExLegacy), typeof(IFExInitialize))]
+[Register(typeof(FExLegacy), Scope.SingleInstance, typeof(FExLegacy), typeof(IFExInitializable))]
 [Register(typeof(FExLegacyModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExLegacyModule : InitializeModule<IFExLegacyContainer, IServiceCollection>
 {

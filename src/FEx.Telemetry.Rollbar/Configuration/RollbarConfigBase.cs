@@ -1,7 +1,7 @@
 ﻿using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Core.Abstractions;
 using FEx.Core.Abstractions.Extensions;
-using FEx.Core.Abstractions.Interfaces;
 using FEx.Platforms;
 using FEx.Telemetry.Rollbar.Abstractions.Interfaces;
 using FEx.Telemetry.Subjects;

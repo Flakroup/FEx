@@ -1,5 +1,7 @@
 using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Helpers;
 using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Utilities;
 using FEx.DependencyInjection.Abstractions.Basics;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +18,7 @@ public class FExServiceProvider : IFExServiceProvider
     /// <summary>
     /// Lock object for thread-safe initialization.
     /// </summary>
-    private static readonly object _initializationLock = new();
+    private static readonly FExSemaphoreSlim _initializationLock = new();
 
     /// <summary>
     /// Tracks the container instance for idempotent initialization.
@@ -95,7 +97,7 @@ public class FExServiceProvider : IFExServiceProvider
     /// <summary>
     /// No-op implementation for the static provider as it delegates to the actual providers.
     /// </summary>
-    public ValueTask ConfigureServiceProviderAsync() => new();
+    public ValueTask ConfigureServiceProviderAsync() => FExValueTaskHelper.CompletedTask;
 
     /// <summary>
     /// Gets the service object of the specified type.
@@ -112,7 +114,7 @@ public class FExServiceProvider : IFExServiceProvider
     {
         if (ServiceContainer == null)
             throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
+                $"FExServiceProvider not initialized. Call {nameof(InitializeAsync)}<TContainer>() first.");
 
         return ServiceContainer.ResolveService<T>();
     }
@@ -127,7 +129,7 @@ public class FExServiceProvider : IFExServiceProvider
     {
         if (ServiceContainer == null)
             throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
+                $"FExServiceProvider not initialized. Call {nameof(InitializeAsync)}<TContainer>() first.");
 
         return await ServiceContainer.ResolveServiceAsync<T>();
     }
@@ -142,7 +144,7 @@ public class FExServiceProvider : IFExServiceProvider
     {
         if (ServiceContainer == null)
             throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
+                $"FExServiceProvider not initialized. Call {nameof(InitializeAsync)}<TContainer>() first.");
 
         return ServiceContainer.ResolveServices<T>();
     }
@@ -157,7 +159,7 @@ public class FExServiceProvider : IFExServiceProvider
     {
         if (ServiceContainer == null)
             throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
+                $"FExServiceProvider not initialized. Call {nameof(InitializeAsync)}<TContainer>() first.");
 
         return ServiceContainer.TryResolveServices<T>();
     }
@@ -172,7 +174,7 @@ public class FExServiceProvider : IFExServiceProvider
     {
         if (ServiceContainer == null)
             throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
+                $"FExServiceProvider not initialized. Call {nameof(InitializeAsync)}<TContainer>() first.");
 
         return await ServiceContainer.ResolveServicesAsync<T>();
     }
@@ -203,8 +205,8 @@ public class FExServiceProvider : IFExServiceProvider
     /// </summary>
     /// <typeparam name="TContainer"></typeparam>
     /// <returns></returns>
-    public static TContainer Initialize<TContainer>(IServiceCollection services = null,
-                                                    Action<TContainer> configureContainer = null)
+    public static async ValueTask<TContainer> InitializeAsync<TContainer>(IServiceCollection services = null,
+                                                                          Action<TContainer> configureContainer = null)
         where TContainer : class, IDisposable, new()
     {
         // Idempotent: return existing container if already initialized with same type
@@ -212,7 +214,9 @@ public class FExServiceProvider : IFExServiceProvider
             return existingContainer;
 
         // Thread-safety: prevent concurrent initialization
-        lock (_initializationLock)
+        await _initializationLock.WaitAsync();
+
+        try
         {
             // Double-check after acquiring lock
             if (_containerInstance is TContainer existing)
@@ -229,6 +233,7 @@ public class FExServiceProvider : IFExServiceProvider
                 .Value;
 
             serviceProvider.SetServiceProvider(container);
+            await serviceProvider.ConfigureServiceProviderAsync();
             ServiceProvider = serviceProvider;
 
             // Set ServiceContainer by resolving from the new container
@@ -246,21 +251,10 @@ public class FExServiceProvider : IFExServiceProvider
 
             return container;
         }
-    }
-
-    public static async Task InitializeAsync<TProvider>() where TProvider : class, IFExServiceProvider
-    {
-        if (ServiceProvider == null
-            || ServiceContainer == null)
-            throw new InvalidOperationException(
-                $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
-
-        // Resolve the external DI provider from current provider
-        var serviceProvider = ServiceProvider.GetInstance<TProvider>();
-
-        await serviceProvider.ConfigureServiceProviderAsync();
-        ServiceProvider = serviceProvider;
-        InitializeInternal(serviceProvider);
+        finally
+        {
+            _initializationLock.Release();
+        }
     }
 
     public static TModule GetDefaultContainer<TModule>() where TModule : class

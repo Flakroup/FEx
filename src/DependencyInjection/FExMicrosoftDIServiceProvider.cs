@@ -101,7 +101,8 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
         foreach (var module in modules)
             module.RegisterServices(services);
 
-        await modules.Where(x => !x.HasBeenCompleted).WithWhenAllAsync(m => m.CompleteInitializationAsync(services));
+        await modules.Where(static x => !x.HasBeenCompleted)
+            .WithWhenAllAsync(m => m.CompleteInitializationAsync(services));
     }
 
     #region IDisposable

@@ -1,4 +1,3 @@
-using FEx.DependencyInjection;
 using FEx.DependencyInjection.Abstractions;
 
 namespace FEx.Sample.WebAPI;
@@ -12,10 +11,7 @@ public class Program
     public static async Task Main(string[] args)
     {
         // Step 1: Initialize StrongInject (FEx foundation)
-        using var container = FExServiceProvider.Initialize<AppContainer>();
-
-        // Step 2: Initialize Microsoft DI (integrates FEx modules into ASP.NET)
-        await FExServiceProvider.InitializeAsync<FExMicrosoftDIServiceProvider>();
+        using var container = await FExServiceProvider.InitializeAsync<AppContainer>();
 
         Console.WriteLine("Multi-DI initialized: StrongInject + Microsoft DI");
 

@@ -1,10 +1,9 @@
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Utilities;
-using FEx.Asyncx.Helpers;
 using FEx.Common.Abstractions.Interfaces;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Core.Abstractions.Interfaces;
 using FEx.Core.Abstractions.Utilities;
-using FEx.DependencyInjection;
 using FEx.DependencyInjection.Abstractions;
 using FEx.MVVM;
 using FEx.MVVM.Abstractions.Enums;
@@ -15,7 +14,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -24,11 +22,11 @@ namespace FEx.WPFx.Abstractions;
 public abstract class AppBootstrapper<TContainer> : Application
     where TContainer : class, IFExContainer, IDisposable, new()
 {
-    protected readonly TContainer _container;
     protected readonly IAppInfoProvider _appInfoProvider;
     protected readonly IExceptionHandler _exceptionHandler;
     protected readonly IStatusService _statusService;
     protected readonly IAppConfig _appConfig;
+    protected readonly TContainer _container;
 
     protected DirectoryInfo AppData => _appInfoProvider.AppData;
     protected DirectoryInfo UserData => _appInfoProvider.UserData;
@@ -44,7 +42,7 @@ public abstract class AppBootstrapper<TContainer> : Application
 
             SetNetwork();
 
-            _container = FExServiceProvider.Initialize<TContainer>();
+            _container = FExServiceProvider.InitializeAsync<TContainer>().GetAwaiter().GetResult();
             _appInfoProvider = FExServiceProvider.Get<IAppInfoProvider>();
             _appConfig = FExServiceProvider.Get<IAppConfig>();
             _exceptionHandler = FExServiceProvider.Get<IExceptionHandler>();
@@ -60,12 +58,6 @@ public abstract class AppBootstrapper<TContainer> : Application
 
     protected abstract void ComponentInitialize();
     protected abstract void OnActivation();
-
-    protected virtual void ConfigureServiceProvider() =>
-        JoinableAsyncHelper.AwaitWithoutDeadlock(ConfigureServiceProviderAsync); //todo move to separate class
-
-    protected virtual async Task ConfigureServiceProviderAsync() =>
-        await FExServiceProvider.InitializeAsync<FExMicrosoftDIServiceProvider>();
 
     protected virtual void AfterServicesContainerBuild()
     {
@@ -177,11 +169,7 @@ public abstract class AppBootstrapper<TContainer> : Application
                 BeforeStartup(e);
 
             using (_ = LogToHub("Initializing app components"))
-            {
-                ConfigureServiceProvider();
-
                 AfterServicesContainerBuild();
-            }
 
             _ = LogToHub("Showing window");
             base.OnStartup(e);

@@ -1,4 +1,5 @@
 using FEx.Agnostics.Abstractions;
+using FEx.Agnostics.Abstractions.Helpers;
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using System.Threading.Tasks;
@@ -21,7 +22,7 @@ public abstract class InitializeModule<TContainer, TEngineContext> : FExInitiali
         RegisterServices(container, context);
     }
 
-    public async Task CompleteInitializationAsync(TEngineContext context)
+    public async ValueTask CompleteInitializationAsync(TEngineContext context)
     {
         if (HasBeenCompleted)
             return;
@@ -30,7 +31,7 @@ public abstract class InitializeModule<TContainer, TEngineContext> : FExInitiali
         HasBeenCompleted = true;
     }
 
-    public virtual async Task OnCompleteInitializationAsync(TEngineContext context) => await Task.CompletedTask;
+    public virtual ValueTask OnCompleteInitializationAsync(TEngineContext context) => FExValueTaskHelper.CompletedTask;
 
     protected abstract void RegisterServices(TContainer container, TEngineContext context);
 

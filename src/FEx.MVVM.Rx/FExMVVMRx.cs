@@ -20,7 +20,8 @@ public class FExMvvmRx : FExInitializable
 #if NETFRAMEWORK
             RxApp.MainThreadScheduler = DispatcherScheduler.Current;
 #else
-        RxApp.MainThreadScheduler = CurrentThreadScheduler.Instance;
+        if (RxApp.MainThreadScheduler is DefaultScheduler)
+            RxApp.MainThreadScheduler = CurrentThreadScheduler.Instance;
 #endif
         RxApp.TaskpoolScheduler = TaskPoolScheduler.Default;
     }

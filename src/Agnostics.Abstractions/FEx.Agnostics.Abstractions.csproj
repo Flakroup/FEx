@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
@@ -7,6 +7,7 @@
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
         <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+        <PackageReference Condition="'$(TargetFramework)' == '$(StandardTargetFrameworkId)'" Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
     </ItemGroup>
 
 </Project>

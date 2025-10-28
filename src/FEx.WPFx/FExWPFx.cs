@@ -10,7 +10,7 @@ using System.Windows.Markup;
 
 namespace FEx.WPFx;
 
-public class FExWpfx : FExInitialize
+public class FExWpfx : FExInitializable
 {
     public static EventHandler<RoutedEventArgs> WindowLoaded;
     public static List<string> ExcludedWindows { get; }

@@ -9,7 +9,7 @@ using StrongInject.Extensions.DependencyInjection;
 namespace FEx.AppSettings;
 
 [Register(typeof(ConfigurationService), Scope.SingleInstance, typeof(IConfigurationService))]
-[Register(typeof(FExAppSettings), Scope.SingleInstance, typeof(FExAppSettings), typeof(IFExInitialize))]
+[Register(typeof(FExAppSettings), Scope.SingleInstance, typeof(FExAppSettings), typeof(IFExInitializable))]
 [Register(typeof(FExAppSettingsModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExAppSettingsModule : InitializeModule<IFExAppSettingsModule, IServiceCollection>
 {

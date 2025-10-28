@@ -1,12 +1,18 @@
 using FEx.Flurlx.Configuration;
 using FEx.Logging.Abstractions.Interfaces;
 using Flurl.Http;
+using Flurl.Util;
 using Polly;
 using Polly.Bulkhead;
 using Polly.Fallback;
 using Polly.Timeout;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace FEx.Flurlx.Services;
@@ -57,16 +63,27 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
     }
 
     /// <summary>
+    /// Creates a mock response for Service Unavailable (503).
+    /// </summary>
+    private static IFlurlResponse CreateServiceUnavailableResponse() =>
+        // Create a mock response with 503 status code
+        // This is a fallback response when all retries are exhausted
+        new FExFallbackResponse
+        {
+            StatusCode = (int)HttpStatusCode.ServiceUnavailable
+        };
+
+    /// <summary>
     /// Builds a Retry policy with exponential backoff.
     /// Handles transient errors: connection failures, timeouts, 5xx errors.
     /// </summary>
     private IAsyncPolicy<IFlurlResponse> BuildRetryPolicy(PollyPolicyConfiguration config) =>
         Policy.Handle<FlurlHttpException>()
             .Or<TimeoutRejectedException>()
-            .Or<System.Net.Http.HttpRequestException>() // ✅ Connection failures
-            .Or<System.Net.Sockets.SocketException>()   // ✅ Socket errors
-            .Or<TaskCanceledException>()                 // ✅ Request cancellation/timeout
-            .OrResult<IFlurlResponse>(static r => r == null 
+            .Or<HttpRequestException>() // ✅ Connection failures
+            .Or<SocketException>() // ✅ Socket errors
+            .Or<TaskCanceledException>() // ✅ Request cancellation/timeout
+            .OrResult<IFlurlResponse>(static r => r == null
                                                   || r.StatusCode == (int)HttpStatusCode.RequestTimeout
                                                   || r.StatusCode == 429 // TooManyRequests
                                                   || r.StatusCode >= (int)HttpStatusCode.InternalServerError)
@@ -85,8 +102,8 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
     {
         return Policy.Handle<FlurlHttpException>()
             .Or<TimeoutRejectedException>()
-            .Or<System.Net.Http.HttpRequestException>()
-            .Or<System.Net.Sockets.SocketException>()
+            .Or<HttpRequestException>()
+            .Or<SocketException>()
             .OrResult<IFlurlResponse>(r => r == null || r.StatusCode >= (int)HttpStatusCode.InternalServerError)
             .CircuitBreakerAsync(config.CircuitBreakerFailureThreshold,
                 config.CircuitBreakerDuration,
@@ -133,12 +150,12 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
 
     /// <summary>
     /// Builds a Fallback policy for graceful degradation.
+    /// Returns a 503 Service Unavailable response when all retries are exhausted.
     /// </summary>
     private AsyncFallbackPolicy<IFlurlResponse> BuildFallbackPolicy()
     {
         return Policy<IFlurlResponse>.Handle<Exception>()
-            .FallbackAsync(default(IFlurlResponse)!,
-                async (result, context) =>
+            .FallbackAsync((result, context, _) =>
                 {
                     _logger?.LogError(
                         $"[FExPolly] Fallback activated due to: {result.Exception?.Message ?? "Unknown error"}");
@@ -147,8 +164,41 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
                     if (context.TryGetValue("CacheKey", out var cacheKey))
                         _logger?.LogInformation($"[FExPolly] Attempting to retrieve cached data for key: {cacheKey}");
 
-                    // TODO: Implement cache retrieval
-                    await Task.CompletedTask;
-                });
+                    // Create a fallback response with 503 Service Unavailable
+                    var fallbackResponse = CreateServiceUnavailableResponse();
+
+                    return Task.FromResult(fallbackResponse);
+                },
+                OnFallbackAsync);
+    }
+
+    private static async Task OnFallbackAsync(DelegateResult<IFlurlResponse> delegateResult, Context context)
+    {
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Fallback response implementation for graceful degradation.
+    /// </summary>
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
+    private class FExFallbackResponse : IFlurlResponse
+    {
+        public int StatusCode { get; init; }
+        public IFlurlRequest Request => null;
+        public HttpResponseMessage ResponseMessage => null;
+        public IReadOnlyList<FlurlCookie> Cookies => null;
+        public IReadOnlyNameValueList<string> Headers => null;
+
+        public Task<T> GetJsonAsync<T>() => Task.FromResult<T>(default);
+        public Task<string> GetStringAsync() => Task.FromResult("Service temporarily unavailable");
+        public Task<byte[]> GetBytesAsync() => Task.FromResult(Array.Empty<byte>());
+        public Task<Stream> GetStreamAsync() => Task.FromResult(Stream.Null);
+
+        #region IDisposable
+        public void Dispose()
+        {
+            // No resources to dispose
+        }
+        #endregion
     }
 }

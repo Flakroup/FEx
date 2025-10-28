@@ -3,6 +3,7 @@ using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace FEx.DependencyInjection.Tests;
@@ -56,10 +57,10 @@ public class EngineAgnosticTests : IDisposable
     }
 
     [Fact]
-    public void BaseModuleClass_ShouldProvideContainerAccess()
+    public async Task BaseModuleClass_ShouldProvideContainerAccess()
     {
         // Arrange
-        FExServiceProvider.Initialize<TestContainer>();
+        await FExServiceProvider.InitializeAsync<TestContainer>();
 
         // Act & Assert - Test module should be able to access its container
         Should.NotThrow(() =>

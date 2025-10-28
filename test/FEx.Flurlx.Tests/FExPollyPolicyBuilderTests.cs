@@ -1,6 +1,7 @@
 using FEx.Flurlx.Configuration;
 using FEx.Flurlx.Services;
 using FEx.Logging.Abstractions.Interfaces;
+using Flurl.Http;
 using NSubstitute;
 using Polly.CircuitBreaker;
 using Polly.Timeout;
@@ -89,14 +90,14 @@ public class FExPollyPolicyBuilderTests
                 await Task.CompletedTask;
 
                 if (attemptCount < 3)
-                    return new(HttpStatusCode.InternalServerError);
+                    return CreateResponse((int)HttpStatusCode.InternalServerError);
 
-                return new(HttpStatusCode.OK);
+                return CreateResponse((int)HttpStatusCode.OK);
             },
             CancellationToken.None);
 
         // Assert
-        result.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.StatusCode.ShouldBe((int)HttpStatusCode.OK);
         attemptCount.ShouldBe(3); // Initial + 2 retries
     }
 
@@ -119,12 +120,12 @@ public class FExPollyPolicyBuilderTests
                 attemptCount++;
                 await Task.CompletedTask;
 
-                return new(HttpStatusCode.BadRequest);
+                return CreateResponse((int)HttpStatusCode.BadRequest);
             },
             CancellationToken.None);
 
         // Assert
-        result.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.StatusCode.ShouldBe((int)HttpStatusCode.BadRequest);
         attemptCount.ShouldBe(1); // No retries for 4xx
     }
 
@@ -147,7 +148,7 @@ public class FExPollyPolicyBuilderTests
             {
                 await Task.CompletedTask;
 
-                return new(HttpStatusCode.InternalServerError);
+                return CreateResponse((int)HttpStatusCode.InternalServerError);
             },
             CancellationToken.None);
 
@@ -155,7 +156,7 @@ public class FExPollyPolicyBuilderTests
             {
                 await Task.CompletedTask;
 
-                return new(HttpStatusCode.InternalServerError);
+                return CreateResponse((int)HttpStatusCode.InternalServerError);
             },
             CancellationToken.None);
 
@@ -166,7 +167,7 @@ public class FExPollyPolicyBuilderTests
                 {
                     await Task.CompletedTask;
 
-                    return new(HttpStatusCode.OK);
+                    return CreateResponse((int)HttpStatusCode.OK);
                 },
                 CancellationToken.None);
         });
@@ -192,7 +193,7 @@ public class FExPollyPolicyBuilderTests
                 {
                     await Task.Delay(TimeSpan.FromSeconds(5), ct);
 
-                    return new(HttpStatusCode.OK);
+                    return CreateResponse((int)HttpStatusCode.OK);
                 },
                 CancellationToken.None);
         });
@@ -215,7 +216,7 @@ public class FExPollyPolicyBuilderTests
         var semaphore = new SemaphoreSlim(1, 1);
 
         // Act - Try to run 5 requests concurrently
-        var tasks = new Task<HttpResponseMessage>[5];
+        var tasks = new Task<IFlurlResponse>[5];
 
         for (var i = 0; i < 5; i++)
         {
@@ -238,7 +239,7 @@ public class FExPollyPolicyBuilderTests
 
                                 concurrentCount--;
 
-                                return new(HttpStatusCode.OK);
+                                return CreateResponse((int)HttpStatusCode.OK);
                             }
                             finally
                             {
@@ -249,7 +250,7 @@ public class FExPollyPolicyBuilderTests
                 }
                 catch
                 {
-                    return new(HttpStatusCode.ServiceUnavailable);
+                    return CreateResponse((int)HttpStatusCode.ServiceUnavailable);
                 }
             });
         }
@@ -285,8 +286,9 @@ public class FExPollyPolicyBuilderTests
             CancellationToken.None);
 
         // Assert
-        result.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
-        var content = await result.Content.ReadAsStringAsync();
+        result.ShouldNotBeNull();
+        result.StatusCode.ShouldBe((int)HttpStatusCode.ServiceUnavailable);
+        var content = await result.GetStringAsync();
         content.ShouldContain("Service temporarily unavailable");
     }
 
@@ -344,14 +346,25 @@ public class FExPollyPolicyBuilderTests
                 await Task.CompletedTask;
 
                 if (attemptCount < 2)
-                    return new(HttpStatusCode.InternalServerError);
+                    return CreateResponse((int)HttpStatusCode.InternalServerError);
 
-                return new(HttpStatusCode.OK);
+                return CreateResponse((int)HttpStatusCode.OK);
             },
             CancellationToken.None);
 
         // Assert
-        result.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.StatusCode.ShouldBe((int)HttpStatusCode.OK);
         _mockLogger.Received().LogWarning(Arg.Is<string>(s => s.Contains("Retry")));
+    }
+
+    private static IFlurlResponse CreateResponse(int statusCode, string content = null)
+    {
+        var resp = Substitute.For<IFlurlResponse>();
+        resp.StatusCode.Returns(statusCode);
+        if (content != null)
+            resp.GetStringAsync().Returns(content);
+        else
+            resp.GetStringAsync().Returns(string.Empty);
+        return resp;
     }
 }

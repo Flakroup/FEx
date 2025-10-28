@@ -6,6 +6,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\src\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+		<ProjectReference Include="..\..\src\Core\FEx.Core.csproj" />
 		<ProjectReference Include="..\..\src\Logging\FEx.Logging.csproj" />
 		<ProjectReference Include="..\..\src\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
 		<ProjectReference Include="..\..\src\DependencyInjection\FEx.DependencyInjection.csproj" />

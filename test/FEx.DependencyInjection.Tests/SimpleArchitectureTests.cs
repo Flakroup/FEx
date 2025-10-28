@@ -34,16 +34,11 @@ public sealed class SimpleArchitectureTests : IDisposable
     public void FExServiceProviderEntryPoints_ShouldExist()
     {
         // Verify the main entry points exist with correct signatures
-        var initializeMethod = typeof(FExServiceProvider)
-            .GetMethods()
-            .FirstOrDefault(m => m.Name == "Initialize" && m.IsGenericMethodDefinition);
-
         var initializeAsyncMethod = typeof(FExServiceProvider)
             .GetMethods()
             .FirstOrDefault(m => m.Name == "InitializeAsync" && m.IsGenericMethodDefinition);
 
-        initializeMethod.ShouldNotBeNull("StrongInject initialization should be available");
-        initializeAsyncMethod.ShouldNotBeNull("External DI initialization should be available");
+        initializeAsyncMethod.ShouldNotBeNull("InitializeAsync should be available");
 
         // Verify static methods exist
         var getMethod = typeof(FExServiceProvider)

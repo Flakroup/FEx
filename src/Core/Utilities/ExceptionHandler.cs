@@ -33,7 +33,7 @@ public class ExceptionHandler : ExceptionHandlerBase
     {
         options ??= new ExceptionHandlerOptions();
 
-        if (!options.InformUser
+        if (options.InformUser
             && exception is not TaskCanceledException)
             base.Handle(exception, options);
     }

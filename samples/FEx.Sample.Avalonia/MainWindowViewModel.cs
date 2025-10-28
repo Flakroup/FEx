@@ -55,8 +55,11 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
     {
         try
         {
-            IsBusy = true;
-            StatusText = "Loading users from JSONPlaceholder API...";
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsBusy = true;
+                StatusText = "Loading users from JSONPlaceholder API...";
+            });
 
             var users = await _api.GetUsersAsync().ConfigureAwait(false);
 
@@ -67,17 +70,18 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
 
                 foreach (var user in users)
                     Users.Add(user);
-            });
 
-            StatusText = $"✅ Loaded {users.Count} users at {DateTime.Now:HH:mm:ss}";
+                StatusText = $"✅ Loaded {users.Count} users at {DateTime.Now:HH:mm:ss}";
+                IsBusy = false;
+            });
         }
         catch (Exception ex)
         {
-            StatusText = $"❌ Error: {ex.Message}";
-        }
-        finally
-        {
-            IsBusy = false;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = $"❌ Error: {ex.Message}";
+                IsBusy = false;
+            });
         }
     }
 
@@ -85,8 +89,11 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
     {
         try
         {
-            IsBusy = true;
-            StatusText = "Loading posts from JSONPlaceholder API...";
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsBusy = true;
+                StatusText = "Loading posts from JSONPlaceholder API...";
+            });
 
             var posts = await _api.GetPostsAsync().ConfigureAwait(false);
 
@@ -97,17 +104,18 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
 
                 foreach (var post in posts.Take(10)) // Only show first 10
                     Posts.Add(post);
-            });
 
-            StatusText = $"✅ Loaded {posts.Count} posts (showing 10) at {DateTime.Now:HH:mm:ss}";
+                StatusText = $"✅ Loaded {posts.Count} posts (showing 10) at {DateTime.Now:HH:mm:ss}";
+                IsBusy = false;
+            });
         }
         catch (Exception ex)
         {
-            StatusText = $"❌ Error: {ex.Message}";
-        }
-        finally
-        {
-            IsBusy = false;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = $"❌ Error: {ex.Message}";
+                IsBusy = false;
+            });
         }
     }
 
@@ -115,26 +123,33 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
     {
         try
         {
-            IsBusy = true;
-            StatusText = "Testing Polly resilience policies (retry, circuit breaker, timeout)...";
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsBusy = true;
+                StatusText = "Testing Polly resilience policies (retry, circuit breaker, timeout)...";
+            });
 
             // Make multiple rapid requests to test resilience
             var task1 = _api.GetUsersAsync();
             var task2 = _api.GetPostsAsync();
             var task3 = _api.GetUserPostsAsync(1);
 
-            await Task.WhenAll(task1, task2, task3);
+            await Task.WhenAll(task1, task2, task3).ConfigureAwait(false);
 
-            StatusText =
-                $"✅ Resilience test passed! All concurrent requests handled successfully at {DateTime.Now:HH:mm:ss}";
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText =
+                    $"✅ Resilience test passed! All concurrent requests handled successfully at {DateTime.Now:HH:mm:ss}";
+                IsBusy = false;
+            });
         }
         catch (Exception ex)
         {
-            StatusText = $"❌ Resilience test failed: {ex.Message}";
-        }
-        finally
-        {
-            IsBusy = false;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = $"❌ Resilience test failed: {ex.Message}";
+                IsBusy = false;
+            });
         }
     }
 }

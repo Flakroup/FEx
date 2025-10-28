@@ -19,7 +19,7 @@ public sealed partial class App : Application
         try
         {
             // Initialize FEx with StrongInject container (no Microsoft DI needed for simple WPF)
-            using var container = FExServiceProvider.Initialize<AppContainer>();
+            using var container = FExServiceProvider.InitializeAsync<AppContainer>().GetAwaiter().GetResult();
 
             // Create and show main window
             var mainWindow = new MainWindow();

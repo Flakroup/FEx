@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Helpers;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using StrongInject;
 using System;
@@ -72,7 +73,7 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
     /// <summary>
     /// No-op for StrongInject provider as it doesn't need external engine configuration.
     /// </summary>
-    public ValueTask ConfigureServiceProviderAsync() => new();
+    public ValueTask ConfigureServiceProviderAsync() => FExValueTaskHelper.CompletedTask;
 
     public void SetServiceProvider<TContainer>(TContainer container) where TContainer : class, IDisposable
     {

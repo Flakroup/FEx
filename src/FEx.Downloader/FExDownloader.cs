@@ -2,7 +2,7 @@ using FEx.Agnostics.Abstractions;
 
 namespace FEx.Downloader;
 
-public class FExDownloader : FExInitialize
+public class FExDownloader : FExInitializable
 {
     protected override void OnInitialize()
     {

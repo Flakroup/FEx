@@ -2,7 +2,7 @@ using FEx.Agnostics.Abstractions;
 
 namespace FEx.AppSettings;
 
-public class FExAppSettings : FExInitialize
+public class FExAppSettings : FExInitializable
 {
     protected override void OnInitialize()
     {

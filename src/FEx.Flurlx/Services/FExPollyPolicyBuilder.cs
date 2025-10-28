@@ -1,6 +1,8 @@
 using FEx.Flurlx.Configuration;
 using FEx.Logging.Abstractions.Interfaces;
 using Polly;
+using Polly.Bulkhead;
+using Polly.Fallback;
 using Polly.Timeout;
 using System;
 using System.Net;
@@ -21,11 +23,11 @@ namespace FEx.Flurlx.Services;
 /// - Fallback for graceful degradation
 /// Designed to handle slow APIs (e.g., Synology DSM) with proper throttling and resilience.
 /// </remarks>
-public class FExPollyPolicyBuilder
+public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
 {
     private readonly ILoggable _logger;
 
-    public FExPollyPolicyBuilder(ILoggable logger = null)
+    public FExPollyPolicyBuilder(ILoggable logger)
     {
         _logger = logger;
     }
@@ -40,7 +42,7 @@ public class FExPollyPolicyBuilder
         IAsyncPolicy<HttpResponseMessage> retryPolicy = BuildRetryPolicy(config);
         IAsyncPolicy<HttpResponseMessage> circuitBreakerPolicy = BuildCircuitBreakerPolicy(config);
         IAsyncPolicy<HttpResponseMessage> timeoutPolicy = BuildTimeoutPolicy(config);
-        IAsyncPolicy<HttpResponseMessage> bulkheadPolicy = BuildBulkheadPolicy(config);
+        AsyncBulkheadPolicy<HttpResponseMessage> bulkheadPolicy = BuildBulkheadPolicy(config);
 
         IAsyncPolicy<HttpResponseMessage> fallbackPolicy = config.EnableFallback
             ? BuildFallbackPolicy()
@@ -57,26 +59,20 @@ public class FExPollyPolicyBuilder
     /// <summary>
     /// Builds a Retry policy with exponential backoff.
     /// </summary>
-    private IAsyncPolicy<HttpResponseMessage> BuildRetryPolicy(PollyPolicyConfiguration config)
-    {
-        return Policy.Handle<HttpRequestException>()
+    private IAsyncPolicy<HttpResponseMessage> BuildRetryPolicy(PollyPolicyConfiguration config) =>
+        Policy.Handle<HttpRequestException>()
             .Or<TimeoutRejectedException>()
-            .OrResult<HttpResponseMessage>(r => r.StatusCode == HttpStatusCode.RequestTimeout
-                                                || (int)r.StatusCode == 429
-                                                || // TooManyRequests
-                                                r.StatusCode >= HttpStatusCode.InternalServerError)
+            .OrResult<HttpResponseMessage>(static r => r.StatusCode == HttpStatusCode.RequestTimeout
+                                                       || (int)r.StatusCode == 429
+                                                       || // TooManyRequests
+                                                       r.StatusCode >= HttpStatusCode.InternalServerError)
             .WaitAndRetryAsync(config.MaxRetryAttempts,
                 retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) * config.InitialRetryDelay.TotalSeconds),
                 (outcome, timespan, retryCount, _) =>
                 {
-                    if (outcome.Exception != null)
-                        _logger?.LogWarning(
-                            $"[FExPolly] Retry {retryCount}/{config.MaxRetryAttempts} after {timespan.TotalSeconds:F1}s due to exception: {outcome.Exception.Message}");
-                    else
-                        _logger?.LogWarning(
-                            $"[FExPolly] Retry {retryCount}/{config.MaxRetryAttempts} after {timespan.TotalSeconds:F1}s due to status code: {outcome.Result.StatusCode}");
+                    _logger.LogWarning(
+                        $"[FExPolly] Retry {retryCount}/{config.MaxRetryAttempts} after {timespan.TotalSeconds:F1}s due to {(outcome.Exception is not null ? $"exception: {outcome.Exception.Message}" : $"status code: {outcome.Result.StatusCode}")}");
                 });
-    }
 
     /// <summary>
     /// Builds a Circuit Breaker policy to prevent cascading failures.
@@ -90,10 +86,10 @@ public class FExPollyPolicyBuilder
                 config.CircuitBreakerDuration,
                 (_, duration) =>
                 {
-                    _logger?.LogError(
+                    _logger.LogError(
                         $"[FExPolly] Circuit breaker OPENED for {duration.TotalSeconds:F0}s after {config.CircuitBreakerFailureThreshold} failures");
                 },
-                () => { _logger?.LogInformation("[FExPolly] Circuit breaker CLOSED - endpoint recovered"); },
+                () => { _logger.LogInformation("[FExPolly] Circuit breaker CLOSED - endpoint recovered"); },
                 () => { _logger?.LogInformation("[FExPolly] Circuit breaker HALF-OPEN - testing endpoint"); });
     }
 
@@ -106,7 +102,7 @@ public class FExPollyPolicyBuilder
             TimeoutStrategy.Pessimistic,
             (_, timespan, _) =>
             {
-                _logger?.LogWarning($"[FExPolly] Request timed out after {timespan.TotalSeconds:F1}s");
+                _logger.LogWarning($"[FExPolly] Request timed out after {timespan.TotalSeconds:F1}s");
 
                 return Task.CompletedTask;
             });
@@ -116,13 +112,13 @@ public class FExPollyPolicyBuilder
     /// Builds a Bulkhead policy to limit concurrent requests.
     /// Critical for slow APIs to prevent overwhelming the endpoint.
     /// </summary>
-    private IAsyncPolicy<HttpResponseMessage> BuildBulkheadPolicy(PollyPolicyConfiguration config)
+    private AsyncBulkheadPolicy<HttpResponseMessage> BuildBulkheadPolicy(PollyPolicyConfiguration config)
     {
         return Policy.BulkheadAsync<HttpResponseMessage>(config.MaxParallelization,
             config.MaxQueuingActions,
             _ =>
             {
-                _logger?.LogWarning(
+                _logger.LogWarning(
                     $"[FExPolly] Bulkhead rejected request - {config.MaxParallelization} concurrent + {config.MaxQueuingActions} queued limit reached");
 
                 return Task.CompletedTask;
@@ -132,7 +128,7 @@ public class FExPollyPolicyBuilder
     /// <summary>
     /// Builds a Fallback policy for graceful degradation.
     /// </summary>
-    private IAsyncPolicy<HttpResponseMessage> BuildFallbackPolicy()
+    private AsyncFallbackPolicy<HttpResponseMessage> BuildFallbackPolicy()
     {
         return Policy<HttpResponseMessage>.Handle<Exception>()
             .FallbackAsync(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)

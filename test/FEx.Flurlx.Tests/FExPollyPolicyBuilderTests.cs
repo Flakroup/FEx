@@ -4,6 +4,7 @@ using FEx.Logging.Abstractions.Interfaces;
 using NSubstitute;
 using Polly;
 using Polly.CircuitBreaker;
+using Polly.Timeout;
 using Shouldly;
 using System;
 using System.Net;
@@ -45,7 +46,8 @@ public class FExPollyPolicyBuilderTests
         var config = new PollyPolicyConfiguration
         {
             MaxRetryAttempts = 3,
-            InitialRetryDelay = TimeSpan.FromMilliseconds(10)
+            InitialRetryDelay = TimeSpan.FromMilliseconds(10),
+            EnableFallback = false // Disable fallback to test exception propagation
         };
 
         IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
@@ -135,7 +137,8 @@ public class FExPollyPolicyBuilderTests
         {
             CircuitBreakerFailureThreshold = 2,
             CircuitBreakerDuration = TimeSpan.FromSeconds(1),
-            MaxRetryAttempts = 0 // Disable retry to test circuit breaker in isolation
+            MaxRetryAttempts = 0, // Disable retry to test circuit breaker in isolation
+            EnableFallback = false // Disable fallback to test exception propagation
         };
 
         IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
@@ -177,13 +180,14 @@ public class FExPollyPolicyBuilderTests
         var config = new PollyPolicyConfiguration
         {
             RequestTimeout = TimeSpan.FromMilliseconds(100),
-            MaxRetryAttempts = 0 // Disable retry
+            MaxRetryAttempts = 0, // Disable retry
+            EnableFallback = false // Disable fallback to test exception propagation
         };
 
         IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Act & Assert
-        await Should.ThrowAsync<TimeoutException>(async () =>
+        await Should.ThrowAsync<TimeoutRejectedException>(async () =>
         {
             await policy.ExecuteAsync(async ct =>
                 {

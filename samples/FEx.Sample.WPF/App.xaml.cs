@@ -1,5 +1,5 @@
-﻿using FEx.DependencyInjection;
-using FEx.DependencyInjection.Abstractions;
+﻿using FEx.DependencyInjection.Abstractions;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 
 namespace FEx.Sample.WPF;
@@ -9,7 +9,8 @@ namespace FEx.Sample.WPF;
 /// Shows how to initialize FEx framework with StrongInject container.
 /// NOTE: This is a minimal example. For full WPF functionality, see FEx.WPFx module documentation.
 /// </summary>
-public partial class App : Application
+[SuppressMessage("ReSharper", "RedundantExtendsListEntry")]
+public sealed partial class App : Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -18,8 +19,7 @@ public partial class App : Application
         try
         {
             // Initialize FEx with StrongInject container (no Microsoft DI needed for simple WPF)
-            using AppContainer? container =
-                FExServiceProvider.Initialize<AppContainer>();
+            using AppContainer? container = FExServiceProvider.Initialize<AppContainer>();
 
             // Create and show main window
             var mainWindow = new MainWindow();

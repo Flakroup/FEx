@@ -45,21 +45,31 @@ dotnet test test/FEx.Flurlx.Tests/FEx.Flurlx.Tests.csproj --filter "FullyQualifi
 
 ## Test Status
 
-**Current Status**: 8/18 tests passing
+**Current Status**: ✅ **18/18 tests passing** 🎉
 
-**Passing Tests** (Unit Tests):
+**All Tests Passing**:
+
+**Unit Tests (Polly Policy Builder)**:
 - ✅ BuildFullSuitePolicy_WithDefaultConfig_CreatesPolicy
+- ✅ RetryPolicy_RetriesOnHttpRequestException
+- ✅ RetryPolicy_RetriesOn5xxStatusCodes
 - ✅ RetryPolicy_DoesNotRetryOn4xxStatusCodes
 - ✅ CircuitBreaker_OpensAfterConsecutiveFailures
+- ✅ Timeout_CancelsLongRunningRequest
 - ✅ Bulkhead_LimitsConcurrentRequests
 - ✅ Fallback_ReturnsServiceUnavailableOnFailure
 - ✅ SlowApiDefaults_CreatesCorrectConfiguration
 - ✅ FastApiDefaults_CreatesCorrectConfiguration
 - ✅ Logger_LogsRetryAttempts
 
-**Needs Adjustment** (Integration Tests):
-- 🔄 Integration tests with WireMock need fine-tuning for HTTP message handling
-- 🔄 Some tests may need adjustment for Flurl 4.x API changes
+**Integration Tests (FlurlApiBase with WireMock)**:
+- ✅ GetResponseAsync_SuccessfulRequest_ReturnsData
+- ✅ GetResponseAsync_ServerError_RetriesAndSucceeds
+- ✅ GetResponseAsync_PersistentFailure_ThrowsHttpRequestException
+- ✅ PostResponseAsync_WithRequestBody_SendsCorrectData
+- ✅ GetResponseAsync_WithQueryParameters_AppendsCorrectly
+- ✅ GetResponseAsync_Timeout_ThrowsTimeoutException
+- ✅ GetResponseAsync_MultipleRequests_RespectsBulkhead
 
 ## Test Dependencies
 

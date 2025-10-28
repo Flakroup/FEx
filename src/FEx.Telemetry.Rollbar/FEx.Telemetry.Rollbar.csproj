@@ -3,6 +3,7 @@
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
 	</PropertyGroup>
 	<ItemGroup>
+		<PackageReference Include="Azure.Identity" Version="1.17.0" />
 		<PackageReference Include="Rollbar.OfflinePersistence" Version="5.2.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(EFCoreVersion)" />

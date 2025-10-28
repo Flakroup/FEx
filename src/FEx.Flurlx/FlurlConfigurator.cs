@@ -2,7 +2,6 @@ using FEx.Agnostics.Abstractions;
 using FEx.Flurlx.Abstractions.Interfaces;
 using FEx.Flurlx.Services;
 using FEx.Json.Extensions;
-using FEx.Logging.Abstractions.Interfaces;
 using Flurl.Http;
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;
@@ -15,19 +14,16 @@ public class FlurlConfigurator : FExInitialize, IFlurlConfigurator
 {
     private readonly IApiConfiguration _apiConfiguration;
     private readonly IFlurlClientCache _flurlClientCache;
-    private readonly ILoggable _logger;
     private readonly IAsyncPolicy<HttpResponseMessage> _resiliencePolicy;
 
     public FlurlConfigurator(IApiConfiguration apiConfiguration,
                              IFlurlClientCache flurlClientCache,
-                             ILoggable logger = null)
+                             IFExPollyPolicyBuilder policyBuilder)
     {
         _apiConfiguration = apiConfiguration;
         _flurlClientCache = flurlClientCache;
-        _logger = logger;
 
         // Build Polly policy from configuration
-        var policyBuilder = new FExPollyPolicyBuilder(_logger);
         _resiliencePolicy = policyBuilder.BuildFullSuitePolicy(_apiConfiguration.PollyConfig);
 
         FlurlHttp.Clients.WithDefaults(DefaultClientConfiguration);

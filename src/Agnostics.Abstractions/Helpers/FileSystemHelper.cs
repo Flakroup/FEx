@@ -30,12 +30,12 @@ public static class FileSystemHelper
     /// </returns>
     public static bool IsPathNtfs(string absolutePath)
     {
-        string pathRoot = Path.GetPathRoot(absolutePath);
+        var pathRoot = Path.GetPathRoot(absolutePath);
 
         if (pathRoot is not null)
         {
-            DriveInfo[] allDrives = DriveInfo.GetDrives();
-            DriveInfo driveBasedOnPath = allDrives.FindInEnumerable(d => d.RootDirectory.Name == pathRoot);
+            var allDrives = DriveInfo.GetDrives();
+            var driveBasedOnPath = allDrives.FindInEnumerable(d => d.RootDirectory.Name == pathRoot);
 
             return driveBasedOnPath?.DriveFormat.IsEqual(Ntfs) == true
                    && driveBasedOnPath.DriveType.IsIn(DriveType.Fixed, DriveType.Removable);
@@ -53,7 +53,7 @@ public static class FileSystemHelper
 
     public static string GetParentFolderFromPath(string path, char pathSeparator, bool includeSeparatorAtEnd)
     {
-        int pos = path.TrimEnd(pathSeparator).LastIndexOf(pathSeparator.ToString(), StringComparison.Ordinal);
+        var pos = path.TrimEnd(pathSeparator).LastIndexOf(pathSeparator.ToString(), StringComparison.Ordinal);
 #if NETSTANDARD
         return path.Substring(includeSeparatorAtEnd
             ? pos + 1
@@ -73,20 +73,20 @@ public static class FileSystemHelper
         {
             var sb = new StringBuilder(path);
 
-            foreach (char c in toReplace)
+            foreach (var c in toReplace)
                 sb.Replace(c, '_');
 
             path = sb.ToString();
         }
 
-        string[] segments = path.Split(Path.DirectorySeparatorChar);
+        var segments = path.Split(Path.DirectorySeparatorChar);
 
         for (var i = 0; i < segments.Length; i++)
         {
             char[] toBeReplaced = [.. segments[i].Distinct().Where(x => InvalidFileOrDirNameChars.Contains(x))];
 
             if (toBeReplaced.Length > 0)
-                foreach (char c in toBeReplaced)
+                foreach (var c in toBeReplaced)
                     segments[i] = segments[i].Replace(c, '_');
         }
 

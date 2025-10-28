@@ -11,7 +11,7 @@ public static class JsonExtensions
 
     static JsonExtensions()
     {
-        JsonSerializerSettings settings = JsonConvert.DefaultSettings?.Invoke() ?? new JsonSerializerSettings();
+        var settings = JsonConvert.DefaultSettings?.Invoke() ?? new JsonSerializerSettings();
         settings.NullValueHandling = NullValueHandling.Ignore;
         settings.MissingMemberHandling = MissingMemberHandling.Ignore;
         settings.PreserveReferencesHandling = PreserveReferencesHandling.None;

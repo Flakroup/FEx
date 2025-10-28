@@ -25,7 +25,7 @@ public abstract class FExInitialize : IFExInitialize
 
     protected virtual void OnInitialize()
     {
-        foreach (IFExInitialize dependency in _dependencies.Where(dependency => !dependency.IsInitialized))
+        foreach (var dependency in _dependencies.Where(dependency => !dependency.IsInitialized))
         {
             if (!dependency.IsInitialized)
                 dependency.Initialize();

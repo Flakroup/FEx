@@ -47,7 +47,7 @@ public class Splash : FExInitialize, IFExPriorityInitialize
         if (!_appConfig.SplashResourceName.IsNotNullOrEmptyString())
             return;
 
-        TaskCompletionSource<bool> tcs = DispatcherService.ShowView(ShowSplashInternal, true);
+        var tcs = DispatcherService.ShowView(ShowSplashInternal, true);
 
         JoinableAsyncHelper.AwaitWithoutDeadlock(() => tcs.Task);
         JoinableAsyncHelper.AwaitWithoutDeadlock(() => SplashScreenWindow.InitializationTask);

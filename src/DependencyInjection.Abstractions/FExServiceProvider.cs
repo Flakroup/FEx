@@ -224,7 +224,7 @@ public class FExServiceProvider : IFExServiceProvider
             configureContainer?.Invoke(container);
             _containerInstance = container;
 
-            IFExStrongInjectServiceProvider serviceProvider = ((IContainer<IFExStrongInjectServiceProvider>)container)
+            var serviceProvider = ((IContainer<IFExStrongInjectServiceProvider>)container)
                 .Resolve<IFExStrongInjectServiceProvider>()
                 .Value;
 
@@ -256,7 +256,7 @@ public class FExServiceProvider : IFExServiceProvider
                 $"FExServiceProvider not initialized. Call {nameof(Initialize)}<TContainer>() first.");
 
         // Resolve the external DI provider from current provider
-        TProvider serviceProvider = ServiceProvider.GetInstance<TProvider>();
+        var serviceProvider = ServiceProvider.GetInstance<TProvider>();
 
         await serviceProvider.ConfigureServiceProviderAsync();
         ServiceProvider = serviceProvider;
@@ -298,7 +298,7 @@ public class FExServiceProvider : IFExServiceProvider
         Func<IFExServiceProvider, Task> serviceProviderConfiguration)
     {
         serviceProviderConfiguration.Guard(nameof(serviceProviderConfiguration));
-        IFExServiceProvider provider = ServiceProvider;
+        var provider = ServiceProvider;
         await serviceProviderConfiguration(provider);
 
         return provider;
@@ -312,7 +312,7 @@ public class FExServiceProvider : IFExServiceProvider
 
         priorityInitializers.InitializeAll();
 
-        IFExInitialize[] initializers = serviceProvider.TryResolveService<IFExInitialize[]>() ?? [];
+        var initializers = serviceProvider.TryResolveService<IFExInitialize[]>() ?? [];
         initializers.InitializeAll();
 
         // Note: Engine-specific modules (IInitializeModule<TEngineContext>) are handled by 

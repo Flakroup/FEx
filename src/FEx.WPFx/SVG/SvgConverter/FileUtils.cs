@@ -47,8 +47,8 @@ public static class FileUtils
         if (fromUri.Scheme != toUri.Scheme)
             return toPath; // path can't be made relative.
 
-        Uri relativeUri = fromUri.MakeRelativeUri(toUri);
-        string relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+        var relativeUri = fromUri.MakeRelativeUri(toUri);
+        var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
 
         if (string.Equals(toUri.Scheme, "FILE", StringComparison.InvariantCultureIgnoreCase))
             relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);

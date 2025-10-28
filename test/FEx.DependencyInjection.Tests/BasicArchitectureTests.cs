@@ -2,7 +2,6 @@ using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using StrongInject;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -19,7 +18,7 @@ public sealed class BasicArchitectureTests
     {
         // Arrange & Act
         using var container = new TestContainer();
-        Owned<IFExServiceContainer> serviceContainer = container.Resolve<IFExServiceContainer>();
+        var serviceContainer = container.Resolve<IFExServiceContainer>();
 
         // Assert
         serviceContainer.Value.ShouldNotBeNull();
@@ -30,7 +29,7 @@ public sealed class BasicArchitectureTests
     {
         // Arrange & Act
         using var container = new TestContainer();
-        Owned<IFExServiceProvider> serviceProvider = container.Resolve<IFExServiceProvider>();
+        var serviceProvider = container.Resolve<IFExServiceProvider>();
 
         // Assert
         serviceProvider.Value.ShouldNotBeNull();
@@ -42,7 +41,7 @@ public sealed class BasicArchitectureTests
     {
         // Arrange & Act
         using var container = new TestContainer();
-        Owned<FExMicrosoftDIServiceProvider> microsoftProvider = container.Resolve<FExMicrosoftDIServiceProvider>();
+        var microsoftProvider = container.Resolve<FExMicrosoftDIServiceProvider>();
 
         // Assert
         microsoftProvider.Value.ShouldNotBeNull();
@@ -70,7 +69,7 @@ public sealed class BasicArchitectureTests
     {
         // Arrange
         using var container = new TestContainer();
-        Owned<IFExServiceProvider> serviceProvider = container.Resolve<IFExServiceProvider>();
+        var serviceProvider = container.Resolve<IFExServiceProvider>();
 
         // Act & Assert
         await serviceProvider.Value.ConfigureServiceProviderAsync();

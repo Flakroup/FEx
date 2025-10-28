@@ -41,7 +41,7 @@ public class WebRequestParams
         {
             Cookies = new();
 
-            foreach (Cookie c in cookies)
+            foreach (var c in cookies)
                 Cookies.Add(c);
         }
     }

@@ -21,7 +21,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -357,7 +356,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                         }
                         else
                         {
-                            bool canBeSpeedUp = await CheckIfCanBeSpeededUpAsync();
+                            var canBeSpeedUp = await CheckIfCanBeSpeededUpAsync();
 
                             if (canBeSpeedUp)
                             {
@@ -528,9 +527,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     protected async Task GetResponseAsync()
     {
-        HttpWebRequest req = Url.GetHttpRequest(Pars);
+        var req = Url.GetHttpRequest(Pars);
         var sw = Stopwatch.StartNew();
-        WebResponse response = await req.GetResponseAsync();
+        var response = await req.GetResponseAsync();
         sw.Stop();
         SetResponse(response);
         Ping = sw.ElapsedMilliseconds;
@@ -543,7 +542,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
         try
         {
-            int value = isConnected
+            var value = isConnected
                 ? Interlocked.Increment(ref _openConnections)
                 : Interlocked.Decrement(ref _openConnections);
 
@@ -617,7 +616,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     private async Task DownloadSmallItemAsync()
     {
-        using Stream streamResponse = Response.GetResponseStream();
+        using var streamResponse = Response.GetResponseStream();
 
         if (streamResponse is not null)
         {
@@ -627,8 +626,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             {
                 try
                 {
-                    using (FileStream fileStream =
-                           File.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                    using (var fileStream = File.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                     {
                         fileStream.SetLength(0);
 #if NETSTANDARD2_0
@@ -663,8 +661,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         if (Response is null)
             await GetResponseAsync();
 
-        Dictionary<string, string> resultHeaders = Response.GetAllHeaders();
-        Uri responseUri = Response.ResponseUri;
+        var resultHeaders = Response.GetAllHeaders();
+        var responseUri = Response.ResponseUri;
 
         if (Response is not null)
         {
@@ -673,17 +671,16 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             GC.Collect();
         }
 
-        (bool canBeSpeedUp, LengthType _) =
+        var (canBeSpeedUp, _) =
             await responseUri.TryGetRangeAsync(resultHeaders, 0, Convert.ToInt32(BufferLength), Pars);
 
         if (canBeSpeedUp)
         {
-            double speed = await GetNetworkSpeedAsync();
+            var speed = await GetNetworkSpeedAsync();
 
             if (speed > 0)
             {
-                (double length, LengthType _) =
-                    FileLengthConverter.ConvertFileLength(speed, LengthType.Bytes, LengthType.Megabytes);
+                var (length, _) = FileLengthConverter.ConvertFileLength(speed, LengthType.Bytes, LengthType.Megabytes);
 
                 ParallelRanges = Convert.ToInt32(Math.Max(Math.Min(Math.Ceiling(ParallelRanges * length),
                         ServicePointManager.DefaultConnectionLimit / 2D),
@@ -701,7 +698,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     private async Task<double> GetNetworkSpeedAsync()
     {
         var sw = Stopwatch.StartNew();
-        bool isSuccess = await DownloadBufferAsync();
+        var isSuccess = await DownloadBufferAsync();
         sw.Stop();
 
         return isSuccess
@@ -711,12 +708,12 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     private async Task<bool> DownloadBufferAsync()
     {
-        HttpWebRequest myHttpWebRequest = Url.GetHttpRequest(Pars);
+        var myHttpWebRequest = Url.GetHttpRequest(Pars);
         myHttpWebRequest.AddRange(0, BufferLength);
 
-        using WebResponse res = await myHttpWebRequest.GetResponseAsync();
+        using var res = await myHttpWebRequest.GetResponseAsync();
         using var response = (HttpWebResponse)res;
-        ContentRangeHeaderValue retrievedContentRange = response.GetContentRange();
+        var retrievedContentRange = response.GetContentRange();
 
         if (retrievedContentRange?.From is null
             || retrievedContentRange.To is null
@@ -726,9 +723,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             return false;
 
 #if NETSTANDARD
-        using Stream streamResponse = response.GetResponseStream();
+        using var streamResponse = response.GetResponseStream();
 #else
-        await using Stream streamResponse = response.GetResponseStream();
+        await using var streamResponse = response.GetResponseStream();
 #endif
 
 #if NETSTANDARD
@@ -736,7 +733,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             return false;
 #endif
 
-        using MemoryStream ms = await streamResponse.CopyToMemoryStreamAsync(cancellationToken: CancellationToken);
+        using var ms = await streamResponse.CopyToMemoryStreamAsync(cancellationToken: CancellationToken);
 
         return true;
     }
@@ -750,11 +747,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                     : Path.GetPathRoot(FilePath),
                 "TempFlakWebCache"));
 
-        string dirName = (OmitQuery && Url.Query.IsNotNullOrEmptyString()
+        var dirName = (OmitQuery && Url.Query.IsNotNullOrEmptyString()
             ? Url.AbsoluteUri.Replace(Url.Query, string.Empty)
             : Url.AbsoluteUri).GenerateMd5OfString();
 
-        DirectoryInfo dir = TempDirectory.GetDescendantDirectory(dirName);
+        var dir = TempDirectory.GetDescendantDirectory(dirName);
         dir.Create();
 
         return dir;
@@ -768,11 +765,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
         Ranges.Values.ForEachInEnumerable(x => x?.Dispose());
         Ranges.Clear();
-        double operatingSize = Math.Max(Math.Floor(DataLength / (double)ParallelRanges), BufferLength);
+        var operatingSize = Math.Max(Math.Floor(DataLength / (double)ParallelRanges), BufferLength);
         var rangesCount = (int)Math.Ceiling(DataLength / operatingSize);
         long offset = 0;
 
-        foreach (int rangeNo in Enumerable.Range(0, rangesCount))
+        foreach (var rangeNo in Enumerable.Range(0, rangesCount))
         {
             var end = (long)Math.Min(offset + operatingSize - 1, DataLength - 1);
 
@@ -782,7 +779,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             offset = end + 1;
         }
 
-        int[] unfinishedRanges = Ranges?.Where(x => x.Value?.DState != DownloadState.Finished)
+        var unfinishedRanges = Ranges?.Where(x => x.Value?.DState != DownloadState.Finished)
             .Select(x => x.Key)
             .OrderBy(x => x)
             .ToArray();
@@ -793,7 +790,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                 && unfinishedRanges.Length > 1)
                 await unfinishedRanges.WithWhenAllTasksAsync(x => Ranges[x].DoDownloadAsync());
             else
-                foreach (int x in unfinishedRanges)
+                foreach (var x in unfinishedRanges)
                     await Ranges[x].DoDownloadAsync();
 
             unfinishedRanges = Ranges?.Where(x => x.Value?.DState != DownloadState.Finished)
@@ -815,11 +812,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
         using (var fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
         {
-            foreach (DownloadRange range in Ranges.Values.OrderBy(x => x.From))
+            foreach (var range in Ranges.Values.OrderBy(x => x.From))
             {
-                foreach (DownloadChunk chunk in range.Chunks.Values.OrderBy(x => x.From))
+                foreach (var chunk in range.Chunks.Values.OrderBy(x => x.From))
                 {
-                    using (FileStream stream = chunk.File.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var stream = chunk.File.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
                         fileStream.Seek(chunk.From, SeekOrigin.Begin);
                         await stream.CopyToAsync(fileStream, DownloadRange.BufferSize, CancellationToken);
@@ -834,8 +831,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 #if !NETSTANDARD2_0
         await
 #endif
-        using (var fileStream =
-               new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+            using (var fileStream =
+                   new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
             fileStream.SetLength(DataLength);
 
         DState = DownloadState.Cleanup;

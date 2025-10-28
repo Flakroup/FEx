@@ -38,11 +38,11 @@ public abstract class BulkDbServiceBase<TDbContext> : DbServiceBase<TDbContext>,
 
     public void ProgressAction(decimal progress, string operationId, OperationType type, string tableName)
     {
-        string opIdStr = operationId.IsNotNullOrEmptyString()
+        var opIdStr = operationId.IsNotNullOrEmptyString()
             ? $"{operationId} "
             : string.Empty;
 
-        string prgStr = progress == 1
+        var prgStr = progress == 1
             ? "Completed"
             : $"{Math.Floor(progress * 100)}%";
 

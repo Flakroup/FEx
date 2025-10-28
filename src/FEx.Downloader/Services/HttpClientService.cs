@@ -44,7 +44,7 @@ public class HttpClientService : IDisposable
 
     public static async Task<HttpClientService> GetInstanceAsync(HttpClientServiceStub stub)
     {
-        if (!Instances.TryGetValue(stub.Host, out HttpClientService res)
+        if (!Instances.TryGetValue(stub.Host, out var res)
             || res is null)
         {
             await PrepareInstanceAsync(stub);
@@ -61,7 +61,7 @@ public class HttpClientService : IDisposable
         if (!Instances.ContainsKey(stub.Host)
             || Instances[stub.Host] is null)
         {
-            SemaphoreSlim loadingSemaphore = LockSrv.EnsureLock($"{nameof(HttpClientService)}@{stub.Host}");
+            var loadingSemaphore = LockSrv.EnsureLock($"{nameof(HttpClientService)}@{stub.Host}");
             await loadingSemaphore.WaitAsync();
 
             try
@@ -80,9 +80,9 @@ public class HttpClientService : IDisposable
 
     public static async Task RemoveInstanceAsync(string urlHost, bool waitForBusyClients = true)
     {
-        if (Instances.TryGetValue(urlHost, out HttpClientService instance))
+        if (Instances.TryGetValue(urlHost, out var instance))
         {
-            SemaphoreSlim loadingSemaphore = LockSrv.EnsureLock($"{nameof(HttpClientService)}@{urlHost}");
+            var loadingSemaphore = LockSrv.EnsureLock($"{nameof(HttpClientService)}@{urlHost}");
             await loadingSemaphore.WaitAsync();
 
             try
@@ -90,7 +90,7 @@ public class HttpClientService : IDisposable
                 if (waitForBusyClients)
                     await AsyncStatics.DelayUntilAsync(() => instance.Clients.Any(x => x.IsBusy));
 
-                Instances.TryRemove(urlHost, out HttpClientService srv);
+                Instances.TryRemove(urlHost, out var srv);
                 srv?.Dispose();
             }
             finally
@@ -104,7 +104,7 @@ public class HttpClientService : IDisposable
 
     public async Task DoHttpClientActionAsync(Action<FlakHttpClient> action, WebRequestParams pars = null)
     {
-        FlakHttpClient client = await GetClientAsync(pars);
+        var client = await GetClientAsync(pars);
 
         try
         {
@@ -119,7 +119,7 @@ public class HttpClientService : IDisposable
 
     public async Task DoHttpClientActionAsync(Func<FlakHttpClient, Task> func, WebRequestParams pars = null)
     {
-        FlakHttpClient client = await GetClientAsync(pars);
+        var client = await GetClientAsync(pars);
 
         try
         {
@@ -134,7 +134,7 @@ public class HttpClientService : IDisposable
 
     public async Task<T> DoHttpClientActionAsync<T>(Func<FlakHttpClient, Task<T>> func, WebRequestParams pars = null)
     {
-        FlakHttpClient client = await GetClientAsync(pars);
+        var client = await GetClientAsync(pars);
 
         try
         {
@@ -161,7 +161,7 @@ public class HttpClientService : IDisposable
         {
             await AsyncStatics.DelayUntilAsync(() => Clients.All(x => x.IsBusy));
 
-            FlakHttpClient client = Clients.First(x => !x.IsBusy);
+            var client = Clients.First(x => !x.IsBusy);
             client.Busy();
 
             if (pars is not null)

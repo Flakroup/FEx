@@ -27,7 +27,7 @@ public class HasInternetConnectionGate
 #if NET
 #pragma warning restore SYSLIB0014
 #endif
-            using WebResponse response = await request.GetResponseAsync();
+            using var response = await request.GetResponseAsync();
 
             return true;
         }

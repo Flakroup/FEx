@@ -1,4 +1,3 @@
-using FEx.Agnostics.Abstractions.Flow;
 using FEx.Common.Abstractions.Enums;
 using FEx.Common.Abstractions.Interfaces;
 using FEx.Core.Abstractions.Extensions;
@@ -26,7 +25,7 @@ public class DeviceHelper : IDeviceHelper
         if (HasInternet)
             return true;
 
-        Result<bool, Error> result = await _connectivityChangedSubject
+        var result = await _connectivityChangedSubject
             .Select(static networkAccess => networkAccess == FExNetworkAccess.Internet)
             .GetResultAsync(cancellationToken);
 

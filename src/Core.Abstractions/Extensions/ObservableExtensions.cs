@@ -63,7 +63,7 @@ public static class ObservableExtensions
         this INotifyPropertyChanged notifyPropertyChanged,
         string propertyName = null)
     {
-        IObservable<EventPattern<PropertyChangedEventArgs>> observable = Observable
+        var observable = Observable
             .FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
                 ev => notifyPropertyChanged.PropertyChanged += ev,
                 ev => notifyPropertyChanged.PropertyChanged -= ev)
@@ -86,7 +86,7 @@ public static class ObservableExtensions
 
     public static IDisposable AsyncSubscribe<T>(this IObservable<T> source, Action<T> onNext = null)
     {
-        IObservable<T> observable = source.ObserveOn(Scheduler.Default).SubscribeOn(Scheduler.Default);
+        var observable = source.ObserveOn(Scheduler.Default).SubscribeOn(Scheduler.Default);
 
         return onNext is not null
             ? observable.Subscribe(onNext)
@@ -97,9 +97,9 @@ public static class ObservableExtensions
     {
         disposable.Guard(nameof(disposable));
 
-        IObservable<T> observable = source.ObserveOn(Scheduler.Default).SubscribeOn(Scheduler.Default);
+        var observable = source.ObserveOn(Scheduler.Default).SubscribeOn(Scheduler.Default);
 
-        IDisposable subscription = onNext is not null
+        var subscription = onNext is not null
             ? observable.Subscribe(onNext)
             : observable.Subscribe();
 
@@ -119,14 +119,14 @@ public static class ObservableExtensions
     public static async ValueTask<Result<T, Error>> GetResultAsync<T>(this IObservable<T> observable,
                                                                       CancellationToken cancellationToken = default)
     {
-        Result<T, Error> result = observable.GetResult();
+        var result = observable.GetResult();
 
         if (result.IsSuccess)
             return result.Data;
 
         try
         {
-            T data = await observable.FirstAsync().ToTaskAsync(cancellationToken);
+            var data = await observable.FirstAsync().ToTaskAsync(cancellationToken);
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -169,7 +169,7 @@ public static class ObservableExtensions
         T result = default;
         var isSet = false;
 
-        using IDisposable subscription = observable.Subscribe(x =>
+        using var subscription = observable.Subscribe(x =>
         {
             result = x;
             isSet = true;
@@ -205,7 +205,7 @@ public static class ObservableExtensions
     public static void TryGetLastValue<TResult>(this IObservable<TResult> source, out TResult value)
     {
         TResult result = default;
-        using IDisposable subscription = source.Subscribe(x => result = x);
+        using var subscription = source.Subscribe(x => result = x);
         value = result;
     }
 
@@ -215,7 +215,7 @@ public static class ObservableExtensions
         var sampler = new Subject<Unit>();
 #pragma warning restore IDISP001
 
-        IDisposable sub = source.Sample(sampler)
+        var sub = source.Sample(sampler)
             .Subscribe(l =>
             {
                 action(l);
@@ -234,7 +234,7 @@ public static class ObservableExtensions
                                                            Func<IPropagatorBlock<T, TResult>> blockFactory) =>
         Observable.Defer(() =>
         {
-            IPropagatorBlock<T, TResult> block = blockFactory();
+            var block = blockFactory();
 #pragma warning disable IDISP004
             source.Subscribe(block.AsObserver());
 #pragma warning restore IDISP004

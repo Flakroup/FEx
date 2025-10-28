@@ -6,7 +6,6 @@ using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
-using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -48,9 +47,48 @@ public class NuGetManager : AsyncInitializable
 
     public static async Task<PackageMetadataResource> GetNuGetOrgPackageMetadataResourceAsync()
     {
-        SourceRepository sourceRepository = NuGetRepository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
+        var sourceRepository = NuGetRepository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
 
         return await sourceRepository.GetResourceAsync<PackageMetadataResource>();
+    }
+
+    public static async Task<PackageIdentity[]> GetIdentitiesAsync(
+        PackageSearchMetadataBuilder.ClonedPackageSearchMetadata package) =>
+        (await package.GetVersionsAsync()).Select(x => new PackageIdentity(package.Identity.Id, x.Version)).ToArray();
+
+    public static async Task GetPackageDependenciesAsync(PackageIdentity package,
+                                                         NuGetFramework framework,
+                                                         SourceCacheContext cacheContext,
+                                                         INuGetLogger logger,
+                                                         IEnumerable<SourceRepository> repositories,
+                                                         ISet<SourcePackageDependencyInfo> availablePackages)
+    {
+        if (!availablePackages.Contains(package))
+            foreach (var sourceRepository in repositories)
+            {
+                var dependencyInfoResource = await sourceRepository.GetResourceAsync<DependencyInfoResource>();
+
+                var dependencyInfo = await dependencyInfoResource.ResolvePackage(package,
+                    framework,
+                    cacheContext,
+                    logger,
+                    CancellationToken.None);
+
+                if (dependencyInfo is not null)
+                {
+                    availablePackages.Add(dependencyInfo);
+
+                    foreach (var dependency in dependencyInfo.Dependencies)
+                    {
+                        await GetPackageDependenciesAsync(new(dependency.Id, dependency.VersionRange.MinVersion),
+                            framework,
+                            cacheContext,
+                            logger,
+                            repositories,
+                            availablePackages);
+                    }
+                }
+            }
     }
 
     public async Task BackupPackageAsync(PackageIdentity package,
@@ -70,7 +108,7 @@ public class NuGetManager : AsyncInitializable
 
             while (!succeeded && retry)
             {
-                (DownloadResourceResult downloadResult, bool isSuccess) =
+                var (downloadResult, isSuccess) =
                     await RestorePackageAsync(package, downloadResource, cacheContext, settings);
 
                 if (isSuccess)
@@ -89,7 +127,7 @@ public class NuGetManager : AsyncInitializable
 
                             try
                             {
-                                using (FileStream bqPackageStream = bqFile.OpenRead())
+                                using (var bqPackageStream = bqFile.OpenRead())
                                 {
                                     using var packageArchiveReader = new PackageArchiveReader(bqPackageStream);
                                     bqContentHash = packageArchiveReader.GetContentHash(token);
@@ -112,7 +150,7 @@ public class NuGetManager : AsyncInitializable
 
                         if (backup)
                         {
-                            using FileStream bqPackageStream = bqFile.Open(FileMode.OpenOrCreate,
+                            using var bqPackageStream = bqFile.Open(FileMode.OpenOrCreate,
                                 FileAccess.ReadWrite,
                                 FileShare.None);
 
@@ -143,10 +181,6 @@ public class NuGetManager : AsyncInitializable
         }
     }
 
-    public static async Task<PackageIdentity[]> GetIdentitiesAsync(
-        PackageSearchMetadataBuilder.ClonedPackageSearchMetadata package) => (await package.GetVersionsAsync()).Select(x => new PackageIdentity(package.Identity.Id, x.Version))
-            .ToArray();
-
     public async Task<(DownloadResourceResult result, bool isSuccess)> RestorePackageByIdAsync(
         string packageId,
         bool includePrerelease = false,
@@ -165,7 +199,7 @@ public class NuGetManager : AsyncInitializable
                                                     SourceCacheContext sourceCacheContext,
                                                     string apiKey)
     {
-        PackageSearchMetadataRegistration[] listedPackages =
+        var listedPackages =
             (await packageMetadataResource.GetMetadataAsync(packageId,
                 true,
                 true,
@@ -176,7 +210,7 @@ public class NuGetManager : AsyncInitializable
             .ToArray();
 
         //await listedPackages.WithWhenAllAsync(x => DeletePackage(x, source, ApiKey));
-        foreach (PackageSearchMetadataRegistration pkg in listedPackages)
+        foreach (var pkg in listedPackages)
             await DeletePackageAsync(pkg, apiKey);
     }
 
@@ -213,7 +247,7 @@ public class NuGetManager : AsyncInitializable
         if (pkgToRestore is not null)
             try
             {
-                DownloadResourceResult res = await downloadResource.GetDownloadResourceResultAsync(pkgToRestore,
+                var res = await downloadResource.GetDownloadResourceResultAsync(pkgToRestore,
                     directDownload
                         ? new(sourceCacheContext, directDownloadDirectory, true)
                         : new PackageDownloadContext(sourceCacheContext),
@@ -233,48 +267,11 @@ public class NuGetManager : AsyncInitializable
         return (null, false);
     }
 
-    public static async Task GetPackageDependenciesAsync(PackageIdentity package,
-                                                  NuGetFramework framework,
-                                                  SourceCacheContext cacheContext,
-                                                  INuGetLogger logger,
-                                                  IEnumerable<SourceRepository> repositories,
-                                                  ISet<SourcePackageDependencyInfo> availablePackages)
-    {
-        if (!availablePackages.Contains(package))
-            foreach (SourceRepository sourceRepository in repositories)
-            {
-                DependencyInfoResource dependencyInfoResource =
-                    await sourceRepository.GetResourceAsync<DependencyInfoResource>();
-
-                SourcePackageDependencyInfo dependencyInfo =
-                    await dependencyInfoResource.ResolvePackage(package,
-                        framework,
-                        cacheContext,
-                        logger,
-                        CancellationToken.None);
-
-                if (dependencyInfo is not null)
-                {
-                    availablePackages.Add(dependencyInfo);
-
-                    foreach (PackageDependency dependency in dependencyInfo.Dependencies)
-                    {
-                        await GetPackageDependenciesAsync(new(dependency.Id, dependency.VersionRange.MinVersion),
-                            framework,
-                            cacheContext,
-                            logger,
-                            repositories,
-                            availablePackages);
-                    }
-                }
-            }
-    }
-
     public async Task<FileInfo[]> GetNuGetsToPublishOnNuGetOrgAsync(FileInfo[] allNuGets,
                                                                     HashSet<string> excludedPackageNames = null,
                                                                     params string[] packagesToPublish)
     {
-        PackageMetadataResource packageMetadataResource = await GetNuGetOrgPackageMetadataResourceAsync();
+        var packageMetadataResource = await GetNuGetOrgPackageMetadataResourceAsync();
 
         return await GetNuGetsToPublishAsync(packageMetadataResource,
             allNuGets,
@@ -289,14 +286,13 @@ public class NuGetManager : AsyncInitializable
     {
         using var sourceCacheContext = new SourceCacheContext();
 
-        (FileInfo nuGet, bool isNotPublished)[] result = await allNuGets.WithWhenAllTasksAsync(x =>
-            NuGetNotPublishedAsync(packageMetadataResource,
-                sourceCacheContext,
-                x,
-                excludedPackageNames,
-                true,
-                true,
-                packagesToPublish));
+        var result = await allNuGets.WithWhenAllTasksAsync(x => NuGetNotPublishedAsync(packageMetadataResource,
+            sourceCacheContext,
+            x,
+            excludedPackageNames,
+            true,
+            true,
+            packagesToPublish));
 
         return result.Where(x => x.isNotPublished).Select(x => x.nuGet).ToArray();
     }
@@ -338,7 +334,7 @@ public class NuGetManager : AsyncInitializable
         bool includeUnlisted = false,
         CancellationToken token = default)
     {
-        PackageSearchMetadataRegistration[] listedPackages =
+        var listedPackages =
             (await packageMetadataResource.GetMetadataAsync(packageId,
                 includePrerelease,
                 includeUnlisted,
@@ -348,8 +344,8 @@ public class NuGetManager : AsyncInitializable
             .Cast<PackageSearchMetadataRegistration>()
             .ToArray();
 
-        NuGetVersion maxVer = listedPackages.Max(y => y.Version);
-        PackageSearchMetadataRegistration latest = listedPackages.First(x => x.Version == maxVer);
+        var maxVer = listedPackages.Max(y => y.Version);
+        var latest = listedPackages.First(x => x.Version == maxVer);
 
         return await RestorePackageAsync(latest.Identity, downloadResource, sourceCacheContext, Settings);
     }
@@ -366,7 +362,7 @@ public class NuGetManager : AsyncInitializable
     {
         PackageIdentity identity;
 
-        using (FileStream pkgStream = file.OpenRead())
+        using (var pkgStream = file.OpenRead())
         {
             using var packageArchiveReader = new PackageArchiveReader(pkgStream);
             identity = packageArchiveReader.NuspecReader.GetIdentity();

@@ -36,7 +36,7 @@ public class FExCachedFile : NotifyPropertyChanged, IFExCachedFile, IAsyncDispos
         Id = CachedFileExtensions.GetFileId(Url);
         Timestamp = file.UploadDate.ToUniversalTime();
         Filename = file.Filename;
-        using LiteFileStream<string> liteFileStream = file.OpenRead();
+        using var liteFileStream = file.OpenRead();
         _dataStream = liteFileStream.CopyToMemoryStream();
     }
 
@@ -46,7 +46,7 @@ public class FExCachedFile : NotifyPropertyChanged, IFExCachedFile, IAsyncDispos
         Id = CachedFileExtensions.GetFileId(Url);
         Timestamp = file.LastWriteTimeUtc;
         Filename = file.Name;
-        using FileStream fileStream = file.OpenRead();
+        using var fileStream = file.OpenRead();
         _dataStream = fileStream.CopyToMemoryStream();
     }
 

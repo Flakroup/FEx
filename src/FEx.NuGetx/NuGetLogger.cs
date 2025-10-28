@@ -30,7 +30,8 @@ public class NuGetLogger<T> : INuGetLogger
 
     public void LogInformationSummary(string data) => Dump(LogLevel.Information, $"INFORMATION SUMMARY: {data}");
 
-    public void Log(NuGetLogLevel level, string data) => Dump(GetLogLevel(level), $"{level.ToString().ToUpper()}: {data}");
+    public void Log(NuGetLogLevel level, string data) =>
+        Dump(GetLogLevel(level), $"{level.ToString().ToUpper()}: {data}");
 
     public void Log(ILogMessage message) => Dump(GetLogLevel(message.Level), $"{message.Level}: {message}");
 

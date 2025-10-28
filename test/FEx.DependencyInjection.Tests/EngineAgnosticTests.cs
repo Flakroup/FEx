@@ -20,27 +20,26 @@ public class EngineAgnosticTests : IDisposable
         using var container = new TestContainer();
 
         // Act - Get Microsoft DI specific modules directly from container
-        IInitializeModule<IServiceCollection>[] microsoftModules =
-            container.Resolve<IInitializeModule<IServiceCollection>[]>().Value;
+        var microsoftModules = container.Resolve<IInitializeModule<IServiceCollection>[]>().Value;
 
         // Assert
         microsoftModules.ShouldNotBeNull();
         microsoftModules.Length.ShouldBeGreaterThan(0);
 
         // Verify each module has the correct generic signature
-        foreach (IInitializeModule<IServiceCollection> module in microsoftModules)
+        foreach (var module in microsoftModules)
         {
-            Type moduleType = module.GetType();
-            Type[] interfaces = moduleType.GetInterfaces();
+            var moduleType = module.GetType();
+            var interfaces = moduleType.GetInterfaces();
 
             var hasCorrectInterface = false;
 
-            foreach (Type iface in interfaces)
+            foreach (var iface in interfaces)
             {
                 if (iface.IsGenericType
                     && iface.GetGenericTypeDefinition() == typeof(IInitializeModule<>))
                 {
-                    Type genericArg = iface.GetGenericArguments()[0];
+                    var genericArg = iface.GetGenericArguments()[0];
 
                     if (genericArg == typeof(IServiceCollection))
                     {
@@ -66,7 +65,7 @@ public class EngineAgnosticTests : IDisposable
         Should.NotThrow(() =>
         {
             var testModule = new TestInitializeModule();
-            IFExDependencyInjectionContainer testContainer = testModule.TestGetModule();
+            var testContainer = testModule.TestGetModule();
             testContainer.ShouldNotBeNull();
         });
     }
@@ -81,8 +80,7 @@ public class EngineAgnosticTests : IDisposable
         using var container = new TestContainer();
 
         // Act - Verify Microsoft DI modules exist (proving the pattern works)
-        IInitializeModule<IServiceCollection>[] microsoftModules =
-            container.Resolve<IInitializeModule<IServiceCollection>[]>().Value;
+        var microsoftModules = container.Resolve<IInitializeModule<IServiceCollection>[]>().Value;
 
         // Assert - Architecture should support any engine context
         typeof(IInitializeModule<>).IsGenericTypeDefinition.ShouldBeTrue();

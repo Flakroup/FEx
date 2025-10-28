@@ -38,7 +38,7 @@ public sealed class NavigationService : INavigationService
 
     private T GetViewModel<T>() where T : IRoutableViewModel
     {
-        T viewModel = _serviceProvider.GetRequiredService<T>();
+        var viewModel = _serviceProvider.GetRequiredService<T>();
 
         if (viewModel is IAsyncInitializable asyncInitializable)
             asyncInitializable.BeginInitialization();

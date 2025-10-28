@@ -57,9 +57,9 @@ public static class FileLengthConverter
         if (output == LengthType.AutoDetect)
             output = GetOutputLenghtType(size);
 
-        double roundedLength = ConvertFileLength(size, input, output, digits).length;
+        var roundedLength = ConvertFileLength(size, input, output, digits).length;
 
-        string lenghtString = digits > 0
+        var lenghtString = digits > 0
             ? string.Format($"{{0:0.{new string('0', digits)}}}", roundedLength)
             : roundedLength.ToString();
 
@@ -70,7 +70,7 @@ public static class FileLengthConverter
 
     public static LengthType GetOutputLenghtType(double size)
     {
-        double pow = Math.Log10(size);
+        var pow = Math.Log10(size);
 
         return pow >= 12 ? LengthType.Terabytes :
             pow >= 9 ? LengthType.Gigabytes :

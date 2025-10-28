@@ -13,8 +13,8 @@ public static class ReflectionHelper
     {
         obj.Guard(nameof(obj));
 
-        Type objType = obj.GetType();
-        PropertyInfo propInfo = GetPropertyInfo(objType, propertyName);
+        var objType = obj.GetType();
+        var propInfo = GetPropertyInfo(objType, propertyName);
 
         return propInfo is null
             ? throw new ArgumentOutOfRangeException(nameof(propertyName),
@@ -26,8 +26,8 @@ public static class ReflectionHelper
     {
         if (obj is not null)
         {
-            Type objType = obj.GetType();
-            PropertyInfo propInfo = GetPropertyInfo(objType, propertyName);
+            var objType = obj.GetType();
+            var propInfo = GetPropertyInfo(objType, propertyName);
 
             if (propInfo is not null)
                 propInfo.SetValue(obj, val, null);
@@ -45,8 +45,8 @@ public static class ReflectionHelper
     {
         obj.Guard(nameof(obj));
 
-        Type objType = obj.GetType();
-        FieldInfo propInfo = GetFieldInfo(objType, fieldName);
+        var objType = obj.GetType();
+        var propInfo = GetFieldInfo(objType, fieldName);
 
         return propInfo is null
             ? throw new ArgumentOutOfRangeException(nameof(fieldName),
@@ -59,7 +59,7 @@ public static class ReflectionHelper
                                    bool throwIfMissing = true,
                                    bool addNamespace = false)
     {
-        string[] names = assembly.GetManifestResourceNames();
+        var names = assembly.GetManifestResourceNames();
 
         if (addNamespace)
             resourceName = $"{assembly.GetName().Name}.{resourceName}";
@@ -83,7 +83,7 @@ public static class ReflectionHelper
         if (!throwIfMissing
             || assembly.HasResource(resourceName))
         {
-            using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            using var stream = assembly.GetManifestResourceStream(resourceName);
 
             if (stream is not null)
                 using (var reader = new StreamReader(stream))
@@ -100,9 +100,9 @@ public static class ReflectionHelper
     public static T ToObject<T>(this IDictionary<string, object> source) where T : class, new()
     {
         var someObject = new T();
-        Type someObjectType = someObject.GetType();
+        var someObjectType = someObject.GetType();
 
-        foreach (KeyValuePair<string, object> item in source)
+        foreach (var item in source)
             someObjectType.GetProperty(item.Key).SetValue(someObject, item.Value, null);
 
         return someObject;

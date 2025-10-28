@@ -136,7 +136,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         cancellationToken.ThrowIfCancellationRequested();
 
         // Check if we can enter the lock directly.
-        if (EnterReadLockPreface(out WriteLockState existingWriteLockState))
+        if (EnterReadLockPreface(out var existingWriteLockState))
             return true;
 
         var waitResult = false;
@@ -188,7 +188,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         cancellationToken.ThrowIfCancellationRequested();
 
         // Check if we can enter the lock directly.
-        if (EnterReadLockPreface(out WriteLockState existingWriteLockState))
+        if (EnterReadLockPreface(out var existingWriteLockState))
             return true;
 
         var waitResult = false;
@@ -256,12 +256,12 @@ public class AsyncReaderWriterLockSlim : IDisposable
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        long initialTicks = millisecondsTimeout == Timeout.Infinite
+        var initialTicks = millisecondsTimeout == Timeout.Infinite
             ? 0
             : GetTimestampTicks();
 
         // Enter the write lock semaphore before doing anything else.
-        if (!EnterWriteLockPreface(out bool waitForReadLocks))
+        if (!EnterWriteLockPreface(out var waitForReadLocks))
         {
             var writeLockWaitResult = false;
 
@@ -341,12 +341,12 @@ public class AsyncReaderWriterLockSlim : IDisposable
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        long initialTicks = millisecondsTimeout == Timeout.Infinite
+        var initialTicks = millisecondsTimeout == Timeout.Infinite
             ? 0
             : GetTimestampTicks();
 
         // Enter the write lock semaphore before doing anything else.
-        if (!EnterWriteLockPreface(out bool waitForReadLocks))
+        if (!EnterWriteLockPreface(out var waitForReadLocks))
         {
             var writeLockWaitResult = false;
 
@@ -447,7 +447,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         // Increment the read lock count. If the MSB is not set, no write lock is
         // currently held and we can return immediately without the need to lock
         // on syncRoot.
-        int readLockResult = Interlocked.Increment(ref _currentReadLockCount);
+        var readLockResult = Interlocked.Increment(ref _currentReadLockCount);
 
         if (readLockResult >= 0)
             return true;
@@ -504,7 +504,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
 
     private void ExitReadLockCore(bool getLock)
     {
-        int readLockResult = Interlocked.Decrement(ref _currentReadLockCount);
+        var readLockResult = Interlocked.Decrement(ref _currentReadLockCount);
 
         // If we are the last read lock and there's an active write lock waiting,
         // we need to release the read lock release semaphore.
@@ -515,7 +515,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
 
             try
             {
-                WriteLockState lockState = _currentWriteLockState;
+                var lockState = _currentWriteLockState;
 
                 if (lockState is not null
                     && !lockState.ReadLockReleaseSemaphoreReleased)
@@ -577,7 +577,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
                     // Set the MSB on the current read lock count, so that other
                     // threads that want to enter the lock know that they need to
                     // wait until the write lock is released.
-                    int readLockCount = Interlocked.Add(ref _currentReadLockCount, -0x80000000) & 0x7FFFFFFF;
+                    var readLockCount = Interlocked.Add(ref _currentReadLockCount, -0x80000000) & 0x7FFFFFFF;
 
                     // Check if the write lock will need to wait for existing read
                     // locks to be released.
@@ -670,7 +670,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
 
     private void ReleaseWriteLockState()
     {
-        WriteLockState writeLockState = _currentWriteLockState;
+        var writeLockState = _currentWriteLockState;
 
         writeLockState.StateIsReleased = true;
 

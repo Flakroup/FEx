@@ -2,8 +2,6 @@ using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Json.Extensions;
 using Newtonsoft.Json;
 using System;
-using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,23 +25,23 @@ public static class JsonExtensions
             if (url.Scheme is "http" or "https")
             {
                 using var client = new HttpClient();
-                using HttpResponseMessage response = await client.GetAsync(url, cancellationToken);
-                using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
+                using var response = await client.GetAsync(url, cancellationToken);
+                using var ensuredResponse = response.EnsureSuccessStatusCode();
 #if NETSTANDARD
-                using Stream jsonStream = await ensuredResponse.Content.ReadAsStreamAsync();
+                using var jsonStream = await ensuredResponse.Content.ReadAsStreamAsync();
 #else
-                await using Stream jsonStream = await ensuredResponse.Content.ReadAsStreamAsync(cancellationToken);
+                await using var jsonStream = await ensuredResponse.Content.ReadAsStreamAsync(cancellationToken);
 #endif
                 if (jsonStream is not null)
                     res = jsonStream.DeserializeFromStream<T>(settings);
             }
             else
             {
-                using WebResponse response = await url.GetUriResponseAsync();
+                using var response = await url.GetUriResponseAsync();
 #if NETSTANDARD
-                using Stream jsonStream = response.GetResponseStream();
+                using var jsonStream = response.GetResponseStream();
 #else
-                await using Stream jsonStream = response.GetResponseStream();
+                await using var jsonStream = response.GetResponseStream();
 #endif
                 if (jsonStream is not null)
                     res = jsonStream.DeserializeFromStream<T>(settings);

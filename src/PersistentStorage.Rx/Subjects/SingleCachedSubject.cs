@@ -27,7 +27,7 @@ public abstract class SingleCachedSubject<T, TCacheable> : CachedSubjectBase<T, 
         }
 
         DisposeCurrentData();
-        TCacheable cacheableData = ConvertModelToCachedData(value);
+        var cacheableData = ConvertModelToCachedData(value);
         _cacheService.ReplaceWith(cacheableData);
 
         base.OnNext(value);
@@ -38,7 +38,7 @@ public abstract class SingleCachedSubject<T, TCacheable> : CachedSubjectBase<T, 
         if (!ValueIsEqualTo(_defaultValue))
             return;
 
-        TCacheable cachedData = _cacheService.FirstOrDefault<TCacheable>();
+        var cachedData = _cacheService.FirstOrDefault<TCacheable>();
 
         if (cachedData is null)
         {
@@ -47,7 +47,7 @@ public abstract class SingleCachedSubject<T, TCacheable> : CachedSubjectBase<T, 
             return;
         }
 
-        T data = ConvertCachedDataToModel(cachedData);
+        var data = ConvertCachedDataToModel(cachedData);
         SynchronizedOnNext(data);
     }
 

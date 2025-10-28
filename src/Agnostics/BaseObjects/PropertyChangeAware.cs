@@ -11,7 +11,7 @@ public class PropertyChangeAware
         if (!(propertyNames?.Length > 0))
             return;
 
-        foreach (string propertyName in propertyNames)
+        foreach (var propertyName in propertyNames)
             OnPropertyChanged(propertyName);
     }
 
@@ -23,7 +23,7 @@ public class PropertyChangeAware
         if (EqualityHelper.IsEqual(ref backingField, newValue))
             return false;
 
-        TRet oldValue = backingField;
+        var oldValue = backingField;
         backingField = newValue;
         OnPropertySet(oldValue, newValue, propertyName);
         OnPropertyChanged(propertyName);

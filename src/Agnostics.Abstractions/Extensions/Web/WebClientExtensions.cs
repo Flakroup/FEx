@@ -1,7 +1,6 @@
 using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Models;
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 
@@ -18,13 +17,13 @@ public static class WebClientExtensions
             client.Headers.Add("User-Agent", pars.UserAgent);
 
         if (pars?.Headers is not null)
-            foreach (KeyValuePair<string, string> header in pars.Headers)
+            foreach (var header in pars.Headers)
                 client.Headers.Add(header.Key, header.Value);
     }
 
     public static void PrepareHttpClient(out HttpClient client, WebRequestParams pars, bool resultAsJson = false)
     {
-        HttpClientHandler handler = pars.GetHttpClientHandler();
+        var handler = pars.GetHttpClientHandler();
 
         client = handler is not null
             ? new(handler)
@@ -40,7 +39,7 @@ public static class WebClientExtensions
             client.DefaultRequestHeaders.Add("User-Agent", pars.UserAgent);
 
         if (pars?.Headers is not null)
-            foreach (KeyValuePair<string, string> header in pars.Headers)
+            foreach (var header in pars.Headers)
                 client.DefaultRequestHeaders.Add(header.Key, header.Value);
 
         if (pars?.KeepAlive.HasValue == true)

@@ -102,7 +102,7 @@ public partial class GridDetailsView : GridView
     {
         if (args.LeftButton == MouseButtonState.Pressed)
         {
-            object item = ((FrameworkElement)sender).DataContext;
+            var item = ((FrameworkElement)sender).DataContext;
 
             if (item != ExpandedItem)
             {
@@ -116,7 +116,7 @@ public partial class GridDetailsView : GridView
                 if (MaxContainerSize == double.PositiveInfinity)
                     MaxContainerSize = DesiredContainerSize;
 
-                double sourceHeight = MaxContainerSize;
+                var sourceHeight = MaxContainerSize;
 
                 for (var i = 20; i >= 0; i--)
                 {
@@ -145,7 +145,7 @@ public partial class GridDetailsView : GridView
             _expandedItemContainerRoot = (FrameworkElement)sender;
             MaxContainerSize = 0;
 
-            double targetHeight = DesiredContainerSize;
+            var targetHeight = DesiredContainerSize;
 
             _animateExpansion = true;
 

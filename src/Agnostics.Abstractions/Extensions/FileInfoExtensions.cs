@@ -53,7 +53,7 @@ public static class FileInfoExtensions
                                                 bool deleteTempDirectory = false,
                                                 bool overwrite = false)
     {
-        DirectoryInfo parentDirectory = zipFile is null
+        var parentDirectory = zipFile is null
             ? file.Directory
             : zipFile.Directory;
 
@@ -64,15 +64,14 @@ public static class FileInfoExtensions
             tempDirectory.Delete(true);
 
         tempDirectory.Create();
-        string targetFilePath = Path.Combine(tempDirectory.FullName, file.Name);
+        var targetFilePath = Path.Combine(tempDirectory.FullName, file.Name);
 
 #if NETSTANDARD
-        using (FileStream sourceStream = file.OpenRead())
-        using (FileStream targetStream =
-               File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+        using (var sourceStream = file.OpenRead())
+        using (var targetStream = File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
 #else
-        await using (FileStream sourceStream = file.OpenRead())
-        await using (FileStream targetStream =
+        await using (var sourceStream = file.OpenRead())
+        await using (var targetStream =
                      File.Open(targetFilePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
 #endif
 
@@ -130,9 +129,9 @@ public static class FileInfoExtensions
     {
 #if NETSTANDARD
         using var md5Algorithm = MD5.Create();
-        byte[] hash = md5Algorithm.ComputeHash(data);
+        var hash = md5Algorithm.ComputeHash(data);
 #else
-        byte[] hash = MD5.HashData(data);
+        var hash = MD5.HashData(data);
 #endif
 
         return hash.GetHashString(removeDashes, toLower, asBase64String);

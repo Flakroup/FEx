@@ -9,7 +9,7 @@ public static class ListExtensions
 {
     public static PaginatedList<T> MakePaginatedList<T>(this IList<T> items, int itemsPerPage, int page)
     {
-        int itemsToSkip = (page - 1) * itemsPerPage;
+        var itemsToSkip = (page - 1) * itemsPerPage;
 
         if (items?.Count > 0
             && (itemsToSkip > items.Count || itemsToSkip < 0))

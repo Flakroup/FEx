@@ -18,7 +18,7 @@ public abstract class AggregatedCollectionCachedSubject<T, TCacheable> : Collect
         var newValue = newCollection.ToList();
 
         DisposeCurrentData();
-        IEnumerable<TCacheable> cacheableData = newValue.Select(ConvertModelToCachedData);
+        var cacheableData = newValue.Select(ConvertModelToCachedData);
         _cacheService.ReplaceWith(cacheableData);
 
         SynchronizedOnNext(newValue);

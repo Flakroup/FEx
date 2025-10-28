@@ -44,7 +44,7 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
         {
             var sb = new StringBuilder();
 
-            foreach (string m in ex.InnerExceptions.Select(e => e.Message.Split(':')[4])
+            foreach (var m in ex.InnerExceptions.Select(e => e.Message.Split(':')[4])
                          .Distinct()
                          .OrderBy(x => x)
                          .ToList())
@@ -92,14 +92,13 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
     private static async Task InitializeMicrosoftDIModulesAsync(IServiceCollection services)
     {
         // Use TryResolveServices to gracefully handle cases where no modules are registered
-        IInitializeModule<IServiceCollection>[] modules = FExServiceProvider.ServiceContainer
-            .TryResolveServices<IInitializeModule<IServiceCollection>>()
+        var modules = FExServiceProvider.ServiceContainer.TryResolveServices<IInitializeModule<IServiceCollection>>()
             .ToArray();
 
         if (modules.IsNullOrEmptyList())
             return;
 
-        foreach (IInitializeModule<IServiceCollection> module in modules)
+        foreach (var module in modules)
             module.RegisterServices(services);
 
         await modules.Where(x => !x.HasBeenCompleted).WithWhenAllAsync(m => m.CompleteInitializationAsync(services));

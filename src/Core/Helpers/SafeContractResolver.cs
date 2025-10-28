@@ -18,7 +18,7 @@ public class SafeContractResolver : DefaultContractResolver
 
     protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
     {
-        JsonProperty prop = base.CreateProperty(member, memberSerialization);
+        var prop = base.CreateProperty(member, memberSerialization);
 
         if (IsSubclassOfBindableObject(prop.PropertyType))
             prop.Ignored = true;

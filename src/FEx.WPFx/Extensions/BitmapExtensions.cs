@@ -43,7 +43,7 @@ public static class BitmapExtensions
         if (decodePixelHeight > 0
             || decodePixelWidth > 0)
         {
-            WidthAndHeight originalSize = GetSize(stream);
+            var originalSize = GetSize(stream);
 
             if (decodePixelHeight > 0)
                 result.DecodePixelHeight = Math.Min(decodePixelHeight, originalSize.Height);
@@ -78,7 +78,7 @@ public static class BitmapExtensions
     /// <returns></returns>
     public static BitmapSource ToBitmapSource(this Bitmap bitmap)
     {
-        IntPtr handle = bitmap.GetHbitmap();
+        var handle = bitmap.GetHbitmap();
 
         try
         {

@@ -119,7 +119,7 @@ internal class ItemContainerManager : IItemContainerManager
 
     public IItemContainerInfo Realize(int itemIndex, out bool isNewlyRealized, out bool isNewContainer)
     {
-        object item = Items[itemIndex];
+        var item = Items[itemIndex];
 
         if (RealizedContainers.FirstOrDefault(container => container.Item == item) is { } containerInfo)
         {
@@ -130,11 +130,11 @@ internal class ItemContainerManager : IItemContainerManager
         }
 
         isNewlyRealized = true;
-        GeneratorPosition generatorPosition = _recyclingItemContainerGenerator.GeneratorPositionFromIndex(itemIndex);
+        var generatorPosition = _recyclingItemContainerGenerator.GeneratorPositionFromIndex(itemIndex);
 
         using (_recyclingItemContainerGenerator.StartAt(generatorPosition, GeneratorDirection.Forward))
         {
-            DependencyObject container = _recyclingItemContainerGenerator.GenerateNext(out isNewContainer);
+            var container = _recyclingItemContainerGenerator.GenerateNext(out isNewContainer);
             _recyclingItemContainerGenerator.PrepareItemContainer(container);
             containerInfo = ItemContainerInfo.For((UIElement)container, item);
             _cachedContainers.Remove(containerInfo);
@@ -146,7 +146,7 @@ internal class ItemContainerManager : IItemContainerManager
 
     public bool Virtualize(IItemContainerInfo containerInfo)
     {
-        int itemIndex = FindItemIndexOfContainer(containerInfo);
+        var itemIndex = FindItemIndexOfContainer(containerInfo);
 
         if (itemIndex == -1)
         {
@@ -156,7 +156,7 @@ internal class ItemContainerManager : IItemContainerManager
             return true;
         }
 
-        GeneratorPosition generatorPosition = _recyclingItemContainerGenerator.GeneratorPositionFromIndex(itemIndex);
+        var generatorPosition = _recyclingItemContainerGenerator.GeneratorPositionFromIndex(itemIndex);
 
         if (IsRecycling)
         {

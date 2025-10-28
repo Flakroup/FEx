@@ -23,18 +23,18 @@ public class SecureStorageService
 
     public T Get<T>(string key)
     {
-        FileInfo file = _storage.GetDescendantFile(key + FexFileExtension);
-        string encrypted = File.ReadAllText(file.FullName);
-        string decrypted = StringHasher.DecryptString(_cipher, encrypted);
+        var file = _storage.GetDescendantFile(key + FexFileExtension);
+        var encrypted = File.ReadAllText(file.FullName);
+        var decrypted = StringHasher.DecryptString(_cipher, encrypted);
 
         return decrypted.FromJson<T>();
     }
 
     public void Set(string key, object content)
     {
-        FileInfo file = _storage.GetDescendantFile(key + FexFileExtension);
-        string decrypted = content.ToJson();
-        string encrypted = StringHasher.EncryptString(_cipher, decrypted);
+        var file = _storage.GetDescendantFile(key + FexFileExtension);
+        var decrypted = content.ToJson();
+        var encrypted = StringHasher.EncryptString(_cipher, decrypted);
         File.WriteAllText(file.FullName, encrypted);
     }
 }

@@ -158,8 +158,8 @@ public class ProgressStatus : LinkableNotifyPropertyChanged, IProgressStatus
 
     protected virtual void CalculateProgressPercentage()
     {
-        double pv = Value;
-        double pm = Maximum;
+        var pv = Value;
+        var pm = Maximum;
 
         if (!(pv > 0)
             && !(pm > 0))
@@ -169,7 +169,7 @@ public class ProgressStatus : LinkableNotifyPropertyChanged, IProgressStatus
             return;
         }
 
-        double prc = pv / pm;
+        var prc = pv / pm;
 
         if (prc.PreciseEquals(PrecisePercentage, 3))
             return;

@@ -15,12 +15,12 @@ public class ByteToSizeConverter : IValueConverter
 
         var length = System.Convert.ToDouble(value);
         var digits = 3;
-        LengthType lType = LengthType.AutoDetect;
+        var lType = LengthType.AutoDetect;
         var pS = parameter as string;
 
         if (pS is not null)
         {
-            string[] pA = pS.Split(',');
+            var pA = pS.Split(',');
             digits = System.Convert.ToInt32(pA[0]);
 
             if (pA.Length > 1)

@@ -83,7 +83,7 @@ public static class DateTimeExtensions
 
     public static DateTime GetStartOfWeek(this DateTime date)
     {
-        int difference = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+        var difference = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
 
         return date.AddDays(-1 * difference).Date;
     }
@@ -96,7 +96,7 @@ public static class DateTimeExtensions
     public static DateTime ConvertLocalToTimeZone(this DateTime dateTime, TimeZoneInfo timeZone)
     {
         var unspecifiedDateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
-        DateTime utcDateTime = TimeZoneInfo.ConvertTimeToUtc(unspecifiedDateTime);
+        var utcDateTime = TimeZoneInfo.ConvertTimeToUtc(unspecifiedDateTime);
 
         return TimeZoneInfo.ConvertTime(utcDateTime, timeZone);
     }
@@ -158,7 +158,7 @@ public static class DateTimeExtensions
     /// <returns>The number of days.</returns>
     public static int GetCountDaysOfMonth(this DateTime current)
     {
-        DateTime nextMonth = current.AddMonths(1);
+        var nextMonth = current.AddMonths(1);
 
         return new DateTime(nextMonth.Year, nextMonth.Month, 1).AddDays(-1).Day;
     }
@@ -264,7 +264,7 @@ public static class DateTimeExtensions
                                   DateInterval interval,
                                   DayOfWeek? dayOfWeek = null)
     {
-        TimeSpan timeSpan = date2.Subtract(date1);
+        var timeSpan = date2.Subtract(date1);
 
         switch (interval)
         {

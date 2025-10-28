@@ -23,7 +23,7 @@ public class Map<TForwardKey, TReverseKey> : IMap<TForwardKey, TReverseKey>
     public Map(IDictionary<TForwardKey, TReverseKey> dictionary, bool isReadOnly = false)
         : this()
     {
-        foreach (KeyValuePair<TForwardKey, TReverseKey> d in dictionary)
+        foreach (var d in dictionary)
             Add(d.Key, d.Value);
 
         if (isReadOnly)

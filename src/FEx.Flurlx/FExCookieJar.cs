@@ -46,7 +46,7 @@ public class FExCookieJar : IReadOnlyCollection<FlurlCookie>
     /// </summary>
     public FExCookieJar AddOrReplace(FlurlCookie cookie)
     {
-        if (!TryAddOrReplace(cookie, out string reason))
+        if (!TryAddOrReplace(cookie, out var reason))
             throw new FExInvalidCookieException(reason);
 
         return this;
@@ -80,7 +80,7 @@ public class FExCookieJar : IReadOnlyCollection<FlurlCookie>
     {
         var keys = _dict.Where(kv => predicate(kv.Value)).Select(kv => kv.Key).ToList();
 
-        foreach (string key in keys)
+        foreach (var key in keys)
             _dict.TryRemove(key, out _);
 
         return this;

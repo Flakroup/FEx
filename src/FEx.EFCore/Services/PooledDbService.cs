@@ -92,7 +92,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     /// <returns></returns>
     public async Task MigrateAsync()
     {
-        bool hasNoPendingMigrations = await HasNoPendingMigrationsAsync();
+        var hasNoPendingMigrations = await HasNoPendingMigrationsAsync();
 
         if (!hasNoPendingMigrations)
         {
@@ -131,8 +131,8 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                                      bool useTransaction = true,
                                      IsolationLevel isolationLevel = IsolationLevel.Unspecified)
     {
-        using IServiceScope scope = _scopeProvider.CreateScope();
-        TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        using var scope = _scopeProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
         var id = Guid.NewGuid().ToString();
 
         try
@@ -159,8 +159,8 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                                                       bool useTransaction = true,
                                                       IsolationLevel isolationLevel = IsolationLevel.Unspecified)
     {
-        using IServiceScope scope = _scopeProvider.CreateScope();
-        await using TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        using var scope = _scopeProvider.CreateScope();
+        await using var dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
         var id = Guid.NewGuid().ToString();
 
         try
@@ -187,8 +187,8 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                                                       bool useTransaction = true,
                                                       IsolationLevel isolationLevel = IsolationLevel.Unspecified)
     {
-        using IServiceScope scope = _scopeProvider.CreateScope();
-        await using TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        using var scope = _scopeProvider.CreateScope();
+        await using var dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
         var id = Guid.NewGuid().ToString();
 
         try
@@ -231,7 +231,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     {
         await base.OnInitializeAsync();
 
-        bool result = await SQLConnectionHelper.CheckMasterDbConnectionAsync(_dbConfig);
+        var result = await SQLConnectionHelper.CheckMasterDbConnectionAsync(_dbConfig);
 
         if (result && _dbConfig.RunMigrations)
             result = await RunMigrationsAsync();
@@ -261,7 +261,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                                                    bool validateAllProperties = true,
                                                    bool acceptAllChangesOnSuccess = true)
     {
-        Result<Error> result = dbContext.ValidateChangedEntities(null,
+        var result = dbContext.ValidateChangedEntities(null,
             validateAllProperties,
             OnValidationStart,
             OnFaultyEntity,
@@ -286,9 +286,9 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
             }
             catch (DbUpdateConcurrencyException ex) when (retries > 0)
             {
-                foreach (EntityEntry entry in ex.Entries)
+                foreach (var entry in ex.Entries)
                 {
-                    PropertyValues databaseValues = entry.GetDatabaseValues();
+                    var databaseValues = entry.GetDatabaseValues();
 
                     if (databaseValues is not null)
                         entry.OriginalValues.SetValues(databaseValues);
@@ -322,7 +322,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                                                                     bool validateAllProperties = true,
                                                                     bool acceptAllChangesOnSuccess = true)
     {
-        Result<Error> result = dbContext.ValidateChangedEntities(id,
+        var result = dbContext.ValidateChangedEntities(id,
             validateAllProperties,
             OnValidationStart,
             OnFaultyEntity,
@@ -347,9 +347,9 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
             }
             catch (DbUpdateConcurrencyException ex) when (retries > 0)
             {
-                foreach (EntityEntry entry in ex.Entries)
+                foreach (var entry in ex.Entries)
                 {
-                    PropertyValues databaseValues = await entry.GetDatabaseValuesAsync();
+                    var databaseValues = await entry.GetDatabaseValuesAsync();
 
                     if (databaseValues is not null)
                         entry.OriginalValues.SetValues(databaseValues);
@@ -404,7 +404,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
 
     private T Execute<T>(TDbContext dbContext, Func<TDbContext, T> func, bool saveChanges, string id)
     {
-        T res = func(dbContext);
+        var res = func(dbContext);
 
         if (saveChanges)
             ValidateAndSaveChanges(dbContext, id);
@@ -417,7 +417,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                                           bool saveChanges,
                                           string id)
     {
-        T res = await func(dbContext);
+        var res = await func(dbContext);
 
         if (saveChanges)
             await ValidateAndSaveChangesAsync(dbContext, id);

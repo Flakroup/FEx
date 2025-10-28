@@ -22,7 +22,7 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
         {
             ReactiveObject sender = this;
 
-            foreach (string propertyName in propertyNames)
+            foreach (var propertyName in propertyNames)
                 sender.RaisePropertyChanged(propertyName);
         }
     }
@@ -51,7 +51,7 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
             return false;
 
         OnPropertyChangingInternal(propertyName);
-        TRet oldValue = backingField;
+        var oldValue = backingField;
         backingField = newValue;
         OnPropertySet(oldValue, newValue, propertyName);
         OnPropertyChangedInternal(propertyName);

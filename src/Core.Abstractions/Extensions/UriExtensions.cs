@@ -59,7 +59,7 @@ public static class UriExtensions
                 if (url.Scheme is HttpScheme or HttpsScheme)
                     return await url.DoHttpResponseFuncAsync((response, _) =>
                         {
-                            bool result = response?.StatusCode is HttpStatusCode.OK
+                            var result = response?.StatusCode is HttpStatusCode.OK
                                 or HttpStatusCode.PartialContent
                                 or HttpStatusCode.NonAuthoritativeInformation;
 
@@ -68,9 +68,9 @@ public static class UriExtensions
                         pars,
                         sw);
 
-                using (WebResponse response = await url.GetUriResponseAsync(pars))
+                using (var response = await url.GetUriResponseAsync(pars))
                 {
-                    bool result = response is not null;
+                    var result = response is not null;
 
                     return (result, sw.ElapsedMilliseconds);
                 }
@@ -162,7 +162,7 @@ public static class UriExtensions
 #if NET
 #pragma warning disable SYSLIB0014
 #endif
-            HttpWebRequest request = WebRequest.CreateHttp(url);
+            var request = WebRequest.CreateHttp(url);
 #if NET
 #pragma warning restore SYSLIB0014
 #endif
@@ -172,7 +172,7 @@ public static class UriExtensions
 
             request.Method = HeadMethod; //Get only the header information -- no need to download any content
 
-            using WebResponse response = await request.GetResponseAsync();
+            using var response = await request.GetResponseAsync();
             using var httpResponse = (HttpWebResponse)response;
             var statusCode = (int)httpResponse.StatusCode;
 
@@ -205,10 +205,10 @@ public static class UriExtensions
         WebRequestParams pars = null,
         Stopwatch stopwatch = null)
     {
-        HttpWebRequest req = url.GetHttpRequest(pars);
+        var req = url.GetHttpRequest(pars);
         stopwatch?.Restart();
 
-        using WebResponse response = await req.GetResponseAsync();
+        using var response = await req.GetResponseAsync();
         stopwatch?.Stop();
         using var resp = (HttpWebResponse)response;
 
@@ -220,10 +220,10 @@ public static class UriExtensions
                                                                     WebRequestParams pars = null,
                                                                     Stopwatch stopwatch = null)
     {
-        HttpWebRequest req = url.GetHttpRequest(pars);
+        var req = url.GetHttpRequest(pars);
         stopwatch?.Restart();
 
-        using WebResponse response = await req.GetResponseAsync();
+        using var response = await req.GetResponseAsync();
         stopwatch?.Stop();
         using var resp = (HttpWebResponse)response;
 
@@ -235,10 +235,10 @@ public static class UriExtensions
                                                                 WebRequestParams pars = null,
                                                                 Stopwatch stopwatch = null)
     {
-        HttpWebRequest req = url.GetHttpRequest(pars);
+        var req = url.GetHttpRequest(pars);
         stopwatch?.Restart();
 
-        using WebResponse response = await req.GetResponseAsync();
+        using var response = await req.GetResponseAsync();
         stopwatch?.Stop();
         using var resp = (HttpWebResponse)response;
         action(resp, req);
@@ -250,14 +250,14 @@ public static class UriExtensions
         WebRequestParams pars = null,
         Stopwatch stopwatch = null)
     {
-        WebClientExtensions.PrepareHttpClient(out HttpClient client, pars);
+        WebClientExtensions.PrepareHttpClient(out var client, pars);
 
         using (client)
         {
             stopwatch?.Restart();
-            using HttpResponseMessage response = await client.GetAsync(url);
+            using var response = await client.GetAsync(url);
             stopwatch?.Stop();
-            using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
+            using var ensuredResponse = response.EnsureSuccessStatusCode();
 
             return await func(ensuredResponse, client);
         }
@@ -269,14 +269,14 @@ public static class UriExtensions
         WebRequestParams pars = null,
         Stopwatch stopwatch = null)
     {
-        WebClientExtensions.PrepareHttpClient(out HttpClient client, pars);
+        WebClientExtensions.PrepareHttpClient(out var client, pars);
 
         using (client)
         {
             stopwatch?.Restart();
-            using HttpResponseMessage response = await client.GetAsync(url);
+            using var response = await client.GetAsync(url);
             stopwatch?.Stop();
-            using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
+            using var ensuredResponse = response.EnsureSuccessStatusCode();
 
             return func(ensuredResponse, client);
         }
@@ -287,14 +287,14 @@ public static class UriExtensions
                                                                       WebRequestParams pars = null,
                                                                       Stopwatch stopwatch = null)
     {
-        WebClientExtensions.PrepareHttpClient(out HttpClient client, pars);
+        WebClientExtensions.PrepareHttpClient(out var client, pars);
 
         using (client)
         {
             stopwatch?.Restart();
-            using HttpResponseMessage response = await client.GetAsync(url);
+            using var response = await client.GetAsync(url);
             stopwatch?.Stop();
-            using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
+            using var ensuredResponse = response.EnsureSuccessStatusCode();
             action(ensuredResponse, client);
         }
     }

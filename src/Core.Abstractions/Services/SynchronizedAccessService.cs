@@ -86,13 +86,13 @@ public sealed class SynchronizedAccessService : ISynchronizedAccessService, IDis
 
     public void RemoveLock(string key)
     {
-        if (!AccessSemaphores.TryGetValue(key, out SemaphoreSlim accessSemaphore))
+        if (!AccessSemaphores.TryGetValue(key, out var accessSemaphore))
             return;
 
         if (accessSemaphore.CurrentCount == 0)
             throw new InvalidOperationException($"Key {key} is still busy");
 
-        if (AccessSemaphores.TryRemove(key, out SemaphoreSlim semaphore))
+        if (AccessSemaphores.TryRemove(key, out var semaphore))
             semaphore.Dispose();
     }
 

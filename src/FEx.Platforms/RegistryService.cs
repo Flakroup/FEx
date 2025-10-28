@@ -29,7 +29,7 @@ public class RegistryService : IRegistryService
 
         using (var lm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
         {
-            using RegistryKey key = lm.OpenSubKey(registryKey);
+            using var key = lm.OpenSubKey(registryKey);
 
             if (key is not null)
                 keys.AddRange(key.GetSubKeyNames().Select(key.OpenSubKey).ToArray());
@@ -37,7 +37,7 @@ public class RegistryService : IRegistryService
 
         using (var lm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
         {
-            using RegistryKey key = lm.OpenSubKey(registry64Key);
+            using var key = lm.OpenSubKey(registry64Key);
 
             if (key is not null)
                 keys.AddRange(key.GetSubKeyNames().Select(key.OpenSubKey).ToArray());
@@ -51,18 +51,18 @@ public class RegistryService : IRegistryService
         var versions = new List<Version>();
 
         // Opens the registry key for the .NET Framework entry.
-        using RegistryKey ndpKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, "")
+        using var ndpKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, "")
             .OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\");
 
         // As an alternative, if you know the computers you will query are running .NET Framework 4.5 
         // or later, you can use:
         // using (RegistryKey ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, 
         // RegistryView.Registry32).OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\"))
-        foreach (string versionKeyName in ndpKey!.GetSubKeyNames())
+        foreach (var versionKeyName in ndpKey!.GetSubKeyNames())
         {
             if (versionKeyName.StartsWith("v"))
             {
-                using RegistryKey versionKey = ndpKey.OpenSubKey(versionKeyName);
+                using var versionKey = ndpKey.OpenSubKey(versionKeyName);
                 var name = (string)versionKey!.GetValue("Version", "");
                 var sp = versionKey.GetValue("SP", "").ToString();
                 var install = versionKey.GetValue("Install", "").ToString();
@@ -78,12 +78,12 @@ public class RegistryService : IRegistryService
                 }
                 else
                 {
-                    foreach (string subKeyName in versionKey.GetSubKeyNames())
+                    foreach (var subKeyName in versionKey.GetSubKeyNames())
                     {
                         if (versionKeyName != "v4"
                             && subKeyName != "Full")
                         {
-                            using RegistryKey subKey = versionKey.OpenSubKey(subKeyName);
+                            using var subKey = versionKey.OpenSubKey(subKeyName);
                             name = (string)(subKey?.GetValue("Version", "") ?? "");
 
                             if (name.Length != 0)
@@ -111,7 +111,7 @@ public class RegistryService : IRegistryService
     {
         const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
 
-        using RegistryKey ndpKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, "").OpenSubKey(subkey);
+        using var ndpKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, "").OpenSubKey(subkey);
 
         return ndpKey?.GetValue(Release) is not null
             ? CheckFor45PlusVersion((int)ndpKey.GetValue(Release)!)
@@ -140,7 +140,7 @@ public class RegistryService : IRegistryService
     {
         const string runKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
 
-        using RegistryKey startupKey = global
+        using var startupKey = global
             ? GetOrAddLocalMachineSubKey(runKey)
             : GetOrAddCurrentUserSubKey(runKey);
 
@@ -152,7 +152,7 @@ public class RegistryService : IRegistryService
 
     public string GetStandardBrowserPath()
     {
-        string browserPath = string.Empty;
+        var browserPath = string.Empty;
         RegistryKey browserKey = null;
 
         try
@@ -196,7 +196,7 @@ public class RegistryService : IRegistryService
 
     public string GetDefaultExtension(string mimeType)
     {
-        using RegistryKey key = GetClassesRootSubKey($@"MIME\Database\Content Type\{mimeType}", false);
+        using var key = GetClassesRootSubKey($@"MIME\Database\Content Type\{mimeType}", false);
         const string name = "Extension";
 
         return key?.GetValue(name, null)?.ToString();
@@ -204,7 +204,7 @@ public class RegistryService : IRegistryService
 
     public string GetDefaultMimeType(string extension)
     {
-        using RegistryKey key = GetClassesRootSubKey(@"MIME\Database\Content Type", false);
+        using var key = GetClassesRootSubKey(@"MIME\Database\Content Type", false);
 
         return key?.GetSubKeyNames().FirstOrDefault(subKey => GetDefaultExtension(subKey) == extension);
     }
@@ -213,7 +213,7 @@ public class RegistryService : IRegistryService
 
     public string GetOrAddRegistryKeyStringValue(string path, string keyName, Func<string> getNewValue)
     {
-        using RegistryKey reg = GetOrAddCurrentUserSubKey(path);
+        using var reg = GetOrAddCurrentUserSubKey(path);
 
         if (PlatformInfoProvider.IsWindows
             && !reg.GetValueNames().Contains(keyName))
@@ -290,13 +290,13 @@ public class RegistryService : IRegistryService
     private RegistryKey GetOrAddSubKey(RegistryKey root, string subKey, bool writable)
     {
 #pragma warning disable IDISP001
-        RegistryKey reg = GetSubKey(root, subKey, writable);
+        var reg = GetSubKey(root, subKey, writable);
 #pragma warning restore IDISP001
 
         if (reg is not null)
             return reg;
 
-        using RegistryKey _ = root.CreateSubKey(subKey);
+        using var _ = root.CreateSubKey(subKey);
 
         return GetSubKey(root, subKey, writable);
     }

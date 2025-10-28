@@ -27,7 +27,7 @@ public static class WindowsExtensions
     /// <param name="screen">The screen.</param>
     public static void CenterWindowOnTheScreen(this Window window, Screen screen)
     {
-        Point f = window.GetDpiFactor();
+        var f = window.GetDpiFactor();
         window.Left = screen.WorkingArea.Location.X * f.X + (screen.WorkingArea.Width * f.X - window.Width) / 2;
         window.Top = screen.WorkingArea.Location.Y * f.Y + (screen.WorkingArea.Height * f.Y - window.Height) / 2;
     }
@@ -36,8 +36,8 @@ public static class WindowsExtensions
     {
         var source = PresentationSource.FromVisual(control);
 
-        double dpiX = 96.0 * (source?.CompositionTarget?.TransformToDevice.M11 ?? 1);
-        double dpiY = 96.0 * (source?.CompositionTarget?.TransformToDevice.M22 ?? 1);
+        var dpiX = 96.0 * (source?.CompositionTarget?.TransformToDevice.M11 ?? 1);
+        var dpiY = 96.0 * (source?.CompositionTarget?.TransformToDevice.M22 ?? 1);
 
         return new(96.0 / dpiX, 96.0 / dpiY);
     }
@@ -61,7 +61,7 @@ public static class WindowsExtensions
     /// <param name="window">The window.</param>
     public static void PlaceToPrimaryMonitor(this Window window)
     {
-        Screen primaryScreen = Screen.AllScreens.FindInEnumerable(s => s.Primary);
+        var primaryScreen = Screen.AllScreens.FindInEnumerable(s => s.Primary);
         window.PlaceToMonitor(primaryScreen);
     }
 

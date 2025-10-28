@@ -54,16 +54,16 @@ public static class SQLConnectionHelper
     public static async Task<bool> CheckMasterDbConnectionAsync(IFExDbConfig config,
                                                                 CancellationToken cancellationToken = default)
     {
-        FExDbConfig testConfig = GetMasterDbConfig(config);
-        string testConnectionString = GetConnectionString(testConfig);
+        var testConfig = GetMasterDbConfig(config);
+        var testConnectionString = GetConnectionString(testConfig);
 
         return await CheckDbConnectionAsync(testConnectionString, cancellationToken);
     }
 
     public static bool CheckMasterDbConnection(IFExDbConfig config)
     {
-        FExDbConfig testConfig = GetMasterDbConfig(config);
-        string testConnectionString = GetConnectionString(testConfig);
+        var testConfig = GetMasterDbConfig(config);
+        var testConnectionString = GetConnectionString(testConfig);
 
         return CheckDbConnection(testConnectionString);
     }
@@ -82,7 +82,7 @@ public static class SQLConnectionHelper
         if (config.Password is not null)
             sB.Password = config.Password;
 
-        string host = config.SqlInstance.Split('\\')[0];
+        var host = config.SqlInstance.Split('\\')[0];
 
         if ((host.CompareOrdinalIgnoreCase("localhost") || host.CompareOrdinalIgnoreCase(Environment.MachineName))
             && PlatformInfoProvider.IsWindows)

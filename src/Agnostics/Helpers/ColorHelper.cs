@@ -6,7 +6,7 @@ namespace FEx.Agnostics.Helpers;
 public static class ColorHelper
 {
     /// <summary>
-    ///     Gets <see cref="Color" /> from ARGB string.
+    /// Gets <see cref="Color" /> from ARGB string.
     /// </summary>
     /// <param name="colorcode">The colorcode.</param>
     /// <returns>
@@ -24,7 +24,7 @@ public static class ColorHelper
     }
 
     /// <summary>
-    ///     Froms the RGB string.
+    /// Froms the RGB string.
     /// </summary>
     /// <param name="colorcode">The colorcode.</param>
     /// <returns></returns>

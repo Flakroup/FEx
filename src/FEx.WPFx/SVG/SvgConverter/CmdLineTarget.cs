@@ -30,7 +30,7 @@ public class CmdLineTarget //: SimpleBaseTarget
         bool filterPixelsPerDip = false)
     {
         FExLoggingModule.Log("Building resource dictionary...", GetType());
-        string outFileName = Path.Combine(outputdir ?? inputdir, outputname);
+        var outFileName = Path.Combine(outputdir ?? inputdir, outputname);
 
         if (!Path.HasExtension(outFileName))
             outFileName = Path.ChangeExtension(outFileName, ".xaml");
@@ -50,8 +50,8 @@ public class CmdLineTarget //: SimpleBaseTarget
 
         if (buildhtmlfile)
         {
-            string htmlFilePath = Path.Combine(inputdir, Path.GetFileNameWithoutExtension(outputname));
-            IEnumerable<string> files = ConverterLogic.SvgFilesFromFolder(inputdir);
+            var htmlFilePath = Path.Combine(inputdir, Path.GetFileNameWithoutExtension(outputname));
+            var files = ConverterLogic.SvgFilesFromFolder(inputdir);
             BuildHtmlBrowseFile(files, htmlFilePath);
         }
 
@@ -87,7 +87,7 @@ public class CmdLineTarget //: SimpleBaseTarget
                     new XAttribute("height", size),
                     new XAttribute("width", size))))));
 
-        string filename = Path.ChangeExtension(outputFilename, ".html");
+        var filename = Path.ChangeExtension(outputFilename, ".html");
         doc.Save(filename);
         FExLoggingModule.Log($"Html overview written to {filename}", typeof(CmdLineTarget));
     }

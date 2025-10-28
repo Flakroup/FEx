@@ -23,7 +23,7 @@ public static class PropertiesExtensions
     {
         expression.Guard(nameof(expression));
 
-        MemberExpression memberExpression = FindMemberExpression(expression);
+        var memberExpression = FindMemberExpression(expression);
 
         memberExpression.Guard(nameof(memberExpression), WrongExpressionMessage);
 
@@ -37,12 +37,12 @@ public static class PropertiesExtensions
             && !member.DeclaringType.IsInstanceOfType(target))
             throw new ArgumentException(WrongExpressionMessage, nameof(expression));
 
-        MethodInfo setMethod = member.GetSetMethod(true);
+        var setMethod = member.GetSetMethod(true);
 
         if (setMethod.IsStatic)
             throw new ArgumentException(WrongExpressionMessage, nameof(expression));
 
-        MethodInfo getMethod = member.GetGetMethod(true);
+        var getMethod = member.GetGetMethod(true);
 
         if (getMethod.Invoke(target, null) is not T oldValue
             || EqualityComparer<T>.Default.Equals(oldValue, value))
@@ -126,8 +126,8 @@ public static class PropertiesExtensions
         MemberExpression memberExpression =
             FindMemberExpression(property).Guard(nameof(memberExpression), WrongExpressionMessage);
 
-        string propertyName = memberExpression.Member.Name;
-        Func<T, TProp> getPropertyValue = property.Compile();
+        var propertyName = memberExpression.Member.Name;
+        var getPropertyValue = property.Compile();
 
         var link = new Link(typeof(TProp),
             sender,

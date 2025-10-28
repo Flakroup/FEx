@@ -39,12 +39,12 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
         _logger = this.GetLogger();
         _initializationSemaphore = new();
         _taskSemaphore = new();
-        Type instanceType = GetType();
+        var instanceType = GetType();
         TypeName = instanceType.Name;
         TypeFullName = instanceType.FullName;
         _dependencies = new();
 
-        foreach (IAsyncInitializable dependency in dependencies)
+        foreach (var dependency in dependencies)
             AddDependency(dependency);
 
         OriginSynchronizationContext = SynchronizationContextExtensions.Get(true);

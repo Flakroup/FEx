@@ -52,7 +52,7 @@ public class MainThreadDispatcher : FExDispatcher
     public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null) =>
         await Task.Run(async () =>
         {
-            Task task = Task.CompletedTask;
+            var task = Task.CompletedTask;
             _mainThreadContextProvider.Context?.Send(_ => task = funcTask(), null);
             await task;
         });

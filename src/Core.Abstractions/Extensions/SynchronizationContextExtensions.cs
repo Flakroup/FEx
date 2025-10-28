@@ -38,7 +38,7 @@ public static class SynchronizationContextExtensions
     [SuppressMessage("Usage", "VSTHRD001:Avoid legacy thread switching APIs")]
     public static T SendInContext<T>(this SynchronizationContext context, object sender, Func<T> func)
     {
-        StackTrace stackTrace = GetStackTrace();
+        var stackTrace = GetStackTrace();
 
         try
         {
@@ -72,7 +72,7 @@ public static class SynchronizationContextExtensions
     [SuppressMessage("Usage", "VSTHRD001:Avoid legacy thread switching APIs")]
     public static void SendInContext(this SynchronizationContext context, object sender, Action action)
     {
-        StackTrace stackTrace = GetStackTrace();
+        var stackTrace = GetStackTrace();
 
         try
         {
@@ -106,7 +106,7 @@ public static class SynchronizationContextExtensions
     {
         _ = context.Guard(nameof(context));
         action.Guard(nameof(action));
-        StackTrace stackTrace = FExCoreStatics.StackTraceProvider.GetStackTrace();
+        var stackTrace = FExCoreStatics.StackTraceProvider.GetStackTrace();
         var postFinished = new TaskCompletionSource<bool>();
 
         FExCoreStatics.AsyncHelper.FireTaskAndForget(() =>
@@ -192,7 +192,7 @@ public static class SynchronizationContextExtensions
                                               Action<AttachedException> onException,
                                               TaskCompletionSource<bool> postFinished)
     {
-        Result<ExceptionError> result = InternalPost(action, sender, stackTrace, onException);
+        var result = InternalPost(action, sender, stackTrace, onException);
         postFinished.SetResult(result.IsSuccess);
     }
 

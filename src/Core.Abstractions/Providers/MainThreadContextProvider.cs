@@ -32,7 +32,7 @@ public class MainThreadContextProvider : IMainThreadContextProvider
             if (IsDispatcherContext)
                 return _mainSynchronizationContext;
 
-            SynchronizationContext context = Thread.GetThreadSynchronizationContext(IsUIApp);
+            var context = Thread.GetThreadSynchronizationContext(IsUIApp);
 
             if (context is not null)
             {
@@ -55,12 +55,12 @@ public class MainThreadContextProvider : IMainThreadContextProvider
 
     public void SetMainThread(bool throwOnNonMainThread = true)
     {
-        Thread currentThread = Thread.CurrentThread;
+        var currentThread = Thread.CurrentThread;
 
-        bool isMainThread = currentThread.IsPlatformMainThread(IsUIApp)
-                            && !currentThread.IsBackground
-                            && currentThread.IsAlive
-                            && !currentThread.IsThreadPoolThread;
+        var isMainThread = currentThread.IsPlatformMainThread(IsUIApp)
+                           && !currentThread.IsBackground
+                           && currentThread.IsAlive
+                           && !currentThread.IsThreadPoolThread;
 
         switch (isMainThread)
         {

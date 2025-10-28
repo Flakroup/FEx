@@ -26,7 +26,7 @@ public class ItemsToFirstItemConverter : IValueConverter
 
         if (enumerable is not null)
         {
-            IEnumerator enumerator = enumerable.GetEnumerator();
+            var enumerator = enumerable.GetEnumerator();
 
             return enumerator.MoveNext()
                 ? enumerator.Current

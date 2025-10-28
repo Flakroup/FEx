@@ -23,7 +23,7 @@ public static class DispatcherService
                                                  DispatcherObject sender = null,
                                                  DispatcherPriority priority = DispatcherPriority.Send)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         if (CheckAccess(dispatcherObject))
             action();
@@ -42,7 +42,7 @@ public static class DispatcherService
                                                             DispatcherObject sender = null,
                                                             DispatcherPriority priority = DispatcherPriority.Send)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         if (CheckAccess(dispatcherObject))
             action();
@@ -61,7 +61,7 @@ public static class DispatcherService
                                                  DispatcherObject sender = null,
                                                  DispatcherPriority priority = DispatcherPriority.Send)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         return CheckAccess(dispatcherObject)
             ? action()
@@ -82,7 +82,7 @@ public static class DispatcherService
                                                                   CancellationToken cancellationToken =
                                                                       default) //todo support ct
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         return CheckAccess(dispatcherObject)
             ? action()
@@ -93,7 +93,7 @@ public static class DispatcherService
                                                                  DispatcherObject sender = null,
                                                                  DispatcherPriority priority = DispatcherPriority.Send)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         if (CheckAccess(dispatcherObject))
             await funcTask();
@@ -106,7 +106,7 @@ public static class DispatcherService
                                                                        DispatcherPriority priority =
                                                                            DispatcherPriority.Send)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         return CheckAccess(dispatcherObject)
             ? await funcTask()
@@ -144,7 +144,7 @@ public static class DispatcherService
                                    DispatcherObject sender = null,
                                    DispatcherPriority priority = DispatcherPriority.Normal)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         FExCoreStatics.AsyncHelper.FireTaskAndForget(async () =>
             await dispatcherObject.Dispatcher.BeginInvoke(action, priority));
@@ -157,7 +157,7 @@ public static class DispatcherService
             SynchronizationContext.SetSynchronizationContext(
                 new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
 
-            T view = viewFunc();
+            var view = viewFunc();
             // When the window closes, shut down the dispatcher
             view.Closed += (_, _) => Dispatcher.CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
 

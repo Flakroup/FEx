@@ -12,30 +12,29 @@ public static class ExceptionExtensions
     private static readonly Func<Exception, StackTrace, Exception> _setStackTraceFunc =
         new Func<Func<Exception, StackTrace, Exception>>(static () =>
         {
-            ParameterExpression target = Expression.Parameter(typeof(Exception));
-            ParameterExpression stack = Expression.Parameter(typeof(StackTrace));
-            Type traceFormatType = typeof(StackTrace).GetNestedType("TraceFormat", BindingFlags.NonPublic);
+            var target = Expression.Parameter(typeof(Exception));
+            var stack = Expression.Parameter(typeof(StackTrace));
+            var traceFormatType = typeof(StackTrace).GetNestedType("TraceFormat", BindingFlags.NonPublic);
 
-            MethodInfo toString = typeof(StackTrace).GetMethod("ToString",
+            var toString = typeof(StackTrace).GetMethod("ToString",
                 BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 [traceFormatType],
                 null);
 
-            object normalTraceFormat =
+            var normalTraceFormat =
 #if NET9_0_OR_GREATER
                 Enum.GetValuesAsUnderlyingType(traceFormatType!).GetValue(0);
 #else
                 Enum.GetValues(traceFormatType!).GetValue(0);
 #endif
-            MethodCallExpression stackTraceString =
+            var stackTraceString =
                 Expression.Call(stack, toString!, Expression.Constant(normalTraceFormat, traceFormatType));
 
-            FieldInfo stackTraceStringField =
+            var stackTraceStringField =
                 typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
 
-            BinaryExpression assign =
-                Expression.Assign(Expression.Field(target, stackTraceStringField!), stackTraceString);
+            var assign = Expression.Assign(Expression.Field(target, stackTraceStringField!), stackTraceString);
 
             return Expression
                 .Lambda<Func<Exception, StackTrace, Exception>>(Expression.Block(assign, target), target, stack)
@@ -126,7 +125,7 @@ public static class ExceptionExtensions
             message.Append("Source: ").AppendLine(ex.Source);
 
         //Stack trace is expensive to create. Do it only once.
-        string stackTrace = ex.StackTrace;
+        var stackTrace = ex.StackTrace;
 
         if (!string.IsNullOrWhiteSpace(stackTrace))
         {

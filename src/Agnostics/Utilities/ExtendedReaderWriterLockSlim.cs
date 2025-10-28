@@ -59,7 +59,7 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
 
         while (true)
         {
-            bool hasLock = type == LockType.Write
+            var hasLock = type == LockType.Write
                 ? TryEnterWriteLock(timeout)
                 : TryEnterUpgradeableReadLock(timeout);
 

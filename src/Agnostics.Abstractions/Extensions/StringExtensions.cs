@@ -93,7 +93,7 @@ public static class StringExtensions
 
     public static void AppendJoin(this StringBuilder stringBuilder, IEnumerable collection)
     {
-        foreach (object value in collection)
+        foreach (var value in collection)
             stringBuilder.Append(value);
     }
 
@@ -149,9 +149,9 @@ public static class StringExtensions
     /// <returns>The index of the first occurrence of the specified strings, or -1 if no match was found.</returns>
     public static int IndexOf(this string value, params string[] matchCandidates)
     {
-        foreach (string checkValue in matchCandidates)
+        foreach (var checkValue in matchCandidates)
         {
-            int index = value.IndexOf(checkValue, StringComparison.Ordinal);
+            var index = value.IndexOf(checkValue, StringComparison.Ordinal);
 
             if (index != -1)
                 return index;
@@ -168,7 +168,7 @@ public static class StringExtensions
     /// <exception cref="Exception">Throw an exception when string is in incorrect format</exception>
     public static decimal FromString(this string value)
     {
-        string numberDecimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+        var numberDecimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
         const string dot = ".";
         const string comma = ",";
 
@@ -179,7 +179,7 @@ public static class StringExtensions
                  && comma != numberDecimalSeparator)
             value = value.Replace(comma, numberDecimalSeparator);
 
-        return decimal.TryParse(value, out decimal result)
+        return decimal.TryParse(value, out var result)
             ? result
             : throw new("Cannot unmarshal type decimal");
     }
@@ -192,7 +192,7 @@ public static class StringExtensions
         return baseUri switch
         {
             not null => new(baseUri, source),
-            _ => Uri.TryCreate(source, kind, out Uri result)
+            _ => Uri.TryCreate(source, kind, out var result)
                 ? result
                 : null
         };
@@ -233,9 +233,9 @@ public static class StringExtensions
         var sum = 0;
         var shouldApplyDouble = true;
 
-        for (int index = value.Length - 2; index >= 0; index--)
+        for (var index = value.Length - 2; index >= 0; index--)
         {
-            int currentDigit = value[index] - zeroChar;
+            var currentDigit = value[index] - zeroChar;
 
             if (currentDigit is < 0 or > 9)
                 return false;
@@ -247,7 +247,7 @@ public static class StringExtensions
             shouldApplyDouble = !shouldApplyDouble;
         }
 
-        int checkDigit = (10 - sum % 10) % 10;
+        var checkDigit = (10 - sum % 10) % 10;
 
         return
 #if NETSTANDARD2_0
@@ -432,8 +432,8 @@ public static class StringExtensions
                 break;
             }
 
-            string chunk = value.Substring(start, stringLength);
-            int splitIndex = chunk.LastIndexOf(splitValue, StringComparison.Ordinal);
+            var chunk = value.Substring(start, stringLength);
+            var splitIndex = chunk.LastIndexOf(splitValue, StringComparison.Ordinal);
 
             if (splitIndex == -1
                 || splitIndex == 0)
@@ -505,7 +505,7 @@ public static class StringExtensions
 
     public static bool MatchesRegex(this string text, Regex regex)
     {
-        Match match = regex.Match(text);
+        var match = regex.Match(text);
 
         return match.Value.Equals(text);
     }
@@ -681,7 +681,7 @@ public static class StringExtensions
 
     public static string Zip(this string str)
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(str);
+        var bytes = Encoding.UTF8.GetBytes(str);
 
         using var msi = new MemoryStream(bytes);
         using var mso = new MemoryStream();
@@ -710,7 +710,7 @@ public static class StringExtensions
     {
         var hex = new StringBuilder(ba.Length * 2);
 
-        foreach (byte b in ba)
+        foreach (var b in ba)
             hex.Append($"{b:x2}");
 
         return hex.ToString();
@@ -718,7 +718,7 @@ public static class StringExtensions
 
     public static byte[] StringToByteArray(this string hex)
     {
-        int numberChars = hex.Length;
+        var numberChars = hex.Length;
         var bytes = new byte[numberChars / 2];
 
         for (var i = 0; i < numberChars; i += 2)
@@ -743,7 +743,7 @@ public static class StringExtensions
 
         var lastWasCR = false;
 
-        foreach (char c in input)
+        foreach (var c in input)
         {
             if (lastWasCR)
             {
@@ -776,12 +776,12 @@ public static class StringExtensions
 
     public static string ComputeSha256Hash(this string rawData)
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(rawData);
+        var bytes = Encoding.UTF8.GetBytes(rawData);
 #if NETSTANDARD
         using var sha256Hash = SHA256.Create();
-        byte[] hash = sha256Hash.ComputeHash(bytes);
+        var hash = sha256Hash.ComputeHash(bytes);
 #else
-        byte[] hash = SHA256.HashData(bytes);
+        var hash = SHA256.HashData(bytes);
 #endif
         return hash.ByteArrayToString();
     }
@@ -815,19 +815,19 @@ public static class StringExtensions
 
 #if NETSTANDARD
         using var md5 = MD5.Create();
-        byte[] hash = md5.ComputeHash(stream);
+        var hash = md5.ComputeHash(stream);
 #else
-        byte[] hash = MD5.HashData(stream);
+        var hash = MD5.HashData(stream);
 #endif
         return BitConverter.ToString(hash).Replace("-", string.Empty).ToLower();
     }
 
     public static string RemoveDiacritics(this string text)
     {
-        string formD = text.Normalize(NormalizationForm.FormD);
+        var formD = text.Normalize(NormalizationForm.FormD);
         var sb = new StringBuilder();
 
-        foreach (char ch in formD.Select(ch => new
+        foreach (var ch in formD.Select(ch => new
                      {
                          ch,
                          uc = CharUnicodeInfo.GetUnicodeCategory(ch)
@@ -845,7 +845,7 @@ public static class StringExtensions
     /// <param name="value">String value to convert</param>
     /// <returns>Converted integer or -1 if conversion fails</returns>
     public static int ToInt(this string value) =>
-        int.TryParse(value, out int result)
+        int.TryParse(value, out var result)
             ? result
             : -1;
 }

@@ -15,7 +15,7 @@ public static class ReadOnlyDictionaryExtensions
             && dictionary.IsNotNullOrEmptyReadOnlyCollection()
             && dictionary.ContainsKey(key))
         {
-            (bool isSuccess, TValue value) = dictionary.GetReadOnlyValue(key);
+            var (isSuccess, value) = dictionary.GetReadOnlyValue(key);
 
             if (isSuccess)
                 return value;
@@ -27,7 +27,7 @@ public static class ReadOnlyDictionaryExtensions
     public static (bool isSuccess, TV value) GetReadOnlyValue<TK, TV>(this IReadOnlyDictionary<TK, TV> dictionary,
                                                                       TK key)
     {
-        bool res = dictionary.TryGetValue(key, out TV v);
+        var res = dictionary.TryGetValue(key, out var v);
 
         return (res, v);
     }

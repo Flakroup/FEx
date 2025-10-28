@@ -44,11 +44,11 @@ public static class DbContextOptionsBuilderExtensions
 
         try
         {
-            bool canConnect = SQLConnectionHelper.CheckMasterDbConnection(config);
+            var canConnect = SQLConnectionHelper.CheckMasterDbConnection(config);
 
             if (canConnect)
             {
-                string connectionString = SQLConnectionHelper.GetConnectionString(config);
+                var connectionString = SQLConnectionHelper.GetConnectionString(config);
 
                 options.UseSqlServer(connectionString,
                     serverDbContextOptionsBuilder =>

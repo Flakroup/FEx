@@ -114,7 +114,7 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
 
     public bool Remove(TKey key)
     {
-        bool flag = _dictionary.TryRemove(key, out TValue val);
+        var flag = _dictionary.TryRemove(key, out var val);
 
         if (flag)
             OnRemoveFromCollection(new KeyValuePair<TKey, TValue>(key, val), -1);
@@ -151,7 +151,7 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
     /// </exception>
     public bool TryAdd(TKey key, TValue value)
     {
-        bool flag = _dictionary.TryAdd(key, value);
+        var flag = _dictionary.TryAdd(key, value);
 
         if (flag)
             OnAddToCollection(new(key, _dictionary[key]), -1);
@@ -184,8 +184,8 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
                               Func<TKey, TValue> addValueFactory,
                               Func<TKey, TValue, TValue> updateValueFactory)
     {
-        bool hasKey = _dictionary.TryGetValue(key, out TValue oldValue);
-        TValue value = _dictionary.AddOrUpdate(key, addValueFactory, updateValueFactory);
+        var hasKey = _dictionary.TryGetValue(key, out var oldValue);
+        var value = _dictionary.AddOrUpdate(key, addValueFactory, updateValueFactory);
 
         if (hasKey)
             OnReplaceInCollection(new(key, value), new(key, oldValue), -1);
@@ -229,7 +229,7 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
 
     private void UpdateWithNotification(TKey key, TValue value)
     {
-        (bool hasBeenReplaced, TValue removedValue, TValue newValue) = _dictionary.AddOrReplaceValue(key, () => value);
+        var (hasBeenReplaced, removedValue, newValue) = _dictionary.AddOrReplaceValue(key, () => value);
 
         if (hasBeenReplaced)
             OnReplaceInCollection(new(key, value), new(key, removedValue), -1);

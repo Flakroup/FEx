@@ -45,7 +45,7 @@ public static class WebServices
         //requestUrl = Uri.EscapeUriString(requestUrl);
         if (requestUrl.IsNotNullOrEmptyString())
         {
-            using HttpClient client = PrepareHttpClient(requestUrl, credentials, resultAsJson, cookies);
+            using var client = PrepareHttpClient(requestUrl, credentials, resultAsJson, cookies);
             HttpResponseMessage response = null;
 
             try
@@ -71,7 +71,7 @@ public static class WebServices
             }
             catch (Exception ex)
             {
-                string webApiResp = string.Empty;
+                var webApiResp = string.Empty;
 
                 if (response is not null)
                     webApiResp = GetWebApiResponseCodeInfo(response.StatusCode);
@@ -162,7 +162,7 @@ public static class WebServices
             }
         };
 
-        WebClientExtensions.PrepareHttpClient(out HttpClient client, pars, resultAsJson);
+        WebClientExtensions.PrepareHttpClient(out var client, pars, resultAsJson);
 
         return client;
     }
@@ -218,7 +218,7 @@ public static class WebServices
                                                                     List<Cookie> cookies = null)
     {
         requestUrl = Uri.EscapeUriString(BaseRequestUrl + requestUrl);
-        using HttpClient client = PrepareHttpClient(requestUrl, credentials, false, cookies);
+        using var client = PrepareHttpClient(requestUrl, credentials, false, cookies);
 
         using HttpContent post = new StringContent(postContent,
             Encoding.UTF8,
@@ -258,7 +258,7 @@ public static class WebServices
         }
         catch (Exception ex)
         {
-            string webApiResp = string.Empty;
+            var webApiResp = string.Empty;
 
             if (response is not null)
                 webApiResp = GetWebApiResponseCodeInfo(response.StatusCode);
@@ -284,7 +284,7 @@ public static class WebServices
     /// <param name="statusCode"><see cref="HttpStatusCode" /> which to translate from.</param>
     /// <returns>Message <see cref="string" /></returns>
     public static string GetWebApiResponseCodeInfo(int statusCode) =>
-        StatusCodes.TryGetValue(statusCode, out string code)
+        StatusCodes.TryGetValue(statusCode, out var code)
             ? code
             : ((HttpStatusCode)statusCode).ToString();
 }

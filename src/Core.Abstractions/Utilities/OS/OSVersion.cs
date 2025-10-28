@@ -102,7 +102,7 @@ internal class OSVersion : IEquatable<OSVersion>
     {
         unchecked
         {
-            int hashCode = Major;
+            var hashCode = Major;
             hashCode = hashCode * 397 ^ Minor.GetHashCode();
             hashCode = hashCode * 397 ^ ProductType.GetHashCode();
 

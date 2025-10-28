@@ -136,7 +136,7 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
     {
         if (limitToCurrentThread)
         {
-            SynchronizationContext uiScheduler = SynchronizationContextExtensions.Get();
+            var uiScheduler = SynchronizationContextExtensions.Get();
             observable = observable.ObserveOn(uiScheduler);
         }
 

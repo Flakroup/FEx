@@ -25,8 +25,8 @@ public class HtmlWebHelper : IWebScraper
                                       NetworkCredential credential = null,
                                       CancellationToken cancellationToken = default)
     {
-        (HtmlWeb web, Task<HtmlDocument> docTask) = Load(pageLink, configWeb, encoding, credential, cancellationToken);
-        HtmlDocument doc = await docTask;
+        var (web, docTask) = Load(pageLink, configWeb, encoding, credential, cancellationToken);
+        var doc = await docTask;
 
         return action(web.ResponseUri, web, doc);
     }
@@ -40,7 +40,7 @@ public class HtmlWebHelper : IWebScraper
         var web = new HtmlWeb();
         configWeb?.Invoke(web);
 
-        Task<HtmlDocument> task = AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
+        var task = AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
             LoadHtmlDocumentAsync(web, pageLink, encoding, credential, cancellationToken));
 
         return (web, task);

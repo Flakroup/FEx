@@ -32,8 +32,8 @@ public class OneDriveClient
 
         try
         {
-            GraphServiceClient client = GetGraphServiceClient();
-            DriveCollectionResponse r = await client.Me.Drives.GetAsync(cancellationToken: cancellationToken);
+            var client = GetGraphServiceClient();
+            var r = await client.Me.Drives.GetAsync(cancellationToken: cancellationToken);
 
             var pageIterator = PageIterator<Drive, DriveCollectionResponse>.CreatePageIterator(client,
                 r,

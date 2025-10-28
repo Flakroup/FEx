@@ -38,7 +38,7 @@ public static class EventsExtensions
             || handler is null)
             return;
 
-        foreach (Delegate invocation in handler.GetInvocationList())
+        foreach (var invocation in handler.GetInvocationList())
         {
             if (invocation.Target is ISynchronizeInvoke { InvokeRequired: true } synchronizeInvoke)
                 synchronizeInvoke.Invoke(invocation, [sender, eventArgs]);

@@ -47,7 +47,7 @@ public static class CollectionExtensions
     /// <param name="items">The sequence of items to add to the collection.</param>
     public static void AddRange<T>(this ICollection<T> source, IEnumerable<T> items)
     {
-        foreach (T item in items)
+        foreach (var item in items)
             source.Add(item);
     }
 
@@ -74,13 +74,13 @@ public static class CollectionExtensions
     public static void AddRangeToCollection<T>(this ICollection<T> source, IList<T> items)
     {
         if (items.IsNotNullOrEmptyList())
-            foreach (T item in items)
+            foreach (var item in items)
                 source.Add(item);
     }
 
     public static void Remove<T>(this ICollection<T> source, Func<T, bool> predicate)
     {
-        foreach (T item in source.Where(predicate).ToList())
+        foreach (var item in source.Where(predicate).ToList())
             source.Remove(item);
     }
 
@@ -132,7 +132,7 @@ public static class CollectionExtensions
     {
         item.Guard(nameof(item));
 
-        int oldIndex = list.IndexOf(item);
+        var oldIndex = list.IndexOf(item);
 
         if (oldIndex == -1)
             throw new NullReferenceException("The list does not contain this item");

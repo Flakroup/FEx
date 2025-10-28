@@ -2,7 +2,6 @@
 
 namespace FEx.NuGetx;
 
-public interface INuGetExModule : IContainer<NuGetEx>, IContainer<NuGetManager>,
-    IContainer<NuGetLogger<NuGetManager>>
+public interface INuGetExModule : IContainer<NuGetEx>, IContainer<NuGetManager>, IContainer<NuGetLogger<NuGetManager>>
 {
 }

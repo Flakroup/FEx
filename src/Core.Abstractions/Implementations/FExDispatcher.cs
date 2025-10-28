@@ -63,7 +63,7 @@ public abstract class FExDispatcher : IFExDispatcher
 
     public virtual void InvokeOnMainThread(Action action, object sender = null)
     {
-        SynchronizationContext context = sender is Thread thread
+        var context = sender is Thread thread
             ? thread.GetThreadSynchronizationContext()
             : _mainThreadContextProvider.Context;
 
@@ -76,7 +76,7 @@ public abstract class FExDispatcher : IFExDispatcher
 
     public virtual T InvokeOnMainThread<T>(Func<T> action, object sender = null)
     {
-        SynchronizationContext context = sender is Thread thread
+        var context = sender is Thread thread
             ? thread.GetThreadSynchronizationContext()
             : _mainThreadContextProvider.Context;
 
@@ -95,7 +95,7 @@ public abstract class FExDispatcher : IFExDispatcher
     /// <inheritdoc />
     public virtual void SendInContext(Action action, object sender, uint? timeout = 3000)
     {
-        bool isInCtorOrMainContext = IsInCreationContext() || IsInMainContext();
+        var isInCtorOrMainContext = IsInCreationContext() || IsInMainContext();
 
         if (isInCtorOrMainContext)
         {
@@ -104,7 +104,7 @@ public abstract class FExDispatcher : IFExDispatcher
             return;
         }
 
-        StackTrace stackTrace = _stackTraceProvider.GetStackTrace();
+        var stackTrace = _stackTraceProvider.GetStackTrace();
 
         if (!_isDeadlockMonitoringEnabled
             || !timeout.HasValue)
@@ -133,7 +133,7 @@ public abstract class FExDispatcher : IFExDispatcher
 
     private void SendInThisOrMainThreadContextCore(Action action, object sender, StackTrace stackTrace)
     {
-        SynchronizationContext context = _ctorSynchronizationContext ?? MainThreadSynchronizationContext;
+        var context = _ctorSynchronizationContext ?? MainThreadSynchronizationContext;
 
         try
         {

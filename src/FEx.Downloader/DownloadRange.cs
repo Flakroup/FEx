@@ -90,12 +90,12 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
         DataLength = dataLength;
         Chunks = [];
 
-        long length = To - From + 1;
+        var length = To - From + 1;
         double operatingSize = Math.Min(length, MaxChunkSize);
         var chunksCount = (int)Math.Ceiling(length / operatingSize);
-        long offset = From;
+        var offset = From;
 
-        foreach (int chunkNr in Enumerable.Range(0, chunksCount))
+        foreach (var chunkNr in Enumerable.Range(0, chunksCount))
         {
             var end = (long)Math.Min(offset + operatingSize - 1, To);
             Chunks.Add(chunkNr, new(offset, end, Dir, progress));
@@ -107,22 +107,22 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
 
     public async Task DoDownloadAsync(int retryCount = 3)
     {
-        long from = From;
-        long to = To;
+        var from = From;
+        var to = To;
 
         while (retryCount >= 0
                && DState != DownloadState.Finished)
         {
-            int[] unfinishedChunks = Chunks.Where(x => x.Value.State != DownloadState.Finished)
+            var unfinishedChunks = Chunks.Where(x => x.Value.State != DownloadState.Finished)
                 .OrderBy(x => x.Value.From)
                 .Select(x => x.Key)
                 .ToArray();
 
             if (unfinishedChunks.Length > 0)
             {
-                (int start, int end)[] ranges = GetRanges(unfinishedChunks);
+                var ranges = GetRanges(unfinishedChunks);
 
-                foreach ((int start, int end) range in ranges)
+                foreach (var range in ranges)
                     await ProcessDownloadAsync(range.start, range.end);
             }
 
@@ -145,7 +145,7 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
     {
         var res = new List<int[]>();
 
-        foreach (int t in unfinishedChunks)
+        foreach (var t in unfinishedChunks)
         {
             if (res.Count == 0
                 || res[res.Count - 1][1] != t - 1)
@@ -162,7 +162,7 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
         var isFinished = true;
         long s = 0;
 
-        foreach (DownloadChunk c in Chunks.Values)
+        foreach (var c in Chunks.Values)
         {
             s += c.Size;
 
@@ -188,13 +188,13 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
             ReadenBytes = 0;
 
             DState = DownloadState.None;
-            HttpWebRequest myHttpWebRequest = Url.GetHttpRequest(Pars);
+            var myHttpWebRequest = Url.GetHttpRequest(Pars);
             myHttpWebRequest.AddRange(From, To);
 
             DState = DownloadState.Connecting;
-            using WebResponse res = await myHttpWebRequest.GetResponseAsync();
+            using var res = await myHttpWebRequest.GetResponseAsync();
             using var response = (HttpWebResponse)res;
-            ContentRangeHeaderValue retrievedContentRange = response.GetContentRange();
+            var retrievedContentRange = response.GetContentRange();
 
             if (retrievedContentRange?.From is null
                 || retrievedContentRange.To is null
@@ -206,7 +206,7 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
             }
             else
             {
-                using Stream streamResponse = response.GetResponseStream();
+                using var streamResponse = response.GetResponseStream();
 
                 if (streamResponse is null)
                     DState = DownloadState.Failed;
@@ -287,7 +287,7 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
 
     private void ClearChunks()
     {
-        foreach (DownloadChunk c in Chunks.Values)
+        foreach (var c in Chunks.Values)
             c.ClearChunk();
     }
 
@@ -297,10 +297,10 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
 
         while (bytesRead > 0)
         {
-            long start = From + ReadenBytes;
-            int chunkNo = Chunks.First(x => x.Value.From <= start && x.Value.To >= start).Key;
+            var start = From + ReadenBytes;
+            var chunkNo = Chunks.First(x => x.Value.From <= start && x.Value.To >= start).Key;
             var gapSize = (int)(Chunks[chunkNo].ExpectedSize - Chunks[chunkNo].Size);
-            int bytesToWrite = Math.Min(bytesRead, gapSize);
+            var bytesToWrite = Math.Min(bytesRead, gapSize);
 
             await Chunks[chunkNo].WriteBytesAsync(Buffer, offset, bytesToWrite, CancellationToken);
             ReadenBytes += bytesToWrite;

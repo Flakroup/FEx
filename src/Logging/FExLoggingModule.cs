@@ -16,7 +16,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace FEx.Logging;
@@ -75,7 +74,7 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
     {
         var collection = new LoggerProviderCollection();
 
-        foreach (ILoggerProvider loggerProvider in loggerProviders)
+        foreach (var loggerProvider in loggerProviders)
             collection.AddProvider(loggerProvider);
 
         return collection;
@@ -95,10 +94,10 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
     {
         var loggerFactory = (SerilogLoggerFactory)GetSerilogLoggerFactory(GetLoggerProviderCollection(LoggerProviders));
 
-        MethodInfo methodInfo = typeof(LoggerFactoryExtensions).GetMethods()
+        var methodInfo = typeof(LoggerFactoryExtensions).GetMethods()
             .Single(static x => x.Name == nameof(LoggerFactoryExtensions.CreateLogger) && x.IsGenericMethod);
 
-        MethodInfo genericMethod = methodInfo.MakeGenericMethod(senderType);
+        var genericMethod = methodInfo.MakeGenericMethod(senderType);
 
         return (ILogger)genericMethod.Invoke(loggerFactory, [loggerFactory]);
     }
@@ -126,7 +125,7 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
         if (!logs.Any())
             return;
 
-        string latestLogPath =
+        var latestLogPath =
 #if NETSTANDARD
             logs.OrderByDescending(static f => f.LastWriteTimeUtc).First().FullName;
 #else

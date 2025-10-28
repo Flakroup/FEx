@@ -32,7 +32,7 @@ public class StackTraceGenerator : IStackTraceProvider
         }
         catch (Exception exception1)
         {
-            Exception exception = exception1;
+            var exception = exception1;
 
             var str = exception.ToString();
 
@@ -48,17 +48,17 @@ public class StackTraceGenerator : IStackTraceProvider
             return null;
 
         var stackTraceFrames = new List<StackTraceFrame>();
-        StackFrame[] frames = GetStackTrace().GetFrames();
+        var frames = GetStackTrace().GetFrames();
 
         if (frames is null)
             return null;
 
-        StackFrame[] stackFrameArray = frames;
+        var stackFrameArray = frames;
 
         for (var i = 0; i < stackFrameArray.Length; i++)
         {
-            StackFrame stackFrame = stackFrameArray[i];
-            Type declaringType = stackFrame.GetMethod().DeclaringType;
+            var stackFrame = stackFrameArray[i];
+            var declaringType = stackFrame.GetMethod().DeclaringType;
 
             if (declaringType is not null)
                 stackTraceFrames.Add(new()
@@ -89,18 +89,17 @@ public class StackTraceGenerator : IStackTraceProvider
 
     private void CheatClrAndUseDynamicMethodsToGetStackTraceFast()
     {
-        Type stackTraceType = typeof(StackTrace);
-        Assembly stackTraceAssembly = stackTraceType.Assembly;
-        Type type = stackTraceAssembly.GetType("System.Diagnostics.StackFrameHelper");
+        var stackTraceType = typeof(StackTrace);
+        var stackTraceAssembly = stackTraceType.Assembly;
+        var type = stackTraceAssembly.GetType("System.Diagnostics.StackFrameHelper");
 
         if (type is null)
             return;
 
-        FieldInfo field = type.GetField("rgMethodHandle", BindingFlags.Instance | BindingFlags.NonPublic);
-        FieldInfo fieldInfo = type.GetField("rgiILOffset", BindingFlags.Instance | BindingFlags.NonPublic);
+        var field = type.GetField("rgMethodHandle", BindingFlags.Instance | BindingFlags.NonPublic);
+        var fieldInfo = type.GetField("rgiILOffset", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        MethodInfo method =
-            stackTraceType.GetMethod("GetStackFramesInternal", BindingFlags.Static | BindingFlags.NonPublic);
+        var method = stackTraceType.GetMethod("GetStackFramesInternal", BindingFlags.Static | BindingFlags.NonPublic);
 
         var dynamicMethod = new DynamicMethod("GetStackTraceFast",
             typeof(MethodHandleAndILOffset[]),
@@ -108,9 +107,9 @@ public class StackTraceGenerator : IStackTraceProvider
             type,
             true);
 
-        ConstructorInfo constructors = type.GetConstructors()[0];
-        bool length = constructors.GetParameters().Length == 2;
-        ILGenerator lGenerator = dynamicMethod.GetILGenerator();
+        var constructors = type.GetConstructors()[0];
+        var length = constructors.GetParameters().Length == 2;
+        var lGenerator = dynamicMethod.GetILGenerator();
         lGenerator.DeclareLocal(type);
 
         if (length)
@@ -142,7 +141,7 @@ public class StackTraceGenerator : IStackTraceProvider
 
     private bool RequiresStackTrace(string logger, string message)
     {
-        IStackTraceFilter[] stackTraceFilterArray = _stackTraceFilters;
+        var stackTraceFilterArray = _stackTraceFilters;
 
         if (stackTraceFilterArray.IsNullOrEmptyList())
             return true;
@@ -159,7 +158,7 @@ public class StackTraceGenerator : IStackTraceProvider
     private void SlowAndSafeApproachToGetStackTrace() =>
         _stackTraceCache = new(() =>
         {
-            StackFrame[] frames = new StackTrace(false).GetFrames();
+            var frames = new StackTrace(false).GetFrames();
 
             if (frames is null)
                 return new([]);
@@ -258,7 +257,7 @@ public class StackTraceGenerator : IStackTraceProvider
 
         public override int GetHashCode()
         {
-            IntPtr intPtr = _methodHandle;
+            var intPtr = _methodHandle;
 
             return intPtr.GetHashCode() * 397 ^ _offset;
         }
@@ -290,7 +289,7 @@ public class StackTraceGenerator : IStackTraceProvider
         {
             StackTrace stackTrace;
             StackTrace stackTrace1;
-            Key key = _createKey();
+            var key = _createKey();
             _rwLock.EnterReadLock();
 
             try
@@ -313,7 +312,7 @@ public class StackTraceGenerator : IStackTraceProvider
             {
                 IDictionary<Key, StackTrace> keys = _cachedTraces;
                 var stackTrace2 = new StackTrace(true);
-                StackTrace stackTrace3 = stackTrace2;
+                var stackTrace3 = stackTrace2;
                 keys[key] = stackTrace2;
                 stackTrace1 = stackTrace3;
             }

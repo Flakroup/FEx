@@ -56,7 +56,7 @@ public class StatusHub : IDisposable, IStatusHub
         Guid? key = null;
 
         if (unique)
-            foreach (KeyValuePair<Guid, string> s in Statuses)
+            foreach (var s in Statuses)
             {
                 if (s.Value == status)
                 {
@@ -77,7 +77,7 @@ public class StatusHub : IDisposable, IStatusHub
     public void RemoveStatus(Guid key)
     {
         if (Statuses.ContainsKey(key)
-            && Statuses.TryRemove(key, out string v))
+            && Statuses.TryRemove(key, out var v))
             StatusChange?.Report((key, v, NotifyCollectionChangedAction.Remove));
     }
 
@@ -102,7 +102,7 @@ public class StatusHub : IDisposable, IStatusHub
 
         var sb = new StringBuilder();
 
-        IList<string> statuses = GetStatuses();
+        var statuses = GetStatuses();
 
         for (var i = 0; i < statuses.Count; i++)
         {
@@ -117,7 +117,7 @@ public class StatusHub : IDisposable, IStatusHub
 
     public DisposableAction Log(string status, bool unique = true)
     {
-        Guid statusKey = AddStatus(status, unique);
+        var statusKey = AddStatus(status, unique);
 
         return new(() => RemoveStatus(statusKey));
     }

@@ -21,14 +21,14 @@ public static class UriExtensions
 
     public static string GetFileName(this HttpWebResponse response)
     {
-        Dictionary<string, string> responseHeaders = response.GetAllHeaders();
+        var responseHeaders = response.GetAllHeaders();
 
         return GetFileName(response.ResponseUri, responseHeaders);
     }
 
     public static string GetFileName(this HttpResponseMessage response)
     {
-        Dictionary<string, string[]> responseHeaders = response.GetAllHeaders();
+        var responseHeaders = response.GetAllHeaders();
 
         return GetFileName(response.RequestMessage!.RequestUri, responseHeaders);
     }
@@ -42,7 +42,7 @@ public static class UriExtensions
 
     private static string GetFileName(Uri responseUri, IDictionary<string, string> responseHeaders)
     {
-        string contentDispositionHeader = responseHeaders.Keys.FindInEnumerable(x => x.IsEqual("content-disposition"));
+        var contentDispositionHeader = responseHeaders.Keys.FindInEnumerable(x => x.IsEqual("content-disposition"));
 
         return GetFileName(responseUri,
             contentDispositionHeader is not null
@@ -53,7 +53,7 @@ public static class UriExtensions
 
     private static string GetFileName(Uri responseUri, IDictionary<string, string[]> responseHeaders)
     {
-        string contentDispositionHeader = responseHeaders.Keys.FindInEnumerable(x => x.IsEqual("content-disposition"));
+        var contentDispositionHeader = responseHeaders.Keys.FindInEnumerable(x => x.IsEqual("content-disposition"));
 
         return GetFileName(responseUri,
             contentDispositionHeader is not null
@@ -75,7 +75,7 @@ public static class UriExtensions
                         ? x[1]
                         : null);
 
-            string fileNameKey = values.Keys.FirstOrDefault(x => x.IsEqual("filename"));
+            var fileNameKey = values.Keys.FirstOrDefault(x => x.IsEqual("filename"));
 
             if (fileNameKey is not null
                 && values.TryGetKeyValue(fileNameKey).IsNotNullOrEmptyString())
@@ -87,10 +87,10 @@ public static class UriExtensions
             }
         }
 
-        string fName = Uri.UnescapeDataString(responseUri.Segments.Last());
-        string ext = Path.GetExtension(fName);
+        var fName = Uri.UnescapeDataString(responseUri.Segments.Last());
+        var ext = Path.GetExtension(fName);
 
-        string mimeType = responseHeaders.Where(x => x.Key.IsEqual("Content-Type"))
+        var mimeType = responseHeaders.Where(x => x.Key.IsEqual("Content-Type"))
             .Select(x => x.Value)
             .SingleOrDefault()
             ?.FirstOrDefault()

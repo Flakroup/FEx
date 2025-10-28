@@ -188,12 +188,12 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
 
         if (ItemsOwner is IHierarchicalVirtualizationAndScrollInfo groupItem)
         {
-            Rect viewport = groupItem.Constraints.Viewport;
-            Size headerSize = groupItem.HeaderDesiredSizes.PixelSize;
+            var viewport = groupItem.Constraints.Viewport;
+            var headerSize = groupItem.HeaderDesiredSizes.PixelSize;
 
-            double viewportWidth = Math.Max(viewport.Size.Width, 0);
+            var viewportWidth = Math.Max(viewport.Size.Width, 0);
 
-            double viewporteHeight = Orientation == Orientation.Horizontal
+            var viewporteHeight = Orientation == Orientation.Horizontal
                 ? Math.Max(viewport.Size.Height, 0)
                 : Math.Max(viewport.Size.Height - headerSize.Height, 0);
 

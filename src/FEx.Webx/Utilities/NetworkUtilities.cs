@@ -20,7 +20,7 @@ public static class NetworkUtilities
     {
         var dictionary = new Dictionary<NetworkInterfaceType, HashSet<string>>();
 
-        foreach (NetworkInterface item in NetworkInterface.GetAllNetworkInterfaces())
+        foreach (var item in NetworkInterface.GetAllNetworkInterfaces())
         {
             if (item.OperationalStatus == OperationalStatus.Up
                 && (!ommitLoopbacks || item.NetworkInterfaceType != NetworkInterfaceType.Loopback)
@@ -34,7 +34,7 @@ public static class NetworkUtilities
                 if (!dictionary.ContainsKey(item.NetworkInterfaceType))
                     dictionary.Add(item.NetworkInterfaceType, [.. ipAddresses]);
                 else
-                    foreach (string ip in ipAddresses)
+                    foreach (var ip in ipAddresses)
                         dictionary[item.NetworkInterfaceType].Add(ip);
             }
         }

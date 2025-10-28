@@ -1,4 +1,4 @@
-﻿using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Asyncx.Abstractions;
 using FEx.Flurlx.Abstractions.Interfaces;
 using FEx.Flurlx.Extensions;
@@ -47,7 +47,7 @@ public abstract class FlurlApiBase : AsyncInitializable
                                                               TReq requestContent = default,
                                                               CancellationToken cancellationToken = default)
     {
-        IFlurlRequest req = FlurlClient.Request(apiPath);
+        var req = FlurlClient.Request(apiPath);
 
         if (func is not null)
             req = func(req).FixBooleanQueryParameters();
@@ -57,9 +57,9 @@ public abstract class FlurlApiBase : AsyncInitializable
         var responseUri = req.Url.ToUri();
 
         // Execute with Polly resilience
-        HttpResponseMessage httpResponse = await ResiliencePolicy.ExecuteAsync(async ct =>
+        using var httpResponse = await ResiliencePolicy.ExecuteAsync(async ct =>
             {
-                IFlurlResponse flurlResponse = method switch
+                using var flurlResponse = method switch
                 {
                     RequestMethod.GET => await req.GetAsync(cancellationToken: ct),
                     RequestMethod.POST => await req.PostJsonAsync(requestContent, cancellationToken: ct),
@@ -76,9 +76,9 @@ public abstract class FlurlApiBase : AsyncInitializable
             cancellationToken);
 
 #if NET5_0_OR_GREATER
-        string content = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
+        var content = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
 #else
-        string content = await httpResponse.Content.ReadAsStringAsync();
+        var content = await httpResponse.Content.ReadAsStringAsync();
 #endif
 
         if (!httpResponse.IsSuccessStatusCode)
@@ -94,7 +94,7 @@ public abstract class FlurlApiBase : AsyncInitializable
 #endif
         }
 
-        T res = content.FromJson<T>();
+        var res = content.FromJson<T>();
 
         return res;
     }

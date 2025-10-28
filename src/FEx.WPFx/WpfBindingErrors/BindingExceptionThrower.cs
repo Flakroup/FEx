@@ -88,7 +88,7 @@ public static class BindingExceptionThrower
             if (!BindingErrorsCache.Any(x => x.Equals(exception)))
             {
                 BindingErrorsCache.Add(exception);
-                string json = JsonConvert.SerializeObject(BindingErrorsCache, Formatting.Indented, DefaultSettings);
+                var json = JsonConvert.SerializeObject(BindingErrorsCache, Formatting.Indented, DefaultSettings);
                 File.WriteAllText(BindingErrorsCacheFile, json);
                 shouldBeThrown = true;
             }
@@ -103,7 +103,7 @@ public static class BindingExceptionThrower
     private static HashSet<BindingException> GetCachedBindingErrors()
     {
         var result = new HashSet<BindingException>();
-        string dir = Path.GetDirectoryName(BindingErrorsCacheFile);
+        var dir = Path.GetDirectoryName(BindingErrorsCacheFile);
 
         if (dir is not null)
         {
@@ -111,8 +111,8 @@ public static class BindingExceptionThrower
 
             if (File.Exists(BindingErrorsCacheFile))
             {
-                string json = File.ReadAllText(BindingErrorsCacheFile);
-                HashSet<BindingException> obj = JsonConvert.DeserializeObject<HashSet<BindingException>>(json);
+                var json = File.ReadAllText(BindingErrorsCacheFile);
+                var obj = JsonConvert.DeserializeObject<HashSet<BindingException>>(json);
 
                 if (obj is not null)
                     result = obj;

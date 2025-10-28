@@ -20,14 +20,14 @@ public static class DoubleExtensions
                 floatDigits,
                 "Only values between 1 and 7 are supported");
 
-        double floatComparison = GetFloatComparison(floatDigits);
+        var floatComparison = GetFloatComparison(floatDigits);
 
         return Math.Abs(left - right) < floatComparison;
     }
 
     public static double ToDouble(this string value)
     {
-        string numberDecimalSeparator = Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+        var numberDecimalSeparator = Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 
         if (
 #if NETSTANDARD
@@ -46,7 +46,7 @@ public static class DoubleExtensions
             && "," != numberDecimalSeparator)
             value = value.Replace(",", numberDecimalSeparator);
 
-        return double.TryParse(value, out double l)
+        return double.TryParse(value, out var l)
             ? l
             : throw new("Cannot unmarshal type double");
     }

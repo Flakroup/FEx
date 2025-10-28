@@ -1,7 +1,6 @@
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.PersistentStorage.Abstractions;
 using FEx.PersistentStorage.Abstractions.Enums;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace FEx.PersistentStorage.Rx.Subjects;
@@ -24,9 +23,7 @@ public abstract class CollectionCachedSubject<T, TCacheable> : CollectionCachedS
         if (!cachedData.Any())
             return;
 
-        IReadOnlyList<T> data = cachedData.ConvertAll(ConvertCachedDataToModel)
-            .Where(cached => cached is not null)
-            .ToReadOnlyList();
+        var data = cachedData.ConvertAll(ConvertCachedDataToModel).Where(cached => cached is not null).ToReadOnlyList();
 
         if (!data.Any())
             return;

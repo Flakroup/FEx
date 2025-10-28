@@ -1,7 +1,6 @@
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Core.Abstractions.Interfaces;
 using Microsoft.CSharp;
-using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -17,14 +16,14 @@ public class ResxManager : IResxManager
     {
         if (data.Count > 0)
         {
-            Dictionary<string, string> resourceEntries = GetResourcesEntries(path);
+            var resourceEntries = GetResourcesEntries(path);
 
             //Modify resources here...
-            foreach (KeyValuePair<string, string> entry in data)
+            foreach (var entry in data)
             {
                 if (!resourceEntries.ContainsValue(entry.Value))
                 {
-                    string temp = entry.Key;
+                    var temp = entry.Key;
                     var apx = 0;
 
                     while (resourceEntries.ContainsKey(temp))
@@ -37,7 +36,7 @@ public class ResxManager : IResxManager
                 }
             }
 
-            string directoryPath = Path.GetDirectoryName(path);
+            var directoryPath = Path.GetDirectoryName(path);
 
             if (!string.IsNullOrEmpty(directoryPath))
                 Directory.CreateDirectory(directoryPath);
@@ -48,7 +47,7 @@ public class ResxManager : IResxManager
             //Write the combined resource file
             var resourceWriter = new ResXResourceWriter(path);
 
-            foreach (KeyValuePair<string, string> entry in resourceEntries)
+            foreach (var entry in resourceEntries)
                 resourceWriter.AddResource(entry.Key, resourceEntries[entry.Key]);
 
             resourceWriter.Generate();
@@ -69,7 +68,7 @@ public class ResxManager : IResxManager
             foreach (DictionaryEntry entry in reader)
             {
                 var key = entry.Key.ToString();
-                string value = entry.Value?.ToString() ?? string.Empty;
+                var value = entry.Value?.ToString() ?? string.Empty;
 
                 if (key.IsNotNullOrWhiteSpace()
                     && !resourceEntries.ContainsValue(value))
@@ -91,12 +90,12 @@ public class ResxManager : IResxManager
         var generatedCodeNamespace = $"{projectNamespace}.Properties";
         var codeProvider = new CSharpCodeProvider();
 
-        CodeCompileUnit code = StronglyTypedResourceBuilder.Create(resx,
+        var code = StronglyTypedResourceBuilder.Create(resx,
             fileName,
             generatedCodeNamespace,
             codeProvider,
             false,
-            out string[] unmatchedElements);
+            out var unmatchedElements);
 
         using var writer = new StreamWriter(resxDesigner, false, Encoding.UTF8);
         codeProvider.GenerateCodeFromCompileUnit(code, writer, new());

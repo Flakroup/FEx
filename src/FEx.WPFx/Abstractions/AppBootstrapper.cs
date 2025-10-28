@@ -135,8 +135,8 @@ public abstract class AppBootstrapper<TContainer> : Application
     {
         using (_ = LogToHub("Checking duplicated instances"))
         {
-            int[] otherInstances = AppUtility.GetOtherInstances();
-            bool isSingleInstance = otherInstances.Length == 0;
+            var otherInstances = AppUtility.GetOtherInstances();
+            var isSingleInstance = otherInstances.Length == 0;
 
             if (isSingleInstance)
                 return;
@@ -148,7 +148,7 @@ public abstract class AppBootstrapper<TContainer> : Application
                 == MessageResult.No)
                 ExitApp(0);
 
-            foreach (int pid in otherInstances)
+            foreach (var pid in otherInstances)
             {
                 using var p = Process.GetProcessById(pid);
                 p.Kill();

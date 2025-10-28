@@ -1,6 +1,5 @@
 using FEx.Logging.Abstractions.Interfaces;
 using Shouldly;
-using StrongInject;
 using System;
 using Xunit;
 
@@ -15,9 +14,9 @@ public class LoggingConfigurationTests : IDisposable
         using var container = new TestContainer();
 
         // Assert
-        Owned<IFExLoggingService> loggingService = container.Resolve<IFExLoggingService>();
-        Owned<IFExLoggingConfigurator> configurator = container.Resolve<IFExLoggingConfigurator>();
-        Owned<ILoggingConfiguration> configuration = container.Resolve<ILoggingConfiguration>();
+        var loggingService = container.Resolve<IFExLoggingService>();
+        var configurator = container.Resolve<IFExLoggingConfigurator>();
+        var configuration = container.Resolve<ILoggingConfiguration>();
 
         loggingService.Value.ShouldNotBeNull();
         configurator.Value.ShouldNotBeNull();

@@ -16,7 +16,7 @@ public class SerilogConfigurationTests : IDisposable
     {
         // Arrange
         using var container = new TestContainer();
-        IFExLoggingConfigurator configurator = container.Resolve<IFExLoggingConfigurator>().Value;
+        var configurator = container.Resolve<IFExLoggingConfigurator>().Value;
 
         // Act
         configurator.ExternalLoggingLevel = LogEventLevel.Warning;

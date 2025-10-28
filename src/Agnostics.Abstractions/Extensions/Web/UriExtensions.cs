@@ -39,7 +39,7 @@ public static class UriExtensions
 #if NET
 #pragma warning restore SYSLIB0014
 #endif
-            using WebResponse _ = await request.GetResponseAsync();
+            using var _ = await request.GetResponseAsync();
 
             return true;
         }
@@ -58,7 +58,7 @@ public static class UriExtensions
                                                                       WebRequestParams pars = null,
                                                                       Stopwatch stopwatch = null)
     {
-        HttpWebRequest req = url.GetHttpRequest(pars);
+        var req = url.GetHttpRequest(pars);
         stopwatch?.Restart();
         var response = (HttpWebResponse)await req.GetResponseAsync();
         stopwatch?.Stop();
@@ -70,9 +70,9 @@ public static class UriExtensions
                                                               WebRequestParams pars = null,
                                                               Stopwatch stopwatch = null)
     {
-        WebRequest req = url.GetWebRequest(pars);
+        var req = url.GetWebRequest(pars);
         stopwatch?.Restart();
-        WebResponse response = await req.GetResponseAsync();
+        var response = await req.GetResponseAsync();
         stopwatch?.Stop();
 
         return response;
@@ -83,7 +83,7 @@ public static class UriExtensions
 #if NET
 #pragma warning disable SYSLIB0014
 #endif
-        HttpWebRequest myWebRequest = WebRequest.CreateHttp(url);
+        var myWebRequest = WebRequest.CreateHttp(url);
 #if NET
 #pragma warning restore SYSLIB0014
 #endif
@@ -115,7 +115,7 @@ public static class UriExtensions
                                                                   int rangeTo,
                                                                   WebRequestParams pars = null)
     {
-        using WebResponse resp = await url.GetUriResponseAsync(pars);
+        using var resp = await url.GetUriResponseAsync(pars);
 
         return await resp.TryGetRangeAsync(rangeFrom, rangeTo, pars);
     }

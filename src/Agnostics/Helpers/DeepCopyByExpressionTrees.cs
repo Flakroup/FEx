@@ -12,7 +12,7 @@ using System.Reflection;
 namespace FEx.Agnostics.Helpers;
 
 /// <summary>
-///     Superfast deep copier class, which uses Expression trees.
+/// Superfast deep copier class, which uses Expression trees.
 /// </summary>
 public static class DeepCopyByExpressionTrees
 {
@@ -38,7 +38,7 @@ public static class DeepCopyByExpressionTrees
         [];
 
     /// <summary>
-    ///     Creates a deep copy of an object.
+    /// Creates a deep copy of an object.
     /// </summary>
     /// <typeparam name="T">Object type.</typeparam>
     /// <param name="original">Object to copy.</param>
@@ -57,7 +57,7 @@ public static class DeepCopyByExpressionTrees
         if (original is null)
             return null;
 
-        Type type = original.GetType();
+        var type = original.GetType();
 
         if (IsDelegate(type))
             return null;
@@ -66,14 +66,13 @@ public static class DeepCopyByExpressionTrees
             && !IsTypeToDeepCopy(type))
             return original;
 
-        if (copiedReferencesDict.TryGetValue(original, out object alreadyCopiedObject))
+        if (copiedReferencesDict.TryGetValue(original, out var alreadyCopiedObject))
             return alreadyCopiedObject;
 
         if (type == ObjectType)
             return new();
 
-        Func<object, Dictionary<object, object>, object> compiledCopyFunction =
-            GetOrCreateCompiledLambdaCopyFunction(type);
+        var compiledCopyFunction = GetOrCreateCompiledLambdaCopyFunction(type);
 
         return compiledCopyFunction(original, copiedReferencesDict);
     }
@@ -85,14 +84,12 @@ public static class DeepCopyByExpressionTrees
         // That is why we do not modify the old dictionary instance but
         // we replace it with a new instance everytime.
 
-        if (!_compiledCopyFunctionsDictionary.TryGetValue(type,
-                out Func<object, Dictionary<object, object>, object> compiledCopyFunction))
+        if (!_compiledCopyFunctionsDictionary.TryGetValue(type, out var compiledCopyFunction))
             lock (CompiledCopyFunctionsDictionaryLocker)
             {
                 if (!_compiledCopyFunctionsDictionary.TryGetValue(type, out compiledCopyFunction))
                 {
-                    Expression<Func<object, Dictionary<object, object>, object>> uncompiledCopyFunction =
-                        CreateCompiledLambdaCopyFunctionForType(type);
+                    var uncompiledCopyFunction = CreateCompiledLambdaCopyFunctionForType(type);
 
                     compiledCopyFunction = uncompiledCopyFunction.Compile();
 
@@ -114,13 +111,13 @@ public static class DeepCopyByExpressionTrees
         ///// INITIALIZATION OF EXPRESSIONS AND VARIABLES
 
         InitializeExpressions(type,
-            out ParameterExpression inputParameter,
-            out ParameterExpression inputDictionary,
-            out ParameterExpression outputVariable,
-            out ParameterExpression boxingVariable,
-            out LabelTarget endLabel,
-            out List<ParameterExpression> variables,
-            out List<Expression> expressions);
+            out var inputParameter,
+            out var inputDictionary,
+            out var outputVariable,
+            out var boxingVariable,
+            out var endLabel,
+            out var variables,
+            out var expressions);
 
         ///// RETURN NULL IF ORIGINAL IS NULL
 
@@ -198,7 +195,7 @@ public static class DeepCopyByExpressionTrees
         /////     return null;
         ///// }
 
-        ConditionalExpression ifNullThenReturnNullExpression = Expression.IfThen(
+        var ifNullThenReturnNullExpression = Expression.IfThen(
             Expression.Equal(inputParameter, Expression.Constant(null, ObjectType)),
             Expression.Return(endLabel));
 
@@ -214,10 +211,10 @@ public static class DeepCopyByExpressionTrees
         /////
         ///// var output = (<type>)input.MemberwiseClone();
 
-        MethodInfo memberwiseCloneMethod =
+        var memberwiseCloneMethod =
             ObjectType.GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        BinaryExpression memberwiseCloneInputExpression = Expression.Assign(outputVariable,
+        var memberwiseCloneInputExpression = Expression.Assign(outputVariable,
             Expression.Convert(Expression.Call(inputParameter, memberwiseCloneMethod), type));
 
         expressions.Add(memberwiseCloneInputExpression);
@@ -232,7 +229,7 @@ public static class DeepCopyByExpressionTrees
         /////
         ///// inputDictionary[(Object)input] = (Object)output;
 
-        BinaryExpression storeReferencesExpression = Expression.Assign(
+        var storeReferencesExpression = Expression.Assign(
             Expression.Property(inputDictionary, ObjectDictionaryType.GetProperty("Item"), inputParameter),
             Expression.Convert(outputVariable, ObjectType));
 
@@ -251,7 +248,7 @@ public static class DeepCopyByExpressionTrees
 
         expressions.Add(Expression.Convert(outputVariable, ObjectType));
 
-        BlockExpression finalBody = Expression.Block(variables, expressions);
+        var finalBody = Expression.Block(variables, expressions);
 
         return Expression.Lambda<Func<object, Dictionary<object, object>, object>>(finalBody,
             inputParameter,
@@ -312,13 +309,13 @@ public static class DeepCopyByExpressionTrees
         ///// }
         ///// ENDLABELFORLOOP1:
 
-        int rank = type.GetArrayRank();
+        var rank = type.GetArrayRank();
 
-        List<ParameterExpression> indices = GenerateIndices(rank);
+        var indices = GenerateIndices(rank);
 
         variables.AddRange(indices);
 
-        Type elementType = type.GetElementType();
+        var elementType = type.GetElementType();
 
         Expression forExpression = ArrayFieldToArrayFieldAssignExpression(inputParameter,
             inputDictionary,
@@ -329,7 +326,7 @@ public static class DeepCopyByExpressionTrees
 
         for (var dimension = 0; dimension < rank; dimension++)
         {
-            ParameterExpression indexVariable = indices[dimension];
+            var indexVariable = indices[dimension];
 
             forExpression = LoopIntoLoopExpression(inputParameter, indexVariable, forExpression, dimension);
         }
@@ -347,7 +344,7 @@ public static class DeepCopyByExpressionTrees
 
         for (var i = 0; i < arrayRank; i++)
         {
-            ParameterExpression indexVariable = Expression.Variable(typeof(int));
+            var indexVariable = Expression.Variable(typeof(int));
 
             indices.Add(indexVariable);
         }
@@ -369,13 +366,13 @@ public static class DeepCopyByExpressionTrees
         /////     = (<elementType>)DeepCopyByExpressionTreeObj(
         /////            (Object)inputarray[i1, i2, ..., in]);
 
-        IndexExpression indexTo = Expression.ArrayAccess(outputVariable, indices);
+        var indexTo = Expression.ArrayAccess(outputVariable, indices);
 
-        MethodCallExpression indexFrom = Expression.ArrayIndex(Expression.Convert(inputParameter, arrayType), indices);
+        var indexFrom = Expression.ArrayIndex(Expression.Convert(inputParameter, arrayType), indices);
 
-        bool forceDeepCopy = elementType != ObjectType;
+        var forceDeepCopy = elementType != ObjectType;
 
-        UnaryExpression rightSide = Expression.Convert(Expression.Call(DeepCopyByExpressionTreeObjMethod,
+        var rightSide = Expression.Convert(Expression.Call(DeepCopyByExpressionTreeObjMethod,
                 Expression.Convert(indexFrom, ObjectType),
                 Expression.Constant(forceDeepCopy, typeof(bool)),
                 inputDictionary),
@@ -404,20 +401,20 @@ public static class DeepCopyByExpressionTrees
         ///// }
         ///// ENDLABELFORLOOP:
 
-        ParameterExpression lengthVariable = Expression.Variable(typeof(int));
+        var lengthVariable = Expression.Variable(typeof(int));
 
-        LabelTarget endLabelForThisLoop = Expression.Label();
+        var endLabelForThisLoop = Expression.Label();
 
-        LoopExpression newLoop = Expression.Loop(Expression.Block([],
+        var newLoop = Expression.Loop(Expression.Block([],
                 Expression.IfThen(Expression.GreaterThanOrEqual(indexVariable, lengthVariable),
                     Expression.Break(endLabelForThisLoop)),
                 loopToEncapsulate,
                 Expression.PostIncrementAssign(indexVariable)),
             endLabelForThisLoop);
 
-        BinaryExpression lengthAssignment = GetLengthForDimensionExpression(lengthVariable, inputParameter, dimension);
+        var lengthAssignment = GetLengthForDimensionExpression(lengthVariable, inputParameter, dimension);
 
-        BinaryExpression indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
+        var indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
 
         return Expression.Block([lengthVariable], lengthAssignment, indexAssignment, newLoop);
     }
@@ -430,9 +427,9 @@ public static class DeepCopyByExpressionTrees
         /////
         ///// length = ((Array)input).GetLength(i); 
 
-        MethodInfo getLengthMethod = typeof(Array).GetMethod("GetLength", BindingFlags.Public | BindingFlags.Instance);
+        var getLengthMethod = typeof(Array).GetMethod("GetLength", BindingFlags.Public | BindingFlags.Instance);
 
-        ConstantExpression dimensionConstant = Expression.Constant(i);
+        var dimensionConstant = Expression.Constant(i);
 
         return Expression.Assign(lengthVariable,
             Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod, dimensionConstant));
@@ -445,24 +442,23 @@ public static class DeepCopyByExpressionTrees
                                               ParameterExpression boxingVariable,
                                               List<Expression> expressions)
     {
-        FieldInfo[] fields = GetAllRelevantFields(type);
+        var fields = GetAllRelevantFields(type);
 
         var readonlyFields = fields.Where(f => f.IsInitOnly).ToList();
         var writableFields = fields.Where(f => !f.IsInitOnly).ToList();
 
         ///// READONLY FIELDS COPY (with boxing)
 
-        bool shouldUseBoxing = readonlyFields.Count > 0;
+        var shouldUseBoxing = readonlyFields.Count > 0;
 
         if (shouldUseBoxing)
         {
-            BinaryExpression boxingExpression =
-                Expression.Assign(boxingVariable, Expression.Convert(outputVariable, ObjectType));
+            var boxingExpression = Expression.Assign(boxingVariable, Expression.Convert(outputVariable, ObjectType));
 
             expressions.Add(boxingExpression);
         }
 
-        foreach (FieldInfo field in readonlyFields)
+        foreach (var field in readonlyFields)
         {
             if (IsDelegate(field.FieldType))
                 ReadonlyFieldToNullExpression(field, boxingVariable, expressions);
@@ -472,15 +468,14 @@ public static class DeepCopyByExpressionTrees
 
         if (shouldUseBoxing)
         {
-            BinaryExpression unboxingExpression =
-                Expression.Assign(outputVariable, Expression.Convert(boxingVariable, type));
+            var unboxingExpression = Expression.Assign(outputVariable, Expression.Convert(boxingVariable, type));
 
             expressions.Add(unboxingExpression);
         }
 
         ///// NOT-READONLY FIELDS COPY
 
-        foreach (FieldInfo field in writableFields)
+        foreach (var field in writableFields)
         {
             if (IsDelegate(field.FieldType))
                 WritableFieldToNullExpression(field, outputVariable, expressions);
@@ -493,7 +488,7 @@ public static class DeepCopyByExpressionTrees
     {
         var fieldsList = new List<FieldInfo>();
 
-        Type typeCache = type;
+        var typeCache = type;
 
         while (typeCache is not null)
         {
@@ -523,7 +518,7 @@ public static class DeepCopyByExpressionTrees
         /////
         ///// fieldInfo.SetValue(boxing, <fieldtype>null);
 
-        MethodCallExpression fieldToNullExpression = Expression.Call(Expression.Constant(field),
+        var fieldToNullExpression = Expression.Call(Expression.Constant(field),
             SetValueMethod,
             boxingVariable,
             Expression.Constant(null, field.FieldType));
@@ -545,11 +540,11 @@ public static class DeepCopyByExpressionTrees
         /////
         ///// fieldInfo.SetValue(boxing, DeepCopyByExpressionTreeObj((Object)((<type>)input).<field>))
 
-        MemberExpression fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
+        var fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
 
-        bool forceDeepCopy = field.FieldType != ObjectType;
+        var forceDeepCopy = field.FieldType != ObjectType;
 
-        MethodCallExpression fieldDeepCopyExpression = Expression.Call(Expression.Constant(field, FieldInfoType),
+        var fieldDeepCopyExpression = Expression.Call(Expression.Constant(field, FieldInfoType),
             SetValueMethod,
             boxingVariable,
             Expression.Call(DeepCopyByExpressionTreeObjMethod,
@@ -568,9 +563,9 @@ public static class DeepCopyByExpressionTrees
         /////
         ///// output.<field> = (<type>)null;
 
-        MemberExpression fieldTo = Expression.Field(outputVariable, field);
+        var fieldTo = Expression.Field(outputVariable, field);
 
-        BinaryExpression fieldToNullExpression = Expression.Assign(fieldTo, Expression.Constant(null, field.FieldType));
+        var fieldToNullExpression = Expression.Assign(fieldTo, Expression.Constant(null, field.FieldType));
 
         expressions.Add(fieldToNullExpression);
     }
@@ -586,15 +581,15 @@ public static class DeepCopyByExpressionTrees
         /////
         ///// output.<field> = (<fieldType>)DeepCopyByExpressionTreeObj((Object)((<type>)input).<field>);
 
-        MemberExpression fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
+        var fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
 
-        Type fieldType = field.FieldType;
+        var fieldType = field.FieldType;
 
-        MemberExpression fieldTo = Expression.Field(outputVariable, field);
+        var fieldTo = Expression.Field(outputVariable, field);
 
-        bool forceDeepCopy = field.FieldType != ObjectType;
+        var forceDeepCopy = field.FieldType != ObjectType;
 
-        BinaryExpression fieldDeepCopyExpression = Expression.Assign(fieldTo,
+        var fieldDeepCopyExpression = Expression.Assign(fieldTo,
             Expression.Convert(Expression.Call(DeepCopyByExpressionTreeObjMethod,
                     Expression.Convert(fieldFrom, ObjectType),
                     Expression.Constant(forceDeepCopy, typeof(bool)),
@@ -619,7 +614,7 @@ public static class DeepCopyByExpressionTrees
         // That is why we do not modify the old dictionary instance but
         // we replace it with a new instance everytime.
 
-        if (!_isStructTypeToDeepCopyDictionary.TryGetValue(type, out bool isStructTypeToDeepCopy))
+        if (!_isStructTypeToDeepCopyDictionary.TryGetValue(type, out var isStructTypeToDeepCopy))
             lock (IsStructTypeToDeepCopyDictionaryLocker)
             {
                 if (!_isStructTypeToDeepCopyDictionary.TryGetValue(type, out isStructTypeToDeepCopy))
@@ -650,18 +645,18 @@ public static class DeepCopyByExpressionTrees
 
         alreadyCheckedTypes.Add(type);
 
-        FieldInfo[] allFields = GetAllFields(type);
+        var allFields = GetAllFields(type);
 
         var allFieldTypes = allFields.Select(f => f.FieldType).Distinct().ToList();
 
-        bool hasFieldsWithClasses = allFieldTypes.Any(IsClassOtherThanString);
+        var hasFieldsWithClasses = allFieldTypes.Any(IsClassOtherThanString);
 
         if (hasFieldsWithClasses)
             return true;
 
         var notBasicStructsTypes = allFieldTypes.Where(IsStructOtherThanBasicValueTypes).ToList();
 
-        foreach (Type typeToCheck in notBasicStructsTypes.Where(t => !alreadyCheckedTypes.Contains(t)).ToList())
+        foreach (var typeToCheck in notBasicStructsTypes.Where(t => !alreadyCheckedTypes.Contains(t)).ToList())
         {
             if (HasInItsHierarchyFieldsWithClasses(typeToCheck, alreadyCheckedTypes))
                 return true;

@@ -23,7 +23,7 @@ public static class NativeMethods
         {
             var retries = 3;
             var result = false;
-            IntPtr windowHandle = GetWindowHandle(window);
+            var windowHandle = GetWindowHandle(window);
 
             while (!result
                    && retries > 0)
@@ -58,12 +58,12 @@ public static class NativeMethods
     {
         process ??= Process.GetCurrentProcess();
 
-        IEnumerable<IntPtr> rootWindows = GetChildWindows(IntPtr.Zero);
+        var rootWindows = GetChildWindows(IntPtr.Zero);
         var dsProcRootWindows = new List<KeyValuePair<uint, Window>>();
 
-        foreach (IntPtr hWnd in rootWindows)
+        foreach (var hWnd in rootWindows)
         {
-            uint threadId = GetWindowThreadProcessId(hWnd, out uint lpdwProcessId);
+            var threadId = GetWindowThreadProcessId(hWnd, out var lpdwProcessId);
 
             if (lpdwProcessId == process.Id)
             {
@@ -83,14 +83,14 @@ public static class NativeMethods
 
         // Adjust the maximized size and position to fit the work area of the correct monitor
         const int monitorDefaulttonearest = 0x00000002;
-        IntPtr monitor = MonitorFromWindow(hwnd, monitorDefaulttonearest);
+        var monitor = MonitorFromWindow(hwnd, monitorDefaulttonearest);
 
         if (monitor != IntPtr.Zero)
         {
             var monitorInfo = new Monitorinfo();
             GetMonitorInfo(monitor, monitorInfo);
-            RectStruct rcWorkArea = monitorInfo.RcWork;
-            RectStruct rcMonitorArea = monitorInfo.RcMonitor;
+            var rcWorkArea = monitorInfo.RcWork;
+            var rcMonitorArea = monitorInfo.RcMonitor;
             mmi.ptMaxPosition.X = Math.Abs(rcWorkArea.left - rcMonitorArea.left);
             mmi.ptMaxPosition.Y = Math.Abs(rcWorkArea.top - rcMonitorArea.top);
             mmi.ptMaxSize.X = Math.Abs(rcWorkArea.right - rcWorkArea.left);

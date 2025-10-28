@@ -4,7 +4,6 @@ using FEx.MVVM.Rx.BaseObjects;
 using FEx.Sample.Avalonia.Services;
 using ReactiveUI;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
@@ -45,7 +44,10 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
         // Commands execute on background thread, so we need to marshal UI updates
         LoadUsersCommand = ReactiveCommand.CreateFromTask(LoadUsersAsync, outputScheduler: RxApp.MainThreadScheduler);
         LoadPostsCommand = ReactiveCommand.CreateFromTask(LoadPostsAsync, outputScheduler: RxApp.MainThreadScheduler);
-        TestResilienceCommand = ReactiveCommand.CreateFromTask(TestResilienceAsync, outputScheduler: RxApp.MainThreadScheduler);
+
+        TestResilienceCommand =
+            ReactiveCommand.CreateFromTask(TestResilienceAsync, outputScheduler: RxApp.MainThreadScheduler);
+
         _api = FExServiceProvider.Get<JsonPlaceholderApi>();
     }
 
@@ -56,13 +58,14 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
             IsBusy = true;
             StatusText = "Loading users from JSONPlaceholder API...";
 
-            List<User> users = await _api.GetUsersAsync().ConfigureAwait(false);
+            var users = await _api.GetUsersAsync().ConfigureAwait(false);
 
             // Marshal UI updates to main thread
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Users.Clear();
-                foreach (User user in users)
+
+                foreach (var user in users)
                     Users.Add(user);
             });
 
@@ -85,13 +88,14 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
             IsBusy = true;
             StatusText = "Loading posts from JSONPlaceholder API...";
 
-            List<Post> posts = await _api.GetPostsAsync().ConfigureAwait(false);
+            var posts = await _api.GetPostsAsync().ConfigureAwait(false);
 
             // Marshal UI updates to main thread
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Posts.Clear();
-                foreach (Post post in posts.Take(10)) // Only show first 10
+
+                foreach (var post in posts.Take(10)) // Only show first 10
                     Posts.Add(post);
             });
 
@@ -115,9 +119,9 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
             StatusText = "Testing Polly resilience policies (retry, circuit breaker, timeout)...";
 
             // Make multiple rapid requests to test resilience
-            Task<List<User>> task1 = _api.GetUsersAsync();
-            Task<List<Post>> task2 = _api.GetPostsAsync();
-            Task<List<Post>> task3 = _api.GetUserPostsAsync(1);
+            var task1 = _api.GetUsersAsync();
+            var task2 = _api.GetPostsAsync();
+            var task3 = _api.GetUserPostsAsync(1);
 
             await Task.WhenAll(task1, task2, task3);
 

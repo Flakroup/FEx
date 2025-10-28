@@ -1,5 +1,4 @@
 using FEx.Agnostics.Abstractions.Models;
-using System.Collections.Generic;
 using System.Net;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Web;
@@ -15,7 +14,7 @@ public static class WebRequestExtensions
             req.UserAgent = pars.UserAgent;
 
         if (pars.Headers is not null)
-            foreach (KeyValuePair<string, string> header in pars.Headers)
+            foreach (var header in pars.Headers)
                 req.Headers.Add(header.Key, header.Value);
 
         if (pars.Cookies is not null)
@@ -52,7 +51,7 @@ public static class WebRequestExtensions
             req.Credentials = pars.Credentials;
 
         if (pars.Headers is not null)
-            foreach (KeyValuePair<string, string> header in pars.Headers)
+            foreach (var header in pars.Headers)
                 req.Headers.Add(header.Key, header.Value);
 
         if (pars.Method is not null)

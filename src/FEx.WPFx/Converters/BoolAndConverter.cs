@@ -9,7 +9,7 @@ public class BoolAndConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        bool[] booleans = values.Select(static x =>
+        var booleans = values.Select(static x =>
             {
                 var b = x as bool?;
 

@@ -43,15 +43,15 @@ public class FExLoggingConfigurator : IFExLoggingConfigurator
         if (!IsLoggingEnabled)
             return;
 
-        LogEventLevel baseLevel = Debugger.IsAttached
+        var baseLevel = Debugger.IsAttached
             ? LogEventLevel.Debug
             : LogEventLevel.Information;
 
-        LogEventLevel externalLevel = Debugger.IsAttached
+        var externalLevel = Debugger.IsAttached
             ? ExternalDebugLoggingLevel
             : ExternalLoggingLevel;
 
-        LoggerConfiguration cfg = _sinkConfigurators.Where(static sinkConfigurator => sinkConfigurator.IsEnabled)
+        var cfg = _sinkConfigurators.Where(static sinkConfigurator => sinkConfigurator.IsEnabled)
             .Aggregate(new LoggerConfiguration()
                     .MinimumLevel.Is(baseLevel)
                     .AddOverrides(Overrides, externalLevel)
@@ -64,8 +64,8 @@ public class FExLoggingConfigurator : IFExLoggingConfigurator
 
         Log.Information("#### Started Application ####");
 
-        string rawCmd = Environment.CommandLine;
-        string argsOnly = rawCmd.Replace($"\"{Environment.GetCommandLineArgs()[0]}\"", "").Trim();
+        var rawCmd = Environment.CommandLine;
+        var argsOnly = rawCmd.Replace($"\"{Environment.GetCommandLineArgs()[0]}\"", "").Trim();
         Log.Debug($"Startup args:{argsOnly}");
     }
 

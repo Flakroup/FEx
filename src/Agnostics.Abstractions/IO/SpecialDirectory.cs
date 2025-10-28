@@ -55,7 +55,7 @@ public class SpecialDirectory
     {
         try
         {
-            string path = Environment.GetFolderPath(value);
+            var path = Environment.GetFolderPath(value);
 
             if (path.IsNotNullOrEmptyString())
                 return new(value, path);

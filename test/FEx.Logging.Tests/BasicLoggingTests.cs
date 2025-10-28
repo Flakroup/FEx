@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System;
 using System.Linq;
-using System.Reflection;
 using Xunit;
 
 namespace FEx.Logging.Tests;
@@ -35,7 +34,7 @@ public sealed class BasicLoggingTests
         // This test validates that the static Configure method exists
 
         // Act & Assert  
-        MethodInfo configureMethod = typeof(FExLoggingModule).GetMethod("Configure", new Type[0]);
+        var configureMethod = typeof(FExLoggingModule).GetMethod("Configure", new Type[0]);
         configureMethod.ShouldNotBeNull();
         configureMethod.IsStatic.ShouldBeTrue();
     }
@@ -44,18 +43,18 @@ public sealed class BasicLoggingTests
     public void LoggingModule_ShouldSupportEngineAgnosticPattern()
     {
         // Verify the module follows the new pattern
-        Type moduleType = typeof(FExLoggingModule);
+        var moduleType = typeof(FExLoggingModule);
 
         // Should inherit from InitializeModule<,>
-        Type baseType = moduleType.BaseType;
+        var baseType = moduleType.BaseType;
         baseType.ShouldNotBeNull();
         baseType.IsGenericType.ShouldBeTrue();
         baseType.GetGenericTypeDefinition().ShouldBe(typeof(InitializeModule<,>));
 
         // Should implement IInitializeModule<IServiceCollection>
-        Type[] interfaces = moduleType.GetInterfaces();
+        var interfaces = moduleType.GetInterfaces();
 
-        bool hasCorrectInterface = interfaces.Any(i =>
+        var hasCorrectInterface = interfaces.Any(i =>
             i.IsGenericType
             && i.GetGenericTypeDefinition() == typeof(IInitializeModule<>)
             && i.GetGenericArguments()[0] == typeof(IServiceCollection));

@@ -22,11 +22,11 @@ public class FExServiceContainer : IFExServiceContainer
 
         _container = container;
 
-        foreach (IFExInitializable initializable in TryResolveServices<IFExInitializable>())
+        foreach (var initializable in TryResolveServices<IFExInitializable>())
             initializable.Initialize();
 
         if (services is not null)
-            foreach (IMicrosoftDIConfigurator configurator in TryResolveServices<IMicrosoftDIConfigurator>()
+            foreach (var configurator in TryResolveServices<IMicrosoftDIConfigurator>()
                          .OrderBy(static configurator => configurator.Priority))
                 configurator.RegisterServicesUsingContainer(services, container);
     }

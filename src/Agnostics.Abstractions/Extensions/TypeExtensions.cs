@@ -74,8 +74,8 @@ public static class TypeExtensions
         if (!genericDefinition.GetTypeInfo().IsGenericType)
             return false;
 
-        bool isMatch = t.GetTypeInfo().IsGenericType
-                       && t.GetGenericTypeDefinition() == genericDefinition.GetGenericTypeDefinition();
+        var isMatch = t.GetTypeInfo().IsGenericType
+                      && t.GetGenericTypeDefinition() == genericDefinition.GetGenericTypeDefinition();
 
         if (!isMatch
             && t.GetTypeInfo().BaseType is not null)
@@ -84,7 +84,7 @@ public static class TypeExtensions
         if (!isMatch
             && genericDefinition.GetTypeInfo().IsInterface
             && t.GetTypeInfo().ImplementedInterfaces.Any())
-            foreach (Type i in t.GetTypeInfo().ImplementedInterfaces)
+            foreach (var i in t.GetTypeInfo().ImplementedInterfaces)
             {
 #pragma warning disable IL2072 // Target parameter argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method. The return value of the source method does not have matching annotations.
                 if (i.IsGenericTypeOf(genericDefinition, out genericParameters))

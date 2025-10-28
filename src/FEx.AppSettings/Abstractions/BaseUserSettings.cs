@@ -117,11 +117,11 @@ public abstract class BaseUserSettings<T> : BaseUserSettings where T : BaseUserS
 {
     public static T GetSettings(string persistencePath = null, bool isAsync = false)
     {
-        string content = persistencePath.IsNotNullOrEmptyString() && File.Exists(persistencePath)
+        var content = persistencePath.IsNotNullOrEmptyString() && File.Exists(persistencePath)
             ? File.ReadAllText(persistencePath)
             : null;
 
-        T config = content.IsNotNullOrEmptyString()
+        var config = content.IsNotNullOrEmptyString()
             ? content.FromJson<T>()
             : new();
 

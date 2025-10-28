@@ -18,7 +18,7 @@ public static class StringUtilities
             return word;
 
         // Standard case
-        string ret = CapitaliseFirstLetter(word);
+        var ret = CapitaliseFirstLetter(word);
 
         // Special cases:
         ret = ProperSuffix(ret, "'"); // D'Artagnon, D'Silva
@@ -53,13 +53,13 @@ public static class StringUtilities
         if (string.IsNullOrEmpty(word))
             return word;
 
-        string lowerWord = word.ToLower();
-        string lowerPrefix = prefix.ToLower();
+        var lowerWord = word.ToLower();
+        var lowerPrefix = prefix.ToLower();
 
         if (!lowerWord.Contains(lowerPrefix))
             return word;
 
-        int index = lowerWord.IndexOf(lowerPrefix, StringComparison.Ordinal);
+        var index = lowerWord.IndexOf(lowerPrefix, StringComparison.Ordinal);
 
         // If the search string is at the end of the word ignore.
         if (index + prefix.Length == word.Length)

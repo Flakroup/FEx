@@ -14,9 +14,9 @@ public class ParseStringToLongConverter : JsonConverter
         if (reader.TokenType == JsonToken.Null)
             return null;
 
-        string value = serializer.Deserialize<string>(reader);
+        var value = serializer.Deserialize<string>(reader);
 
-        if (long.TryParse(value, out long l))
+        if (long.TryParse(value, out var l))
             return l;
 
         throw new("Cannot unmarshal type long");

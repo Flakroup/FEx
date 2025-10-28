@@ -36,7 +36,7 @@ public abstract class FExTelemetryConfigBase : NotifyPropertyChanged, IFExTeleme
 
     private string GetAppEnvironment()
     {
-        string userName = AddPersonToEnvironment
+        var userName = AddPersonToEnvironment
             ? PersonUserName?.Invoke()
             : null;
 

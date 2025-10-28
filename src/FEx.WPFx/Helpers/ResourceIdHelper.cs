@@ -15,7 +15,7 @@ public static class ResourceIdHelper
 
     private static string GetResourceIdFromUri(Uri baseUri, Uri sourceUri)
     {
-        string str = string.Empty;
+        var str = string.Empty;
 
         if (!baseUri.IsAbsoluteUri
             || !sourceUri.IsAbsoluteUri
@@ -23,10 +23,10 @@ public static class ResourceIdHelper
             || baseUri.Host != sourceUri.Host)
             return str;
 
-        string components1 = baseUri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
-        string components2 = sourceUri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
-        string lower1 = components1.ToLower(CultureInfo.InvariantCulture);
-        string lower2 = components2.ToLower(CultureInfo.InvariantCulture);
+        var components1 = baseUri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
+        var components2 = sourceUri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
+        var lower1 = components1.ToLower(CultureInfo.InvariantCulture);
+        var lower2 = components2.ToLower(CultureInfo.InvariantCulture);
 
         if (lower2.StartsWith(lower1, StringComparison.OrdinalIgnoreCase))
             str = lower2.Substring(lower1.Length);

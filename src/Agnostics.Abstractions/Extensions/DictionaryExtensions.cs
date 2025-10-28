@@ -27,7 +27,7 @@ public static class DictionaryExtensions
     {
         if (dictionary is ConcurrentDictionary<TKey, TValue> cDic)
 #if NETSTANDARD
-            return cDic.TryGetValue(key, out TValue value)
+            return cDic.TryGetValue(key, out var value)
                 ? value
                 : fallback;
 #else
@@ -38,7 +38,7 @@ public static class DictionaryExtensions
             && dictionary.IsNotNullOrEmptyCollection()
             && dictionary.ContainsKey(key))
         {
-            (bool isSuccess, TValue value) = dictionary.GetValue(key);
+            var (isSuccess, value) = dictionary.GetValue(key);
 
             if (isSuccess)
                 return value;
@@ -49,7 +49,7 @@ public static class DictionaryExtensions
 
     public static (bool isSuccess, TV value) GetValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key)
     {
-        bool res = dictionary.TryGetValue(key, out TV v);
+        var res = dictionary.TryGetValue(key, out var v);
 
         return (res, v);
     }
@@ -91,11 +91,11 @@ public static class DictionaryExtensions
     {
         var result = new Dictionary<TOutKey, IEnumerable<TOutElement>>();
 
-        foreach (KeyValuePair<TKey, IList<TElement>> item in source)
+        foreach (var item in source)
         {
             IEnumerable<TOutElement> values;
-            IEnumerable<TOutElement> valuesToMerge = valuesSelector(item.Value);
-            TOutKey key = keySelector(item.Key);
+            var valuesToMerge = valuesSelector(item.Value);
+            var key = keySelector(item.Key);
 
             values = result.TryGetValue(key, out values)
                 ? values.Concat(valuesToMerge)
@@ -119,9 +119,9 @@ public static class DictionaryExtensions
         this IDictionary<TKey, IEnumerable<TElement>> source,
         IDictionary<TKey, IEnumerable<TElement>> merged)
     {
-        foreach (KeyValuePair<TKey, IEnumerable<TElement>> pair in merged)
+        foreach (var pair in merged)
         {
-            if (source.TryGetValue(pair.Key, out IEnumerable<TElement> elements))
+            if (source.TryGetValue(pair.Key, out var elements))
                 source[pair.Key] = elements.Concat(pair.Value);
             else
                 source[pair.Key] = pair.Value.ToList();
@@ -145,7 +145,7 @@ public static class DictionaryExtensions
         if (dictionary is ConcurrentDictionary<TK, TV> cDic)
             return cDic.GetOrAdd(key, _ => createValueToAdd());
 
-        if (!dictionary.TryGetValue(key, out TV v))
+        if (!dictionary.TryGetValue(key, out var v))
         {
             v = createValueToAdd();
             dictionary.Add(key, v);
@@ -204,8 +204,8 @@ public static class DictionaryExtensions
         TK key,
         Func<TV> valueToAddOrUpdate)
     {
-        (bool hadValue, TV oldValue) = dictionary.GetValue(key);
-        TV added = dictionary.AddOrUpdateValue(key, valueToAddOrUpdate);
+        var (hadValue, oldValue) = dictionary.GetValue(key);
+        var added = dictionary.AddOrUpdateValue(key, valueToAddOrUpdate);
 
         return (hadValue, oldValue, added);
     }
@@ -214,7 +214,7 @@ public static class DictionaryExtensions
     {
         if (!dictionary.ContainsKey(key))
         {
-            TV v = createValueToAdd();
+            var v = createValueToAdd();
             dictionary.Add(key, v);
 
             return true;
@@ -247,7 +247,7 @@ public static class DictionaryExtensions
     public static bool ReplaceAndDisposeOldValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> func)
         where TV : IDisposable
     {
-        (bool hasBeenReplaced, TV removedValue, TV _) = dictionary.AddOrReplaceValue(key, func);
+        var (hasBeenReplaced, removedValue, _) = dictionary.AddOrReplaceValue(key, func);
 
         if (hasBeenReplaced)
             removedValue?.Dispose();
@@ -262,9 +262,9 @@ public static class DictionaryExtensions
         var anyItemHasMatched = false;
         Dictionary<TK, TV> removedEntries = null;
 
-        for (int i = dictionary.Keys.Count - 1; i > -1; i--)
+        for (var i = dictionary.Keys.Count - 1; i > -1; i--)
         {
-            TK key = dictionary.Keys.ElementAt(i);
+            var key = dictionary.Keys.ElementAt(i);
 
             if (predicate(key, dictionary[key]))
             {
@@ -274,7 +274,7 @@ public static class DictionaryExtensions
                     removedEntries = [];
                 }
 
-                (bool hasBeenRemoved, TV removedValue) = dictionary.RemoveValue(key);
+                var (hasBeenRemoved, removedValue) = dictionary.RemoveValue(key);
 
                 if (hasBeenRemoved)
                     removedEntries.Add(key, removedValue);
@@ -293,7 +293,7 @@ public static class DictionaryExtensions
         if (sourceDictionary.Count == 0)
             sourceDictionary.AddRangeToDictionary(syncedDictionary);
         else
-            foreach (TKey key in syncedDictionary.Keys)
+            foreach (var key in syncedDictionary.Keys)
                 sourceDictionary.AddOrUpdateValue(key, () => syncedDictionary[key]);
     }
 

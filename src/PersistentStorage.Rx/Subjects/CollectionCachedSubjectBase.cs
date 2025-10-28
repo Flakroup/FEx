@@ -31,7 +31,7 @@ public abstract class
         }
 
         DisposeCurrentData();
-        IEnumerable<TCacheable> cacheableData = value!.Select(ConvertModelToCachedData);
+        var cacheableData = value!.Select(ConvertModelToCachedData);
         _cacheService.ReplaceWith(cacheableData);
 
         base.OnNext(value);
@@ -42,7 +42,7 @@ public abstract class
         if (Value.IsNullOrEmpty())
             return;
 
-        foreach (IDisposable disposable in Value.OfType<IDisposable>())
+        foreach (var disposable in Value.OfType<IDisposable>())
             disposable.Dispose();
     }
 }

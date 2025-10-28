@@ -3,8 +3,8 @@ using FEx.Core.Abstractions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Core.Abstractions.Interfaces;
 using FEx.Platforms;
-using FEx.Telemetry.Subjects;
 using FEx.Telemetry.Rollbar.Abstractions.Interfaces;
+using FEx.Telemetry.Subjects;
 using Rollbar;
 using Rollbar.Common;
 using Rollbar.DTOs;
@@ -21,10 +21,10 @@ namespace FEx.Telemetry.Rollbar.Configuration;
 public abstract class RollbarConfigBase : FExTelemetryConfigBase, IRollbarConfig, IDisposable
 {
     private readonly CompositeDisposable _disposable;
+    private readonly IAppInfoProvider _appInfoProvider;
     private DirectoryInfo _localAppDataDir;
     private FileInfo _defaultRollbarStoreDbFile;
     private RollbarInfrastructureConfig _rollbarConfig;
-    private readonly IAppInfoProvider _appInfoProvider;
 
     public DirectoryInfo LocalAppDataDir
     {
@@ -58,7 +58,9 @@ public abstract class RollbarConfigBase : FExTelemetryConfigBase, IRollbarConfig
 
     private static string DefaultID { get; } = $"{Environment.UserName}@{Environment.MachineName}";
 
-    protected RollbarConfigBase(TelemetryAccessTokenSubject telemetryAccessTokenSubject, IAppInfoProvider appInfoProvider, string accessToken)
+    protected RollbarConfigBase(TelemetryAccessTokenSubject telemetryAccessTokenSubject,
+                                IAppInfoProvider appInfoProvider,
+                                string accessToken)
     {
         _appInfoProvider = appInfoProvider;
         _disposable = [];
@@ -73,8 +75,8 @@ public abstract class RollbarConfigBase : FExTelemetryConfigBase, IRollbarConfig
 
     protected virtual RollbarInfrastructureConfig GetRollbarConfig()
     {
-        string token = AccessToken.Guard(nameof(AccessToken), "Token cannot be null");
-        Person appPerson = GetAppPerson();
+        var token = AccessToken.Guard(nameof(AccessToken), "Token cannot be null");
+        var appPerson = GetAppPerson();
         var config = new RollbarInfrastructureConfig(token, AppEnvironment);
 
         var payloadAdditionOptions = new RollbarPayloadAdditionOptions
@@ -125,7 +127,7 @@ public abstract class RollbarConfigBase : FExTelemetryConfigBase, IRollbarConfig
 
     private static RollbarInfrastructureConfig Validate(RollbarInfrastructureConfig config)
     {
-        IReadOnlyCollection<ValidationResult> failedValidationRules = config.Validate();
+        var failedValidationRules = config.Validate();
 
         if (failedValidationRules.Count > 0)
             throw new AggregateException(AggregateErrors(failedValidationRules));
@@ -153,7 +155,7 @@ public abstract class RollbarConfigBase : FExTelemetryConfigBase, IRollbarConfig
 
     private static string GetFromFuncOrFallback(Func<string> func, string fallback = null)
     {
-        string fromFunc = func?.Invoke();
+        var fromFunc = func?.Invoke();
 
         return fromFunc?.IsNotNullOrEmptyOrWhiteSpace() ?? false
             ? fromFunc

@@ -29,8 +29,8 @@ public static class BlobExtensions
 
     public static Uri GetBlobUri(this BlobItem blob, BlobContainerClient blobContainerClient)
     {
-        BlobClient blobClient = blobContainerClient.GetBlobClient(blob.Name);
-        Uri blobUri = blobClient.Uri;
+        var blobClient = blobContainerClient.GetBlobClient(blob.Name);
+        var blobUri = blobClient.Uri;
 
         return new($"{blobUri.Scheme}://{blobUri.Host}{blobUri.LocalPath}");
     }
@@ -43,7 +43,7 @@ public static class BlobExtensions
 
         do
         {
-            BlobResultSegment response = await directory.ListBlobsSegmentedAsync(continuationToken, cancellationToken);
+            var response = await directory.ListBlobsSegmentedAsync(continuationToken, cancellationToken);
             continuationToken = response.ContinuationToken;
             results.AddRange(response.Results);
         } while (continuationToken is not null);
@@ -60,8 +60,7 @@ public static class BlobExtensions
 
         do
         {
-            ContainerResultSegment response =
-                await client.ListContainersSegmentedAsync(continuationToken, cancellationToken);
+            var response = await client.ListContainersSegmentedAsync(continuationToken, cancellationToken);
 
             continuationToken = response.ContinuationToken;
             results.AddRange(response.Results);
@@ -81,9 +80,9 @@ public static class BlobExtensions
     {
         if (prefix.IsNotNullOrEmptyString())
         {
-            string dir = FileSystemHelper.GetParentFolderFromPath(prefix, '/', true);
-            CloudBlobDirectory directory = client.GetDirectoryReference(dir);
-            IList<IListBlobItem> blobs = await directory.ListBlobsAsync(cancellationToken);
+            var dir = FileSystemHelper.GetParentFolderFromPath(prefix, '/', true);
+            var directory = client.GetDirectoryReference(dir);
+            var blobs = await directory.ListBlobsAsync(cancellationToken);
 
             if (blobs.OfType<CloudBlobDirectory>().All(x => x.Prefix != prefix))
                 return Result<IList<IListBlobItem>, StackError>.Failure;
@@ -94,7 +93,7 @@ public static class BlobExtensions
 
         do
         {
-            BlobResultSegment response = await client.ListBlobsSegmentedAsync(prefix,
+            var response = await client.ListBlobsSegmentedAsync(prefix,
                 useFlatBlobListing,
                 blobListingDetails,
                 0,
@@ -112,7 +111,7 @@ public static class BlobExtensions
 
     public static async Task EnsureCorrectContentTypeAsync(this CloudBlockBlobInfo arg)
     {
-        string contentType = MimeTypesUtility.Mappings.TryGetReadOnlyKeyValue(arg.Extension.TrimStart('.'));
+        var contentType = MimeTypesUtility.Mappings.TryGetReadOnlyKeyValue(arg.Extension.TrimStart('.'));
 
         if (contentType != null
             && arg.ContentType != contentType)

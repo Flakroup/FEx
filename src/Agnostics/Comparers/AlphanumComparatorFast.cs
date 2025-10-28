@@ -23,8 +23,8 @@ public sealed class AlphanumComparatorFast : IComparer<string>, IEqualityCompare
                && marker2 < s2.Length)
         {
             // Build up two strings to compare either numerically or alphabetically
-            string str1 = ExtractChunk(s1, ref marker1);
-            string str2 = ExtractChunk(s2, ref marker2);
+            var str1 = ExtractChunk(s1, ref marker1);
+            var str2 = ExtractChunk(s2, ref marker2);
 
             int result;
 
@@ -51,8 +51,8 @@ public sealed class AlphanumComparatorFast : IComparer<string>, IEqualityCompare
 
     private static string ExtractChunk(string str, ref int marker)
     {
-        int originalMarker = marker;
-        bool isDigit = char.IsDigit(str[marker]);
+        var originalMarker = marker;
+        var isDigit = char.IsDigit(str[marker]);
 
         while (marker < str.Length
                && char.IsDigit(str[marker]) == isDigit)

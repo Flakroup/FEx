@@ -29,7 +29,7 @@ public static class XmlExtensions
 
         XmlSchema lastSchema = null;
 
-        foreach (object schema in xmlSchemaSet.Schemas(targetNamespace))
+        foreach (var schema in xmlSchemaSet.Schemas(targetNamespace))
             lastSchema = schema as XmlSchema;
 
         return lastSchema;
@@ -40,7 +40,7 @@ public static class XmlExtensions
                                                       string targetNamespace,
                                                       string name)
     {
-        using Stream schemaStream = resourceAssembly.GetManifestResourceStream(name);
+        using var schemaStream = resourceAssembly.GetManifestResourceStream(name);
 
         return xmlSchemaSet.Add(targetNamespace, schemaStream);
     }
@@ -48,7 +48,7 @@ public static class XmlExtensions
     public static T ValidateAndDeserialize<T>(this XmlSerializer serializer, string xml, Func<XmlSchemaSet> func)
         where T : class
     {
-        byte[] data = Encoding.ASCII.GetBytes(xml);
+        var data = Encoding.ASCII.GetBytes(xml);
         using var stream = new MemoryStream(data, 0, data.Length);
 
         return ValidateAndDeserialize<T>(serializer, stream, func);
@@ -65,8 +65,8 @@ public static class XmlExtensions
     public static string SerializeAndValidate<T>(this XmlSerializer serializer, T obj, Func<XmlSchemaSet> func)
         where T : class
     {
-        string xml = serializer.Serialize(obj);
-        byte[] data = Encoding.ASCII.GetBytes(xml);
+        var xml = serializer.Serialize(obj);
+        var data = Encoding.ASCII.GetBytes(xml);
         using var stream = new MemoryStream(data, 0, data.Length);
         Validate(stream, func);
 
@@ -79,7 +79,7 @@ public static class XmlExtensions
         xmlReaderSettings.Schemas.Add(func?.Invoke());
         xmlReaderSettings.ValidationType = ValidationType.Schema;
 
-        string warningAndErrorsText = string.Empty;
+        var warningAndErrorsText = string.Empty;
         var containsError = false;
 
         xmlReaderSettings.ValidationEventHandler += (_, e) =>

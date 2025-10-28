@@ -103,8 +103,7 @@ public partial class ThreadingAwareViewModel
 
     protected virtual async Task InitializeDependenciesAsync()
     {
-        Result<ExceptionError>[] results = await _dependencies.Values
-            .Where(static dependency => !dependency.IsInitialized)
+        var results = await _dependencies.Values.Where(static dependency => !dependency.IsInitialized)
             .WithWhenAllTasksAsync(SafeInitializeAsync, AsyncMode.ThreadPool);
 
         if (!results.Any())

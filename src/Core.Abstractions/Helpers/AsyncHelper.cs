@@ -95,7 +95,7 @@ public class AsyncHelper : IAsyncHelper
                                                           AsyncMode asyncMode = AsyncMode.Default,
                                                           IExceptionHandlerOptions options = null)
     {
-        List<Func<Task>> deferredList = (tasks?.ToList()).Guard(nameof(tasks));
+        var deferredList = (tasks?.ToList()).Guard(nameof(tasks));
 
         return deferredList.Select(x => FireTaskAndForget(x, asyncMode, options)).ToList().AsReadOnly();
     }
@@ -104,7 +104,7 @@ public class AsyncHelper : IAsyncHelper
                                                                 AsyncMode asyncMode = AsyncMode.Default,
                                                                 IExceptionHandlerOptions options = null)
     {
-        List<Func<Task<T>>> deferredList = (tasks?.ToList()).Guard(nameof(tasks));
+        var deferredList = (tasks?.ToList()).Guard(nameof(tasks));
 
         return deferredList.Select(x => FireTaskAndForget(x, asyncMode, options)).ToList().AsReadOnly();
     }

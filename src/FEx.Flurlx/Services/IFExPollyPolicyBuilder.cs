@@ -2,10 +2,9 @@
 using Polly;
 using System.Net.Http;
 
-namespace FEx.Flurlx.Services
+namespace FEx.Flurlx.Services;
+
+public interface IFExPollyPolicyBuilder
 {
-    public interface IFExPollyPolicyBuilder
-    {
-        IAsyncPolicy<HttpResponseMessage> BuildFullSuitePolicy(PollyPolicyConfiguration config);
-    }
+    IAsyncPolicy<HttpResponseMessage> BuildFullSuitePolicy(PollyPolicyConfiguration config);
 }

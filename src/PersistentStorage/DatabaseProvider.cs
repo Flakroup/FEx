@@ -25,8 +25,8 @@ public sealed class DatabaseProvider : IDatabaseProvider, IDisposable
         //we need to detect whether it is already registered 
         const string dbFileName = "localLiteDb.db";
 
-        string databaseDirectoryPath = filePathResolver.GetDatabasesFolderPath();
-        string dbFilePath = Path.Combine(databaseDirectoryPath, dbFileName);
+        var databaseDirectoryPath = filePathResolver.GetDatabasesFolderPath();
+        var dbFilePath = Path.Combine(databaseDirectoryPath, dbFileName);
 
         return LiteRepositoryExtensions.GetRepository(dbFilePath);
     }

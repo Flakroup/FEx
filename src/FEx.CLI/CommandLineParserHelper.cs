@@ -48,7 +48,7 @@ public static class CommandLineParserHelper
 
     private static string GetErrorInfo(Error error)
     {
-        ErrorData e = GetErrorData(error);
+        var e = GetErrorData(error);
 
         var info = e.Tag.ToString();
 

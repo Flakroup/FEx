@@ -64,7 +64,7 @@ public static class ListExtensions
 
                 break;
             case IList<T> list:
-                for (int i = list.Count - 1; i > -1; i--)
+                for (var i = list.Count - 1; i > -1; i--)
                 {
                     if (predicate(list[i]))
                     {
@@ -75,9 +75,9 @@ public static class ListExtensions
 
                 break;
             default:
-                for (int i = source.Count - 1; i > -1; i--)
+                for (var i = source.Count - 1; i > -1; i--)
                 {
-                    T element = source.ElementAt(i);
+                    var element = source.ElementAt(i);
 
                     if (predicate(element))
                     {
@@ -103,7 +103,7 @@ public static class ListExtensions
         {
             var list = new List<T>(count);
 
-            for (int i = index; i < index + count; i++)
+            for (var i = index; i < index + count; i++)
                 list.Add(sourceList[i]);
 
             return list;
@@ -128,7 +128,7 @@ public static class ListExtensions
     {
         var synced = false;
 
-        foreach (T f in sourceList)
+        foreach (var f in sourceList)
         {
             if (f.Equals(item))
             {
@@ -143,28 +143,28 @@ public static class ListExtensions
 
     public static int CountEqualItems<T>(this IList<T> listA, IList<T> listB) where T : IEquatable<T>
     {
-        IList<T> shorter = listA.Count <= listB.Count
+        var shorter = listA.Count <= listB.Count
             ? listA
             : listB;
 
-        IList<T> longer = listA.Count <= listB.Count
+        var longer = listA.Count <= listB.Count
             ? listB
             : listA;
 
-        int shorterCount = shorter.Count;
-        int longerCount = longer.Count;
+        var shorterCount = shorter.Count;
+        var longerCount = longer.Count;
         var arrayB = new BitArray(shorterCount);
         var count = 0;
 
         for (var i = 0; i < shorterCount; i++)
         {
-            T tA = shorter[i];
+            var tA = shorter[i];
 
             for (var j = 0; j < longerCount; j++)
             {
                 if (!arrayB[i])
                 {
-                    T tB = longer[j];
+                    var tB = longer[j];
 
                     if (tA.Equals(tB))
                     {
@@ -188,7 +188,7 @@ public static class ListExtensions
 
     public static void Move<T>(this IList<T> source, int oldIndex, int newIndex)
     {
-        T item = source[oldIndex];
+        var item = source[oldIndex];
         source.RemoveAt(oldIndex);
         source.Insert(newIndex, item);
     }
@@ -211,13 +211,13 @@ public static class ListExtensions
         if (t is not null)
             return t.Combo(items => items.SyncWith(syncedList, equalityComparator, syncAction));
 
-        bool hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !equalityComparator(x, y)));
+        var hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !equalityComparator(x, y)));
 
         if (syncAction is not null)
             for (var i = 0; i < sourceList.Count; i++)
             {
-                T f = sourceList[i];
-                int[] match = syncedList.IndexesWhere(x => equalityComparator(f, x)).ToArray();
+                var f = sourceList[i];
+                var match = syncedList.IndexesWhere(x => equalityComparator(f, x)).ToArray();
 
                 if (match.Length == 1)
                 {
@@ -233,7 +233,7 @@ public static class ListExtensions
                 }
             }
 
-        int c = sourceList.Count;
+        var c = sourceList.Count;
         sourceList.AddRangeToList(syncedList.Where(x => sourceList.All(y => !equalityComparator(x, y))));
 
         if (c != sourceList.Count)
@@ -250,13 +250,13 @@ public static class ListExtensions
         if (t is not null)
             return t.Combo(items => items.SyncWith(syncedList, syncAction));
 
-        bool hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !x.Equals(y)));
+        var hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !x.Equals(y)));
 
         if (syncAction is not null)
             for (var i = 0; i < sourceList.Count; i++)
             {
-                T f = sourceList[i];
-                int[] match = syncedList.IndexesWhere(f.Equals).ToArray();
+                var f = sourceList[i];
+                var match = syncedList.IndexesWhere(f.Equals).ToArray();
 
                 if (match.Length == 1)
                 {
@@ -271,7 +271,7 @@ public static class ListExtensions
                 }
             }
 
-        int c = sourceList.Count;
+        var c = sourceList.Count;
 
         sourceList.AddRangeToList(syncedList.Where(x => sourceList.All(y => !x.Equals(y))));
 

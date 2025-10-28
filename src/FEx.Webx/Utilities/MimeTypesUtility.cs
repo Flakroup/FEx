@@ -6,7 +6,6 @@ using FEx.Platforms.Abstractions.Interfaces;
 using MimeMapping;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -44,7 +43,7 @@ public static class MimeTypesUtility
 
     public static IReadOnlyCollection<string> GetDefaultExtensions(string mimeType)
     {
-        ReadOnlyCollection<string> extensions = Mappings.IsNotNullOrEmptyReadOnlyCollection()
+        var extensions = Mappings.IsNotNullOrEmptyReadOnlyCollection()
             ? Mappings.Where(x => x.Value == mimeType).Select(x => x.Key).ToList().AsReadOnly()
             : null;
 
@@ -63,10 +62,10 @@ public static class MimeTypesUtility
 
     public static string GetDefaultExtension(string contentType, string fileName)
     {
-        string urlExtension = Path.GetExtension(fileName);
-        IReadOnlyCollection<string> webExtensions = GetDefaultExtensions(contentType);
+        var urlExtension = Path.GetExtension(fileName);
+        var webExtensions = GetDefaultExtensions(contentType);
 
-        string extension = webExtensions.Contains(".*") && urlExtension.IsNotNullOrEmptyString()
+        var extension = webExtensions.Contains(".*") && urlExtension.IsNotNullOrEmptyString()
             ? urlExtension
             : webExtensions.FindInEnumerable(x => x.IsEqual(urlExtension)) ?? webExtensions.FirstOrDefault();
 

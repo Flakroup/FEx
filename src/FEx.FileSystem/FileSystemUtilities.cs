@@ -58,8 +58,8 @@ public class FileSystemUtilities
                                                            bool printLog = true,
                                                            params string[] exclusionPaths)
     {
-        Result<DirectoryInfo, ExceptionError> sourceResult = DirectoryPathStringToDirectoryInfo(source);
-        Result<DirectoryInfo, ExceptionError> destResult = DirectoryPathStringToDirectoryInfo(dest);
+        var sourceResult = DirectoryPathStringToDirectoryInfo(source);
+        var destResult = DirectoryPathStringToDirectoryInfo(dest);
 
         var errors = sourceResult.Error.Yield().Concat(destResult.Error.Yield()).Where(x => x is not null).ToList();
 
@@ -85,17 +85,16 @@ public class FileSystemUtilities
         {
             Log("Scanning source directories", printLog);
 
-            Result<ConcurrentDictionary<DirectoryInfo, FileInfo[]>, AggregatedError> sourceDirectoriesResult =
-                GetDirectoriesContents(sourceInfo, exclusionPaths);
+            var sourceDirectoriesResult = GetDirectoriesContents(sourceInfo, exclusionPaths);
 
             if (sourceDirectoriesResult.IsFailure)
                 return sourceDirectoriesResult.Error;
 
-            ConcurrentDictionary<DirectoryInfo, FileInfo[]> sourceDirectories = sourceDirectoriesResult.Data;
+            var sourceDirectories = sourceDirectoriesResult.Data;
 
             if (sourceDirectories?.Count > 0)
             {
-                string operationString = fileOperation switch
+                var operationString = fileOperation switch
                 {
                     FileOperation.Copy => "copied",
                     FileOperation.Move => "moved",
@@ -104,13 +103,13 @@ public class FileSystemUtilities
                     _ => string.Empty
                 };
 
-                ConcurrentList<FileInfo> files = GetSourceFiles(sourceDirectories);
+                var files = GetSourceFiles(sourceDirectories);
 
                 Log(
                     $"There are {sourceDirectories.Keys.Count} directories with total {files.Count} files to be {operationString}",
                     printLog);
 
-                Result<AggregatedError> result = Result<AggregatedError>.Success;
+                var result = Result<AggregatedError>.Success;
 
                 if (fileOperation == FileOperation.SyncSrcToDest)
                 {
@@ -137,50 +136,50 @@ public class FileSystemUtilities
                 switch (fileOperation)
                 {
                     case FileOperation.Copy or FileOperation.Move or FileOperation.SyncSrcToDest:
-                        {
-                            var results = new ConcurrentDictionary<DirectoryInfo, Result<ExceptionError>>();
-                            PrgMax = files.Count;
+                    {
+                        var results = new ConcurrentDictionary<DirectoryInfo, Result<ExceptionError>>();
+                        PrgMax = files.Count;
 
-                            Parallel.ForEach(files,
-                                file => ProcessFile(dest, file, sourceInfo, results, fileOperation, printPaths));
+                        Parallel.ForEach(files,
+                            file => ProcessFile(dest, file, sourceInfo, results, fileOperation, printPaths));
 
-                            var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
 
-                            result = errors.Count > 0
-                                ? new AggregatedError(result.Error.InnerErrors.Concat(errors).ToList().AsReadOnly())
-                                : Result<AggregatedError>.Success;
+                        result = errors.Count > 0
+                            ? new AggregatedError(result.Error.InnerErrors.Concat(errors).ToList().AsReadOnly())
+                            : Result<AggregatedError>.Success;
 
-                            break;
-                        }
+                        break;
+                    }
                     case FileOperation.Delete:
-                        {
-                            var results = new ConcurrentDictionary<FileInfo, Result<ExceptionError>>();
+                    {
+                        var results = new ConcurrentDictionary<FileInfo, Result<ExceptionError>>();
 
-                            Parallel.ForEach(files,
-                                file =>
+                        Parallel.ForEach(files,
+                            file =>
+                            {
+                                Result<ExceptionError> temp;
+
+                                try
                                 {
-                                    Result<ExceptionError> temp;
+                                    temp = SafeDeleteFile(file);
+                                }
+                                catch (Exception ex)
+                                {
+                                    temp = new ExceptionError(ex);
+                                }
 
-                                    try
-                                    {
-                                        temp = SafeDeleteFile(file);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        temp = new ExceptionError(ex);
-                                    }
+                                results.AddOrUpdateValue(file, temp);
+                            });
 
-                                    results.AddOrUpdateValue(file, temp);
-                                });
+                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
 
-                            var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+                        result = errors.Count > 0
+                            ? new AggregatedError(errors)
+                            : Result<AggregatedError>.Success;
 
-                            result = errors.Count > 0
-                                ? new AggregatedError(errors)
-                                : Result<AggregatedError>.Success;
-
-                            break;
-                        }
+                        break;
+                    }
                 }
 
                 FinishProgress();
@@ -190,8 +189,7 @@ public class FileSystemUtilities
                 {
                     Log("Removing empty source directory", printLog);
 
-                    Result<ConcurrentDictionary<DirectoryInfo, FileInfo[]>, AggregatedError> sourceDirsResult =
-                        GetDirectoriesContents(sourceInfo, exclusionPaths);
+                    var sourceDirsResult = GetDirectoriesContents(sourceInfo, exclusionPaths);
 
                     if (sourceDirsResult.IsSuccess)
                     {
@@ -251,7 +249,7 @@ public class FileSystemUtilities
 
                 for (var i = 0; i < dirs.Count; i++)
                 {
-                    DirectoryInfo dir = dirs[i];
+                    var dir = dirs[i];
                     dirs.RemoveAt(i);
                     i--;
 
@@ -267,11 +265,9 @@ public class FileSystemUtilities
                     }
                 }
 
-                foreach (string root in sourceDirectories.Keys)
+                foreach (var root in sourceDirectories.Keys)
                 {
-                    DirectoryInfo sourceInfo = sourceDirectories[root]
-                        .OrderByDescending(x => x.FullName.Length)
-                        .First();
+                    var sourceInfo = sourceDirectories[root].OrderByDescending(x => x.FullName.Length).First();
 
                     while (!sourceDirectories[root]
                                .All(x => x.FullName.Contains(sourceInfo?.FullName
@@ -294,7 +290,7 @@ public class FileSystemUtilities
         string source,
         string[] exclusionPaths)
     {
-        Result<DirectoryInfo, ExceptionError> sourceResult = DirectoryPathStringToDirectoryInfo(source);
+        var sourceResult = DirectoryPathStringToDirectoryInfo(source);
 
         if (sourceResult.IsFailure)
             return sourceResult.Error.ToAggregatedError();
@@ -317,7 +313,7 @@ public class FileSystemUtilities
         {
             if (sourceFile.Exists)
             {
-                string destFile = Path.Combine(destDir.FullName, Path.GetFileName(sourceFile.FullName));
+                var destFile = Path.Combine(destDir.FullName, Path.GetFileName(sourceFile.FullName));
                 var destFileInfo = new FileInfo(destFile);
                 var toCopy = true;
 
@@ -389,9 +385,9 @@ public class FileSystemUtilities
     {
         try
         {
-            string destFile = Path.Combine(destDir.FullName, Path.GetFileName(sourceFile.FullName));
+            var destFile = Path.Combine(destDir.FullName, Path.GetFileName(sourceFile.FullName));
             FileInfo destFileInfo = new(destFile);
-            Result<ExceptionError> deleteResult = SafeDeleteFile(destFileInfo);
+            var deleteResult = SafeDeleteFile(destFileInfo);
 
             if (deleteResult.IsSuccess)
             {
@@ -485,7 +481,7 @@ public class FileSystemUtilities
             if (!File.Exists(path))
                 return false;
 
-            FileAttributes attr = File.GetAttributes(path);
+            var attr = File.GetAttributes(path);
 
             return !attr.HasFlag(FileAttributes.Directory);
         }
@@ -546,7 +542,7 @@ public class FileSystemUtilities
                 fileInfo.IsReadOnly = false;
                 string data;
 
-                using (StreamReader sr = fileInfo.OpenText())
+                using (var sr = fileInfo.OpenText())
                     data = await sr.ReadToEndAsync();
 
                 var s = new StringBuilder(data, data.Length * 2);
@@ -554,7 +550,7 @@ public class FileSystemUtilities
 #if !NETSTANDARD2_0
                 await
 #endif
-                    using FileStream fs = fileInfo.OpenWrite();
+                    using var fs = fileInfo.OpenWrite();
 
                 fs.SetLength(0);
 #if !NETSTANDARD2_0
@@ -576,14 +572,14 @@ public class FileSystemUtilities
         }
     }
 
-    public static bool FileExistsSafe(string path) => IsPathFile(path).TryGetData(out bool isFile) && isFile;
+    public static bool FileExistsSafe(string path) => IsPathFile(path).TryGetData(out var isFile) && isFile;
 
     public static Result<AggregatedError> SafeDeleteDirectory(string source,
                                                               bool printPaths = true,
                                                               bool printLog = true,
                                                               params string[] exclusionPaths)
     {
-        Result<DirectoryInfo, ExceptionError> result = DirectoryPathStringToDirectoryInfo(source);
+        var result = DirectoryPathStringToDirectoryInfo(source);
 
         if (result.IsFailure)
             return result.Error.ToAggregatedError();
@@ -619,13 +615,12 @@ public class FileSystemUtilities
         bool printLog = true,
         params string[] exclusionPaths)
     {
-        Result<ConcurrentDictionary<DirectoryInfo, FileInfo[]>, AggregatedError> destDirectoriesResult =
-            GetDirectoriesContents(dest, exclusionPaths);
+        var destDirectoriesResult = GetDirectoriesContents(dest, exclusionPaths);
 
         if (destDirectoriesResult.IsFailure)
             return destDirectoriesResult.Error;
 
-        ConcurrentDictionary<DirectoryInfo, FileInfo[]> destDirectories = destDirectoriesResult.Data;
+        var destDirectories = destDirectoriesResult.Data;
 
         try
         {
@@ -633,17 +628,16 @@ public class FileSystemUtilities
             {
                 var errors = new List<Error>();
 
-                foreach (KeyValuePair<DirectoryInfo, FileInfo[]> dirContent in destDirectories)
+                foreach (var dirContent in destDirectories)
                 {
-                    string relPath = dirContent.Key.FullName.Substring(dest.FullName.Length);
-                    string relatedSourceDir = PathCombine(src.FullName, relPath);
+                    var relPath = dirContent.Key.FullName.Substring(dest.FullName.Length);
+                    var relatedSourceDir = PathCombine(src.FullName, relPath);
 
-                    DirectoryInfo currSrcDir =
-                        sourceDirectories.Keys.FindInEnumerable(x => x.FullName == relatedSourceDir);
+                    var currSrcDir = sourceDirectories.Keys.FindInEnumerable(x => x.FullName == relatedSourceDir);
 
                     if (currSrcDir is null)
                     {
-                        Result<AggregatedError> directoryResult = ProcessDirectory(dirContent.Key,
+                        var directoryResult = ProcessDirectory(dirContent.Key,
                             null,
                             FileOperation.Delete,
                             printPaths,
@@ -693,7 +687,7 @@ public class FileSystemUtilities
     {
         if (file is not null)
         {
-            string relativePath = file.DirectoryName?.Replace(sourceInfo.FullName, string.Empty).TrimStart('\\', '/');
+            var relativePath = file.DirectoryName?.Replace(sourceInfo.FullName, string.Empty).TrimStart('\\', '/');
             var destDir = new DirectoryInfo(Path.Combine(dest.FullName, relativePath ?? string.Empty));
             var temp = new Result<ExceptionError>();
 
@@ -730,7 +724,7 @@ public class FileSystemUtilities
                     .DistinctBy(x => x.FullName)
             ];
 
-            foreach (DirectoryInfo dir in destDirectories.Where(dir => !dir.Exists))
+            foreach (var dir in destDirectories.Where(dir => !dir.Exists))
                 dir.Create();
         }
     }
@@ -748,7 +742,7 @@ public class FileSystemUtilities
             if (root.Exists
                 && !exclusionPaths.Contains(root.FullName))
             {
-                Result<AggregatedError> result = FlattenDirectoriesTree(root, res, exclusionPaths);
+                var result = FlattenDirectoriesTree(root, res, exclusionPaths);
                 FinishProgress();
 
                 if (result.IsFailure)
@@ -823,9 +817,9 @@ public class FileSystemUtilities
 
     private static string GetPercentage()
     {
-        int prgVal = PrgValue;
-        int prgMax = PrgMax;
-        double perc = Math.Round((double)prgVal / prgMax * 100, 0);
+        var prgVal = PrgValue;
+        var prgMax = PrgMax;
+        var perc = Math.Round((double)prgVal / prgMax * 100, 0);
 
         return $"{perc}% {prgVal}/{prgMax}";
     }

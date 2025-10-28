@@ -22,9 +22,9 @@ public class EnumToVisibilityConverter : IValueConverter
     /// </returns>
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        bool result = value is not null
-                      && parameter is not null
-                      && value.ToString().Equals(parameter.ToString(), StringComparison.InvariantCultureIgnoreCase);
+        var result = value is not null
+                     && parameter is not null
+                     && value.ToString().Equals(parameter.ToString(), StringComparison.InvariantCultureIgnoreCase);
 
         return result
             ? Visibility.Visible

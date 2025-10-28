@@ -180,12 +180,11 @@ public class BufferedProgressAggregator : ProgressAggregator
 
         try
         {
-            IList<Timestamped<IProgressChange>> changes =
-                await _changesBuffer.RetrieveFromBufferAsync(cancellationToken);
+            var changes = await _changesBuffer.RetrieveFromBufferAsync(cancellationToken);
 
             while (changes.Any())
             {
-                foreach (Timestamped<IProgressChange> change in changes)
+                foreach (var change in changes)
                     ProcessChange(change.Value);
 
                 changes = await _changesBuffer.RetrieveFromBufferAsync(cancellationToken);

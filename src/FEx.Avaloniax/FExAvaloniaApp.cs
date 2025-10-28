@@ -40,7 +40,7 @@ public abstract class FExAvaloniaApp<TContainer> : Application
 
     protected virtual void HandleAppException(Exception exception)
     {
-        bool bindingException = exception is BindingChainException;
+        var bindingException = exception is BindingChainException;
         exception.HandleException(!bindingException);
     }
 }

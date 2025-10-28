@@ -1,7 +1,7 @@
 ﻿using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Extensions.Collections.Lists;
-using FEx.Core.Abstractions.Extensions;
 using FEx.Agnostics.Utilities;
+using FEx.Core.Abstractions.Extensions;
 using FEx.Platforms.Windows.Models;
 using FEx.Platforms.Windows.Utilities;
 using System;
@@ -32,12 +32,12 @@ public static class FileSystemExtensions
     {
         var account = (NTAccount)sid.Translate(typeof(NTAccount));
         var cuAccount = (NTAccount)cuSid.Translate(typeof(NTAccount));
-        bool shouldRun = CheckAccess(dInfo, account, cuAccount, excludes);
+        var shouldRun = CheckAccess(dInfo, account, cuAccount, excludes);
 
         if (!shouldRun)
             return true;
 
-        string everyone = account.Value;
+        var everyone = account.Value;
         var argsA = $"icacls \"{dInfo.FullName}\" /T /C /setowner {everyone}";
         var argsB = $"icacls \"{dInfo.FullName}\" /grant {everyone}:(OI)(CI)F /T";
         bool isSuccess;
@@ -98,7 +98,7 @@ public static class FileSystemExtensions
         var wrongOutput = false;
         ACL[] access = null;
 
-        string[] raw = output.IsNotNullOrEmptyString()
+        var raw = output.IsNotNullOrEmptyString()
             ? output.Split('\n')
             : null;
 
@@ -122,7 +122,7 @@ public static class FileSystemExtensions
             access = raw.AsParallel()
                 .Select(x =>
                 {
-                    string[] splitted = x.Trim().Split('|');
+                    var splitted = x.Trim().Split('|');
 
                     try
                     {
@@ -146,9 +146,9 @@ public static class FileSystemExtensions
     private static void RunIcacls(string argsA, ElevatedCmd c)
     {
         c.Run(argsA);
-        string[] lines = c.Output.ToString().Trim().Split('\n');
-        string last = lines.Last();
-        string failed = last.Split(';')[1];
+        var lines = c.Output.ToString().Trim().Split('\n');
+        var last = lines.Last();
+        var failed = last.Split(';')[1];
         var failedCount = int.Parse(failed.Trim().Split(' ')[2]);
 
         if (c.Code != 0

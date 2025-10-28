@@ -109,7 +109,7 @@ public static class BulkOperationsExtensions
 
     private static BulkConfig EnsureConfig<T>(ICollection<T> entities, Func<BulkConfig> config) where T : class
     {
-        BulkConfig cfg = config?.Invoke() ?? DefaultBulkConfig();
+        var cfg = config?.Invoke() ?? DefaultBulkConfig();
 
         cfg.NotifyAfter = cfg.NotifyAfter
                           ?? Math.Max((int)Math.Ceiling(entities.Count / 5D), (int)Math.Ceiling(cfg.BatchSize / 5D));
@@ -128,7 +128,7 @@ public static class BulkOperationsExtensions
                                                                       CancellationToken cancellationToken)
         where TDbContext : DbContext where T : class
     {
-        BulkConfig config = EnsureConfig(entities, configFunc);
+        var config = EnsureConfig(entities, configFunc);
 
         if (service.BulkOperationsSemaphore is not null)
             await service.BulkOperationsSemaphore.WaitAsync(cancellationToken);
@@ -137,7 +137,7 @@ public static class BulkOperationsExtensions
         {
             var id = Guid.NewGuid().ToString();
             var hasCompleted = false;
-            string tableName = service.TableMappings.ForwardIndex[typeof(T).FullName];
+            var tableName = service.TableMappings.ForwardIndex[typeof(T).FullName];
 
             await service.RunTaskInDbContextAsync(ctx => func(ctx)(entities,
                     config,

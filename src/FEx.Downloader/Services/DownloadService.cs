@@ -47,11 +47,11 @@ public class DownloadService : ProgressAggregator
     {
         var idx = new DownloadIndex(stub);
 
-        if (Downloads.TryGetValue(idx, out IDownloadItem value)
+        if (Downloads.TryGetValue(idx, out var value)
             && !cancelAndReplaceOldOne)
             return value;
 
-        IDownloadItem di = stub as IDownloadItem ?? await DownloadItem.CreateAsync(stub, true);
+        var di = stub as IDownloadItem ?? await DownloadItem.CreateAsync(stub, true);
 
         return await AddDownloadAsync(di, idx, cancelAndReplaceOldOne, startDownload);
     }
@@ -69,15 +69,13 @@ public class DownloadService : ProgressAggregator
 
     public void StartDownloads()
     {
-        foreach (DownloadIndex idx in Downloads.Where(x => x.Value.DState == DownloadState.None)
-                     .Select(x => x.Key)
-                     .ToArray())
+        foreach (var idx in Downloads.Where(x => x.Value.DState == DownloadState.None).Select(x => x.Key).ToArray())
             StartDownload(idx);
     }
 
     public async Task WaitForAllDownloadsAsync()
     {
-        Task[] tasks = GetUnfinishedDownloadsTasks();
+        var tasks = GetUnfinishedDownloadsTasks();
 
         while (tasks.Length > 0)
         {
@@ -141,7 +139,7 @@ public class DownloadService : ProgressAggregator
 
     private void UpdatePrg()
     {
-        (double val, double max, int finished) = CalculateProgress();
+        var (val, max, finished) = CalculateProgress();
 
         this.SetCurrentDownloadState(val, max);
 
@@ -155,7 +153,7 @@ public class DownloadService : ProgressAggregator
         double max = 0;
         var finished = 0;
 
-        foreach (IDownloadItem d in Downloads.Values)
+        foreach (var d in Downloads.Values)
         {
             if (d.IsFinished)
                 finished++;

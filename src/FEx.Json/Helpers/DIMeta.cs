@@ -25,9 +25,9 @@ public sealed class DIMeta : InitializeOnlyModule
 
     public Type RegistredTypeFor(Type t)
     {
-        string key = t?.FullName;
+        var key = t?.FullName;
 
-        return key is not null && _register.TryGetValue(key, out Type value)
+        return key is not null && _register.TryGetValue(key, out var value)
             ? value
             : t;
     }
@@ -37,7 +37,7 @@ public sealed class DIMeta : InitializeOnlyModule
 
     private void ProcessRegisteredServices(IServiceCollection services)
     {
-        foreach (ServiceDescriptor s in services)
+        foreach (var s in services)
             _register[s.ServiceType.FullName!] = s.ImplementationType;
     }
 }

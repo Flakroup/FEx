@@ -27,7 +27,7 @@ public class FExLoggingService : IFExLoggingService
         if (sender is not Type senderType)
             senderType = sender.GetType();
 
-        ILogger logger = FExLoggingModule.CreateLogger(senderType);
+        var logger = FExLoggingModule.CreateLogger(senderType);
 
         return new Loggable(logger);
     }

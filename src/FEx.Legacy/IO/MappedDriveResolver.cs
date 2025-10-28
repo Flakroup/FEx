@@ -59,11 +59,11 @@ public static class MappedDriveResolver
 
         if (p is not null)
         {
-            string str = p.StandardOutput.ReadToEnd();
+            var str = p.StandardOutput.ReadToEnd();
 
-            foreach (string s in str.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+            foreach (var s in str.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
             {
-                string[] s2 = s.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+                var s2 = s.Split([' '], StringSplitOptions.RemoveEmptyEntries);
 
                 if (s2.Length >= 2
                     && s2[1][1] == ':')
@@ -95,7 +95,7 @@ public static class MappedDriveResolver
         if (path.StartsWith(@"\\"))
             return path;
 
-        string rootPath = ResolveToRootUnc(path);
+        var rootPath = ResolveToRootUnc(path);
 
         if (path.StartsWith(rootPath))
             return path; // Local drive, no resolving occurred
@@ -117,11 +117,11 @@ public static class MappedDriveResolver
         //Soem variables to be used inside and out of the foreach.
         var found = false;
         string serverName = null;
-        using ManagementObjectCollection disks = driveSearcher.Get();
+        using var disks = driveSearcher.Get();
 
-        foreach (ManagementObject disk in disks.Cast<ManagementObject>())
+        foreach (var disk in disks.Cast<ManagementObject>())
         {
-            ManagementPath path = disk.Path;
+            var path = disk.Path;
 
             if (path.ToString().Contains(mappedDrive))
             {
@@ -156,7 +156,7 @@ public static class MappedDriveResolver
     {
         if (!path.StartsWith(@"\\"))
         {
-            (DriveType, string, string) drive = GetDriveType(path);
+            var drive = GetDriveType(path);
 
             return drive.Item1 == DriveType.Network
                 ? drive.Item3
@@ -175,7 +175,7 @@ public static class MappedDriveResolver
     {
         if (!path.StartsWith(@"\\"))
         {
-            (DriveType, string, string) drive = GetDriveType(path);
+            var drive = GetDriveType(path);
 
             return drive.Item1 == DriveType.Network;
         }
@@ -212,7 +212,7 @@ public static class MappedDriveResolver
                 $"The path '{path}' was not a rooted path and ResolveToRootUNC does not support relative paths.");
 
         // Get just the drive letter for WMI call
-        string driveLetter = GetDriveLetter(path);
+        var driveLetter = GetDriveLetter(path);
         //string unc = CheckUncPath(driveLetter);
 
         // Query WMI if the drive letter is a network drive

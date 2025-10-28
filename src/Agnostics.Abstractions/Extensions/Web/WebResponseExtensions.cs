@@ -33,10 +33,10 @@ public static class WebResponseExtensions
         if (!responseHeaders.ContainsKey(AcceptRangesHeaderName))
             return (false, LengthType.AutoDetect);
 
-        HttpWebRequest myHttpWebRequest = responseUri.GetHttpRequest(pars);
+        var myHttpWebRequest = responseUri.GetHttpRequest(pars);
         myHttpWebRequest.AddRange(rangeFrom, rangeTo);
 
-        using WebResponse res = await myHttpWebRequest.GetResponseAsync();
+        using var res = await myHttpWebRequest.GetResponseAsync();
         using var resp = (HttpWebResponse)res;
         responseHeaders = resp.GetAllHeaders();
 
@@ -45,7 +45,7 @@ public static class WebResponseExtensions
 
     public static ContentRangeHeaderValue GetContentRange(this HttpWebResponse response)
     {
-        Dictionary<string, string> resultHeaders = response.GetAllHeaders();
+        var resultHeaders = response.GetAllHeaders();
 
         return GetContentRange(resultHeaders.TryGetKeyValue(ContentRangeHeaderName));
     }
@@ -55,7 +55,7 @@ public static class WebResponseExtensions
         if (rangeHeader?.Trim().IsNullOrEmptyString() ?? true)
             return null;
 
-        string[] split = rangeHeader.Split(' ')[1].Split('/')[0].Split('-');
+        var split = rangeHeader.Split(' ')[1].Split('/')[0].Split('-');
         var from = long.Parse(split[0]);
         var to = long.Parse(split[1]);
 

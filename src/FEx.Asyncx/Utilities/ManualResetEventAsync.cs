@@ -78,7 +78,7 @@ public sealed class ManualResetEventAsync
     public void Reset()
     {
         // Grab a reference to the current completion source.
-        TaskCompletionSource<bool> currentCompletionSource = _completionSource;
+        var currentCompletionSource = _completionSource;
 
         // Check if there is nothing to be done, return.
         if (!currentCompletionSource.Task.IsCompleted)
@@ -121,16 +121,16 @@ public sealed class ManualResetEventAsync
         using (timeoutToken)
         {
             // Create a task to account for our timeout. The continuation just eats the task cancelled exception, but makes sure to observe it.
-            Task delayTask = Task.Delay(timeoutMS, timeoutToken.Token)
+            var delayTask = Task.Delay(timeoutMS, timeoutToken.Token)
 #pragma warning disable VSTHRD105 // Avoid method overloads that assume TaskScheduler.Current
                 .ContinueWith(result =>
                     {
-                        AggregateException _ = result.Exception;
+                        var _ = result.Exception;
                     },
                     TaskContinuationOptions.ExecuteSynchronously);
 #pragma warning restore VSTHRD105 // Avoid method overloads that assume TaskScheduler.Current
 
-            Task resultingTask = await Task.WhenAny(_completionSource.Task, delayTask).ConfigureAwait(false);
+            var resultingTask = await Task.WhenAny(_completionSource.Task, delayTask).ConfigureAwait(false);
 
             // The actual task finished, not the timeout, so we can cancel our cancellation token and return true.
             if (resultingTask != delayTask)

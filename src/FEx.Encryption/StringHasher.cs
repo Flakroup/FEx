@@ -16,7 +16,7 @@ public static class StringHasher
         {
             aes.Key = Encoding.UTF8.GetBytes(key);
             aes.IV = iv;
-            ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+            var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
             using var memoryStream = new MemoryStream();
             using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
 
@@ -32,11 +32,11 @@ public static class StringHasher
     public static string DecryptString(string key, string cipherText)
     {
         var iv = new byte[16];
-        byte[] buffer = Convert.FromBase64String(cipherText);
+        var buffer = Convert.FromBase64String(cipherText);
         using var aes = Aes.Create();
         aes.Key = Encoding.UTF8.GetBytes(key);
         aes.IV = iv;
-        ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+        var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
         using var memoryStream = new MemoryStream(buffer);
         using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
         using var streamReader = new StreamReader(cryptoStream);

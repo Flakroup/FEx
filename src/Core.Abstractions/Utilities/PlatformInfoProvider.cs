@@ -63,7 +63,7 @@ public static class PlatformInfoProvider
 
             try
             {
-                string version = File.ReadAllText("/proc/version");
+                var version = File.ReadAllText("/proc/version");
 
                 return version.ContainsOrdinalIgnoreCase("Microsoft");
             }
@@ -270,7 +270,7 @@ public static class PlatformInfoProvider
                 ? OSProcessorArchitecture.Bit32
                 : OSProcessorArchitecture.Bit64;
 
-        OSProcessorArchitecture pbits = OSProcessorArchitecture.Unknown;
+        var pbits = OSProcessorArchitecture.Unknown;
 
         try
         {
@@ -356,7 +356,7 @@ public static class PlatformInfoProvider
 
     private static SoftwareArchitecture GetProgramBits()
     {
-        int check = IntPtr.Size * 8;
+        var check = IntPtr.Size * 8;
 
         return check switch
         {
@@ -368,7 +368,7 @@ public static class PlatformInfoProvider
 
     private static SoftwareArchitecture GetOSBits()
     {
-        int check = IntPtr.Size * 8;
+        var check = IntPtr.Size * 8;
 
         return check switch
         {
@@ -385,7 +385,7 @@ public static class PlatformInfoProvider
         if (!IsWindows)
             return OSEdition.Unknown;
 
-        OperatingSystem osVersion = Environment.OSVersion;
+        var osVersion = Environment.OSVersion;
 
         var osVersionInfo = new OSVersionInfoEx
         {
@@ -396,10 +396,10 @@ public static class PlatformInfoProvider
         {
             if (GetVersionEx(ref osVersionInfo))
             {
-                int majorVersion = osVersion.Version.Major;
-                int minorVersion = osVersion.Version.Minor;
-                byte productType = osVersionInfo.wProductType;
-                short suiteMask = osVersionInfo.wSuiteMask;
+                var majorVersion = osVersion.Version.Major;
+                var minorVersion = osVersion.Version.Minor;
+                var productType = osVersionInfo.wProductType;
+                var suiteMask = osVersionInfo.wSuiteMask;
 
                 switch (majorVersion)
                 {
@@ -433,7 +433,7 @@ public static class PlatformInfoProvider
                         minorVersion,
                         osVersionInfo.wServicePackMajor,
                         osVersionInfo.wServicePackMinor,
-                        out uint ed):
+                        out var ed):
                         return GetEditionFromProduct(ed);
                 }
             }
@@ -458,7 +458,7 @@ public static class PlatformInfoProvider
         if (!IsWindows)
             return null;
 
-        OperatingSystem osVersion = Environment.OSVersion;
+        var osVersion = Environment.OSVersion;
 
         var osVersionInfo = new OSVersionInfoEx
         {
@@ -469,8 +469,8 @@ public static class PlatformInfoProvider
         {
             if (GetVersionEx(ref osVersionInfo))
             {
-                int majorVersion = osVersion.Version.Major;
-                int minorVersion = osVersion.Version.Minor;
+                var majorVersion = osVersion.Version.Major;
+                var minorVersion = osVersion.Version.Minor;
 
                 if (majorVersion == 6
                     && minorVersion == 2)
@@ -481,14 +481,13 @@ public static class PlatformInfoProvider
 
                     // For applications that have been manifested for Windows 8.1 & Windows 10. Applications not manifested for 8.1 or 10 will return the Windows 8 OS version value (6.2).
                     // By reading the registry, we'll get the exact version - meaning we can even compare against  Win 8 and Win 8.1.
-                    string exactVersion =
-                        RegistryRead(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion",
-                            "CurrentVersion",
-                            "");
+                    var exactVersion = RegistryRead(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+                        "CurrentVersion",
+                        "");
 
                     if (!string.IsNullOrEmpty(exactVersion))
                     {
-                        string[] splitResult = exactVersion.Split('.');
+                        var splitResult = exactVersion.Split('.');
                         majorVersion = Convert.ToInt32(splitResult[0]);
                         minorVersion = Convert.ToInt32(splitResult[1]);
                     }
@@ -510,7 +509,7 @@ public static class PlatformInfoProvider
                     {
                         if (majorVersion == 4)
                         {
-                            string csdVersion = osVersionInfo.szCSDVersion;
+                            var csdVersion = osVersionInfo.szCSDVersion;
 
                             switch (minorVersion)
                             {
@@ -556,7 +555,7 @@ public static class PlatformInfoProvider
         if (!IsWindows)
             return 0;
 
-        string version = RegistryRead(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+        var version = RegistryRead(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion",
             "CurrentBuildNumber",
             null);
 
@@ -570,7 +569,7 @@ public static class PlatformInfoProvider
         if (!IsWindows)
             return null;
 
-        Version currentVersion = GetCurrentVersion();
+        var currentVersion = GetCurrentVersion();
 
         return new(currentVersion.Major, currentVersion.Minor, GetBuildVersion(), currentVersion.Revision);
     }
@@ -580,15 +579,15 @@ public static class PlatformInfoProvider
         if (IsWindows10())
             return new(10, 0, 0, 0);
 
-        int revision = Environment.OSVersion.Version.Revision;
+        var revision = Environment.OSVersion.Version.Revision;
 
-        string exactVersion = RegistryRead(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+        var exactVersion = RegistryRead(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion",
             "CurrentVersion",
             null);
 
         if (exactVersion.IsNotNullOrEmptyString())
         {
-            string[] splitVersion = exactVersion.Split('.');
+            var splitVersion = exactVersion.Split('.');
 
             return new(int.Parse(splitVersion[0]), int.Parse(splitVersion[1]), 0, revision);
         }
@@ -598,7 +597,7 @@ public static class PlatformInfoProvider
 
     private static bool IsWindows10()
     {
-        string productName = RegistryRead(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+        var productName = RegistryRead(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion",
             "ProductName",
             "");
 
@@ -612,7 +611,7 @@ public static class PlatformInfoProvider
 #if NET
         try
         {
-            string[] splitResult = registryPath.Split('\\');
+            var splitResult = registryPath.Split('\\');
 
             if (splitResult.Length > 0)
                 return ReadOurKey(field, defaultValue, splitResult);
@@ -632,7 +631,7 @@ public static class PlatformInfoProvider
         var backSlash = "";
         var newRegistryPath = "";
         string rtn = null;
-        RegistryKey ourKey = GetRegistryKey(splitResult[0]);
+        var ourKey = GetRegistryKey(splitResult[0]);
 
         try
         {

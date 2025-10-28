@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 #if NETSTANDARD2_0
 using System.Collections.Concurrent;
+
 #else
 using System.Threading.Channels;
 #endif
@@ -132,7 +133,7 @@ public class AsyncProcessingQueue : IDisposable
 #if !NETSTANDARD2_0
         await
 #endif
-        using CancellationTokenRegistration registration = cancellationToken.Register(() => gate.TrySetResult(true));
+        using var registration = cancellationToken.Register(() => gate.TrySetResult(true));
 
 #if NETSTANDARD2_0
         _taskQueue.Enqueue(gate);
@@ -154,11 +155,11 @@ public class AsyncProcessingQueue : IDisposable
 
             while (QueuedCount > 0
                    && _currentRunning >= _concurrencyLimit
-                   && _taskQueue.TryDequeue(out TaskCompletionSource<bool> gate))
+                   && _taskQueue.TryDequeue(out var gate))
                 ReleaseGate(gate);
         }
 #else
-        await foreach (TaskCompletionSource<bool> gate in _taskChannel.Reader.ReadAllAsync())
+        await foreach (var gate in _taskChannel.Reader.ReadAllAsync())
         {
             await WaitWhileAboveLimitAsync();
 

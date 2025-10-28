@@ -154,8 +154,7 @@ public class GridView : ListView
 
         var gridView = (GridView)sender;
 
-        object currentItem =
-            gridView.ItemContainerGenerator.ItemFromContainer((DependencyObject)Keyboard.FocusedElement);
+        var currentItem = gridView.ItemContainerGenerator.ItemFromContainer((DependencyObject)Keyboard.FocusedElement);
 
         int targetIndex;
 

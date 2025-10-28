@@ -32,7 +32,7 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
 
     protected T DecryptFromJsonSource<T>(ref string source, [CallerMemberName] string propertyName = null)
     {
-        string json = DecryptFromSource(ref source, propertyName);
+        var json = DecryptFromSource(ref source, propertyName);
 
         try
         {

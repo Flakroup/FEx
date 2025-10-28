@@ -88,7 +88,7 @@ public sealed class FlakWebClient : WebClient
 
         if (filePath is not null)
         {
-            string folder = Path.GetDirectoryName(filePath);
+            var folder = Path.GetDirectoryName(filePath);
 
             if (folder is not null)
                 Directory.CreateDirectory(folder);
@@ -105,7 +105,7 @@ public sealed class FlakWebClient : WebClient
     {
         try
         {
-            using WebResponse res = base.GetWebResponse(request);
+            using var res = base.GetWebResponse(request);
             ReadCookies(res);
             var response = (HttpWebResponse)res;
 
@@ -137,7 +137,7 @@ public sealed class FlakWebClient : WebClient
     {
         //try
         //{
-        WebResponse res = base.GetWebResponse(request, result);
+        var res = base.GetWebResponse(request, result);
         ReadCookies(res);
 
         if (request is not HttpWebRequest)
@@ -163,7 +163,7 @@ public sealed class FlakWebClient : WebClient
 
     protected override WebRequest GetWebRequest(Uri address)
     {
-        WebRequest request = base.GetWebRequest(address);
+        var request = base.GetWebRequest(address);
         var req = request as HttpWebRequest;
 
         if (req is not null)
@@ -200,7 +200,7 @@ public sealed class FlakWebClient : WebClient
         if (r is not HttpWebResponse response)
             return;
 
-        CookieCollection cookies = response.Cookies;
+        var cookies = response.Cookies;
         Pars.Cookies.Add(cookies);
     }
 }

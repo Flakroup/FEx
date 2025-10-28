@@ -52,7 +52,7 @@ public static class DirectoryWalker
         if (!root.Exists)
             throw new DirectoryNotFoundException($"Specified path doesn't exist: {root.FullName}");
 
-        bool hasFilter = predicate is not null;
+        var hasFilter = predicate is not null;
         options ??= DefaultOptions;
 
         return await GetDirectoriesAsync(root, hasFilter, predicate, searchPattern, options);
@@ -66,7 +66,7 @@ public static class DirectoryWalker
         if (!root.Exists)
             throw new DirectoryNotFoundException($"Specified path doesn't exist: {root.FullName}");
 
-        bool hasFilter = predicate is not null;
+        var hasFilter = predicate is not null;
         options ??= DefaultOptions;
 
         var stack = new Stack<DirectoryInfo>();
@@ -76,7 +76,7 @@ public static class DirectoryWalker
 
         while (stack.Count > 0)
         {
-            DirectoryInfo current = stack.Pop();
+            var current = stack.Pop();
 
             if (current.IsErrorPath())
                 continue;
@@ -86,7 +86,7 @@ public static class DirectoryWalker
                 result.AddRange(current.EnumerateFiles(searchPattern, options)
                     .Where(file => !hasFilter || predicate!(file)));
 
-                foreach (DirectoryInfo subDir in current.EnumerateDirectories("*", options ?? DefaultOptions))
+                foreach (var subDir in current.EnumerateDirectories("*", options ?? DefaultOptions))
                     stack.Push(subDir);
             }
             catch
@@ -103,7 +103,7 @@ public static class DirectoryWalker
 
     public static bool IsErrorPath(this DirectoryInfo folder)
     {
-        string fullPath = folder.FullName + Path.DirectorySeparatorChar;
+        var fullPath = folder.FullName + Path.DirectorySeparatorChar;
 
         return ErrorPaths.Contains(fullPath) || ErrorPaths.Any(folder.FullName.StartsWith);
     }
@@ -127,8 +127,7 @@ public static class DirectoryWalker
     {
         List<DirectoryInfo> topLevelFolders = [];
 
-        foreach (DirectoryInfo folder in folders.OrderBy(static dir => dir.FullName,
-                     FExCoreStatics.AlphanumComparatorFast))
+        foreach (var folder in folders.OrderBy(static dir => dir.FullName, FExCoreStatics.AlphanumComparatorFast))
         {
             if (!folders.Any(parent =>
                     parent != folder && folder.FullName.StartsWith(parent.FullName + Path.DirectorySeparatorChar)))
@@ -148,13 +147,12 @@ public static class DirectoryWalker
         RunSecure(directory,
             () =>
             {
-                IEnumerable<FileSystemInfo>
-                    contentsEnumerable = directory.EnumerateFileSystemInfos("*", DefaultOptions);
+                var contentsEnumerable = directory.EnumerateFileSystemInfos("*", DefaultOptions);
 
                 if (predicate is null)
                     return !contentsEnumerable.Any();
 
-                FileSystemInfo[] contents = contentsEnumerable.ToArray();
+                var contents = contentsEnumerable.ToArray();
 
                 return contents.Length == 0 || predicate(contents);
             });
@@ -222,10 +220,10 @@ public static class DirectoryWalker
 
         try
         {
-            DirectoryInfo[] directories =
+            var directories =
                 await Queue.EnqueueAsync(() => Task.Run(() => current.GetDirectories(searchPattern, options)));
 
-            List<DirectoryInfo>[] results = await directories.WithWhenAllTasksAsync(dir =>
+            var results = await directories.WithWhenAllTasksAsync(dir =>
                 GetDirectoriesAsync(dir, hasFilter, predicate, searchPattern, options));
 
             return results.SelectMany(x => x)

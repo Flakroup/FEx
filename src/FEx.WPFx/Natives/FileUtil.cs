@@ -25,7 +25,7 @@ public static class FileUtil
         var key = Guid.NewGuid().ToString();
         var processes = new List<Process>();
 
-        int res = RmStartSession(out uint handle, 0, key);
+        var res = RmStartSession(out var handle, 0, key);
 
         if (res != 0)
             throw new("Could not begin restart session.  Unable to determine file locker.");
@@ -47,7 +47,7 @@ public static class FileUtil
             //Note: there's a race condition here -- the first call to RmGetList() returns
             //      the total number of process. However, when we call RmGetList() again to get
             //      the actual processes this number may have increased.
-            res = RmGetList(handle, out uint pnProcInfoNeeded, ref pnProcInfo, null, ref lpdwRebootReasons);
+            res = RmGetList(handle, out var pnProcInfoNeeded, ref pnProcInfo, null, ref lpdwRebootReasons);
 
             if (res == ERROR_MORE_DATA)
             {

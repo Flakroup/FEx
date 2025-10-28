@@ -60,13 +60,13 @@ public class ProgressState
         if (progress.BytesTransferred > 0
             && LoggedProgress != progress.BytesTransferred)
         {
-            long ms = Sw.ElapsedMilliseconds;
+            var ms = Sw.ElapsedMilliseconds;
             var prg = Convert.ToDouble(progress.BytesTransferred);
 
             if (prg == TotalSize)
                 Sw.Stop();
 
-            double percentage = Math.Floor(prg / TotalSize * 100);
+            var percentage = Math.Floor(prg / TotalSize * 100);
 
             if (LoggedPercentage + 1 <= percentage)
             {
@@ -85,7 +85,7 @@ public class ProgressState
 
     private string GetRemainingTime(double ms)
     {
-        double etr = (TotalSize - LoggedProgress) / LoggedProgress * ms;
+        var etr = (TotalSize - LoggedProgress) / LoggedProgress * ms;
 
         return TimeSpan.FromMilliseconds(etr).GetTime();
     }

@@ -12,9 +12,9 @@ public static class DirectoryInfoExtensions
 
     public static string GetDescendantPath(this DirectoryInfo dir, params string[] descendants)
     {
-        string path = dir.FullName;
+        var path = dir.FullName;
 
-        foreach (string d in descendants)
+        foreach (var d in descendants)
         {
             if (!path.StartsWith(@"\\?\")
                 && path.Length + d.Length > 260)

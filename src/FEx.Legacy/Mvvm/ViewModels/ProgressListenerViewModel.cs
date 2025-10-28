@@ -111,7 +111,7 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
     protected void SubscribeToProgressExcept<TProgress>(TProgress producer, params string[] iProgressReceiverProperties)
         where TProgress : IProgressAggregator
     {
-        string[] props = ProgressAggregatorExtensions.ListenerPropertyNames.ToArray();
+        var props = ProgressAggregatorExtensions.ListenerPropertyNames.ToArray();
 
         if (!iProgressReceiverProperties.IsNullOrEmpty())
             props = props.Except(iProgressReceiverProperties).ToArray();

@@ -39,10 +39,10 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
     /// <returns>Composite async policy with Retry, Circuit Breaker, Timeout, Bulkhead, and Fallback</returns>
     public IAsyncPolicy<HttpResponseMessage> BuildFullSuitePolicy(PollyPolicyConfiguration config)
     {
-        IAsyncPolicy<HttpResponseMessage> retryPolicy = BuildRetryPolicy(config);
-        IAsyncPolicy<HttpResponseMessage> circuitBreakerPolicy = BuildCircuitBreakerPolicy(config);
-        IAsyncPolicy<HttpResponseMessage> timeoutPolicy = BuildTimeoutPolicy(config);
-        AsyncBulkheadPolicy<HttpResponseMessage> bulkheadPolicy = BuildBulkheadPolicy(config);
+        var retryPolicy = BuildRetryPolicy(config);
+        var circuitBreakerPolicy = BuildCircuitBreakerPolicy(config);
+        var timeoutPolicy = BuildTimeoutPolicy(config);
+        var bulkheadPolicy = BuildBulkheadPolicy(config);
 
         IAsyncPolicy<HttpResponseMessage> fallbackPolicy = config.EnableFallback
             ? BuildFallbackPolicy()
@@ -142,7 +142,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
                         $"[FExPolly] Fallback activated due to: {result.Exception?.Message ?? "Unknown error"}");
 
                     // Future enhancement: Try to get cached response
-                    if (context.TryGetValue("CacheKey", out object cacheKey))
+                    if (context.TryGetValue("CacheKey", out var cacheKey))
                         _logger?.LogInformation($"[FExPolly] Attempting to retrieve cached data for key: {cacheKey}");
 
                     // TODO: Implement cache retrieval

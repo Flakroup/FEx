@@ -39,7 +39,7 @@ public class Wipe
                 File.SetAttributes(filename, FileAttributes.Normal);
 
                 // Calculate the total number of sectors in the file.
-                double sectors = Math.Ceiling(new FileInfo(filename).Length / 512.0);
+                var sectors = Math.Ceiling(new FileInfo(filename).Length / 512.0);
 
                 // Create a dummy-buffer the size of a sector.
 #if NETSTANDARD

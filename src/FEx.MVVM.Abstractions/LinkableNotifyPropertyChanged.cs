@@ -22,13 +22,13 @@ public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILi
     {
         base.OnPropertySet(oldValue, newValue, propertyName);
 
-        if (Links.TryGetValue(propertyName, out ConcurrentDictionary<Guid, ILink> links))
+        if (Links.TryGetValue(propertyName, out var links))
             TriggerLinks(links.Values.ToList(), oldValue, newValue);
     }
 
     public void AddLink(ILink link)
     {
-        ConcurrentDictionary<Guid, ILink> links = Links.GetOrAddValue(link.PropertyName, () => new());
+        var links = Links.GetOrAddValue(link.PropertyName, () => new());
 
         if (!links.TryAdd(link.Id, link))
             throw new InvalidOperationException($"This {nameof(link)} has already been added");
@@ -41,8 +41,8 @@ public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILi
 
     public void Unlink(Guid linkId, string propertyName, Type propertyType, bool resetProperty = false)
     {
-        if (!Links.TryGetValue(propertyName, out ConcurrentDictionary<Guid, ILink> links)
-            || !links.TryRemove(linkId, out ILink link))
+        if (!Links.TryGetValue(propertyName, out var links)
+            || !links.TryRemove(linkId, out var link))
         {
             FExStaticLogger.Error(
                 $"There is no link from {propertyType.FullName} to {GetType().FullName} on {propertyName} property of id {linkId}");
@@ -58,7 +58,7 @@ public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILi
 
     private static void TriggerLinks(IEnumerable<ILink> propertyLinks, object oldValue, object newValue)
     {
-        foreach (ILink link in propertyLinks)
+        foreach (var link in propertyLinks)
             link.OnPropertyChange(oldValue, newValue);
     }
 }

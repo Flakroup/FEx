@@ -20,9 +20,9 @@ public static class StringExtensions
 
         var argumentsStringBuilder = new StringBuilder();
 
-        foreach (object argument in arguments)
+        foreach (var argument in arguments)
         {
-            object obj = argument switch
+            var obj = argument switch
             {
                 IEnumerable<int> integers => integers.OrderBy(static x => x),
                 IEnumerable<long> longs => longs.OrderBy(static x => x),

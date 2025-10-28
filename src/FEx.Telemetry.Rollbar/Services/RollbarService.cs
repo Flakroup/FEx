@@ -138,7 +138,7 @@ public class RollbarService : Loggable, IRollbarService
     /// <param name="e">The <see cref="RollbarEventArgs" /> instance containing the event data.</param>
     private void OnRollbarInternalEvent(object sender, RollbarEventArgs e)
     {
-        string message = e.TraceAsString();
+        var message = e.TraceAsString();
 
         switch (e)
         {

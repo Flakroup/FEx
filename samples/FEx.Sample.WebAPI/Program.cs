@@ -12,7 +12,7 @@ public class Program
     public static async Task Main(string[] args)
     {
         // Step 1: Initialize StrongInject (FEx foundation)
-        using AppContainer? container = FExServiceProvider.Initialize<AppContainer>();
+        using var container = FExServiceProvider.Initialize<AppContainer>();
 
         // Step 2: Initialize Microsoft DI (integrates FEx modules into ASP.NET)
         await FExServiceProvider.InitializeAsync<FExMicrosoftDIServiceProvider>();
@@ -20,13 +20,13 @@ public class Program
         Console.WriteLine("Multi-DI initialized: StrongInject + Microsoft DI");
 
         // Step 3: Build ASP.NET Core application
-        WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+        var builder = WebApplication.CreateBuilder(args);
 
         // Add ASP.NET specific services
         builder.Services.AddOpenApi();
         builder.Services.AddControllers();
 
-        WebApplication app = builder.Build();
+        var app = builder.Build();
 
         // Configure the HTTP request pipeline
         if (app.Environment.IsDevelopment())
@@ -53,13 +53,13 @@ public class Program
         app.MapGet("/weatherforecast",
                 () =>
                 {
-                    string[] summaries = new[]
+                    var summaries = new[]
                     {
                         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering",
                         "Scorching"
                     };
 
-                    WeatherForecast[] forecast = Enumerable.Range(1, 5)
+                    var forecast = Enumerable.Range(1, 5)
                         .Select(index => new WeatherForecast(DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
                             Random.Shared.Next(-20, 55),
                             summaries[Random.Shared.Next(summaries.Length)]))

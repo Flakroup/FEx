@@ -26,7 +26,7 @@ public sealed class StatusService : IStatusService
     {
         key ??= Guid.NewGuid();
 
-        StatusHub hub = StatusHubs.GetOrAddValue(key.Value,
+        var hub = StatusHubs.GetOrAddValue(key.Value,
             () => new(key.Value, onStatusAdded, onStatusRemoved, onStatusesReset));
 
         if (markAsMain)

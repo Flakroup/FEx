@@ -17,7 +17,7 @@ public static class SvgCommon
     /// </returns>
     public static DrawingImage ConvertSvgFileToDrawingImage(string filepath)
     {
-        DrawingImage imgSrc = ConverterLogic.ConvertSvg(filepath).ConvertedObj;
+        var imgSrc = ConverterLogic.ConvertSvg(filepath).ConvertedObj;
         imgSrc.Freeze();
 
         return imgSrc;
@@ -33,7 +33,7 @@ public static class SvgCommon
     /// </returns>
     public static DrawingImage ConvertSvgToDrawingImage(string svg, string fileName)
     {
-        DrawingImage imgSrc = ConverterLogic.ConvertSvg(svg, fileName).ConvertedObj;
+        var imgSrc = ConverterLogic.ConvertSvg(svg, fileName).ConvertedObj;
         imgSrc.Freeze();
 
         return imgSrc;
@@ -55,7 +55,7 @@ public static class SvgCommon
     {
         var drawingVisual = new DrawingVisual();
 
-        using (DrawingContext drawingContext = drawingVisual.RenderOpen())
+        using (var drawingContext = drawingVisual.RenderOpen())
             drawingContext.DrawImage(source, new(new(0, 0), new Size(source.Width, source.Height)));
 
         var bmp = new RenderTargetBitmap((int)source.Width, (int)source.Height, 96, 96, PixelFormats.Pbgra32);

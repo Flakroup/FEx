@@ -27,7 +27,7 @@ public abstract class FExAvaloniaReactiveUserControl<T> : ReactiveUserControl<T>
 
     protected void SubscribeToWhenActivated()
     {
-        IDisposable subscription = this.WhenActivated(disposables =>
+        var subscription = this.WhenActivated(disposables =>
         {
             OnActivated();
             Disposable.Create(OnDeactivated).DisposeWith(disposables);

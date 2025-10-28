@@ -28,7 +28,7 @@ public class PlainFileLocalStorageService : FileLocalStorageService
     /// <inheritdoc />
     public override IFExCachedFile GetCachedFile(Uri fileUrl)
     {
-        FileInfo file = GetFile(fileUrl);
+        var file = GetFile(fileUrl);
 
         return file.Exists
             ? new FExCachedFile(file, fileUrl)
@@ -38,9 +38,9 @@ public class PlainFileLocalStorageService : FileLocalStorageService
     /// <inheritdoc />
     public override void UpdateFile(IFExCachedFile cachedFile)
     {
-        FileInfo file = GetFile(cachedFile.Url);
+        var file = GetFile(cachedFile.Url);
 
-        using MemoryStream stream = cachedFile.GetDataStream();
+        using var stream = cachedFile.GetDataStream();
         CopyData(file, stream);
 
         file.LastWriteTimeUtc = DateTime.UtcNow;
@@ -53,33 +53,33 @@ public class PlainFileLocalStorageService : FileLocalStorageService
             .Where(static file => CachedFileExtensions.IsExpired(file.LastWriteTimeUtc))
             .ToList();
 
-        foreach (FileInfo file in expiredFiles)
+        foreach (var file in expiredFiles)
             file.Delete();
     }
 
     private static void CopyData(FileInfo file, Stream stream)
     {
-        using FileStream fileStream = file.Open(FileMode.OpenOrCreate, FileAccess.Write);
+        using var fileStream = file.Open(FileMode.OpenOrCreate, FileAccess.Write);
         fileStream.SetLength(0);
         stream.CopyTo(fileStream);
     }
 
     private void CopyData(Uri fileUrl, Stream stream)
     {
-        FileInfo file = GetFile(fileUrl);
+        var file = GetFile(fileUrl);
         CopyData(file, stream);
     }
 
     private string GetFilePath(Uri fileUrl)
     {
-        string fileName = GetFileId(fileUrl);
+        var fileName = GetFileId(fileUrl);
 
         return Path.Combine(_cacheRoot.FullName, fileName);
     }
 
     private FileInfo GetFile(Uri fileUrl)
     {
-        string filePath = GetFilePath(fileUrl);
+        var filePath = GetFilePath(fileUrl);
 
         return new(filePath);
     }

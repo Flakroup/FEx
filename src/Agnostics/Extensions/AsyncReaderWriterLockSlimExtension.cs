@@ -70,7 +70,7 @@ public static class AsyncReaderWriterLockSlimExtension
                                                  int millisecondsTimeout,
                                                  CancellationToken cancellationToken = default)
     {
-        bool returnValue = lockInstance.TryEnterReadLock(millisecondsTimeout, cancellationToken);
+        var returnValue = lockInstance.TryEnterReadLock(millisecondsTimeout, cancellationToken);
 
         return returnValue
             ? new ActionDisposableLock(lockInstance.ExitReadLock, lockInstance, false)
@@ -100,7 +100,7 @@ public static class AsyncReaderWriterLockSlimExtension
                                                                   int millisecondsTimeout,
                                                                   CancellationToken cancellationToken = default)
     {
-        bool returnValue = await lockInstance.TryEnterReadLockAsync(millisecondsTimeout, cancellationToken);
+        var returnValue = await lockInstance.TryEnterReadLockAsync(millisecondsTimeout, cancellationToken);
 
         return returnValue
             ? new ActionDisposableLock(lockInstance.ExitReadLock, lockInstance, false)
@@ -165,7 +165,7 @@ public static class AsyncReaderWriterLockSlimExtension
                                                   int millisecondsTimeout,
                                                   CancellationToken cancellationToken = default)
     {
-        bool returnValue = lockInstance.TryEnterWriteLock(millisecondsTimeout, cancellationToken);
+        var returnValue = lockInstance.TryEnterWriteLock(millisecondsTimeout, cancellationToken);
 
         return returnValue
             ? new ActionDisposableLock(lockInstance.ExitWriteLock, lockInstance, true)
@@ -195,7 +195,7 @@ public static class AsyncReaderWriterLockSlimExtension
                                                                    int millisecondsTimeout,
                                                                    CancellationToken cancellationToken = default)
     {
-        bool returnValue = await lockInstance.TryEnterWriteLockAsync(millisecondsTimeout, cancellationToken);
+        var returnValue = await lockInstance.TryEnterWriteLockAsync(millisecondsTimeout, cancellationToken);
 
         return returnValue
             ? new ActionDisposableLock(lockInstance.ExitWriteLock, lockInstance, true)

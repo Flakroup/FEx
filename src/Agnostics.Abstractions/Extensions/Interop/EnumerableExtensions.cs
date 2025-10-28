@@ -52,7 +52,7 @@ public static class EnumerableExtensions
                                                                           Func<TSource, TKey> keySelector,
                                                                           IEqualityComparer<TKey> comparer)
     {
-        using IEnumerator<TSource> enumerator = source.GetEnumerator();
+        using var enumerator = source.GetEnumerator();
 
         if (enumerator.MoveNext())
         {
@@ -60,7 +60,7 @@ public static class EnumerableExtensions
 
             do
             {
-                TSource element = enumerator.Current;
+                var element = enumerator.Current;
 
                 if (set.Add(keySelector(element)))
                     yield return element;

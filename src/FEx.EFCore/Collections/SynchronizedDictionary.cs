@@ -1,6 +1,5 @@
 ﻿using DynamicData;
 using DynamicData.Binding;
-using DynamicData.Kernel;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Asyncx.Abstractions;
 using FEx.Core.Abstractions.Extensions;
@@ -19,7 +18,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -79,7 +77,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     public async Task<TValue> GetOrAddValueAsync(TKey key, bool addNew = true, IDictionary<string, object> param = null)
     {
-        Optional<TValue> optional = Cache.Lookup(key);
+        var optional = Cache.Lookup(key);
 
         return optional.HasValue
             ? optional.Value
@@ -104,7 +102,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     public bool Remove(TKey key)
     {
-        Optional<TValue> optional = Cache.Lookup(key);
+        var optional = Cache.Lookup(key);
 
         if (!optional.HasValue)
             return false;
@@ -134,7 +132,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     public async Task<bool> ContainsKeyAsync(TKey key)
     {
-        bool hasKey = Cache.Keys.Contains(key);
+        var hasKey = Cache.Keys.Contains(key);
 
         if (hasKey || HasCachedAll)
             return hasKey;
@@ -195,13 +193,13 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     {
         await base.OnInitializeAsync();
 
-        IReadOnlyCollection<string> mappedProperties = _dbSrv.Mappings[typeof(TValue).FullName].Properties;
+        var mappedProperties = _dbSrv.Mappings[typeof(TValue).FullName].Properties;
 
         _observedProperties = _observedProperties is null
             ? [.. mappedProperties]
             : [.. _observedProperties, .. mappedProperties];
 
-        IObservable<IChangeSet<TValue, TKey>> cacheObservable =
+        var cacheObservable =
             Cache.Connect().AutoRefreshOnObservable(x => x.WhenAnyPropertyChanged(_observedProperties));
 
         if (_observables?.Any() == true)
@@ -220,7 +218,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 if (changes.Count == 0)
                     return [];
 
-                IList<Change<TValue, TKey>> distinctChanges = DistinctChanges(changes);
+                var distinctChanges = DistinctChanges(changes);
 
                 return new ChangeSet<TValue, TKey>(distinctChanges);
             })
@@ -239,9 +237,9 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     {
         await CheckWhichAlreadyExistsAsync(dbContext, changes);
 
-        DbSet<TValue> set = DbSetAccessor(dbContext);
+        var set = DbSetAccessor(dbContext);
 
-        foreach (ChangeInfo<TKey, TValue> entityInfo in changes)
+        foreach (var entityInfo in changes)
         {
             if (entityInfo.ToDelete)
             {
@@ -273,10 +271,10 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     protected Expression<Func<TValue, bool>> KeyIsIn(HashSet<TKey> keys)
     {
-        ParameterExpression iParam = Expression.Parameter(typeof(TValue));
-        MemberExpression prop = Expression.Property(iParam, KeyPropertyName);
-        MethodInfo method = keys.GetType().GetMethod("Contains");
-        MethodCallExpression call = Expression.Call(Expression.Constant(keys), method, prop);
+        var iParam = Expression.Parameter(typeof(TValue));
+        var prop = Expression.Property(iParam, KeyPropertyName);
+        var method = keys.GetType().GetMethod("Contains");
+        var call = Expression.Call(Expression.Constant(keys), method, prop);
 
         return Expression.Lambda<Func<TValue, bool>>(call, iParam);
     }
@@ -297,9 +295,9 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     {
         List<Change<TValue, TKey>> distinctChanges = [];
 
-        for (int i = changes.Count - 1; i > -1; i--)
+        for (var i = changes.Count - 1; i > -1; i--)
         {
-            Change<TValue, TKey> change = changes[i];
+            var change = changes[i];
 
             if (distinctChanges.All(x => !x.Key.Equals(change.Key)))
                 distinctChanges.Add(change);
@@ -314,7 +312,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                                                               bool addNew,
                                                               IDictionary<string, object> param = null)
     {
-        Optional<TValue> optional = Cache.Lookup(key);
+        var optional = Cache.Lookup(key);
 
         if (optional.HasValue)
             return optional.Value;
@@ -326,7 +324,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             value = await _dbSrv.RunTaskInDbContextAsync(ctx => FindExistingAsync(ctx, key),
                 $"Failed to find entry matching key {key}");
 
-        bool hasRetrievedFromDb = value is not null;
+        var hasRetrievedFromDb = value is not null;
 
         if (!hasRetrievedFromDb && addNew)
             value = GetNew(key, param);
@@ -362,7 +360,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         }
         finally
         {
-            CacheTasks.TryRemove(key, out Task<bool> _);
+            CacheTasks.TryRemove(key, out _);
         }
     }
 
@@ -379,7 +377,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 await OnChangesDetectedAsync(changes);
 
                 if (UseIndex)
-                    foreach (ChangeInfo<TKey, TValue> e in changes)
+                    foreach (var e in changes)
                     {
                         switch (e.Reason)
                         {
@@ -415,7 +413,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     private async Task CheckWhichAlreadyExistsAsync(TDbCtx dbContext, ICollection<ChangeInfo<TKey, TValue>> changeInfos)
     {
-        foreach (ChangeInfo<TKey, TValue> e in changeInfos)
+        foreach (var e in changeInfos)
         {
             e.ExistsInDb = UseIndex
                 ? IndexContains(e.Key)
@@ -425,7 +423,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     private async Task<TValue> FindExistingAsync(TDbCtx ctx, TKey key)
     {
-        TValue entity = await DbSetAccessor(ctx).FindAsync(key);
+        var entity = await DbSetAccessor(ctx).FindAsync(key);
 
         return entity is not null
             ? await LoadEntityAsync(ctx, entity)
@@ -455,14 +453,14 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         Cache.Edit(x =>
         {
-            foreach (TValue e in toCache)
+            foreach (var e in toCache)
                 x.AddOrUpdate(e);
         });
     }
 
     private async Task EnsureKeysIndexAsync(TDbCtx ctx)
     {
-        List<TKey> entries = await DbSetAccessor(ctx).AsNoTracking().Select(RetriveKey()).ToListAsync();
+        var entries = await DbSetAccessor(ctx).AsNoTracking().Select(RetriveKey()).ToListAsync();
 
         SetIndex(entries);
     }

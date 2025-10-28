@@ -62,7 +62,7 @@ public class ExceptionHandler : ExceptionHandlerBase
             var tempLog = new FileInfo(Path.Combine(Path.GetTempPath(),
                 $"{FExCoreStatics.AppInfoProvider?.Name ?? "Flakroup"}.log"));
 
-            using FileStream str = tempLog.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            using var str = tempLog.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             using var sw = new StreamWriter(str);
             sw.BaseStream.Seek(0, SeekOrigin.End);
             sw.WriteLine($"[{DateTime.Now}] {exception}");

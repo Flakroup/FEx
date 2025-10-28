@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 namespace FEx.FTPx;
 
 /// <summary>
-///     FTP download utilities with resume support.
+/// FTP download utilities with resume support.
 /// </summary>
 public static class FtpDownloader
 {
@@ -46,7 +46,7 @@ public static class FtpDownloader
 
                 try
                 {
-                    long offset1 = offset;
+                    var offset1 = offset;
 
                     res = await RestartDownloadFromServerAsync(fileName,
                         serverUri,
@@ -75,7 +75,7 @@ public static class FtpDownloader
     }
 
     /// <summary>
-    ///     Restarts the download from server.
+    /// Restarts the download from server.
     /// </summary>
     /// <param name="fileName">Name of the file. Identifies the local file.</param>
     /// <param name="serverUri">The server URI. Identifies the remote file.</param>
@@ -105,13 +105,13 @@ public static class FtpDownloader
                     return true;
             }
 
-            KeyValuePair<bool, FtpWebResponse> resp = await TryGetResponseAsync(serverUri, username, password, offset);
-            FtpWebResponse response = resp.Value;
-            using Stream stream = response.GetResponseStream();
+            var resp = await TryGetResponseAsync(serverUri, username, password, offset);
+            var response = resp.Value;
+            using var stream = response.GetResponseStream();
             viewModel?.PrgSetMax(fileSize - offset);
             viewModel?.IfNotNull(v => v.SetIsIndeterminate(true));
 
-            FileMode mode = File.Exists(fileName)
+            var mode = File.Exists(fileName)
                 ? FileMode.Append
                 : FileMode.CreateNew;
 
@@ -183,7 +183,7 @@ public static class FtpDownloader
                                         //Common.LogIt($"{fileName} byte at position {offset + prg + 1}  replaced with 0 due to {retryCount} unsuccessfull read attempts.\n", false);
                                         _retryCount = 0;
 
-                                        long newOffset = await DetectOffsetAsync(serverUri,
+                                        var newOffset = await DetectOffsetAsync(serverUri,
                                             offset + prg,
                                             username,
                                             password,
@@ -232,7 +232,7 @@ public static class FtpDownloader
     }
 
     /// <summary>
-    ///     Calculates the size.
+    /// Calculates the size.
     /// </summary>
     /// <param name="serverUri">The server URI.</param>
     /// <param name="promptOnError">if set to <c>true</c> [prompt on error].</param>
@@ -311,7 +311,7 @@ public static class FtpDownloader
                                                       string password,
                                                       IProgressAggregator viewModel)
     {
-        long newOffset = offset;
+        var newOffset = offset;
 
         if (serverUri.Scheme == Uri.UriSchemeFtp)
         {
@@ -322,17 +322,16 @@ public static class FtpDownloader
             while (readCount <= 0
                    && newOffset < fileSize)
             {
-                KeyValuePair<bool, FtpWebResponse> resp =
-                    await TryGetResponseAsync(serverUri, username, password, offset);
+                var resp = await TryGetResponseAsync(serverUri, username, password, offset);
 
-                FtpWebResponse response = resp.Value;
+                var response = resp.Value;
 
                 if (!resp.Key)
                     return offset;
 
                 try
                 {
-                    Stream stream = response.GetResponseStream();
+                    var stream = response.GetResponseStream();
 
                     try
                     {
@@ -424,4 +423,3 @@ public static class FtpDownloader
         return newOffset;
     }
 }
-

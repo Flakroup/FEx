@@ -31,7 +31,7 @@ public static class JoinableAsyncHelper
 
     public static async Task AwaitWithoutDeadlockAsync(Func<Task> func, bool onMainThread = false)
     {
-        JoinableTaskFactoryHandler jtf = onMainThread
+        var jtf = onMainThread
             ? MainJTF
             : GetFactory();
 
@@ -40,7 +40,7 @@ public static class JoinableAsyncHelper
 
     public static void AwaitWithoutDeadlock(Func<Task> func, bool onMainThread = false)
     {
-        JoinableTaskFactoryHandler jtf = onMainThread
+        var jtf = onMainThread
             ? MainJTF
             : GetFactory();
 
@@ -49,7 +49,7 @@ public static class JoinableAsyncHelper
 
     public static async Task<T> AwaitWithoutDeadlockAsync<T>(Func<Task<T>> func, bool onMainThread = false)
     {
-        JoinableTaskFactoryHandler jtf = onMainThread
+        var jtf = onMainThread
             ? MainJTF
             : GetFactory();
 
@@ -58,7 +58,7 @@ public static class JoinableAsyncHelper
 
     public static T AwaitWithoutDeadlock<T>(Func<Task<T>> func, bool onMainThread = false)
     {
-        JoinableTaskFactoryHandler jtf = onMainThread
+        var jtf = onMainThread
             ? MainJTF
             : GetFactory();
 
@@ -67,8 +67,8 @@ public static class JoinableAsyncHelper
 
     public static JoinableTaskFactoryHandler GetFactory(Thread thread = null, bool replace = false)
     {
-        int key = thread?.ManagedThreadId ?? Environment.CurrentManagedThreadId;
-        Func<JoinableTaskFactoryHandler> func = () => GetNew(thread);
+        var key = thread?.ManagedThreadId ?? Environment.CurrentManagedThreadId;
+        var func = () => GetNew(thread);
 
         return replace
             ? Factories.AddOrUpdateValue(key, func)
@@ -77,9 +77,9 @@ public static class JoinableAsyncHelper
 
     private static JoinableTaskFactoryHandler GetNew(Thread thread)
     {
-        int key = thread?.ManagedThreadId ?? Environment.CurrentManagedThreadId;
+        var key = thread?.ManagedThreadId ?? Environment.CurrentManagedThreadId;
 
-        SynchronizationContext syncCtx = thread is null
+        var syncCtx = thread is null
             ? SynchronizationContext.Current
             : thread.GetThreadSynchronizationContext();
 

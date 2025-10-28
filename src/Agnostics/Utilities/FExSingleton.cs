@@ -17,7 +17,7 @@ public abstract class FExSingleton : IDisposable
     {
         lock (_singletons)
         {
-            foreach (FExSingleton s in _singletons)
+            foreach (var s in _singletons)
                 s.Dispose();
 
             _singletons.Clear();

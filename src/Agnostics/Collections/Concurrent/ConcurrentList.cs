@@ -72,9 +72,9 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     /// <inheritdoc cref="List{T}.Remove" />
     public bool Remove(T item)
     {
-        (int index, bool itemHasBeenRemoved) = Write(() =>
+        var (index, itemHasBeenRemoved) = Write(() =>
         {
-            int index = Items.IndexOf(item);
+            var index = Items.IndexOf(item);
 
             if (index == -1)
                 return (-1, false);
@@ -95,14 +95,14 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     /// <inheritdoc />
     public void AddRange(IEnumerable<T> collection)
     {
-        (int startingIndex, List<T> itemsToAdd) = Write(() =>
+        var (startingIndex, itemsToAdd) = Write(() =>
         {
             var itemsToAdd = collection?.ToList();
 
             if (itemsToAdd.IsNullOrEmpty())
                 return (-1, itemsToAdd);
 
-            int count = Items.Count;
+            var count = Items.Count;
             Items.AddRange(itemsToAdd);
 
             return (count, itemsToAdd);
@@ -117,12 +117,12 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     /// <inheritdoc />
     public bool AddUnique(T item)
     {
-        int index = Write(() =>
+        var index = Write(() =>
         {
             if (!Items.Contains(item))
                 return -1;
 
-            int count = Items.Count;
+            var count = Items.Count;
             Items.Add(item);
 
             return count;
@@ -147,11 +147,11 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     /// <inheritdoc />
     public bool RemoveWhere(Func<T, bool> predicate, out List<T> removedItems)
     {
-        List<(int index, T removedItem)> innerRemovedItems = Write(() =>
+        var innerRemovedItems = Write(() =>
         {
             List<(int index, T removedItem)> removedItems = [];
 
-            for (int i = Items.Count - 1; i > -1; i--)
+            for (var i = Items.Count - 1; i > -1; i--)
             {
                 if (predicate(Items[i]))
                     removedItems.Add((i, RemoveAtCore(i)));
@@ -160,7 +160,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
             return removedItems;
         });
 
-        foreach ((int index, T removedItem) in innerRemovedItems)
+        foreach (var (index, removedItem) in innerRemovedItems)
             WhenItemIsRemoved(index, removedItem);
 
         removedItems = innerRemovedItems.Select(static tuple => tuple.removedItem).ToList();
@@ -249,7 +249,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     /// <inheritdoc />
     public bool Combo(Func<IConcurrentList<T>, bool> shouldTriggerCollectionReset)
     {
-        bool triggerCollectionReset = Write(() =>
+        var triggerCollectionReset = Write(() =>
         {
             using (SuppressEvents())
                 return shouldTriggerCollectionReset(this);
@@ -285,15 +285,15 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     /// <inheritdoc cref="List{T}.RemoveAt" />
     public void RemoveAt(int index)
     {
-        T removedItem = RemoveAtCore(index);
+        var removedItem = RemoveAtCore(index);
         WhenItemIsRemoved(index, removedItem);
     }
 
     protected virtual void MoveItem(int oldIndex, int newIndex)
     {
-        T movedItem = Write(() =>
+        var movedItem = Write(() =>
         {
-            T movedItem = this[oldIndex];
+            var movedItem = this[oldIndex];
 
             using (SuppressEvents())
             {
@@ -309,9 +309,9 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
 
     protected T SetItem(int index, T item)
     {
-        T replacedItem = Write(() =>
+        var replacedItem = Write(() =>
         {
-            T replacedItem = Items[index];
+            var replacedItem = Items[index];
             Items[index] = item;
 
             return replacedItem;
@@ -325,7 +325,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     private T RemoveAtCore(int index) =>
         Write(() =>
         {
-            T removedItem = Items[index];
+            var removedItem = Items[index];
             Items.RemoveAt(index);
 
             return removedItem;
@@ -333,9 +333,9 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
 
     private int AddCoreWithEvents(T item)
     {
-        int index = Write(() =>
+        var index = Write(() =>
         {
-            int count = Items.Count;
+            var count = Items.Count;
             Items.Add(item);
 
             return count;

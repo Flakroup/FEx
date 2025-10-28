@@ -19,7 +19,7 @@ public static class CachedFileExtensions
 
     public static Expression<Func<LiteFileInfo<string>, bool>> GetIsExpiredPredicate()
     {
-        DateTime expirationThreshold = DateTime.UtcNow.AddTicks(-CacheServiceConfiguration.ExpirationTimeSpan.Ticks);
+        var expirationThreshold = DateTime.UtcNow.AddTicks(-CacheServiceConfiguration.ExpirationTimeSpan.Ticks);
 
         return file => file.UploadDate.ToUniversalTime() < expirationThreshold;
     }

@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -35,25 +34,25 @@ public sealed class SimpleArchitectureTests : IDisposable
     public void FExServiceProviderEntryPoints_ShouldExist()
     {
         // Verify the main entry points exist with correct signatures
-        MethodInfo initializeMethod = typeof(FExServiceProvider).GetMethods()
-            .Where(m => m.Name == "Initialize" && m.IsGenericMethodDefinition)
-            .FirstOrDefault();
+        var initializeMethod = typeof(FExServiceProvider)
+            .GetMethods()
+            .FirstOrDefault(m => m.Name == "Initialize" && m.IsGenericMethodDefinition);
 
-        MethodInfo initializeAsyncMethod = typeof(FExServiceProvider).GetMethods()
-            .Where(m => m.Name == "InitializeAsync" && m.IsGenericMethodDefinition)
-            .FirstOrDefault();
+        var initializeAsyncMethod = typeof(FExServiceProvider)
+            .GetMethods()
+            .FirstOrDefault(m => m.Name == "InitializeAsync" && m.IsGenericMethodDefinition);
 
         initializeMethod.ShouldNotBeNull("StrongInject initialization should be available");
         initializeAsyncMethod.ShouldNotBeNull("External DI initialization should be available");
 
         // Verify static methods exist
-        MethodInfo getMethod = typeof(FExServiceProvider).GetMethods()
-            .Where(m => m.Name == "Get" && m.IsGenericMethodDefinition)
-            .FirstOrDefault();
+        var getMethod = typeof(FExServiceProvider)
+            .GetMethods()
+            .FirstOrDefault(m => m.Name == "Get" && m.IsGenericMethodDefinition);
 
-        MethodInfo getAsyncMethod = typeof(FExServiceProvider).GetMethods()
-            .Where(m => m.Name == "GetAsync" && m.IsGenericMethodDefinition)
-            .FirstOrDefault();
+        var getAsyncMethod = typeof(FExServiceProvider)
+            .GetMethods()
+            .FirstOrDefault(m => m.Name == "GetAsync" && m.IsGenericMethodDefinition);
 
         getMethod.ShouldNotBeNull("Static service resolution should be available");
         getAsyncMethod.ShouldNotBeNull("Static async service resolution should be available");
@@ -63,7 +62,7 @@ public sealed class SimpleArchitectureTests : IDisposable
     public void ProviderInterface_ShouldIncludeConfigureServiceProviderAsync()
     {
         // Verify the new ConfigureServiceProviderAsync method is available
-        MethodInfo configureMethod = typeof(IFExServiceProvider).GetMethod("ConfigureServiceProviderAsync");
+        var configureMethod = typeof(IFExServiceProvider).GetMethod("ConfigureServiceProviderAsync");
 
         configureMethod.ShouldNotBeNull("ConfigureServiceProviderAsync should be available on provider interface");
         configureMethod.ReturnType.ShouldBe(typeof(ValueTask), "Should return ValueTask for async configuration");

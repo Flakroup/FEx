@@ -2,7 +2,6 @@ using FEx.Flurlx.Configuration;
 using FEx.Flurlx.Services;
 using FEx.Logging.Abstractions.Interfaces;
 using NSubstitute;
-using Polly;
 using Polly.CircuitBreaker;
 using Polly.Timeout;
 using Shouldly;
@@ -33,7 +32,7 @@ public class FExPollyPolicyBuilderTests
         var config = new PollyPolicyConfiguration();
 
         // Act
-        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
+        var policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Assert
         policy.ShouldNotBeNull();
@@ -50,7 +49,7 @@ public class FExPollyPolicyBuilderTests
             EnableFallback = false // Disable fallback to test exception propagation
         };
 
-        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
+        var policy = _policyBuilder.BuildFullSuitePolicy(config);
         var attemptCount = 0;
 
         // Act & Assert
@@ -80,11 +79,11 @@ public class FExPollyPolicyBuilderTests
             InitialRetryDelay = TimeSpan.FromMilliseconds(10)
         };
 
-        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
+        var policy = _policyBuilder.BuildFullSuitePolicy(config);
         var attemptCount = 0;
 
         // Act
-        HttpResponseMessage result = await policy.ExecuteAsync(async _ =>
+        var result = await policy.ExecuteAsync(async _ =>
             {
                 attemptCount++;
                 await Task.CompletedTask;
@@ -111,11 +110,11 @@ public class FExPollyPolicyBuilderTests
             InitialRetryDelay = TimeSpan.FromMilliseconds(10)
         };
 
-        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
+        var policy = _policyBuilder.BuildFullSuitePolicy(config);
         var attemptCount = 0;
 
         // Act
-        HttpResponseMessage result = await policy.ExecuteAsync(async _ =>
+        var result = await policy.ExecuteAsync(async _ =>
             {
                 attemptCount++;
                 await Task.CompletedTask;
@@ -141,7 +140,7 @@ public class FExPollyPolicyBuilderTests
             EnableFallback = false // Disable fallback to test exception propagation
         };
 
-        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
+        var policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Act - Cause failures to open circuit
         await policy.ExecuteAsync(async _ =>
@@ -184,7 +183,7 @@ public class FExPollyPolicyBuilderTests
             EnableFallback = false // Disable fallback to test exception propagation
         };
 
-        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
+        var policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Act & Assert
         await Should.ThrowAsync<TimeoutRejectedException>(async () =>
@@ -210,7 +209,7 @@ public class FExPollyPolicyBuilderTests
             RequestTimeout = TimeSpan.FromSeconds(10)
         };
 
-        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
+        var policy = _policyBuilder.BuildFullSuitePolicy(config);
         var concurrentCount = 0;
         var maxConcurrentCount = 0;
         var semaphore = new SemaphoreSlim(1, 1);
@@ -274,10 +273,10 @@ public class FExPollyPolicyBuilderTests
             CircuitBreakerFailureThreshold = 10 // High threshold to not trigger
         };
 
-        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
+        var policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Act - All retries should fail, fallback should activate
-        HttpResponseMessage result = await policy.ExecuteAsync(async _ =>
+        var result = await policy.ExecuteAsync(async _ =>
             {
                 await Task.CompletedTask;
 
@@ -287,7 +286,7 @@ public class FExPollyPolicyBuilderTests
 
         // Assert
         result.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
-        string content = await result.Content.ReadAsStringAsync();
+        var content = await result.Content.ReadAsStringAsync();
         content.ShouldContain("Service temporarily unavailable");
     }
 
@@ -335,11 +334,11 @@ public class FExPollyPolicyBuilderTests
             InitialRetryDelay = TimeSpan.FromMilliseconds(10)
         };
 
-        IAsyncPolicy<HttpResponseMessage> policy = _policyBuilder.BuildFullSuitePolicy(config);
+        var policy = _policyBuilder.BuildFullSuitePolicy(config);
         var attemptCount = 0;
 
         // Act
-        HttpResponseMessage result = await policy.ExecuteAsync(async _ =>
+        var result = await policy.ExecuteAsync(async _ =>
             {
                 attemptCount++;
                 await Task.CompletedTask;

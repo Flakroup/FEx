@@ -132,7 +132,7 @@ public class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
         File.Refresh();
 
         if (File.Exists)
-            using (FileStream fileStream = File.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            using (var fileStream = File.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 fileStream.SetLength(Size);
     }
 

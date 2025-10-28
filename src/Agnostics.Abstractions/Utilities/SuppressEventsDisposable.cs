@@ -13,7 +13,7 @@ public sealed class SuppressEventsDisposable : DisposableAction
 
     private static void Act(ISuppressEvents suppressedEventSource, Action onNoMoreSuppressedEvents)
     {
-        int suppressedEventsCount = --suppressedEventSource.SuppressedEvents;
+        var suppressedEventsCount = --suppressedEventSource.SuppressedEvents;
 
         if (suppressedEventsCount == 0)
             onNoMoreSuppressedEvents?.Invoke();

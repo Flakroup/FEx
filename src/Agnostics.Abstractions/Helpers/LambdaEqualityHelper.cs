@@ -26,7 +26,7 @@ public class LambdaEqualityHelper<T>
 
     public int GetHashCode(T instance)
     {
-        int hashCode = GetType().GetHashCode();
+        var hashCode = GetType().GetHashCode();
 
         unchecked
         {

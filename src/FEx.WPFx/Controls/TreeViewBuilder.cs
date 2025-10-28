@@ -2,7 +2,6 @@ using FEx.Core.Abstractions.Interfaces;
 using FEx.MVVM.Abstractions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 
 namespace FEx.WPFx.Controls;
 
@@ -22,7 +21,7 @@ public class TreeViewBuilder : TreeViewBuilderBase<TreeViewItem>
     /// </returns>
     public override async Task<TreeViewItem> GetTreeViewItemAsync(FExTreeViewNode nodeStub)
     {
-        BitmapSource img = await GetBitmapSourceAsync(nodeStub);
+        var img = await GetBitmapSourceAsync(nodeStub);
 
         return await _dispatcher.InvokeOnMainThreadAsync(() =>
         {

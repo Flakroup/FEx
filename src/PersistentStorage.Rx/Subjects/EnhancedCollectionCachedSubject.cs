@@ -28,8 +28,8 @@ public abstract class
         if (!cachedData.Any())
             return;
 
-        TEnhancement enhancement = GetEnhancement(cachedData);
-        List<T> data = cachedData.ConvertAll(c => ConvertCachedDataToModel(c, enhancement));
+        var enhancement = GetEnhancement(cachedData);
+        var data = cachedData.ConvertAll(c => ConvertCachedDataToModel(c, enhancement));
 
         SynchronizedOnNext(data);
     }

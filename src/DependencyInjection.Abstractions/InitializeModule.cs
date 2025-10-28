@@ -17,7 +17,7 @@ public abstract class InitializeModule<TContainer, TEngineContext> : FExInitiali
 
     public void RegisterServices(TEngineContext context)
     {
-        TContainer container = GetModule();
+        var container = GetModule();
         RegisterServices(container, context);
     }
 

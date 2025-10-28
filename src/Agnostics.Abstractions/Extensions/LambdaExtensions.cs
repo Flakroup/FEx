@@ -37,7 +37,7 @@ public static class LambdaExtensions
     public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> first,
                                                    Expression<Func<T, bool>> second)
     {
-        ParameterExpression p = first.Parameters[0];
+        var p = first.Parameters[0];
 
         var visitor = new SubstExpressionVisitor
         {
@@ -63,7 +63,7 @@ public static class LambdaExtensions
     public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> first,
                                                   Expression<Func<T, bool>> second)
     {
-        ParameterExpression p = first.Parameters[0];
+        var p = first.Parameters[0];
 
         var visitor = new SubstExpressionVisitor
         {
@@ -85,7 +85,7 @@ internal class SubstExpressionVisitor : ExpressionVisitor
     public IDictionary<Expression, Expression> Subst = new Dictionary<Expression, Expression>();
 
     protected override Expression VisitParameter(ParameterExpression node) =>
-        Subst.TryGetValue(node, out Expression newValue)
+        Subst.TryGetValue(node, out var newValue)
             ? newValue
             : node;
 }

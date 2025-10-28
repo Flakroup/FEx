@@ -63,9 +63,9 @@ public abstract class BaseMappingConverter<TIn, TOut> : IValueConverter
         {
             var casted = (TIn)value;
 
-            Dictionary<TIn, TOut> selectedMappings = Mappings[parameter ?? DefaultParameter];
+            var selectedMappings = Mappings[parameter ?? DefaultParameter];
 
-            if (selectedMappings.TryGetValue(casted, out TOut result))
+            if (selectedMappings.TryGetValue(casted, out var result))
                 return result;
         }
 
@@ -83,7 +83,7 @@ public abstract class BaseMappingConverter<TIn, TOut> : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
         IDictionary<TIn, TOut> selectedMappings = Mappings[parameter ?? DefaultParameter];
-        KeyValuePair<TIn, TOut> selectedPair = selectedMappings.FirstOrDefault(sm => sm.Value.Equals((TOut)value));
+        var selectedPair = selectedMappings.FirstOrDefault(sm => sm.Value.Equals((TOut)value));
 
         return selectedPair.Key;
     }

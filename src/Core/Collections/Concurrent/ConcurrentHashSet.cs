@@ -110,7 +110,7 @@ public class ConcurrentHashSet<T> : HashSet<T>
 
         RunLocked(() =>
         {
-            foreach (T item in deferredList)
+            foreach (var item in deferredList)
                 base.Add(item);
         });
     }

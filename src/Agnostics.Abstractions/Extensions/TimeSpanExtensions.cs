@@ -53,7 +53,7 @@ public static class TimeSpanExtensions
     {
         if (value.HasValue)
         {
-            DateTime localDateTime = DateTime.Today + value.Value;
+            var localDateTime = DateTime.Today + value.Value;
 
             return localDateTime.ToUniversalTime().TimeOfDay;
         }
@@ -70,7 +70,7 @@ public static class TimeSpanExtensions
     {
         if (value.HasValue)
         {
-            DateTime localDateTime = DateTime.UtcNow.Date + value.Value;
+            var localDateTime = DateTime.UtcNow.Date + value.Value;
 
             return localDateTime.ToLocalTime().TimeOfDay;
         }
@@ -115,7 +115,7 @@ public static class TimeSpanExtensions
 
     public static double RoundDown(this double i, double decimalPlaces)
     {
-        double power = Math.Pow(10, decimalPlaces);
+        var power = Math.Pow(10, decimalPlaces);
 
         return Math.Floor(i * power) / power;
     }
@@ -124,7 +124,7 @@ public static class TimeSpanExtensions
     {
         var totalMinutes = (int)timeSpan.TotalMinutes;
 
-        int remainder = totalMinutes % roundToMinutes;
+        var remainder = totalMinutes % roundToMinutes;
 
         if (remainder != 0)
             totalMinutes += roundToMinutes - remainder;

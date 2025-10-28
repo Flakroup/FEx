@@ -17,10 +17,10 @@ public class ConfigurationService : IConfigurationService
     {
         if (Configuration is null)
         {
-            IConfigurationBuilder builder = new ConfigurationBuilder().Add(new LegacyConfigurationProvider());
+            var builder = new ConfigurationBuilder().Add(new LegacyConfigurationProvider());
 
             if (sources is not null)
-                foreach (IConfigurationSource source in sources)
+                foreach (var source in sources)
                     builder.Add(source);
 
             Configuration = builder.Build();
@@ -43,7 +43,7 @@ public class ConfigurationService : IConfigurationService
     {
         EnsureConfiguration();
 
-        return AppSettings.IsNotNullOrEmptyCollection() && AppSettings.TryGetValue(key, out string setting)
+        return AppSettings.IsNotNullOrEmptyCollection() && AppSettings.TryGetValue(key, out var setting)
             ? StringToBool(setting)
             : defaultValue;
     }

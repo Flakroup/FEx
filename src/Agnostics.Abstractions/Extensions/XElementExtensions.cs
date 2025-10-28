@@ -9,7 +9,7 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 public static class XElementExtensions
 {
     /// <summary>
-    ///     Convert to a XML element.
+    /// Convert to a XML element.
     /// </summary>
     /// <param name="el">The xelement to convert.</param>
     /// <returns>A XmlElement.</returns>
@@ -22,7 +22,7 @@ public static class XElementExtensions
     }
 
     /// <summary>
-    ///     Gets a attribute value.
+    /// Gets a attribute value.
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="attributeName">Name of the attribute to get value for.</param>
@@ -39,7 +39,7 @@ public static class XElementExtensions
     }
 
     /// <summary>
-    ///     Sets the value for an attribute.
+    /// Sets the value for an attribute.
     /// </summary>
     /// <typeparam name="T">Type of value.</typeparam>
     /// <param name="attribute">Current attribute.</param>
@@ -53,7 +53,7 @@ public static class XElementExtensions
     }
 
     /// <summary>
-    ///     Creates a attribute.
+    /// Creates a attribute.
     /// </summary>
     /// <param name="attribute">Current attribute.</param>
     /// <param name="attributeName">Name for the attribute.</param>
@@ -62,7 +62,7 @@ public static class XElementExtensions
         attribute.Create(attributeName, string.Empty);
 
     /// <summary>
-    ///     Creates a attribute.
+    /// Creates a attribute.
     /// </summary>
     /// <param name="attribute">Current attribute.</param>
     /// <param name="attributeName">Name for the attribute.</param>
@@ -72,7 +72,7 @@ public static class XElementExtensions
         attribute.Parent.GetOrCreateAttribute(attributeName).SetValue<string>(value);
 
     /// <summary>
-    ///     Creates a attribute.
+    /// Creates a attribute.
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="attributeName">Name for the attribute.</param>
@@ -85,7 +85,7 @@ public static class XElementExtensions
     }
 
     /// <summary>
-    ///     Creates a attribute.
+    /// Creates a attribute.
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="attributeName">Name for the attribute.</param>
@@ -101,7 +101,7 @@ public static class XElementExtensions
     }
 
     /// <summary>
-    ///     Gets a attribute (if the attribute not exist it's created).
+    /// Gets a attribute (if the attribute not exist it's created).
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="attributeName">Name for the attribute.</param>
@@ -120,26 +120,26 @@ public static class XElementExtensions
     }
 
     /// <summary>
-    ///     Gets a value for a child.
+    /// Gets a value for a child.
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="childName">Name for the child.</param>
     /// <returns>The value if found; otherwise a empty string.</returns>
     /// <remarks>
-    ///     If you have more than one child with the same name, the first child will be returned.
+    /// If you have more than one child with the same name, the first child will be returned.
     /// </remarks>
     public static string GetChildValue(this XElement element, string childName) =>
         element.GetChildValue(childName, string.Empty);
 
     /// <summary>
-    ///     Gets the child value.
+    /// Gets the child value.
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="childName">Name for the child.</param>
     /// <param name="nameSpace">The name space.</param>
     /// <returns>The value if found; otherwise a empty string.</returns>
     /// <remarks>
-    ///     If you have more than one child with the same name, the first child will be returned.
+    /// If you have more than one child with the same name, the first child will be returned.
     /// </remarks>
     public static string GetChildValue(this XElement element, string childName, string nameSpace)
     {
@@ -157,7 +157,7 @@ public static class XElementExtensions
     }
 
     /// <summary>
-    ///     Gets the child.
+    /// Gets the child.
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="childName">Name for the child.</param>
@@ -166,7 +166,7 @@ public static class XElementExtensions
         element.GetChild(childName, string.Empty);
 
     /// <summary>
-    ///     Gets the child.
+    /// Gets the child.
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="childName">Name for the child.</param>
@@ -188,7 +188,7 @@ public static class XElementExtensions
     }
 
     /// <summary>
-    ///     Creates a child element.
+    /// Creates a child element.
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="childName">Name for the child.</param>
@@ -197,7 +197,7 @@ public static class XElementExtensions
         element.CreateChild(childName, string.Empty);
 
     /// <summary>
-    ///     Creates a child element.
+    /// Creates a child element.
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="childName">Name for the child.</param>
@@ -215,7 +215,7 @@ public static class XElementExtensions
     }
 
     /// <summary>
-    ///     Sets the value for an element.
+    /// Sets the value for an element.
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="value">The value to set.</param>
@@ -228,7 +228,7 @@ public static class XElementExtensions
     }
 
     /// <summary>
-    ///     Gets a element (if the element not exist it's created).
+    /// Gets a element (if the element not exist it's created).
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="childName">Name for the element.</param>
@@ -237,7 +237,7 @@ public static class XElementExtensions
         element.GetOrCreateChild(childName, string.Empty);
 
     /// <summary>
-    ///     Gets a element (if the element not exist it's created).
+    /// Gets a element (if the element not exist it's created).
     /// </summary>
     /// <param name="element">Current element.</param>
     /// <param name="childName">Name for the element.</param>

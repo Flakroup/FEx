@@ -48,14 +48,14 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
 
     public T GetRequiredService<T>(Type serviceType)
     {
-        MethodInfo generic = _method.MakeGenericMethod(serviceType);
+        var generic = _method.MakeGenericMethod(serviceType);
 
         return (T)generic.Invoke(this, null);
     }
 
     public object GetRequiredService(Type serviceType)
     {
-        MethodInfo generic = _method.MakeGenericMethod(serviceType);
+        var generic = _method.MakeGenericMethod(serviceType);
 
         return generic.Invoke(this, null);
     }

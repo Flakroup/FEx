@@ -31,7 +31,7 @@ public static class FindFilesPatternToRegex
                                                       Func<T, string> selector = null,
                                                       params string[] patterns)
     {
-        Regex[] regexes = patterns.Select(Convert).ToArray();
+        var regexes = patterns.Select(Convert).ToArray();
 
         return items.Where(i =>
         {
@@ -56,7 +56,7 @@ public static class FindFilesPatternToRegex
         if (pattern.PathHasIllegalCharacters())
             throw new ArgumentException("Pattern contains illegal characters.");
 
-        bool hasExtension = CatchExtentionRegex.IsMatch(pattern);
+        var hasExtension = CatchExtentionRegex.IsMatch(pattern);
         var matchExact = false;
 
         if (HasQuestionMarkRegEx.IsMatch(pattern))
@@ -65,13 +65,13 @@ public static class FindFilesPatternToRegex
         }
         else if (hasExtension)
         {
-            Match match = CatchExtentionRegex.Match(pattern);
+            var match = CatchExtentionRegex.Match(pattern);
 
             if (match.Groups.Count > 1)
                 matchExact = match.Groups[1].Length != 3;
         }
 
-        string regexString = Regex.Escape(pattern);
+        var regexString = Regex.Escape(pattern);
         regexString = "^" + Regex.Replace(regexString, @"\\\*", ".*");
         regexString = Regex.Replace(regexString, @"\\\?", ".");
 

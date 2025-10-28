@@ -31,7 +31,7 @@ public static class DynamicExtensions
     {
         ICollection<KeyValuePair<string, object>> eoColl = eo;
 
-        foreach (KeyValuePair<string, object> kvp in propsDictionary)
+        foreach (var kvp in propsDictionary)
             eoColl.Add(kvp);
 
         return eo;

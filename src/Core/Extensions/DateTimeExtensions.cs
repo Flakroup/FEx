@@ -7,7 +7,7 @@ public static class DateTimeExtensions
 {
     public static TimeZoneInfo ConvertWindowsToIanaTimeZone(this string timeZoneToId)
     {
-        string timeZoneToName = TZConvert.WindowsToIana(timeZoneToId);
+        var timeZoneToName = TZConvert.WindowsToIana(timeZoneToId);
 
         return TZConvert.GetTimeZoneInfo(timeZoneToName);
     }

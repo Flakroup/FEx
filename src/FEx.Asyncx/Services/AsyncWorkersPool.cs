@@ -34,7 +34,7 @@ public abstract class AsyncWorkersPool<TWorker, TResult> : AsyncInitializable
                                                   Func<Guid, string> getId = null)
     {
         var guid = Guid.NewGuid();
-        string id = getId?.Invoke(guid) ?? guid.ToString();
+        var id = getId?.Invoke(guid) ?? guid.ToString();
 
         return await ProcessingQueue.EnqueueAsync(() => ExecuteAsync(w => func(w, id)));
     }
@@ -64,7 +64,7 @@ public abstract class AsyncWorkersPool<TWorker, TResult> : AsyncInitializable
 
         try
         {
-            TWorker worker = Workers.FirstOrDefault(x => !x.IsBusy);
+            var worker = Workers.FirstOrDefault(x => !x.IsBusy);
 
             if (worker is null)
             {

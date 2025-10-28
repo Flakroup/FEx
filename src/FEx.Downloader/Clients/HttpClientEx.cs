@@ -187,13 +187,11 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         {
             DState = DownloadState.Connecting;
 
-            using HttpResponseMessage res = await GetAsync(url,
-                HttpCompletionOption.ResponseHeadersRead,
-                CancellationToken);
+            using var res = await GetAsync(url, HttpCompletionOption.ResponseHeadersRead, CancellationToken);
 
             try
             {
-                using (HttpResponseMessage response = res.EnsureSuccessStatusCode())
+                using (var response = res.EnsureSuccessStatusCode())
                     await DoDownloadAsync(filePath, response, lockOnFilePath);
 
                 retry = false;
@@ -219,7 +217,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
     public async Task DoDownloadAsync(string filePath, HttpResponseMessage response, bool lockOnFilePath = true)
     {
-        long length = response.Content.Headers.ContentLength ?? -1;
+        var length = response.Content.Headers.ContentLength ?? -1;
 
         ProgressMaximum = length > 0
             ? length
@@ -236,13 +234,13 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
             try
             {
 #if NETSTANDARD
-                using Stream streamResponse = await response.Content.ReadAsStreamAsync();
+                using var streamResponse = await response.Content.ReadAsStreamAsync();
 #else
-                await using Stream streamResponse = await response.Content.ReadAsStreamAsync(CancellationToken);
+                await using var streamResponse = await response.Content.ReadAsStreamAsync(CancellationToken);
 #endif
                 if (streamResponse is not null)
                 {
-                    string dirPath = Directory.GetParent(filePath).FullName;
+                    var dirPath = Directory.GetParent(filePath).FullName;
                     Directory.CreateDirectory(dirPath);
 
                     using var fileStream = new FileStream(filePath,
@@ -257,7 +255,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
                         while (true)
                         {
-                            int num = await streamResponse.ReadAsync(Buffer, 0, Buffer.Length, CancellationToken);
+                            var num = await streamResponse.ReadAsync(Buffer, 0, Buffer.Length, CancellationToken);
                             int bytesRead;
 
                             if ((bytesRead = num) != 0)

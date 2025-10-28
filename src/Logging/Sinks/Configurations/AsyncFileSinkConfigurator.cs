@@ -39,7 +39,7 @@ public class AsyncFileSinkConfigurator : SinkConfiguratorBase, IFileSinkConfigur
 
     public override LoggerConfiguration ConfigureSink(LoggerSinkConfiguration writeTo)
     {
-        string logFilePath = !string.IsNullOrEmpty(CustomLogFilePath)
+        var logFilePath = !string.IsNullOrEmpty(CustomLogFilePath)
             ? CustomLogFilePath
             : Path.Combine(_logsDirectory.FullName, LogFileName);
 

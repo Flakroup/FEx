@@ -354,7 +354,7 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     {
         var copy = new HashSet<T>(_set, _set.Comparer);
 
-        int removedCount = copy.RemoveWhere(match);
+        var removedCount = copy.RemoveWhere(match);
 
         if (removedCount == 0)
             return 0;

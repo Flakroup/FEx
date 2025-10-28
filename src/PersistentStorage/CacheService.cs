@@ -145,7 +145,7 @@ public sealed class CacheService : ICacheService
             .OrderByDescending(static service => service.ClearCachePriority)
             .ToList();
 
-        foreach (IClearCache cleanupCandidate in cleanupCandidates)
+        foreach (var cleanupCandidate in cleanupCandidates)
             cleanupCandidate.ClearCache();
     }
 

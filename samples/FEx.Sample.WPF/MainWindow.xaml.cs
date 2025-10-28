@@ -20,7 +20,7 @@ public partial class MainWindow : Window
         statusText.Text = $"Action at {DateTime.Now:HH:mm:ss}";
 
         // Demonstrate service resolution
-        string serviceCount = FExServiceProvider.Instance != null
+        var serviceCount = FExServiceProvider.Instance != null
             ? "✅ Services available"
             : "❌ No services";
 

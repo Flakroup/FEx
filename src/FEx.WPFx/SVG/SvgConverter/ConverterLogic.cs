@@ -41,7 +41,7 @@ public static class ConverterLogic
                                        bool filterPixelsPerDip,
                                        WpfDrawingSettings wpfDrawingSettings = null)
     {
-        object obj = ConvertSvgToObject(svg, resultMode, wpfDrawingSettings, out string name, resKeyInfo);
+        var obj = ConvertSvgToObject(svg, resultMode, wpfDrawingSettings, out var name, resKeyInfo);
 
         return SvgObjectToXaml(obj, wpfDrawingSettings?.IncludeRuntime == true, name, filterPixelsPerDip);
     }
@@ -72,8 +72,8 @@ public static class ConverterLogic
                                             out string name,
                                             ResKeyInfo resKeyInfo)
     {
-        DrawingGroup dg = ConvertFileToDrawingGroup(svg, wpfDrawingSettings);
-        string elementName = Path.GetFileNameWithoutExtension(svg.Filepath);
+        var dg = ConvertFileToDrawingGroup(svg, wpfDrawingSettings);
+        var elementName = Path.GetFileNameWithoutExtension(svg.Filepath);
 
         switch (resultMode)
         {
@@ -92,7 +92,7 @@ public static class ConverterLogic
 
     public static string SvgObjectToXaml(object obj, bool includeRuntime, string name, bool filterPixelsPerDip)
     {
-        string xamlUntidy = WpfObjToXaml(obj, includeRuntime);
+        var xamlUntidy = WpfObjToXaml(obj, includeRuntime);
 
         var doc = XDocument.Parse(xamlUntidy);
         BeautifyDrawingElement(doc.Root, name);
@@ -102,7 +102,7 @@ public static class ConverterLogic
 
         var xamlWithNamespaces = doc.ToString();
 
-        string xamlClean = RemoveNamespaceDeclarations(xamlWithNamespaces);
+        var xamlClean = RemoveNamespaceDeclarations(xamlWithNamespaces);
 
         return xamlClean;
     }
@@ -119,9 +119,9 @@ public static class ConverterLogic
         var firstChar = char.ToUpperInvariant(resKeyInfo.XamlName[0]);
         resKeyInfo.XamlName = firstChar + resKeyInfo.XamlName.Remove(0, 1);
 
-        IEnumerable<string> files = SvgFilesFromFolder(folder);
-        ResourceDictionary dict = ConvertFilesToResourceDictionary(files, wpfDrawingSettings, resKeyInfo);
-        string xamlUntidy = WpfObjToXaml(dict, wpfDrawingSettings?.IncludeRuntime ?? false);
+        var files = SvgFilesFromFolder(folder);
+        var dict = ConvertFilesToResourceDictionary(files, wpfDrawingSettings, resKeyInfo);
+        var xamlUntidy = WpfObjToXaml(dict, wpfDrawingSettings?.IncludeRuntime ?? false);
 
         var doc = XDocument.Parse(xamlUntidy);
         RemoveResDictEntries(doc.Root);
@@ -131,7 +131,7 @@ public static class ConverterLogic
 
         var drawingGroupElements = doc.Root.XPathSelectElements("defns:DrawingGroup", NsManager).ToList();
 
-        foreach (XElement drawingGroupElement in drawingGroupElements)
+        foreach (var drawingGroupElement in drawingGroupElements)
         {
             BeautifyDrawingElement(drawingGroupElement, null);
 
@@ -197,28 +197,28 @@ public static class ConverterLogic
         //building local Elements
         var drawingGroups = rootElement.Elements(NsDef + "DrawingGroup").ToList();
 
-        foreach (XElement node in drawingGroups)
+        foreach (var node in drawingGroups)
         {
             //get Name of DrawingGroup
-            string keyDg = node.Attribute(Nsx + "Key")?.Value;
-            string elemName = GetElemNameFromResKey(keyDg, resKeyInfo);
-            string elemBaseName = elemName.Replace("DrawingGroup", "");
+            var keyDg = node.Attribute(Nsx + "Key")?.Value;
+            var elemName = GetElemNameFromResKey(keyDg, resKeyInfo);
+            var elemBaseName = elemName.Replace("DrawingGroup", "");
 
             var brushAttributes = CollectBrushAttributesWithColor(node).ToList();
 
-            foreach (XAttribute brushAttribute in brushAttributes)
+            foreach (var brushAttribute in brushAttributes)
             {
-                string color = brushAttribute.Value;
+                var color = brushAttribute.Value;
 
-                if (colorKeys.TryGetValue(color, out string resKeyColor))
+                if (colorKeys.TryGetValue(color, out var resKeyColor))
                 {
                     //global color found
                     //build resourcename
-                    string nameBrush = brushAttributes.Count > 1
+                    var nameBrush = brushAttributes.Count > 1
                         ? $"{elemBaseName}Color{brushAttributes.IndexOf(brushAttribute) + 1}Brush"
                         : $"{elemBaseName}ColorBrush"; //dont add number if only one color
 
-                    string resKeyBrush = BuildResKey(nameBrush, resKeyInfo);
+                    var resKeyBrush = BuildResKey(nameBrush, resKeyInfo);
 
                     node.AddBeforeSelf(new XElement(NsDef + "SolidColorBrush",
                         new XAttribute(Nsx + "Key", resKeyBrush),
@@ -237,14 +237,14 @@ public static class ConverterLogic
         //building local Elements
         var drawingGroups = rootElement.Elements(NsDef + "DrawingGroup").ToList();
 
-        foreach (XElement node in drawingGroups)
+        foreach (var node in drawingGroups)
         {
             var brushAttributes = CollectBrushAttributesWithColor(node).ToList();
 
-            foreach (XAttribute brushAttribute in brushAttributes)
+            foreach (var brushAttribute in brushAttributes)
             {
-                string color = brushAttribute.Value;
-                int index = brushAttributes.IndexOf(brushAttribute);
+                var color = brushAttribute.Value;
+                var index = brushAttributes.IndexOf(brushAttribute);
 
                 brushAttribute.Value =
                     $"{{Binding Path=(brushes:Props.ContentBrushes)[{index}], RelativeSource={{RelativeSource AncestorType=Visual}}, FallbackValue={color}}}";
@@ -266,7 +266,7 @@ public static class ConverterLogic
             {
                 case DrawingGroup group:
                 {
-                    foreach (Drawing d in group.Children)
+                    foreach (var d in group.Children)
                         HandleDrawing(d);
 
                     break;
@@ -314,7 +314,7 @@ public static class ConverterLogic
         if (drawingGroup.GetValue(FrameworkElement.NameProperty) is not null)
             drawingGroup.SetValue(FrameworkElement.NameProperty, null);
 
-        foreach (Drawing child in drawingGroup.Children)
+        foreach (var child in drawingGroup.Children)
         {
             if (child.GetValue(FrameworkElement.NameProperty) is not null)
                 child.SetValue(FrameworkElement.NameProperty, null);
@@ -330,12 +330,12 @@ public static class ConverterLogic
     {
         var dict = new ResourceDictionary();
 
-        foreach (string file in files)
+        foreach (var file in files)
         {
-            ConvertedSvgData svg = ConvertSvg(file);
-            DrawingGroup drawingGroup = ConvertFileToDrawingGroup(svg, wpfDrawingSettings);
-            string elementName = Path.GetFileNameWithoutExtension(file);
-            string keyDg = BuildDrawingGroupName(elementName, resKeyInfo);
+            var svg = ConvertSvg(file);
+            var drawingGroup = ConvertFileToDrawingGroup(svg, wpfDrawingSettings);
+            var elementName = Path.GetFileNameWithoutExtension(file);
+            var keyDg = BuildDrawingGroupName(elementName, resKeyInfo);
             dict[keyDg] = drawingGroup;
         }
 
@@ -344,7 +344,7 @@ public static class ConverterLogic
 
     internal static void SetSizeToGeometries(DrawingGroup dg)
     {
-        Size? size = GetSizeFromDrawingGroup(dg);
+        var size = GetSizeFromDrawingGroup(dg);
 
         if (size.HasValue)
         {
@@ -383,7 +383,7 @@ public static class ConverterLogic
         //}
 
         //workaround: error when Id starts with a number
-        XDocument doc = svg.Svg is not null
+        var doc = svg.Svg is not null
             ? XDocument.Parse(svg.Svg)
             : XDocument.Load(Path.GetFullPath(svg.Filepath));
 
@@ -405,14 +405,14 @@ public static class ConverterLogic
             IncludeRuntime = includeRuntime
         });
 
-        string xaml = writer.Save(wpfObject);
+        var xaml = writer.Save(wpfObject);
 
         return xaml;
     }
 
     internal static void RemoveResDictEntries(XElement root)
     {
-        XElement entriesElem = root.Element(NsDef + "ResourceDictionary.Entries");
+        var entriesElem = root.Element(NsDef + "ResourceDictionary.Entries");
 
         if (entriesElem is not null)
         {
@@ -423,21 +423,21 @@ public static class ConverterLogic
 
     internal static string BuildDrawingGroupName(string elementName, ResKeyInfo resKeyInfo)
     {
-        string rawName = elementName + "DrawingGroup";
+        var rawName = elementName + "DrawingGroup";
 
         return BuildResKey(rawName, resKeyInfo);
     }
 
     internal static string BuildDrawingImageName(string elementName, ResKeyInfo resKeyInfo)
     {
-        string rawName = elementName + "DrawingImage";
+        var rawName = elementName + "DrawingImage";
 
         return BuildResKey(rawName, resKeyInfo);
     }
 
     internal static string BuildGeometryName(string name, int? no, ResKeyInfo resKeyInfo)
     {
-        string rawName = no.HasValue
+        var rawName = no.HasValue
             ? $"{name}Geometry{no.Value}"
             : $"{name}Geometry"; //dont add number if only one Geometry
 
@@ -463,7 +463,7 @@ public static class ConverterLogic
         if (resKeyInfo.UseComponentResKeys)
             return $"{{x:Static {resKeyInfo.NameSpaceName}:{resKeyInfo.XamlName}.{ValidateName(name)}Key}}";
 
-        string result = name;
+        var result = name;
 
         if (resKeyInfo.Prefix is not null)
             result = resKeyInfo.Prefix + CPrefixSeparator + name;
@@ -481,7 +481,7 @@ public static class ConverterLogic
     /// <returns></returns>
     internal static string BuildResKeyReference(string refName, bool dynamic = false)
     {
-        string resourceIdent = dynamic
+        var resourceIdent = dynamic
             ? "DynamicResource"
             : "StaticResource";
 
@@ -493,10 +493,10 @@ public static class ConverterLogic
         if (resKeyInfo.UseComponentResKeys)
         {
             //{x:Static NameSpaceName:XamlName.ElementName}
-            int p1 = name.IndexOf(".", StringComparison.Ordinal);
-            int p2 = name.LastIndexOf("}", StringComparison.Ordinal);
+            var p1 = name.IndexOf(".", StringComparison.Ordinal);
+            var p2 = name.LastIndexOf("}", StringComparison.Ordinal);
 
-            string result = p1 < p2
+            var result = p1 < p2
                 ? name.Substring(p1 + 1, p2 - p1 - 1)
                 : name;
 
@@ -509,7 +509,7 @@ public static class ConverterLogic
         if (resKeyInfo.Prefix is null)
             return name;
 
-        string prefixWithSeparator = resKeyInfo.Prefix + CPrefixSeparator;
+        var prefixWithSeparator = resKeyInfo.Prefix + CPrefixSeparator;
 
         if (name.StartsWith(resKeyInfo.Prefix + CPrefixSeparator, StringComparison.OrdinalIgnoreCase))
             name = name.Remove(0, prefixWithSeparator.Length);
@@ -519,7 +519,7 @@ public static class ConverterLogic
 
     internal static string ValidateName(string name)
     {
-        string result = Regex.Replace(name, "[^[0-9a-zA-Z]]*", "_");
+        var result = Regex.Replace(name, "[^[0-9a-zA-Z]]*", "_");
 
         if (Regex.IsMatch(result, "^[0-9].*"))
             result = "_" + result;
@@ -539,9 +539,9 @@ public static class ConverterLogic
         //       <DrawingGroup.ClipGeometry>
         //           <RectangleGeometry Rect="0,0,512,512" />
         //       </DrawingGroup.ClipGeometry>
-        XElement clipElement = drawingGroupElement?.XPathSelectElement(".//defns:DrawingGroup.ClipGeometry", NsManager);
-        XElement rectangleElement = clipElement?.Element(NsDef + "RectangleGeometry");
-        XAttribute rectAttr = rectangleElement?.Attribute("Rect");
+        var clipElement = drawingGroupElement?.XPathSelectElement(".//defns:DrawingGroup.ClipGeometry", NsManager);
+        var rectangleElement = clipElement?.Element(NsDef + "RectangleGeometry");
+        var rectAttr = rectangleElement?.Attribute("Rect");
 
         if (rectAttr is not null)
         {
@@ -560,8 +560,7 @@ public static class ConverterLogic
         //       <DrawingGroup.ClipGeometry>
         //           <RectangleGeometry Rect="0,0,512,512" />
         //       </DrawingGroup.ClipGeometry>
-        DrawingGroup subGroup = drawingGroup?.Children.OfType<DrawingGroup>()
-            .FirstOrDefault(c => c.ClipGeometry is not null);
+        var subGroup = drawingGroup?.Children.OfType<DrawingGroup>().FirstOrDefault(c => c.ClipGeometry is not null);
 
         return subGroup?.ClipGeometry.Bounds.Size;
     }
@@ -583,11 +582,11 @@ public static class ConverterLogic
     {
         var drawingGroups = rootElement.Elements(NsDef + "DrawingGroup").ToList();
 
-        foreach (XElement node in drawingGroups)
+        foreach (var node in drawingGroups)
         {
             //get Name of DrawingGroup
-            string nameDg = node.Attribute(Nsx + "Key")?.Value;
-            string nameImg = nameDg?.Replace("DrawingGroup", "DrawingImage");
+            var nameDg = node.Attribute(Nsx + "Key")?.Value;
+            var nameImg = nameDg?.Replace("DrawingGroup", "DrawingImage");
 
             //<DrawingImage x:Key="xxx" Drawing="{StaticResource cloud_5_icon_DrawingGroup}"/>
             var drawingImage = new XElement(NsDef + "DrawingImage",
@@ -600,7 +599,7 @@ public static class ConverterLogic
 
     private static DrawingGroup ConvertFileToDrawingGroup(ConvertedSvgData svg, WpfDrawingSettings wpfDrawingSettings)
     {
-        DrawingGroup dg = SvgFileToWpfObject(svg, wpfDrawingSettings);
+        var dg = SvgFileToWpfObject(svg, wpfDrawingSettings);
         SetSizeToGeometries(dg);
         RemoveObjectNames(dg);
 
@@ -609,11 +608,11 @@ public static class ConverterLogic
 
     private static void FixIds(XElement root)
     {
-        IEnumerable<XAttribute> idAttributesStartingWithDigit = root.DescendantsAndSelf()
+        var idAttributesStartingWithDigit = root.DescendantsAndSelf()
             .SelectMany(d => d.Attributes())
             .Where(a => string.Equals(a.Name.LocalName, "Id", StringComparison.InvariantCultureIgnoreCase));
 
-        foreach (XAttribute attr in idAttributesStartingWithDigit)
+        foreach (var attr in idAttributesStartingWithDigit)
         {
             if (char.IsDigit(attr.Value.FindInEnumerable()))
                 attr.Value = "_" + attr.Value;
@@ -632,7 +631,7 @@ public static class ConverterLogic
 
     private static void InlineClipping(XElement drawingElement)
     {
-        XElement clipElement = GetClipElement(drawingElement, out Rect clipRect);
+        var clipElement = GetClipElement(drawingElement, out var clipRect);
 
         if (clipElement?.Parent?.Name.LocalName == "DrawingGroup")
         {
@@ -653,22 +652,22 @@ public static class ConverterLogic
     private static void RemoveCascadedDrawingGroup(XElement drawingElement)
     {
         //wenn eine DrawingGroup nix anderes wie eine andere DrawingGroup hat, werden deren Elemente eine Ebene hochgezogen und die überflüssige Group entfernt
-        IEnumerable<XElement> drawingGroups = drawingElement.DescendantsAndSelf(NsDef + "DrawingGroup");
+        var drawingGroups = drawingElement.DescendantsAndSelf(NsDef + "DrawingGroup");
 
-        foreach (XElement drawingGroup in drawingGroups)
+        foreach (var drawingGroup in drawingGroups)
         {
             var elems = drawingGroup.Elements().ToList();
 
             if (elems.Count == 1
                 && elems[0].Name.LocalName == "DrawingGroup")
             {
-                XElement subGroup = elems[0];
+                var subGroup = elems[0];
 
                 //var subElems = subGroup.Elements().ToList();
                 //subElems.Remove();
                 //drawingGroup.Add(subElems);
-                IEnumerable<XName> subAttrNames = subGroup.Attributes().Select(a => a.Name);
-                IEnumerable<XName> attrNames = drawingGroup.Attributes().Select(a => a.Name);
+                var subAttrNames = subGroup.Attributes().Select(a => a.Name);
+                var attrNames = drawingGroup.Attributes().Select(a => a.Name);
 
                 if (subAttrNames.Intersect(attrNames).Any())
                     return;
@@ -691,9 +690,9 @@ public static class ConverterLogic
         //</DrawingGroup>
 
         //würde auch gehen:var pathGeometries = drawingElement.XPathSelectElements(".//defns:PathGeometry", _nsManager).ToArray();
-        XElement[] pathGeometries = drawingElement.Descendants(NsDef + "PathGeometry").ToArray();
+        var pathGeometries = drawingElement.Descendants(NsDef + "PathGeometry").ToArray();
 
-        foreach (XElement pathGeometry in pathGeometries)
+        foreach (var pathGeometry in pathGeometries)
         {
             if (pathGeometry.Parent?.Parent?.Name.LocalName == "GeometryDrawing")
             {
@@ -704,8 +703,8 @@ public static class ConverterLogic
                     && attrNames.Contains("Figures")
                     && (attrNames.Contains("FillRule") || attrNames.Count == 1))
                 {
-                    string sFigures = pathGeometry.Attribute("Figures")?.Value;
-                    XAttribute fillRuleAttr = pathGeometry.Attribute("FillRule");
+                    var sFigures = pathGeometry.Attribute("Figures")?.Value;
+                    var fillRuleAttr = pathGeometry.Attribute("FillRule");
 
                     if (fillRuleAttr is not null)
                     {
@@ -738,9 +737,9 @@ public static class ConverterLogic
     {
         var glyphRuns = drawingElement.Descendants(NsDef + nameof(GlyphRun)).ToList();
 
-        foreach (XElement glyphRun in glyphRuns)
+        foreach (var glyphRun in glyphRuns)
         {
-            XAttribute pixelsPerDipAttr = glyphRun.Attribute(nameof(GlyphRun.PixelsPerDip));
+            var pixelsPerDipAttr = glyphRun.Attribute(nameof(GlyphRun.PixelsPerDip));
             pixelsPerDipAttr?.Remove();
         }
     }
@@ -748,8 +747,8 @@ public static class ConverterLogic
     private static void ExtractGeometries(XElement drawingGroupElement, ResKeyInfo resKeyInfo)
     {
         //get Name of DrawingGroup
-        string nameDg = drawingGroupElement.Attribute(Nsx + "Key")?.Value;
-        string name = nameDg?.Replace("DrawingGroup", "");
+        var nameDg = drawingGroupElement.Attribute(Nsx + "Key")?.Value;
+        var name = nameDg?.Replace("DrawingGroup", "");
         name = GetElemNameFromResKey(name, resKeyInfo);
 
         //find this: <GeometryDrawing Brush="{DynamicResource _3d_view_icon_BrushColor}" Geometry="F1 M512,512z M0,0z M436.631,207.445L436.631,298.319z" />
@@ -760,14 +759,14 @@ public static class ConverterLogic
             .Where(a => a.Name.LocalName == "Geometry")
             .ToList();
 
-        foreach (XAttribute geo in geos)
+        foreach (var geo in geos)
         {
             //build resourcename
             int? no = geos.Count > 1
                 ? geos.IndexOf(geo) + 1
                 : null;
 
-            string localName = BuildGeometryName(name, no, resKeyInfo);
+            var localName = BuildGeometryName(name, no, resKeyInfo);
 
             //Add this: <Geometry x:Key="cloud_3_iconGeometry">F1 M512,512z M0,0z M409.338,216.254C398.922,351.523z</Geometry>
             drawingGroupElement.AddBeforeSelf(new XElement(NsDef + "Geometry",

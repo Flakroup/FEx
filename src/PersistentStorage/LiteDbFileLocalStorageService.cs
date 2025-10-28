@@ -6,7 +6,6 @@ using LiteDB;
 using System;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 
 namespace FEx.PersistentStorage;
 
@@ -39,26 +38,26 @@ public class LiteDbFileLocalStorageService : FileLocalStorageService
     /// <inheritdoc />
     public override void DeleteExpiredFiles()
     {
-        Expression<Func<LiteFileInfo<string>, bool>> isExpiredPredicate = CachedFileExtensions.GetIsExpiredPredicate();
+        var isExpiredPredicate = CachedFileExtensions.GetIsExpiredPredicate();
         var filesToDelete = _context.Database.FileStorage.Find(isExpiredPredicate).ToList();
 
         if (filesToDelete.IsNullOrEmpty())
             return;
 
-        foreach (LiteFileInfo<string> file in filesToDelete)
+        foreach (var file in filesToDelete)
             _context.Database.FileStorage.Delete(file.Id);
     }
 
     private FExCachedFile Upload(Uri fileUrl, string fileName, MemoryStream stream)
     {
-        string fileId = GetFileId(fileUrl);
+        var fileId = GetFileId(fileUrl);
 
         var fileMetadata = new BsonDocument
         {
             [FExCachedFile.UrlMetadataName] = fileUrl.ToString()
         };
 
-        LiteFileInfo<string> result = _context.Database.FileStorage.Upload(fileId, fileName, stream, fileMetadata);
+        var result = _context.Database.FileStorage.Upload(fileId, fileName, stream, fileMetadata);
 
         return new(result);
     }

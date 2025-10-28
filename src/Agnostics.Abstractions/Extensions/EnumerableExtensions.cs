@@ -16,7 +16,7 @@ public static class EnumerableExtensions
     {
         source.Guard(nameof(source));
 
-        IEnumerator enumerator = source.GetEnumerator();
+        var enumerator = source.GetEnumerator();
         bool result;
 
         try
@@ -106,7 +106,7 @@ public static class EnumerableExtensions
     public static string AggregateSafe(this IEnumerable<string> source)
     {
         IEnumerable<string> enumerable = source as string[] ?? [.. source];
-        string result = string.Empty;
+        var result = string.Empty;
 
         if (enumerable.Any())
             result = string.Join(", ", enumerable);
@@ -123,7 +123,7 @@ public static class EnumerableExtensions
     /// <returns>The list itself.</returns>
     public static void ForEachInEnumerable<T>(this IEnumerable<T> source, Action<T> action)
     {
-        foreach (T item in source)
+        foreach (var item in source)
             action(item);
     }
 
@@ -157,7 +157,7 @@ public static class EnumerableExtensions
         var partialList = new List<T>();
         var counter = 0;
 
-        foreach (T item in items)
+        foreach (var item in items)
         {
             if (counter == 0
                 || counter % maxNumberOfItems == 0)
@@ -230,7 +230,7 @@ public static class EnumerableExtensions
     {
         var index = 0;
 
-        foreach (T element in source)
+        foreach (var element in source)
         {
             if (predicate(element))
                 return index;
@@ -254,7 +254,7 @@ public static class EnumerableExtensions
     {
         var index = 0;
 
-        foreach (T element in source)
+        foreach (var element in source)
         {
             if (predicate(element))
                 yield return index;
@@ -332,8 +332,8 @@ public static class EnumerableExtensions
         var listA = sourceA.ToList();
         var listB = sourceB.ToList();
 
-        int listACount = listA.Count;
-        int listBCount = listB.Count;
+        var listACount = listA.Count;
+        var listBCount = listB.Count;
 
         IEnumerable<T> shorter = listACount <= listBCount
             ? listA
@@ -343,20 +343,20 @@ public static class EnumerableExtensions
             ? listB
             : listA;
 
-        int shorterCount = shorter.Count();
-        int longerCount = longer.Count();
+        var shorterCount = shorter.Count();
+        var longerCount = longer.Count();
         var arrayB = new BitArray(shorterCount);
         var count = 0;
 
         for (var i = 0; i < shorterCount; i++)
         {
-            T tA = shorter.ElementAt(i);
+            var tA = shorter.ElementAt(i);
 
             for (var j = 0; j < longerCount; j++)
             {
                 if (!arrayB[i])
                 {
-                    T tB = longer.ElementAt(j);
+                    var tB = longer.ElementAt(j);
 
                     if (tA.Equals(tB))
                     {
@@ -376,7 +376,7 @@ public static class EnumerableExtensions
 
     public static IEnumerable<T> GetAllItemChildren<T>(this T item, Func<T, IEnumerable<T>> getChildrenFunc)
     {
-        IEnumerable<T> children = getChildrenFunc(item);
+        var children = getChildrenFunc(item);
 
         return children.IsNotNullOrEmptyEnumerable()
             ? children.Concat(children.SelectMany(x => GetAllItemChildren(x, getChildrenFunc)))
@@ -393,9 +393,9 @@ public static class EnumerableExtensions
 
     public static int IndexOfEnumerable<T>(this IEnumerable<T> items, T itemToFind)
     {
-        int index = -1;
+        var index = -1;
 
-        foreach ((T item, int counter) in items.Select(static (item, counter) => (item, counter)))
+        foreach (var (item, counter) in items.Select(static (item, counter) => (item, counter)))
         {
             if (IsCompatibleObject(item)
                 && item.Equals(itemToFind))
@@ -411,7 +411,7 @@ public static class EnumerableExtensions
 
     private static bool HasElements(IEnumerable enumerable)
     {
-        IEnumerator enumerator = enumerable.GetEnumerator();
+        var enumerator = enumerable.GetEnumerator();
         using var disposable = enumerator as IDisposable;
 
         return enumerator.MoveNext();

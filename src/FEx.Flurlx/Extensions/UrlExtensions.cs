@@ -5,7 +5,6 @@ using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Agnostics.Abstractions.Utilities;
 using Flurl;
 using Flurl.Http;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -29,8 +28,8 @@ public static class UrlExtensions
                 dispose = true;
             }
 
-            using IFlurlResponse response = await client.Request(url).HeadAsync();
-            double bytesTotal = GetContentLength(response);
+            using var response = await client.Request(url).HeadAsync();
+            var bytesTotal = GetContentLength(response);
 
             return unit == LengthType.Bytes
                 ? bytesTotal
@@ -63,28 +62,28 @@ public static class UrlExtensions
             }
 
             var ms = new MemoryStream();
-            IFlurlRequest request = client.Request(url);
+            var request = client.Request(url);
 
             if (length.HasValue)
             {
-                using IFlurlResponse response = await request.HeadAsync();
+                using var response = await request.HeadAsync();
 
-                Dictionary<string, string[]> headers = response.ResponseMessage.GetAllHeaders();
+                var headers = response.ResponseMessage.GetAllHeaders();
 
                 if (headers.ContainsKey(acceptRangesHeader))
                 {
-                    double bytesTotal = GetContentLength(response);
+                    var bytesTotal = GetContentLength(response);
 
-                    double fromBytes = origin == SeekOrigin.Begin
+                    var fromBytes = origin == SeekOrigin.Begin
                         ? offset
                         : bytesTotal - offset;
 
-                    double? toBytes = fromBytes + length;
+                    var toBytes = fromBytes + length;
                     request = request.WithHeader("Range", $"bytes={fromBytes}-{toBytes}");
 #if NETSTANDARD
-                    using Stream rangedStream = await request.GetStreamAsync();
+                    using var rangedStream = await request.GetStreamAsync();
 #else
-                    await using Stream rangedStream = await request.GetStreamAsync();
+                    await using var rangedStream = await request.GetStreamAsync();
 #endif
                     await rangedStream.CopyToAsync(ms);
 
@@ -92,9 +91,9 @@ public static class UrlExtensions
                 }
 
 #if NETSTANDARD
-                using Stream seekableStream = await request.GetStreamAsync();
+                using var seekableStream = await request.GetStreamAsync();
 #else
-                await using Stream seekableStream = await request.GetStreamAsync();
+                await using var seekableStream = await request.GetStreamAsync();
 #endif
                 seekableStream.Seek(offset, origin);
                 await seekableStream.CopyStreamToStreamAsync(ms, length: length);
@@ -103,9 +102,9 @@ public static class UrlExtensions
             }
 
 #if NETSTANDARD
-            using Stream stream = await request.GetStreamAsync();
+            using var stream = await request.GetStreamAsync();
 #else
-            await using Stream stream = await request.GetStreamAsync();
+            await using var stream = await request.GetStreamAsync();
 #endif
             await stream.CopyToAsync(ms);
 
@@ -121,7 +120,7 @@ public static class UrlExtensions
     private static double GetContentLength(IFlurlResponse response)
     {
         const string contentLengthKey = "Content-Length";
-        string contentLength = response.Headers.FirstOrDefault(contentLengthKey);
+        var contentLength = response.Headers.FirstOrDefault(contentLengthKey);
 
         return contentLength.ToDouble();
     }

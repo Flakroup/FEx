@@ -14,10 +14,10 @@ public static class CompressionHelper
     {
         var dir = new DirectoryInfo(targetDirectory);
         dir.Create();
-        FileInfo file = dir.GetDescendantFile(targetFileName);
+        var file = dir.GetDescendantFile(targetFileName);
 
-        using (FileStream originalFileStream = fileToDecompress.OpenRead())
-        using (FileStream decompressedFileStream = file.Create())
+        using (var originalFileStream = fileToDecompress.OpenRead())
+        using (var decompressedFileStream = file.Create())
         using (var decompressionStream = new GZipStream(originalFileStream, CompressionMode.Decompress))
             await decompressionStream.CopyToAsync(decompressedFileStream);
 
@@ -30,7 +30,7 @@ public static class CompressionHelper
     {
         try
         {
-            using FileStream originalFileStream = fileToDecompress.OpenRead();
+            using var originalFileStream = fileToDecompress.OpenRead();
 
             using (new GZipStream(originalFileStream, CompressionMode.Decompress))
                 return true;
@@ -49,7 +49,7 @@ public static class CompressionHelper
 
         if (overwrite)
             //todo check if directories entries are also important
-            foreach (string entry in ListZipEntries(fileToDecompress)
+            foreach (var entry in ListZipEntries(fileToDecompress)
                          .Where(x => !x.FullName.EndsWith("/"))
                          .Select(x => Path.Combine(targetDirectory, x.FullName.Replace("/", "\\")))
                          .Where(File.Exists)
@@ -66,7 +66,7 @@ public static class CompressionHelper
 
     public static ZipArchiveEntry[] ListZipEntries(string zipPath)
     {
-        using ZipArchive archive = ZipFile.OpenRead(zipPath);
+        using var archive = ZipFile.OpenRead(zipPath);
 
         return [.. archive.Entries];
     }

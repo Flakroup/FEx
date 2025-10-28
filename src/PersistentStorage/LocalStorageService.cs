@@ -144,8 +144,8 @@ public class LocalStorageService : ILocalStorageService
     /// <returns>A lambda expression that always evaluates to true.</returns>
     private static Expression<Func<T, bool>> GetTrueExpression<T>()
     {
-        Type type = typeof(T);
-        ParameterExpression parameter = Expression.Parameter(type);
+        var type = typeof(T);
+        var parameter = Expression.Parameter(type);
 
         return Expression.Lambda<Func<T, bool>>(Expression.Constant(true), parameter);
     }
@@ -155,7 +155,7 @@ public class LocalStorageService : ILocalStorageService
         predicate ??= GetTrueExpression<T>();
 
         //LiteDB issue workaround https://github.com/mbdavid/LiteDB/issues/1940#issuecomment-961784366
-        int? documentsCount = CollectionCount(predicate);
+        var documentsCount = CollectionCount(predicate);
 
         return documentsCount is null or 0
                || Context.Database.GetCollection<T>().DeleteMany(predicate) == documentsCount;

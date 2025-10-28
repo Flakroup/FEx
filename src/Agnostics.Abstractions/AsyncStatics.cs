@@ -31,7 +31,7 @@ public static class AsyncStatics
                                                             AsyncOptions options = AsyncOptions.ImmediateStart,
                                                             CancellationToken cancellationToken = default)
     {
-        Type argumentType = typeof(T);
+        var argumentType = typeof(T);
 
         if (argumentType == typeof(Task)
             || argumentType.IsGenericType && argumentType.GetGenericTypeDefinition() == typeof(Task<>))
@@ -49,7 +49,7 @@ public static class AsyncStatics
     public static async Task ExecuteTaskOnThreadPoolAsync(Func<Task> func,
                                                           AsyncOptions options = AsyncOptions.ImmediateStart)
     {
-        Func<Task> effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
+        var effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
             ? () => Task.Run(func)
             : func;
 
@@ -66,7 +66,7 @@ public static class AsyncStatics
     public static async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> func,
                                                                 AsyncOptions options = AsyncOptions.ImmediateStart)
     {
-        Func<Task<T>> effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
+        var effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
             ? () => Task.Run(func)
             : func;
 
@@ -179,7 +179,7 @@ public static class AsyncStatics
                                                       Action action = null,
                                                       CancellationToken cancellationToken = default)
     {
-        TimeSpan delayTimeSpan = GetDelayTimeSpan(delayMilliseconds);
+        var delayTimeSpan = GetDelayTimeSpan(delayMilliseconds);
 
         try
         {
@@ -249,7 +249,7 @@ public static class AsyncStatics
                                                   TimeSpan delayTimeSpan,
                                                   CancellationToken cancellationToken = default)
     {
-        bool result = predicate is not null && predicate();
+        var result = predicate is not null && predicate();
 
         if (!result)
             return;
@@ -266,7 +266,7 @@ public static class AsyncStatics
                                                   TimeSpan delayTimeSpan,
                                                   CancellationToken cancellationToken = default)
     {
-        bool result = predicate is not null && await predicate();
+        var result = predicate is not null && await predicate();
 
         if (!result)
             return;

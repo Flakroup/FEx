@@ -209,18 +209,18 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
 
     protected virtual void UpdateProgressInfo()
     {
-        TimeSpan elapsed = Stopwatch.Elapsed;
-        double elapsedMilliseconds = elapsed.TotalMilliseconds;
-        double maximum = Maximum;
-        double value = Value;
-        double percentage = Percentage;
-        double avgMs = elapsedMilliseconds / value;
+        var elapsed = Stopwatch.Elapsed;
+        var elapsedMilliseconds = elapsed.TotalMilliseconds;
+        var maximum = Maximum;
+        var value = Value;
+        var percentage = Percentage;
+        var avgMs = elapsedMilliseconds / value;
 
-        double etr = value > 0
+        var etr = value > 0
             ? (maximum - value) * avgMs
             : 0;
 
-        string est = !double.IsNaN(etr) && !double.IsInfinity(etr) && etr > 0
+        var est = !double.IsNaN(etr) && !double.IsInfinity(etr) && etr > 0
             ? $"ETR: {TimeSpan.FromMilliseconds(etr).GetTime()}"
             : string.Empty;
 
@@ -228,7 +228,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         {
             case ProgressOperationMode.Standard:
             {
-                string avg = est.IsNotNullOrEmptyString()
+                var avg = est.IsNotNullOrEmptyString()
                     ? $"AVG: {avgMs.GetTime()}"
                     : string.Empty;
 
@@ -239,16 +239,17 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
             }
             case ProgressOperationMode.Stream:
             {
-                string curBt =
-                    FileLengthConverter.ConvertFileLengthToString(value, LengthType.Bytes, LengthType.AutoDetect);
-
-                string curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
+                var curBt = FileLengthConverter.ConvertFileLengthToString(value,
                     LengthType.Bytes,
                     LengthType.AutoDetect);
 
-                double curr = elapsed.TotalSeconds;
+                var curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
+                    LengthType.Bytes,
+                    LengthType.AutoDetect);
 
-                string kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
+                var curr = elapsed.TotalSeconds;
+
+                var kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
                     LengthType.Bytes,
                     LengthType.AutoDetect,
                     1);
@@ -283,7 +284,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
 
     private void OnExcludedPropertiesChanged(IEnumerable<string> propertyNames)
     {
-        foreach (string propertyName in propertyNames)
+        foreach (var propertyName in propertyNames)
             InvokePropertyChanged(propertyName);
     }
 

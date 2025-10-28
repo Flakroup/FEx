@@ -103,7 +103,7 @@ public static class JsonExtensions
     /// </returns>
     public static string ReformatJson(this string json)
     {
-        object obj = JsonConvert.DeserializeObject(json);
+        var obj = JsonConvert.DeserializeObject(json);
 
         return JsonConvert.SerializeObject(obj, Formatting.Indented);
     }
@@ -132,9 +132,9 @@ public static class JsonExtensions
 
     public static void PrettyPrintFile(string orgPath, string destPath)
     {
-        using StreamReader file = File.OpenText(orgPath);
+        using var file = File.OpenText(orgPath);
         using var reader = new JsonTextReader(file);
-        using FileStream destFile = File.OpenWrite(destPath);
+        using var destFile = File.OpenWrite(destPath);
         destFile.SetLength(0);
         using var destFileWriter = new StreamWriter(destFile);
         using var destWriter = new JsonTextWriter(destFileWriter);
@@ -151,7 +151,7 @@ public static class JsonExtensions
 
     public static T DeserializeFromFile<T>(this FileInfo file, JsonSerializerSettings settings = null)
     {
-        using FileStream fStream = file.OpenRead();
+        using var fStream = file.OpenRead();
 
         return fStream.DeserializeFromStream<T>(settings);
     }

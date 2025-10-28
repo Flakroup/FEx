@@ -10,7 +10,7 @@ public static class InitializationExtensions
         if (!(initializers?.Count > 0))
             return;
 
-        foreach (T initializer in initializers)
+        foreach (var initializer in initializers)
         {
             if (!initializer.IsInitialized)
                 initializer.Initialize();

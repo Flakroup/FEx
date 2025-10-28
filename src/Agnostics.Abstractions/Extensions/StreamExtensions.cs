@@ -29,11 +29,11 @@ public static class StreamExtensions
 
 #if NETSTANDARD
 #pragma warning disable IDISP007
-        using Stream stream = sourceStream;
+        using var stream = sourceStream;
 #pragma warning restore IDISP007
 #else
 #pragma warning disable IDISP007
-        await using Stream stream = sourceStream;
+        await using var stream = sourceStream;
 #pragma warning restore IDISP007
 #endif
         progressMaximumSet?.BeginInvoke(stream.Length, null, null);
@@ -41,9 +41,9 @@ public static class StreamExtensions
         while (true)
         {
 #if NETSTANDARD
-            int num = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+            var num = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
 #else
-            int num = await stream.ReadAsync(buffer, cancellationToken);
+            var num = await stream.ReadAsync(buffer, cancellationToken);
 #endif
 #if NETSTANDARD
             int bytesRead;
@@ -81,14 +81,14 @@ public static class StreamExtensions
         sourceStream.Guard(nameof(sourceStream));
 
 #pragma warning disable IDISP007
-        using Stream stream = sourceStream;
+        using var stream = sourceStream;
 #pragma warning restore IDISP007
 
         progressMaximumSet?.BeginInvoke(stream.Length, null, null);
 
         while (true)
         {
-            int num = stream.Read(buffer, 0, buffer.Length);
+            var num = stream.Read(buffer, 0, buffer.Length);
             int bytesRead;
 
             if ((bytesRead = num) != 0)
@@ -114,12 +114,12 @@ public static class StreamExtensions
 #pragma warning disable IDISP007
         using (input)
 #pragma warning restore IDISP007
-        using (MemoryStream ms = await input.CopyToMemoryStreamAsync(true))
+        using (var ms = await input.CopyToMemoryStreamAsync(true))
 #else
 #pragma warning disable IDISP007
         await using (input)
 #pragma warning restore IDISP007
-        await using (MemoryStream ms = await input.CopyToMemoryStreamAsync(true))
+        await using (var ms = await input.CopyToMemoryStreamAsync(true))
 #endif
             return ms.ToArray();
     }
@@ -196,7 +196,7 @@ public static class StreamExtensions
         using (var md5Algorithm = MD5.Create())
             hash = md5Algorithm.ComputeHash(data);
 #else
-        byte[] hash = MD5.HashData(data); //todo provide async overloads for NET
+        var hash = MD5.HashData(data); //todo provide async overloads for NET
 #endif
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }

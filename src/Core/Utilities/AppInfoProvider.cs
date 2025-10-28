@@ -49,7 +49,7 @@ public record AppInfoProvider : IAppInfoProvider
         {
             EntryAssembly = Assembly.GetEntryAssembly();
 
-            string mainModule = Process.GetCurrentProcess().MainModule?.FileName;
+            var mainModule = Process.GetCurrentProcess().MainModule?.FileName;
 
             EntryAssemblyLocation = EntryAssembly?.Location is not null ? new(EntryAssembly.Location) :
                 mainModule is not null ? new FileInfo(mainModule) : null;
@@ -104,7 +104,7 @@ public record AppInfoProvider : IAppInfoProvider
     }
 
     private static Version ParseVersionString(string version) =>
-        Version.TryParse(version, out Version result)
+        Version.TryParse(version, out var result)
             ? result
             : null;
 

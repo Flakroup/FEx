@@ -18,7 +18,7 @@ public class MultiDITests : IDisposable
         FExServiceProvider.Release();
 
         // Act
-        TestContainer container = FExServiceProvider.Initialize<TestContainer>();
+        var container = FExServiceProvider.Initialize<TestContainer>();
 
         // Assert
         FExServiceProvider.ServiceContainer.ShouldNotBeNull();
@@ -39,7 +39,7 @@ public class MultiDITests : IDisposable
         FExServiceProvider.ServiceContainer.ShouldNotBeNull();
 
         // Verify we can resolve MicrosoftDI-specific services
-        FExMicrosoftDIServiceProvider microsoftProvider = FExServiceProvider.Get<FExMicrosoftDIServiceProvider>();
+        var microsoftProvider = FExServiceProvider.Get<FExMicrosoftDIServiceProvider>();
         microsoftProvider.ShouldNotBeNull();
     }
 
@@ -50,15 +50,14 @@ public class MultiDITests : IDisposable
         using var container = new TestContainer();
 
         // Act - Get Microsoft DI specific modules directly from container
-        IInitializeModule<IServiceCollection>[] microsoftModules =
-            container.Resolve<IInitializeModule<IServiceCollection>[]>().Value;
+        var microsoftModules = container.Resolve<IInitializeModule<IServiceCollection>[]>().Value;
 
         // Assert
         microsoftModules.ShouldNotBeNull();
         microsoftModules.Length.ShouldBeGreaterThan(0);
 
         // All modules should exist but not be completed (StrongInject path doesn't run them)
-        foreach (IInitializeModule<IServiceCollection> module in microsoftModules)
+        foreach (var module in microsoftModules)
             module.HasBeenCompleted.ShouldBeFalse("Engine modules should not be completed in StrongInject-only path");
     }
 
@@ -70,8 +69,8 @@ public class MultiDITests : IDisposable
         FExServiceProvider.Initialize<TestContainer>();
 
         // Verify initial state
-        IFExServiceContainer serviceFromStrongInject = FExServiceProvider.Get<IFExServiceContainer>();
-        IFExServiceContainer serviceFromNew = FExServiceProvider.Get<IFExServiceContainer>();
+        var serviceFromStrongInject = FExServiceProvider.Get<IFExServiceContainer>();
+        var serviceFromNew = FExServiceProvider.Get<IFExServiceContainer>();
 
         serviceFromStrongInject.ShouldNotBeNull();
         serviceFromNew.ShouldNotBeNull();
@@ -81,7 +80,7 @@ public class MultiDITests : IDisposable
         await FExServiceProvider.InitializeAsync<FExMicrosoftDIServiceProvider>();
 
         // Assert - Services should still be available
-        IFExServiceContainer serviceAfterSwitch = FExServiceProvider.Get<IFExServiceContainer>();
+        var serviceAfterSwitch = FExServiceProvider.Get<IFExServiceContainer>();
         serviceAfterSwitch.ShouldNotBeNull();
     }
 

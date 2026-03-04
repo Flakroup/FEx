@@ -3,7 +3,6 @@ using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Logging;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
-using FEx.Logging.Abstractions;
 using FEx.Logging.Abstractions.Interfaces;
 using FEx.Logging.Sinks.Configurations;
 using Microsoft.Extensions.DependencyInjection;

@@ -84,8 +84,11 @@ public static class FileInfoExtensions
             zipFile.Delete();
             zipFile.Refresh();
         }
-
+#if NETSTANDARD
         ZipFile.CreateFromDirectory(tempDirectory.FullName, zipFile.FullName, CompressionLevel.Optimal, false);
+#else
+        await ZipFile.CreateFromDirectoryAsync(tempDirectory.FullName, zipFile.FullName, CompressionLevel.Optimal, false);
+#endif
         tempDirectory.Delete(true);
         zipFile.Refresh();
 

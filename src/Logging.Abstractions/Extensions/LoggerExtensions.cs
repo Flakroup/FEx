@@ -1,4 +1,3 @@
-using FEx.Logging.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;

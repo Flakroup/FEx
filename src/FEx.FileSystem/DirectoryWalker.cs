@@ -37,8 +37,9 @@ public static class DirectoryWalker
     public static async Task<List<DirectoryInfo>> SafeGetAllDirectoriesAsync(string rootPath,
                                                                              DirectoryFilterDelegate predicate = null,
                                                                              string searchPattern = "*",
-                                                                             FExEnumerationOptions options = null) =>
-        await SafeGetAllDirectoriesAsync(new DirectoryInfo(rootPath), predicate, searchPattern, options);
+                                                                             FExEnumerationOptions options = null,
+                                                                             DirectoryFilterDelegate skipRecursionPredicate = null) =>
+        await SafeGetAllDirectoriesAsync(new DirectoryInfo(rootPath), predicate, searchPattern, options, skipRecursionPredicate);
 
     /// <summary>
     /// Recursively gets all subdirectories from a root directory, ignoring
@@ -47,7 +48,8 @@ public static class DirectoryWalker
     public static async Task<List<DirectoryInfo>> SafeGetAllDirectoriesAsync(this DirectoryInfo root,
                                                                              DirectoryFilterDelegate predicate = null,
                                                                              string searchPattern = "*",
-                                                                             FExEnumerationOptions options = null)
+                                                                             FExEnumerationOptions options = null,
+                                                                             DirectoryFilterDelegate skipRecursionPredicate = null)
     {
         if (!root.Exists)
             throw new DirectoryNotFoundException($"Specified path doesn't exist: {root.FullName}");
@@ -55,18 +57,20 @@ public static class DirectoryWalker
         var hasFilter = predicate is not null;
         options ??= DefaultOptions;
 
-        return await GetDirectoriesAsync(root, hasFilter, predicate, searchPattern, options);
+        return await GetDirectoriesAsync(root, hasFilter, predicate, searchPattern, options, skipRecursionPredicate);
     }
 
     public static List<FileInfo> SafeGetAllFiles(this DirectoryInfo root,
                                                  FileFilterDelegate predicate = null,
                                                  string searchPattern = "*",
-                                                 FExEnumerationOptions options = null)
+                                                 FExEnumerationOptions options = null,
+                                                 DirectoryFilterDelegate skipDirectoryPredicate = null)
     {
         if (!root.Exists)
             throw new DirectoryNotFoundException($"Specified path doesn't exist: {root.FullName}");
 
         var hasFilter = predicate is not null;
+        var hasSkip = skipDirectoryPredicate is not null;
         options ??= DefaultOptions;
 
         var stack = new Stack<DirectoryInfo>();
@@ -87,7 +91,10 @@ public static class DirectoryWalker
                     .Where(file => !hasFilter || predicate!(file)));
 
                 foreach (var subDir in current.EnumerateDirectories("*", options ?? DefaultOptions))
-                    stack.Push(subDir);
+                {
+                    if (!hasSkip || !skipDirectoryPredicate!(subDir))
+                        stack.Push(subDir);
+                }
             }
             catch
             {
@@ -113,11 +120,13 @@ public static class DirectoryWalker
     public static async Task<List<DirectoryInfo>> SafeGetLeafDirectoriesAsync(this DirectoryInfo root,
                                                                               DirectoryFilterDelegate predicate = null,
                                                                               string searchPattern = "*",
-                                                                              FExEnumerationOptions options = null) =>
+                                                                              FExEnumerationOptions options = null,
+                                                                              DirectoryFilterDelegate skipRecursionPredicate = null) =>
         await SafeGetAllDirectoriesAsync(root,
             dir => dir.IsLeaf() && (predicate is null || predicate(dir)),
             searchPattern,
-            options);
+            options,
+            skipRecursionPredicate);
 
     /// <summary>
     /// Given a list of folders, returns only those which are not subfolders
@@ -213,7 +222,8 @@ public static class DirectoryWalker
                                                                        bool hasFilter,
                                                                        DirectoryFilterDelegate predicate,
                                                                        string searchPattern,
-                                                                       FExEnumerationOptions options)
+                                                                       FExEnumerationOptions options,
+                                                                       DirectoryFilterDelegate skipRecursionPredicate)
     {
         if (current.IsErrorPath())
             return [];
@@ -223,8 +233,12 @@ public static class DirectoryWalker
             var directories =
                 await Queue.EnqueueAsync(() => Task.Run(() => current.GetDirectories(searchPattern, options)));
 
-            var results = await directories.WithWhenAllTasksAsync(dir =>
-                GetDirectoriesAsync(dir, hasFilter, predicate, searchPattern, options));
+            var directoriesToRecurse = skipRecursionPredicate is not null
+                ? directories.Where(dir => !skipRecursionPredicate(dir))
+                : directories;
+
+            var results = await directoriesToRecurse.WithWhenAllTasksAsync(dir =>
+                GetDirectoriesAsync(dir, hasFilter, predicate, searchPattern, options, skipRecursionPredicate));
 
             return results.SelectMany(x => x)
                 .Concat(directories.Where(subDir => !hasFilter || predicate(subDir)))

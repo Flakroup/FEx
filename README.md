@@ -435,7 +435,7 @@ FEx is actively developed by **Flakroup**. Contributions, feedback, and issue re
 
 ## 📄 License
 
-Copyright © **Flakroup** 2025. All rights reserved.
+Copyright © **Flakroup** 2025-2026. All rights reserved.
 
 ---
 

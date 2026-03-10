@@ -1,6 +1,6 @@
 # FEx Framework API Catalog
 
-**Generated:** 2025-10-26 17:06:35  
+**Generated:** 2026-01-14 16:48:43  
 **Version:** 1.0
 
 > 🤖 **AI Agent Usage:** Load this file into context when working with projects that reference FEx framework.
@@ -57,8 +57,8 @@
 ## FEx.Agnostics
 
 **Namespace:** `Flakroup.FEx.Agnostics`  
-**Classes:** 27 | **Interfaces:** 2 | **Enums:** 0
-**Extension Methods:** 12 | **Methods:** 24 | **Properties:** 7
+**Classes:** 28 | **Interfaces:** 2 | **Enums:** 0
+**Extension Methods:** 12 | **Methods:** 27 | **Properties:** 7
 
 ### 🔌 Extension Methods
 
@@ -160,6 +160,7 @@
 - **`InterlockedBool`**
 - **`ListDebugView`**
 - **`ListExtensions`**
+- **`LoggerState`** - Default implementation of ILoggerState for structured logging scopes.
 - **`NonSpaceIgnoringStringComparer`**
 - **`NotifyPropertyChanged`**
 - **`PaginatedList`**
@@ -275,6 +276,20 @@
 - **`GetHashCode`** → `int`
   - `int GetHashCode()`
 
+#### 📁 LoggerState.cs
+
+- **`AddOrUpdateLabel`** → `void`
+  - Default implementation of ILoggerState for structured logging scopes.
+  - `void AddOrUpdateLabel(string key, object value)`
+
+- **`RemoveLabel`** → `void`
+  - Default implementation of ILoggerState for structured logging scopes.
+  - `void RemoveLabel(string key)`
+
+- **`ToString`** → `string`
+  - Default implementation of ILoggerState for structured logging scopes.
+  - `string ToString()`
+
 #### 📁 NonSpaceIgnoringStringComparer.cs
 
 - **`GetHashCode`** → `int`
@@ -315,8 +330,8 @@
 ## FEx.Agnostics.Abstractions
 
 **Namespace:** `Flakroup.FEx.AgnosticsAbstractions`  
-**Classes:** 75 | **Interfaces:** 24 | **Enums:** 7
-**Extension Methods:** 225 | **Methods:** 36 | **Properties:** 18
+**Classes:** 77 | **Interfaces:** 26 | **Enums:** 12
+**Extension Methods:** 225 | **Methods:** 46 | **Properties:** 28
 
 ### 🔌 Extension Methods
 
@@ -1524,6 +1539,8 @@
 
 ### 🔷 Interfaces
 
+- **`IAppInfo`**
+- **`IAppInfoProvider`**
 - **`IAppVersionProvider`**
 - **`IAsyncHelper`**
 - **`IConcurrentList`**
@@ -1531,12 +1548,12 @@
 - **`IExceptionError`**
 - **`IExceptionHandlerOptions`**
 - **`IFExInitializable`**
-- **`IFExInitialize`**
-- **`IFExLogger`**
+- **`IFExLogger`** - Framework-agnostic logger interface aligned with Microsoft.Extensions.Logging semantics. Provides leveled logging (Trace/Debug/Info/Warning/Error/Critical), structured logging via scopes/labels, and low-level error event hooks.
 - **`IFExMemoryCache`**
 - **`IFExNotifyPropertyChanged`**
 - **`IFExPriorityInitialize`**
 - **`IIndex`**
+- **`ILoggerState`** - Represents a mutable dictionary of logging state/labels for structured logging scopes.
 - **`IMap`**
 - **`IResult`**
 - **`IResult`**
@@ -1580,11 +1597,12 @@
 - **`ExceptionExtensions`**
 - **`FExAgnosticsStatics`** - Provides static access to core FEx services at the agnostics layer. This class MUST be initialized by higher-level layers (e.g., FEx.Core) before use.
 - **`FExConversion`** *(static)*
-- **`FExDebugLogger`**
+- **`FExDebugLogger`** - Simple debug console logger implementation (no structured logging support).
 - **`FExErrorEventArgs`**
-- **`FExInitialize`**
+- **`FExInitializable`**
 - **`FExSemaphoreSlim`**
 - **`FExStaticLogger`**
+- **`FExValueTaskHelper`**
 - **`FileInfoExtensions`**
 - **`FileLengthConverter`**
 - **`FileSystemHelper`**
@@ -1596,11 +1614,12 @@
 - **`IntegerExtensions`** *(static)*
 - **`InterlockedBool`**
 - **`LambdaEqualityHelper`**
-- **`LambdaExtensions`**
 - **`LambdaExtensions`** - Returns a expression that always returns false
+- **`LambdaExtensions`**
 - **`ListExtensions`** - Extensions for the IList interface.
 - **`Map`**
 - **`ObjectExtensions`**
+- **`PlatformInfoProvider`** - Provides detailed information about the host operating system.
 - **`ReadOnlyDictionaryExtensions`** - IReadOnlyDictionary extensions class.
 - **`Result`**
 - **`Result`**
@@ -1635,6 +1654,11 @@
 - **`FileOperation`**
 - **`LengthType`**
 - **`MediaTypes`**
+- **`OSEdition`**
+- **`OSPlatformInfo`**
+- **`OSProcessorArchitecture`**
+- **`OSProduct`**
+- **`SoftwareArchitecture`**
 - **`WildCardPosition`** - Wild card position.
 
 ### ⚙️ Public Methods
@@ -1730,6 +1754,36 @@
   - Return the integer portion of a number.
   - `double Fix(double number)`
 
+#### 📁 FExDebugLogger.cs (7 methods)
+
+- **`Debug`** → `void`
+  - Simple debug console logger implementation (no structured logging support).
+  - `void Debug(string message)`
+
+- **`Debug`** → `void`
+  - Simple debug console logger implementation (no structured logging support).
+  - `void Debug(Exception exception, string message = null)`
+
+- **`Information`** → `void`
+  - Simple debug console logger implementation (no structured logging support).
+  - `void Information(string message)`
+
+- **`Information`** → `void`
+  - Simple debug console logger implementation (no structured logging support).
+  - `void Information(Exception exception, string message = null)`
+
+- **`Trace`** → `void`
+  - Simple debug console logger implementation (no structured logging support).
+  - `void Trace(string message)`
+
+- **`Trace`** → `void`
+  - Simple debug console logger implementation (no structured logging support).
+  - `void Trace(Exception exception, string message = null)`
+
+- **`Warning`** → `void`
+  - Simple debug console logger implementation (no structured logging support).
+  - `void Warning(string message)`
+
 #### 📁 FileLengthConverter.cs (7 methods)
 
 - **`ConvertFileLength`** → `double`
@@ -1795,6 +1849,21 @@
 - **`SetReadOnly`** → `void`
   - `void SetReadOnly()`
 
+#### 📁 OSVersion.cs
+
+- **`GetHashCode`** → `int`
+  - `int GetHashCode()`
+
+#### 📁 PlatformInfoProvider.cs
+
+- **`IsOSPlatform`** → `bool`
+  - Indicates the operating-system platform.
+  - `bool IsOSPlatform(string platform)`
+
+- **`IsOSPlatform`** → `bool`
+  - Indicates the operating-system platform.
+  - `bool IsOSPlatform(string platform)`
+
 #### 📁 SpecialDirectory.cs
 
 - **`GetExistingDirectories`** → `IDictionary<Environment.SpecialFolder, SpecialDirectory>`
@@ -1839,6 +1908,10 @@
   - Gets the instance. ⚠️ This property must be initialized by calling before first use. ⚠️ Typically initialized automatically by FEx.Core during application startup.
   - 📁 FExAgnosticsStatics.cs
 
+- **`BuildVersion`** : `int`
+  - Gets the build version number of the operating system running on this computer.
+  - 📁 PlatformInfoProvider.cs
+
 - **`Default`** : `DateTime`
   - Gets the default date.
   - 📁 DateTimeDefaults.cs
@@ -1855,6 +1928,14 @@
   - Gets the default minimum date.
   - 📁 DateTimeDefaults.cs
 
+- **`Edition`** : `OSEdition`
+  - Determines if the current processor is 32 or 64-bit.
+  - 📁 PlatformInfoProvider.cs
+
+- **`InfoString`** : `string`
+  - Gets the full version of the operating system running on this computer.
+  - 📁 PlatformInfoProvider.cs
+
 - **`IsodateMask`** : `string`
   - Provides set of default datetime values.
   - 📁 DateTimeDefaults.cs
@@ -1866,6 +1947,10 @@
 - **`IsotimeMask`** : `string`
   - Provides set of default datetime values.
   - 📁 DateTimeDefaults.cs
+
+- **`IsWsl`** : `bool`
+  - Indicates whether the current process is running under Windows Subsystem for Linux.
+  - 📁 PlatformInfoProvider.cs
 
 - **`LettersAndNumbersRegex`** : `Regex`
   - The SQL wild card 'any value'.
@@ -1879,9 +1964,29 @@
   - The SQL wild card 'any value'.
   - 📁 StringExtensions.cs
 
+- **`Name`** : `string`
+  - Gets the name of the operating system running on this computer.
+  - 📁 PlatformInfoProvider.cs
+
+- **`OSBits`** : `SoftwareArchitecture`
+  - Determines if the current application is 32 or 64-bit.
+  - 📁 PlatformInfoProvider.cs
+
+- **`ProcessorBits`** : `OSProcessorArchitecture`
+  - Determines if the current processor is 32 or 64-bit.
+  - 📁 PlatformInfoProvider.cs
+
+- **`ProgramBits`** : `SoftwareArchitecture`
+  - Determines if the current application is 32 or 64-bit.
+  - 📁 PlatformInfoProvider.cs
+
 - **`RomanNumeralsRegex`** : `Regex`
   - String utility methods for advanced string processing.
   - 📁 StringUtilities.cs
+
+- **`ServicePack`** : `string`
+  - Gets the service pack information of the operating system running on this computer.
+  - 📁 PlatformInfoProvider.cs
 
 - **`SqlMax`** : `DateTime`
   - Gets the SQL maximum allowed date.
@@ -1894,6 +1999,10 @@
 - **`UnixEpoch`** : `DateTime`
   - Provides set of default datetime values.
   - 📁 DateTimeDefaults.cs
+
+- **`Version`** : `Version`
+  - Gets the full version of the operating system running on this computer.
+  - 📁 PlatformInfoProvider.cs
 
 - **`WordRegex`** : `Regex`
   - The SQL wild card 'any value'.
@@ -2096,8 +2205,8 @@
 ## FEx.Avaloniax
 
 **Namespace:** `Flakroup.FEx.Avaloniax`  
-**Classes:** 9 | **Interfaces:** 3 | **Enums:** 0
-**Extension Methods:** 0 | **Methods:** 5 | **Properties:** 0
+**Classes:** 11 | **Interfaces:** 3 | **Enums:** 0
+**Extension Methods:** 0 | **Methods:** 4 | **Properties:** 1
 
 ### 🔷 Interfaces
 
@@ -2109,12 +2218,14 @@
 
 - **`AppViewLocator`**
 - **`AvaloniaDispatcher`**
-- **`AvaloniaExceptionHandler`**
 - **`AvaloniaMessagePopupService`**
+- **`AvaloniaScheduler`** - Scheduler for ReactiveUI that marshals work to Avalonia's UI thread.
 - **`FExAvaloniaApp`**
 - **`FExAvaloniaReactiveUserControl`**
 - **`FExAvaloniaViewModelBase`**
+- **`FExAvaloniax`** - Initializer for FEx.Avaloniax that configures ReactiveUI with Avalonia's UI scheduler.
 - **`FExAvaloniaxModule`**
+- **`FExModule`**
 - **`NavigationService`**
 
 ### ⚙️ Public Methods
@@ -2138,10 +2249,11 @@
 - **`CheckAccess`** → `bool`
   - `bool CheckAccess(object sender = null)`
 
-#### 📁 AvaloniaExceptionHandler.cs
+### 📊 Properties
 
-- **`Handle`** → `void`
-  - `void Handle(Exception exception, IExceptionHandlerOptions options = null)`
+- **`Instance`** : `AvaloniaScheduler`
+  - Gets the singleton instance of the Avalonia scheduler.
+  - 📁 AvaloniaScheduler.cs
 
 ---
 
@@ -2433,8 +2545,8 @@
 ## FEx.Core.Abstractions
 
 **Namespace:** `Flakroup.FEx.CoreAbstractions`  
-**Classes:** 33 | **Interfaces:** 15 | **Enums:** 6
-**Extension Methods:** 13 | **Methods:** 41 | **Properties:** 11
+**Classes:** 32 | **Interfaces:** 13 | **Enums:** 1
+**Extension Methods:** 13 | **Methods:** 38 | **Properties:** 1
 
 ### 🔌 Extension Methods
 
@@ -2519,8 +2631,6 @@
 
 ### 🔷 Interfaces
 
-- **`IAppInfo`**
-- **`IAppInfoProvider`**
 - **`IAppThreadingSettings`**
 - **`IAsyncInitializable`**
 - **`IDeadlockMonitor`**
@@ -2557,7 +2667,6 @@
 - **`MainThreadContextProvider`**
 - **`ObservableExtensions`**
 - **`ObservableHashSet`** - A hash set that implements the interfaces required for Entity Framework to use notification based change tracking for a collection navigation property.
-- **`PlatformInfoProvider`** - Provides detailed information about the host operating system.
 - **`ReflectionHelper`**
 - **`StackError`**
 - **`StackError`**
@@ -2574,11 +2683,6 @@
 ### 🔢 Enums
 
 - **`NavigationFlow`**
-- **`OSEdition`**
-- **`OSPlatformInfo`**
-- **`OSProcessorArchitecture`**
-- **`OSProduct`**
-- **`SoftwareArchitecture`**
 
 ### ⚙️ Public Methods
 
@@ -2723,21 +2827,6 @@
   - Modifies the hash set to contain all elements that are present in itself, the specified collection, or both.
   - `void UnionWith(IEnumerable<T> other)`
 
-#### 📁 OSVersion.cs
-
-- **`GetHashCode`** → `int`
-  - `int GetHashCode()`
-
-#### 📁 PlatformInfoProvider.cs
-
-- **`IsOSPlatform`** → `bool`
-  - Indicates the operating-system platform.
-  - `bool IsOSPlatform(string platform)`
-
-- **`IsOSPlatform`** → `bool`
-  - Indicates the operating-system platform.
-  - `bool IsOSPlatform(string platform)`
-
 #### 📁 StackTraceProvider.cs
 
 - **`GetStackTrace`** → `StackTrace`
@@ -2766,49 +2855,9 @@
 
 ### 📊 Properties
 
-- **`BuildVersion`** : `int`
-  - Gets the build version number of the operating system running on this computer.
-  - 📁 PlatformInfoProvider.cs
-
-- **`Edition`** : `OSEdition`
-  - Determines if the current processor is 32 or 64-bit.
-  - 📁 PlatformInfoProvider.cs
-
-- **`InfoString`** : `string`
-  - Gets the full version of the operating system running on this computer.
-  - 📁 PlatformInfoProvider.cs
-
-- **`IsWsl`** : `bool`
-  - Indicates whether the current process is running under Windows Subsystem for Linux.
-  - 📁 PlatformInfoProvider.cs
-
-- **`Name`** : `string`
-  - Gets the name of the operating system running on this computer.
-  - 📁 PlatformInfoProvider.cs
-
 - **`NoItems`** : `T[]`
   - PropertyChanged event (per ).
   - 📁 ObservableHashSet.cs
-
-- **`OSBits`** : `SoftwareArchitecture`
-  - Determines if the current application is 32 or 64-bit.
-  - 📁 PlatformInfoProvider.cs
-
-- **`ProcessorBits`** : `OSProcessorArchitecture`
-  - Determines if the current processor is 32 or 64-bit.
-  - 📁 PlatformInfoProvider.cs
-
-- **`ProgramBits`** : `SoftwareArchitecture`
-  - Determines if the current application is 32 or 64-bit.
-  - 📁 PlatformInfoProvider.cs
-
-- **`ServicePack`** : `string`
-  - Gets the service pack information of the operating system running on this computer.
-  - 📁 PlatformInfoProvider.cs
-
-- **`Version`** : `Version`
-  - Gets the full version of the operating system running on this computer.
-  - 📁 PlatformInfoProvider.cs
 
 ---
 
@@ -3487,8 +3536,8 @@
 ## FEx.Flurlx
 
 **Namespace:** `Flakroup.FEx.Flurlx`  
-**Classes:** 11 | **Interfaces:** 3 | **Enums:** 1
-**Extension Methods:** 4 | **Methods:** 11 | **Properties:** 8
+**Classes:** 11 | **Interfaces:** 4 | **Enums:** 1
+**Extension Methods:** 4 | **Methods:** 15 | **Properties:** 9
 
 ### 🔌 Extension Methods
 
@@ -3521,6 +3570,7 @@
 
 - **`IApiConfiguration`**
 - **`IFExFlurlxContainer`**
+- **`IFExPollyPolicyBuilder`**
 - **`IFlurlConfigurator`**
 
 ### 📦 Classes
@@ -3571,17 +3621,33 @@
 
 #### 📁 FExPollyPolicyBuilder.cs
 
-- **`BuildFullSuitePolicy`** → `IAsyncPolicy<HttpResponseMessage>`
+- **`BuildFullSuitePolicy`** → `IAsyncPolicy<IFlurlResponse>`
   - Builds a comprehensive resilience policy with all Polly features.
-  - `IAsyncPolicy<HttpResponseMessage> BuildFullSuitePolicy(PollyPolicyConfiguration config)`
+  - `IAsyncPolicy<IFlurlResponse> BuildFullSuitePolicy(PollyPolicyConfiguration config)`
+
+- **`Dispose`** → `void`
+  - Fallback response implementation for graceful degradation.
+  - `void Dispose()`
+
+- **`GetBytesAsync`** → `Task<byte[]>`
+  - Fallback response implementation for graceful degradation.
+  - `Task<byte[]> GetBytesAsync()`
+
+- **`GetStreamAsync`** → `Task<Stream>`
+  - Fallback response implementation for graceful degradation.
+  - `Task<Stream> GetStreamAsync()`
+
+- **`GetStringAsync`** → `Task<string>`
+  - Fallback response implementation for graceful degradation.
+  - `Task<string> GetStringAsync()`
 
 #### 📁 FlurlConfigurator.cs
 
 - **`GetClient`** → `IFlurlClient`
   - `IFlurlClient GetClient()`
 
-- **`GetResiliencePolicy`** → `IAsyncPolicy<HttpResponseMessage>`
-  - `IAsyncPolicy<HttpResponseMessage> GetResiliencePolicy()`
+- **`GetResiliencePolicy`** → `IAsyncPolicy<IFlurlResponse>`
+  - `IAsyncPolicy<IFlurlResponse> GetResiliencePolicy()`
 
 #### 📁 PollyPolicyConfiguration.cs
 
@@ -3627,6 +3693,10 @@
   - Maximum timeout for a single HTTP request. Default: 30 seconds
   - 📁 PollyPolicyConfiguration.cs
 
+- **`StatusCode`** : `int`
+  - Fallback response implementation for graceful degradation.
+  - 📁 FExPollyPolicyBuilder.cs
+
 ---
 
 ## FEx.FTPx
@@ -3663,13 +3733,26 @@
 #### 📁 FtpCommon.cs
 
 - **`CreateAsync`** → `Task<FtpClient>`
-  - `Task<FtpClient> CreateAsync(Uri ftphost, string username, string password, bool useProxy = false, int port = 0)`
+  - `Task<FtpClient> CreateAsync(Uri ftphost,
+                                                    string username,
+                                                    string password,
+                                                    bool useProxy = false,
+                                                    int port = 0)`
 
 - **`GetFtpFileInfoAsync`** → `Task<FtpListItem>`
-  - `Task<FtpListItem> GetFtpFileInfoAsync(string ftpfilepath, Uri ftphost, string username, string password, bool useProxy = false, int port = 0)`
+  - `Task<FtpListItem> GetFtpFileInfoAsync(string ftpfilepath,
+                                                              Uri ftphost,
+                                                              string username,
+                                                              string password,
+                                                              bool useProxy = false,
+                                                              int port = 0)`
 
 - **`GetListingAsync`** → `Task<FtpListItem[]>`
-  - `Task<FtpListItem[]> GetListingAsync(string ftpdirpath, Uri ftphost, string username, string password, bool useProxy = false)`
+  - `Task<FtpListItem[]> GetListingAsync(string ftpdirpath,
+                                                            Uri ftphost,
+                                                            string username,
+                                                            string password,
+                                                            bool useProxy = false)`
 
 #### 📁 FtpDownloader.cs
 
@@ -4058,7 +4141,7 @@
 
 **Namespace:** `Flakroup.FEx.Logging`  
 **Classes:** 10 | **Interfaces:** 0 | **Enums:** 0
-**Extension Methods:** 0 | **Methods:** 8 | **Properties:** 0
+**Extension Methods:** 0 | **Methods:** 17 | **Properties:** 0
 
 ### 📦 Classes
 
@@ -4069,7 +4152,7 @@
 - **`FExLoggingConfigurator`**
 - **`FExLoggingModule`**
 - **`FExLoggingService`**
-- **`FExSerilogLogger`**
+- **`FExSerilogLogger`** - Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
 - **`LoggingConfiguration`**
 - **`PlatformSinkConfigurator`**
 
@@ -4104,8 +4187,46 @@
 
 #### 📁 FExLoggingService.cs
 
-- **`GetLogger`** → `ILoggable`
-  - `ILoggable GetLogger(object sender)`
+- **`GetLogger`** → `IFExLogger`
+  - `IFExLogger GetLogger(object sender)`
+
+#### 📁 FExSerilogLogger.cs (9 methods)
+
+- **`Debug`** → `void`
+  - Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
+  - `void Debug(string message)`
+
+- **`Debug`** → `void`
+  - Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
+  - `void Debug(Exception exception, string message = null)`
+
+- **`Error`** → `void`
+  - Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
+  - `void Error(string message)`
+
+- **`Information`** → `void`
+  - Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
+  - `void Information(string message)`
+
+- **`Information`** → `void`
+  - Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
+  - `void Information(Exception exception, string message = null)`
+
+- **`Trace`** → `void`
+  - Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
+  - `void Trace(string message)`
+
+- **`Trace`** → `void`
+  - Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
+  - `void Trace(Exception exception, string message = null)`
+
+- **`Warning`** → `void`
+  - Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
+  - `void Warning(string message)`
+
+- **`Warning`** → `void`
+  - Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
+  - `void Warning(Exception exception, string message = null)`
 
 #### 📁 LoggingConfiguration.cs
 
@@ -4117,16 +4238,10 @@
 ## FEx.Logging.Abstractions
 
 **Namespace:** `Flakroup.FEx.LoggingAbstractions`  
-**Classes:** 7 | **Interfaces:** 10 | **Enums:** 1
-**Extension Methods:** 6 | **Methods:** 3 | **Properties:** 0
+**Classes:** 5 | **Interfaces:** 8 | **Enums:** 1
+**Extension Methods:** 4 | **Methods:** 3 | **Properties:** 0
 
 ### 🔌 Extension Methods
-
-#### Extensions for `ILoggable`
-
-- **`Log`** → `void`
-  - `void Log(this ILoggable loggable, LogLevel logLevel, string message, Exception exception = null)`
-  - 📁 LoggerExtensions.cs
 
 #### Extensions for `ILogger`
 
@@ -4150,10 +4265,6 @@
 
 #### Extensions for `object`
 
-- **`GetLogger`** → `ILoggable`
-  - `ILoggable GetLogger(this object sender)`
-  - 📁 LoggerExtensions.cs
-
 - **`GetMicrosoftLogger`** → `ILogger`
   - `ILogger GetMicrosoftLogger(this object sender)`
   - 📁 LoggerExtensions.cs
@@ -4164,8 +4275,6 @@
 - **`IFExLoggingContainer`**
 - **`IFExLoggingService`**
 - **`IFileSinkConfigurator`**
-- **`ILoggable`**
-- **`ILoggerState`**
 - **`ILoggingConfiguration`**
 - **`IPlatformLogger`**
 - **`ISentryConfig`**
@@ -4174,9 +4283,7 @@
 ### 📦 Classes
 
 - **`FExLoggingStatics`**
-- **`Loggable`**
 - **`LoggerExtensions`**
-- **`LoggerState`**
 - **`LoggingOptionsExtensions`**
 - **`SentrySinkConfiguratorBase`**
 - **`SinkConfiguratorBase`**
@@ -4660,11 +4767,11 @@
 
 - **`GetPackageDependenciesAsync`** → `Task`
   - `Task GetPackageDependenciesAsync(PackageIdentity package,
-                                                  NuGetFramework framework,
-                                                  SourceCacheContext cacheContext,
-                                                  INuGetLogger logger,
-                                                  IEnumerable<SourceRepository> repositories,
-                                                  ISet<SourcePackageDependencyInfo> availablePackages)`
+                                                         NuGetFramework framework,
+                                                         SourceCacheContext cacheContext,
+                                                         INuGetLogger logger,
+                                                         IEnumerable<SourceRepository> repositories,
+                                                         ISet<SourcePackageDependencyInfo> availablePackages)`
 
 ---
 

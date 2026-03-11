@@ -25,6 +25,9 @@ public interface ITagTarget : INuGetPublishTarget
 
             Log.Information("Creating Git tag: {Tag}", tag);
 
+            RunGit("config user.email \"ci@flakroup.com\"");
+            RunGit("config user.name \"CI\"");
+
             var serverUrl = Environment.GetEnvironmentVariable("CI_SERVER_URL");
             var projectPath = Environment.GetEnvironmentVariable("CI_PROJECT_PATH");
             var jobToken = Environment.GetEnvironmentVariable("CI_JOB_TOKEN");

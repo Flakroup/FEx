@@ -15,4 +15,12 @@
     <PackageReference Include="Nuke.Common" Version="10.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageDownload Include="GitVersion.Tool" Version="[6.3.0]" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\FEx.Building\FEx.Building.csproj" />
+  </ItemGroup>
+
 </Project>

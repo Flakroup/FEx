@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Nuke.Common" Version="10.1.0" />
+        <PackageReference Include="Nuke.Utilities" Version="10.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+    </ItemGroup>
+
+</Project>

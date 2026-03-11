@@ -43,7 +43,8 @@ public interface INuGetPublishTarget : IPackTarget
                 DotNetNuGetPush(s => s
                     .SetTargetPath(package)
                     .SetSource(NuGetSource)
-                    .SetApiKey(NuGetApiKey!));
+                    .SetApiKey(NuGetApiKey!)
+                    .EnableSkipDuplicate());
             }
 
             Log.Information("Successfully pushed {Count} package(s) to {Source}", packages.Count, NuGetSource);

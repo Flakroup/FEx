@@ -27,11 +27,24 @@ public interface IPackTarget : IGitVersionComponent
 
             var version = NuGetVersion;
 
+            Log.Information("Building {Project} before packing", PackSolution);
+
+            DotNetRestore(s => s
+                .SetProjectFile(PackSolution)
+                .SetProperty("NuGetAudit", !NukeBuild.IsServerBuild));
+
+            DotNetBuild(s => s
+                .SetProjectFile(PackSolution)
+                .SetConfiguration("Release")
+                .SetNoRestore(true)
+                .SetProperty("NuGetAudit", !NukeBuild.IsServerBuild));
+
             Log.Information("Packing with version: {Version}", version);
 
             DotNetPack(s => s
                 .SetProject(PackSolution)
                 .SetConfiguration("Release")
+                .EnableNoBuild()
                 .SetOutputDirectory(PackagesDirectory)
                 .SetVersion(version)
                 .SetAssemblyVersion(VersionInfo!.AssemblySemVer)

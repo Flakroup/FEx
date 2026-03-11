@@ -45,7 +45,7 @@ public interface ITagTarget : INuGetPublishTarget
                 return;
             }
 
-            RunGit($"tag {tag} -m \"Release {tag}\"");
+            RunGit($"tag {tag}");
             RunGit($"push {authenticatedUrl} {tag}");
 
             Log.Information("Successfully pushed tag {Tag}", tag);

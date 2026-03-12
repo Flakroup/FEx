@@ -25,6 +25,7 @@
 		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
 		<ProjectReference Include="..\Core\FEx.Core.csproj" />
 		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+		<ProjectReference Include="..\Sqlx.Abstractions\FEx.Sqlx.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

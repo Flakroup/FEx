@@ -2,6 +2,7 @@ using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
+using FEx.Sqlx.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;

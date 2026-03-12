@@ -2,7 +2,7 @@ using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.EFCore.Helpers;
-using FEx.EFCore.Interfaces;
+using FEx.Sqlx.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 using StrongInject.Extensions.DependencyInjection;

@@ -1,6 +1,6 @@
 using FEx.Core.Abstractions.Interfaces;
 
-namespace FEx.EFCore.Interfaces;
+namespace FEx.Sqlx.Abstractions;
 
 public interface ISqlDbHelper : IAsyncInitializable
 {

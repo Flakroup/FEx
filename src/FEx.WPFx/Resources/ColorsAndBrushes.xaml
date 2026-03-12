@@ -1,0 +1,66 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options">
+
+    <!--  Window & Window Chrome  -->
+    <Color x:Key="WindowChrome.BackgroundColor">#004A7F</Color>
+    <Color x:Key="WindowChrome.ForegroundColor">#ffffffff</Color>
+    <Color x:Key="WindowChrome.ContentBackgroundColor">#FFCDDAEA</Color>
+    <Color x:Key="WindowChrome.ContentForegroundColor">#FF1E395B</Color>
+    <Color x:Key="WindowChrome.MouseOverButtonColor">#FF808080</Color>
+    <Color x:Key="WindowChrome.IsPressedButtonColor">#FF007ACC</Color>
+    <Color x:Key="WindowChrome.BorderColor">#FF007ACC</Color>
+
+    <SolidColorBrush x:Key="WindowChrome.BackgroundBrush"
+                     po:Freeze="True"
+                     Color="{DynamicResource WindowChrome.BackgroundColor}" />
+    <SolidColorBrush x:Key="WindowChrome.ForegroundBrush"
+                     po:Freeze="True"
+                     Color="{DynamicResource WindowChrome.ForegroundColor}" />
+    <SolidColorBrush x:Key="WindowChrome.ContentBackgroundBrush"
+                     po:Freeze="True"
+                     Color="{DynamicResource WindowChrome.ContentBackgroundColor}" />
+    <SolidColorBrush x:Key="WindowChrome.ContentForegroundBrush"
+                     po:Freeze="True"
+                     Color="{DynamicResource WindowChrome.ContentForegroundColor}" />
+    <SolidColorBrush x:Key="WindowChrome.MouseOverButtonBrush"
+                     po:Freeze="True"
+                     Color="{DynamicResource WindowChrome.MouseOverButtonColor}" />
+    <SolidColorBrush x:Key="WindowChrome.IsPressedButtonBrush"
+                     po:Freeze="True"
+                     Color="{DynamicResource WindowChrome.IsPressedButtonColor}" />
+    <SolidColorBrush x:Key="WindowChrome.BorderBrush"
+                     po:Freeze="True"
+                     Color="{DynamicResource WindowChrome.BorderColor}" />
+
+
+    <!--  Button  -->
+    <Color x:Key="Button.NormalBorderColor">#FF707070</Color>
+    <Color x:Key="Button.NormalBackgroundColor">#FFF3F3F3</Color>
+
+    <SolidColorBrush x:Key="Button.NormalBorderBrush" Color="{DynamicResource Button.NormalBorderColor}" />
+    <LinearGradientBrush x:Key="Button.ShadedBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#F3F3F3" />
+        <GradientStop Offset="0.5" Color="#EBEBEB" />
+        <GradientStop Offset="0.5" Color="#DDDDDD" />
+        <GradientStop Offset="1" Color="#CDCDCD" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="Button.NormalBackgroundBrush" Color="{DynamicResource Button.NormalBackgroundColor}" />
+
+    <!--  Fonts related  -->
+    <SolidColorBrush x:Key="Text.ShadedBrush" Color="#ffe0e0e0" />
+
+    <!--  FlowDocument  -->
+    <Color x:Key="FlowDocument.Hdr1ForegroundColor">#0c588a</Color>
+    <Color x:Key="FlowDocument.TextShadedForegroundColor">#ff757575</Color>
+    <Color x:Key="FlowDocument.HeaderRowBackgroundColor">#FFe1e1e1</Color>
+    <Color x:Key="FlowDocument.TableBackgroundShadedColor">#FFf1f1f1</Color>
+
+    <SolidColorBrush x:Key="FlowDocument.Hdr1ForegroundBrush" Color="{DynamicResource FlowDocument.Hdr1ForegroundColor}" />
+    <SolidColorBrush x:Key="FlowDocument.TextShadedForegroundBrush" Color="{DynamicResource FlowDocument.TextShadedForegroundColor}" />
+    <SolidColorBrush x:Key="FlowDocument.HeaderRowBackgroundBrush" Color="{DynamicResource FlowDocument.HeaderRowBackgroundColor}" />
+    <SolidColorBrush x:Key="FlowDocument.TableBackgroundShadedBrush" Color="{DynamicResource FlowDocument.TableBackgroundShadedColor}" />
+
+    <!--  Rad Tab Control  -->
+    <SolidColorBrush x:Key="RadTabItem.Background" Color="#FFD7D7D7" />
+</ResourceDictionary>

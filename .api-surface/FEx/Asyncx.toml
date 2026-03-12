@@ -1,0 +1,97 @@
+[project]
+name = "FEx.Asyncx"
+path = "rc\\FEx.Asyncx"
+
+[[classes]]
+name = "FExAsyncx"
+ns = "FEx.Asyncx"
+base = "FExInitializable"
+file = "FExAsyncx.cs"
+
+[[classes]]
+name = "AsyncAutoInitializable"
+ns = "FEx.Asyncx.Abstractions"
+base = "AsyncInitializable, IRequiresInitialization"
+file = "Abstractions\\AsyncAutoInitializable.cs"
+
+[[classes]]
+name = "AsyncInitializable"
+ns = "FEx.Asyncx.Abstractions"
+base = "NotifyPropertyChanged, IAsyncInitializable"
+file = "Abstractions\\AsyncInitializable.cs"
+
+[[classes]]
+name = "AsyncBuffer"
+ns = "FEx.Asyncx.Collections"
+base = "IDisposable"
+file = "Collections\\AsyncBuffer.cs"
+
+[[classes]]
+name = "JoinableTaskExtensions"
+ns = "FEx.Asyncx.Extensions"
+file = "Extensions\\JoinableTaskExtensions.cs"
+static = true
+
+[[extensions]]
+name = "WaitWithoutThreadLock"
+sig = "void WaitWithoutThreadLock(this Func<Task> taskFactory,
+                                             AsyncOptions options = AsyncOptions.ImmediateStart)"
+returns = "void"
+file = "Extensions\\JoinableTaskExtensions.cs"
+
+[[classes]]
+name = "AsyncProcessingQueue"
+ns = "FEx.Asyncx.Helpers"
+base = "IDisposable"
+file = "Helpers\\AsyncProcessingQueue.cs"
+
+[[classes]]
+name = "JoinableAsyncHelper"
+ns = "FEx.Asyncx.Helpers"
+file = "Helpers\\JoinableAsyncHelper.cs"
+static = true
+
+[[classes]]
+name = "JoinableTaskFactoryHandler"
+ns = "FEx.Asyncx.Helpers"
+file = "Helpers\\JoinableTaskFactoryHandler.cs"
+
+[[interfaces]]
+name = "IAsyncWorkerConfig"
+ns = "FEx.Asyncx.Interfaces"
+file = "Interfaces\\IAsyncWorkerConfig.cs"
+
+[[classes]]
+name = "AsyncWorker"
+ns = "FEx.Asyncx.Services"
+base = "AsyncInitializable where T : class"
+file = "Services\\AsyncWorker.cs"
+
+[[classes]]
+name = "AsyncWorkersPool"
+ns = "FEx.Asyncx.Services"
+base = "AsyncInitializable
+    where TWorker : AsyncWorker<TWorker, TResult>"
+file = "Services\\AsyncWorkersPool.cs"
+
+[[classes]]
+name = "AsyncWorkersService"
+ns = "FEx.Asyncx.Services"
+base = "AsyncInitializable
+    where TPool : AsyncWorkersPool<TWorker, TQueue>
+    where TWorker : AsyncWorker<TWorker, TQueue>
+    where TConf : IAsyncWorkerConfig"
+file = "Services\\AsyncWorkersService.cs"
+
+[[classes]]
+name = "AsyncTaskCompletionSource"
+ns = "FEx.Asyncx.Utilities"
+base = "TaskCompletionSource<TResult>"
+file = "Utilities\\AsyncTaskCompletitionSource.cs"
+
+[[classes]]
+name = "ManualResetEventAsync"
+ns = "FEx.Asyncx.Utilities"
+summary = "An async manual reset event."
+file = "Utilities\\ManualResetEventAsync.cs"
+

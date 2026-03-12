@@ -1,0 +1,44 @@
+[project]
+name = "FEx.Encryption"
+path = "rc\\FEx.Encryption"
+
+[[classes]]
+name = "EncryptionHelper"
+ns = "FEx.Encryption"
+file = "EncryptionHelper.cs"
+static = true
+
+[[extensions]]
+name = "Encode"
+sig = "string Encode(this string valueToEncrypt)"
+returns = "string"
+file = "EncryptionHelper.cs"
+
+[[classes]]
+name = "FExEncryption"
+ns = "FEx.Encryption"
+base = "InitializeOnlyModule"
+file = "FExEncryption.cs"
+
+[[classes]]
+name = "FExEncryptionModule"
+ns = "FEx.Encryption"
+file = "FExEncryptionModule.cs"
+
+[[classes]]
+name = "SecureNotifyPropertyChanged"
+ns = "FEx.Encryption"
+base = "NotifyPropertyChanged"
+file = "SecureNotifyPropertyChanged.cs"
+
+[[classes]]
+name = "StringHasher"
+ns = "FEx.Encryption"
+file = "StringHasher.cs"
+static = true
+
+[[interfaces]]
+name = "IFExEncryptionSettings"
+ns = "FEx.Encryption.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IFExEncryptionSettings.cs"
+

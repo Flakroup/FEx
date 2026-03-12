@@ -1,0 +1,132 @@
+[project]
+name = "FEx.FileSystem"
+path = "rc\\FEx.FileSystem"
+
+[[classes]]
+name = "DirectoryInfoEnumerationExtensions"
+ns = "FEx.FileSystem"
+summary = "Shim extension methods that allow the rest of the codebase (which expects ) to compile and work on older frameworks where that type does not exist (e.g. netstandard2.0/2.1). The implementation maps the subset of functionality that is possible to emulate via the existing overloads. Properties that have no equivalent are ignored."
+file = "DirectoryInfoEnumerationExtensions.cs"
+static = true
+
+[[extensions]]
+name = "EnumerateFiles"
+sig = "IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo dir,
+                                                       string searchPattern,
+                                                       FExEnumerationOptions options)"
+returns = "IEnumerable<FileInfo>"
+summary = "Shim extension methods that allow the rest of the codebase (which expects ) to compile and work on older frameworks where that type does not exist (e.g. netstandard2.0/2.1). The implementation maps the subset of functionality that is possible to emulate via the existing overloads. Properties that have no equivalent are ignored."
+file = "DirectoryInfoEnumerationExtensions.cs"
+
+[[extensions]]
+name = "EnumerateDirectories"
+sig = "IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo dir,
+                                                                  string searchPattern,
+                                                                  FExEnumerationOptions options)"
+returns = "IEnumerable<DirectoryInfo>"
+summary = "Shim extension methods that allow the rest of the codebase (which expects ) to compile and work on older frameworks where that type does not exist (e.g. netstandard2.0/2.1). The implementation maps the subset of functionality that is possible to emulate via the existing overloads. Properties that have no equivalent are ignored."
+file = "DirectoryInfoEnumerationExtensions.cs"
+
+[[extensions]]
+name = "EnumerateFileSystemInfos"
+sig = "IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo dir,
+                                                                       string searchPattern,
+                                                                       FExEnumerationOptions options)"
+returns = "IEnumerable<FileSystemInfo>"
+summary = "Shim extension methods that allow the rest of the codebase (which expects ) to compile and work on older frameworks where that type does not exist (e.g. netstandard2.0/2.1). The implementation maps the subset of functionality that is possible to emulate via the existing overloads. Properties that have no equivalent are ignored."
+file = "DirectoryInfoEnumerationExtensions.cs"
+
+[[extensions]]
+name = "GetDirectories"
+sig = "DirectoryInfo[] GetDirectories(this DirectoryInfo dir,
+                                                 string searchPattern,
+                                                 FExEnumerationOptions options)"
+returns = "DirectoryInfo[]"
+summary = "Shim extension methods that allow the rest of the codebase (which expects ) to compile and work on older frameworks where that type does not exist (e.g. netstandard2.0/2.1). The implementation maps the subset of functionality that is possible to emulate via the existing overloads. Properties that have no equivalent are ignored."
+file = "DirectoryInfoEnumerationExtensions.cs"
+
+[[classes]]
+name = "DirectoryWalker"
+ns = "FEx.FileSystem"
+file = "DirectoryWalker.cs"
+static = true
+
+[[extensions]]
+name = "SafeGetAllFiles"
+sig = "List<FileInfo> SafeGetAllFiles(this DirectoryInfo root,
+                                                 FileFilterDelegate predicate = null,
+                                                 string searchPattern = \"*\",
+                                                 FExEnumerationOptions options = null,
+                                                 DirectoryFilterDelegate skipDirectoryPredicate = null)"
+returns = "List<FileInfo>"
+summary = "Recursively gets all subdirectories from a root directory, ignoring any directories that throw an UnauthorizedAccessException or other IO exceptions."
+file = "DirectoryWalker.cs"
+
+[[extensions]]
+name = "AddToErrorPaths"
+sig = "void AddToErrorPaths(this DirectoryInfo folder)"
+returns = "void"
+file = "DirectoryWalker.cs"
+
+[[extensions]]
+name = "IsErrorPath"
+sig = "bool IsErrorPath(this DirectoryInfo folder)"
+returns = "bool"
+file = "DirectoryWalker.cs"
+
+[[extensions]]
+name = "GetTopLevelFolders"
+sig = "List<DirectoryInfo> GetTopLevelFolders(this IList<DirectoryInfo> folders, bool logFindings = false)"
+returns = "List<DirectoryInfo>"
+summary = "Given a list of folders, returns only those which are not subfolders of another folder in the list (\"top-level\" relative to each other)."
+file = "DirectoryWalker.cs"
+
+[[extensions]]
+name = "IsEmpty"
+sig = "bool IsEmpty(this DirectoryInfo directory,
+                               Func<IReadOnlyCollection<FileSystemInfo>, bool> predicate = null)"
+returns = "bool"
+summary = "Given a list of folders, returns only those which are not subfolders of another folder in the list (\"top-level\" relative to each other)."
+file = "DirectoryWalker.cs"
+
+[[extensions]]
+name = "IsLeaf"
+sig = "bool IsLeaf(this DirectoryInfo directory)"
+returns = "bool"
+file = "DirectoryWalker.cs"
+
+[[extensions]]
+name = "SafeDelete"
+sig = "bool SafeDelete(this DirectoryInfo folder, bool recursive = false, bool logDeletions = false)"
+returns = "bool"
+file = "DirectoryWalker.cs"
+
+[[extensions]]
+name = "SafeDelete"
+sig = "bool SafeDelete(this FileInfo file, bool logDeletions = false)"
+returns = "bool"
+file = "DirectoryWalker.cs"
+
+[[classes]]
+name = "FExEnumerationOptions"
+ns = "FEx.FileSystem"
+summary = "Provides file and directory enumeration options."
+file = "FExEnumerationOptions.cs"
+
+[[classes]]
+name = "FileSystemUtilities"
+ns = "FEx.FileSystem"
+file = "FileSystemUtilities.cs"
+
+[[classes]]
+name = "CompressionHelper"
+ns = "FEx.FileSystem.Helpers"
+file = "Helpers\\CompressionHelper.cs"
+static = true
+
+[[extensions]]
+name = "VerifyGZip"
+sig = "bool VerifyGZip(this FileInfo fileToDecompress)"
+returns = "bool"
+file = "Helpers\\CompressionHelper.cs"
+

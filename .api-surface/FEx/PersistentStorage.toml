@@ -1,0 +1,51 @@
+[project]
+name = "FEx.PersistentStorage"
+path = "rc\\PersistentStorage"
+
+[[classes]]
+name = "CacheService"
+ns = "FEx.PersistentStorage"
+base = "ICacheService"
+file = "CacheService.cs"
+
+[[classes]]
+name = "DatabaseProvider"
+ns = "FEx.PersistentStorage"
+base = "IDatabaseProvider, IDisposable"
+file = "DatabaseProvider.cs"
+
+[[classes]]
+name = "FExPersistentStorageModule"
+ns = "FEx.PersistentStorage"
+base = "InitializeModule<IFExPersistentStorageContainer, IServiceCollection>"
+file = "FExPersistentStorageModule.cs"
+
+[[classes]]
+name = "FileLocalStorageService"
+ns = "FEx.PersistentStorage"
+base = "IFileLocalStorageService"
+file = "FileLocalStorageService.cs"
+
+[[classes]]
+name = "LiteDbFileLocalStorageService"
+ns = "FEx.PersistentStorage"
+base = "FileLocalStorageService"
+file = "LiteDbFileLocalStorageService.cs"
+
+[[classes]]
+name = "LocalStorageService"
+ns = "FEx.PersistentStorage"
+base = "ILocalStorageService"
+file = "LocalStorageService.cs"
+
+[[classes]]
+name = "PlainFileLocalStorageService"
+ns = "FEx.PersistentStorage"
+base = "FileLocalStorageService"
+file = "PlainFileLocalStorageService.cs"
+
+[[classes]]
+name = "LiteRepositoryExtensions"
+ns = "FEx.PersistentStorage.Extensions"
+file = "Extensions\\LiteRepositoryExtensions.cs"
+

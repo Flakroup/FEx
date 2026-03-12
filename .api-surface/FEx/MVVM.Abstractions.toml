@@ -1,0 +1,151 @@
+[project]
+name = "FEx.MVVM.Abstractions"
+path = "rc\\FEx.MVVM.Abstractions"
+
+[[classes]]
+name = "DummyPopupService"
+ns = "FEx.MVVM.Abstractions"
+base = "IMessagePopupService"
+file = "DummyPopupService.cs"
+
+[[classes]]
+name = "FExTreeViewNode"
+ns = "FEx.MVVM.Abstractions"
+base = "IEquatable<FExTreeViewNode>"
+file = "FExTreeViewNode.cs"
+
+[[classes]]
+name = "Link"
+ns = "FEx.MVVM.Abstractions"
+base = "ILink"
+file = "Link.cs"
+
+[[classes]]
+name = "LinkableNotifyPropertyChanged"
+ns = "FEx.MVVM.Abstractions"
+base = "NotifyPropertyChanged, ILinkableNotifyPropertyChanged"
+file = "LinkableNotifyPropertyChanged.cs"
+
+[[classes]]
+name = "WidthAndHeight"
+ns = "FEx.MVVM.Abstractions"
+base = "IComparable<WidthAndHeight>, IEquatable<WidthAndHeight>"
+file = "WidthAndHeight.cs"
+
+[[classes]]
+name = "DialogOptionsBase"
+ns = "FEx.MVVM.Abstractions.Dialogs"
+file = "Dialogs\\DialogOptionsBase.cs"
+
+[[classes]]
+name = "FileDialogOptionsBase"
+ns = "FEx.MVVM.Abstractions.Dialogs"
+base = "DialogOptionsBase<TDialog>"
+file = "Dialogs\\FileDialogOptionsBase.cs"
+
+[[classes]]
+name = "FolderBrowserDialogOptionsBase"
+ns = "FEx.MVVM.Abstractions.Dialogs"
+base = "DialogOptionsBase<TDialog>"
+file = "Dialogs\\FolderBrowserDialogOptionsBase.cs"
+
+[[classes]]
+name = "OpenFileDialogOptionsBase"
+ns = "FEx.MVVM.Abstractions.Dialogs"
+base = "FileDialogOptionsBase<TDialog>"
+file = "Dialogs\\OpenFileDialogOptionsBase.cs"
+
+[[classes]]
+name = "SaveFileDialogOptionsBase"
+ns = "FEx.MVVM.Abstractions.Dialogs"
+base = "FileDialogOptionsBase<TDialog>"
+file = "Dialogs\\SaveFileDialogOptionsBase.cs"
+
+[[enums]]
+name = "FExMessageButton"
+ns = "FEx.MVVM.Abstractions.Enums"
+summary = "Specifies the buttons that are displayed on a message box."
+file = "Enums\\FExMessageButton.cs"
+
+[[enums]]
+name = "MessageIcon"
+ns = "FEx.MVVM.Abstractions.Enums"
+file = "Enums\\MessageIcon.cs"
+
+[[enums]]
+name = "MessageResult"
+ns = "FEx.MVVM.Abstractions.Enums"
+summary = "Specifies which message box button that a user clicks."
+file = "Enums\\MessageResult.cs"
+
+[[enums]]
+name = "ProgressChangeMode"
+ns = "FEx.MVVM.Abstractions.Enums"
+file = "Enums\\ProgressChangeMode.cs"
+
+[[enums]]
+name = "ProgressOperationMode"
+ns = "FEx.MVVM.Abstractions.Enums"
+file = "Enums\\ProgressOperationMode.cs"
+
+[[enums]]
+name = "ProgressState"
+ns = "FEx.MVVM.Abstractions.Enums"
+file = "Enums\\ProgressState.cs"
+
+[[classes]]
+name = "ProgressPropertyChangedEventArgs"
+ns = "FEx.MVVM.Abstractions.Events"
+base = "EventArgs"
+file = "Events\\ProgressPropertyChangedEventArgs.cs"
+
+[[interfaces]]
+name = "IAsyncCommand"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Interfaces\\IAsyncCommand.cs"
+
+[[interfaces]]
+name = "IAsyncCommand"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Interfaces\\IAsyncCommand.cs"
+
+[[interfaces]]
+name = "IFExTimer"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Interfaces\\IFExTimer.cs"
+
+[[interfaces]]
+name = "ILink"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Interfaces\\ILink.cs"
+
+[[interfaces]]
+name = "ILinkableNotifyPropertyChanged"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Interfaces\\ILinkableNotifyPropertyChanged.cs"
+
+[[interfaces]]
+name = "IMessagePopupService"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Interfaces\\IMessagePopupService.cs"
+
+[[interfaces]]
+name = "IProgressAggregator"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Interfaces\\IProgressAggregator.cs"
+
+[[interfaces]]
+name = "IProgressNotifyPropertyChanged"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Interfaces\\IProgressNotifyPropertyChanged.cs"
+
+[[interfaces]]
+name = "IProgressStatus"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Interfaces\\IProgressStatus.cs"
+
+[[interfaces]]
+name = "IViewModelBase"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Interfaces\\IViewModelBase.cs"
+

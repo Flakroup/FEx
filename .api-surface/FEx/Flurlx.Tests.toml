@@ -1,0 +1,15 @@
+[project]
+name = "FEx.Flurlx.Tests"
+path = "est\\FEx.Flurlx.Tests"
+
+[[classes]]
+name = "FExPollyPolicyBuilderTests"
+ns = "FEx.Flurlx.Tests"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[classes]]
+name = "FlurlApiBaseIntegrationTests"
+ns = "FEx.Flurlx.Tests"
+base = "IDisposable"
+file = "FlurlApiBaseIntegrationTests.cs"
+

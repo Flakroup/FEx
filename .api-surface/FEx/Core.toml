@@ -1,0 +1,147 @@
+[project]
+name = "FEx.Core"
+path = "rc\\Core"
+
+[[classes]]
+name = "FExCoreModule"
+ns = "FEx.Core"
+base = "InitializeModule<IFExCoreContainer, IServiceCollection>"
+file = "FExCoreModule.cs"
+
+[[classes]]
+name = "IsExternalInit"
+ns = "System.Runtime.CompilerServices"
+file = "IsExternalInit.cs"
+static = true
+
+[[classes]]
+name = "ConcurrentHashSet"
+ns = "FEx.Core.Collections.Concurrent"
+base = "HashSet<T>"
+summary = "https://stackoverflow.com/questions/18922985/concurrent-hashsett-in-net-framework"
+file = "Collections\\Concurrent\\ConcurrentHashSet.cs"
+
+[[classes]]
+name = "ConcurrentObservableDictionary"
+ns = "FEx.Core.Collections.Concurrent"
+base = "BaseConcurrentList<KeyValuePair<TKey, TValue>>,
+    IDictionary<TKey, TValue>, IDictionary, IReadOnlyDictionary<TKey, TValue>, INotifyCollectionChanged,
+    INotifyPropertyChanged"
+summary = "Based on https://github.com/ChadBurggraf/parallel-extensions-extras"
+file = "Collections\\Concurrent\\ConcurrentObservableDictionary.cs"
+
+[[classes]]
+name = "ConcurrentObservableList"
+ns = "FEx.Core.Collections.Concurrent"
+base = "ConcurrentList<T>, IObservableCollection<T>"
+file = "Collections\\Concurrent\\ConcurrentObservableList.cs"
+
+[[classes]]
+name = "ConcurrentSortableObservableList"
+ns = "FEx.Core.Collections.Concurrent"
+base = "ConcurrentObservableList<T> where T : IComparable<T>"
+file = "Collections\\Concurrent\\ConcurrentSortableObservableList.cs"
+
+[[classes]]
+name = "DateTimeExtensions"
+ns = "FEx.Core.Extensions"
+file = "Extensions\\DateTimeExtensions.cs"
+static = true
+
+[[extensions]]
+name = "ConvertWindowsToIanaTimeZone"
+sig = "TimeZoneInfo ConvertWindowsToIanaTimeZone(this string timeZoneToId)"
+returns = "TimeZoneInfo"
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[classes]]
+name = "EnumerableExtensions"
+ns = "FEx.Core.Extensions"
+file = "Extensions\\EnumerableExtensions.cs"
+static = true
+
+[[classes]]
+name = "JsonExtensions"
+ns = "FEx.Core.Extensions"
+file = "Extensions\\JsonExtensions.cs"
+static = true
+
+[[extensions]]
+name = "SafeSerializeObject"
+sig = "string SafeSerializeObject(this object initializeParameter)"
+returns = "string"
+file = "Extensions\\JsonExtensions.cs"
+
+[[classes]]
+name = "StringExtensions"
+ns = "FEx.Core.Extensions"
+file = "Extensions\\StringExtensions.cs"
+static = true
+
+[[extensions]]
+name = "ComputeMd5HashFromArguments"
+sig = "string ComputeMd5HashFromArguments(this object[] arguments)"
+returns = "string"
+summary = "Generate MD5 hash from combined arguments"
+file = "Extensions\\StringExtensions.cs"
+
+[[classes]]
+name = "SafeContractResolver"
+ns = "FEx.Core.Helpers"
+base = "DefaultContractResolver"
+file = "Helpers\\SafeContractResolver.cs"
+
+[[interfaces]]
+name = "IStackTraceFilter"
+ns = "FEx.Core.StackTraces"
+file = "StackTraces\\IStackTraceFilter.cs"
+
+[[classes]]
+name = "StackTraceFilter"
+ns = "FEx.Core.StackTraces"
+base = "IStackTraceFilter"
+file = "StackTraces\\StackTraceFilter.cs"
+
+[[classes]]
+name = "StackTraceFrame"
+ns = "FEx.Core.StackTraces"
+base = "IEquatable<StackTraceFrame>"
+file = "StackTraces\\StackTraceFrame.cs"
+
+[[classes]]
+name = "StackTraceGenerator"
+ns = "FEx.Core.StackTraces"
+base = "IStackTraceProvider"
+file = "StackTraces\\StackTraceGenerator.cs"
+
+[[classes]]
+name = "StackTraceInfo"
+ns = "FEx.Core.StackTraces"
+base = "IEquatable<StackTraceInfo>"
+file = "StackTraces\\StackTraceInfo.cs"
+
+[[classes]]
+name = "FExArgumentlessSubject"
+ns = "FEx.Core.Subjects"
+base = "FExSubject<bool>"
+file = "Subjects\\FExArgumentlessSubject.cs"
+
+[[classes]]
+name = "NavigationFlowSubject"
+ns = "FEx.Core.Subjects"
+base = "FExBehaviorSubject<IReadOnlyList<NavigationFlowChange>>, INavigationFlowSubject"
+file = "Subjects\\NavigationFlowSubject.cs"
+
+[[classes]]
+name = "TasksInfoSubject"
+ns = "FEx.Core.Subjects"
+base = "FExBehaviorSubject<IList<Guid>>, ITasksInfoSubject"
+file = "Subjects\\TasksInfoSubject.cs"
+
+[[classes]]
+name = "ExceptionHandler"
+ns = "FEx.Core.Utilities"
+base = "ExceptionHandlerBase"
+summary = "Exception extensions class."
+file = "Utilities\\ExceptionHandler.cs"
+

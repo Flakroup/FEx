@@ -1,0 +1,105 @@
+[project]
+name = "FEx.Logging.Abstractions"
+path = "rc\\Logging.Abstractions"
+
+[[classes]]
+name = "FExLoggingStatics"
+ns = "FEx.Logging.Abstractions"
+base = "StaticsBase"
+file = "FExLoggingStatics.cs"
+
+[[classes]]
+name = "SentrySinkConfiguratorBase"
+ns = "FEx.Logging.Abstractions"
+base = "SinkConfiguratorBase"
+file = "SentrySinkConfiguratorBase.cs"
+
+[[classes]]
+name = "SinkConfiguratorBase"
+ns = "FEx.Logging.Abstractions"
+base = "ISinkConfigurator"
+file = "SinkConfiguratorBase.cs"
+
+[[enums]]
+name = "LoggingOptions"
+ns = "FEx.Logging.Abstractions.Enums"
+file = "Enums\\LoggingOptions.cs"
+
+[[classes]]
+name = "LoggerExtensions"
+ns = "FEx.Logging.Abstractions.Extensions"
+file = "Extensions\\LoggerExtensions.cs"
+static = true
+
+[[extensions]]
+name = "AddOverrides"
+sig = "LoggerConfiguration AddOverrides(this LoggerConfiguration cfg,
+                                                   IList<string> overrides,
+                                                   LogEventLevel level)"
+returns = "LoggerConfiguration"
+file = "Extensions\\LoggerExtensions.cs"
+
+[[extensions]]
+name = "Log"
+sig = "void Log(this ILogger logger, LogLevel logLevel, string message, Exception exception = null)"
+returns = "void"
+file = "Extensions\\LoggerExtensions.cs"
+
+[[extensions]]
+name = "GetMicrosoftLogger"
+sig = "ILogger GetMicrosoftLogger(this object sender)"
+returns = "ILogger"
+file = "Extensions\\LoggerExtensions.cs"
+
+[[classes]]
+name = "LoggingOptionsExtensions"
+ns = "FEx.Logging.Abstractions.Extensions"
+file = "Extensions\\LoggingOptionsExtensions.cs"
+static = true
+
+[[extensions]]
+name = "HasFlagFast"
+sig = "bool HasFlagFast(this LoggingOptions value, LoggingOptions flag)"
+returns = "bool"
+file = "Extensions\\LoggingOptionsExtensions.cs"
+
+[[interfaces]]
+name = "IFExLoggingConfigurator"
+ns = "FEx.Logging.Abstractions.Interfaces"
+file = "Interfaces\\IFExLoggingConfigurator.cs"
+
+[[interfaces]]
+name = "IFExLoggingContainer"
+ns = "FEx.Logging.Abstractions.Interfaces"
+file = "Interfaces\\IFExLoggingContainer.cs"
+
+[[interfaces]]
+name = "IFExLoggingService"
+ns = "FEx.Logging.Abstractions.Interfaces"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[interfaces]]
+name = "IFileSinkConfigurator"
+ns = "FEx.Logging.Abstractions.Interfaces"
+file = "Interfaces\\IFileSinkConfigurator.cs"
+
+[[interfaces]]
+name = "ILoggingConfiguration"
+ns = "FEx.Logging.Abstractions.Interfaces"
+file = "Interfaces\\ILoggingConfiguration.cs"
+
+[[interfaces]]
+name = "IPlatformLogger"
+ns = "FEx.Logging.Abstractions.Interfaces"
+file = "Interfaces\\IPlatformLogger.cs"
+
+[[interfaces]]
+name = "ISentryConfig"
+ns = "FEx.Logging.Abstractions.Interfaces"
+file = "Interfaces\\ISentryConfig.cs"
+
+[[interfaces]]
+name = "ISinkConfigurator"
+ns = "FEx.Logging.Abstractions.Interfaces"
+file = "Interfaces\\ISinkConfigurator.cs"
+

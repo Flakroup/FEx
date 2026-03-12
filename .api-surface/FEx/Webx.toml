@@ -1,0 +1,86 @@
+[project]
+name = "FEx.Webx"
+path = "rc\\FEx.Webx"
+
+[[classes]]
+name = "FExWebx"
+ns = "FEx.Webx"
+file = "FExWebx.cs"
+
+[[classes]]
+name = "HasInternetConnectionGate"
+ns = "FEx.Webx"
+file = "HasInternetConnectionGate.cs"
+
+[[classes]]
+name = "HttpResponseExtensions"
+ns = "FEx.Webx.Extensions"
+file = "Extensions\\HttpResponseExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetDefaultExtension"
+sig = "string GetDefaultExtension(this HttpResponseMessage response)"
+returns = "string"
+file = "Extensions\\HttpResponseExtensions.cs"
+
+[[extensions]]
+name = "GetDefaultExtension"
+sig = "string GetDefaultExtension(this HttpWebResponse response)"
+returns = "string"
+file = "Extensions\\HttpResponseExtensions.cs"
+
+[[classes]]
+name = "JsonExtensions"
+ns = "FEx.Webx.Extensions"
+file = "Extensions\\JsonExtensions.cs"
+static = true
+
+[[classes]]
+name = "UriExtensions"
+ns = "FEx.Webx.Extensions"
+file = "Extensions\\UriExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetFileName"
+sig = "string GetFileName(this HttpWebResponse response)"
+returns = "string"
+file = "Extensions\\UriExtensions.cs"
+
+[[extensions]]
+name = "GetFileName"
+sig = "string GetFileName(this HttpResponseMessage response)"
+returns = "string"
+file = "Extensions\\UriExtensions.cs"
+
+[[classes]]
+name = "ResponseResult"
+ns = "FEx.Webx.Models"
+file = "Models\\ResponseResult.cs"
+
+[[classes]]
+name = "MimeTypesUtility"
+ns = "FEx.Webx.Utilities"
+file = "Utilities\\MimeTypesUtility.cs"
+static = true
+
+[[extensions]]
+name = "GetDefaultExtensions"
+sig = "IReadOnlyCollection<string> GetDefaultExtensions(this MediaTypeHeaderValue contentType)"
+returns = "IReadOnlyCollection<string>"
+file = "Utilities\\MimeTypesUtility.cs"
+
+[[extensions]]
+name = "GetDefaultExtension"
+sig = "string GetDefaultExtension(this MediaTypeHeaderValue contentType)"
+returns = "string"
+file = "Utilities\\MimeTypesUtility.cs"
+
+[[classes]]
+name = "NetworkUtilities"
+ns = "FEx.Webx.Utilities"
+summary = "Network-related utilities."
+file = "Utilities\\NetworkUtilities.cs"
+static = true
+

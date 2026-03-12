@@ -1,0 +1,22 @@
+[project]
+name = "FEx.FTPx"
+path = "rc\\FEx.FTPx"
+
+[[classes]]
+name = "FtpClientFactory"
+ns = "FEx.FTPx"
+file = "FtpClientFactory.cs"
+
+[[classes]]
+name = "FtpCommon"
+ns = "FEx.FTPx"
+file = "FtpCommon.cs"
+static = true
+
+[[classes]]
+name = "FtpDownloader"
+ns = "FEx.FTPx"
+summary = "FTP download utilities with resume support."
+file = "FtpDownloader.cs"
+static = true
+

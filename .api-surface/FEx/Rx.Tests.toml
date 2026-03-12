@@ -1,0 +1,21 @@
+[project]
+name = "FEx.Rx.Tests"
+path = "est\\FEx.Rx.Tests"
+
+[[classes]]
+name = "DTests"
+ns = "FEx.Rx.Tests"
+file = "DTests.cs"
+
+[[classes]]
+name = "Tester"
+ns = "FEx.Rx.Tests"
+base = "AbstractNotifyPropertyChanged"
+file = "DTests.cs"
+
+[[classes]]
+name = "NestedTester"
+ns = "FEx.Rx.Tests"
+base = "AbstractNotifyPropertyChanged"
+file = "DTests.cs"
+

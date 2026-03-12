@@ -1,0 +1,71 @@
+[project]
+name = "FEx.Logging"
+path = "rc\\Logging"
+
+[[classes]]
+name = "DefaultPlatformLogger"
+ns = "FEx.Logging"
+base = "IPlatformLogger"
+file = "DefaultPlatformLogger.cs"
+
+[[classes]]
+name = "FExLoggingConfigurator"
+ns = "FEx.Logging"
+base = "IFExLoggingConfigurator"
+file = "FExLoggingConfigurator.cs"
+
+[[classes]]
+name = "FExLoggingModule"
+ns = "FEx.Logging"
+base = "InitializeModule<IFExLoggingContainer, IServiceCollection>"
+file = "FExLoggingModule.cs"
+
+[[classes]]
+name = "FExLoggingService"
+ns = "FEx.Logging"
+base = "IFExLoggingService"
+file = "FExLoggingService.cs"
+
+[[classes]]
+name = "FExSerilogLogger"
+ns = "FEx.Logging"
+base = "IFExLogger"
+summary = "Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext."
+file = "FExSerilogLogger.cs"
+
+[[classes]]
+name = "LoggingConfiguration"
+ns = "FEx.Logging"
+base = "ILoggingConfiguration"
+file = "LoggingConfiguration.cs"
+
+[[classes]]
+name = "PlatformSink"
+ns = "FEx.Logging.Sinks"
+base = "ILogEventSink"
+file = "Sinks\\PlatformSink.cs"
+
+[[classes]]
+name = "AsyncFileSinkConfigurator"
+ns = "FEx.Logging.Sinks.Configurations"
+base = "SinkConfiguratorBase, IFileSinkConfigurator"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
+[[classes]]
+name = "ConsoleSinkConfigurator"
+ns = "FEx.Logging.Sinks.Configurations"
+base = "SinkConfiguratorBase"
+file = "Sinks\\Configurations\\ConsoleSinkConfigurator.cs"
+
+[[classes]]
+name = "DebugSinkConfigurator"
+ns = "FEx.Logging.Sinks.Configurations"
+base = "SinkConfiguratorBase"
+file = "Sinks\\Configurations\\DebugSinkConfigurator.cs"
+
+[[classes]]
+name = "PlatformSinkConfigurator"
+ns = "FEx.Logging.Sinks.Configurations"
+base = "SinkConfiguratorBase"
+file = "Sinks\\Configurations\\PlatformSinkConfigurator.cs"
+

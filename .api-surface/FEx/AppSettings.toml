@@ -1,0 +1,88 @@
+[project]
+name = "FEx.AppSettings"
+path = "rc\\FEx.AppSettings"
+
+[[classes]]
+name = "ConfigurationService"
+ns = "FEx.AppSettings"
+base = "IConfigurationService"
+file = "ConfigurationService.cs"
+
+[[classes]]
+name = "FExAppSettings"
+ns = "FEx.AppSettings"
+base = "FExInitializable"
+file = "FExAppSettings.cs"
+
+[[classes]]
+name = "FExAppSettingsModule"
+ns = "FEx.AppSettings"
+base = "InitializeModule<IFExAppSettingsModule, IServiceCollection>"
+file = "FExAppSettingsModule.cs"
+
+[[interfaces]]
+name = "IFExAppSettingsModule"
+ns = "FEx.AppSettings"
+file = "IFExAppSettingsModule.cs"
+
+[[classes]]
+name = "BaseUserSettings"
+ns = "FEx.AppSettings.Abstractions"
+base = "SecureNotifyPropertyChanged, IBaseUserSettings"
+file = "Abstractions\\BaseUserSettings.cs"
+
+[[classes]]
+name = "BaseUserSettings"
+ns = "FEx.AppSettings.Abstractions"
+base = "BaseUserSettings where T : BaseUserSettings, new()"
+file = "Abstractions\\BaseUserSettings.cs"
+
+[[interfaces]]
+name = "IBaseUserSettings"
+ns = "FEx.AppSettings.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IBaseUserSettings.cs"
+
+[[interfaces]]
+name = "IConfigurationService"
+ns = "FEx.AppSettings.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IConfigurationService.cs"
+
+[[classes]]
+name = "LegacyConfigurationProvider"
+ns = "FEx.AppSettings.ConfigurationEx"
+base = "ConfigurationProvider, IConfigurationSource"
+file = "ConfigurationEx\\LegacyConfigurationProvider.cs"
+
+[[classes]]
+name = "ConfigurationManagerExtensions"
+ns = "FEx.AppSettings.Extensions"
+file = "Extensions\\ConfigurationManagerExtensions.cs"
+static = true
+
+[[classes]]
+name = "FExConfigurationExtensions"
+ns = "FEx.AppSettings.Extensions"
+file = "Extensions\\FExConfigurationExtensions.cs"
+static = true
+
+[[extensions]]
+name = "BindJsonNet"
+sig = "void BindJsonNet(this IConfigurationSection config,
+                                   object instance,
+                                   Func<string, string> jsonFunc = null)"
+returns = "void"
+file = "Extensions\\FExConfigurationExtensions.cs"
+
+[[classes]]
+name = "SettingsExtensions"
+ns = "FEx.AppSettings.Extensions.Settings"
+file = "Extensions\\Settings\\SettingsExtensions.cs"
+static = true
+
+[[extensions]]
+name = "SaveAndReloadSettings"
+sig = "void SaveAndReloadSettings(this ApplicationSettingsBase settings)"
+returns = "void"
+summary = "Saves the and reload settings."
+file = "Extensions\\Settings\\SettingsExtensions.cs"
+

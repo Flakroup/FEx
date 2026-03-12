@@ -1,0 +1,100 @@
+[project]
+name = "FEx.Avaloniax"
+path = "rc\\FEx.Avaloniax"
+
+[[classes]]
+name = "AvaloniaDispatcher"
+ns = "FEx.Avaloniax"
+base = "FExDispatcher"
+file = "AvaloniaDispatcher.cs"
+
+[[classes]]
+name = "AvaloniaMessagePopupService"
+ns = "FEx.Avaloniax"
+base = "MessagePopupServiceBase"
+file = "AvaloniaMessagePopupService.cs"
+
+[[classes]]
+name = "AvaloniaScheduler"
+ns = "FEx.Avaloniax"
+base = "LocalScheduler"
+summary = "Scheduler for ReactiveUI that marshals work to Avalonia's UI thread."
+file = "AvaloniaScheduler.cs"
+
+[[classes]]
+name = "FExAvaloniaApp"
+ns = "FEx.Avaloniax"
+base = "Application
+    where TContainer : class, IFExContainer, IDisposable, new()"
+file = "FExAvaloniaApp.cs"
+
+[[classes]]
+name = "FExAvaloniax"
+ns = "FEx.Avaloniax"
+base = "FExInitializable"
+summary = "Initializer for FEx.Avaloniax that configures ReactiveUI with Avalonia's UI scheduler."
+file = "FExAvaloniax.cs"
+
+[[classes]]
+name = "FExAvaloniaxModule"
+ns = "FEx.Avaloniax"
+file = "FExAvaloniaxModule.cs"
+
+[[classes]]
+name = "FExModule"
+ns = "FEx.Avaloniax"
+base = "InitializeModule<IFExContainer, IServiceCollection>"
+file = "FExModule.cs"
+
+[[classes]]
+name = "AsyncInitializableViewModelBase"
+ns = "FEx.Avaloniax.Abstractions"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[classes]]
+name = "AsyncInitializableViewModelBase"
+ns = "FEx.Avaloniax.Abstractions"
+base = "FExAvaloniaViewModelBase, IAsyncInitializable"
+file = "Abstractions\\AsyncInitializableViewModelBase.cs"
+
+[[classes]]
+name = "FExAvaloniaReactiveUserControl"
+ns = "FEx.Avaloniax.Abstractions"
+base = "ReactiveUserControl<T>, IDisposable
+    where T : class, IActivatableViewModel"
+file = "Abstractions\\FExAvaloniaReactiveUserControl.cs"
+
+[[classes]]
+name = "FExAvaloniaViewModelBase"
+ns = "FEx.Avaloniax.Abstractions"
+base = "ReactiveNotifyPropertyChanged, IRoutableViewModel,
+    IActivatableViewModel, IDisposable"
+file = "Abstractions\\FExAvaloniaViewModelBase.cs"
+
+[[interfaces]]
+name = "IFExAvaloniaContainer"
+ns = "FEx.Avaloniax.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IFExAvaloniaContainer.cs"
+
+[[interfaces]]
+name = "IFExContainer"
+ns = "FEx.Avaloniax.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IFExContainer.cs"
+
+[[interfaces]]
+name = "INavigationService"
+ns = "FEx.Avaloniax.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\INavigationService.cs"
+
+[[classes]]
+name = "AppViewLocator"
+ns = "FEx.Avaloniax.Services"
+base = "IViewLocator"
+file = "Services\\AppViewLocator.cs"
+
+[[classes]]
+name = "NavigationService"
+ns = "FEx.Avaloniax.Services"
+base = "INavigationService"
+file = "Services\\NavigationService.cs"
+

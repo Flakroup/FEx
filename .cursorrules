@@ -1,0 +1,60 @@
+# FEx Framework
+
+## Project Context
+
+FEx (FlakEssentials) is a shared .NET library framework used as a git submodule across projects (DotNetMate, miGit, etc.).
+
+## Architecture
+
+```
+FEx.Agnostics.Abstractions     - Framework-independent interfaces
+FEx.Agnostics                  - Framework-independent implementations
+FEx.DependencyInjection.Abstractions
+FEx.DependencyInjection        - Multi-DI (StrongInject + MS DI)
+FEx.Core.Abstractions
+FEx.Core
+FEx.Logging.Abstractions
+FEx.Logging                    - IFExLogger (Serilog backend)
+FEx.Common.Abstractions
+FEx.Common                     - Top layer
+```
+
+### File Placement Guidelines
+- **FEx.Something.Abstractions** - Extension methods, interfaces, abstract classes, simple records/DTOs
+- **FEx.Something** - Complex logic, services, implementations
+- **Collection types** - `FEx.Agnostics.Collections`
+- **Exception types** - `FEx.Agnostics.Exceptions`
+- **Core framework concepts** - `FEx.Core.Abstractions`
+
+## Technical Guidelines
+
+- **Multi-target**: net10.0, netstandard2.0, netstandard2.1, net481 (via MSBuild properties in DevConfigs/Directory.Build.props)
+- **Naming**: Projects = `FEx.<Feature>`, new folders without `FEx.` prefix (e.g., `src/Sqlx/FEx.Sqlx.csproj`)
+- **Abstractions**: Always in separate projects - interfaces in Abstractions, implementations in main project
+- **DI**: StrongInject + Microsoft.Extensions.DependencyInjection, `IInitializeModule<>` / `InitializeModule<,>`
+- **MVVM**: CommunityToolkit.Mvvm (`FEx.MVVM`) and ReactiveUI (`FEx.MVVM.Rx`)
+- **Logging**: `IFExLogger` / Serilog
+- **Build**: NUKE 10.1.0 (`FEx.Building`)
+- **API Surface**: Generate with `.\Generate-ApiSurface.ps1 -RepoPath .` (per-project TOML files in `.api-surface/`)
+
+## Build & Test
+
+```powershell
+dotnet build FEx.slnx -c Release    # 0 errors expected
+dotnet test FEx.slnx                # 38 tests (14 DI + 6 Logging + 18 Flurlx)
+```
+
+## Work Tracking
+
+- `work/STATUS.md` - Build/test status snapshot
+- `work/OPEN-ISSUES.md` - Active issues
+- `work/BACKLOG.md` - Pending specs
+- `work/SESSION-LOG.md` - AI session history
+
+## AI Guidelines
+
+- Preserve ALL original comments and XML docs
+- Never add explanatory comments to existing code
+- Ask when unsure about architecture or business logic
+- Build test after each significant change
+- Check `work/OPEN-ISSUES.md` for known issues before investigating

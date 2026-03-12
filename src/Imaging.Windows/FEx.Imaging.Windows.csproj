@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFrameworks>$(WindowsTargetFrameworkIds)</TargetFrameworks>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\FEx.Downloader\FEx.Downloader.csproj" />
+        <ProjectReference Include="..\FEx.EFCore\FEx.EFCore.csproj" />
+        <ProjectReference Include="..\FEx.Legacy\FEx.Legacy.csproj" />
+        <ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
+        <ProjectReference Include="..\FEx.WPFx\FEx.WPFx.csproj" />
+        <ProjectReference Include="..\Sqlx.Abstractions\FEx.Sqlx.Abstractions.csproj" />
+    </ItemGroup>
+</Project>

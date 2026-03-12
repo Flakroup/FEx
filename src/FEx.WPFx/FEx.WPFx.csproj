@@ -39,6 +39,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Common\FEx.Common.csproj" />
+	  <ProjectReference Include="..\FEx.Legacy\FEx.Legacy.csproj" />
 	  <ProjectReference Include="..\DependencyInjection\FEx.DependencyInjection.csproj" />
 	  <ProjectReference Include="..\FEx.FileSystem\FEx.FileSystem.csproj" />
 	  <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />

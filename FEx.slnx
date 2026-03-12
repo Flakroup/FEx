@@ -70,6 +70,7 @@
   </Project>
   <Project Path="src/FEx.AppSettings/FEx.AppSettings.csproj" />
   <Project Path="src/FEx.Asyncx/FEx.Asyncx.csproj" />
+  <Project Path="src/AzureDevOpsx/FEx.AzureDevOpsx.csproj" />
   <Project Path="src/FEx.Avaloniax/FEx.Avaloniax.csproj" />
   <Project Path="src/FEx.AzureStorage/FEx.AzureStorage.csproj" />
   <Project Path="src/FEx.CLI/FEx.CLI.csproj" />
@@ -78,10 +79,12 @@
   <Project Path="src/FEx.Encryption/FEx.Encryption.csproj" />
   <Project Path="src/FEx.FileSystem/FEx.FileSystem.csproj" />
   <Project Path="src/FEx.Flurlx/FEx.Flurlx.csproj" />
+  <Project Path="src/Imaging.Windows/FEx.Imaging.Windows.csproj" />
   <Project Path="src/FEx.Json/FEx.Json.csproj" />
   <Project Path="src/FEx.KeyVault/FEx.KeyVault.csproj" />
   <Project Path="src/FEx.Legacy/FEx.Legacy.csproj" />
   <Project Path="src/FEx.Maui/FEx.Maui.csproj" />
+  <Project Path="src/MSBuildx/FEx.MSBuildx.csproj" />
   <Project Path="src/FEx.MVVM.Abstractions/FEx.MVVM.Abstractions.csproj" />
   <Project Path="src/FEx.MVVM.Rx/FEx.MVVM.Rx.csproj" />
   <Project Path="src/FEx.MVVM/FEx.MVVM.csproj" />
@@ -89,6 +92,8 @@
   <Project Path="src/FEx.Platforms/FEx.Platforms.csproj" />
   <Project Path="src/FEx.RESXx/FEx.RESXx.csproj" />
   <Project Path="src/FEx.SecureStorage/FEx.SecureStorage.csproj" />
+  <Project Path="src/Sqlx.Abstractions/FEx.Sqlx.Abstractions.csproj" />
+  <Project Path="src/Sqlx/FEx.Sqlx.csproj" />
   <Project Path="src/FEx.Telemetry/FEx.Telemetry.csproj" />
   <Project Path="src/FEx.WebScraping/FEx.WebScraping.csproj" />
   <Project Path="src/FEx.Webx/FEx.Webx.csproj" />

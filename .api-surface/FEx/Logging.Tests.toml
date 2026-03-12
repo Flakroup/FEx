@@ -1,0 +1,31 @@
+[project]
+name = "FEx.Logging.Tests"
+path = "est\\FEx.Logging.Tests"
+
+[[classes]]
+name = "BasicLoggingTests"
+ns = "FEx.Logging.Tests"
+summary = "Basic tests to validate the Logging module works correctly. Tests the container directly instead of relying on static FExServiceProvider."
+file = "BasicLoggingTests.cs"
+
+[[classes]]
+name = "LoggingConfigurationTests"
+ns = "FEx.Logging.Tests"
+base = "IDisposable"
+file = "LoggingConfigurationTests.cs"
+
+[[classes]]
+name = "SerilogConfigurationTests"
+ns = "FEx.Logging.Tests"
+base = "IDisposable"
+summary = "Tests to verify Serilog is correctly configured via IFExLoggingConfigurator."
+file = "SerilogConfigurationTests.cs"
+
+[[classes]]
+name = "TestContainer"
+ns = "FEx.Logging.Tests"
+base = "TestBase, IFExLoggingContainer, IFExDependencyInjectionContainer,
+    IFExCoreContainer, IContainer<IFExServiceContainer>, IContainer<IFExServiceProvider>,
+    IContainer<FExMicrosoftDIServiceProvider>"
+file = "TestContainer.cs"
+

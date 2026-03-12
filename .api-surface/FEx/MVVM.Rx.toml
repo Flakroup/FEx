@@ -1,0 +1,71 @@
+[project]
+name = "FEx.MVVM.Rx"
+path = "rc\\FEx.MVVM.Rx"
+
+[[classes]]
+name = "FExMvvmRx"
+ns = "FEx.MVVM.Rx"
+base = "FExInitializable"
+file = "FExMVVMRx.cs"
+
+[[classes]]
+name = "FExMvvmRxModule"
+ns = "FEx.MVVM.Rx"
+base = "InitializeModule<IFExMvvmRxContainer, IServiceCollection>"
+file = "FExMVVMRxModule.cs"
+
+[[interfaces]]
+name = "IDisposableProgress"
+ns = "FEx.MVVM.Rx.Abstractions.Interfaces"
+summary = "An that is disposable."
+file = "Abstractions\\Interfaces\\IDisposableProgress.cs"
+
+[[interfaces]]
+name = "IDisposableProgress"
+ns = "FEx.MVVM.Rx.Abstractions.Interfaces"
+summary = "An that is disposable."
+file = "Abstractions\\Interfaces\\IDisposableProgress.cs"
+
+[[interfaces]]
+name = "IFExMvvmRxContainer"
+ns = "FEx.MVVM.Rx.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IFExMVVMRxContainer.cs"
+
+[[classes]]
+name = "LinkableReactiveNotifyPropertyChanged"
+ns = "FEx.MVVM.Rx.BaseObjects"
+base = "ReactiveNotifyPropertyChanged,
+    ILinkableNotifyPropertyChanged"
+file = "BaseObjects\\LinkableReactiveNotifyPropertyChanged.cs"
+
+[[classes]]
+name = "ReactiveNotifyPropertyChanged"
+ns = "FEx.MVVM.Rx.BaseObjects"
+base = "ReactiveObject, IFExNotifyPropertyChanged"
+file = "BaseObjects\\ReactiveNotifyPropertyChanged.cs"
+
+[[classes]]
+name = "ReactiveObjectExtensions"
+ns = "FEx.MVVM.Rx.Extensions"
+file = "Extensions\\ReactiveObjectExtensions.cs"
+static = true
+
+[[classes]]
+name = "ObservableProgress"
+ns = "FEx.MVVM.Rx.Utilities"
+base = "IObservable<T>, IDisposableProgress<T>"
+summary = "A progress reporter that exposes progress updates as an observable stream. This is a hot observable."
+file = "Utilities\\ObservableProgress.cs"
+
+[[classes]]
+name = "StatusHub"
+ns = "FEx.MVVM.Rx.Utilities"
+base = "IDisposable, IStatusHub"
+file = "Utilities\\StatusHub.cs"
+
+[[classes]]
+name = "StatusService"
+ns = "FEx.MVVM.Rx.Utilities"
+base = "IStatusService"
+file = "Utilities\\StatusService.cs"
+

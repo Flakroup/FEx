@@ -1,0 +1,46 @@
+[project]
+name = "FEx.Common"
+path = "rc\\Common"
+
+[[classes]]
+name = "FExBaseModule"
+ns = "FEx.Common"
+base = "InitializeModule<IFExBaseContainer, IServiceCollection>"
+file = "FExBaseModule.cs"
+
+[[classes]]
+name = "FExCommonModule"
+ns = "FEx.Common"
+base = "InitializeModule<IFExCommonContainer, IServiceCollection>"
+file = "FExCommonModule.cs"
+
+[[classes]]
+name = "DeviceHelper"
+ns = "FEx.Common.Helpers"
+base = "IDeviceHelper"
+file = "Helpers\\DeviceHelper.cs"
+
+[[classes]]
+name = "FExInternetConnectionHelper"
+ns = "FEx.Common.Implementations"
+base = "IFExInternetConnectionHelper"
+file = "Implementations\\FExInternetConnectionHelper.cs"
+
+[[classes]]
+name = "MainThreadDispatcher"
+ns = "FEx.Common.Implementations"
+base = "FExDispatcher"
+file = "Implementations\\MainThreadDispatcher.cs"
+
+[[classes]]
+name = "SimpleMainThreadContextProvider"
+ns = "FEx.Common.Implementations"
+base = "IMainThreadContextProvider"
+file = "Implementations\\SimpleMainThreadContextProvider.cs"
+
+[[classes]]
+name = "ConnectivityChangedSubject"
+ns = "FEx.Common.Subjects"
+base = "FExBehaviorSubject<FExNetworkAccess>, IConnectivityChangedSubject"
+file = "Subjects\\ConnectivityChangedSubject.cs"
+

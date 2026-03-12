@@ -1,0 +1,55 @@
+[project]
+name = "FEx.Platforms.Windows"
+path = "rc\\FEx.Platforms.Windows"
+
+[[classes]]
+name = "FileSystemExtensions"
+ns = "FEx.Platforms.Windows.Extensions"
+file = "Extensions\\FileSystemExtensions.cs"
+static = true
+
+[[extensions]]
+name = "SetEverybodyFullControl"
+sig = "bool SetEverybodyFullControl(this DirectoryInfo dInfo, params string[] excludes)"
+returns = "bool"
+file = "Extensions\\FileSystemExtensions.cs"
+
+[[classes]]
+name = "IdentityExtensions"
+ns = "FEx.Platforms.Windows.Extensions"
+summary = "Extension to extract various parts of the identity name."
+file = "Extensions\\IdentityExtensions.cs"
+static = true
+
+[[extensions]]
+name = "SamAccountName"
+sig = "string SamAccountName(this IIdentity user)"
+returns = "string"
+summary = "Extracts the SAMAccountName part of the full identity name"
+file = "Extensions\\IdentityExtensions.cs"
+
+[[extensions]]
+name = "Domain"
+sig = "string Domain(this IIdentity user)"
+returns = "string"
+summary = "Extracts the domain name part of the full identity name"
+file = "Extensions\\IdentityExtensions.cs"
+
+[[extensions]]
+name = "LogFormattedName"
+sig = "string LogFormattedName(this IIdentity user)"
+returns = "string"
+summary = "Extracts the SAMAccountName part of the full identity name and formats it the way the activity log wants it."
+file = "Extensions\\IdentityExtensions.cs"
+
+[[classes]]
+name = "ACL"
+ns = "FEx.Platforms.Windows.Models"
+file = "Models\\ACL.cs"
+
+[[classes]]
+name = "ElevatedCmd"
+ns = "FEx.Platforms.Windows.Utilities"
+base = "Cmd"
+file = "Utilities\\ElevatedCmd.cs"
+

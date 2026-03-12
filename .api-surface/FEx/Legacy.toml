@@ -1,0 +1,194 @@
+[project]
+name = "FEx.Legacy"
+path = "rc\\FEx.Legacy"
+
+[[classes]]
+name = "FExLegacy"
+ns = "FEx.Legacy"
+base = "FExInitializable"
+file = "FExLegacy.cs"
+
+[[classes]]
+name = "FExLegacyModule"
+ns = "FEx.Legacy"
+base = "InitializeModule<IFExLegacyContainer, IServiceCollection>"
+file = "FExLegacyModule.cs"
+
+[[interfaces]]
+name = "IFExLegacyContainer"
+ns = "FEx.Legacy"
+file = "IFExLegacyContainer.cs"
+
+[[classes]]
+name = "TasksHandler"
+ns = "FEx.Legacy.Asyncx"
+base = "ITasksHandler"
+file = "Asyncx\\TasksHandler.cs"
+
+[[interfaces]]
+name = "ITasksHandler"
+ns = "FEx.Legacy.Asyncx.Abstractions.Interfaces"
+file = "Asyncx\\Abstractions\\Interfaces\\ITasksHandler.cs"
+
+[[classes]]
+name = "JobSpecsExtensions"
+ns = "FEx.Legacy.Asyncx.Enums"
+file = "Asyncx\\Enums\\JobSpecs.cs"
+static = true
+
+[[enums]]
+name = "JobSpecs"
+ns = "FEx.Legacy.Asyncx.Enums"
+file = "Asyncx\\Enums\\JobSpecs.cs"
+
+[[extensions]]
+name = "HasFlagsFast"
+sig = "bool HasFlagsFast(this JobSpecs? value, params JobSpecs[] flags)"
+returns = "bool"
+file = "Asyncx\\Enums\\JobSpecs.cs"
+
+[[extensions]]
+name = "HasFlagFast"
+sig = "bool HasFlagFast(this JobSpecs? value, JobSpecs flag)"
+returns = "bool"
+file = "Asyncx\\Enums\\JobSpecs.cs"
+
+[[interfaces]]
+name = "ICachedImageStorage"
+ns = "FEx.Legacy.Imaging.Abstractions.Interfaces"
+file = "Imaging\\Abstractions\\Interfaces\\ICachedImageStorage.cs"
+
+[[interfaces]]
+name = "IIndexEntryBase"
+ns = "FEx.Legacy.Imaging.Abstractions.Interfaces"
+file = "Imaging\\Abstractions\\Interfaces\\IIndexEntryBase.cs"
+
+[[classes]]
+name = "MappedDriveResolver"
+ns = "FEx.Legacy.IO"
+file = "IO\\MappedDriveResolver.cs"
+static = true
+
+[[classes]]
+name = "Wipe"
+ns = "FEx.Legacy.IO"
+summary = "https://www.codeproject.com/Articles/22736/Securely-Delete-a-File-using-NET"
+file = "IO\\Wipe.cs"
+
+[[classes]]
+name = "PassInfoEventArgs"
+ns = "FEx.Legacy.IO"
+base = "EventArgs"
+file = "IO\\Wipe.cs"
+
+[[classes]]
+name = "SectorInfoEventArgs"
+ns = "FEx.Legacy.IO"
+base = "EventArgs"
+summary = "Get the total number of passes to be run"
+file = "IO\\Wipe.cs"
+
+[[classes]]
+name = "WipeDoneEventArgs"
+ns = "FEx.Legacy.IO"
+base = "EventArgs"
+summary = "Get the total number of sectors to be run"
+file = "IO\\Wipe.cs"
+
+[[classes]]
+name = "WipeErrorEventArgs"
+ns = "FEx.Legacy.IO"
+base = "EventArgs"
+summary = "Get the total number of sectors to be run"
+file = "IO\\Wipe.cs"
+
+[[classes]]
+name = "ViewModelBaseExtensions"
+ns = "FEx.Legacy.Mvvm.Abstractions.Extensions"
+file = "Mvvm\\Abstractions\\Extensions\\ViewModelBaseExtensions.cs"
+static = true
+
+[[interfaces]]
+name = "IProgressListenerViewModel"
+ns = "FEx.Legacy.Mvvm.Abstractions.Interfaces"
+file = "Mvvm\\Abstractions\\Interfaces\\IProgressListenerViewModel.cs"
+
+[[interfaces]]
+name = "IProgressStateGet"
+ns = "FEx.Legacy.Mvvm.Abstractions.Interfaces"
+file = "Mvvm\\Abstractions\\Interfaces\\IProgressStateGet.cs"
+
+[[interfaces]]
+name = "IProgressSubscriber"
+ns = "FEx.Legacy.Mvvm.Abstractions.Interfaces"
+file = "Mvvm\\Abstractions\\Interfaces\\IProgressSubscriber.cs"
+
+[[interfaces]]
+name = "IRunAsync"
+ns = "FEx.Legacy.Mvvm.Abstractions.Interfaces"
+file = "Mvvm\\Abstractions\\Interfaces\\IRunAsync.cs"
+
+[[interfaces]]
+name = "IRunAsyncView"
+ns = "FEx.Legacy.Mvvm.Abstractions.Interfaces"
+file = "Mvvm\\Abstractions\\Interfaces\\IRunAsyncView.cs"
+
+[[interfaces]]
+name = "IThreadingAwareViewModel"
+ns = "FEx.Legacy.Mvvm.Abstractions.Interfaces"
+file = "Mvvm\\Abstractions\\Interfaces\\IThreadingAwareViewModel.cs"
+
+[[classes]]
+name = "DelayedNotificationObserver"
+ns = "FEx.Legacy.Mvvm.Observables"
+base = "IDisposable"
+file = "Mvvm\\Observables\\DelayedNotificationObserver.cs"
+
+[[classes]]
+name = "ProducerConsumerCollectionBase"
+ns = "FEx.Legacy.Mvvm.Observables"
+base = "IProducerConsumerCollection<T>"
+summary = "Provides a base implementation for producer-consumer collections that wrap other producer-consumer collections. Based on https://github.com/ChadBurggraf/parallel-extensions-extras"
+file = "Mvvm\\Observables\\ProducerConsumerCollectionBase.cs"
+
+[[classes]]
+name = "ProducerConsumerCollectionDebugView"
+ns = "FEx.Legacy.Mvvm.Observables"
+summary = "Debug view for the IProducerConsumerCollection. Based on https://github.com/ChadBurggraf/parallel-extensions-extras"
+file = "Mvvm\\Observables\\ProducerConsumerCollectionDebugView.cs"
+
+[[classes]]
+name = "SubscriptionActions"
+ns = "FEx.Legacy.Mvvm.Observables"
+file = "Mvvm\\Observables\\SubscriptionActions.cs"
+
+[[classes]]
+name = "ProgressAggregatorViewModel"
+ns = "FEx.Legacy.Mvvm.ViewModels"
+base = "ProgressListenerViewModel<ProgressAggregator>"
+file = "Mvvm\\ViewModels\\ProgressAggregatorViewModel.cs"
+
+[[classes]]
+name = "ProgressListenerViewModel"
+ns = "FEx.Legacy.Mvvm.ViewModels"
+base = "ThreadingAwareViewModel, IProgressListenerViewModel<T>
+    where T : class, IProgressAggregator, new()"
+file = "Mvvm\\ViewModels\\ProgressListenerViewModel.cs"
+
+[[classes]]
+name = "ThreadingAwareViewModel"
+ns = "FEx.Legacy.Mvvm.ViewModels"
+file = "Mvvm\\ViewModels\\ThreadingAwareViewModel.AsyncInitializable.cs"
+
+[[classes]]
+name = "ThreadingAwareViewModel"
+ns = "FEx.Legacy.Mvvm.ViewModels"
+base = "ViewModelBase, IThreadingAwareViewModel"
+file = "Mvvm\\ViewModels\\ThreadingAwareViewModel.cs"
+
+[[classes]]
+name = "WebServices"
+ns = "FEx.Legacy.Web"
+file = "Web\\WebServices.cs"
+static = true
+

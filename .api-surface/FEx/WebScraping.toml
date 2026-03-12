@@ -1,0 +1,119 @@
+[project]
+name = "FEx.WebScraping"
+path = "rc\\FEx.WebScraping"
+
+[[classes]]
+name = "HtmlWebHelper"
+ns = "FEx.WebScraping"
+base = "IWebScraper"
+file = "HtmlWebHelper.cs"
+
+[[classes]]
+name = "XPathBuilderBase"
+ns = "FEx.WebScraping"
+file = "XPathBuilderBase.cs"
+
+[[classes]]
+name = "XPathBuilderEx"
+ns = "FEx.WebScraping"
+base = "XPathBuilderBase<XPathBuilderEx>"
+file = "XPathBuilderEx.cs"
+
+[[interfaces]]
+name = "IWebBrowserScraper"
+ns = "FEx.WebScraping.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IWebBrowserScraper.cs"
+
+[[interfaces]]
+name = "IWebScraper"
+ns = "FEx.WebScraping.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IWebScraper.cs"
+
+[[classes]]
+name = "HtmlDocumentExtensions"
+ns = "FEx.WebScraping.Extensions"
+file = "Extensions\\HtmlDocumentExtensions.cs"
+static = true
+
+[[extensions]]
+name = "SaveToFile"
+sig = "string SaveToFile(this HtmlDocument doc, string path = null)"
+returns = "string"
+file = "Extensions\\HtmlDocumentExtensions.cs"
+
+[[classes]]
+name = "HtmlNodeExtensions"
+ns = "FEx.WebScraping.Extensions"
+file = "Extensions\\HtmlNodeExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetNodeAttributeStringValue"
+sig = "string GetNodeAttributeStringValue(this HtmlNode value, string name, string def = null)"
+returns = "string"
+summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "GetNodeAttributeBoolValue"
+sig = "bool GetNodeAttributeBoolValue(this HtmlNode value, string name, bool def = false)"
+returns = "bool"
+summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "GetNodeAttributeIntValue"
+sig = "int GetNodeAttributeIntValue(this HtmlNode value, string name, int def = 0)"
+returns = "int"
+summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "GetSrc"
+sig = "string GetSrc(this HtmlNode value)"
+returns = "string"
+summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "GetHref"
+sig = "string GetHref(this HtmlNode value)"
+returns = "string"
+summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "GetNodeTypeAttributeValue"
+sig = "string GetNodeTypeAttributeValue(this HtmlNode value)"
+returns = "string"
+summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "IsNodeLinkElementOfType"
+sig = "bool IsNodeLinkElementOfType(this HtmlNode value, string type)"
+returns = "bool"
+summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "IsInBody"
+sig = "bool IsInBody(this HtmlNode value)"
+returns = "bool"
+summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "SelectSingleNode"
+sig = "HtmlNode SelectSingleNode(this HtmlNode value, Func<XPathBuilderEx, XPathBuilderEx> xpath)"
+returns = "HtmlNode"
+summary = "Selects the first XmlNode that matches the XPath expression."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "SelectNodes"
+sig = "HtmlNodeCollection SelectNodes(this HtmlNode value, Func<XPathBuilderEx, XPathBuilderEx> xpath)"
+returns = "HtmlNodeCollection"
+summary = "Selects a list of nodes matching the expression."
+file = "Extensions\\HtmlNodeExtensions.cs"
+

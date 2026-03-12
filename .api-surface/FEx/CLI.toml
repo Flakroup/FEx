@@ -1,0 +1,15 @@
+[project]
+name = "FEx.CLI"
+path = "rc\\FEx.CLI"
+
+[[classes]]
+name = "CommandLineParserHelper"
+ns = "FEx.CLI"
+file = "CommandLineParserHelper.cs"
+static = true
+
+[[classes]]
+name = "ErrorData"
+ns = "FEx.CLI"
+file = "ErrorData.cs"
+

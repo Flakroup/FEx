@@ -1,0 +1,27 @@
+[project]
+name = "FEx.MVVM.Tests"
+path = "est\\FEx.MVVM.Tests"
+
+[[classes]]
+name = "LinkedPropertiesTests"
+ns = "FEx.MVVM.Tests"
+file = "LinkedPropertiesTests.cs"
+
+[[classes]]
+name = "Child"
+ns = "FEx.MVVM.Tests"
+base = "LinkableNotifyPropertyChanged"
+file = "LinkedPropertiesTests.cs"
+
+[[classes]]
+name = "ChildInfo"
+ns = "FEx.MVVM.Tests"
+base = "LinkableNotifyPropertyChanged"
+file = "LinkedPropertiesTests.cs"
+
+[[classes]]
+name = "SingleParent"
+ns = "FEx.MVVM.Tests"
+base = "LinkableNotifyPropertyChanged"
+file = "LinkedPropertiesTests.cs"
+

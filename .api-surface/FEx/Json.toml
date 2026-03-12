@@ -1,0 +1,121 @@
+[project]
+name = "FEx.Json"
+path = "rc\\FEx.Json"
+
+[[classes]]
+name = "FExJson"
+ns = "FEx.Json"
+base = "FExInitializable"
+file = "FExJson.cs"
+
+[[classes]]
+name = "FExJsonModule"
+ns = "FEx.Json"
+base = "InitializeModule<IFExJsonContainer, IServiceCollection>"
+file = "FExJsonModule.cs"
+
+[[interfaces]]
+name = "IFExJsonContainer"
+ns = "FEx.Json"
+file = "IFExJsonContainer.cs"
+
+[[classes]]
+name = "JsonPathConverter"
+ns = "FEx.Json.Converters"
+base = "JsonConverter"
+file = "Converters\\JsonPathConverter.cs"
+
+[[classes]]
+name = "ParseStringToDoubleConverter"
+ns = "FEx.Json.Converters"
+base = "JsonConverter"
+file = "Converters\\ParseStringToDoubleConverter.cs"
+
+[[classes]]
+name = "ParseStringToLongConverter"
+ns = "FEx.Json.Converters"
+base = "JsonConverter"
+file = "Converters\\ParseStringToLongConverter.cs"
+
+[[classes]]
+name = "JsonExtensions"
+ns = "FEx.Json.Extensions"
+file = "Extensions\\JsonExtensions.cs"
+static = true
+
+[[extensions]]
+name = "ToJson"
+sig = "string ToJson(this object self,
+                                JsonSerializerSettings settings = null,
+                                Formatting formatting = Formatting.None)"
+returns = "string"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "FromJson"
+sig = "object FromJson(this string json, JsonSerializerSettings settings = null)"
+returns = "object"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "DeserializeFromStream"
+sig = "object DeserializeFromStream(this Stream stream, JsonSerializerSettings settings = null)"
+returns = "object"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "ReformatJson"
+sig = "string ReformatJson(this string json)"
+returns = "string"
+summary = "Reformats the json."
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "TrimJsonString"
+sig = "string TrimJsonString(this string jsonValue)"
+returns = "string"
+summary = "Deserializes the token."
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "PrettyPrintJson"
+sig = "string PrettyPrintJson(this string json,
+                                         JsonLoadSettings loadSettings = null,
+                                         JsonSerializerSettings saveSettings = null,
+                                         Formatting formatting = Formatting.Indented)"
+returns = "string"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "SerializeToFile"
+sig = "void SerializeToFile(this FileInfo file,
+                                       object self,
+                                       JsonSerializerSettings settings = null,
+                                       Formatting formatting = Formatting.None)"
+returns = "void"
+file = "Extensions\\JsonExtensions.cs"
+
+[[classes]]
+name = "NotifyPropertyChangedExtensions"
+ns = "FEx.Json.Extensions"
+file = "Extensions\\NotifyPropertyChangedExtensions.cs"
+static = true
+
+[[classes]]
+name = "DIMeta"
+ns = "FEx.Json.Helpers"
+base = "InitializeOnlyModule"
+file = "Helpers\\DIMeta.cs"
+
+[[classes]]
+name = "DIContractResolver"
+ns = "FEx.Json.Resolvers"
+base = "DefaultContractResolver"
+file = "Resolvers\\DIContractResolver.cs"
+
+[[classes]]
+name = "PropertyRenameAndIgnoreSerializerContractResolver"
+ns = "FEx.Json.Resolvers"
+base = "DefaultContractResolver"
+file = "Resolvers\\PropertyRenameAndIgnoreSerializerContractResolver.cs"
+

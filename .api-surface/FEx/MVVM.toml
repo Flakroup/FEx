@@ -1,0 +1,165 @@
+[project]
+name = "FEx.MVVM"
+path = "rc\\FEx.MVVM"
+
+[[classes]]
+name = "FExMvvm"
+ns = "FEx.MVVM"
+base = "FExInitializable"
+file = "FExMvvm.cs"
+
+[[classes]]
+name = "FExMvvmModule"
+ns = "FEx.MVVM"
+base = "InitializeModule<IFExMvvmContainer, IServiceCollection>"
+file = "FExMvvmModule.cs"
+
+[[classes]]
+name = "IsExternalInit"
+ns = "System.Runtime.CompilerServices"
+file = "IsExternalInit.cs"
+static = true
+
+[[classes]]
+name = "SubscriberBase"
+ns = "FEx.MVVM.Abstractions"
+file = "Abstractions\\SubscriberBase.cs"
+
+[[classes]]
+name = "ViewModelBase"
+ns = "FEx.MVVM.Abstractions"
+base = "LinkableReactiveNotifyPropertyChanged, IViewModelBase, IEquatable<ViewModelBase>"
+file = "Abstractions\\ViewModelBase.cs"
+
+[[interfaces]]
+name = "IAttachToContainerReceiver"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IAttachToContainerReceiver.cs"
+
+[[interfaces]]
+name = "IFExMvvmContainer"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IFExMvvmContainer.cs"
+
+[[interfaces]]
+name = "IProgressReceiver"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+summary = "Has progress status container instance"
+file = "Abstractions\\Interfaces\\IProgressReceiver.cs"
+
+[[interfaces]]
+name = "IProgressService"
+ns = "FEx.MVVM.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IProgressService.cs"
+
+[[classes]]
+name = "CheckedListItem"
+ns = "FEx.MVVM.Controls"
+base = "NotifyPropertyChanged"
+file = "Controls\\CheckedListItem.cs"
+
+[[classes]]
+name = "ViewField"
+ns = "FEx.MVVM.Controls"
+base = "NotifyPropertyChanged"
+file = "Controls\\ViewField.cs"
+
+[[classes]]
+name = "ProgressAggregatorExtensions"
+ns = "FEx.MVVM.Extensions"
+file = "Extensions\\ProgressAggregatorExtensions.cs"
+static = true
+
+[[extensions]]
+name = "SetCurrentDownloadState"
+sig = "void SetCurrentDownloadState(this IProgressAggregator viewModel, DownloadProgressChangedEventArgs e)"
+returns = "void"
+summary = "Sets the state of the current download."
+file = "Extensions\\ProgressAggregatorExtensions.cs"
+
+[[extensions]]
+name = "SetCurrentDownloadState"
+sig = "void SetCurrentDownloadState(this IProgressAggregator viewModel,
+                                               double? bytesReceived,
+                                               double? totalBytesToReceive = null,
+                                               object userState = null)"
+returns = "void"
+summary = "Sets the state of the current download."
+file = "Extensions\\ProgressAggregatorExtensions.cs"
+
+[[classes]]
+name = "PropertiesExtensions"
+ns = "FEx.MVVM.Extensions"
+file = "Extensions\\PropertiesExtensions.cs"
+static = true
+
+[[classes]]
+name = "NotifyProgressInfoChanged"
+ns = "FEx.MVVM.Models"
+base = "NotifyPropertyChanged"
+file = "Models\\NotifyProgressInfoChanged.cs"
+
+[[classes]]
+name = "ProgressSnapshot"
+ns = "FEx.MVVM.Models"
+file = "Models\\ProgressSnapshot.cs"
+
+[[classes]]
+name = "MessagePopupServiceBase"
+ns = "FEx.MVVM.Services"
+base = "IMessagePopupService"
+file = "Services\\MessagePopupService.cs"
+
+[[classes]]
+name = "ProgressService"
+ns = "FEx.MVVM.Services"
+base = "SubscriberBase, IProgressService"
+file = "Services\\ProgressService.cs"
+
+[[classes]]
+name = "ReceiverDefinition"
+ns = "FEx.MVVM.Services"
+base = "IEquatable<ReceiverDefinition>"
+file = "Services\\ReceiverDefinition.cs"
+
+[[interfaces]]
+name = "IProgressChange"
+ns = "FEx.MVVM.Subjects"
+file = "Subjects\\IProgressChange.cs"
+
+[[classes]]
+name = "ProgressChangeSubject"
+ns = "FEx.MVVM.Subjects"
+base = "FExSubject<IProgressChange>"
+file = "Subjects\\ProgressChangeSubject.cs"
+
+[[classes]]
+name = "ProgressStatus"
+ns = "FEx.MVVM.Subjects"
+base = "LinkableNotifyPropertyChanged, IProgressStatus"
+file = "Subjects\\ProgressStatus.cs"
+
+[[classes]]
+name = "BufferedProgressAggregator"
+ns = "FEx.MVVM.Utilities"
+base = "ProgressAggregator"
+file = "Utilities\\BufferedProgressAggregator.cs"
+
+[[classes]]
+name = "FExTimer"
+ns = "FEx.MVVM.Utilities"
+base = "ReactiveNotifyPropertyChanged, IFExTimer"
+file = "Utilities\\FExTimer.cs"
+
+[[classes]]
+name = "ProgressAggregator"
+ns = "FEx.MVVM.Utilities"
+base = "ProgressStatus, IProgressAggregator"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[classes]]
+name = "ProgressChangesBuffer"
+ns = "FEx.MVVM.Utilities"
+base = "AsyncBuffer<Timestamped<IProgressChange>>"
+file = "Utilities\\ProgressChangesBuffer.cs"
+

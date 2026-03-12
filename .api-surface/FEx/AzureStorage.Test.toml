@@ -1,0 +1,9 @@
+[project]
+name = "FEx.AzureStorage.Test"
+path = "est\\FEx.AzureStorage.Test"
+
+[[classes]]
+name = "AzureStorageServiceTests"
+ns = "FEx.AzureStorage.Test"
+file = "AzureStorageServiceTests.cs"
+

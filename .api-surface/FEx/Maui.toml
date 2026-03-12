@@ -1,0 +1,10 @@
+[project]
+name = "FEx.Maui"
+path = "rc\\FEx.Maui"
+
+[[classes]]
+name = "FExMauiDispatcher"
+ns = "FEx.Maui"
+base = "FExDispatcher"
+file = "FExMauiDispatcher.cs"
+

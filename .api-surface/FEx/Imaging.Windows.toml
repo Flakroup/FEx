@@ -1,0 +1,125 @@
+[project]
+name = "FEx.Imaging.Windows"
+path = "rc\\Imaging.Windows"
+
+[[classes]]
+name = "CachedImage"
+ns = "FEx.Imaging.Windows"
+base = "ReactiveNotifyPropertyChanged, IDisposable"
+file = "CachedImage.cs"
+
+[[classes]]
+name = "Extensions"
+ns = "FEx.Imaging.Windows"
+file = "Extensions.cs"
+static = true
+
+[[extensions]]
+name = "DoesCacheExists"
+sig = "bool DoesCacheExists(this IndexEntry entry)"
+returns = "bool"
+file = "Extensions.cs"
+
+[[classes]]
+name = "FExDefaultFilesCacheServiceConfig"
+ns = "FEx.Imaging.Windows"
+base = "FilesCacheServiceConfig"
+file = "FExDefaultFilesCacheServiceConfig.cs"
+
+[[classes]]
+name = "FilesCacheDbService"
+ns = "FEx.Imaging.Windows"
+base = "EFCoreDatabaseBackedService<FilesCacheContext>"
+file = "FilesCacheDbService.cs"
+
+[[classes]]
+name = "FilesCacheService"
+ns = "FEx.Imaging.Windows"
+base = "AsyncInitializable, IFilesCacheService"
+file = "FilesCacheService.cs"
+
+[[classes]]
+name = "FilesCacheServiceConfig"
+ns = "FEx.Imaging.Windows"
+base = "IFilesCacheServiceConfig"
+file = "FilesCacheServiceConfig.cs"
+
+[[interfaces]]
+name = "IFilesCacheService"
+ns = "FEx.Imaging.Windows"
+file = "IFilesCacheService.cs"
+
+[[interfaces]]
+name = "IFilesCacheServiceConfig"
+ns = "FEx.Imaging.Windows"
+file = "IFilesCacheServiceConfig.cs"
+
+[[interfaces]]
+name = "IIndexEntryConfig"
+ns = "FEx.Imaging.Windows"
+file = "IIndexEntryConfig.cs"
+
+[[classes]]
+name = "IndexEntriesCache"
+ns = "FEx.Imaging.Windows"
+base = "SynchronizedDictionary<string, IndexEntry, FilesCacheContext>"
+file = "IndexEntriesCache.cs"
+
+[[interfaces]]
+name = "IWindowsImagingServicesModule"
+ns = "FEx.Imaging.Windows"
+file = "IWindowsImagingServicesModule.cs"
+
+[[classes]]
+name = "LazyImagesHandler"
+ns = "FEx.Imaging.Windows"
+file = "LazyImagesHandler.cs"
+
+[[classes]]
+name = "SizedImageCache"
+ns = "FEx.Imaging.Windows"
+base = "NotifyPropertyChanged, IDisposable"
+file = "SizedImageCache.cs"
+
+[[classes]]
+name = "WindowsImagingServices"
+ns = "FEx.Imaging.Windows"
+base = "InitializeModule<IWindowsImagingServicesModule, IServiceCollection>"
+file = "WindowsImagingServices.cs"
+
+[[classes]]
+name = "WindowsImagingServicesModule"
+ns = "FEx.Imaging.Windows"
+file = "WindowsImagingServicesModule.cs"
+
+[[classes]]
+name = "InitialCreate"
+ns = "FEx.Imaging.Windows.Migrations"
+base = "Migration"
+file = "Migrations\\20191014120352_InitialCreate.cs"
+
+[[classes]]
+name = "Add_Size_Columns"
+ns = "FEx.Imaging.Windows.Migrations"
+base = "Migration"
+file = "Migrations\\20200610104919_Add_Size_Columns.cs"
+
+[[classes]]
+name = "FilesCacheContext"
+ns = "FEx.Imaging.Windows.Model"
+base = "DbContext
+// ReSharper restore PartialTypeWithSinglePart"
+file = "Model\\FilesCacheContext.cs"
+
+[[classes]]
+name = "IndexEntry"
+ns = "FEx.Imaging.Windows.Model"
+base = "IndexEntryBase, IDisposable"
+file = "Model\\IndexEntry.cs"
+
+[[classes]]
+name = "IndexEntryBase"
+ns = "FEx.Imaging.Windows.Model"
+base = "NotifyPropertyChanged, IIndexEntryBase"
+file = "Model\\IndexEntryBase.cs"
+

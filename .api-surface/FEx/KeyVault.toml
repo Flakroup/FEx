@@ -1,0 +1,45 @@
+[project]
+name = "FEx.KeyVault"
+path = "rc\\FEx.KeyVault"
+
+[[interfaces]]
+name = "IKeyVaultCredentials"
+ns = "FEx.KeyVault"
+file = "IKeyVaultCredentials.cs"
+
+[[interfaces]]
+name = "IKeyVaultByCertCredentials"
+ns = "FEx.KeyVault"
+file = "IKeyVaultCredentials.cs"
+
+[[interfaces]]
+name = "IKeyVaultByClientSecretCredentials"
+ns = "FEx.KeyVault"
+file = "IKeyVaultCredentials.cs"
+
+[[classes]]
+name = "KeyVaultConfigurator"
+ns = "FEx.KeyVault"
+file = "KeyVaultConfigurator.cs"
+static = true
+
+[[extensions]]
+name = "AddAzureKeyVaultWithCertificate"
+sig = "void AddAzureKeyVaultWithCertificate(this IConfigurationBuilder config,
+                                                       IKeyVaultByCertCredentials credentials)"
+returns = "void"
+file = "KeyVaultConfigurator.cs"
+
+[[extensions]]
+name = "AddAzureKeyVaultWithClientSecret"
+sig = "void AddAzureKeyVaultWithClientSecret(this IConfigurationBuilder config,
+                                                        IKeyVaultByClientSecretCredentials credentials)"
+returns = "void"
+file = "KeyVaultConfigurator.cs"
+
+[[classes]]
+name = "KeyVaultCredentials"
+ns = "FEx.KeyVault"
+base = "IKeyVaultByCertCredentials, IKeyVaultByClientSecretCredentials"
+file = "KeyVaultCredentials.cs"
+

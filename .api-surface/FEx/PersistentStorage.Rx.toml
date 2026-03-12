@@ -1,0 +1,46 @@
+[project]
+name = "FEx.PersistentStorage.Rx"
+path = "rc\\PersistentStorage.Rx"
+
+[[classes]]
+name = "AggregatedCollectionCachedSubject"
+ns = "FEx.PersistentStorage.Rx.Subjects"
+base = "CollectionCachedSubject<T, TCacheable>
+    where TCacheable : class, ICacheableItem"
+file = "Subjects\\AggregatedCollectionCachedSubject.cs"
+
+[[classes]]
+name = "CachedSubjectBase"
+ns = "FEx.PersistentStorage.Rx.Subjects"
+base = "FExBehaviorSubject<TData>, IClearCache,
+    IRequiresInitialization where TCacheable : class, ICacheableItem"
+file = "Subjects\\CachedSubjectBase.cs"
+
+[[classes]]
+name = "CollectionCachedSubject"
+ns = "FEx.PersistentStorage.Rx.Subjects"
+base = "CollectionCachedSubjectBase<T, TCacheable>
+    where TCacheable : class, ICacheableItem"
+file = "Subjects\\CollectionCachedSubject.cs"
+
+[[classes]]
+name = "CollectionCachedSubjectBase"
+ns = "FEx.PersistentStorage.Rx.Subjects"
+base = "CachedSubjectBase<IReadOnlyCollection<T>, T, TCacheable>
+    where TCacheable : class, ICacheableItem"
+file = "Subjects\\CollectionCachedSubjectBase.cs"
+
+[[classes]]
+name = "EnhancedCollectionCachedSubject"
+ns = "FEx.PersistentStorage.Rx.Subjects"
+base = "CollectionCachedSubjectBase<T, TCacheable>
+    where TCacheable : class, ICacheableItem"
+file = "Subjects\\EnhancedCollectionCachedSubject.cs"
+
+[[classes]]
+name = "SingleCachedSubject"
+ns = "FEx.PersistentStorage.Rx.Subjects"
+base = "CachedSubjectBase<T, T, TCacheable>
+    where TCacheable : class, ICacheableItem"
+file = "Subjects\\SingleCachedSubject.cs"
+

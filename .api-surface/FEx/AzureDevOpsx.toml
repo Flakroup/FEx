@@ -1,0 +1,137 @@
+[project]
+name = "FEx.AzureDevOpsx"
+path = "rc\\AzureDevOpsx"
+
+[[classes]]
+name = "AuthenticatedUserInfo"
+ns = "FEx.AzureDevOpsx"
+file = "AuthenticatedUserInfo.cs"
+
+[[classes]]
+name = "FuncProcessor"
+ns = "FEx.AzureDevOpsx"
+file = "FuncProcessor.cs"
+
+[[classes]]
+name = "Project"
+ns = "FEx.AzureDevOpsx"
+base = "NotifyPropertyChanged"
+summary = "Container for TFS project properties https://www.visualstudio.com/en-us/docs/integrate/api/tfs/projects"
+file = "Project.cs"
+
+[[classes]]
+name = "ProjectsCollection"
+ns = "FEx.AzureDevOpsx"
+base = "NotifyPropertyChanged"
+summary = "Container for TFS projects collection properties https://www.visualstudio.com/en-us/docs/integrate/api/tfs/project-collections"
+file = "ProjectsCollection.cs"
+
+[[enums]]
+name = "TfsBuildServerVersion"
+ns = "FEx.AzureDevOpsx"
+file = "TfsBuildServerVersion.cs"
+
+[[classes]]
+name = "TfsChangeset"
+ns = "FEx.AzureDevOpsx"
+file = "TfsChangeset.cs"
+
+[[classes]]
+name = "TfsEnvironment"
+ns = "FEx.AzureDevOpsx"
+base = "NotifyPropertyChanged"
+file = "TfsEnvironment.cs"
+
+[[classes]]
+name = "TfsWebApi"
+ns = "FEx.AzureDevOpsx"
+summary = "Wrapper class for handling TFS REST API according to this documentation: Methods reserved for Git have prefix Git. Those for Tfvc have prefix Tfvc. Other are universal."
+file = "TfsWebApi.cs"
+static = true
+
+[[classes]]
+name = "ChangeItem"
+ns = "FEx.AzureDevOpsx.Entities"
+file = "Entities\\ChangeItem.cs"
+
+[[classes]]
+name = "HrefUrl"
+ns = "FEx.AzureDevOpsx.Entities"
+file = "Entities\\HrefUrl.cs"
+
+[[classes]]
+name = "Links"
+ns = "FEx.AzureDevOpsx.Entities"
+file = "Entities\\Links.cs"
+
+[[classes]]
+name = "Owner"
+ns = "FEx.AzureDevOpsx.Entities"
+base = "NotifyPropertyChanged"
+file = "Entities\\Owner.cs"
+
+[[classes]]
+name = "ShelvesetChange"
+ns = "FEx.AzureDevOpsx.Entities"
+file = "Entities\\ShelvesetChange.cs"
+
+[[classes]]
+name = "ShelvesetContent"
+ns = "FEx.AzureDevOpsx.Entities"
+base = "NotifyPropertyChanged"
+file = "Entities\\ShelvesetContent.cs"
+
+[[classes]]
+name = "TfsExtensions"
+ns = "FEx.AzureDevOpsx.Extensions"
+file = "Extensions\\TfsExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetBuildServerVersion"
+sig = "TfsBuildServerVersion GetBuildServerVersion(this IBuildServer buildServer)"
+returns = "TfsBuildServerVersion"
+file = "Extensions\\TfsExtensions.cs"
+
+[[extensions]]
+name = "GetServerVersionDescription"
+sig = "string GetServerVersionDescription(this TfsBuildServerVersion buildServerVersion)"
+returns = "string"
+file = "Extensions\\TfsExtensions.cs"
+
+[[extensions]]
+name = "GetProjectWorkspaces"
+sig = "List<Workspace> GetProjectWorkspaces(this Project project)"
+returns = "List<Workspace>"
+file = "Extensions\\TfsExtensions.cs"
+
+[[extensions]]
+name = "GetTeamProjectCollection"
+sig = "TfsTeamProjectCollection GetTeamProjectCollection(this CatalogNode collectionNode, TfsConfigurationServer server)"
+returns = "TfsTeamProjectCollection"
+file = "Extensions\\TfsExtensions.cs"
+
+[[extensions]]
+name = "GetCurrentUserName"
+sig = "string GetCurrentUserName(this TfsConfigurationServer server, string separator = \" \")"
+returns = "string"
+summary = "Gets the name of the current user."
+file = "Extensions\\TfsExtensions.cs"
+
+[[classes]]
+name = "BaseTfsResponse"
+ns = "FEx.AzureDevOpsx.Responses"
+file = "Responses\\BaseTFSResponse.cs"
+
+[[classes]]
+name = "ShelvesetResponse"
+ns = "FEx.AzureDevOpsx.Responses"
+base = "BaseTfsResponse"
+file = "Responses\\ShelvesetResponse.cs"
+
+[[classes]]
+name = "TfsService"
+ns = "FEx.AzureDevOpsx.Services"
+base = "ThreadingAwareViewModel"
+file = "Services\\TFSService.cs"
+

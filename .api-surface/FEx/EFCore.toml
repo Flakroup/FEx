@@ -1,0 +1,194 @@
+[project]
+name = "FEx.EFCore"
+path = "rc\\FEx.EFCore"
+
+[[classes]]
+name = "FExEFCore"
+ns = "FEx.EFCore"
+base = "FExInitializable"
+file = "FExEFCore.cs"
+
+[[classes]]
+name = "FExEFCoreModule"
+ns = "FEx.EFCore"
+base = "InitializeModule<IFExEFCoreModule, IServiceCollection>"
+file = "FExEFCoreModule.cs"
+
+[[interfaces]]
+name = "IFExEFCoreModule"
+ns = "FEx.EFCore"
+file = "IFExEFCoreModule.cs"
+
+[[classes]]
+name = "IsExternalInit"
+ns = "System.Runtime.CompilerServices"
+file = "IsExternalInit.cs"
+static = true
+
+[[classes]]
+name = "SynchronizedDictionary"
+ns = "FEx.EFCore.Collections"
+base = "AsyncInitializable, IReadOnlyCollection<TValue>
+    where TKey : IEquatable<TKey> where TValue : class, INotifyPropertyChanged where TDbCtx : DbContext"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[classes]]
+name = "BulkDbConfig"
+ns = "FEx.EFCore.Configuration"
+base = "IBulkDbConfig"
+file = "Configuration\\BulkDbConfig.cs"
+
+[[classes]]
+name = "DbServiceConfig"
+ns = "FEx.EFCore.Configuration"
+base = "IDbServiceConfig"
+file = "Configuration\\DbServiceConfig.cs"
+
+[[interfaces]]
+name = "IBulkDbConfig"
+ns = "FEx.EFCore.Configuration"
+file = "Configuration\\IBulkDbConfig.cs"
+
+[[interfaces]]
+name = "IDbServiceConfig"
+ns = "FEx.EFCore.Configuration"
+file = "Configuration\\IDbServiceConfig.cs"
+
+[[enums]]
+name = "SqlDialect"
+ns = "FEx.EFCore.Enums"
+file = "Enums\\SqlDialect.cs"
+
+[[classes]]
+name = "BulkOperationsExtensions"
+ns = "FEx.EFCore.Extensions"
+file = "Extensions\\BulkOperationsExtensions.cs"
+static = true
+
+[[classes]]
+name = "DbContextExtensions"
+ns = "FEx.EFCore.Extensions"
+file = "Extensions\\DbContextExtensions.cs"
+static = true
+
+[[classes]]
+name = "DbContextOptionsBuilderExtensions"
+ns = "FEx.EFCore.Extensions"
+file = "Extensions\\DbContextOptionsBuilderExtensions.cs"
+static = true
+
+[[extensions]]
+name = "ConfigureDbContext"
+sig = "bool ConfigureDbContext(this DbContextOptionsBuilder options,
+                                          IFExDbConfig config,
+                                          ISqlDbHelper sqlDbHelper)"
+returns = "bool"
+file = "Extensions\\DbContextOptionsBuilderExtensions.cs"
+
+[[extensions]]
+name = "UseSqlite"
+sig = "void UseSqlite(this DbContextOptionsBuilder options, IFExDbConfig config)"
+returns = "void"
+file = "Extensions\\DbContextOptionsBuilderExtensions.cs"
+
+[[extensions]]
+name = "UseSqlServer"
+sig = "bool UseSqlServer(this DbContextOptionsBuilder options,
+                                    IFExDbConfig config,
+                                    Action<SqlServerDbContextOptionsBuilder> configure = null)"
+returns = "bool"
+file = "Extensions\\DbContextOptionsBuilderExtensions.cs"
+
+[[classes]]
+name = "EntityTypeExtensions"
+ns = "FEx.EFCore.Extensions"
+file = "Extensions\\EntityTypeExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetMappedProperties"
+sig = "IReadOnlyCollection<string> GetMappedProperties(this IEntityType entityType)"
+returns = "IReadOnlyCollection<string>"
+file = "Extensions\\EntityTypeExtensions.cs"
+
+[[classes]]
+name = "EFCoreHelper"
+ns = "FEx.EFCore.Helpers"
+file = "Helpers\\EFCoreHelper.cs"
+static = true
+
+[[classes]]
+name = "ResilientTransaction"
+ns = "FEx.EFCore.Helpers"
+summary = "Use of an EF Core resiliency strategy when using multiple DbContexts within an explicit BeginTransaction(): See: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency"
+file = "Helpers\\ResilientTransaction.cs"
+
+[[classes]]
+name = "SQLConnectionHelper"
+ns = "FEx.EFCore.Helpers"
+file = "Helpers\\SQLConnectionHelper.cs"
+static = true
+
+[[interfaces]]
+name = "IBulkDbServiceBase"
+ns = "FEx.EFCore.Interfaces"
+file = "Interfaces\\IBulkDbServiceBase.cs"
+
+[[interfaces]]
+name = "IDbServiceBase"
+ns = "FEx.EFCore.Interfaces"
+file = "Interfaces\\IDbServiceBase.cs"
+
+[[interfaces]]
+name = "IEFCoreDatabaseBackedService"
+ns = "FEx.EFCore.Interfaces"
+file = "Interfaces\\IEFCoreDatabaseBackedService.cs"
+
+[[interfaces]]
+name = "IFExDbConfig"
+ns = "FEx.EFCore.Interfaces"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[interfaces]]
+name = "IPooledDbService"
+ns = "FEx.EFCore.Interfaces"
+file = "Interfaces\\IPooledDbService.cs"
+
+[[classes]]
+name = "ChangeInfo"
+ns = "FEx.EFCore.Models"
+file = "Models\\ChangeInfo.cs"
+
+[[classes]]
+name = "EntityValidationFail"
+ns = "FEx.EFCore.Models"
+file = "Models\\EntityValidationFail.cs"
+
+[[classes]]
+name = "BulkDbServiceBase"
+ns = "FEx.EFCore.Services"
+base = "DbServiceBase<TDbContext>, IBulkDbServiceBase<TDbContext>
+    where TDbContext : DbContext"
+file = "Services\\BulkDbServiceBase.cs"
+
+[[classes]]
+name = "DbServiceBase"
+ns = "FEx.EFCore.Services"
+base = "PooledDbService<TDbContext>, IDbServiceBase<TDbContext>
+    where TDbContext : DbContext"
+file = "Services\\DbServiceBase.cs"
+
+[[classes]]
+name = "EFCoreDatabaseBackedService"
+ns = "FEx.EFCore.Services"
+base = "BulkDbServiceBase<TDbContext>,
+    IEFCoreDatabaseBackedService<TDbContext> where TDbContext : DbContext"
+file = "Services\\EFCoreDatabaseBackedService.cs"
+
+[[classes]]
+name = "PooledDbService"
+ns = "FEx.EFCore.Services"
+base = "AsyncInitializable, IPooledDbService<TDbContext>
+    where TDbContext : DbContext"
+file = "Services\\PooledDbService.cs"
+

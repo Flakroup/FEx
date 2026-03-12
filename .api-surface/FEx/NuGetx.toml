@@ -1,0 +1,38 @@
+[project]
+name = "FEx.NuGetx"
+path = "rc\\FEx.NuGetx"
+
+[[interfaces]]
+name = "INuGetExModule"
+ns = "FEx.NuGetx"
+file = "INuGetExModule.cs"
+
+[[classes]]
+name = "NuGetEx"
+ns = "FEx.NuGetx"
+base = "InitializeModule<INuGetExModule, IServiceCollection>"
+file = "NuGetEx.cs"
+
+[[classes]]
+name = "NuGetExModule"
+ns = "FEx.NuGetx"
+file = "NuGetExModule.cs"
+
+[[classes]]
+name = "NuGetLogger"
+ns = "FEx.NuGetx"
+base = "INuGetLogger"
+file = "NuGetLogger.cs"
+
+[[classes]]
+name = "NuGetManager"
+ns = "FEx.NuGetx"
+base = "AsyncInitializable"
+file = "NuGetManager.cs"
+
+[[classes]]
+name = "NuGetPackageInstallation"
+ns = "FEx.NuGetx"
+base = "NotifyPropertyChanged"
+file = "NuGetPackageInstallation.cs"
+

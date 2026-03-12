@@ -1,0 +1,46 @@
+[project]
+name = "FEx.DependencyInjection"
+path = "rc\\DependencyInjection"
+
+[[classes]]
+name = "FExDependencyInjectionModule"
+ns = "FEx.DependencyInjection"
+base = "InitializeModule<IFExDependencyInjectionContainer, IServiceCollection>"
+file = "FExDependencyInjectionModule.cs"
+
+[[classes]]
+name = "FExMicrosoftDIServiceProvider"
+ns = "FEx.DependencyInjection"
+base = "IFExServiceProvider"
+file = "FExMicrosoftDIServiceProvider.cs"
+
+[[classes]]
+name = "MicrosoftDIScopeProviderAdapter"
+ns = "FEx.DependencyInjection"
+base = "IScopeProvider, IDisposable"
+file = "FExMicrosoftDIServiceProvider.cs"
+
+[[classes]]
+name = "FExServiceContainer"
+ns = "FEx.DependencyInjection"
+base = "IFExServiceContainer"
+file = "FExServiceContainer.cs"
+
+[[classes]]
+name = "FExStrongInjectServiceProvider"
+ns = "FEx.DependencyInjection"
+base = "IFExStrongInjectServiceProvider"
+file = "FExStrongInjectServiceProvider.cs"
+
+[[classes]]
+name = "ContainerExtensions"
+ns = "FEx.DependencyInjection.Extensions"
+file = "Extensions\\ContainerExtensions.cs"
+static = true
+
+[[classes]]
+name = "ServiceProviderExtensions"
+ns = "FEx.DependencyInjection.Extensions"
+file = "Extensions\\ServiceProviderExtensions.cs"
+static = true
+

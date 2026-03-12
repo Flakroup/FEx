@@ -1,0 +1,370 @@
+[project]
+name = "FEx.Core.Abstractions"
+path = "rc\\Core.Abstractions"
+
+[[classes]]
+name = "FExCoreStatics"
+ns = "FEx.Core.Abstractions"
+base = "StaticsBase"
+file = "FExCoreStatics.cs"
+
+[[classes]]
+name = "IsExternalInit"
+ns = "System.Runtime.CompilerServices"
+file = "IsExternalInit.cs"
+static = true
+
+[[classes]]
+name = "ObservableHashSet"
+ns = "FEx.Core.Abstractions.Collections"
+base = "BaseConcurrentList<T>, ISet<T>, IReadOnlyCollection<T>, INotifyCollectionChanged,
+    INotifyPropertyChanged"
+summary = "A hash set that implements the interfaces required for Entity Framework to use notification based change tracking for a collection navigation property."
+file = "Collections\\ObservableHashSet.cs"
+
+[[classes]]
+name = "ExceptionEventArgs"
+ns = "FEx.Core.Abstractions.CustomEventArgs"
+base = "EventArgs"
+file = "CustomEventArgs\\ExceptionEventArgs.cs"
+
+[[enums]]
+name = "NavigationFlow"
+ns = "FEx.Core.Abstractions.Enums"
+file = "Enums\\NavigationFlow.cs"
+
+[[classes]]
+name = "EventsExtensions"
+ns = "FEx.Core.Abstractions.Extensions"
+file = "Extensions\\EventsExtensions.cs"
+static = true
+
+[[classes]]
+name = "ExceptionExtensions"
+ns = "FEx.Core.Abstractions.Extensions"
+file = "Extensions\\ExceptionExtensions.cs"
+static = true
+
+[[extensions]]
+name = "HandleException"
+sig = "void HandleException(this Exception exception)"
+returns = "void"
+file = "Extensions\\ExceptionExtensions.cs"
+
+[[extensions]]
+name = "HandleException"
+sig = "void HandleException(this Exception exception, IExceptionHandlerOptions options)"
+returns = "void"
+file = "Extensions\\ExceptionExtensions.cs"
+
+[[extensions]]
+name = "HandleException"
+sig = "void HandleException(this Exception ex,
+                                       bool informUser = false,
+                                       bool wait = false,
+                                       bool doNotReport = false,
+                                       params (string, object)"
+returns = "void"
+file = "Extensions\\ExceptionExtensions.cs"
+
+[[classes]]
+name = "ObservableExtensions"
+ns = "FEx.Core.Abstractions.Extensions"
+file = "Extensions\\ObservableExtensions.cs"
+static = true
+
+[[classes]]
+name = "SynchronizationContextExtensions"
+ns = "FEx.Core.Abstractions.Extensions"
+file = "Extensions\\SynchronizationContextExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetThreadSynchronizationContext"
+sig = "SynchronizationContext GetThreadSynchronizationContext(this Thread thread, bool createNew = false)"
+returns = "SynchronizationContext"
+file = "Extensions\\SynchronizationContextExtensions.cs"
+
+[[extensions]]
+name = "SendInContext"
+sig = "void SendInContext(this SynchronizationContext context, object sender, Action action)"
+returns = "void"
+file = "Extensions\\SynchronizationContextExtensions.cs"
+
+[[extensions]]
+name = "PostInContext"
+sig = "TaskCompletionSource<bool> PostInContext(this SynchronizationContext context,
+                                                           Action action,
+                                                           object sender,
+                                                           Action<AttachedException> handleException = null)"
+returns = "TaskCompletionSource<bool>"
+file = "Extensions\\SynchronizationContextExtensions.cs"
+
+[[classes]]
+name = "ThreadExtensions"
+ns = "FEx.Core.Abstractions.Extensions"
+file = "Extensions\\ThreadExtensions.cs"
+static = true
+
+[[extensions]]
+name = "IsPlatformMainThread"
+sig = "bool IsPlatformMainThread(this Thread currentThread, bool? isUIApp = null)"
+returns = "bool"
+file = "Extensions\\ThreadExtensions.cs"
+
+[[classes]]
+name = "UriExtensions"
+ns = "FEx.Core.Abstractions.Extensions"
+file = "Extensions\\UriExtensions.cs"
+static = true
+
+[[classes]]
+name = "StackError"
+ns = "FEx.Core.Abstractions.Flow"
+base = "Error, IStackError"
+file = "Flow\\StackError.cs"
+
+[[classes]]
+name = "StackError"
+ns = "FEx.Core.Abstractions.Flow"
+base = "Error<TErrorStatus>, IStackError"
+file = "Flow\\StackError.cs"
+
+[[classes]]
+name = "ApiError"
+ns = "FEx.Core.Abstractions.Flow.Errors"
+base = "StackError<HttpStatusCode?>"
+file = "Flow\\Errors\\ApiError.cs"
+
+[[classes]]
+name = "TimeoutError"
+ns = "FEx.Core.Abstractions.Flow.Errors"
+base = "Error"
+file = "Flow\\Errors\\TimeoutError.cs"
+
+[[classes]]
+name = "AsyncHelper"
+ns = "FEx.Core.Abstractions.Helpers"
+base = "IAsyncHelper"
+file = "Helpers\\AsyncHelper.cs"
+
+[[classes]]
+name = "DeadlockMonitor"
+ns = "FEx.Core.Abstractions.Helpers"
+base = "IDeadlockMonitor"
+file = "Helpers\\DeadlockMonitor.cs"
+
+[[classes]]
+name = "DebugExceptionHandler"
+ns = "FEx.Core.Abstractions.Helpers"
+base = "ExceptionHandlerBase"
+file = "Helpers\\DebugExceptionHandler.cs"
+
+[[classes]]
+name = "ExceptionHandlerBase"
+ns = "FEx.Core.Abstractions.Helpers"
+base = "IExceptionHandler"
+file = "Helpers\\ExceptionHandlerBase.cs"
+
+[[classes]]
+name = "ReflectionHelper"
+ns = "FEx.Core.Abstractions.Helpers"
+file = "Helpers\\ReflectionHelper.cs"
+static = true
+
+[[extensions]]
+name = "GetPropertyValue"
+sig = "object GetPropertyValue(this object obj, string propertyName)"
+returns = "object"
+file = "Helpers\\ReflectionHelper.cs"
+
+[[extensions]]
+name = "SetPropertyValue"
+sig = "void SetPropertyValue(this object obj, string propertyName, object val)"
+returns = "void"
+file = "Helpers\\ReflectionHelper.cs"
+
+[[extensions]]
+name = "GetFieldValue"
+sig = "object GetFieldValue(this object obj, string fieldName)"
+returns = "object"
+file = "Helpers\\ReflectionHelper.cs"
+
+[[extensions]]
+name = "HasResource"
+sig = "bool HasResource(this Assembly assembly,
+                                   string resourceName,
+                                   bool throwIfMissing = true,
+                                   bool addNamespace = false)"
+returns = "bool"
+file = "Helpers\\ReflectionHelper.cs"
+
+[[extensions]]
+name = "ReadEmbeddedFile"
+sig = "string ReadEmbeddedFile(this Assembly assembly,
+                                          string resourceName,
+                                          bool throwIfMissing = true,
+                                          bool addNamespace = false)"
+returns = "string"
+file = "Helpers\\ReflectionHelper.cs"
+
+[[extensions]]
+name = "AsDictionary"
+sig = "IDictionary<string, object> AsDictionary(this object source,
+                                                           BindingFlags bindingAttr =
+                                                               BindingFlags.DeclaredOnly
+                                                               | BindingFlags.Public
+                                                               | BindingFlags.Instance)"
+returns = "IDictionary<string, object>"
+file = "Helpers\\ReflectionHelper.cs"
+
+[[classes]]
+name = "StackTraceProvider"
+ns = "FEx.Core.Abstractions.Helpers"
+base = "IStackTraceProvider"
+file = "Helpers\\StackTraceProvider.cs"
+
+[[classes]]
+name = "DefaultDispatcher"
+ns = "FEx.Core.Abstractions.Implementations"
+base = "FExDispatcher"
+file = "Implementations\\DefaultDispatcher.cs"
+
+[[classes]]
+name = "DefaultStackTraceProvider"
+ns = "FEx.Core.Abstractions.Implementations"
+base = "IStackTraceProvider"
+file = "Implementations\\DefaultStackTraceProvider.cs"
+
+[[classes]]
+name = "ExceptionHandlerOptions"
+ns = "FEx.Core.Abstractions.Implementations"
+base = "IExceptionHandlerOptions"
+file = "Implementations\\ExceptionHandlerOptions.cs"
+
+[[classes]]
+name = "FExDispatcher"
+ns = "FEx.Core.Abstractions.Implementations"
+base = "IFExDispatcher"
+file = "Implementations\\FExDispatcher.cs"
+
+[[interfaces]]
+name = "IAppThreadingSettings"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\IAppThreadingSettings.cs"
+
+[[interfaces]]
+name = "IAsyncInitializable"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\IAsyncInitializable.cs"
+
+[[interfaces]]
+name = "IDeadlockMonitor"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\IDeadlockMonitor.cs"
+
+[[interfaces]]
+name = "IExceptionHandler"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\IExceptionHandler.cs"
+
+[[interfaces]]
+name = "IFExBehaviorSubject"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\IFExBehaviorSubject.cs"
+
+[[interfaces]]
+name = "IFExCoreContainer"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\IFExCoreContainer.cs"
+
+[[interfaces]]
+name = "IFExDispatcher"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\IFExDispatcher.cs"
+
+[[interfaces]]
+name = "IFExSubject"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\IFExSubject.cs"
+
+[[interfaces]]
+name = "IMainThreadContextProvider"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\IMainThreadContextProvider.cs"
+
+[[interfaces]]
+name = "INavigationFlowSubject"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\INavigationFlowSubject.cs"
+
+[[interfaces]]
+name = "IResxManager"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\IResxManager.cs"
+
+[[interfaces]]
+name = "IStackTraceProvider"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\IStackTraceProvider.cs"
+
+[[interfaces]]
+name = "ITasksInfoSubject"
+ns = "FEx.Core.Abstractions.Interfaces"
+file = "Interfaces\\ITasksInfoSubject.cs"
+
+[[classes]]
+name = "MainThreadContextProvider"
+ns = "FEx.Core.Abstractions.Providers"
+base = "IMainThreadContextProvider"
+file = "Providers\\MainThreadContextProvider.cs"
+
+[[classes]]
+name = "SynchronizedAccessService"
+ns = "FEx.Core.Abstractions.Services"
+base = "ISynchronizedAccessService, IDisposable"
+file = "Services\\SynchronizedAccessService.cs"
+
+[[classes]]
+name = "AppThreadingSettings"
+ns = "FEx.Core.Abstractions.Settings"
+base = "IAppThreadingSettings"
+file = "Settings\\AppThreadingSettings.cs"
+
+[[classes]]
+name = "FExBehaviorSubject"
+ns = "FEx.Core.Abstractions.Subjects"
+base = "FExSubject<T>, IFExBehaviorSubject<T>"
+file = "Subjects\\FExBehaviorSubject.cs"
+
+[[classes]]
+name = "FExSubject"
+ns = "FEx.Core.Abstractions.Subjects"
+base = "IFExSubject<T>"
+file = "Subjects\\FExSubject.cs"
+
+[[classes]]
+name = "AppUtility"
+ns = "FEx.Core.Abstractions.Utilities"
+file = "Utilities\\AppUtility.cs"
+static = true
+
+[[classes]]
+name = "TaskWrapper"
+ns = "FEx.Core.Abstractions.Utilities"
+base = "TaskWrapperBase<Task, Result<ExceptionError>>, ITaskWrapper"
+file = "Utilities\\TaskWrapper.cs"
+
+[[classes]]
+name = "TaskWrapper"
+ns = "FEx.Core.Abstractions.Utilities"
+base = "TaskWrapperBase<Task<T>, Result<T, ExceptionError>>, ITaskWrapper<T>"
+file = "Utilities\\TaskWrapper.cs"
+
+[[classes]]
+name = "TaskWrapperBase"
+ns = "FEx.Core.Abstractions.Utilities"
+base = "ITaskWrapperBase<TTask, TResult> where TTask : Task
+    where TResult : class, IResult<ExceptionError>"
+file = "Utilities\\TaskWrapperBase.cs"
+

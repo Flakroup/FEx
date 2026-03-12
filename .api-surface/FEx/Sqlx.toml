@@ -1,0 +1,48 @@
+[project]
+name = "FEx.Sqlx"
+path = "rc\\Sqlx"
+
+[[classes]]
+name = "SqlDbHelper"
+ns = "FEx.Sqlx"
+base = "AsyncInitializable, ISqlDbHelper"
+file = "SqlDbHelper.cs"
+
+[[classes]]
+name = "SQLInstanceInfo"
+ns = "FEx.Sqlx"
+file = "SQLInstanceInfo.cs"
+
+[[enums]]
+name = "ServerEditionID"
+ns = "FEx.Sqlx.Enums"
+file = "Enums\\ServerEditionID.cs"
+
+[[enums]]
+name = "ServerEngineEdition"
+ns = "FEx.Sqlx.Enums"
+file = "Enums\\ServerEngineEdition.cs"
+
+[[enums]]
+name = "ServerProp"
+ns = "FEx.Sqlx.Enums"
+file = "Enums\\ServerProp.cs"
+
+[[classes]]
+name = "SqlConnectionExtensions"
+ns = "FEx.Sqlx.Extensions"
+file = "Extensions\\SqlConnectionExtensions.cs"
+static = true
+
+[[extensions]]
+name = "RunSql"
+sig = "IDictionary<string, object>[] RunSql(this MsSqlConnection connection, string sql)"
+returns = "IDictionary<string, object>[]"
+file = "Extensions\\SqlConnectionExtensions.cs"
+
+[[extensions]]
+name = "RunSql"
+sig = "IDictionary<string, object>[] RunSql(this SqlConnection connection, string sql)"
+returns = "IDictionary<string, object>[]"
+file = "Extensions\\SqlConnectionExtensions.cs"
+

@@ -1,0 +1,32 @@
+[project]
+name = "FEx.Agnostics.TestMocks"
+path = "rc\\Agnostics.TestMocks"
+
+[[classes]]
+name = "TestBase"
+ns = "FEx.Agnostics.TestMocks"
+file = "TestBase.cs"
+
+[[classes]]
+name = "UniqueRandomGenerator"
+ns = "FEx.Agnostics.TestMocks.Helpers"
+file = "Helpers\\UniqueRandomGenerator.cs"
+
+[[classes]]
+name = "XUnitFExLoggerHelper"
+ns = "FEx.Agnostics.TestMocks.Logging"
+file = "Logging\\XUnitFExLoggerHelper.cs"
+static = true
+
+[[classes]]
+name = "XUnitLogger"
+ns = "FEx.Agnostics.TestMocks.Logging"
+base = "ILogger"
+file = "Logging\\XUnitLogger.cs"
+
+[[classes]]
+name = "XUnitLoggerProvider"
+ns = "FEx.Agnostics.TestMocks.Logging"
+base = "ILoggerProvider"
+file = "Logging\\XUnitLoggerProvider.cs"
+

@@ -64,6 +64,7 @@
     <Project Path="test/FEx.DependencyInjection.Tests/FEx.DependencyInjection.Tests.csproj" />
     <Project Path="test/FEx.Flurlx.Tests/FEx.Flurlx.Tests.csproj" />
     <Project Path="test/FEx.Logging.Tests/FEx.Logging.Tests.csproj" />
+    <Project Path="test/FEx.MVVM.Tests/FEx.MVVM.Tests.csproj" />
   </Folder>
   <Project Path="build/_build.csproj">
     <Build Solution="*|Any CPU" Project="false" />

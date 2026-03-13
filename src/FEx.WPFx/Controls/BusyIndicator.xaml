@@ -15,7 +15,7 @@
     <ContentControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/FlakEssentials.WpfEx;component/ConvertersDictionary.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/FEx.WPFx;component/ConvertersDictionary.xaml" />
                 <!--  you only need bring this resource in if you want to specify the circular style statically  -->
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.ProgressBar.xaml" />
             </ResourceDictionary.MergedDictionaries>

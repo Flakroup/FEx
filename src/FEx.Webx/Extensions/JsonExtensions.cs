@@ -16,7 +16,6 @@ public static class JsonExtensions
                                                               bool checkNetAvailability = false,
                                                               CancellationToken cancellationToken = default)
     {
-        //
         T res = default;
 
         if (!checkNetAvailability
@@ -26,13 +25,13 @@ public static class JsonExtensions
             {
                 using var client = new HttpClient();
                 using var response = await client.GetAsync(url, cancellationToken);
-                using var ensuredResponse = response.EnsureSuccessStatusCode();
+                response.EnsureSuccessStatusCode();
 #if NETSTANDARD2_0
-                using var jsonStream = await ensuredResponse.Content.ReadAsStreamAsync();
+                using var jsonStream = await response.Content.ReadAsStreamAsync();
 #elif NETSTANDARD2_1
-                await using var jsonStream = await ensuredResponse.Content.ReadAsStreamAsync();
+                await using var jsonStream = await response.Content.ReadAsStreamAsync();
 #else
-                await using var jsonStream = await ensuredResponse.Content.ReadAsStreamAsync(cancellationToken);
+                await using var jsonStream = await response.Content.ReadAsStreamAsync(cancellationToken);
 #endif
                 if (jsonStream is not null)
                     res = jsonStream.DeserializeFromStream<T>(settings);

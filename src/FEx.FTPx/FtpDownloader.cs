@@ -344,9 +344,9 @@ public static class FtpDownloader
                             {
                                 stream.Close();
                             }
-                            catch
+                            catch (Exception ex)
                             {
-                                //
+                                ex.HandleException();
                             }
 
                             newOffset--;
@@ -374,41 +374,33 @@ public static class FtpDownloader
                                     }
                                 }
                             }
-                            catch
+                            catch (Exception ex)
                             {
+                                ex.HandleException();
+
                                 try
                                 {
                                     stream?.Close();
                                 }
-                                catch
+                                catch (Exception closeEx)
                                 {
-                                    //
+                                    closeEx.HandleException();
                                 }
 
                                 return newOffset;
                             }
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        //ex.HandleException( "", false);
-                        //ViewModel.=ex.Message StatusInfo;
-                        //WebException webEx = ex as WebException;
-                        //if (webEx is not null)
-                        //{
-                        //    FtpWebResponse ftpResponse = (FtpWebResponse)webEx.Response;
-                        //    if (ftpResponse.StatusCode == FtpStatusCode.ActionAbortedLocalProcessingError)
-                        //    {
-
-                        //    }
-                        //}
+                        ex.HandleException();
                     }
 
                     stream?.Close();
                 }
-                catch
+                catch (Exception ex)
                 {
-                    //
+                    ex.HandleException();
                 }
 
                 viewModel?.PrgSet(newOffset - offset);

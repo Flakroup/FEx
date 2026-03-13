@@ -2,7 +2,6 @@
 using FEx.MVVM.Abstractions.Interfaces;
 using FluentFTP;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
@@ -80,7 +79,7 @@ public static class FtpCommon
         var fName = Path.GetFileName(ftpfilepath);
 
         if (fName != null
-            && (!fName.Contains("[") && !fName.Contains("]") || Debugger.IsAttached)) //todo bug causing timeout
+            && !fName.Contains("[") && !fName.Contains("]")) // TODO: FluentFTP#268 - brackets in filenames cause timeout
         {
             var target = Path.Combine(inputdirpath, fName);
             var client = await CreateAsync(ftphost, username, password, useProxy);

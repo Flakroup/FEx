@@ -235,8 +235,6 @@ public class TfsEnvironment : NotifyPropertyChanged
                     || Server.Uri != ServerUri
                     || !Server.HasAuthenticated
                     || UserName.IsNotNullOrWhiteSpace()
-                    &&
-                    UserName.IsNullOrWhiteSpace()
                     && GetDefaultUserName() != GetCurrentUserName()))
                 return await LoginAsync(username, password);
 

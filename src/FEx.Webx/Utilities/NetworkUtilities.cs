@@ -16,14 +16,14 @@ public static class NetworkUtilities
     /// Gets the local ip addresses.
     /// </summary>
     /// <returns></returns>
-    public static Dictionary<NetworkInterfaceType, HashSet<string>> GetAllLocalIPv4(bool ommitLoopbacks = true)
+    public static Dictionary<NetworkInterfaceType, HashSet<string>> GetAllLocalIPv4(bool omitLoopbacks = true)
     {
         var dictionary = new Dictionary<NetworkInterfaceType, HashSet<string>>();
 
         foreach (var item in NetworkInterface.GetAllNetworkInterfaces())
         {
             if (item.OperationalStatus == OperationalStatus.Up
-                && (!ommitLoopbacks || item.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                && (!omitLoopbacks || item.NetworkInterfaceType != NetworkInterfaceType.Loopback)
                 && item.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
             {
                 var ipAddresses = item.GetIPProperties()

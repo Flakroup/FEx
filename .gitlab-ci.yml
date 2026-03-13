@@ -14,6 +14,7 @@ variables:
   GIT_SUBMODULE_FORCE_HTTPS: "true"
   GIT_LFS_SKIP_SMUDGE: "1"
   GIT_TERMINAL_PROMPT: "0"
+  GCM_INTERACTIVE: "false"
 
   # Manual pipeline action selector (Run pipeline)
   ACTION:
@@ -26,27 +27,21 @@ variables:
       - "all"
     description: "Action to run (NUKE target: Compile/Test/Publish/Clean)"
 
-# Default settings for all jobs
+# Default settings for all jobs (Shell executor on JOHNNYABQPC)
 default:
-  image: mcr.microsoft.com/dotnet/sdk:10.0
   tags:
     - johnnyabqpc
-  hooks:
-    pre_get_sources_script:
-      - git config --global core.longPaths true
-      - git config --global protocol.file.allow always
   before_script:
     - echo "Checking environment..."
-    - git config --global protocol.file.allow always
-    - git config --global fetch.recurseSubmodules false
-    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/".insteadOf "https://gitlab.com/"
+    - git config --local protocol.file.allow always
+    - git config --local fetch.recurseSubmodules false
+    - git config --local url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/".insteadOf "https://gitlab.com/"
     - git submodule init
     - git submodule sync
     - git submodule update
     - git submodule foreach --recursive 'git submodule init && git submodule sync && git submodule update'
     - pwsh --version
     - dotnet --version
-    - dotnet workload install maui
     - echo "Environment ready"
 
 ######################################################################

@@ -1,6 +1,6 @@
-﻿using FEx.Abstractions.Models;
-using FEx.Basics.Extensions;
-using FEx.Extensions.Web;
+using FEx.Agnostics.Abstractions.Extensions.Web;
+using FEx.Agnostics.Abstractions.Models;
+using FEx.Core.Abstractions.Extensions;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Models;
 using System;
@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 namespace FEx.Downloader.Clients;
 
 /// <summary>
-///     An extended WebClient that i.e. will store authentication cookie information and persist it through subsequent
-///     requests.
+/// An extended WebClient that i.e. will store authentication cookie information and persist it through subsequent
+/// requests.
 /// </summary>
 public sealed class FlakWebClient : WebClient
 {
@@ -53,7 +53,7 @@ public sealed class FlakWebClient : WebClient
     }
 
     /// <summary>
-    ///     Returns list of cookies.
+    /// Returns list of cookies.
     /// </summary>
     /// <returns></returns>
     public List<Cookie> CookieMonster()
@@ -88,7 +88,7 @@ public sealed class FlakWebClient : WebClient
 
         if (filePath is not null)
         {
-            string folder = Path.GetDirectoryName(filePath);
+            var folder = Path.GetDirectoryName(filePath);
 
             if (folder is not null)
                 Directory.CreateDirectory(folder);
@@ -98,13 +98,14 @@ public sealed class FlakWebClient : WebClient
         }
     }
 
-    public async Task DownloadFileWithProgressAsync(string address, string filePath) => await DownloadFileWithProgressAsync(new Uri(address), filePath);
+    public async Task DownloadFileWithProgressAsync(string address, string filePath) =>
+        await DownloadFileWithProgressAsync(new Uri(address), filePath);
 
     protected override WebResponse GetWebResponse(WebRequest request)
     {
         try
         {
-            using WebResponse res = base.GetWebResponse(request);
+            using var res = base.GetWebResponse(request);
             ReadCookies(res);
             var response = (HttpWebResponse)res;
 
@@ -136,7 +137,7 @@ public sealed class FlakWebClient : WebClient
     {
         //try
         //{
-        WebResponse res = base.GetWebResponse(request, result);
+        var res = base.GetWebResponse(request, result);
         ReadCookies(res);
 
         if (request is not HttpWebRequest)
@@ -162,7 +163,7 @@ public sealed class FlakWebClient : WebClient
 
     protected override WebRequest GetWebRequest(Uri address)
     {
-        WebRequest request = base.GetWebRequest(address);
+        var request = base.GetWebRequest(address);
         var req = request as HttpWebRequest;
 
         if (req is not null)
@@ -199,7 +200,7 @@ public sealed class FlakWebClient : WebClient
         if (r is not HttpWebResponse response)
             return;
 
-        CookieCollection cookies = response.Cookies;
+        var cookies = response.Cookies;
         Pars.Cookies.Add(cookies);
     }
 }

@@ -1,7 +1,6 @@
-﻿using FEx.Common.Extensions;
-using FEx.Extensions.Base.Converters;
-using FEx.Extensions.Base.Enums;
-using FEx.Extensions.DateTimes;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Utilities;
 using Microsoft.Azure.Storage.DataMovement;
 using System;
 using System.Diagnostics;
@@ -61,13 +60,13 @@ public class ProgressState
         if (progress.BytesTransferred > 0
             && LoggedProgress != progress.BytesTransferred)
         {
-            long ms = Sw.ElapsedMilliseconds;
+            var ms = Sw.ElapsedMilliseconds;
             var prg = Convert.ToDouble(progress.BytesTransferred);
 
             if (prg == TotalSize)
                 Sw.Stop();
 
-            double percentage = Math.Floor(prg / TotalSize * 100);
+            var percentage = Math.Floor(prg / TotalSize * 100);
 
             if (LoggedPercentage + 1 <= percentage)
             {
@@ -86,7 +85,7 @@ public class ProgressState
 
     private string GetRemainingTime(double ms)
     {
-        double etr = (TotalSize - LoggedProgress) / LoggedProgress * ms;
+        var etr = (TotalSize - LoggedProgress) / LoggedProgress * ms;
 
         return TimeSpan.FromMilliseconds(etr).GetTime();
     }

@@ -1,7 +1,8 @@
-using Avalonia.ReactiveUI;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 using System;
 using System.Reactive.Disposables;
+using System.Reactive.Disposables.Fluent;
 
 namespace FEx.Avaloniax.Abstractions;
 
@@ -26,7 +27,7 @@ public abstract class FExAvaloniaReactiveUserControl<T> : ReactiveUserControl<T>
 
     protected void SubscribeToWhenActivated()
     {
-        IDisposable subscription = this.WhenActivated(disposables =>
+        var subscription = this.WhenActivated(disposables =>
         {
             OnActivated();
             Disposable.Create(OnDeactivated).DisposeWith(disposables);

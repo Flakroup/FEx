@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
@@ -6,15 +6,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="StrongInject.Extensions.DependencyInjection" Version="1.4.4" />
-	</ItemGroup>
-
-	<ItemGroup Condition="$(DefineConstants.Contains('NETSTANDARD'))">
-		<PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+		<PackageReference Condition="'$(TargetFramework)' != '$(TargetFrameworkId)'" Include="Microsoft.Win32.Registry" Version="5.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FEx.DI.Abstractions\FEx.DI.Abstractions.csproj" />
-		<ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+		<ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+		<ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+		<ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
-﻿using FEx.EFCore.Helpers;
-using FEx.EFCore.Interfaces;
+using FEx.EFCore.Helpers;
+using FEx.Sqlx.Abstractions;
 using StrongInject;
 
 namespace FEx.EFCore;

@@ -1,16 +1,13 @@
-﻿using FEx.Abstractions.Enums;
-using FEx.Abstractions.Flow;
-using FEx.Abstractions.Flow.Errors;
-using FEx.Abstractions.Interfaces;
-using FEx.Asyncx.Extensions;
+using FEx.Agnostics.Abstractions;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Flow;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Logging;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Agnostics.BaseObjects;
 using FEx.Asyncx.Helpers;
-using FEx.Basics.Abstractions;
-using FEx.Basics.Utilities;
-using FEx.Common.Extensions;
-using FEx.Extensions;
-using FEx.Extensions.Helpers;
-using FEx.Logging.Abstractions.Extensions;
-using Microsoft.Extensions.Logging;
+using FEx.Core.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -20,7 +17,7 @@ namespace FEx.Asyncx.Abstractions;
 
 public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitializable
 {
-    protected readonly ILogger _logger;
+    protected readonly IFExLogger _logger;
     protected readonly ConcurrentDictionary<string, IAsyncInitializable> _dependencies;
 
     protected Task _initializationTask;
@@ -39,16 +36,16 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
     public string TypeFullName { get; protected set; }
 
     /// <summary>
-    ///     If <c>true</c> doesn't wait for dependencies initialization
+    /// If <c>true</c> doesn't wait for dependencies initialization
     /// </summary>
     protected bool SkipDependenciesInitialization { get; set; }
 
     protected AsyncInitializable(params IAsyncInitializable[] dependencies)
     {
-        _logger = this.GetLogger();
+        _logger = FExStaticLogger.Instance;
         _initializationSemaphore = new();
         _taskSemaphore = new();
-        Type instanceType = GetType();
+        var instanceType = GetType();
         TypeName = instanceType.Name;
         TypeFullName = instanceType.FullName;
         _dependencies = new();
@@ -64,7 +61,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
         try
         {
-            _initializationTask ??= StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InitializeCoreAsync);
+            _initializationTask ??= AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeCoreAsync);
         }
         finally
         {
@@ -93,7 +90,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
         return;
 
-        Task InitFuncAsync() => StaticAsyncHelper.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
+        Task InitFuncAsync() => AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
     }
 
     protected static async Task<Result<ExceptionError>> SafeInitializeAsync(IAsyncInitializable dependency)
@@ -115,14 +112,13 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         if (!SkipDependenciesInitialization)
             await InitializeDependenciesAsync();
 
-        _logger.LogDebug($"Initializing {TypeName}");
+        _logger.Debug($"Initializing {TypeName}");
     }
 
     protected virtual async Task InitializeDependenciesAsync()
     {
-        Result<ExceptionError>[] results = await _dependencies.Values
-            .Where(static dependency => !dependency.IsInitialized)
-            .RunWithWhenAllTasksAsync(SafeInitializeAsync, AsyncMode.ThreadPool);
+        var results = await _dependencies.Values.Where(static dependency => !dependency.IsInitialized)
+            .WithWhenAllTasksAsync(SafeInitializeAsync, AsyncMode.ThreadPool);
 
         if (!results.Any())
             return;
@@ -143,7 +139,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         {
             if (IsInitialized)
             {
-                _logger.LogWarning($"{TypeName} has been already initialized");
+                _logger.Warning($"{TypeName} has been already initialized");
 
                 return;
             }
@@ -154,11 +150,11 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
             IsInitialized = true;
 
-            _logger.LogDebug($"{TypeName} initialized");
+            _logger.Debug($"{TypeName} initialized");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex);
+            _logger.Error(ex);
 
             throw;
         }
@@ -179,12 +175,15 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
     protected void AddDependencies(params IAsyncInitializable[] dependencies)
     {
-        foreach (IAsyncInitializable dependency in dependencies)
+        if (dependencies is null)
+            return;
+
+        foreach (var dependency in dependencies)
         {
             dependency.Guard(nameof(dependency));
 
             if (!_dependencies.TryAdd(dependency.TypeFullName, dependency))
-                _logger.LogWarning($"{dependency.TypeFullName} is already referenced in {TypeFullName}");
+                _logger.Warning($"{dependency.TypeFullName} is already referenced in {TypeFullName}");
         }
     }
 

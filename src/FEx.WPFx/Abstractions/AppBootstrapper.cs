@@ -1,10 +1,10 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Asyncx.Helpers;
-using FEx.Basics.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Common.Abstractions.Interfaces;
-using FEx.Common.Utilities;
-using FEx.DependencyInjection;
-using FEx.DI.Abstractions;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Utilities;
+using FEx.DependencyInjection.Abstractions;
 using FEx.MVVM;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.WPFx.Abstractions.Interfaces;
@@ -14,7 +14,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -23,11 +22,11 @@ namespace FEx.WPFx.Abstractions;
 public abstract class AppBootstrapper<TContainer> : Application
     where TContainer : class, IFExContainer, IDisposable, new()
 {
-    protected readonly TContainer _container;
     protected readonly IAppInfoProvider _appInfoProvider;
     protected readonly IExceptionHandler _exceptionHandler;
     protected readonly IStatusService _statusService;
     protected readonly IAppConfig _appConfig;
+    protected readonly TContainer _container;
 
     protected DirectoryInfo AppData => _appInfoProvider.AppData;
     protected DirectoryInfo UserData => _appInfoProvider.UserData;
@@ -43,7 +42,7 @@ public abstract class AppBootstrapper<TContainer> : Application
 
             SetNetwork();
 
-            _container = FExServiceProvider.Initialize<TContainer, FExStrongInjectServiceProvider>();
+            _container = FExServiceProvider.InitializeAsync<TContainer>().GetAwaiter().GetResult();
             _appInfoProvider = FExServiceProvider.Get<IAppInfoProvider>();
             _appConfig = FExServiceProvider.Get<IAppConfig>();
             _exceptionHandler = FExServiceProvider.Get<IExceptionHandler>();
@@ -59,62 +58,6 @@ public abstract class AppBootstrapper<TContainer> : Application
 
     protected abstract void ComponentInitialize();
     protected abstract void OnActivation();
-
-    /// <summary>
-    ///     Raises the <see cref="E:System.Windows.Application.Startup" /> event.
-    /// </summary>
-    /// <param name="e">A <see cref="T:System.Windows.StartupEventArgs" /> that contains the event data.</param>
-    protected override void OnStartup(StartupEventArgs e)
-    {
-        try
-        {
-            EnsureSingleInstance();
-
-            using (_ = LogToHub("Initializing app"))
-            {
-                OnConstruction(e);
-                BeforeInitializationCheck();
-                ComponentInitialize();
-            }
-
-            using (_ = LogToHub("Preparing app"))
-                BeforeStartup(e);
-
-            using (_ = LogToHub("Initializing app components"))
-            {
-                ConfigureServiceProvider();
-
-                AfterServicesContainerBuild();
-            }
-
-            _ = LogToHub("Showing window");
-            base.OnStartup(e);
-
-            using (_ = LogToHub("Finalizing startup"))
-                AfterStartup(e);
-        }
-        catch (Exception ex)
-        {
-            HandleException(ex);
-        }
-        finally
-        {
-            ExitIfInitializationHasFailed();
-        }
-    }
-
-    protected override void OnExit(ExitEventArgs e)
-    {
-        FExMvvm.MessagePopupService.AppIsClosing = true;
-        Log.CloseAndFlush();
-        base.OnExit(e);
-    }
-
-    protected virtual void ConfigureServiceProvider() =>
-        JoinableAsyncHelper.AwaitWithoutDeadlock(ConfigureServiceProviderAsync);//todo move to separate class
-
-    protected virtual async Task ConfigureServiceProviderAsync() =>
-        await FExServiceProvider.InitializeAsync<FExMicrosoftDIServiceProvider>();
 
     protected virtual void AfterServicesContainerBuild()
     {
@@ -184,8 +127,8 @@ public abstract class AppBootstrapper<TContainer> : Application
     {
         using (_ = LogToHub("Checking duplicated instances"))
         {
-            int[] otherInstances = AppUtility.GetOtherInstances();
-            bool isSingleInstance = otherInstances.Length == 0;
+            var otherInstances = AppUtility.GetOtherInstances();
+            var isSingleInstance = otherInstances.Length == 0;
 
             if (isSingleInstance)
                 return;
@@ -197,12 +140,58 @@ public abstract class AppBootstrapper<TContainer> : Application
                 == MessageResult.No)
                 ExitApp(0);
 
-            foreach (int pid in otherInstances)
+            foreach (var pid in otherInstances)
             {
                 using var p = Process.GetProcessById(pid);
                 p.Kill();
             }
         }
+    }
+
+    /// <summary>
+    /// Raises the <see cref="E:System.Windows.Application.Startup" /> event.
+    /// </summary>
+    /// <param name="e">A <see cref="StartupEventArgs" /> that contains the event data.</param>
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        try
+        {
+            EnsureSingleInstance();
+
+            using (_ = LogToHub("Initializing app"))
+            {
+                OnConstruction(e);
+                BeforeInitializationCheck();
+                ComponentInitialize();
+            }
+
+            using (_ = LogToHub("Preparing app"))
+                BeforeStartup(e);
+
+            using (_ = LogToHub("Initializing app components"))
+                AfterServicesContainerBuild();
+
+            _ = LogToHub("Showing window");
+            base.OnStartup(e);
+
+            using (_ = LogToHub("Finalizing startup"))
+                AfterStartup(e);
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+        finally
+        {
+            ExitIfInitializationHasFailed();
+        }
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        FExMvvm.MessagePopupService.AppIsClosing = true;
+        Log.CloseAndFlush();
+        base.OnExit(e);
     }
 
     protected DisposableAction LogToHub(string status) => _statusService.Log(status);

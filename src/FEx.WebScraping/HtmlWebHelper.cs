@@ -1,4 +1,4 @@
-﻿using FEx.Extensions.Helpers;
+using FEx.Agnostics.Abstractions;
 using FEx.WebScraping.Abstractions.Interfaces;
 using HtmlAgilityPack;
 using System;
@@ -25,8 +25,8 @@ public class HtmlWebHelper : IWebScraper
                                       NetworkCredential credential = null,
                                       CancellationToken cancellationToken = default)
     {
-        (HtmlWeb web, Task<HtmlDocument> docTask) = Load(pageLink, configWeb, encoding, credential, cancellationToken);
-        HtmlDocument doc = await docTask;
+        var (web, docTask) = Load(pageLink, configWeb, encoding, credential, cancellationToken);
+        var doc = await docTask;
 
         return action(web.ResponseUri, web, doc);
     }
@@ -40,16 +40,16 @@ public class HtmlWebHelper : IWebScraper
         var web = new HtmlWeb();
         configWeb?.Invoke(web);
 
-        Task<HtmlDocument> task = StaticAsyncHelper
-            .ExecuteTaskOnThreadPoolAsync(() => LoadHtmlDocumentAsync(web, pageLink, encoding, credential, cancellationToken));
+        var task = AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
+            LoadHtmlDocumentAsync(web, pageLink, encoding, credential, cancellationToken));
 
         return (web, task);
     }
 
     public async Task<HtmlDocument> LoadHtmlDocumentAsync(HtmlWeb web,
-                                              Uri pageLink,
-                                              Encoding encoding = null,
-                                              NetworkCredential credential = null,
-                                              CancellationToken cancellationToken = default) =>
+                                                          Uri pageLink,
+                                                          Encoding encoding = null,
+                                                          NetworkCredential credential = null,
+                                                          CancellationToken cancellationToken = default) =>
         await web.LoadFromWebAsync(pageLink, encoding, credential, cancellationToken);
 }

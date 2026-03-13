@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
@@ -9,7 +9,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+	  <ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

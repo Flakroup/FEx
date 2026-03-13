@@ -1,6 +1,6 @@
-﻿using FEx.Basics.Extensions;
-using FEx.Common.Extensions;
-using FEx.Common.Utilities;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Core.Abstractions.Extensions;
 using FEx.EFCore.Configuration;
 using FEx.EFCore.Interfaces;
 using Microsoft.Data.SqlClient;
@@ -12,11 +12,12 @@ namespace FEx.EFCore.Helpers;
 
 public static class SQLConnectionHelper
 {
-    public static async Task<bool> CheckDbConnectionAsync(string connectionString, CancellationToken cancellationToken = default)
+    public static async Task<bool> CheckDbConnectionAsync(string connectionString,
+                                                          CancellationToken cancellationToken = default)
     {
         try
         {
-#if NETSTANDARD
+#if NETSTANDARD2_0
             using var connection = new SqlConnection(connectionString);
 #else
             await using var connection = new SqlConnection(connectionString);
@@ -50,18 +51,19 @@ public static class SQLConnectionHelper
         }
     }
 
-    public static async Task<bool> CheckMasterDbConnectionAsync(IFExDbConfig config, CancellationToken cancellationToken = default)
+    public static async Task<bool> CheckMasterDbConnectionAsync(IFExDbConfig config,
+                                                                CancellationToken cancellationToken = default)
     {
-        FExDbConfig testConfig = GetMasterDbConfig(config);
-        string testConnectionString = GetConnectionString(testConfig);
+        var testConfig = GetMasterDbConfig(config);
+        var testConnectionString = GetConnectionString(testConfig);
 
         return await CheckDbConnectionAsync(testConnectionString, cancellationToken);
     }
 
     public static bool CheckMasterDbConnection(IFExDbConfig config)
     {
-        FExDbConfig testConfig = GetMasterDbConfig(config);
-        string testConnectionString = GetConnectionString(testConfig);
+        var testConfig = GetMasterDbConfig(config);
+        var testConnectionString = GetConnectionString(testConfig);
 
         return CheckDbConnection(testConnectionString);
     }
@@ -80,7 +82,7 @@ public static class SQLConnectionHelper
         if (config.Password is not null)
             sB.Password = config.Password;
 
-        string host = config.SqlInstance.Split('\\')[0];
+        var host = config.SqlInstance.Split('\\')[0];
 
         if ((host.CompareOrdinalIgnoreCase("localhost") || host.CompareOrdinalIgnoreCase(Environment.MachineName))
             && PlatformInfoProvider.IsWindows)

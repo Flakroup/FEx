@@ -1,0 +1,48 @@
+[project]
+name = "FEx.MSBuildx"
+path = "rc\\MSBuildx"
+
+[[classes]]
+name = "DiffResult"
+ns = "FEx.MSBuildx"
+file = "DiffResult.cs"
+
+[[classes]]
+name = "MSProject"
+ns = "FEx.MSBuildx"
+file = "MSProject.cs"
+
+[[classes]]
+name = "MSProjectItem"
+ns = "FEx.MSBuildx"
+file = "MSProjectItem.cs"
+
+[[classes]]
+name = "MSProjectNuGetInstallation"
+ns = "FEx.MSBuildx"
+base = "NuGetPackageInstallation"
+file = "MSProjectNuGetInstallation.cs"
+
+[[classes]]
+name = "MSSolution"
+ns = "FEx.MSBuildx"
+base = "AsyncInitializable"
+file = "MSSolution.cs"
+
+[[enums]]
+name = "ProjectItemType"
+ns = "FEx.MSBuildx"
+file = "ProjectItemType.cs"
+
+[[classes]]
+name = "MSBuildExtensions"
+ns = "FEx.MSBuildx.Extensions"
+file = "Extensions\\MSBuildExtensions.cs"
+static = true
+
+[[extensions]]
+name = "FromFile"
+sig = "MSProject FromFile(this ProjectInSolution projectInSolution, string solutionPackagesDir = null)"
+returns = "MSProject"
+file = "Extensions\\MSBuildExtensions.cs"
+

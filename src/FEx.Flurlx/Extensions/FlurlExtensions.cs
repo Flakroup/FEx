@@ -1,9 +1,8 @@
-﻿using Flurl;
+using Flurl;
 using Flurl.Http;
 using Flurl.Util;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Headers;
 
 namespace FEx.Flurlx.Extensions;
 
@@ -22,7 +21,7 @@ public static class FlurlExtensions
         {
             var toReplace = new Dictionary<string, string>();
 
-            foreach ((string name, object value) in url.QueryParams)
+            foreach (var (name, value) in url.QueryParams)
             {
                 var b = value as bool?;
 
@@ -30,7 +29,7 @@ public static class FlurlExtensions
                     toReplace.Add(name, b.Value.ToString().ToLower());
             }
 
-            foreach (KeyValuePair<string, string> v in toReplace)
+            foreach (var v in toReplace)
                 url.QueryParams.AddOrReplace(v.Key, v.Value);
         }
 
@@ -39,7 +38,7 @@ public static class FlurlExtensions
 
     public static HttpContent StripCharsetQuotes(this HttpContent content)
     {
-        MediaTypeHeaderValue contentType = content?.Headers?.ContentType;
+        var contentType = content?.Headers?.ContentType;
 
         if (contentType?.CharSet is not null)
             contentType.CharSet = contentType.CharSet.StripQuotes();

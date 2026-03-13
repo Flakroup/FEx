@@ -1,4 +1,4 @@
-﻿using FEx.Extensions.Numericals;
+using FEx.Agnostics.Abstractions.Extensions.Numericals;
 using Newtonsoft.Json;
 using System;
 
@@ -15,7 +15,7 @@ public class ParseStringToDoubleConverter : JsonConverter
         if (reader.TokenType == JsonToken.Null)
             return null;
 
-        string value = serializer.Deserialize<string>(reader);
+        var value = serializer.Deserialize<string>(reader);
 
         return value.ToDouble();
     }

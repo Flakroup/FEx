@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -9,7 +9,7 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 {
-    private static readonly Size FallbackSize = new(48, 48);
+    private static readonly Size _fallbackSize = new(48, 48);
 
     private readonly IItemContainerManager _itemContainerManager;
     private readonly IChildrenCollection _childrenCollection;
@@ -67,20 +67,20 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         if (invalidateScrollInfo)
             InvalidateScrollInfo();
 
-        double desiredWidth = Math.Min(GetWidth(availableSize), GetWidth(Extent));
-        double desiredHeight = Math.Min(GetHeight(availableSize), GetHeight(Extent));
+        var desiredWidth = Math.Min(GetWidth(availableSize), GetWidth(Extent));
+        var desiredHeight = Math.Min(GetHeight(availableSize), GetHeight(Extent));
 
         return CreateSize(desiredWidth, desiredHeight);
     }
 
     public Size OnArrange(Size finalSize, bool hierarchical)
     {
-        foreach (IItemContainerInfo cachedContainer in _itemContainerManager.CachedContainers)
+        foreach (var cachedContainer in _itemContainerManager.CachedContainers)
             cachedContainer.Arrange(new(0, 0, 0, 0));
 
-        double x = _startItemOffsetX + GetX(ScrollOffset);
+        var x = _startItemOffsetX + GetX(ScrollOffset);
 
-        double y = hierarchical
+        var y = hierarchical
             ? _startItemOffsetY
             : _startItemOffsetY - GetY(ScrollOffset);
 
@@ -88,12 +88,12 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         var rowChilds = new List<IItemContainerInfo>();
         var childSizes = new List<Size>();
 
-        foreach (IItemContainerInfo child in _itemContainerManager.RealizedContainers.OrderBy(container =>
+        foreach (var child in _itemContainerManager.RealizedContainers.OrderBy(container =>
                      _itemContainerManager.FindItemIndexOfContainer(container)))
         {
-            Size? upfrontKnownItemSize = GetUpfrontKnownItemSize(child.Item);
+            var upfrontKnownItemSize = GetUpfrontKnownItemSize(child.Item);
 
-            Size childSize = upfrontKnownItemSize ?? _itemSizesCache[child.Item];
+            var childSize = upfrontKnownItemSize ?? _itemSizesCache[child.Item];
 
             if (x != 0
                 && x + GetWidth(childSize) > GetWidth(finalSize))
@@ -124,13 +124,13 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
             return FixedItemSize;
 
         if (!AllowDifferentSizedItems)
-            return _sizeOfFirstItem ?? FallbackSize;
+            return _sizeOfFirstItem ?? _fallbackSize;
 
         if (_averageItemSizeCache is null
             && _itemSizesCache.Values.Any())
             _averageItemSizeCache = CalculateAverageSize(_itemSizesCache.Values);
 
-        return _averageItemSizeCache ?? FallbackSize;
+        return _averageItemSizeCache ?? _fallbackSize;
     }
 
     public void BringIndexIntoView(int itemIndex)
@@ -140,7 +140,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
             throw new ArgumentOutOfRangeException(nameof(itemIndex),
                 $"The argument {nameof(itemIndex)} must be >= 0 and < the count of items.");
 
-        Point itemOffset = FindItemOffset(itemIndex);
+        var itemOffset = FindItemOffset(itemIndex);
 
         if (GetY(itemOffset) < GetY(ScrollOffset)
             || GetY(itemOffset) + GetHeight(GetAssumedItemSize(_items[itemIndex])) > GetY(ScrollOffset))
@@ -164,11 +164,11 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     {
         if (e.Action is NotifyCollectionChangedAction.Remove or NotifyCollectionChangedAction.Replace)
         {
-            foreach (object item in _items.Except(_itemContainerManager.Items))
+            foreach (var item in _items.Except(_itemContainerManager.Items))
                 _itemSizesCache.Remove(item);
 
             if (!_itemContainerManager.IsRecycling)
-                foreach (IItemContainerInfo container in e.RemovedContainers)
+                foreach (var container in e.RemovedContainers)
                     _childrenCollection.RemoveChild(container);
         }
         else if (e.Action == NotifyCollectionChangedAction.Reset)
@@ -189,7 +189,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
         for (var i = 0; i <= itemIndex; i++)
         {
-            Size itemSize = GetAssumedItemSize(_items[i]);
+            var itemSize = GetAssumedItemSize(_items[i]);
 
             if (x + GetWidth(itemSize) > GetWidth(ViewportSize))
             {
@@ -210,7 +210,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
     private void UpdateViewport(Size availableSize, ref bool invalidateScrollInfo)
     {
-        bool viewportChanged = availableSize != ViewportSize;
+        var viewportChanged = availableSize != ViewportSize;
 
         ViewportSize = availableSize;
 
@@ -220,7 +220,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
     private void FindStartIndexAndOffset()
     {
-        double startOffsetY = DetermineStartOffsetY();
+        var startOffsetY = DetermineStartOffsetY();
 
         if (startOffsetY <= 0)
         {
@@ -236,9 +236,9 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
         var itemIndex = 0;
 
-        foreach (object item in _items) // foreach seems to be faster than a for loop
+        foreach (var item in _items) // foreach seems to be faster than a for loop
         {
-            Size itemSize = GetAssumedItemSize(item);
+            var itemSize = GetAssumedItemSize(item);
 
             if (x + GetWidth(itemSize) > GetWidth(ViewportSize)
                 && x != 0)
@@ -257,7 +257,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
                 if (CacheLengthUnit == VirtualizationCacheLengthUnit.Item)
                 {
                     _startItemIndex = Math.Max(indexOfFirstRowItem - (int)CacheLength.CacheBeforeViewport, 0);
-                    Point itemOffset = FindItemOffset(_startItemIndex);
+                    var itemOffset = FindItemOffset(_startItemIndex);
                     _startItemOffsetX = GetX(itemOffset);
                     _startItemOffsetY = GetY(itemOffset);
                 }
@@ -287,12 +287,12 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
             return;
         }
 
-        int newEndItemIndex = _items.Count - 1;
+        var newEndItemIndex = _items.Count - 1;
 
-        double endOffsetY = DetermineEndOffsetY();
+        var endOffsetY = DetermineEndOffsetY();
 
-        double x = _startItemOffsetX;
-        double y = _startItemOffsetY;
+        var x = _startItemOffsetX;
+        var y = _startItemOffsetY;
         double rowHeight = 0;
 
         _knownExtendX = 0;
@@ -303,23 +303,22 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
                 && itemIndex == 0)
                 _sizeOfFirstItem = null;
 
-            object item = _items[itemIndex];
+            var item = _items[itemIndex];
 
-            IItemContainerInfo container =
-                _itemContainerManager.Realize(itemIndex, out bool _, out bool isNewContainer);
+            var container = _itemContainerManager.Realize(itemIndex, out var _, out var isNewContainer);
 
             if (isNewContainer)
                 _childrenCollection.AddChild(container);
 
-            Size? upfrontKnownItemSize = GetUpfrontKnownItemSize(item);
+            var upfrontKnownItemSize = GetUpfrontKnownItemSize(item);
 
             if (!container.IsMeasureValid)
             {
-                Size availableSize = upfrontKnownItemSize ?? new Size(double.PositiveInfinity, double.PositiveInfinity);
+                var availableSize = upfrontKnownItemSize ?? new Size(double.PositiveInfinity, double.PositiveInfinity);
                 container.Measure(availableSize);
             }
 
-            Size containerSize = DetermineContainerSize(container, upfrontKnownItemSize);
+            var containerSize = DetermineContainerSize(container, upfrontKnownItemSize);
 
             if (!AllowDifferentSizedItems
                 && _sizeOfFirstItem == null)
@@ -380,9 +379,9 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     {
         var containers = _itemContainerManager.RealizedContainers.ToList();
 
-        foreach (IItemContainerInfo container in containers)
+        foreach (var container in containers)
         {
-            int itemIndex = _itemContainerManager.FindItemIndexOfContainer(container);
+            var itemIndex = _itemContainerManager.FindItemIndexOfContainer(container);
 
             if (itemIndex < _startItemIndex)
                 Virtualize(container);
@@ -393,9 +392,9 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     {
         var containers = _itemContainerManager.RealizedContainers.ToList();
 
-        foreach (IItemContainerInfo container in containers)
+        foreach (var container in containers)
         {
-            int itemIndex = _itemContainerManager.FindItemIndexOfContainer(container);
+            var itemIndex = _itemContainerManager.FindItemIndexOfContainer(container);
 
             if (itemIndex > _endItemIndex)
                 Virtualize(container);
@@ -416,17 +415,17 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         {
             extent = FixedItemSize != Size.Empty
                 ? CalculateExtentForSameSizeItems(FixedItemSize)
-                : CalculateExtentForSameSizeItems(_sizeOfFirstItem ?? FallbackSize);
+                : CalculateExtentForSameSizeItems(_sizeOfFirstItem ?? _fallbackSize);
         }
         else
         {
             if (_itemsInKnownExtend == 0)
             {
-                extent = CalculateExtentForSameSizeItems(FallbackSize);
+                extent = CalculateExtentForSameSizeItems(_fallbackSize);
             }
             else
             {
-                double estimatedExtend = (double)_items.Count / _itemsInKnownExtend * _knownExtendY;
+                var estimatedExtend = (double)_items.Count / _itemsInKnownExtend * _knownExtendY;
                 extent = CreateSize(_knownExtendX, estimatedExtend);
             }
         }
@@ -447,7 +446,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     private Size CalculateExtentForSameSizeItems(Size itemSize)
     {
         var itemsPerRow = (int)Math.Max(1, Math.Floor(GetWidth(ViewportSize) / GetWidth(itemSize)));
-        double extentY = Math.Ceiling((double)_items.Count / itemsPerRow) * GetHeight(itemSize);
+        var extentY = Math.Ceiling((double)_items.Count / itemsPerRow) * GetHeight(itemSize);
 
         return CreateSize(_knownExtendX, extentY);
     }
@@ -487,7 +486,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
         if (ItemSizeProvider != null)
         {
-            Size size = ItemSizeProvider.GetSizeForItem(item);
+            var size = ItemSizeProvider.GetSizeForItem(item);
             _itemSizesCache[item] = size;
 
             return size;
@@ -501,7 +500,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         if (GetUpfrontKnownItemSize(item) is Size upfrontKnownItemSize)
             return upfrontKnownItemSize;
 
-        if (_itemSizesCache.TryGetValue(item, out Size cachedItemSize))
+        if (_itemSizesCache.TryGetValue(item, out var cachedItemSize))
             return cachedItemSize;
 
         return GetAverageItemSize();
@@ -519,8 +518,8 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
         if (StretchItems) // TODO: handle MaxWidth/MaxHeight and apply spacing
         {
-            double summedUpChildWidth = childSizes.Sum(GetWidth);
-            double unusedWidth = rowWidth - summedUpChildWidth;
+            var summedUpChildWidth = childSizes.Sum(GetWidth);
+            var unusedWidth = rowWidth - summedUpChildWidth;
             extraWidth = unusedWidth / children.Count;
         }
         else
@@ -528,14 +527,14 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
             CalculateRowSpacing(rowWidth, children, childSizes, out innerSpacing, out outerSpacing);
         }
 
-        double x = hierarchical
+        var x = hierarchical
             ? outerSpacing
             : -GetX(ScrollOffset) + outerSpacing;
 
         for (var i = 0; i < children.Count; i++)
         {
-            IItemContainerInfo child = children[i];
-            Size childSize = childSizes[i];
+            var child = children[i];
+            var childSize = childSizes[i];
             child.Arrange(CreateRect(x, y, GetWidth(childSize) + extraWidth, GetHeight(childSize)));
             x += GetWidth(childSize) + extraWidth + innerSpacing;
         }
@@ -561,7 +560,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
             summedUpChildWidth = childCount * GetWidth(_sizeOfFirstItem.Value);
         }
 
-        double unusedWidth = Math.Max(0, rowWidth - summedUpChildWidth);
+        var unusedWidth = Math.Max(0, rowWidth - summedUpChildWidth);
 
         switch (SpacingMode)
         {

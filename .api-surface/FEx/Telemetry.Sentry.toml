@@ -1,0 +1,44 @@
+[project]
+name = "FEx.Telemetry.Sentry"
+path = "rc\\FEx.Telemetry.Sentry"
+
+[[classes]]
+name = "FExSentryModule"
+ns = "FEx.Telemetry.Sentry"
+base = "FExTelemetryModule"
+file = "FExSentryModule.cs"
+
+[[classes]]
+name = "FExSentryx"
+ns = "FEx.Telemetry.Sentry"
+base = "InitializeModule<ISentryModule, IServiceCollection>"
+file = "FExSentryx.cs"
+
+[[classes]]
+name = "SentrySinkConfigurator"
+ns = "FEx.Telemetry.Sentry"
+base = "SentrySinkConfiguratorBase"
+file = "SentrySinkConfigurator.cs"
+
+[[interfaces]]
+name = "ISentryModule"
+ns = "FEx.Telemetry.Sentry.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\ISentryModule.cs"
+
+[[interfaces]]
+name = "ISentryService"
+ns = "FEx.Telemetry.Sentry.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\ISentryService.cs"
+
+[[classes]]
+name = "SentryConfigBase"
+ns = "FEx.Telemetry.Sentry.Configuration"
+base = "ISentryConfig"
+file = "Configuration\\SentryConfigBase.cs"
+
+[[classes]]
+name = "SentryService"
+ns = "FEx.Telemetry.Sentry.Services"
+base = "ISentryService"
+file = "Services\\SentryService.cs"
+

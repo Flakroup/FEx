@@ -1,4 +1,4 @@
-﻿using StrongInject;
+using StrongInject;
 
 namespace FEx.Platforms.Abstractions.Interfaces;
 

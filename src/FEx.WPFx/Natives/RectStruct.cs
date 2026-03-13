@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 
 namespace FEx.WPFx.Natives;
@@ -30,7 +30,7 @@ public struct RectStruct
     public int Height => bottom - top;
 
     /// <summary>
-    ///     Win32
+    /// Win32
     /// </summary>
     /// <param name="left">The left.</param>
     /// <param name="top">The top.</param>
@@ -45,7 +45,7 @@ public struct RectStruct
     }
 
     /// <summary>
-    ///     Win32
+    /// Win32
     /// </summary>
     /// <param name="rcSrc">The rc source.</param>
     public RectStruct(RectStruct rcSrc)
@@ -68,11 +68,11 @@ public struct RectStruct
             : "RECT { left : " + left + " / top : " + top + " / right : " + right + " / bottom : " + bottom + " }";
 
     /// <summary>
-    ///     Determine if 2 RECT are equal (deep compare)
+    /// Determine if 2 RECT are equal (deep compare)
     /// </summary>
     /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
     /// <returns>
-    ///     <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+    /// <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
     /// </returns>
     public override bool Equals(object obj)
     {
@@ -86,12 +86,12 @@ public struct RectStruct
         left.GetHashCode() + top.GetHashCode() + right.GetHashCode() + bottom.GetHashCode();
 
     /// <summary>
-    ///     Determine if 2 RECT are equal (deep compare)
+    /// Determine if 2 RECT are equal (deep compare)
     /// </summary>
     /// <param name="rect1">The rect1.</param>
     /// <param name="rect2">The rect2.</param>
     /// <returns>
-    ///     The result of the operator.
+    /// The result of the operator.
     /// </returns>
     public static bool operator ==(RectStruct rect1, RectStruct rect2) =>
         rect1.left == rect2.left
@@ -100,12 +100,12 @@ public struct RectStruct
         && rect1.bottom == rect2.bottom;
 
     /// <summary>
-    ///     Determine if 2 RECT are different(deep compare)
+    /// Determine if 2 RECT are different(deep compare)
     /// </summary>
     /// <param name="rect1">The rect1.</param>
     /// <param name="rect2">The rect2.</param>
     /// <returns>
-    ///     The result of the operator.
+    /// The result of the operator.
     /// </returns>
     public static bool operator !=(RectStruct rect1, RectStruct rect2) => !(rect1 == rect2);
 }

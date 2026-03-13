@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,13 +9,13 @@ using System.Threading;
 namespace FEx.WPFx.WpfBindingErrors;
 
 /// <summary>
-///     Converts WPF binding error into BindingException
+/// Converts WPF binding error into BindingException
 /// </summary>
 /// <remarks>
-///     WPF Binding Error Testing
-///     Copyright 2013 Benoit Blanchon
-///     This has been inpired by
-///     http://tech.pro/tutorial/940/wpf-snippet-detecting-binding-errors
+/// WPF Binding Error Testing
+/// Copyright 2013 Benoit Blanchon
+/// This has been inpired by
+/// http://tech.pro/tutorial/940/wpf-snippet-detecting-binding-errors
 /// </remarks>
 public static class BindingExceptionThrower
 {
@@ -30,10 +30,10 @@ public static class BindingExceptionThrower
     };
 
     /// <summary>
-    ///     Gets a value indicating whether this instance is attached.
+    /// Gets a value indicating whether this instance is attached.
     /// </summary>
     /// <value>
-    ///     <c>true</c> if this instance is attached; otherwise, <c>false</c>.
+    /// <c>true</c> if this instance is attached; otherwise, <c>false</c>.
     /// </value>
     public static bool IsAttached => _errorListener is not null;
 
@@ -44,7 +44,7 @@ public static class BindingExceptionThrower
     private static HashSet<BindingException> BindingErrorsCache { get; } = GetCachedBindingErrors();
 
     /// <summary>
-    ///     Start listening WPF binding error
+    /// Start listening WPF binding error
     /// </summary>
     public static void Attach(string bindingErrorsCacheDirectory)
     {
@@ -56,7 +56,7 @@ public static class BindingExceptionThrower
     }
 
     /// <summary>
-    ///     Stop listening WPF binding error
+    /// Stop listening WPF binding error
     /// </summary>
     public static void Detach()
     {
@@ -66,7 +66,7 @@ public static class BindingExceptionThrower
     }
 
     /// <summary>
-    ///     Called when [error catched].
+    /// Called when [error catched].
     /// </summary>
     /// <param name="eventCache">The event cache.</param>
     /// <param name="source">The source.</param>
@@ -88,7 +88,7 @@ public static class BindingExceptionThrower
             if (!BindingErrorsCache.Any(x => x.Equals(exception)))
             {
                 BindingErrorsCache.Add(exception);
-                string json = JsonConvert.SerializeObject(BindingErrorsCache, Formatting.Indented, DefaultSettings);
+                var json = JsonConvert.SerializeObject(BindingErrorsCache, Formatting.Indented, DefaultSettings);
                 File.WriteAllText(BindingErrorsCacheFile, json);
                 shouldBeThrown = true;
             }
@@ -103,7 +103,7 @@ public static class BindingExceptionThrower
     private static HashSet<BindingException> GetCachedBindingErrors()
     {
         var result = new HashSet<BindingException>();
-        string dir = Path.GetDirectoryName(BindingErrorsCacheFile);
+        var dir = Path.GetDirectoryName(BindingErrorsCacheFile);
 
         if (dir is not null)
         {
@@ -111,8 +111,8 @@ public static class BindingExceptionThrower
 
             if (File.Exists(BindingErrorsCacheFile))
             {
-                string json = File.ReadAllText(BindingErrorsCacheFile);
-                HashSet<BindingException> obj = JsonConvert.DeserializeObject<HashSet<BindingException>>(json);
+                var json = File.ReadAllText(BindingErrorsCacheFile);
+                var obj = JsonConvert.DeserializeObject<HashSet<BindingException>>(json);
 
                 if (obj is not null)
                     result = obj;

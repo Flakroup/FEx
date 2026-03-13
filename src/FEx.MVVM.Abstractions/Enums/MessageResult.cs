@@ -1,4 +1,4 @@
-﻿namespace FEx.MVVM.Abstractions.Enums;
+namespace FEx.MVVM.Abstractions.Enums;
 
 /// <summary>Specifies which message box button that a user clicks.</summary>
 public enum MessageResult

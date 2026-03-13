@@ -1,7 +1,6 @@
-﻿using FEx.Common.Extensions;
-using FEx.DI.Abstractions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.DependencyInjection.Abstractions;
 using FEx.Encryption.Abstractions.Interfaces;
-using FEx.Extensions;
 using System;
 
 namespace FEx.Encryption;
@@ -13,7 +12,7 @@ public class FExEncryption : InitializeOnlyModule
 
     public static string PassPhrase
     {
-        get => _passPhrase.Guard();
+        get => _passPhrase.GuardProperty();
         private set => _passPhrase = value.Guard(nameof(value));
     }
 

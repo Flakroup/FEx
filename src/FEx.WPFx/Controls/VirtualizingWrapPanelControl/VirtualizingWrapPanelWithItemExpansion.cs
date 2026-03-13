@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -6,9 +6,9 @@ using System.Windows.Controls.Primitives;
 namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 /// <summary>
-///     A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical
-///     orientation.
-///     In addition the panel allows to expand one specific item.
+/// A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical
+/// orientation.
+/// In addition the panel allows to expand one specific item.
 /// <p class="note">In order to work properly all items must have the same size.</p>
 /// </summary>
 public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
@@ -31,7 +31,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
     private int _itemIndexFollwingExpansion;
 
     /// <summary>
-    ///     Gets or sets the data template used for the item expansion.
+    /// Gets or sets the data template used for the item expansion.
     /// </summary>
     public DataTemplate ExpandedItemTemplate
     {
@@ -40,7 +40,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
     }
 
     /// <summary>
-    ///     Gets or set the expanded item. The default value is null.
+    /// Gets or set the expanded item. The default value is null.
     /// </summary>
     public object ExpandedItem
     {
@@ -52,7 +52,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
 
     protected override Size CalculateExtent(Size availableSize)
     {
-        Size extent = base.CalculateExtent(availableSize);
+        var extent = base.CalculateExtent(availableSize);
 
         if (_expandedItemChild != null)
         {
@@ -69,21 +69,21 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
     {
         double expandedItemChildHeight = 0;
 
-        Size childSize = CalculateChildArrangeSize(finalSize);
+        var childSize = CalculateChildArrangeSize(finalSize);
 
-        CalculateSpacing(finalSize, out double innerSpacing, out double outerSpacing);
+        CalculateSpacing(finalSize, out var innerSpacing, out var outerSpacing);
 
         for (var childIndex = 0; childIndex < InternalChildren.Count; childIndex++)
         {
-            UIElement child = InternalChildren[childIndex];
+            var child = InternalChildren[childIndex];
 
             if (child == _expandedItemChild)
             {
-                int rowIndex = ExpandedItemIndex / _itemsPerRowCount + 1;
-                double x = outerSpacing;
-                double y = rowIndex * GetHeight(childSize);
-                double width = GetWidth(finalSize) - 2 * outerSpacing;
-                double height = GetHeight(_expandedItemChild.DesiredSize);
+                var rowIndex = ExpandedItemIndex / _itemsPerRowCount + 1;
+                var x = outerSpacing;
+                var y = rowIndex * GetHeight(childSize);
+                var width = GetWidth(finalSize) - 2 * outerSpacing;
+                var height = GetHeight(_expandedItemChild.DesiredSize);
 
                 if (SpacingMode == SpacingMode.None)
                     width = _itemsPerRowCount * GetWidth(childSize);
@@ -97,13 +97,13 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
             }
             else
             {
-                int itemIndex = GetItemIndexFromChildIndex(childIndex);
+                var itemIndex = GetItemIndexFromChildIndex(childIndex);
 
-                int columnIndex = itemIndex % _itemsPerRowCount;
-                int rowIndex = itemIndex / _itemsPerRowCount;
+                var columnIndex = itemIndex % _itemsPerRowCount;
+                var rowIndex = itemIndex / _itemsPerRowCount;
 
-                double x = outerSpacing + columnIndex * (GetWidth(childSize) + innerSpacing);
-                double y = rowIndex * GetHeight(childSize) + expandedItemChildHeight;
+                var x = outerSpacing + columnIndex * (GetWidth(childSize) + innerSpacing);
+                var y = rowIndex * GetHeight(childSize) + expandedItemChildHeight;
 
                 child.Arrange(CreateRect(x - GetX(Offset), y - GetY(Offset), childSize.Width, childSize.Height));
             }
@@ -114,15 +114,15 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
 
     protected override void RealizeItems()
     {
-        GeneratorPosition startPosition = ItemContainerGenerator.GeneratorPositionFromIndex(ItemRange.StartIndex);
+        var startPosition = ItemContainerGenerator.GeneratorPositionFromIndex(ItemRange.StartIndex);
 
-        int childIndex = startPosition.Offset == 0
+        var childIndex = startPosition.Offset == 0
             ? startPosition.Index
             : startPosition.Index + 1;
 
-        int expandedItemIndex = Items.IndexOf(ExpandedItem);
+        var expandedItemIndex = Items.IndexOf(ExpandedItem);
 
-        int itemIndexFollwingExpansion = expandedItemIndex != -1
+        var itemIndexFollwingExpansion = expandedItemIndex != -1
             ? (expandedItemIndex / _itemsPerRowCount + 1) * _itemsPerRowCount - 1
             : -1;
 
@@ -137,9 +137,9 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
 
         using (ItemContainerGenerator.StartAt(startPosition, GeneratorDirection.Forward, true))
         {
-            for (int itemIndex = ItemRange.StartIndex; itemIndex <= ItemRange.EndIndex; itemIndex++, childIndex++)
+            for (var itemIndex = ItemRange.StartIndex; itemIndex <= ItemRange.EndIndex; itemIndex++, childIndex++)
             {
-                var child = (FrameworkElement)ItemContainerGenerator.GenerateNext(out bool isNewlyRealized);
+                var child = (FrameworkElement)ItemContainerGenerator.GenerateNext(out var isNewlyRealized);
 
                 if (isNewlyRealized || /*recycling*/!InternalChildren.Contains(child))
                 {
@@ -190,7 +190,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
 
     protected override GeneratorPosition GetGeneratorPositionFromChildIndex(int childIndex)
     {
-        int expandedItemChildIndex = InternalChildren.IndexOf(_expandedItemChild);
+        var expandedItemChildIndex = InternalChildren.IndexOf(_expandedItemChild);
 
         if (expandedItemChildIndex != -1
             && childIndex > expandedItemChildIndex)
@@ -201,7 +201,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
 
     protected override void VirtualizeItems()
     {
-        for (int childIndex = InternalChildren.Count - 1; childIndex >= 0; childIndex--)
+        for (var childIndex = InternalChildren.Count - 1; childIndex >= 0; childIndex--)
         {
             var child = (FrameworkElement)InternalChildren[childIndex];
 
@@ -215,9 +215,9 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
             }
             else
             {
-                int itemIndex = Items.IndexOf(child.DataContext);
+                var itemIndex = Items.IndexOf(child.DataContext);
 
-                GeneratorPosition position = ItemContainerGenerator.GeneratorPositionFromIndex(itemIndex);
+                var position = ItemContainerGenerator.GeneratorPositionFromIndex(itemIndex);
 
                 if (!ItemRange.Contains(itemIndex))
                 {
@@ -234,7 +234,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
 
     protected override void BringIndexIntoView(int index)
     {
-        double offset = index / _itemsPerRowCount * GetHeight(_childSize);
+        var offset = index / _itemsPerRowCount * GetHeight(_childSize);
 
         if (_expandedItemChild != null
             && index > _itemIndexFollwingExpansion)
@@ -250,7 +250,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
     {
         if (args.OldValue != null)
         {
-            int index = InternalChildren.IndexOf(_expandedItemChild);
+            var index = InternalChildren.IndexOf(_expandedItemChild);
 
             if (index != -1)
             {

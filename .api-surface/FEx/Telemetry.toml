@@ -1,0 +1,31 @@
+[project]
+name = "FEx.Telemetry"
+path = "rc\\FEx.Telemetry"
+
+[[classes]]
+name = "FExTelemetryConfigBase"
+ns = "FEx.Telemetry"
+base = "NotifyPropertyChanged, IFExTelemetryConfig"
+file = "FExTelemetryConfigBase.cs"
+
+[[classes]]
+name = "FExTelemetryModule"
+ns = "FEx.Telemetry"
+file = "FExTelemetryModule.cs"
+
+[[interfaces]]
+name = "IFExTelemetryConfig"
+ns = "FEx.Telemetry"
+file = "IFExTelemetryConfig.cs"
+
+[[interfaces]]
+name = "IFExTelemetryModule"
+ns = "FEx.Telemetry"
+file = "IFExTelemetryModule.cs"
+
+[[classes]]
+name = "TelemetryAccessTokenSubject"
+ns = "FEx.Telemetry.Subjects"
+base = "FExBehaviorSubject<string>"
+file = "Subjects\\TelemetryAccessTokenSubject.cs"
+

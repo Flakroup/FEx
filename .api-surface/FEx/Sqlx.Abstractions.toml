@@ -1,0 +1,9 @@
+[project]
+name = "FEx.Sqlx.Abstractions"
+path = "rc\\Sqlx.Abstractions"
+
+[[interfaces]]
+name = "ISqlDbHelper"
+ns = "FEx.Sqlx.Abstractions"
+file = "ISqlDbHelper.cs"
+

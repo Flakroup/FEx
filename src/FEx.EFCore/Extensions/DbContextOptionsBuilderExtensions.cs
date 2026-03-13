@@ -1,7 +1,8 @@
-﻿using FEx.Basics.Extensions;
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Extensions;
 using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
+using FEx.Sqlx.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
@@ -44,11 +45,11 @@ public static class DbContextOptionsBuilderExtensions
 
         try
         {
-            bool canConnect = SQLConnectionHelper.CheckMasterDbConnection(config);
+            var canConnect = SQLConnectionHelper.CheckMasterDbConnection(config);
 
             if (canConnect)
             {
-                string connectionString = SQLConnectionHelper.GetConnectionString(config);
+                var connectionString = SQLConnectionHelper.GetConnectionString(config);
 
                 options.UseSqlServer(connectionString,
                     serverDbContextOptionsBuilder =>

@@ -1,9 +1,11 @@
-﻿using FEx.DI.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
+using FEx.Agnostics.Abstractions;
 
 namespace FEx.Downloader;
 
-public class FExDownloader : InitializeModule<IFExDownloaderModule>
+public class FExDownloader : FExInitializable
 {
-    protected override void AddServices(IFExDownloaderModule container, IServiceCollection services) => FExDownloaderModule.AddServices(container, services);
+    protected override void OnInitialize()
+    {
+        // Downloader initialization if needed
+    }
 }

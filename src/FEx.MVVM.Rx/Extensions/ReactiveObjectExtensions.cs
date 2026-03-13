@@ -1,4 +1,4 @@
-﻿using FEx.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using ReactiveUI;
 using System.Runtime.CompilerServices;
 

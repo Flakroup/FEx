@@ -1,0 +1,952 @@
+[project]
+name = "FEx.WPFx"
+path = "rc\\FEx.WPFx"
+
+[[classes]]
+name = "FExModule"
+ns = "FEx.WPFx"
+base = "InitializeModule<IFExContainer, IServiceCollection>"
+file = "FExModule.cs"
+
+[[classes]]
+name = "FExWpfx"
+ns = "FEx.WPFx"
+base = "FExInitializable"
+file = "FExWPFx.cs"
+
+[[classes]]
+name = "FExWpfxModule"
+ns = "FEx.WPFx"
+base = "InitializeModule<IFExWpfxContainer, IServiceCollection>"
+file = "FExWPFxModule.cs"
+
+[[classes]]
+name = "FileSystemIconsProvider"
+ns = "FEx.WPFx"
+file = "FileSystemIconsProvider.cs"
+
+[[classes]]
+name = "Splash"
+ns = "FEx.WPFx"
+base = "FExInitializable, IFExPriorityInitialize"
+file = "Splash.cs"
+
+[[classes]]
+name = "AppBootstrapper"
+ns = "FEx.WPFx.Abstractions"
+base = "Application
+    where TContainer : class, IFExContainer, IDisposable, new()"
+file = "Abstractions\\AppBootstrapper.cs"
+
+[[interfaces]]
+name = "IAppConfig"
+ns = "FEx.WPFx.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IAppConfig.cs"
+
+[[interfaces]]
+name = "IFExContainer"
+ns = "FEx.WPFx.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IFExContainer.cs"
+
+[[interfaces]]
+name = "IFExWpfxContainer"
+ns = "FEx.WPFx.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IFExWpfxContainer.cs"
+
+[[interfaces]]
+name = "ITreeViewBuilder"
+ns = "FEx.WPFx.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\ITreeViewBuilder.cs"
+
+[[interfaces]]
+name = "ITreeViewBuilder"
+ns = "FEx.WPFx.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\ITreeViewBuilder.cs"
+
+[[interfaces]]
+name = "IViewDesign"
+ns = "FEx.WPFx.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IViewDesign.cs"
+
+[[classes]]
+name = "HotkeyActionAttribute"
+ns = "FEx.WPFx.Attributes"
+base = "Attribute"
+file = "Attributes\\HotkeyActionAttribute.cs"
+
+[[classes]]
+name = "DataGridBehavior"
+ns = "FEx.WPFx.Behaviors"
+file = "Behaviors\\DataGridBehavior.cs"
+static = true
+
+[[classes]]
+name = "TextBoxBehavior"
+ns = "FEx.WPFx.Behaviors"
+file = "Behaviors\\TextBoxBehavior.cs"
+
+[[classes]]
+name = "BindingProxy"
+ns = "FEx.WPFx.Controls"
+base = "Freezable"
+file = "Controls\\BindingProxy.cs"
+
+[[classes]]
+name = "BusyIndicator"
+ns = "FEx.WPFx.Controls"
+base = "ContentControl"
+summary = "Interaction logic for BusyIndicator.xaml"
+file = "Controls\\BusyIndicator.xaml.cs"
+
+[[classes]]
+name = "ControlsHandler"
+ns = "FEx.WPFx.Controls"
+file = "Controls\\ControlsHandler.cs"
+static = true
+
+[[extensions]]
+name = "ApplySortDescriptions"
+sig = "void ApplySortDescriptions(this DataGrid dataGrid,
+                                             DataGridColumn col,
+                                             string sortPropertyName,
+                                             ListSortDirection listSortDirection,
+                                             bool clear = true)"
+returns = "void"
+file = "Controls\\ControlsHandler.cs"
+
+[[extensions]]
+name = "ApplySortDescriptions"
+sig = "void ApplySortDescriptions(this DataGrid dataGrid,
+                                             string columnName,
+                                             ListSortDirection listSortDirection,
+                                             bool clear = true)"
+returns = "void"
+file = "Controls\\ControlsHandler.cs"
+
+[[extensions]]
+name = "ApplySortDescriptions"
+sig = "void ApplySortDescriptions(this DataGrid dataGrid,
+                                             DataGridColumn column,
+                                             ListSortDirection listSortDirection,
+                                             bool clear = true)"
+returns = "void"
+file = "Controls\\ControlsHandler.cs"
+
+[[extensions]]
+name = "GetSortPropertyName"
+sig = "string GetSortPropertyName(this DataGridColumn col)"
+returns = "string"
+file = "Controls\\ControlsHandler.cs"
+
+[[extensions]]
+name = "GetColumnIndex"
+sig = "int GetColumnIndex(this DataGrid dataGrid, string columnName)"
+returns = "int"
+file = "Controls\\ControlsHandler.cs"
+
+[[extensions]]
+name = "GetColumnHeader"
+sig = "string GetColumnHeader(this DataGridColumn col)"
+returns = "string"
+file = "Controls\\ControlsHandler.cs"
+
+[[extensions]]
+name = "GetColumnHeader"
+sig = "string GetColumnHeader(this GridViewColumn col)"
+returns = "string"
+file = "Controls\\ControlsHandler.cs"
+
+[[extensions]]
+name = "ClearSortDirections"
+sig = "void ClearSortDirections(this DataGrid dataGrid)"
+returns = "void"
+file = "Controls\\ControlsHandler.cs"
+
+[[extensions]]
+name = "SetColumnVisibility"
+sig = "void SetColumnVisibility(this DataGrid dataGrid, string columnName, bool visible)"
+returns = "void"
+file = "Controls\\ControlsHandler.cs"
+
+[[classes]]
+name = "DesignTimeResourceDictionary"
+ns = "FEx.WPFx.Controls"
+base = "ResourceDictionary"
+file = "Controls\\DesignTimeResourceDictionary.cs"
+
+[[classes]]
+name = "FExShellWindow"
+ns = "FEx.WPFx.Controls"
+base = "FExWindow<TViewModel> where TViewModel : WpfProgressListenerViewModel"
+file = "Controls\\FExShellWindow.cs"
+
+[[classes]]
+name = "FExUserControl"
+ns = "FEx.WPFx.Controls"
+base = "UserControl, IFExNotifyPropertyChanged"
+file = "Controls\\FExUserControl.cs"
+
+[[classes]]
+name = "FExWindow"
+ns = "FEx.WPFx.Controls"
+base = "Window, IViewFor<TViewModel>, IRunAsyncView
+    where TViewModel : WpfProgressListenerViewModel"
+file = "Controls\\FExWindow.cs"
+
+[[classes]]
+name = "OutlinedTextBlock"
+ns = "FEx.WPFx.Controls"
+base = "FrameworkElement"
+file = "Controls\\OutlinedTextBlock.cs"
+
+[[classes]]
+name = "SplashScreenWindow"
+ns = "FEx.WPFx.Controls"
+base = "Window, INotifyPropertyChanged"
+summary = "Interaction logic for MainWindow.xaml"
+file = "Controls\\SplashScreenWindow.xaml.cs"
+
+[[classes]]
+name = "TreeViewBuilder"
+ns = "FEx.WPFx.Controls"
+base = "TreeViewBuilderBase<TreeViewItem>"
+file = "Controls\\TreeViewBuilder.cs"
+
+[[classes]]
+name = "TreeViewBuilderBase"
+ns = "FEx.WPFx.Controls"
+base = "ITreeViewBuilder<TItem> where TItem : HeaderedItemsControl, new()"
+file = "Controls\\TreeViewBuilderBase.cs"
+
+[[classes]]
+name = "VerticalTextBlock"
+ns = "FEx.WPFx.Controls"
+base = "TextBlock"
+file = "Controls\\VerticalTextBlock.cs"
+
+[[classes]]
+name = "ZoomBorder"
+ns = "FEx.WPFx.Controls"
+base = "Border, INotifyPropertyChanged"
+file = "Controls\\ZoomBorder.cs"
+
+[[classes]]
+name = "VirtualizingPanelWrapper"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "IChildrenCollection"
+file = "Controls\\VirtualizingWrapPanelControl\\ChildrenCollection.cs"
+
+[[interfaces]]
+name = "IChildrenCollection"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+file = "Controls\\VirtualizingWrapPanelControl\\ChildrenCollection.cs"
+
+[[classes]]
+name = "GridDetailsView"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "GridView"
+summary = "Simple control that displays a gird of items. Depending on the orientation, the items are either stacked horizontally or vertically until the items are wrapped to the next row or column. The control is using virtualization to support large amount of items. If an item is clicked the item gots expanded until it is clicked again or an other item is clicked and gots expanded. In order to work properly all items must have the same size."
+file = "Controls\\VirtualizingWrapPanelControl\\GridDetailsView.xaml.cs"
+
+[[classes]]
+name = "GridView"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "ListView"
+summary = "Simple control that displays a gird of items. Depending on the orientation, the items are either stacked horizontally or vertically until the items are wrapped to the next row or column. The control is using virtualization to support large amount of items. In order to work properly all items must have the same size."
+file = "Controls\\VirtualizingWrapPanelControl\\GridView.cs"
+
+[[interfaces]]
+name = "IItemSizeProvider"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+summary = "Provides the size of items displayed in an VirtualizingPanel."
+file = "Controls\\VirtualizingWrapPanelControl\\IItemSizeProvider.cs"
+
+[[classes]]
+name = "ItemContainerInfo"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "IItemContainerInfo"
+file = "Controls\\VirtualizingWrapPanelControl\\ItemContainerInfo.cs"
+
+[[interfaces]]
+name = "IItemContainerInfo"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+file = "Controls\\VirtualizingWrapPanelControl\\ItemContainerInfo.cs"
+
+[[classes]]
+name = "ItemContainerManagerItemsChangedEventArgs"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+file = "Controls\\VirtualizingWrapPanelControl\\ItemContainerManager.cs"
+
+[[classes]]
+name = "ItemContainerManager"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "IItemContainerManager"
+summary = "Realizes the specified item. If the item is already realized, nothing happens."
+file = "Controls\\VirtualizingWrapPanelControl\\ItemContainerManager.cs"
+
+[[interfaces]]
+name = "IItemContainerManager"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+file = "Controls\\VirtualizingWrapPanelControl\\ItemContainerManager.cs"
+
+[[enums]]
+name = "ScrollDirection"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+file = "Controls\\VirtualizingWrapPanelControl\\ScrollDirection.cs"
+
+[[enums]]
+name = "SpacingMode"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+summary = "Specifies how remaining space is distributed."
+file = "Controls\\VirtualizingWrapPanelControl\\SpacingMode.cs"
+
+[[classes]]
+name = "VirtualizingItemsControl"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "ItemsControl"
+summary = "A ItemsControl supporting virtualization."
+file = "Controls\\VirtualizingWrapPanelControl\\VirtualizingItemsControl.cs"
+
+[[classes]]
+name = "VirtualizingPanelBase"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "VirtualizingPanel, IScrollInfo"
+summary = "Base class for panels which are supporting virtualization."
+file = "Controls\\VirtualizingWrapPanelControl\\VirtualizingPanelBase.cs"
+
+[[classes]]
+name = "VirtualizingPanelBaseV1"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "VirtualizingPanel, IScrollInfo"
+summary = "Base class for panels which are supporting virtualization."
+file = "Controls\\VirtualizingWrapPanelControl\\VirtualizingPanelBaseV1.cs"
+
+[[classes]]
+name = "VirtualizingPanelModelBase"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+file = "Controls\\VirtualizingWrapPanelControl\\VirtualizingPanelModelBase.cs"
+
+[[classes]]
+name = "VirtualizingWrapPanel"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "VirtualizingPanelBase"
+summary = "A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical orientation. https://github.com/sbaeumlisberger/VirtualizingWrapPanel"
+file = "Controls\\VirtualizingWrapPanelControl\\VirtualizingWrapPanel.cs"
+
+[[classes]]
+name = "VirtualizingWrapPanelModel"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "VirtualizingPanelModelBase"
+file = "Controls\\VirtualizingWrapPanelControl\\VirtualizingWrapPanelModel.cs"
+
+[[classes]]
+name = "VirtualizingWrapPanelV1"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "VirtualizingPanelBaseV1"
+summary = "A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical orientation. In order to work properly all items must have the same size."
+file = "Controls\\VirtualizingWrapPanelControl\\VirtualizingWrapPanelV1.cs"
+
+[[classes]]
+name = "VirtualizingWrapPanelWithItemExpansion"
+ns = "FEx.WPFx.Controls.VirtualizingWrapPanelControl"
+base = "VirtualizingWrapPanelV1"
+summary = "A implementation of a wrap panel that supports virtualization and can be used in horizontal and vertical orientation. In addition the panel allows to expand one specific item. In order to work properly all items must have the same size."
+file = "Controls\\VirtualizingWrapPanelControl\\VirtualizingWrapPanelWithItemExpansion.cs"
+
+[[classes]]
+name = "AdditionConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+file = "Converters\\AdditionConverter.cs"
+
+[[classes]]
+name = "BaseMappingConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+summary = "Base class for mapping converters."
+file = "Converters\\BaseMappingConverter.cs"
+
+[[classes]]
+name = "BoolAndConverter"
+ns = "FEx.WPFx.Converters"
+base = "IMultiValueConverter"
+file = "Converters\\BoolAndConverter.cs"
+
+[[classes]]
+name = "BoolAndToVisibilityConverter"
+ns = "FEx.WPFx.Converters"
+base = "IMultiValueConverter"
+file = "Converters\\BoolAndToVisibilityConverter.cs"
+
+[[classes]]
+name = "BoolInvertedConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+summary = "Bool invert converter."
+file = "Converters\\BoolInvertedConverter.cs"
+
+[[classes]]
+name = "BoolToVisibilityConverter"
+ns = "FEx.WPFx.Converters"
+base = "BaseMappingConverter<bool?, Visibility>"
+summary = "Bool to visibility converter."
+file = "Converters\\BoolToVisibilityConverter.cs"
+
+[[classes]]
+name = "BoolToVisibilityInvertedConverter"
+ns = "FEx.WPFx.Converters"
+base = "BoolToVisibilityConverter"
+summary = "Bool to Visibility Invert Converter."
+file = "Converters\\BoolToVisibilityInvertedConverter.cs"
+
+[[classes]]
+name = "ByteToSizeConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+file = "Converters\\ByteToSizeConverter.cs"
+
+[[classes]]
+name = "CollectionIsNotNullOrEmptyToBoolConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+summary = "Represents the converter that converts the inverse of a Boolean values to and from System.Windows.Visibility enumeration values."
+file = "Converters\\CollectionIsNotNullOrEmptyToBoolConverter.cs"
+
+[[classes]]
+name = "CollectionIsNotNullOrEmptyToVisibilityConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+summary = "Represents the converter that converts the inverse of a Boolean values to and from System.Windows.Visibility enumeration values."
+file = "Converters\\CollectionIsNotNullOrEmptyToVisibilityConverter.cs"
+
+[[classes]]
+name = "CollectionIsNullOrEmptyToBoolConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+summary = "Represents the converter that converts the inverse of a Boolean values to and from System.Windows.Visibility enumeration values."
+file = "Converters\\CollectionIsNullOrEmptyToBoolConverter.cs"
+
+[[classes]]
+name = "DivisionConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+file = "Converters\\DivisionConverter.cs"
+
+[[classes]]
+name = "EnumToStringConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+file = "Converters\\EnumToStringConverter.cs"
+
+[[classes]]
+name = "EnumToVisibilityConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+summary = "Enum to visibility converter."
+file = "Converters\\EnumToVisibilityConverter.cs"
+
+[[classes]]
+name = "ItemsToFirstItemConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+summary = "Items to first item converter."
+file = "Converters\\ItemsToFirstItemConverter.cs"
+
+[[classes]]
+name = "LongToTimeStringConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+file = "Converters\\LongToTimeStringConverter.cs"
+
+[[classes]]
+name = "MultiplicationConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+file = "Converters\\MultiplicationConverter.cs"
+
+[[classes]]
+name = "NullableBoolInvertedConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+file = "Converters\\NullableBoolInvertedConverter.cs"
+
+[[classes]]
+name = "NullToVisibilityConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+file = "Converters\\NullToVisibilityConverter.cs"
+
+[[classes]]
+name = "NullToVisibilityInvertedConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+file = "Converters\\NullToVisibilityInvertedConverter.cs"
+
+[[classes]]
+name = "ResizeModeToVisibilityConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+file = "Converters\\ResizeModeToVisibilityConverter.cs"
+
+[[classes]]
+name = "StringToBooleanConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+summary = "String to visibility converter."
+file = "Converters\\StringToBooleanConverter.cs"
+
+[[classes]]
+name = "StringToVisibilityConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+summary = "String to visibility converter."
+file = "Converters\\StringToVisibilityConverter.cs"
+
+[[classes]]
+name = "SubtractionConverter"
+ns = "FEx.WPFx.Converters"
+base = "IValueConverter"
+file = "Converters\\SubstractionConverter.cs"
+
+[[classes]]
+name = "FolderBrowserDialogOptions"
+ns = "FEx.WPFx.Dialogs"
+base = "FolderBrowserDialogOptionsBase<FolderBrowserDialog>, IDisposable"
+file = "Dialogs\\FolderBrowserDialogOptions.cs"
+
+[[classes]]
+name = "OpenFileDialogOptions"
+ns = "FEx.WPFx.Dialogs"
+base = "OpenFileDialogOptionsBase<OpenFileDialog>"
+file = "Dialogs\\OpenFileDialogOptions.cs"
+
+[[classes]]
+name = "SaveFileDialogOptions"
+ns = "FEx.WPFx.Dialogs"
+base = "SaveFileDialogOptionsBase<SaveFileDialog>"
+file = "Dialogs\\SaveFileDialogOptions.cs"
+
+[[classes]]
+name = "BitmapExtensions"
+ns = "FEx.WPFx.Extensions"
+file = "Extensions\\BitmapExtensions.cs"
+static = true
+
+[[extensions]]
+name = "ToBitmapImage"
+sig = "BitmapImage ToBitmapImage(this Stream stream,
+                                            bool forceLoad = false,
+                                            int decodePixelHeight = 0,
+                                            int decodePixelWidth = 0)"
+returns = "BitmapImage"
+file = "Extensions\\BitmapExtensions.cs"
+
+[[extensions]]
+name = "ToBitmapSource"
+sig = "BitmapSource ToBitmapSource(this Bitmap bitmap)"
+returns = "BitmapSource"
+summary = "To the bitmap source."
+file = "Extensions\\BitmapExtensions.cs"
+
+[[extensions]]
+name = "SaveToFile"
+sig = "void SaveToFile(this BitmapSource image, string filePath)"
+returns = "void"
+summary = "Saves to file."
+file = "Extensions\\BitmapExtensions.cs"
+
+[[classes]]
+name = "ColorExtensions"
+ns = "FEx.WPFx.Extensions"
+file = "Extensions\\ColorExtensions.cs"
+static = true
+
+[[extensions]]
+name = "ToMediaColor"
+sig = "MColor ToMediaColor(this DColor color)"
+returns = "MColor"
+file = "Extensions\\ColorExtensions.cs"
+
+[[classes]]
+name = "DependencyObjectExtensions"
+ns = "FEx.WPFx.Extensions"
+file = "Extensions\\DependencyObjectExtensions.cs"
+static = true
+
+[[extensions]]
+name = "InvokeOnDispatcherContext"
+sig = "void InvokeOnDispatcherContext(this DependencyObject sender,
+                                                 Action action,
+                                                 DispatcherPriority priority = DispatcherPriority.Send)"
+returns = "void"
+file = "Extensions\\DependencyObjectExtensions.cs"
+
+[[extensions]]
+name = "DoUpdateSource"
+sig = "void DoUpdateSource(this DependencyProperty property, object source)"
+returns = "void"
+file = "Extensions\\DependencyObjectExtensions.cs"
+
+[[classes]]
+name = "DependencyPropertyExtensions"
+ns = "FEx.WPFx.Extensions"
+file = "Extensions\\DependencyPropertyExtensions.cs"
+static = true
+
+[[classes]]
+name = "TreeViewItemExtensions"
+ns = "FEx.WPFx.Extensions"
+file = "Extensions\\TreeViewItemExtensions.cs"
+static = true
+
+[[extensions]]
+name = "FullPath"
+sig = "string FullPath(this HeaderedItemsControl sender)"
+returns = "string"
+file = "Extensions\\TreeViewItemExtensions.cs"
+
+[[classes]]
+name = "UIElementExtensions"
+ns = "FEx.WPFx.Extensions"
+file = "Extensions\\UIElementExtensions.cs"
+static = true
+
+[[extensions]]
+name = "EnableUIElement"
+sig = "void EnableUIElement(this UIElement element, bool inUIContext = false)"
+returns = "void"
+file = "Extensions\\UIElementExtensions.cs"
+
+[[extensions]]
+name = "DisableUIElement"
+sig = "void DisableUIElement(this UIElement element, bool inUIContext = false)"
+returns = "void"
+file = "Extensions\\UIElementExtensions.cs"
+
+[[classes]]
+name = "WindowsExtensions"
+ns = "FEx.WPFx.Extensions"
+file = "Extensions\\WindowsExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetWindowsScreen"
+sig = "Screen GetWindowsScreen(this Window window)"
+returns = "Screen"
+summary = "Gets the screen on which window is present."
+file = "Extensions\\WindowsExtensions.cs"
+
+[[extensions]]
+name = "CenterWindowOnTheScreen"
+sig = "void CenterWindowOnTheScreen(this Window window, Screen screen)"
+returns = "void"
+summary = "Centers the window on the screen."
+file = "Extensions\\WindowsExtensions.cs"
+
+[[extensions]]
+name = "GetDpiFactor"
+sig = "Point GetDpiFactor(this Visual control)"
+returns = "Point"
+summary = "Centers the window on the screen."
+file = "Extensions\\WindowsExtensions.cs"
+
+[[extensions]]
+name = "CenterWindowOnTopOfTheOwner"
+sig = "void CenterWindowOnTopOfTheOwner(this Window window)"
+returns = "void"
+summary = "Centers the window on top of the owner."
+file = "Extensions\\WindowsExtensions.cs"
+
+[[extensions]]
+name = "PlaceToPrimaryMonitor"
+sig = "void PlaceToPrimaryMonitor(this Window window)"
+returns = "void"
+summary = "Places to primary monitor."
+file = "Extensions\\WindowsExtensions.cs"
+
+[[extensions]]
+name = "PlaceToMonitor"
+sig = "void PlaceToMonitor(this Window window, Screen screen)"
+returns = "void"
+summary = "Places to primary monitor."
+file = "Extensions\\WindowsExtensions.cs"
+
+[[classes]]
+name = "ResourceIdHelper"
+ns = "FEx.WPFx.Helpers"
+file = "Helpers\\ResourceIdHelper.cs"
+static = true
+
+[[classes]]
+name = "WpfCommon"
+ns = "FEx.WPFx.Helpers"
+file = "Helpers\\WpfCommon.cs"
+static = true
+
+[[classes]]
+name = "DispatcherContextExecutor"
+ns = "FEx.WPFx.Implementations"
+base = "FExDispatcher"
+file = "Implementations\\DispatcherContextExecutor.cs"
+
+[[classes]]
+name = "WpfMessagePopupService"
+ns = "FEx.WPFx.Implementations"
+base = "MessagePopupServiceBase, IDisposable"
+file = "Implementations\\WpfMessagePopupService.cs"
+
+[[classes]]
+name = "AppConfig"
+ns = "FEx.WPFx.Models"
+base = "IAppConfig"
+file = "Models\\AppConfig.cs"
+
+[[classes]]
+name = "HotkeyPayload"
+ns = "FEx.WPFx.Models"
+file = "Models\\HotkeyPayload.cs"
+
+[[classes]]
+name = "ViewDesign"
+ns = "FEx.WPFx.Models"
+base = "NotifyPropertyChanged, IViewDesign"
+file = "Models\\ViewDesign.cs"
+
+[[classes]]
+name = "CommonWindowsImaging"
+ns = "FEx.WPFx.Natives"
+file = "Natives\\CommonWindowsImaging.cs"
+static = true
+
+[[classes]]
+name = "FileUtil"
+ns = "FEx.WPFx.Natives"
+file = "Natives\\FileUtil.cs"
+static = true
+
+[[enums]]
+name = "RM_APP_TYPE"
+ns = "FEx.WPFx.Natives"
+file = "Natives\\FileUtil.cs"
+
+[[classes]]
+name = "Monitorinfo"
+ns = "FEx.WPFx.Natives"
+file = "Natives\\MONITORINFO.cs"
+
+[[classes]]
+name = "NativeImagingMethods"
+ns = "FEx.WPFx.Natives"
+summary = "Contains the external references to the unmanaged code."
+file = "Natives\\NativeImagingMethods.cs"
+static = true
+
+[[classes]]
+name = "NativeMethods"
+ns = "FEx.WPFx.Natives"
+summary = "Contains the external references to the unmanaged code."
+file = "Natives\\NativeMethods.cs"
+static = true
+
+[[extensions]]
+name = "BringOnTop"
+sig = "void BringOnTop(this Window window)"
+returns = "void"
+summary = "Brings window to the foreground."
+file = "Natives\\NativeMethods.cs"
+
+[[extensions]]
+name = "MaximizeWindow"
+sig = "void MaximizeWindow(this Process proc)"
+returns = "void"
+file = "Natives\\NativeMethods.cs"
+
+[[extensions]]
+name = "MaximizeWindow"
+sig = "void MaximizeWindow(this IntPtr hwnd)"
+returns = "void"
+file = "Natives\\NativeMethods.cs"
+
+[[extensions]]
+name = "MinimizeWindow"
+sig = "void MinimizeWindow(this Process proc)"
+returns = "void"
+file = "Natives\\NativeMethods.cs"
+
+[[extensions]]
+name = "MinimizeWindow"
+sig = "void MinimizeWindow(this IntPtr hwnd)"
+returns = "void"
+file = "Natives\\NativeMethods.cs"
+
+[[classes]]
+name = "ShellIcon"
+ns = "FEx.WPFx.Natives"
+summary = "Get a small or large Icon with an easy C# function call that returns a 32x32 or 16x16 System.Drawing.Icon depending on which function you call either GetSmallIcon(string fileName) or GetLargeIcon(string fileName)"
+file = "Natives\\ShellIcon.cs"
+static = true
+
+[[enums]]
+name = "SHGFI"
+ns = "FEx.WPFx.Natives"
+file = "Natives\\SHGFI.cs"
+
+[[enums]]
+name = "ShowWindow"
+ns = "FEx.WPFx.Natives"
+file = "Natives\\ShowWindow.cs"
+
+[[classes]]
+name = "Win32"
+ns = "FEx.WPFx.Natives"
+file = "Natives\\Win32.cs"
+static = true
+
+[[classes]]
+name = "DispatcherService"
+ns = "FEx.WPFx.Services"
+file = "Services\\DispatcherService.cs"
+static = true
+
+[[extensions]]
+name = "GetDispatcherObject"
+sig = "DispatcherObject GetDispatcherObject(this DispatcherObject sender)"
+returns = "DispatcherObject"
+summary = "Shows the view and waits until it's closed."
+file = "Services\\DispatcherService.cs"
+
+[[classes]]
+name = "WpfProgressStatusContainer"
+ns = "FEx.WPFx.Services"
+base = "ProgressAggregator, IWpfProgressStatusContainer"
+file = "Services\\WpfProgressStatusContainer.cs"
+
+[[classes]]
+name = "SvgCommon"
+ns = "FEx.WPFx.SVG"
+file = "SVG\\SvgCommon.cs"
+static = true
+
+[[extensions]]
+name = "ToMemoryStream"
+sig = "MemoryStream ToMemoryStream(this DrawingImage drawingImage)"
+returns = "MemoryStream"
+summary = "Converts the SVG to image source."
+file = "SVG\\SvgCommon.cs"
+
+[[extensions]]
+name = "ToRenderTargetBitmap"
+sig = "RenderTargetBitmap ToRenderTargetBitmap(this DrawingImage source)"
+returns = "RenderTargetBitmap"
+summary = "Converts the SVG to image source."
+file = "SVG\\SvgCommon.cs"
+
+[[classes]]
+name = "CmdLineHandler"
+ns = "FEx.WPFx.SVG.SvgConverter"
+file = "SVG\\SvgConverter\\CmdLineHandler.cs"
+static = true
+
+[[classes]]
+name = "CmdLineTarget"
+ns = "FEx.WPFx.SVG.SvgConverter"
+file = "SVG\\SvgConverter\\CmdLineTarget.cs"
+
+[[classes]]
+name = "ConvertedSvgData"
+ns = "FEx.WPFx.SVG.SvgConverter"
+file = "SVG\\SvgConverter\\ConvertedSvgData.cs"
+
+[[classes]]
+name = "ConverterLogic"
+ns = "FEx.WPFx.SVG.SvgConverter"
+file = "SVG\\SvgConverter\\ConverterLogic.cs"
+static = true
+
+[[enums]]
+name = "ResultMode"
+ns = "FEx.WPFx.SVG.SvgConverter"
+file = "SVG\\SvgConverter\\ConverterLogic.cs"
+
+[[classes]]
+name = "FileUtils"
+ns = "FEx.WPFx.SVG.SvgConverter"
+file = "SVG\\SvgConverter\\FileUtils.cs"
+static = true
+
+[[enums]]
+name = "PathIs"
+ns = "FEx.WPFx.SVG.SvgConverter"
+file = "SVG\\SvgConverter\\FileUtils.cs"
+
+[[classes]]
+name = "ResKeyInfo"
+ns = "FEx.WPFx.SVG.SvgConverter"
+file = "SVG\\SvgConverter\\ResKeyInfo.cs"
+
+[[classes]]
+name = "NotEmptyValidationRule"
+ns = "FEx.WPFx.Validation"
+base = "ValidationRule"
+file = "Validation\\NotEmptyValidationRule.cs"
+
+[[interfaces]]
+name = "IWpfProgressInfo"
+ns = "FEx.WPFx.ViewModels"
+file = "ViewModels\\IWpfProgressInfo.cs"
+
+[[interfaces]]
+name = "IWpfProgressInfoGet"
+ns = "FEx.WPFx.ViewModels"
+file = "ViewModels\\IWpfProgressInfo.cs"
+
+[[interfaces]]
+name = "IWpfProgressListenerViewModel"
+ns = "FEx.WPFx.ViewModels"
+file = "ViewModels\\IWpfProgressListenerViewModel.cs"
+
+[[interfaces]]
+name = "IWpfProgressReceiver"
+ns = "FEx.WPFx.ViewModels"
+file = "ViewModels\\IWpfProgressReceiver.cs"
+
+[[interfaces]]
+name = "IWpfProgressStatusContainer"
+ns = "FEx.WPFx.ViewModels"
+file = "ViewModels\\IWpfProgressStatusContainer.cs"
+
+[[classes]]
+name = "WpfProgressListenerViewModel"
+ns = "FEx.WPFx.ViewModels"
+base = "ProgressListenerViewModel<WpfProgressStatusContainer>,
+    IWpfProgressListenerViewModel<WpfProgressStatusContainer>"
+file = "ViewModels\\WpfProgressListenerViewModel.cs"
+
+[[classes]]
+name = "BindingErrorListener"
+ns = "FEx.WPFx.WpfBindingErrors"
+base = "IDisposable"
+summary = "Raises an event each time a WPF Binding error occurs."
+file = "WpfBindingErrors\\BindingErrorListener.cs"
+
+[[classes]]
+name = "BindingException"
+ns = "FEx.WPFx.WpfBindingErrors"
+base = "Exception"
+summary = "Exception thrown by the BindingExceptionThrower each time a WPF binding error occurs"
+file = "WpfBindingErrors\\BindingException.cs"
+
+[[classes]]
+name = "BindingExceptionThrower"
+ns = "FEx.WPFx.WpfBindingErrors"
+summary = "Converts WPF binding error into BindingException"
+file = "WpfBindingErrors\\BindingExceptionThrower.cs"
+static = true
+
+[[classes]]
+name = "ObservableTraceListener"
+ns = "FEx.WPFx.WpfBindingErrors"
+base = "TraceListener"
+summary = "A TraceListener that raise an event each time a trace is written"
+file = "WpfBindingErrors\\ObservableTraceListener.cs"
+

@@ -1,0 +1,9 @@
+[project]
+name = "FEx.SecureStorage"
+path = "rc\\FEx.SecureStorage"
+
+[[classes]]
+name = "SecureStorageService"
+ns = "FEx.SecureStorage"
+file = "SecureStorageService.cs"
+

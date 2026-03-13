@@ -5,13 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FEx.DI.Abstractions\FEx.DI.Abstractions.csproj" />
-    <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
-    <ProjectReference Include="..\FEx.Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
+    <ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

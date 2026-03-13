@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -52,19 +52,23 @@ internal abstract class VirtualizingPanelModelBase
         }
     }
 
-    public void LineUp() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+    public void LineUp() =>
+        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
             ? -ScrollLineDelta
             : GetLineUpScrollAmount());
 
-    public void LineDown() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+    public void LineDown() =>
+        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
             ? ScrollLineDelta
             : GetLineDownScrollAmount());
 
-    public void LineLeft() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void LineLeft() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? -ScrollLineDelta
             : GetLineLeftScrollAmount());
 
-    public void LineRight() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void LineRight() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? ScrollLineDelta
             : GetLineRightScrollAmount());
 
@@ -88,27 +92,33 @@ internal abstract class VirtualizingPanelModelBase
             MouseWheelRight();
     }
 
-    public void MouseWheelLeft() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void MouseWheelLeft() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? -MouseWheelDelta
             : GetMouseWheelLeftScrollAmount());
 
-    public void MouseWheelRight() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void MouseWheelRight() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? MouseWheelDelta
             : GetMouseWheelRightScrollAmount());
 
-    public void PageUp() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+    public void PageUp() =>
+        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
             ? -ViewportSize.Height
             : GetPageUpScrollAmount());
 
-    public void PageDown() => ScrollVertical(ScrollUnit == ScrollUnit.Pixel
+    public void PageDown() =>
+        ScrollVertical(ScrollUnit == ScrollUnit.Pixel
             ? ViewportSize.Height
             : GetPageDownScrollAmount());
 
-    public void PageLeft() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void PageLeft() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? -ViewportSize.Width
             : GetPageLeftScrollAmount());
 
-    public void PageRight() => ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
+    public void PageRight() =>
+        ScrollHorizontal(ScrollUnit == ScrollUnit.Pixel
             ? ViewportSize.Width
             : GetPageRightScrollAmount());
 

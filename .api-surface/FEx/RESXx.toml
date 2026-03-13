@@ -1,0 +1,10 @@
+[project]
+name = "FEx.RESXx"
+path = "rc\\FEx.RESXx"
+
+[[classes]]
+name = "ResxManager"
+ns = "FEx.RESXx"
+base = "IResxManager"
+file = "ResxManager.cs"
+

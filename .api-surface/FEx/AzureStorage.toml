@@ -1,0 +1,70 @@
+[project]
+name = "FEx.AzureStorage"
+path = "rc\\FEx.AzureStorage"
+
+[[classes]]
+name = "AzureStorageConfiguration"
+ns = "FEx.AzureStorage"
+file = "AzureStorageConfiguration.cs"
+
+[[classes]]
+name = "AzureStorageService"
+ns = "FEx.AzureStorage"
+base = "IAzureStorageService"
+file = "AzureStorageService.cs"
+
+[[classes]]
+name = "AzureStorageWorker"
+ns = "FEx.AzureStorage"
+file = "AzureStorageWorker.cs"
+
+[[classes]]
+name = "CloudBlockBlobInfo"
+ns = "FEx.AzureStorage"
+file = "CloudBlockBlobInfo.cs"
+
+[[interfaces]]
+name = "IAzureStorageService"
+ns = "FEx.AzureStorage"
+file = "IAzureStorageService.cs"
+
+[[classes]]
+name = "ProgressState"
+ns = "FEx.AzureStorage"
+file = "ProgressState.cs"
+
+[[enums]]
+name = "StorageOperation"
+ns = "FEx.AzureStorage"
+file = "StorageOperation.cs"
+
+[[classes]]
+name = "BlobExtensions"
+ns = "FEx.AzureStorage.Extensions"
+file = "Extensions\\BlobExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetBlobChecksum"
+sig = "string GetBlobChecksum(this CloudBlockBlob blob)"
+returns = "string"
+file = "Extensions\\BlobExtensions.cs"
+
+[[extensions]]
+name = "GetBlobUri"
+sig = "Uri GetBlobUri(this CloudBlockBlob blob)"
+returns = "Uri"
+file = "Extensions\\BlobExtensions.cs"
+
+[[extensions]]
+name = "GetBlobChecksum"
+sig = "string GetBlobChecksum(this BlobItem blob)"
+returns = "string"
+file = "Extensions\\BlobExtensions.cs"
+
+[[extensions]]
+name = "GetBlobUri"
+sig = "Uri GetBlobUri(this BlobItem blob, BlobContainerClient blobContainerClient)"
+returns = "Uri"
+file = "Extensions\\BlobExtensions.cs"
+

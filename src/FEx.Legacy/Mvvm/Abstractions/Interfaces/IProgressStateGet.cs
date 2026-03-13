@@ -1,4 +1,4 @@
-﻿namespace FEx.Legacy.Mvvm.Abstractions.Interfaces;
+namespace FEx.Legacy.Mvvm.Abstractions.Interfaces;
 
 public interface IProgressStateGet
 {

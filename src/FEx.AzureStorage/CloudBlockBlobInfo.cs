@@ -1,5 +1,5 @@
-﻿using FEx.AzureStorage.Extensions;
-using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.AzureStorage.Extensions;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using System;
@@ -55,7 +55,7 @@ public class CloudBlockBlobInfo
     }
 
     /// <summary>
-    ///     Fetches the attributes asynchronous.
+    /// Fetches the attributes asynchronous.
     /// </summary>
     /// <param name="accessCondition">The access condition.</param>
     /// <param name="options">The options.</param>

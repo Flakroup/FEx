@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(FullTargetFrameworkIds)</TargetFrameworks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Dapper" Version="2.1.35" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.2" />
+        <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="172.76.0" />
+        <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+        <ProjectReference Include="..\Core\FEx.Core.csproj" />
+        <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+        <ProjectReference Include="..\Sqlx.Abstractions\FEx.Sqlx.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>

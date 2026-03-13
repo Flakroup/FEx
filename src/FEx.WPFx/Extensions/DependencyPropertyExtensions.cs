@@ -44,7 +44,7 @@ public static class DependencyPropertyExtensions
         if (propertyExpression.Body is not MemberExpression memberExpression)
             throw new ArgumentException("Expression must be a member expression", nameof(propertyExpression));
 
-        string propertyName = memberExpression.Member.Name;
+        var propertyName = memberExpression.Member.Name;
 
         return CreateDependencyProperty(propertyName, defaultValue, flags, propertyChanged, coerceValue, validateValue);
     }

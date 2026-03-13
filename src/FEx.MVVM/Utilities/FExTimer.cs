@@ -1,6 +1,6 @@
-﻿using FEx.MVVM.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Extensions;
+using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Rx.BaseObjects;
-using FEx.Rx.Extensions;
 using System;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;

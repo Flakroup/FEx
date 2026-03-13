@@ -3,16 +3,16 @@
 	<PropertyGroup>
 		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
 		<UseMaui>true</UseMaui>
+		<SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Update="Microsoft.Maui.Controls" Version="8.0.70" />
-		<PackageReference Update="Microsoft.Maui.Controls.Compatibility" Version="8.0.70" />
+	  <ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
-	  <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+		<PackageReference Update="Microsoft.Maui.Controls" Version="9.0.110" />
+		<PackageReference Update="Microsoft.Maui.Controls.Compatibility" Version="9.0.82" />
 	</ItemGroup>
 
 </Project>

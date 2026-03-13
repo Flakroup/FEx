@@ -1,4 +1,4 @@
-﻿using FEx.MVVM.Abstractions.Enums;
+using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;

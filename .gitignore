@@ -376,12 +376,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# VS Code files for those working on multiple tools
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
 *.code-workspace
 
 # Local History for Visual Studio Code
@@ -467,3 +461,17 @@ ehthumbs_vista.db
 
 # Folder config file
 [Dd]esktop.ini
+
+# AI tools / IDE
+.specstory/
+.cursor/
+.cursorindexingignore
+.cursorrules
+CLAUDE.md
+
+# Internal docs
+Migration.md
+work/
+
+# VS Code (full ignore)
+.vscode/

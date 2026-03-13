@@ -1,7 +1,5 @@
-using FEx.Abstractions.Interfaces;
-using FEx.Common.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
-using FEx.Extensions.Collections.Enumerables;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.MVVM.Abstractions;
 using FEx.WPFx.Abstractions.Interfaces;
 using System.Collections.Concurrent;
@@ -37,13 +35,13 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
                              bool isIconAttachedToFile = true,
                              bool isExpanded = false)
     {
-        FExTreeViewNode rootNodeStub = GetRootNodeStub(rootNodeName);
+        var rootNodeStub = GetRootNodeStub(rootNodeName);
         rootNodeStub.AddChildNode(nodePath, name, unique, iconPath, isIconAttachedToFile, isExpanded);
     }
 
     public void AddChildNodes(string rootNodeName, IEnumerable<FExTreeViewNode> childNodes, bool unique = true)
     {
-        FExTreeViewNode rootNodeStub = GetRootNodeStub(rootNodeName);
+        var rootNodeStub = GetRootNodeStub(rootNodeName);
         rootNodeStub.AddChildNodes(childNodes, unique);
     }
 
@@ -67,20 +65,20 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
 
     public async Task GrowTreeAsync(ItemsControl tree, IReadOnlyList<TItem> curr, int i = 0)
     {
-        TItem[] items = tree.Items.OfType<TItem>().ToArray();
+        var items = tree.Items.OfType<TItem>().ToArray();
 
         if (items.None(x => x.Header == curr[i].Header))
             tree.Items.Add(curr[i]);
 
         if (i < curr.Count - 1)
         {
-            int j = items.IndexWhere(x => x.Header == curr[i].Header);
+            var j = items.IndexWhere(x => x.Header == curr[i].Header);
             await GrowTreeAsync((TItem)tree.Items[j], curr, i + 1);
         }
     }
 
     /// <summary>
-    ///     Grows the tree.
+    /// Grows the tree.
     /// </summary>
     /// <param name="tree">The tree.</param>
     /// <param name="newNode">The new node.</param>
@@ -98,7 +96,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
     }
 
     /// <summary>
-    ///     Grows the tree.
+    /// Grows the tree.
     /// </summary>
     /// <param name="tree">The tree.</param>
     /// <param name="nodeStub">The node stub.</param>
@@ -130,7 +128,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
         //
         // //LockService.Instance.Release(header);
 
-        List<string> headers = await _dispatcher.InvokeOnMainThreadAsync(() => tree.Items.OfType<TItem>()
+        var headers = await _dispatcher.InvokeOnMainThreadAsync(() => tree.Items.OfType<TItem>()
             .Select(x => x.Header.ToString())
             .ToList());
 
@@ -145,9 +143,9 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
     {
         if (tree != null)
         {
-            string header = nodeStub.NodePath[locationIndex];
+            var header = nodeStub.NodePath[locationIndex];
             TItem node = null;
-            int idx = headers.IndexOf(header);
+            var idx = headers.IndexOf(header);
 
             if (idx > -1)
                 node = await _dispatcher.InvokeOnMainThreadAsync(() => tree.Items[idx] as TItem);
@@ -183,8 +181,8 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
 
     public async Task<TItem> GetTreeNodeAsync(string rootNodeName, bool setDirectoriesIcons = false)
     {
-        FExTreeViewNode rootNode = GetRootNodeStub(rootNodeName);
-        TItem res = await GetTreeViewItemAsync(rootNode);
+        var rootNode = GetRootNodeStub(rootNodeName);
+        var res = await GetTreeViewItemAsync(rootNode);
 
         var leafsDictionary = new ConcurrentDictionary<FExTreeViewNode, TItem>();
         var parentsDictionary = new ConcurrentDictionary<FExTreeViewNode, TItem>();
@@ -199,7 +197,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
         {
             parentsDictionary.Clear();
 
-            foreach (KeyValuePair<FExTreeViewNode, TItem> node in leafsDictionary)
+            foreach (var node in leafsDictionary)
             {
                 if (node.Key.NodePath.Count > 1)
                 {
@@ -222,7 +220,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
 
             leafsDictionary.Clear();
 
-            foreach (KeyValuePair<FExTreeViewNode, TItem> parent in parentsDictionary)
+            foreach (var parent in parentsDictionary)
                 leafsDictionary.AddOrUpdateValue(parent.Key, parent.Value);
         }
 
@@ -240,7 +238,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
     private async Task PutNewNodeAsync(FExTreeViewNode treeNodeStub,
                                        ConcurrentDictionary<FExTreeViewNode, TItem> nodesDictionary)
     {
-        TItem item = await GetTreeViewItemAsync(treeNodeStub);
+        var item = await GetTreeViewItemAsync(treeNodeStub);
         nodesDictionary.AddOrUpdateValue(treeNodeStub, item);
     }
 }

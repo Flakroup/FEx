@@ -1,5 +1,5 @@
-﻿using FEx.Abstractions;
-using FEx.Basics.Extensions;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.Extensions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,8 +13,8 @@ namespace FEx.WPFx.Services;
 public static class DispatcherService
 {
     /// <summary>
-    ///     Executes the action in dispatcher context
-    ///     by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
@@ -23,7 +23,7 @@ public static class DispatcherService
                                                  DispatcherObject sender = null,
                                                  DispatcherPriority priority = DispatcherPriority.Send)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         if (CheckAccess(dispatcherObject))
             action();
@@ -32,8 +32,8 @@ public static class DispatcherService
     }
 
     /// <summary>
-    ///     Executes the action in dispatcher context
-    ///     by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
@@ -42,7 +42,7 @@ public static class DispatcherService
                                                             DispatcherObject sender = null,
                                                             DispatcherPriority priority = DispatcherPriority.Send)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         if (CheckAccess(dispatcherObject))
             action();
@@ -51,8 +51,8 @@ public static class DispatcherService
     }
 
     /// <summary>
-    ///     Executes the action in dispatcher context
-    ///     by checking if action should be invoked by dispatcher, or directly, and running it.
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
@@ -61,7 +61,7 @@ public static class DispatcherService
                                                  DispatcherObject sender = null,
                                                  DispatcherPriority priority = DispatcherPriority.Send)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         return CheckAccess(dispatcherObject)
             ? action()
@@ -69,8 +69,8 @@ public static class DispatcherService
     }
 
     /// <summary>
-    ///     Executes the action in dispatcher context
-    ///     by checking if action should be invoked by dispatcher, or directly, and running it.
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="cancellationToken"></param>
@@ -82,7 +82,7 @@ public static class DispatcherService
                                                                   CancellationToken cancellationToken =
                                                                       default) //todo support ct
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         return CheckAccess(dispatcherObject)
             ? action()
@@ -93,7 +93,7 @@ public static class DispatcherService
                                                                  DispatcherObject sender = null,
                                                                  DispatcherPriority priority = DispatcherPriority.Send)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         if (CheckAccess(dispatcherObject))
             await funcTask();
@@ -106,7 +106,7 @@ public static class DispatcherService
                                                                        DispatcherPriority priority =
                                                                            DispatcherPriority.Send)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
         return CheckAccess(dispatcherObject)
             ? await funcTask()
@@ -114,7 +114,7 @@ public static class DispatcherService
     }
 
     /// <summary>
-    ///     Shows the view and waits until it's closed.
+    /// Shows the view and waits until it's closed.
     /// </summary>
     /// <param name="viewFunc">The view function.</param>
     /// <param name="isModal">if set to <c>true</c> [is modal].</param>
@@ -134,7 +134,7 @@ public static class DispatcherService
             : Application.Current;
 
     /// <summary>
-    ///     Checks the access.
+    /// Checks the access.
     /// </summary>
     /// <param name="sender">The sender.</param>
     /// <returns>True if you're on the dispatcher thread, otherwise - false</returns>
@@ -144,9 +144,9 @@ public static class DispatcherService
                                    DispatcherObject sender = null,
                                    DispatcherPriority priority = DispatcherPriority.Normal)
     {
-        DispatcherObject dispatcherObject = sender.GetDispatcherObject();
+        var dispatcherObject = sender.GetDispatcherObject();
 
-        FExFoundation.AsyncHelper.FireTaskAndForget(async () =>
+        FExCoreStatics.AsyncHelper.FireTaskAndForget(async () =>
             await dispatcherObject.Dispatcher.BeginInvoke(action, priority));
     }
 
@@ -157,7 +157,7 @@ public static class DispatcherService
             SynchronizationContext.SetSynchronizationContext(
                 new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
 
-            T view = viewFunc();
+            var view = viewFunc();
             // When the window closes, shut down the dispatcher
             view.Closed += (_, _) => Dispatcher.CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
 

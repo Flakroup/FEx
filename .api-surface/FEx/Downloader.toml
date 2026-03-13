@@ -1,0 +1,123 @@
+[project]
+name = "FEx.Downloader"
+path = "rc\\FEx.Downloader"
+
+[[classes]]
+name = "DownloadChunk"
+ns = "FEx.Downloader"
+base = "NotifyPropertyChanged, IDownloadChunk, IDisposable"
+file = "DownloadChunk.cs"
+
+[[classes]]
+name = "DownloadIndex"
+ns = "FEx.Downloader"
+base = "IEquatable<DownloadIndex>"
+file = "DownloadIndex.cs"
+
+[[classes]]
+name = "DownloadItem"
+ns = "FEx.Downloader"
+base = "ProgressAggregator, IDownloadItem"
+file = "DownloadItem.cs"
+
+[[classes]]
+name = "DownloadRange"
+ns = "FEx.Downloader"
+base = "NotifyPropertyChanged, IDownloadRange, IDisposable"
+file = "DownloadRange.cs"
+
+[[classes]]
+name = "DownloadStub"
+ns = "FEx.Downloader"
+base = "NotifyPropertyChanged, IDownloadStub"
+file = "DownloadStub.cs"
+
+[[classes]]
+name = "FExDownloader"
+ns = "FEx.Downloader"
+base = "FExInitializable"
+file = "FExDownloader.cs"
+
+[[classes]]
+name = "FExDownloaderModule"
+ns = "FEx.Downloader"
+base = "InitializeModule<IFExDownloaderModule, IServiceCollection>"
+file = "FExDownloaderModule.cs"
+
+[[interfaces]]
+name = "IFExDownloaderModule"
+ns = "FEx.Downloader"
+file = "IFExDownloaderModule.cs"
+
+[[interfaces]]
+name = "IDownloadBase"
+ns = "FEx.Downloader.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IDownloadBase.cs"
+
+[[interfaces]]
+name = "IDownloadChunk"
+ns = "FEx.Downloader.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IDownloadChunk.cs"
+
+[[interfaces]]
+name = "IDownloadItem"
+ns = "FEx.Downloader.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IDownloadItem.cs"
+
+[[interfaces]]
+name = "IDownloadPart"
+ns = "FEx.Downloader.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IDownloadPart.cs"
+
+[[interfaces]]
+name = "IDownloadRange"
+ns = "FEx.Downloader.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IDownloadRange.cs"
+
+[[interfaces]]
+name = "IDownloadStub"
+ns = "FEx.Downloader.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IDownloadStub.cs"
+
+[[classes]]
+name = "FlakHttpClient"
+ns = "FEx.Downloader.Clients"
+base = "ProgressAggregator, IDownloadBase"
+file = "Clients\\FlakHttpClient.cs"
+
+[[classes]]
+name = "FlakWebClient"
+ns = "FEx.Downloader.Clients"
+base = "WebClient"
+summary = "An extended WebClient that i.e. will store authentication cookie information and persist it through subsequent requests."
+file = "Clients\\FlakWebClient.cs"
+
+[[classes]]
+name = "HttpClientEx"
+ns = "FEx.Downloader.Clients"
+base = "HttpClient, INotifyPropertyChanged, IDownloadBase"
+file = "Clients\\HttpClientEx.cs"
+
+[[enums]]
+name = "DownloadState"
+ns = "FEx.Downloader.Enums"
+file = "Enums\\DownloadState.cs"
+
+[[classes]]
+name = "HttpClientServiceStub"
+ns = "FEx.Downloader.Models"
+base = "IEquatable<HttpClientServiceStub>"
+file = "Models\\HttpClientServiceStub.cs"
+
+[[classes]]
+name = "DownloadService"
+ns = "FEx.Downloader.Services"
+base = "ProgressAggregator"
+file = "Services\\DownloadService.cs"
+
+[[classes]]
+name = "HttpClientService"
+ns = "FEx.Downloader.Services"
+base = "IDisposable"
+file = "Services\\HttpClientService.cs"
+

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
@@ -9,9 +9,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FEx.Basics\FEx.Basics.csproj" />
-	  <ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
-	  <ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
+	  <ProjectReference Include="..\Core\FEx.Core.csproj" />
+	  <ProjectReference Include="..\FEx.FileSystem\FEx.FileSystem.csproj" />
 	  <ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
 	  <ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
 	</ItemGroup>

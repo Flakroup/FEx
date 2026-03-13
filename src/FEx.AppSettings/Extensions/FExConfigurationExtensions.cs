@@ -1,5 +1,5 @@
-﻿using FEx.Common.Extensions;
-using FEx.Extensions.Collections.Lists;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Extensions.Collections.Lists;
 using FEx.Json.Extensions;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -46,9 +46,9 @@ public static class FExConfigurationExtensions
         var builder = new ConfigurationBuilder();
         builder.SetBasePath(basePath ?? Directory.GetCurrentDirectory()).AddJsonFile(settingsFilePath, false);
 
-        IConfigurationRoot configuration = builder.Build();
+        var configuration = builder.Build();
 
-        TConf appConfiguration = Activator.CreateInstance<TConf>();
+        var appConfiguration = Activator.CreateInstance<TConf>();
 
         if (sectionKey is not null)
             configuration.GetSection(sectionKey).Bind(appConfiguration);
@@ -62,7 +62,7 @@ public static class FExConfigurationExtensions
                                    object instance,
                                    Func<string, string> jsonFunc = null)
     {
-        string jsonText = GetSerializedConfig(config, jsonFunc);
+        var jsonText = GetSerializedConfig(config, jsonFunc);
 
         JsonConvert.PopulateObject(jsonText, instance);
     }
@@ -70,7 +70,7 @@ public static class FExConfigurationExtensions
     public static T BindJsonNet<T>(this IConfigurationSection config, Func<string, string> jsonFunc = null)
         where T : new()
     {
-        string jsonText = GetSerializedConfig(config, jsonFunc);
+        var jsonText = GetSerializedConfig(config, jsonFunc);
 
         return jsonText.FromJson<T>() ?? new T();
     }
@@ -112,9 +112,9 @@ public static class FExConfigurationExtensions
 
     private static string GetSerializedConfig(IConfigurationSection config, Func<string, string> jsonFunc)
     {
-        ExpandoObject obj = BindToExpandoObject(config);
+        var obj = BindToExpandoObject(config);
 
-        string jsonText = JsonConvert.SerializeObject(obj);
+        var jsonText = JsonConvert.SerializeObject(obj);
 
         if (jsonFunc is not null)
             jsonText = jsonFunc(jsonText);
@@ -127,12 +127,12 @@ public static class FExConfigurationExtensions
         var result = new ExpandoObject();
 
         // retrieve all keys from your settings
-        IEnumerable<KeyValuePair<string, string>> configs = config.AsEnumerable();
+        var configs = config.AsEnumerable();
 
-        foreach (KeyValuePair<string, string> kvp in configs)
+        foreach (var kvp in configs)
         {
             IDictionary<string, object> parent = result;
-            string[] path = kvp.Key.Split(':');
+            var path = kvp.Key.Split(':');
 
             // create or retrieve the hierarchy (keep last path item for later)
             int i;
@@ -169,11 +169,11 @@ public static class FExConfigurationExtensions
         string[] keys = [.. dict.Keys];
 
         // it's an array if all keys are integers
-        if (keys.All(k => int.TryParse(k, out int dummy)))
+        if (keys.All(k => int.TryParse(k, out var dummy)))
         {
             var array = new object[keys.Length];
 
-            foreach (KeyValuePair<string, object> kvp in dict)
+            foreach (var kvp in dict)
                 array[int.Parse(kvp.Key)] = kvp.Value;
 
             IDictionary<string, object> parentDict = parent;
@@ -182,7 +182,7 @@ public static class FExConfigurationExtensions
         }
         else
         {
-            foreach (string childKey in dict.Keys.ToList())
+            foreach (var childKey in dict.Keys.ToList())
                 ReplaceWithArray(input, childKey, dict[childKey] as ExpandoObject);
         }
     }

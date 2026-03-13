@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace FEx.WPFx.SVG.SvgConverter;
 
@@ -6,7 +6,7 @@ public static class CmdLineHandler
 {
     public static int HandleCommandLine(string arg)
     {
-        string[] args = arg is not null
+        var args = arg is not null
             ? arg.Split(' ')
             : [];
 

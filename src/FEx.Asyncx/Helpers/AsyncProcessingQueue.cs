@@ -1,15 +1,16 @@
-﻿#if NETSTANDARD2_0
-using System.Collections.Concurrent;
-#else
-using System.Threading.Channels;
-#endif
-using FEx.Abstractions;
-using FEx.Asyncx.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Asyncx.Utilities;
-using FEx.Basics.Utilities;
+using FEx.Core.Abstractions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+#if NETSTANDARD2_0
+using System.Collections.Concurrent;
+
+#else
+using System.Threading.Channels;
+#endif
 
 namespace FEx.Asyncx.Helpers;
 
@@ -41,7 +42,7 @@ public class AsyncProcessingQueue : IDisposable
             ArgumentOutOfRangeException.ThrowIfLessThanOrEqual((int)value, 0, nameof(ConcurrencyLimit));
 #endif
             Interlocked.Exchange(ref _concurrencyLimit, (int)value);
-            FExFoundation.AsyncHelper.FireTaskAndForget(TryReleasePollingAsync);
+            FExCoreStatics.AsyncHelper.FireTaskAndForget(TryReleasePollingAsync);
         }
     }
 
@@ -79,12 +80,12 @@ public class AsyncProcessingQueue : IDisposable
         ConcurrencyLimit = limit;
 
 #if NETSTANDARD2_0
-        _taskQueue = new();
+        _taskQueue = [];
 #else
         _taskChannel = Channel.CreateUnbounded<TaskCompletionSource<bool>>();
 #endif
 
-        FExFoundation.AsyncHelper.FireTaskAndForget(ProcessQueueAsync);
+        FExCoreStatics.AsyncHelper.FireTaskAndForget(ProcessQueueAsync);
     }
 
     /// <summary>
@@ -132,8 +133,7 @@ public class AsyncProcessingQueue : IDisposable
 #if !NETSTANDARD2_0
         await
 #endif
-            using CancellationTokenRegistration
-            registration = cancellationToken.Register(() => gate.TrySetResult(true));
+        using var registration = cancellationToken.Register(() => gate.TrySetResult(true));
 
 #if NETSTANDARD2_0
         _taskQueue.Enqueue(gate);
@@ -155,11 +155,11 @@ public class AsyncProcessingQueue : IDisposable
 
             while (QueuedCount > 0
                    && _currentRunning >= _concurrencyLimit
-                   && _taskQueue.TryDequeue(out TaskCompletionSource<bool> gate))
+                   && _taskQueue.TryDequeue(out var gate))
                 ReleaseGate(gate);
         }
 #else
-        await foreach (TaskCompletionSource<bool> gate in _taskChannel.Reader.ReadAllAsync())
+        await foreach (var gate in _taskChannel.Reader.ReadAllAsync())
         {
             await WaitWhileAboveLimitAsync();
 

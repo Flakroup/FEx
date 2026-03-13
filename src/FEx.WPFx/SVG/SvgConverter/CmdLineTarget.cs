@@ -1,4 +1,4 @@
-﻿using FEx.Logging;
+using FEx.Logging;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,8 +29,8 @@ public class CmdLineTarget //: SimpleBaseTarget
         //[ArgumentParam(DefaultValue = false, ExplicitNeeded = false, LongDesc = "If true, PixelsPerDip is filtered to ensure compatibility for < 4.6.2, default: false")]
         bool filterPixelsPerDip = false)
     {
-        FExLogging.Log("Building resource dictionary...", GetType());
-        string outFileName = Path.Combine(outputdir ?? inputdir, outputname);
+        FExLoggingModule.Log("Building resource dictionary...", GetType());
+        var outFileName = Path.Combine(outputdir ?? inputdir, outputname);
 
         if (!Path.HasExtension(outFileName))
             outFileName = Path.ChangeExtension(outFileName, ".xaml");
@@ -46,12 +46,12 @@ public class CmdLineTarget //: SimpleBaseTarget
         };
 
         File.WriteAllText(outFileName, ConverterLogic.SvgDirToXaml(inputdir, resKeyInfo, null, filterPixelsPerDip));
-        FExLogging.Log($"xaml written to: {outFileName}", GetType());
+        FExLoggingModule.Log($"xaml written to: {outFileName}", GetType());
 
         if (buildhtmlfile)
         {
-            string htmlFilePath = Path.Combine(inputdir, Path.GetFileNameWithoutExtension(outputname));
-            IEnumerable<string> files = ConverterLogic.SvgFilesFromFolder(inputdir);
+            var htmlFilePath = Path.Combine(inputdir, Path.GetFileNameWithoutExtension(outputname));
+            var files = ConverterLogic.SvgFilesFromFolder(inputdir);
             BuildHtmlBrowseFile(files, htmlFilePath);
         }
 
@@ -87,8 +87,8 @@ public class CmdLineTarget //: SimpleBaseTarget
                     new XAttribute("height", size),
                     new XAttribute("width", size))))));
 
-        string filename = Path.ChangeExtension(outputFilename, ".html");
+        var filename = Path.ChangeExtension(outputFilename, ".html");
         doc.Save(filename);
-        FExLogging.Log($"Html overview written to {filename}", typeof(CmdLineTarget));
+        FExLoggingModule.Log($"Html overview written to {filename}", typeof(CmdLineTarget));
     }
 }

@@ -1,8 +1,6 @@
-﻿using FEx.Basics.Collections.Concurrent;
-using FEx.Common.Helpers;
-using FEx.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
-using FEx.Extensions.Collections.Enumerables;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Core.Abstractions.Helpers;
+using FEx.Core.Collections.Concurrent;
 using FEx.MVVM.Abstractions;
 using FEx.MVVM.Abstractions.Events;
 using FEx.MVVM.Abstractions.Interfaces;
@@ -95,8 +93,8 @@ public sealed class ProgressService : SubscriberBase, IProgressService
         if (!Listeners.ContainsKey(containerId))
             return false;
 
-        ISet<ReceiverDefinition> entry = Listeners[containerId];
-        ReceiverDefinition def = entry.Single(x => x.Container.Id == receiver.Id);
+        var entry = Listeners[containerId];
+        var def = entry.Single(x => x.Container.Id == receiver.Id);
         entry.Remove(def);
         OnListenerAttached(def, containerId);
 
@@ -105,7 +103,7 @@ public sealed class ProgressService : SubscriberBase, IProgressService
 
     public TCon GetOrAddContainer<TCon>(bool isMain = false) where TCon : class, IProgressAggregator, new()
     {
-        TCon container = ProgressStatusContainerFactory<TCon>();
+        var container = ProgressStatusContainerFactory<TCon>();
         Containers.GetOrAdd(container.Id, container);
 
         if (isMain)
@@ -116,7 +114,7 @@ public sealed class ProgressService : SubscriberBase, IProgressService
 
     public void RemoveContainer(string id)
     {
-        if (!Containers.TryRemove(id, out IProgressAggregator container))
+        if (!Containers.TryRemove(id, out var container))
             return;
 
         DetachContainer(container.Id);
@@ -136,9 +134,11 @@ public sealed class ProgressService : SubscriberBase, IProgressService
         return container;
     }
 
-    private void AttachContainer(IProgressAggregator container) => Subscriptions.ReplaceAndDisposeOldValue(container.Id, () => GetSubscription(container));
+    private void AttachContainer(IProgressAggregator container) =>
+        Subscriptions.ReplaceAndDisposeOldValue(container.Id, () => GetSubscription(container));
 
-    private IDisposable GetSubscription(IProgressAggregator container) => Observable
+    private IDisposable GetSubscription(IProgressAggregator container) =>
+        Observable
             .FromEventPattern<ProgressPropertyChangedEventHandler, ProgressPropertyChangedEventArgs>(
                 h => container.ProgressPropertyChanged += h,
                 h => container.ProgressPropertyChanged -= h)
@@ -146,7 +146,7 @@ public sealed class ProgressService : SubscriberBase, IProgressService
 
     private void OnProgressChange(string producerId, string propertyName, object value)
     {
-        if (!Listeners.TryGetValue(producerId, out ISet<ReceiverDefinition> listeners))
+        if (!Listeners.TryGetValue(producerId, out var listeners))
             return;
 
         listeners.ForEachInEnumerable(l => ReportToListener(l, propertyName, value));
@@ -154,7 +154,7 @@ public sealed class ProgressService : SubscriberBase, IProgressService
 
     private void OnListenerAttached(ReceiverDefinition def, string id)
     {
-        IDictionary<string, object> properties = Containers[id]
+        var properties = Containers[id]
             .AsDictionary(BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public);
 
         properties.ForEachInEnumerable(kv => ReportToListener(def, kv.Key, kv.Value));
@@ -162,7 +162,7 @@ public sealed class ProgressService : SubscriberBase, IProgressService
 
     private void DetachContainer(string containerId)
     {
-        if (!Subscriptions.TryRemove(containerId, out IDisposable subscription))
+        if (!Subscriptions.TryRemove(containerId, out var subscription))
             return;
 
         subscription.Dispose();

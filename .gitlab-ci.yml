@@ -33,13 +33,8 @@ default:
     - johnnyabqpc
   before_script:
     - echo "Checking environment..."
-    - git config --local protocol.file.allow always
-    - git config --local fetch.recurseSubmodules false
-    - git config --local url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/".insteadOf "https://gitlab.com/"
-    - git submodule init
-    - git submodule sync
-    - git submodule update
-    - git submodule foreach --recursive 'git submodule init && git submodule sync && git submodule update'
+    - git submodule sync --recursive
+    - git -c "url.https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/.insteadOf=https://gitlab.com/" submodule update --init --recursive
     - pwsh --version
     - dotnet --version
     - echo "Environment ready"

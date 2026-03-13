@@ -10,7 +10,7 @@ variables:
   DOTNET_NOLOGO: "1"
   CONFIGURATION: "Release"
   GIT_DEPTH: "0"
-  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_STRATEGY: none
   GIT_SUBMODULE_FORCE_HTTPS: "true"
   GIT_LFS_SKIP_SMUDGE: "1"
   GIT_TERMINAL_PROMPT: "0"
@@ -32,6 +32,8 @@ default:
   tags:
     - johnnyabqpc
   before_script:
+    - git submodule sync --recursive
+    - git -c "url.https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/.insteadOf=https://gitlab.com/" submodule update --init --recursive
     - pwsh --version
     - dotnet --version
 
@@ -52,8 +54,6 @@ secret-scan:
   image:
     name: zricethezav/gitleaks:latest
     entrypoint: [""]
-  variables:
-    GIT_SUBMODULE_STRATEGY: none
   before_script: []
   tags: []
   script:

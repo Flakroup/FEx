@@ -1,13 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	  <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
-	  <UserSecretsId>a02b56ea-923b-45ca-9153-95c5b63981e4</UserSecretsId>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+        <UserSecretsId>a02b56ea-923b-45ca-9153-95c5b63981e4</UserSecretsId>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.12.0" />
-    <PackageReference Include="Microsoft.Graph" Version="5.56.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Azure.Identity" Version="1.17.0" />
+        <PackageReference Include="Microsoft.Graph" Version="5.93.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="$(DotNetNugetsVersion)" />
+    </ItemGroup>
 
 </Project>

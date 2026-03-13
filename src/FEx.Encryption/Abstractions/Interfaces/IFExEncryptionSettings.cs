@@ -1,4 +1,4 @@
-﻿namespace FEx.Encryption.Abstractions.Interfaces;
+namespace FEx.Encryption.Abstractions.Interfaces;
 
 public interface IFExEncryptionSettings
 {

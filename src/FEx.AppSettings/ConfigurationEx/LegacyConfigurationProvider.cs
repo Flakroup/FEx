@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using ConfigurationManager = System.Configuration.ConfigurationManager;
 
@@ -13,7 +13,7 @@ public class LegacyConfigurationProvider : ConfigurationProvider, IConfiguration
         foreach (ConnectionStringSettings connectionString in ConfigurationManager.ConnectionStrings)
             Data.Add($"ConnectionStrings:{connectionString.Name}", connectionString.ConnectionString);
 
-        foreach (string settingKey in ConfigurationManager.AppSettings.AllKeys)
+        foreach (var settingKey in ConfigurationManager.AppSettings.AllKeys)
             Data.Add(settingKey, ConfigurationManager.AppSettings[settingKey]);
     }
 }

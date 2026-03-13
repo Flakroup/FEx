@@ -1,4 +1,4 @@
-﻿using Azure.Identity;
+using Azure.Identity;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Identity.Client;
@@ -16,7 +16,8 @@ public class OneDriveClient
 
     public OneDriveClient()
     {
-        _scopes = new[] { "User.Read", "Files.Read", "Files.Read.All" };
+        _scopes = ["User.Read", "Files.Read", "Files.Read.All"];
+
         _appConfiguration = new()
         {
             Instance = "https://login.microsoftonline.com/",
@@ -31,13 +32,17 @@ public class OneDriveClient
 
         try
         {
-            GraphServiceClient client = GetGraphServiceClient();
-            DriveCollectionResponse r = await client.Me.Drives.GetAsync(cancellationToken: cancellationToken);
-            var pageIterator = PageIterator<Drive, DriveCollectionResponse>.CreatePageIterator(client, r, d =>
-            {
-                drives.Add(d);
-                return true;
-            });
+            var client = GetGraphServiceClient();
+            var r = await client.Me.Drives.GetAsync(cancellationToken: cancellationToken);
+
+            var pageIterator = PageIterator<Drive, DriveCollectionResponse>.CreatePageIterator(client,
+                r,
+                d =>
+                {
+                    drives.Add(d);
+
+                    return true;
+                });
 
             await pageIterator.IterateAsync(cancellationToken);
         }
@@ -54,8 +59,11 @@ public class OneDriveClient
         {
             ClientId = _appConfiguration.ClientId
         };
+
         var interactiveBrowserCredential = new InteractiveBrowserCredential(interactiveBrowserCredentialOptions);
 
-        return new(interactiveBrowserCredential, _scopes); // you can pass the TokenCredential directly to the GraphServiceClient
+        return
+            new(interactiveBrowserCredential,
+                _scopes); // you can pass the TokenCredential directly to the GraphServiceClient
     }
 }

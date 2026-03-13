@@ -50,7 +50,7 @@ public class AppConfig : IAppConfig
                                                                   Func<object, TResource> converter)
         where TResource : class
     {
-        object resource = Application.Current.TryFindResource(resourceName);
+        var resource = Application.Current.TryFindResource(resourceName);
 
         return resource is null
             ? null

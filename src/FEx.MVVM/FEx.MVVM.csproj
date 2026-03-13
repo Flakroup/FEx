@@ -9,10 +9,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Core\FEx.Core.csproj" />
 		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
-		<ProjectReference Include="..\FEx.DI.Abstractions\FEx.DI.Abstractions.csproj" />
-		<ProjectReference Include="..\FEx.Extensions\FEx.Extensions.csproj" />
+		<ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
 		<ProjectReference Include="..\FEx.MVVM.Rx\FEx.MVVM.Rx.csproj" />
+		<ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
 	</ItemGroup>
 
 </Project>

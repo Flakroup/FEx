@@ -1,14 +1,12 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Common.Extensions;
-using FEx.DI.Abstractions;
-using FEx.MVVM.Rx.Abstractions.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
+using FEx.Agnostics.Abstractions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Common.Abstractions.Interfaces;
 using ReactiveUI;
 using System.Reactive.Concurrency;
 
 namespace FEx.MVVM.Rx;
 
-public class FExMvvmRx : InitializeModule<IFExMvvmRxContainer>
+public class FExMvvmRx : FExInitializable
 {
     public static IStatusService StatusService { get; private set; }
 
@@ -19,17 +17,12 @@ public class FExMvvmRx : InitializeModule<IFExMvvmRxContainer>
 
     protected override void OnInitialize()
     {
-        base.OnInitialize();
-
 #if NETFRAMEWORK
             RxApp.MainThreadScheduler = DispatcherScheduler.Current;
 #else
-        RxApp.MainThreadScheduler = CurrentThreadScheduler.Instance;
+        if (RxApp.MainThreadScheduler is DefaultScheduler)
+            RxApp.MainThreadScheduler = CurrentThreadScheduler.Instance;
 #endif
         RxApp.TaskpoolScheduler = TaskPoolScheduler.Default;
     }
-
-    /// <inheritdoc />
-    protected override void AddServices(IFExMvvmRxContainer container, IServiceCollection services) =>
-        FExMvvmRxModule.AddServices(container, services);
 }

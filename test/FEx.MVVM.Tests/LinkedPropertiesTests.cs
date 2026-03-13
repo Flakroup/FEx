@@ -1,19 +1,11 @@
 using FEx.MVVM.Abstractions;
 using FEx.MVVM.Extensions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace FEx.MVVM.Tests;
 
-public class LinkedPropertiesTests
+public sealed class LinkedPropertiesTests
 {
-    private readonly ITestOutputHelper _output;
-
-    public LinkedPropertiesTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     [Fact]
     public void LinkMemberPropertyTest()
     {

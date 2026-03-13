@@ -1,0 +1,44 @@
+[project]
+name = "FEx.DependencyInjection.Tests"
+path = "est\\FEx.DependencyInjection.Tests"
+
+[[classes]]
+name = "BasicArchitectureTests"
+ns = "FEx.DependencyInjection.Tests"
+summary = "Basic tests to validate the Multi-DI architecture works correctly. Tests the container directly instead of relying on static FExServiceProvider."
+file = "BasicArchitectureTests.cs"
+
+[[classes]]
+name = "EngineAgnosticTests"
+ns = "FEx.DependencyInjection.Tests"
+base = "IDisposable"
+summary = "Tests to verify the engine-agnostic Multi-DI architecture works correctly."
+file = "EngineAgnosticTests.cs"
+
+[[classes]]
+name = "TestInitializeModule"
+ns = "FEx.DependencyInjection.Tests"
+base = "InitializeModule<IFExDependencyInjectionContainer, IServiceCollection>"
+summary = "Test helper class to validate the InitializeModule base class functionality."
+file = "EngineAgnosticTests.cs"
+
+[[classes]]
+name = "MultiDITests"
+ns = "FEx.DependencyInjection.Tests"
+base = "IDisposable"
+file = "MultiDITests.cs"
+
+[[classes]]
+name = "SimpleArchitectureTests"
+ns = "FEx.DependencyInjection.Tests"
+base = "IDisposable"
+summary = "Simplified tests to validate the Multi-DI architecture fundamentals."
+file = "SimpleArchitectureTests.cs"
+
+[[classes]]
+name = "TestContainer"
+ns = "FEx.DependencyInjection.Tests"
+base = "TestBase, IFExDependencyInjectionContainer, IContainer<IFExServiceProvider>,
+    IContainer<FExMicrosoftDIServiceProvider>, IContainer<IInitializeModule<IServiceCollection>[]>"
+file = "TestContainer.cs"
+

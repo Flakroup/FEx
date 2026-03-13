@@ -1,0 +1,106 @@
+[project]
+name = "FEx.PersistentStorage.Abstractions"
+path = "rc\\PersistentStorage.Abstractions"
+
+[[classes]]
+name = "CacheableItem"
+ns = "FEx.PersistentStorage.Abstractions"
+base = "ICacheableItem"
+file = "CacheableItem.cs"
+
+[[interfaces]]
+name = "ICacheableItem"
+ns = "FEx.PersistentStorage.Abstractions"
+file = "ICacheableItem.cs"
+
+[[interfaces]]
+name = "ICacheService"
+ns = "FEx.PersistentStorage.Abstractions"
+file = "ICacheService.cs"
+
+[[interfaces]]
+name = "IClearCache"
+ns = "FEx.PersistentStorage.Abstractions"
+file = "IClearCache.cs"
+
+[[interfaces]]
+name = "IDatabaseFilePathResolver"
+ns = "FEx.PersistentStorage.Abstractions"
+file = "IDatabaseFilePathResolver.cs"
+
+[[interfaces]]
+name = "IDatabaseProvider"
+ns = "FEx.PersistentStorage.Abstractions"
+file = "IDatabaseProvider.cs"
+
+[[interfaces]]
+name = "IFExCachedFile"
+ns = "FEx.PersistentStorage.Abstractions"
+file = "IFExCachedFile.cs"
+
+[[interfaces]]
+name = "IFExDownloadResult"
+ns = "FEx.PersistentStorage.Abstractions"
+file = "IFExDownloadResult.cs"
+
+[[interfaces]]
+name = "IFExPersistentStorageContainer"
+ns = "FEx.PersistentStorage.Abstractions"
+file = "IFExPersistencyStorageContainer.cs"
+
+[[interfaces]]
+name = "IFileLocalStorageService"
+ns = "FEx.PersistentStorage.Abstractions"
+file = "IFileLocalStorageService.cs"
+
+[[interfaces]]
+name = "ILocalStorageService"
+ns = "FEx.PersistentStorage.Abstractions"
+file = "ILocalStorageService.cs"
+
+[[classes]]
+name = "CacheServiceConfiguration"
+ns = "FEx.PersistentStorage.Abstractions.Configuration"
+file = "Configuration\\CacheServiceConfiguration.cs"
+static = true
+
+[[enums]]
+name = "ClearCachePriority"
+ns = "FEx.PersistentStorage.Abstractions.Enums"
+file = "Enums\\ClearCachePriority.cs"
+
+[[enums]]
+name = "ClearCacheReason"
+ns = "FEx.PersistentStorage.Abstractions.Enums"
+file = "Enums\\ClearCacheReason.cs"
+
+[[classes]]
+name = "CachedFileExtensions"
+ns = "FEx.PersistentStorage.Abstractions.Extensions"
+file = "Extensions\\CachedFileExtensions.cs"
+static = true
+
+[[extensions]]
+name = "IsExpired"
+sig = "bool IsExpired(this LiteFileInfo<string> file)"
+returns = "bool"
+file = "Extensions\\CachedFileExtensions.cs"
+
+[[classes]]
+name = "ClearCacheReasonExtensions"
+ns = "FEx.PersistentStorage.Abstractions.Extensions"
+file = "Extensions\\ClearCacheReasonExtensions.cs"
+static = true
+
+[[extensions]]
+name = "HasFlagFast"
+sig = "bool HasFlagFast(this ClearCacheReason value, ClearCacheReason flag)"
+returns = "bool"
+file = "Extensions\\ClearCacheReasonExtensions.cs"
+
+[[classes]]
+name = "FExCachedFile"
+ns = "FEx.PersistentStorage.Abstractions.Models"
+base = "NotifyPropertyChanged, IFExCachedFile, IAsyncDisposable"
+file = "Models\\FExCachedFile.cs"
+

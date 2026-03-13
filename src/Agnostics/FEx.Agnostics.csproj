@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="System.Text.Json" Version="$(DotNetNugetsVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>

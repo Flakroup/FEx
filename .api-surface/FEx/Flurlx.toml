@@ -1,0 +1,131 @@
+[project]
+name = "FEx.Flurlx"
+path = "rc\\FEx.Flurlx"
+
+[[classes]]
+name = "FExCookieJar"
+ns = "FEx.Flurlx"
+base = "IReadOnlyCollection<FlurlCookie>"
+summary = "A collection of FlurlCookies that can be attached to one or more FlurlRequests, either explicitly via WithCookies or implicitly via a CookieSession. Stores cookies received via Set-Cookie response headers."
+file = "FExCookieJar.cs"
+
+[[classes]]
+name = "FExInvalidCookieException"
+ns = "FEx.Flurlx"
+base = "Exception"
+summary = "Exception thrown when attempting to add or update an invalid FlurlCookie to a CookieJar."
+file = "FExCookieJar.cs"
+
+[[classes]]
+name = "FExFlurlx"
+ns = "FEx.Flurlx"
+base = "FExInitializable"
+file = "FExFlurlx.cs"
+
+[[classes]]
+name = "FExFlurlxModule"
+ns = "FEx.Flurlx"
+base = "InitializeModule<IFExFlurlxContainer, IServiceCollection>"
+file = "FExFlurlxModule.cs"
+
+[[classes]]
+name = "FlurlConfigurator"
+ns = "FEx.Flurlx"
+base = "FExInitializable, IFlurlConfigurator"
+file = "FlurlConfigurator.cs"
+
+[[classes]]
+name = "IsExternalInit"
+ns = "System.Runtime.CompilerServices"
+file = "IsExternalInit.cs"
+static = true
+
+[[interfaces]]
+name = "IApiConfiguration"
+ns = "FEx.Flurlx.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IApiConfiguration.cs"
+
+[[interfaces]]
+name = "IFExFlurlxContainer"
+ns = "FEx.Flurlx.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IFExFlurlxContainer.cs"
+
+[[interfaces]]
+name = "IFlurlConfigurator"
+ns = "FEx.Flurlx.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IFlurlConfigurator.cs"
+
+[[classes]]
+name = "PollyPolicyConfiguration"
+ns = "FEx.Flurlx.Configuration"
+summary = "Configuration for Polly resilience policies."
+file = "Configuration\\PollyPolicyConfiguration.cs"
+
+[[classes]]
+name = "FlurlExtensions"
+ns = "FEx.Flurlx.Extensions"
+file = "Extensions\\FlurlExtensions.cs"
+static = true
+
+[[extensions]]
+name = "FixBooleanQueryParameters"
+sig = "IFlurlRequest FixBooleanQueryParameters(this IFlurlRequest req)"
+returns = "IFlurlRequest"
+file = "Extensions\\FlurlExtensions.cs"
+
+[[extensions]]
+name = "FixBooleanQueryParameters"
+sig = "Url FixBooleanQueryParameters(this Url url)"
+returns = "Url"
+file = "Extensions\\FlurlExtensions.cs"
+
+[[extensions]]
+name = "StripCharsetQuotes"
+sig = "HttpContent StripCharsetQuotes(this HttpContent content)"
+returns = "HttpContent"
+file = "Extensions\\FlurlExtensions.cs"
+
+[[classes]]
+name = "FlurlResponseExtensions"
+ns = "FEx.Flurlx.Extensions"
+file = "Extensions\\FlurlResponseExtensions.cs"
+static = true
+
+[[extensions]]
+name = "IsSuccessStatusCode"
+sig = "bool IsSuccessStatusCode(this IFlurlResponse response)"
+returns = "bool"
+summary = "Gets a value that indicates if the HTTP response was successful."
+file = "Extensions\\FlurlResponseExtensions.cs"
+
+[[classes]]
+name = "UrlExtensions"
+ns = "FEx.Flurlx.Extensions"
+file = "Extensions\\UrlExtensions.cs"
+static = true
+
+[[enums]]
+name = "RequestMethod"
+ns = "FEx.Flurlx.Models"
+summary = "HTTP method to use when making requests"
+file = "Models\\RequestMethod.cs"
+
+[[classes]]
+name = "FExPollyPolicyBuilder"
+ns = "FEx.Flurlx.Services"
+base = "IFExPollyPolicyBuilder"
+summary = "FEx Polly Policy Builder - Creates comprehensive resilience policies for HTTP requests."
+file = "Services\\FExPollyPolicyBuilder.cs"
+
+[[classes]]
+name = "FlurlApiBase"
+ns = "FEx.Flurlx.Services"
+base = "AsyncInitializable"
+summary = "Abstract base class for building typed API clients with Polly resilience."
+file = "Services\\FlurlApiBase.cs"
+
+[[interfaces]]
+name = "IFExPollyPolicyBuilder"
+ns = "FEx.Flurlx.Services"
+file = "Services\\IFExPollyPolicyBuilder.cs"
+

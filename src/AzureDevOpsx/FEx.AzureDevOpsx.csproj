@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net481</TargetFramework>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.205.1" />
+        <PackageReference Include="Microsoft.TeamFoundationServer.ExtendedClient" Version="16.205.1" />
+        <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include="PresentationCore" />
+        <Reference Include="PresentationFramework" />
+        <Reference Include="System.Windows.Forms" />
+        <Reference Include="System.Web" />
+        <Reference Include="System.Xaml" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\FEx.Flurlx\FEx.Flurlx.csproj" />
+        <ProjectReference Include="..\FEx.Legacy\FEx.Legacy.csproj" />
+        <ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
+        <ProjectReference Include="..\Imaging.Windows\FEx.Imaging.Windows.csproj" />
+    </ItemGroup>
+</Project>

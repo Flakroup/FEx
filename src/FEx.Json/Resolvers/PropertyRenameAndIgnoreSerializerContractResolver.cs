@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ public class PropertyRenameAndIgnoreSerializerContractResolver : DefaultContract
         if (!_ignores.ContainsKey(type))
             _ignores[type] = [];
 
-        foreach (string prop in jsonPropertyNames)
+        foreach (var prop in jsonPropertyNames)
             _ignores[type].Add(prop);
     }
 
@@ -36,7 +36,7 @@ public class PropertyRenameAndIgnoreSerializerContractResolver : DefaultContract
 
     protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
     {
-        JsonProperty property = base.CreateProperty(member, memberSerialization);
+        var property = base.CreateProperty(member, memberSerialization);
 
         if (IsIgnored(property.DeclaringType, property.PropertyName))
         {
@@ -44,7 +44,7 @@ public class PropertyRenameAndIgnoreSerializerContractResolver : DefaultContract
             property.Ignored = true;
         }
 
-        if (IsRenamed(property.DeclaringType, property.PropertyName, out string newJsonPropertyName))
+        if (IsRenamed(property.DeclaringType, property.PropertyName, out var newJsonPropertyName))
             property.PropertyName = newJsonPropertyName;
 
         return property;
@@ -55,7 +55,7 @@ public class PropertyRenameAndIgnoreSerializerContractResolver : DefaultContract
 
     private bool IsRenamed(Type type, string jsonPropertyName, out string newJsonPropertyName)
     {
-        if (!_renames.TryGetValue(type, out Dictionary<string, string> renames)
+        if (!_renames.TryGetValue(type, out var renames)
             || !renames.TryGetValue(jsonPropertyName, out newJsonPropertyName))
         {
             newJsonPropertyName = null;

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Logging\FEx.Logging.csproj" />
+		<ProjectReference Include="..\FEx.Telemetry\FEx.Telemetry.csproj" />
+	</ItemGroup>
+
+</Project>

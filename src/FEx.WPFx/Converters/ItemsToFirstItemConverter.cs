@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Globalization;
 using System.Windows.Data;
@@ -6,19 +6,19 @@ using System.Windows.Data;
 namespace FEx.WPFx.Converters;
 
 /// <summary>
-///     Items to first item converter.
+/// Items to first item converter.
 /// </summary>
 public class ItemsToFirstItemConverter : IValueConverter
 {
     /// <summary>
-    ///     Converts a value.
+    /// Converts a value.
     /// </summary>
     /// <param name="value">The value produced by the binding source.</param>
     /// <param name="targetType">The type of the binding target property.</param>
     /// <param name="parameter">The converter parameter to use.</param>
     /// <param name="culture">The culture to use in the converter.</param>
     /// <returns>
-    ///     A converted value. If the method returns null, the valid null value is used.
+    /// A converted value. If the method returns null, the valid null value is used.
     /// </returns>
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
@@ -26,7 +26,7 @@ public class ItemsToFirstItemConverter : IValueConverter
 
         if (enumerable is not null)
         {
-            IEnumerator enumerator = enumerable.GetEnumerator();
+            var enumerator = enumerable.GetEnumerator();
 
             return enumerator.MoveNext()
                 ? enumerator.Current
@@ -37,14 +37,14 @@ public class ItemsToFirstItemConverter : IValueConverter
     }
 
     /// <summary>
-    ///     Converts a value.
+    /// Converts a value.
     /// </summary>
     /// <param name="value">The value that is produced by the binding target.</param>
     /// <param name="targetType">The type to convert to.</param>
     /// <param name="parameter">The converter parameter to use.</param>
     /// <param name="culture">The culture to use in the converter.</param>
     /// <returns>
-    ///     A converted value. If the method returns null, the valid null value is used.
+    /// A converted value. If the method returns null, the valid null value is used.
     /// </returns>
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
 }

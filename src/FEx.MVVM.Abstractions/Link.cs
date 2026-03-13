@@ -1,4 +1,4 @@
-﻿using FEx.Common.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.MVVM.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
@@ -45,9 +45,9 @@ public class Link : ILink
         if (_childLinks.IsNullOrEmptyCollection())
             return;
 
-        foreach (Guid key in _childLinks.Keys.ToList())
+        foreach (var key in _childLinks.Keys.ToList())
         {
-            if (_childLinks.TryRemove(key, out ILink link))
+            if (_childLinks.TryRemove(key, out var link))
                 link.Unlink(resetPropertyValue);
         }
     }
@@ -92,7 +92,7 @@ public class Link : ILink
 
     public void RelinkChildren<T>(T newSender, Action onNewSender) where T : ILinkableNotifyPropertyChanged
     {
-        bool isNull = newSender is null;
+        var isNull = newSender is null;
         UnlinkChildren(isNull);
 
         if (!isNull)

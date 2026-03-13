@@ -1,13 +1,11 @@
-﻿using FEx.Extensions.Web;
+using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Json.Extensions;
 using Newtonsoft.Json;
 using System;
-using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using FExUriExtensions = FEx.Extensions.Web.UriExtensions;
+using FExUriExtensions = FEx.Agnostics.Abstractions.Extensions.Web.UriExtensions;
 
 namespace FEx.Webx.Extensions;
 
@@ -18,7 +16,6 @@ public static class JsonExtensions
                                                               bool checkNetAvailability = false,
                                                               CancellationToken cancellationToken = default)
     {
-        //
         T res = default;
 
         if (!checkNetAvailability
@@ -27,23 +24,25 @@ public static class JsonExtensions
             if (url.Scheme is "http" or "https")
             {
                 using var client = new HttpClient();
-                using HttpResponseMessage response = await client.GetAsync(url, cancellationToken);
-                using HttpResponseMessage ensuredResponse = response.EnsureSuccessStatusCode();
-#if NETSTANDARD
-                using Stream jsonStream = await ensuredResponse.Content.ReadAsStreamAsync();
+                using var response = await client.GetAsync(url, cancellationToken);
+                response.EnsureSuccessStatusCode();
+#if NETSTANDARD2_0
+                using var jsonStream = await response.Content.ReadAsStreamAsync();
+#elif NETSTANDARD2_1
+                await using var jsonStream = await response.Content.ReadAsStreamAsync();
 #else
-                await using Stream jsonStream = await ensuredResponse.Content.ReadAsStreamAsync(cancellationToken);
+                await using var jsonStream = await response.Content.ReadAsStreamAsync(cancellationToken);
 #endif
                 if (jsonStream is not null)
                     res = jsonStream.DeserializeFromStream<T>(settings);
             }
             else
             {
-                using WebResponse response = await url.GetUriResponseAsync();
-#if NETSTANDARD
-                using Stream jsonStream = response.GetResponseStream();
+                using var response = await url.GetUriResponseAsync();
+#if NETSTANDARD2_0
+                using var jsonStream = response.GetResponseStream();
 #else
-                await using Stream jsonStream = response.GetResponseStream();
+                await using var jsonStream = response.GetResponseStream();
 #endif
                 if (jsonStream is not null)
                     res = jsonStream.DeserializeFromStream<T>(settings);

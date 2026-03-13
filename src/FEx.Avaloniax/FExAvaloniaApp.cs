@@ -1,9 +1,8 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Data;
 using FEx.Avaloniax.Abstractions.Interfaces;
-using FEx.Basics.Extensions;
-using FEx.DependencyInjection;
-using FEx.DI.Abstractions;
+using FEx.Core.Abstractions.Extensions;
+using FEx.DependencyInjection.Abstractions;
 using System;
 
 namespace FEx.Avaloniax;
@@ -14,13 +13,13 @@ public abstract class FExAvaloniaApp<TContainer> : Application
     public TContainer Container { get; }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="FExAvaloniaApp{TContainer}" /> class.
+    /// Initializes a new instance of the <see cref="FExAvaloniaApp{TContainer}" /> class.
     /// </summary>
     protected FExAvaloniaApp()
     {
         try
         {
-            FExServiceProvider.Initialize<TContainer, FExStrongInjectServiceProvider>();
+            FExServiceProvider.InitializeAsync<TContainer>().GetAwaiter().GetResult();
             OnActivation();
         }
         catch (Exception ex)
@@ -41,7 +40,7 @@ public abstract class FExAvaloniaApp<TContainer> : Application
 
     protected virtual void HandleAppException(Exception exception)
     {
-        bool bindingException = exception is BindingChainException;
+        var bindingException = exception is BindingChainException;
         exception.HandleException(!bindingException);
     }
 }

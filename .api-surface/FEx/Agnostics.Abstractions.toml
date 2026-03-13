@@ -1,0 +1,2227 @@
+[project]
+name = "FEx.Agnostics.Abstractions"
+path = "rc\\Agnostics.Abstractions"
+
+[[classes]]
+name = "AsyncStatics"
+ns = "FEx.Agnostics.Abstractions"
+file = "AsyncStatics.cs"
+static = true
+
+[[classes]]
+name = "FExAgnosticsStatics"
+ns = "FEx.Agnostics.Abstractions"
+summary = "Provides static access to core FEx services at the agnostics layer. This class MUST be initialized by higher-level layers (e.g., FEx.Core) before use."
+file = "FExAgnosticsStatics.cs"
+
+[[classes]]
+name = "FExInitializable"
+ns = "FEx.Agnostics.Abstractions"
+base = "IFExInitializable"
+file = "FExInitializable.cs"
+
+[[classes]]
+name = "Index"
+ns = "FEx.Agnostics.Abstractions.Collections"
+base = "IIndex<TKey, TValue>"
+file = "Collections\\Index.cs"
+
+[[classes]]
+name = "Map"
+ns = "FEx.Agnostics.Abstractions.Collections"
+base = "IMap<TForwardKey, TReverseKey>"
+file = "Collections\\Map.cs"
+
+[[classes]]
+name = "BaseConcurrentList"
+ns = "FEx.Agnostics.Abstractions.Collections.Concurrent"
+base = "ISuppressEvents"
+file = "Collections\\Concurrent\\BaseConcurrentList.cs"
+
+[[classes]]
+name = "CollectionEventsConfig"
+ns = "FEx.Agnostics.Abstractions.Configuration"
+file = "Configuration\\CollectionEventsConfig.cs"
+
+[[enums]]
+name = "AsyncMode"
+ns = "FEx.Agnostics.Abstractions.Enums"
+file = "Enums\\AsyncMode.cs"
+
+[[enums]]
+name = "AsyncOptions"
+ns = "FEx.Agnostics.Abstractions.Enums"
+file = "Enums\\AsyncOptions.cs"
+
+[[enums]]
+name = "DateInterval"
+ns = "FEx.Agnostics.Abstractions.Enums"
+summary = "Indicates how to determine and format date intervals when calling date-related functions."
+file = "Enums\\DateInterval.cs"
+
+[[enums]]
+name = "FileOperation"
+ns = "FEx.Agnostics.Abstractions.Enums"
+file = "Enums\\FileOperation.cs"
+
+[[enums]]
+name = "LengthType"
+ns = "FEx.Agnostics.Abstractions.Enums"
+file = "Enums\\LengthType.cs"
+
+[[enums]]
+name = "MediaTypes"
+ns = "FEx.Agnostics.Abstractions.Enums"
+file = "Enums\\MediaTypes.cs"
+
+[[classes]]
+name = "AsyncOptionsExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\AsyncOptionsExtensions.cs"
+static = true
+
+[[extensions]]
+name = "HasFlagFast"
+sig = "bool HasFlagFast(this AsyncOptions value, AsyncOptions flag)"
+returns = "bool"
+file = "Extensions\\AsyncOptionsExtensions.cs"
+
+[[classes]]
+name = "BooleanExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\BooleanExtensions.cs"
+static = true
+
+[[extensions]]
+name = "AndNot"
+sig = "bool AndNot(this bool first, bool second)"
+returns = "bool"
+summary = "Combines 2 boolean (And Not operation)."
+file = "Extensions\\BooleanExtensions.cs"
+
+[[extensions]]
+name = "AndAlso"
+sig = "bool AndAlso(this bool first, bool second)"
+returns = "bool"
+summary = "Combines 2 boolean (And operation)."
+file = "Extensions\\BooleanExtensions.cs"
+
+[[extensions]]
+name = "OrElse"
+sig = "bool OrElse(this bool first, bool second)"
+returns = "bool"
+summary = "Combines 2 boolean (Or operation)."
+file = "Extensions\\BooleanExtensions.cs"
+
+[[extensions]]
+name = "ToInteger"
+sig = "int ToInteger(this bool value)"
+returns = "int"
+summary = "Gets a int from a boolean."
+file = "Extensions\\BooleanExtensions.cs"
+
+[[extensions]]
+name = "IsFalse"
+sig = "bool IsFalse(this bool value)"
+returns = "bool"
+summary = "Gets a value indicating if the value is False"
+file = "Extensions\\BooleanExtensions.cs"
+
+[[extensions]]
+name = "IfTrue"
+sig = "void IfTrue(this bool value, Action action)"
+returns = "void"
+summary = "Execute action if value is True."
+file = "Extensions\\BooleanExtensions.cs"
+
+[[extensions]]
+name = "IfFalse"
+sig = "void IfFalse(this bool value, Action action)"
+returns = "void"
+summary = "Execute action if value is False."
+file = "Extensions\\BooleanExtensions.cs"
+
+[[extensions]]
+name = "IfTrueOrFalse"
+sig = "void IfTrueOrFalse(this bool value, Action actionTrue, Action actionFalse)"
+returns = "void"
+summary = "Execute action if value is True/False."
+file = "Extensions\\BooleanExtensions.cs"
+
+[[extensions]]
+name = "ThrowArgumentOutOfRange"
+sig = "void ThrowArgumentOutOfRange(this bool condition, string argumentName)"
+returns = "void"
+summary = "Checks an condition for True/False."
+file = "Extensions\\BooleanExtensions.cs"
+
+[[extensions]]
+name = "ToBooleanSafe"
+sig = "bool ToBooleanSafe(this bool? value)"
+returns = "bool"
+summary = "Converts the nullable boolean to a boolean."
+file = "Extensions\\BooleanExtensions.cs"
+
+[[extensions]]
+name = "ToBooleanSafe"
+sig = "bool ToBooleanSafe(this bool? value, bool defaultValue)"
+returns = "bool"
+summary = "Converts the nullable boolean to a boolean."
+file = "Extensions\\BooleanExtensions.cs"
+
+[[extensions]]
+name = "ToStringSafe"
+sig = "string ToStringSafe(this bool? value)"
+returns = "string"
+summary = "Converts the nullable boolean to a string."
+file = "Extensions\\BooleanExtensions.cs"
+
+[[classes]]
+name = "CollectionExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\CollectionExtensions.cs"
+static = true
+
+[[extensions]]
+name = "Count"
+sig = "int Count(this IEnumerable source)"
+returns = "int"
+file = "Extensions\\CollectionExtensions.cs"
+
+[[classes]]
+name = "DateTimeExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\DateTimeExtensions.cs"
+static = true
+
+[[extensions]]
+name = "InSqlRange"
+sig = "bool InSqlRange(this DateTime value)"
+returns = "bool"
+summary = "Gets a value indicating if value is between or equal Minimum - Maximum values for a SqlDateTime."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "InSqlRangeOrNull"
+sig = "bool InSqlRangeOrNull(this DateTime? value)"
+returns = "bool"
+summary = "Gets a value indicating if value is between or equal Minimum - Maximum values for a SqlDateTime or is null."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "InRange"
+sig = "bool InRange(this DateTime value, DateTime min, DateTime max)"
+returns = "bool"
+summary = "Gets a value indicating if value is between or equal Minimum - Maximum values."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetWeekNumber"
+sig = "int GetWeekNumber(this DateTime current)"
+returns = "int"
+summary = "Gets current week number."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "IsAfter"
+sig = "bool IsAfter(this DateTime? current, DateTime? target)"
+returns = "bool"
+summary = "Gets a value indicating whether a day is after a specified date."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "IsAfter"
+sig = "bool IsAfter(this DateTime current, DateTime target)"
+returns = "bool"
+summary = "Gets a value indicating whether a day is after a specified date."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "IsAfterOrEqual"
+sig = "bool IsAfterOrEqual(this DateTime current, DateTime target)"
+returns = "bool"
+summary = "Gets a value indicating whether a day is after or equal a specified date."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "IsBeforeOrEqual"
+sig = "bool IsBeforeOrEqual(this DateTime current, DateTime target)"
+returns = "bool"
+summary = "Gets a value indicating whether a day is after or equal a specified date."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "ToDaySuffix"
+sig = "string ToDaySuffix(this int day)"
+returns = "string"
+summary = "Gets a value indicating whether a day is after or equal a specified date."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetStartOfWeek"
+sig = "DateTime GetStartOfWeek(this DateTime date)"
+returns = "DateTime"
+summary = "Gets a value indicating whether a day is after or equal a specified date."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "ConvertDateBetweenTimeZones"
+sig = "DateTime ConvertDateBetweenTimeZones(this DateTime date,
+                                                       TimeZoneInfo timeZoneFrom,
+                                                       TimeZoneInfo timeZoneTo)"
+returns = "DateTime"
+summary = "Gets a value indicating whether a day is after or equal a specified date."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "ConvertLocalToTimeZone"
+sig = "DateTime ConvertLocalToTimeZone(this DateTime dateTime, TimeZoneInfo timeZone)"
+returns = "DateTime"
+summary = "Gets a value indicating whether a day is after or equal a specified date."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetLastDayOfMonth"
+sig = "DateTime GetLastDayOfMonth(this DateTime date)"
+returns = "DateTime"
+summary = "Gets the date of last day of month."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "RoundUp"
+sig = "DateTime RoundUp(this DateTime dateToRound, TimeSpan roundTo)"
+returns = "DateTime"
+summary = "Get a new date rounded to the specified time or a multiple of it"
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "IsWeekend"
+sig = "bool IsWeekend(this DateTime current)"
+returns = "bool"
+summary = "Gets whether the the provided date is on a Weekend."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "IsWeekDay"
+sig = "bool IsWeekDay(this DateTime current)"
+returns = "bool"
+summary = "Gets whether the the provided date is on a Week Day."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "IsLeapYear"
+sig = "bool IsLeapYear(this DateTime current)"
+returns = "bool"
+summary = "Gets a value indicating whether the the provided date is in a leap year."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetCountDaysOfMonth"
+sig = "int GetCountDaysOfMonth(this DateTime current)"
+returns = "int"
+summary = "Gets the number of days in the month of the provided date."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "ToA4DTimeString"
+sig = "string ToA4DTimeString(this DateTime current)"
+returns = "string"
+summary = "Gets a formatted datestring from a date."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "ToA4DDateTimeString"
+sig = "string ToA4DDateTimeString(this DateTime current)"
+returns = "string"
+summary = "Gets a formatted datestring from a date."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "ClearMilliseconds"
+sig = "DateTime ClearMilliseconds(this DateTime dateTime)"
+returns = "DateTime"
+summary = "Clears the milliseconds."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "IsEarlierThan"
+sig = "bool IsEarlierThan(this DateTime firstDateTime, DateTime secondDateTime)"
+returns = "bool"
+summary = "Clears the milliseconds."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "IsTheSameTimeAs"
+sig = "bool IsTheSameTimeAs(this DateTime firstDateTime, DateTime secondDateTime)"
+returns = "bool"
+summary = "Clears the milliseconds."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "IsLaterThan"
+sig = "bool IsLaterThan(this DateTime firstDateTime, DateTime secondDateTime)"
+returns = "bool"
+summary = "Clears the milliseconds."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "DateTimeFromUnixTimestampMillis"
+sig = "DateTime DateTimeFromUnixTimestampMillis(this long millis)"
+returns = "DateTime"
+summary = "Clears the milliseconds."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "DateTimeFromUnixTimestampSeconds"
+sig = "DateTime DateTimeFromUnixTimestampSeconds(this long seconds)"
+returns = "DateTime"
+summary = "Clears the milliseconds."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetUnixTimeFromDate"
+sig = "long GetUnixTimeFromDate(this DateTime theTime)"
+returns = "long"
+summary = "Clears the milliseconds."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetUnixTimeFromDateSeconds"
+sig = "long GetUnixTimeFromDateSeconds(this DateTime theTime)"
+returns = "long"
+summary = "Clears the milliseconds."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "FromTicks"
+sig = "DateTime FromTicks(this long ticks)"
+returns = "DateTime"
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetLocalizedShortTimeString"
+sig = "string GetLocalizedShortTimeString(this DateTime date, CultureInfo culture)"
+returns = "string"
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetLocalizedFullDateTimeString"
+sig = "string GetLocalizedFullDateTimeString(this DateTime date, string format = \"dd.MM.yyyy HH:mm\")"
+returns = "string"
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetLocalizedDateString"
+sig = "string GetLocalizedDateString(this DateTime date, string format = \"dd.MM.yyyy\")"
+returns = "string"
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetLocalizedDayOfWeek"
+sig = "string GetLocalizedDayOfWeek(this DayOfWeek dayOfWeek, CultureInfo culture)"
+returns = "string"
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "DateDiffIsBetween"
+sig = "bool DateDiffIsBetween(this DateTime date1,
+                                         DateTime date2,
+                                         DateInterval interval,
+                                         double min,
+                                         double max,
+                                         DayOfWeek? dayOfWeek = null)"
+returns = "bool"
+summary = "Compares the difference between and in the specified interval, and returns whether this difference is between the bounds given."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "DateDiff"
+sig = "double DateDiff(this DateTime date1,
+                                  DateTime date2,
+                                  DateInterval interval,
+                                  DayOfWeek? dayOfWeek = null)"
+returns = "double"
+summary = "Returns a specifying the number of time intervals between two values."
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetDay"
+sig = "double GetDay(this DayOfWeek weekday)"
+returns = "double"
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[extensions]]
+name = "GetDayOfWeek"
+sig = "DayOfWeek GetDayOfWeek(this DateTime dt, DayOfWeek? weekdayFirst = null)"
+returns = "DayOfWeek"
+file = "Extensions\\DateTimeExtensions.cs"
+
+[[classes]]
+name = "DictionaryExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+summary = "IDictionary extensions class."
+file = "Extensions\\DictionaryExtensions.cs"
+static = true
+
+[[classes]]
+name = "DirectoryInfoExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\DirectoryInfoExtensions.cs"
+static = true
+
+[[extensions]]
+name = "IsNtfs"
+sig = "bool IsNtfs(this DirectoryInfo dir)"
+returns = "bool"
+file = "Extensions\\DirectoryInfoExtensions.cs"
+
+[[extensions]]
+name = "GetDescendantPath"
+sig = "string GetDescendantPath(this DirectoryInfo dir, params string[] descendants)"
+returns = "string"
+file = "Extensions\\DirectoryInfoExtensions.cs"
+
+[[extensions]]
+name = "GetDescendantFile"
+sig = "FileInfo GetDescendantFile(this DirectoryInfo dir, params string[] descendants)"
+returns = "FileInfo"
+file = "Extensions\\DirectoryInfoExtensions.cs"
+
+[[extensions]]
+name = "GetDescendantDirectory"
+sig = "DirectoryInfo GetDescendantDirectory(this DirectoryInfo dir, params string[] descendants)"
+returns = "DirectoryInfo"
+file = "Extensions\\DirectoryInfoExtensions.cs"
+
+[[extensions]]
+name = "GetSpecialDirectoryPathDescendants"
+sig = "string GetSpecialDirectoryPathDescendants(this Environment.SpecialFolder folder,
+                                                            params string[] descendants)"
+returns = "string"
+file = "Extensions\\DirectoryInfoExtensions.cs"
+
+[[extensions]]
+name = "GetSpecialDirectory"
+sig = "SpecialDirectory GetSpecialDirectory(this Environment.SpecialFolder folder)"
+returns = "SpecialDirectory"
+file = "Extensions\\DirectoryInfoExtensions.cs"
+
+[[classes]]
+name = "DynamicExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+summary = "Extension methods for the Dynamic"
+file = "Extensions\\DynamicExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetDynamicMemberNames"
+sig = "IEnumerable<string> GetDynamicMemberNames(this ExpandoObject expandoObject)"
+returns = "IEnumerable<string>"
+summary = "Gets the dynamic member names."
+file = "Extensions\\DynamicExtensions.cs"
+
+[[extensions]]
+name = "AddPropertiesFromDictionary"
+sig = "dynamic AddPropertiesFromDictionary(this ExpandoObject eo,
+                                                      IDictionary<string, object> propsDictionary)"
+returns = "dynamic"
+summary = "Adds the properties from dictionary."
+file = "Extensions\\DynamicExtensions.cs"
+
+[[classes]]
+name = "EnumerableExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\EnumerableExtensions.cs"
+static = true
+
+[[extensions]]
+name = "Any"
+sig = "bool Any(this IEnumerable source)"
+returns = "bool"
+file = "Extensions\\EnumerableExtensions.cs"
+
+[[extensions]]
+name = "HasAny"
+sig = "bool HasAny(this IEnumerable enumerable)"
+returns = "bool"
+file = "Extensions\\EnumerableExtensions.cs"
+
+[[extensions]]
+name = "AggregateSafe"
+sig = "string AggregateSafe(this IEnumerable<string> source)"
+returns = "string"
+summary = "Aggregates a list of strings."
+file = "Extensions\\EnumerableExtensions.cs"
+
+[[extensions]]
+name = "GetItemType"
+sig = "Type GetItemType(this IEnumerable enumerable)"
+returns = "Type"
+summary = "Gets the type of the item."
+file = "Extensions\\EnumerableExtensions.cs"
+
+[[extensions]]
+name = "UnorderedSequenceEqual"
+sig = "bool UnorderedSequenceEqual(this IEnumerable first, IEnumerable second)"
+returns = "bool"
+summary = "Checks if two sequences contain the same elements without checking their order"
+file = "Extensions\\EnumerableExtensions.cs"
+
+[[classes]]
+name = "EnumExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\EnumExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetEnumValueDescription"
+sig = "string GetEnumValueDescription(this Enum enumValue)"
+returns = "string"
+summary = "Gets the enum value description."
+file = "Extensions\\EnumExtensions.cs"
+
+[[classes]]
+name = "ErrorExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\ErrorExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetErrorRoot"
+sig = "IError GetErrorRoot(this IError error)"
+returns = "IError"
+file = "Extensions\\ErrorExtensions.cs"
+
+[[extensions]]
+name = "ToAggregatedError"
+sig = "AggregatedError ToAggregatedError(this IError error)"
+returns = "AggregatedError"
+file = "Extensions\\ErrorExtensions.cs"
+
+[[extensions]]
+name = "ToAggregateException"
+sig = "AggregateException ToAggregateException(this AggregatedError error)"
+returns = "AggregateException"
+file = "Extensions\\ErrorExtensions.cs"
+
+[[classes]]
+name = "EventsExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\EventsExtensions.cs"
+static = true
+
+[[extensions]]
+name = "HandlePropertyChanged"
+sig = "void HandlePropertyChanged(this PropertyChangedEventHandler handler,
+                                             object sender,
+                                             string propertyName)"
+returns = "void"
+file = "Extensions\\EventsExtensions.cs"
+
+[[extensions]]
+name = "HandlePropertyChanged"
+sig = "void HandlePropertyChanged(this PropertyChangedEventHandler propertyChangedEventHandler,
+                                             object sender,
+                                             PropertyChangedEventArgs eventArgs)"
+returns = "void"
+file = "Extensions\\EventsExtensions.cs"
+
+[[extensions]]
+name = "HandleCollectionChanged"
+sig = "void HandleCollectionChanged(this NotifyCollectionChangedEventHandler collectionChangedEventHandler,
+                                               object sender,
+                                               NotifyCollectionChangedEventArgs eventArgs)"
+returns = "void"
+file = "Extensions\\EventsExtensions.cs"
+
+[[classes]]
+name = "ExceptionExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\ExceptionExtensions.cs"
+static = true
+
+[[extensions]]
+name = "SetStackTrace"
+sig = "Exception SetStackTrace(this Exception target, StackTrace stack)"
+returns = "Exception"
+summary = "Sets the stack trace of provided exception object"
+file = "Extensions\\ExceptionExtensions.cs"
+
+[[extensions]]
+name = "BuildMessage"
+sig = "string BuildMessage(this Exception ex)"
+returns = "string"
+summary = "Gets a formatted string from the exception."
+file = "Extensions\\ExceptionExtensions.cs"
+
+[[classes]]
+name = "FileInfoExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\FileInfoExtensions.cs"
+static = true
+
+[[extensions]]
+name = "CompareSize"
+sig = "int CompareSize(this FileInfo file, long otherFileSize)"
+returns = "int"
+summary = "Compares the size."
+file = "Extensions\\FileInfoExtensions.cs"
+
+[[extensions]]
+name = "GenerateMd5OfFile"
+sig = "string GenerateMd5OfFile(this FileInfo file,
+                                           bool removeDashes = true,
+                                           bool toLower = true,
+                                           bool asBase64String = false)"
+returns = "string"
+file = "Extensions\\FileInfoExtensions.cs"
+
+[[extensions]]
+name = "IsNtfs"
+sig = "bool IsNtfs(this FileInfo file)"
+returns = "bool"
+file = "Extensions\\FileInfoExtensions.cs"
+
+[[extensions]]
+name = "ComputeMd5Hash"
+sig = "string ComputeMd5Hash(this byte[] data,
+                                        bool removeDashes = true,
+                                        bool toLower = true,
+                                        bool asBase64String = false)"
+returns = "string"
+summary = "Computes the md5 hash."
+file = "Extensions\\FileInfoExtensions.cs"
+
+[[classes]]
+name = "FileSystemInfoExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\FileSystemInfoExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetDirectory"
+sig = "DirectoryInfo GetDirectory(this FileSystemInfo fileSystemInfo)"
+returns = "DirectoryInfo"
+file = "Extensions\\FileSystemInfoExtensions.cs"
+
+[[extensions]]
+name = "IsPathFile"
+sig = "bool IsPathFile(this FileSystemInfo fileSystemInfo)"
+returns = "bool"
+file = "Extensions\\FileSystemInfoExtensions.cs"
+
+[[classes]]
+name = "GuardExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\GuardExtensions.cs"
+static = true
+
+[[classes]]
+name = "InitializationExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\InitializationExtensions.cs"
+static = true
+
+[[classes]]
+name = "LambdaExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\LambdaExtensions.cs"
+static = true
+
+[[classes]]
+name = "LambdaExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+summary = "Returns a expression that always returns false"
+file = "Extensions\\LambdaExtensions.cs"
+static = true
+
+[[classes]]
+name = "SubstExpressionVisitor"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+base = "ExpressionVisitor"
+summary = "Combines 2 expressions with an logical OR."
+file = "Extensions\\LambdaExtensions.cs"
+
+[[classes]]
+name = "ObjectExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\ObjectExtensions.cs"
+static = true
+
+[[extensions]]
+name = "IsNullOrEmpty"
+sig = "bool IsNullOrEmpty(this object data)"
+returns = "bool"
+file = "Extensions\\ObjectExtensions.cs"
+
+[[extensions]]
+name = "GetTypeInstanceDescription"
+sig = "string GetTypeInstanceDescription(this object value)"
+returns = "string"
+summary = "Gets the value of objects property by its name."
+file = "Extensions\\ObjectExtensions.cs"
+
+[[classes]]
+name = "SemaphoreSlimExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\SemaphoreSlimExtensions.cs"
+static = true
+
+[[extensions]]
+name = "SafeRelease"
+sig = "int SafeRelease(this SemaphoreSlim semaphore, int releaseCount = 1)"
+returns = "int"
+summary = "Exits the a specified number of times."
+file = "Extensions\\SemaphoreSlimExtensions.cs"
+
+[[classes]]
+name = "StreamExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\StreamExtensions.cs"
+static = true
+
+[[extensions]]
+name = "CopyStreamToStream"
+sig = "void CopyStreamToStream(this Stream sourceStream,
+                                          Stream destStream,
+                                          Action<double> progressMaximumSet = null,
+                                          Action<double> progressValueSet = null,
+                                          long? length = null)"
+returns = "void"
+file = "Extensions\\StreamExtensions.cs"
+
+[[extensions]]
+name = "CopyToMemoryStream"
+sig = "MemoryStream CopyToMemoryStream(this Stream streamToCopy, bool disposeSource = false)"
+returns = "MemoryStream"
+file = "Extensions\\StreamExtensions.cs"
+
+[[extensions]]
+name = "ComputeMd5Hash"
+sig = "string ComputeMd5Hash(this Stream data,
+                                        bool removeDashes = true,
+                                        bool toLower = true,
+                                        bool asBase64String = false)"
+returns = "string"
+file = "Extensions\\StreamExtensions.cs"
+
+[[classes]]
+name = "StringExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+summary = "String extensions class - comprehensive utilities for string manipulation."
+file = "Extensions\\StringExtensions.cs"
+static = true
+
+[[enums]]
+name = "WildCardPosition"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+summary = "Wild card position."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ToCamel"
+sig = "string ToCamel(this string text)"
+returns = "string"
+summary = "The SQL wild card 'any value'."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ToNiceString"
+sig = "string ToNiceString(this string text)"
+returns = "string"
+summary = "The SQL wild card 'any value'."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ToFormattedPhoneNumber"
+sig = "string ToFormattedPhoneNumber(this string phoneNumber)"
+returns = "string"
+summary = "The SQL wild card 'any value'."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "AppendJoin"
+sig = "void AppendJoin(this StringBuilder stringBuilder, IEnumerable collection)"
+returns = "void"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ComputeMd5Hash"
+sig = "string ComputeMd5Hash(this string value)"
+returns = "string"
+summary = "Generate MD5 hash from the specified string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ContainsAny"
+sig = "bool ContainsAny(this string value, IEnumerable<string> toCheck, StringComparison comparisonType)"
+returns = "bool"
+summary = "Returns a value indicating whether any of a set of specified substrings occurs within this string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IndexOf"
+sig = "int IndexOf(this string value, params string[] matchCandidates)"
+returns = "int"
+summary = "Searches for the index of the first occurrence of the specified strings in the input string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "FromString"
+sig = "decimal FromString(this string value)"
+returns = "decimal"
+summary = "Converts string to decimal value and replace symbols with CurrentCulture NumberDecimalSeparator"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ToUri"
+sig = "Uri ToUri(this string source, Uri baseUri = null, UriKind kind = UriKind.Absolute)"
+returns = "Uri"
+summary = "Converts string to decimal value and replace symbols with CurrentCulture NumberDecimalSeparator"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ValidateCheckDigit"
+sig = "bool ValidateCheckDigit(this string value)"
+returns = "bool"
+summary = "Modulus 10 algorithm created by Hans Peter Luhn. Uses a weight of 2 which is applied to every odd position digit."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ToProperCase"
+sig = "string ToProperCase(this string input)"
+returns = "string"
+summary = "Converts a string to proper case, handling special cases for names, Scottish prefixes, and Roman numerals."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IsAllUpperOrAllLower"
+sig = "bool IsAllUpperOrAllLower(this string input)"
+returns = "bool"
+summary = "Converts a string to proper case, handling special cases for names, Scottish prefixes, and Roman numerals."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "CompareOrdinalIgnoreCase"
+sig = "bool CompareOrdinalIgnoreCase(this string source, string value)"
+returns = "bool"
+summary = "Converts a string to proper case, handling special cases for names, Scottish prefixes, and Roman numerals."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ContainsOrdinalIgnoreCase"
+sig = "bool ContainsOrdinalIgnoreCase(this string str, string other)"
+returns = "bool"
+summary = "Indicates whether a string contains another string under comparison."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IsEqual"
+sig = "bool IsEqual(this string source,
+                               string value,
+                               StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)"
+returns = "bool"
+summary = "Compare 2 strings, ignoring case."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IsNotEqual"
+sig = "bool IsNotEqual(this string source,
+                                  string value,
+                                  StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)"
+returns = "bool"
+summary = "Determines whether string is not equal to the specified value."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IsNullOrEmptyString"
+sig = "bool IsNullOrEmptyString(this string value)"
+returns = "bool"
+summary = "Gets a value indicating if the string is Null or Empty."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IsNotNullOrEmptyString"
+sig = "bool IsNotNullOrEmptyString(this string value)"
+returns = "bool"
+summary = "Gets a value indicating if the string is NOT Null or Empty."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "Remove"
+sig = "string Remove(this string text, params char[] chars)"
+returns = "string"
+summary = "Removes the specified chars from current string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "Remove"
+sig = "string Remove(this string text, params string[] strings)"
+returns = "string"
+summary = "Removes the specified strings from current string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ToDebug"
+sig = "string ToDebug(this string value)"
+returns = "string"
+summary = "Writes value to the debug output."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ToTrace"
+sig = "string ToTrace(this string value)"
+returns = "string"
+summary = "Writes value to the trace output."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "HasNoWildCards"
+sig = "bool HasNoWildCards(this string value)"
+returns = "bool"
+summary = "Determines whether given string has no wild cards."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "HasNoSqlWildCards"
+sig = "bool HasNoSqlWildCards(this string value)"
+returns = "bool"
+summary = "Determines whether given string has no SQL wild cards."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ReplaceStandardWildCardsBySql"
+sig = "string ReplaceStandardWildCardsBySql(this string value)"
+returns = "string"
+summary = "Replaces the standard wild cards by SQL ones."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "EscapeSqlWildCards"
+sig = "string EscapeSqlWildCards(this string value)"
+returns = "string"
+summary = "Escape SQL wild cards characters."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "Split"
+sig = "IList<string> Split(this string value, string splitValue, int stringLength)"
+returns = "IList<string>"
+summary = "Splits the specified string into parts."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ToStream"
+sig = "Stream ToStream(this string str)"
+returns = "Stream"
+summary = "Converts the specified string to stream."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "DivideByCapital"
+sig = "string DivideByCapital(this string value)"
+returns = "string"
+summary = "Divides the by capital letter."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IsNullOrWhiteSpace"
+sig = "bool IsNullOrWhiteSpace(this string value)"
+returns = "bool"
+summary = "Determines whether the specified string is null or white space."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IsNotNullOrWhiteSpace"
+sig = "bool IsNotNullOrWhiteSpace(this string value)"
+returns = "bool"
+summary = "Determines whether the specified string is not null or white space."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IsNotNullOrEmptyOrWhiteSpace"
+sig = "bool IsNotNullOrEmptyOrWhiteSpace(this string value)"
+returns = "bool"
+summary = "Determines whether the specified string is not null or white space."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IsNullOrEmptyOrWhiteSpace"
+sig = "bool IsNullOrEmptyOrWhiteSpace(this string value)"
+returns = "bool"
+summary = "Determines whether the specified string is not null or white space."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "MatchesRegex"
+sig = "bool MatchesRegex(this string text, string regexPattern)"
+returns = "bool"
+summary = "Determines whether the specified string is not null or white space."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "MatchesRegex"
+sig = "bool MatchesRegex(this string text, Regex regex)"
+returns = "bool"
+summary = "Determines whether the specified string is not null or white space."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IsAWord"
+sig = "bool IsAWord(this string text)"
+returns = "bool"
+summary = "Determines whether the specified string is not null or white space."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ContainsOnlyLetters"
+sig = "bool ContainsOnlyLetters(this string text)"
+returns = "bool"
+summary = "Determines whether the specified string is not null or white space."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ContainsOnlyLettersAndNumbers"
+sig = "bool ContainsOnlyLettersAndNumbers(this string text)"
+returns = "bool"
+summary = "Determines whether the specified string is not null or white space."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ContainsOnlyLettersNumbersAndUnderscore"
+sig = "bool ContainsOnlyLettersNumbersAndUnderscore(this string text)"
+returns = "bool"
+summary = "Determines whether the specified string is not null or white space."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "Contains"
+sig = "bool Contains(this string source, string toCheck, StringComparison comp)"
+returns = "bool"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "GetPathParts"
+sig = "IEnumerable<string> GetPathParts(this string path)"
+returns = "IEnumerable<string>"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "FirstCharToUpper"
+sig = "string FirstCharToUpper(this string input)"
+returns = "string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "FirstCharToLower"
+sig = "string FirstCharToLower(this string input)"
+returns = "string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "Left"
+sig = "string Left(this string str, int length, bool trim = false)"
+returns = "string"
+summary = "Returns a string containing a specified number of characters from the left side of a string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "Mid"
+sig = "string Mid(this string str, int start, bool trim = false)"
+returns = "string"
+summary = "Returns a string that contains all the characters starting from a specified position in a string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "Mid"
+sig = "string Mid(this string str, int start, int length, bool trim = false)"
+returns = "string"
+summary = "Returns a string that contains a specified number of characters starting from a specified position in a string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "Right"
+sig = "string Right(this string str, int length, bool trim = false)"
+returns = "string"
+summary = "Returns a string containing a specified number of characters from the right side of a string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "Length"
+sig = "int Length(this string value, bool trim = true)"
+returns = "int"
+summary = "Returns a string containing a specified number of characters from the right side of a string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ToBase64"
+sig = "string ToBase64(this string str, Encoding enc = null)"
+returns = "string"
+summary = "Returns a string containing a specified number of characters from the right side of a string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "FromBase64"
+sig = "string FromBase64(this string base64EncodedData, Encoding enc = null)"
+returns = "string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "CopyTo"
+sig = "void CopyTo(this Stream src, Stream dest)"
+returns = "void"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "Zip"
+sig = "string Zip(this string str)"
+returns = "string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "Unzip"
+sig = "string Unzip(this string bytes)"
+returns = "string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "IsBothNullOrEqual"
+sig = "bool IsBothNullOrEqual(this string source,
+                                         string value,
+                                         StringComparison comparisonType = StringComparison.Ordinal)"
+returns = "bool"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ByteArrayToString"
+sig = "string ByteArrayToString(this byte[] ba)"
+returns = "string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "StringToByteArray"
+sig = "byte[] StringToByteArray(this string hex)"
+returns = "byte[]"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "GetGuidString"
+sig = "string GetGuidString(this Guid? guid)"
+returns = "string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "GetGuidString"
+sig = "string GetGuidString(this Guid guid)"
+returns = "string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "NormalizeLineBreaks"
+sig = "string NormalizeLineBreaks(this string input)"
+returns = "string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ComputeSha256Hash"
+sig = "string ComputeSha256Hash(this string rawData)"
+returns = "string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "TrimLength"
+sig = "string TrimLength(this string value, int length, bool trim = false)"
+returns = "string"
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "GenerateMd5OfString"
+sig = "string GenerateMd5OfString(this string value)"
+returns = "string"
+summary = "Generates the md5 of string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "RemoveDiacritics"
+sig = "string RemoveDiacritics(this string text)"
+returns = "string"
+summary = "Generates the md5 of string."
+file = "Extensions\\StringExtensions.cs"
+
+[[extensions]]
+name = "ToInt"
+sig = "int ToInt(this string value)"
+returns = "int"
+summary = "Converts string to int, returns -1 if conversion fails"
+file = "Extensions\\StringExtensions.cs"
+
+[[classes]]
+name = "TaskExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\TaskExtensions.cs"
+static = true
+
+[[extensions]]
+name = "FireOnMainThreadAndForget"
+sig = "ITaskWrapper FireOnMainThreadAndForget(this IAsyncHelper asyncHelper,
+                                                         Action action,
+                                                         CancellationToken cancellationToken = default)"
+returns = "ITaskWrapper"
+file = "Extensions\\TaskExtensions.cs"
+
+[[extensions]]
+name = "FireTaskOnMainThreadAndForget"
+sig = "ITaskWrapper FireTaskOnMainThreadAndForget(this IAsyncHelper asyncHelper, Func<Task> task)"
+returns = "ITaskWrapper"
+file = "Extensions\\TaskExtensions.cs"
+
+[[extensions]]
+name = "FireTasksOnMainThreadAndForget"
+sig = "IReadOnlyList<ITaskWrapper> FireTasksOnMainThreadAndForget(this IAsyncHelper asyncHelper,
+                                                                             IEnumerable<Func<Task>> tasks)"
+returns = "IReadOnlyList<ITaskWrapper>"
+file = "Extensions\\TaskExtensions.cs"
+
+[[extensions]]
+name = "FireOnThreadPoolAndForget"
+sig = "ITaskWrapper FireOnThreadPoolAndForget(this IAsyncHelper asyncHelper,
+                                                         Action action,
+                                                         CancellationToken cancellationToken = default)"
+returns = "ITaskWrapper"
+file = "Extensions\\TaskExtensions.cs"
+
+[[extensions]]
+name = "FireTaskOnThreadPoolAndForget"
+sig = "ITaskWrapper FireTaskOnThreadPoolAndForget(this IAsyncHelper asyncHelper, Func<Task> task)"
+returns = "ITaskWrapper"
+file = "Extensions\\TaskExtensions.cs"
+
+[[extensions]]
+name = "FireTasksOnThreadPoolAndForget"
+sig = "IReadOnlyList<ITaskWrapper> FireTasksOnThreadPoolAndForget(this IAsyncHelper asyncHelper,
+                                                                             IEnumerable<Func<Task>> tasks)"
+returns = "IReadOnlyList<ITaskWrapper>"
+file = "Extensions\\TaskExtensions.cs"
+
+[[extensions]]
+name = "IsRunning"
+sig = "bool IsRunning(this Task task)"
+returns = "bool"
+summary = "Waits for task to start."
+file = "Extensions\\TaskExtensions.cs"
+
+[[extensions]]
+name = "IsNotStarted"
+sig = "bool IsNotStarted(this Task task)"
+returns = "bool"
+summary = "Waits for task to start."
+file = "Extensions\\TaskExtensions.cs"
+
+[[extensions]]
+name = "IsFinished"
+sig = "bool IsFinished(this Task task)"
+returns = "bool"
+summary = "Waits for task to start."
+file = "Extensions\\TaskExtensions.cs"
+
+[[extensions]]
+name = "IsFailed"
+sig = "bool IsFailed(this Task task)"
+returns = "bool"
+summary = "Waits for task to start."
+file = "Extensions\\TaskExtensions.cs"
+
+[[extensions]]
+name = "Wrap"
+sig = "object Wrap(this Action action)"
+returns = "object"
+file = "Extensions\\TaskExtensions.cs"
+
+[[classes]]
+name = "TimeSpanExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+summary = "Extension methods for the TimeSpan"
+file = "Extensions\\TimeSpanExtensions.cs"
+static = true
+
+[[extensions]]
+name = "IsMidnight"
+sig = "bool IsMidnight(this TimeSpan value)"
+returns = "bool"
+summary = "Gets a value indicating if the time is midnight (00:00:00)."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "Days"
+sig = "TimeSpan Days(this int number)"
+returns = "TimeSpan"
+summary = "Gets a TimeSpan for n number of Days."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "Hours"
+sig = "TimeSpan Hours(this int number)"
+returns = "TimeSpan"
+summary = "Gets a TimeSpan for n number of Hours."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "Minutes"
+sig = "TimeSpan Minutes(this int number)"
+returns = "TimeSpan"
+summary = "Gets a TimeSpan for n number of Minutes."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "Seconds"
+sig = "TimeSpan Seconds(this int number)"
+returns = "TimeSpan"
+summary = "Gets a TimeSpan for n number of Seconds."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "GetTime"
+sig = "string GetTime(this Stopwatch stopwatch)"
+returns = "string"
+summary = "Gets the time from ."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "GetTime"
+sig = "string GetTime(this long milliseconds)"
+returns = "string"
+summary = "Gets the time."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "GetTime"
+sig = "string GetTime(this double milliseconds)"
+returns = "string"
+summary = "Gets the time."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "GetTime"
+sig = "string GetTime(this TimeSpan timespan, int decimals = 0)"
+returns = "string"
+summary = "Gets the time from ."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "RoundDown"
+sig = "double RoundDown(this double i, double decimalPlaces)"
+returns = "double"
+summary = "Gets the time from ."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "RoundUp"
+sig = "TimeSpan RoundUp(this TimeSpan timeSpan, int roundToMinutes)"
+returns = "TimeSpan"
+summary = "Gets the time from ."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "IsAm"
+sig = "bool IsAm(this TimeSpan timeSpan)"
+returns = "bool"
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[classes]]
+name = "TypeExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\TypeExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetImplementedInterfaces"
+sig = "IEnumerable<Type> GetImplementedInterfaces(this Type interfaceType)"
+returns = "IEnumerable<Type>"
+summary = "Gets the implemented interfaces."
+file = "Extensions\\TypeExtensions.cs"
+
+[[extensions]]
+name = "GetImplementedClasses"
+sig = "IEnumerable<Type> GetImplementedClasses(this Type baseType)"
+returns = "IEnumerable<Type>"
+summary = "Gets the implemented classes."
+file = "Extensions\\TypeExtensions.cs"
+
+[[extensions]]
+name = "GetBaseTypes"
+sig = "List<Type> GetBaseTypes(this Type baseType, List<Type> baseTypes = null)"
+returns = "List<Type>"
+summary = "Gets the base types."
+file = "Extensions\\TypeExtensions.cs"
+
+[[extensions]]
+name = "GetTypeDescription"
+sig = "string GetTypeDescription(this Type value)"
+returns = "string"
+summary = "Gets the base types."
+file = "Extensions\\TypeExtensions.cs"
+
+[[extensions]]
+name = "IsOrInherits"
+sig = "bool IsOrInherits(this Type type, Type typeToCompare)"
+returns = "bool"
+file = "Extensions\\TypeExtensions.cs"
+
+[[classes]]
+name = "VersionExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\VersionExtensions.cs"
+static = true
+
+[[extensions]]
+name = "FirstIsOtherThanSecond"
+sig = "bool FirstIsOtherThanSecond(this Version first, Version second)"
+returns = "bool"
+file = "Extensions\\VersionExtensions.cs"
+
+[[extensions]]
+name = "FirstIsHigherThanSecond"
+sig = "bool FirstIsHigherThanSecond(this Version first, Version second)"
+returns = "bool"
+file = "Extensions\\VersionExtensions.cs"
+
+[[classes]]
+name = "WhenResultExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\WhenResultExtensions.cs"
+static = true
+
+[[classes]]
+name = "XElementExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\XElementExtensions.cs"
+static = true
+
+[[extensions]]
+name = "ToXmlElement"
+sig = "IXPathNavigable ToXmlElement(this XNode el)"
+returns = "IXPathNavigable"
+summary = "Convert to a XML element."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "GetAttributeValue"
+sig = "string GetAttributeValue(this XElement element, string attributeName)"
+returns = "string"
+summary = "Gets a attribute value."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "Create"
+sig = "XAttribute Create(this XObject attribute, string attributeName)"
+returns = "XAttribute"
+summary = "Creates a attribute."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "Create"
+sig = "XAttribute Create(this XObject attribute, string attributeName, string value)"
+returns = "XAttribute"
+summary = "Creates a attribute."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "CreateAttribute"
+sig = "XContainer CreateAttribute(this XContainer element, string attributeName)"
+returns = "XContainer"
+summary = "Creates a attribute."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "CreateAttribute"
+sig = "XContainer CreateAttribute(this XContainer element, string attributeName, string value)"
+returns = "XContainer"
+summary = "Creates a attribute."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "GetOrCreateAttribute"
+sig = "XAttribute GetOrCreateAttribute(this XElement element, string attributeName)"
+returns = "XAttribute"
+summary = "Gets a attribute (if the attribute not exist it's created)."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "GetChildValue"
+sig = "string GetChildValue(this XElement element, string childName)"
+returns = "string"
+summary = "Gets a value for a child."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "GetChildValue"
+sig = "string GetChildValue(this XElement element, string childName, string nameSpace)"
+returns = "string"
+summary = "Gets the child value."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "GetChild"
+sig = "XElement GetChild(this XElement element, string childName)"
+returns = "XElement"
+summary = "Gets the child."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "GetChild"
+sig = "XElement GetChild(this XElement element, string childName, string nameSpace)"
+returns = "XElement"
+summary = "Gets the child."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "CreateChild"
+sig = "XElement CreateChild(this XContainer element, string childName)"
+returns = "XElement"
+summary = "Creates a child element."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "CreateChild"
+sig = "XElement CreateChild(this XContainer element, string childName, string value)"
+returns = "XElement"
+summary = "Creates a child element."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "SetChildValue"
+sig = "XElement SetChildValue(this XElement element, string value)"
+returns = "XElement"
+summary = "Sets the value for an element."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "GetOrCreateChild"
+sig = "XElement GetOrCreateChild(this XElement element, string childName)"
+returns = "XElement"
+summary = "Gets a element (if the element not exist it's created)."
+file = "Extensions\\XElementExtensions.cs"
+
+[[extensions]]
+name = "GetOrCreateChild"
+sig = "XElement GetOrCreateChild(this XElement element, string childName, string value)"
+returns = "XElement"
+summary = "Gets a element (if the element not exist it's created)."
+file = "Extensions\\XElementExtensions.cs"
+
+[[classes]]
+name = "XmlExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\XmlExtensions.cs"
+static = true
+
+[[extensions]]
+name = "Add"
+sig = "XmlSchema Add(this XmlSchemaSet xmlSchemaSet, string targetNamespace, Stream schemaStream)"
+returns = "XmlSchema"
+file = "Extensions\\XmlExtensions.cs"
+
+[[extensions]]
+name = "AddManifestResourceSchema"
+sig = "XmlSchema AddManifestResourceSchema(this XmlSchemaSet xmlSchemaSet,
+                                                      Assembly resourceAssembly,
+                                                      string targetNamespace,
+                                                      string name)"
+returns = "XmlSchema"
+file = "Extensions\\XmlExtensions.cs"
+
+[[classes]]
+name = "ArrayExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions.Collections.Arrays"
+file = "Extensions\\Collections\\Arrays\\ArrayExtensions.cs"
+static = true
+
+[[extensions]]
+name = "WithinIndex"
+sig = "bool WithinIndex(this Array source, int index)"
+returns = "bool"
+summary = "Check if the index is within the array"
+file = "Extensions\\Collections\\Arrays\\ArrayExtensions.cs"
+
+[[extensions]]
+name = "IndexOf"
+sig = "int IndexOf(this Array source, object value)"
+returns = "int"
+summary = "Indexes the of."
+file = "Extensions\\Collections\\Arrays\\ArrayExtensions.cs"
+
+[[classes]]
+name = "ReadOnlyDictionaryExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions.Collections.Dictionaries"
+summary = "IReadOnlyDictionary extensions class."
+file = "Extensions\\Collections\\Dictionaries\\ReadOnlyDictionaryExtensions.cs"
+static = true
+
+[[classes]]
+name = "ListExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions.Collections.Lists"
+summary = "Extensions for the IList interface."
+file = "Extensions\\Collections\\Lists\\ListExtensions.cs"
+static = true
+
+[[classes]]
+name = "EnumerableExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions.Interop"
+file = "Extensions\\Interop\\EnumerableExtensions.cs"
+static = true
+
+[[classes]]
+name = "DoubleExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions.Numericals"
+file = "Extensions\\Numericals\\DoubleExtensions.cs"
+static = true
+
+[[extensions]]
+name = "PreciseEquals"
+sig = "bool PreciseEquals(this double left, double right, int floatDigits = 7)"
+returns = "bool"
+file = "Extensions\\Numericals\\DoubleExtensions.cs"
+
+[[extensions]]
+name = "ToDouble"
+sig = "double ToDouble(this string value)"
+returns = "double"
+file = "Extensions\\Numericals\\DoubleExtensions.cs"
+
+[[classes]]
+name = "IntegerExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions.Numericals"
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+static = true
+
+[[extensions]]
+name = "Add"
+sig = "int Add(this int source, int value)"
+returns = "int"
+summary = "Adds the value to source."
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+
+[[extensions]]
+name = "IsZero"
+sig = "bool IsZero(this int value)"
+returns = "bool"
+summary = "Indicates that specified value is equal to 0"
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+
+[[extensions]]
+name = "IsNotZero"
+sig = "bool IsNotZero(this int value)"
+returns = "bool"
+summary = "Indicates that specified value is > than 0"
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+
+[[extensions]]
+name = "InRange"
+sig = "bool InRange(this int value, int min, int max)"
+returns = "bool"
+summary = "Gets a value indicating if value is between or equal Minimum - Maximum values."
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+
+[[extensions]]
+name = "InRange"
+sig = "bool InRange(this int value, int min, int max, bool includeMinMaxValues)"
+returns = "bool"
+summary = "Gets a value indicating if value is between (or equal) Minimum - Maximum values."
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+
+[[extensions]]
+name = "IsLessThanZero"
+sig = "bool IsLessThanZero(this int value)"
+returns = "bool"
+summary = "Indicates that specified value is less than zero."
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+
+[[extensions]]
+name = "ToStringSafe"
+sig = "string ToStringSafe(this int? value)"
+returns = "string"
+summary = "Converts the integer to a string."
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+
+[[extensions]]
+name = "ToStringSafe"
+sig = "string ToStringSafe(this int? value, string defaultValue)"
+returns = "string"
+summary = "Converts the integer to a string."
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+
+[[extensions]]
+name = "ToByteSafe"
+sig = "byte ToByteSafe(this int? value)"
+returns = "byte"
+summary = "Converts the integer to a byte."
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+
+[[extensions]]
+name = "ToByteSafe"
+sig = "byte ToByteSafe(this int? value, byte defaultValue)"
+returns = "byte"
+summary = "Converts the integer to a byte."
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+
+[[extensions]]
+name = "ToShort"
+sig = "short ToShort(this int value)"
+returns = "short"
+summary = "Converts the integer to a byte."
+file = "Extensions\\Numericals\\IntegerExtensions.cs"
+
+[[classes]]
+name = "VBConversion"
+ns = "FEx.Agnostics.Abstractions.Extensions.Numericals"
+file = "Extensions\\Numericals\\VBConversion.cs"
+static = true
+
+[[classes]]
+name = "UriExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions.Web"
+file = "Extensions\\Web\\UriExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetHttpRequest"
+sig = "HttpWebRequest GetHttpRequest(this Uri url, WebRequestParams pars = null)"
+returns = "HttpWebRequest"
+file = "Extensions\\Web\\UriExtensions.cs"
+
+[[extensions]]
+name = "GetWebRequest"
+sig = "WebRequest GetWebRequest(this Uri url, WebRequestParams pars = null)"
+returns = "WebRequest"
+file = "Extensions\\Web\\UriExtensions.cs"
+
+[[classes]]
+name = "WebClientExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions.Web"
+file = "Extensions\\Web\\WebClientExtensions.cs"
+static = true
+
+[[extensions]]
+name = "PrepareWebClient"
+sig = "void PrepareWebClient(this WebClient client, WebRequestParams pars)"
+returns = "void"
+file = "Extensions\\Web\\WebClientExtensions.cs"
+
+[[classes]]
+name = "WebRequestExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions.Web"
+file = "Extensions\\Web\\WebRequestExtensions.cs"
+static = true
+
+[[extensions]]
+name = "PrepareRequest"
+sig = "void PrepareRequest(this HttpWebRequest req, WebRequestParams pars)"
+returns = "void"
+file = "Extensions\\Web\\WebRequestExtensions.cs"
+
+[[extensions]]
+name = "PrepareRequest"
+sig = "void PrepareRequest(this WebRequest req, WebRequestParams pars)"
+returns = "void"
+file = "Extensions\\Web\\WebRequestExtensions.cs"
+
+[[classes]]
+name = "WebRequestParamsExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions.Web"
+file = "Extensions\\Web\\WebRequestParamsExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetHttpClientHandler"
+sig = "HttpClientHandler GetHttpClientHandler(this WebRequestParams pars)"
+returns = "HttpClientHandler"
+file = "Extensions\\Web\\WebRequestParamsExtensions.cs"
+
+[[extensions]]
+name = "Merge"
+sig = "WebRequestParams Merge(this WebRequestParams pars, WebRequestParams other)"
+returns = "WebRequestParams"
+file = "Extensions\\Web\\WebRequestParamsExtensions.cs"
+
+[[classes]]
+name = "WebResponseExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions.Web"
+file = "Extensions\\Web\\WebResponseExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetAllHeaders"
+sig = "Dictionary<string, string> GetAllHeaders(this WebResponse resp)"
+returns = "Dictionary<string, string>"
+file = "Extensions\\Web\\WebResponseExtensions.cs"
+
+[[extensions]]
+name = "GetContentRange"
+sig = "ContentRangeHeaderValue GetContentRange(this HttpWebResponse response)"
+returns = "ContentRangeHeaderValue"
+file = "Extensions\\Web\\WebResponseExtensions.cs"
+
+[[extensions]]
+name = "GetContentRange"
+sig = "ContentRangeHeaderValue GetContentRange(this string rangeHeader)"
+returns = "ContentRangeHeaderValue"
+file = "Extensions\\Web\\WebResponseExtensions.cs"
+
+[[extensions]]
+name = "GetAllHeaders"
+sig = "Dictionary<string, string[]> GetAllHeaders(this HttpResponseMessage resp)"
+returns = "Dictionary<string, string[]>"
+file = "Extensions\\Web\\WebResponseExtensions.cs"
+
+[[classes]]
+name = "AggregatedError"
+ns = "FEx.Agnostics.Abstractions.Flow"
+base = "Error"
+file = "Flow\\AggregatedError.cs"
+
+[[classes]]
+name = "Error"
+ns = "FEx.Agnostics.Abstractions.Flow"
+base = "IError"
+file = "Flow\\Error.cs"
+
+[[classes]]
+name = "Error"
+ns = "FEx.Agnostics.Abstractions.Flow"
+base = "Error"
+file = "Flow\\Error.cs"
+
+[[classes]]
+name = "ExceptionError"
+ns = "FEx.Agnostics.Abstractions.Flow"
+base = "Error, IExceptionError"
+file = "Flow\\ExceptionError.cs"
+
+[[classes]]
+name = "FExErrorEventArgs"
+ns = "FEx.Agnostics.Abstractions.Flow"
+base = "EventArgs"
+file = "Flow\\FExErrorEventArgs.cs"
+
+[[classes]]
+name = "Result"
+ns = "FEx.Agnostics.Abstractions.Flow"
+base = "ResultBase<TError> where TError : class, IError, new()"
+file = "Flow\\Result.cs"
+
+[[classes]]
+name = "Result"
+ns = "FEx.Agnostics.Abstractions.Flow"
+base = "ResultBase<TError>, IResult<TData, TError> where TError : class, IError, new()"
+file = "Flow\\Result.cs"
+
+[[classes]]
+name = "ResultBase"
+ns = "FEx.Agnostics.Abstractions.Flow"
+base = "IResult<TError> where TError : class, IError, new()"
+file = "Flow\\ResultBase.cs"
+
+[[classes]]
+name = "EventArgsCache"
+ns = "FEx.Agnostics.Abstractions.Helpers"
+file = "Helpers\\EventArgsCache.cs"
+static = true
+
+[[classes]]
+name = "FExValueTaskHelper"
+ns = "FEx.Agnostics.Abstractions.Helpers"
+file = "Helpers\\FExValueTaskHelper.cs"
+static = true
+
+[[classes]]
+name = "FileSystemHelper"
+ns = "FEx.Agnostics.Abstractions.Helpers"
+file = "Helpers\\FileSystemHelper.cs"
+static = true
+
+[[classes]]
+name = "HashHelper"
+ns = "FEx.Agnostics.Abstractions.Helpers"
+file = "Helpers\\HashHelper.cs"
+static = true
+
+[[extensions]]
+name = "GetHashString"
+sig = "string GetHashString(this byte[] hash,
+                                       bool removeDashes = true,
+                                       bool toLower = true,
+                                       bool asBase64String = false)"
+returns = "string"
+file = "Helpers\\HashHelper.cs"
+
+[[classes]]
+name = "LambdaEqualityHelper"
+ns = "FEx.Agnostics.Abstractions.Helpers"
+file = "Helpers\\LambdaEqualityHelper.cs"
+
+[[interfaces]]
+name = "IAppInfo"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\IAppInfo.cs"
+
+[[interfaces]]
+name = "IAppInfoProvider"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\IAppInfoProvider.cs"
+
+[[interfaces]]
+name = "IAppVersionProvider"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\IAppVersionProvider.cs"
+
+[[interfaces]]
+name = "IAsyncHelper"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\IAsyncHelper.cs"
+
+[[interfaces]]
+name = "IConcurrentList"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\IConcurrentList.cs"
+
+[[interfaces]]
+name = "IExceptionHandlerOptions"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\IExceptionHandlerOptions.cs"
+
+[[interfaces]]
+name = "IFExInitializable"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\IFExInitializable.cs"
+
+[[interfaces]]
+name = "IFExLogger"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+summary = "Framework-agnostic logger interface aligned with Microsoft.Extensions.Logging semantics. Provides leveled logging (Trace/Debug/Info/Warning/Error/Critical), structured logging via scopes/labels, and low-level error event hooks."
+file = "Interfaces\\IFExLogger.cs"
+
+[[interfaces]]
+name = "IFExMemoryCache"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\IFExMemoryCache.cs"
+
+[[interfaces]]
+name = "IFExNotifyPropertyChanged"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\IFExNotifyPropertyChanged.cs"
+
+[[interfaces]]
+name = "IFExPriorityInitialize"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\IFExPriorityInitialize.cs"
+
+[[interfaces]]
+name = "ILoggerState"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+summary = "Represents a mutable dictionary of logging state/labels for structured logging scopes."
+file = "Interfaces\\ILoggerState.cs"
+
+[[interfaces]]
+name = "ISuppressEvents"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\ISuppressEvents.cs"
+
+[[interfaces]]
+name = "ISynchronizedAccessService"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\ISynchronizedAccessService.cs"
+
+[[interfaces]]
+name = "ITaskWrapper"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\ITaskWrapper.cs"
+
+[[interfaces]]
+name = "ITaskWrapper"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\ITaskWrapper.cs"
+
+[[interfaces]]
+name = "ITaskWrapperBase"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\ITaskWrapperBase.cs"
+
+[[interfaces]]
+name = "ITaskWrapperBase"
+ns = "FEx.Agnostics.Abstractions.Interfaces"
+file = "Interfaces\\ITaskWrapperBase.cs"
+
+[[interfaces]]
+name = "IIndex"
+ns = "FEx.Agnostics.Abstractions.Interfaces.Collections"
+file = "Interfaces\\Collections\\IIndex.cs"
+
+[[interfaces]]
+name = "IMap"
+ns = "FEx.Agnostics.Abstractions.Interfaces.Collections"
+file = "Interfaces\\Collections\\IMap.cs"
+
+[[interfaces]]
+name = "IError"
+ns = "FEx.Agnostics.Abstractions.Interfaces.Flow"
+file = "Interfaces\\Flow\\IError.cs"
+
+[[interfaces]]
+name = "IExceptionError"
+ns = "FEx.Agnostics.Abstractions.Interfaces.Flow"
+file = "Interfaces\\Flow\\IExceptionError.cs"
+
+[[interfaces]]
+name = "IResult"
+ns = "FEx.Agnostics.Abstractions.Interfaces.Flow"
+file = "Interfaces\\Flow\\IResult.cs"
+
+[[interfaces]]
+name = "IResult"
+ns = "FEx.Agnostics.Abstractions.Interfaces.Flow"
+file = "Interfaces\\Flow\\IResult.cs"
+
+[[interfaces]]
+name = "IResult"
+ns = "FEx.Agnostics.Abstractions.Interfaces.Flow"
+file = "Interfaces\\Flow\\IResult.cs"
+
+[[interfaces]]
+name = "IStackError"
+ns = "FEx.Agnostics.Abstractions.Interfaces.Flow"
+file = "Interfaces\\Flow\\IStackError.cs"
+
+[[classes]]
+name = "SpecialDirectory"
+ns = "FEx.Agnostics.Abstractions.IO"
+file = "IO\\SpecialDirectory.cs"
+
+[[classes]]
+name = "FExDebugLogger"
+ns = "FEx.Agnostics.Abstractions.Logging"
+base = "IFExLogger"
+summary = "Simple debug console logger implementation (no structured logging support)."
+file = "Logging\\FExDebugLogger.cs"
+
+[[classes]]
+name = "FExStaticLogger"
+ns = "FEx.Agnostics.Abstractions.Logging"
+base = "FExInitializable"
+file = "Logging\\FExStaticLogger.cs"
+
+[[classes]]
+name = "WebRequestParams"
+ns = "FEx.Agnostics.Abstractions.Models"
+file = "Models\\WebRequestParams.cs"
+
+[[classes]]
+name = "AttachedException"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+base = "Exception"
+file = "Utilities\\AttachedException.cs"
+
+[[classes]]
+name = "DateTimeDefaults"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+summary = "Provides set of default datetime values."
+file = "Utilities\\DateTimeDefaults.cs"
+static = true
+
+[[classes]]
+name = "DisposableAction"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+base = "IDisposable"
+summary = "Models a disposable action that is guaranteed to be invoked at least on disposal (if not explicitly invoked)."
+file = "Utilities\\DisposableAction.cs"
+
+[[classes]]
+name = "EqualityHelper"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+file = "Utilities\\EqualityHelper.cs"
+static = true
+
+[[classes]]
+name = "FExConversion"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+file = "Utilities\\FExConversion.cs"
+static = true
+
+[[classes]]
+name = "FExSemaphoreSlim"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+base = "SemaphoreSlim"
+file = "Utilities\\FExSemaphoreSlim.cs"
+
+[[classes]]
+name = "FileLengthConverter"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+file = "Utilities\\FileLengthConverter.cs"
+static = true
+
+[[classes]]
+name = "InterlockedBool"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+file = "Utilities\\InterlockedBool.cs"
+
+[[classes]]
+name = "PlatformInfoProvider"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+summary = "Provides detailed information about the host operating system."
+file = "Utilities\\PlatformInfoProvider.cs"
+static = true
+
+[[classes]]
+name = "StringUtilities"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+summary = "String utility methods for advanced string processing."
+file = "Utilities\\StringUtilities.cs"
+static = true
+
+[[extensions]]
+name = "DealWithRomanNumerals"
+sig = "string DealWithRomanNumerals(this string word)"
+returns = "string"
+file = "Utilities\\StringUtilities.cs"
+
+[[classes]]
+name = "SuppressEventsDisposable"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+base = "DisposableAction"
+file = "Utilities\\SuppressEventsDisposable.cs"
+
+[[classes]]
+name = "WhenResult"
+ns = "FEx.Agnostics.Abstractions.Utilities"
+file = "Utilities\\WhenResult.cs"
+
+[[enums]]
+name = "OSPlatformInfo"
+ns = "FEx.Agnostics.Abstractions.Utilities.OS"
+file = "Utilities\\OS\\OSPlatformInfo.cs"
+
+[[enums]]
+name = "OSProduct"
+ns = "FEx.Agnostics.Abstractions.Utilities.OS"
+file = "Utilities\\OS\\OSProduct.cs"
+
+[[classes]]
+name = "OSVersion"
+ns = "FEx.Agnostics.Abstractions.Utilities.OS"
+base = "IEquatable<OSVersion>"
+file = "Utilities\\OS\\OSVersion.cs"
+
+[[enums]]
+name = "OSEdition"
+ns = "FEx.Agnostics.Abstractions.Utilities.OS.Enums"
+file = "Utilities\\OS\\Enums\\OSEdition.cs"
+
+[[enums]]
+name = "OSProcessorArchitecture"
+ns = "FEx.Agnostics.Abstractions.Utilities.OS.Enums"
+file = "Utilities\\OS\\Enums\\OSProcessorArchitecture.cs"
+
+[[enums]]
+name = "SoftwareArchitecture"
+ns = "FEx.Agnostics.Abstractions.Utilities.OS.Enums"
+file = "Utilities\\OS\\Enums\\SoftwareArchitecture.cs"
+

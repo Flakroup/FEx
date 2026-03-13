@@ -1,4 +1,4 @@
-﻿using CommandLine;
+using CommandLine;
 using System;
 
 namespace FEx.CLI;
@@ -22,7 +22,7 @@ public class ErrorData
         {
             _nameInfo = value;
 
-            NameInfoString = NameInfo != null
+            NameInfoString = NameInfo is not null
                 ? GetNameInfoString(NameInfo)
                 : null;
         }

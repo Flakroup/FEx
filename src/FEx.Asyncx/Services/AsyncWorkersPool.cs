@@ -1,6 +1,6 @@
-﻿using FEx.Asyncx.Abstractions;
+using FEx.Agnostics.Collections.Concurrent;
+using FEx.Asyncx.Abstractions;
 using FEx.Asyncx.Helpers;
-using FEx.Basics.Collections.Concurrent;
 using System;
 using System.Linq;
 using System.Threading;
@@ -31,10 +31,10 @@ public abstract class AsyncWorkersPool<TWorker, TResult> : AsyncInitializable
     }
 
     public async Task<TResult> ExecuteOnPoolAsync(Func<TWorker, string, Task<TResult>> func,
-                                                       Func<Guid, string> getId = null)
+                                                  Func<Guid, string> getId = null)
     {
         var guid = Guid.NewGuid();
-        string id = getId?.Invoke(guid) ?? guid.ToString();
+        var id = getId?.Invoke(guid) ?? guid.ToString();
 
         return await ProcessingQueue.EnqueueAsync(() => ExecuteAsync(w => func(w, id)));
     }
@@ -64,7 +64,7 @@ public abstract class AsyncWorkersPool<TWorker, TResult> : AsyncInitializable
 
         try
         {
-            TWorker worker = Workers.FirstOrDefault(x => !x.IsBusy);
+            var worker = Workers.FirstOrDefault(x => !x.IsBusy);
 
             if (worker is null)
             {

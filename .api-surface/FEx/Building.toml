@@ -1,0 +1,133 @@
+[project]
+name = "FEx.Building"
+path = "rc\\FEx.Building"
+
+[[classes]]
+name = "BuildExtensions"
+ns = "FEx.Building"
+file = "BuildExtensions.cs"
+static = true
+
+[[extensions]]
+name = "LogError"
+sig = "void LogError(this Exception ex)"
+returns = "void"
+file = "BuildExtensions.cs"
+
+[[extensions]]
+name = "GetLogger"
+sig = "ILogger GetLogger(this object sender)"
+returns = "ILogger"
+file = "BuildExtensions.cs"
+
+[[classes]]
+name = "Configuration"
+ns = "FEx.Building"
+base = "Enumeration"
+file = "Configuration.cs"
+
+[[classes]]
+name = "ConfigurationTypeConverter"
+ns = "FEx.Building"
+base = "TypeConverter"
+file = "Configuration.cs"
+
+[[classes]]
+name = "FExBuild"
+ns = "FEx.Building"
+base = "NukeBuild"
+file = "FExBuild.cs"
+
+[[interfaces]]
+name = "IGitVersionComponent"
+ns = "FEx.Building"
+file = "IGitVersionComponent.cs"
+
+[[interfaces]]
+name = "INuGetPublishTarget"
+ns = "FEx.Building"
+file = "INuGetPublishTarget.cs"
+
+[[interfaces]]
+name = "IPackTarget"
+ns = "FEx.Building"
+file = "IPackTarget.cs"
+
+[[interfaces]]
+name = "IRepositoryInfo"
+ns = "FEx.Building"
+file = "IRepositoryInfo.cs"
+
+[[interfaces]]
+name = "ITagTarget"
+ns = "FEx.Building"
+file = "ITagTarget.cs"
+
+[[classes]]
+name = "NukeExtensions"
+ns = "FEx.Building"
+file = "NukeExtensions.cs"
+static = true
+
+[[extensions]]
+name = "UpdateRepositoryInfo"
+sig = "DotNetPackSettings UpdateRepositoryInfo(this DotNetPackSettings toolSettings,
+                                                          IRepositoryInfo repositoryInfo)"
+returns = "DotNetPackSettings"
+file = "NukeExtensions.cs"
+
+[[classes]]
+name = "NukeLogger"
+ns = "FEx.Building"
+file = "NukeLogger.cs"
+static = true
+
+[[classes]]
+name = "NukeLogger"
+ns = "FEx.Building"
+base = "ILogger<T>"
+file = "NukeLogger.cs"
+
+[[classes]]
+name = "RepositoryInfo"
+ns = "FEx.Building"
+base = "IRepositoryInfo"
+file = "RepositoryInfo.cs"
+
+[[classes]]
+name = "CSharpStringUpdateRule"
+ns = "FEx.Building.AssemblyInfo"
+base = "ICSharpUpdateRule"
+file = "AssemblyInfo\\CSharpStringUpdateRule.cs"
+
+[[classes]]
+name = "CSharpUpdater"
+ns = "FEx.Building.AssemblyInfo"
+file = "AssemblyInfo\\CSharpUpdater.cs"
+
+[[classes]]
+name = "CSharpVersionUpdateRule"
+ns = "FEx.Building.AssemblyInfo"
+base = "ICSharpUpdateRule"
+file = "AssemblyInfo\\CSharpVersionUpdateRule.cs"
+
+[[interfaces]]
+name = "ICSharpUpdateRule"
+ns = "FEx.Building.AssemblyInfo"
+file = "AssemblyInfo\\ICSharpUpdateRule.cs"
+
+[[classes]]
+name = "StringUpdateRule"
+ns = "FEx.Building.AssemblyInfo"
+file = "AssemblyInfo\\StringUpdateRule.cs"
+
+[[classes]]
+name = "VersionString"
+ns = "FEx.Building.AssemblyInfo"
+file = "AssemblyInfo\\VersionString.cs"
+
+[[classes]]
+name = "VersionUpdateRule"
+ns = "FEx.Building.AssemblyInfo"
+file = "AssemblyInfo\\VersionUpdateRule.cs"
+

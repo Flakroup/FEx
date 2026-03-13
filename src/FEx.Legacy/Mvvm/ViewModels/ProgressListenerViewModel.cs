@@ -1,16 +1,13 @@
-﻿using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
-using FEx.Common.Abstractions.Interfaces;
-using FEx.Common.Extensions;
-using FEx.Extensions;
-using FEx.Extensions.DateTimes;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.Legacy.Mvvm.Abstractions.Interfaces;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Extensions;
 using FEx.MVVM.Models;
 using FEx.MVVM.Services;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -28,7 +25,7 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
 
     public T Progress { get; }
 
-    public IAppInfoProvider Application => FExFoundation.AppInfoProvider;
+    public IAppInfoProvider Application => FExCoreStatics.AppInfoProvider;
 
     protected static ProgressService ProgressSrv => ProgressService.Instance;
 
@@ -51,7 +48,7 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
                     if (statusInfo.IsNullOrEmptyOrWhiteSpace())
                         return;
 
-                    _logger.LogInformation(statusInfo);
+                    _logger.Information(statusInfo);
                 });
     }
 
@@ -112,11 +109,10 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
 
     public void PrgMaxAdd(double addedValue) => Progress.PrgMaxAdd(addedValue);
 
-    protected void SubscribeToProgressExcept<TProgress>(TProgress producer,
-                                                        params string[] iProgressReceiverProperties)
+    protected void SubscribeToProgressExcept<TProgress>(TProgress producer, params string[] iProgressReceiverProperties)
         where TProgress : IProgressAggregator
     {
-        string[] props = ProgressAggregatorExtensions.ListenerPropertyNames.ToArray();
+        var props = ProgressAggregatorExtensions.ListenerPropertyNames.ToArray();
 
         if (!iProgressReceiverProperties.IsNullOrEmpty())
             props = props.Except(iProgressReceiverProperties).ToArray();

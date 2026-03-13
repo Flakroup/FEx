@@ -1,4 +1,4 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
 using System.IO;
 
 namespace FEx.WebScraping.Extensions;

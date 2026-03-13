@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.9" />
+		<PackageReference Include="WireMock.Net" Version="1.6.11" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\FEx.Flurlx\FEx.Flurlx.csproj" />
+		<ProjectReference Include="..\..\src\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>
+

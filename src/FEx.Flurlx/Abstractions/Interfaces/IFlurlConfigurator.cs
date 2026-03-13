@@ -1,9 +1,11 @@
-using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
 using Flurl.Http;
+using Polly;
 
 namespace FEx.Flurlx.Abstractions.Interfaces;
 
-public interface IFlurlConfigurator : IFExInitialize
+public interface IFlurlConfigurator : IFExInitializable
 {
     IFlurlClient GetClient();
+    IAsyncPolicy<IFlurlResponse> GetResiliencePolicy();
 }

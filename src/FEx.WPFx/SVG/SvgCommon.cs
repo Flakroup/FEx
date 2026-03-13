@@ -1,4 +1,4 @@
-﻿using FEx.WPFx.SVG.SvgConverter;
+using FEx.WPFx.SVG.SvgConverter;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -9,7 +9,7 @@ namespace FEx.WPFx.SVG;
 public static class SvgCommon
 {
     /// <summary>
-    ///     Converts the SVG file to <see cref="DrawingImage" />.
+    /// Converts the SVG file to <see cref="DrawingImage" />.
     /// </summary>
     /// <param name="filepath">The path to SVG file.</param>
     /// <returns>
@@ -17,23 +17,23 @@ public static class SvgCommon
     /// </returns>
     public static DrawingImage ConvertSvgFileToDrawingImage(string filepath)
     {
-        DrawingImage imgSrc = ConverterLogic.ConvertSvg(filepath).ConvertedObj;
+        var imgSrc = ConverterLogic.ConvertSvg(filepath).ConvertedObj;
         imgSrc.Freeze();
 
         return imgSrc;
     }
 
     /// <summary>
-    ///     Converts the SVG to image source.
+    /// Converts the SVG to image source.
     /// </summary>
     /// <param name="svg">The SVG.</param>
     /// <param name="fileName">Name of the file.</param>
     /// <returns>
-    ///     ImageSource
+    /// ImageSource
     /// </returns>
     public static DrawingImage ConvertSvgToDrawingImage(string svg, string fileName)
     {
-        DrawingImage imgSrc = ConverterLogic.ConvertSvg(svg, fileName).ConvertedObj;
+        var imgSrc = ConverterLogic.ConvertSvg(svg, fileName).ConvertedObj;
         imgSrc.Freeze();
 
         return imgSrc;
@@ -55,7 +55,7 @@ public static class SvgCommon
     {
         var drawingVisual = new DrawingVisual();
 
-        using (DrawingContext drawingContext = drawingVisual.RenderOpen())
+        using (var drawingContext = drawingVisual.RenderOpen())
             drawingContext.DrawImage(source, new(new(0, 0), new Size(source.Width, source.Height)));
 
         var bmp = new RenderTargetBitmap((int)source.Width, (int)source.Height, 96, 96, PixelFormats.Pbgra32);

@@ -1,0 +1,38 @@
+[project]
+name = "FEx.Platforms"
+path = "rc\\FEx.Platforms"
+
+[[classes]]
+name = "FExPlatforms"
+ns = "FEx.Platforms"
+base = "FExInitializable"
+file = "FExPlatforms.cs"
+
+[[classes]]
+name = "FExPlatformsModule"
+ns = "FEx.Platforms"
+base = "InitializeModule<IFExPlatformsContainer, IServiceCollection>"
+file = "FExPlatformsModule.cs"
+
+[[classes]]
+name = "RegistryService"
+ns = "FEx.Platforms"
+base = "IRegistryService"
+file = "RegistryService.cs"
+
+[[interfaces]]
+name = "IFExPlatformsContainer"
+ns = "FEx.Platforms.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IFExPlatformsContainer.cs"
+
+[[interfaces]]
+name = "IRegistryService"
+ns = "FEx.Platforms.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[classes]]
+name = "RegistryKeyExtensions"
+ns = "FEx.Platforms.Extensions"
+file = "Extensions\\RegistryKeyExtensions.cs"
+static = true
+

@@ -1,31 +1,27 @@
-﻿#if NETSTANDARD
-using FEx.Extensions.Collections.Lists;
+#if NETSTANDARD
+using FEx.Agnostics.Abstractions.Extensions.Collections.Lists;
 #endif
-using FEx.Abstractions.Flow;
-using FEx.Abstractions.Flow.Errors;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Flow;
 using FEx.EFCore.Enums;
 using FEx.EFCore.Models;
 using FEx.Json.Converters;
 using FEx.Json.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
-using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-using static FEx.Logging.GlobalLogger;
-using StringExtensions = FEx.Extensions.StringExtensions;
+using static FEx.Agnostics.Abstractions.Logging.FExStaticLogger;
 
 namespace FEx.EFCore.Extensions;
 
@@ -52,7 +48,7 @@ public static class DbContextExtensions
 
         Settings.Error = (_, e) =>
         {
-            LogError(e.ErrorContext.Error.Message);
+            Error(e.ErrorContext.Error.Message);
             e.ErrorContext.Handled = true;
         };
     }
@@ -73,7 +69,7 @@ public static class DbContextExtensions
     {
         id ??= Guid.NewGuid().ToString();
 
-        Result<Error> result = dbContext.ValidateChangedEntities(id,
+        var result = dbContext.ValidateChangedEntities(id,
             validateAllProperties,
             onValidationStart,
             onFaultyEntity,
@@ -83,9 +79,9 @@ public static class DbContextExtensions
         if (result.IsFailure)
             return;
 
-        LogInformation($"[{id}]\tSaving changes to database");
-        int res = await dbContext.SaveChangesAsync(acceptAllChangesOnSuccess);
-        LogInformation($"[{id}]\t{res} rows affected");
+        Information($"[{id}]\tSaving changes to database");
+        var res = await dbContext.SaveChangesAsync(acceptAllChangesOnSuccess);
+        Information($"[{id}]\t{res} rows affected");
     }
 
     public static Result<Error> ValidateChangedEntities<TDbContext>(this TDbContext dbContext,
@@ -103,7 +99,7 @@ public static class DbContextExtensions
     {
         id ??= Guid.NewGuid().ToString();
 
-        ReadOnlyCollection<EntityEntry> entities = dbContext.GetChangedEntities()
+        var entities = dbContext.GetChangedEntities()
 #if NETSTANDARD
             .ToReadOnly();
 #else
@@ -115,7 +111,7 @@ public static class DbContextExtensions
 
         var isSuccess = true;
 
-        LogInformation($"[{id}]\tBegan {entities.Count} {(entities.Count > 1 ? "entities" : "entity")} validation");
+        Information($"[{id}]\tBegan {entities.Count} {(entities.Count > 1 ? "entities" : "entity")} validation");
         onValidationStart?.Invoke(id, entities); //todo convert to Rx
 
         if (entities.Any(x => x.State != EntityState.Deleted))
@@ -123,7 +119,7 @@ public static class DbContextExtensions
             var allFailedValidations = new List<EntityValidationFail>();
             var failedValidations = new List<ValidationResult>();
 
-            foreach ((EntityEntry entry, int counter) in entities.Select((entry, counter) => (entry, counter))
+            foreach (var (entry, counter) in entities.Select((entry, counter) => (entry, counter))
                          .Where(x => x.entry.State != EntityState.Deleted))
             {
                 var validationContext = new ValidationContext(entry.Entity);
@@ -134,12 +130,12 @@ public static class DbContextExtensions
                         failedValidations,
                         validateAllProperties))
                 {
-                    ReadOnlyCollection<ValidationResult> fails = failedValidations.ToList().AsReadOnly();
+                    var fails = failedValidations.ToList().AsReadOnly();
 
                     if (isSuccess)
                     {
                         isSuccess = false;
-                        LogError($"[{id}]\tFAILED");
+                        Error($"[{id}]\tFAILED");
                     }
 
                     var fail = new EntityValidationFail(entry, fails, counter);
@@ -153,16 +149,15 @@ public static class DbContextExtensions
                 var sb = new StringBuilder();
                 sb.Append('[').Append(id).AppendLine("]");
 
-                foreach (string message in allFailedValidations
+                foreach (var message in allFailedValidations
                              .Select(res => GetValidationResultInfo(res, Debugger.IsAttached))
                              .Distinct())
                     sb.Append(message);
 
                 var ex = new InvalidDataException(sb.ToString());
 
-                LogError(
-                    $"[{id}]\tValidation of {allFailedValidations.Count} {(entities.Count > 1 ? "entities" : "entity")} failed",
-                    ex);
+                Error(ex,
+                    $"[{id}]\tValidation of {allFailedValidations.Count} {(entities.Count > 1 ? "entities" : "entity")} failed");
 
                 onValidationFail?.Invoke(id, allFailedValidations); //todo convert to Rx
 
@@ -172,7 +167,7 @@ public static class DbContextExtensions
 
         if (isSuccess)
         {
-            LogInformation(
+            Information(
                 $"[{id}]\tValidation of {entities.Count} {(entities.Count > 1 ? "entities" : "entity")} finished successfully");
 
             onValidationSuccess?.Invoke(id, entities); //todo convert to Rx
@@ -186,7 +181,7 @@ public static class DbContextExtensions
     public static async Task AddOrUpdateAsync<T>(this DbSet<T> dbSet, T data, Expression<Func<T, bool>> existenceFunc)
         where T : class
     {
-        bool exists = await dbSet.AsNoTracking().AnyAsync(existenceFunc);
+        var exists = await dbSet.AsNoTracking().AnyAsync(existenceFunc);
 
         if (exists)
             dbSet.Update(data);
@@ -196,7 +191,10 @@ public static class DbContextExtensions
 
     public static IList<EntityEntry> GetChangedEntities<TDbContext>(this TDbContext dbContext)
         where TDbContext : DbContext =>
-        [.. dbContext.ChangeTracker.Entries().Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)];
+    [
+        .. dbContext.ChangeTracker.Entries()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+    ];
 
     public static bool IsSqlite<TDbContext>(this TDbContext context) where TDbContext : DbContext =>
         context.Database.ProviderName?.EndsWith(nameof(SqlDialect.Sqlite)) == true;
@@ -218,10 +216,10 @@ public static class DbContextExtensions
 
     public static string ExecuteReader<TDbContext>(this TDbContext db, string commandText) where TDbContext : DbContext
     {
-        using DbCommand command = db.Database.GetDbConnection().CreateCommand();
+        using var command = db.Database.GetDbConnection().CreateCommand();
         command.CommandText = commandText;
         db.Database.OpenConnection();
-        using DbDataReader reader = command.ExecuteReader();
+        using var reader = command.ExecuteReader();
         var sb = new StringBuilder();
 
         while (reader.Read())
@@ -234,7 +232,7 @@ public static class DbContextExtensions
 
     public static string GetJsonCommand<TDbContext, T>(this TDbContext context) where TDbContext : DbContext
     {
-        (string tableName, string properties) = context.GetSerializedPropertiesString<TDbContext, T>();
+        var (tableName, properties) = context.GetSerializedPropertiesString<TDbContext, T>();
 
         return context.IsSqlite()
             ? "SELECT\r\n"
@@ -247,23 +245,22 @@ public static class DbContextExtensions
 
     public static void EnsureCreatingMissingTables<TDbContext>(this TDbContext dbContext) where TDbContext : DbContext
     {
-        Type type = typeof(TDbContext);
-        Type dbSetType = typeof(DbSet<>);
+        var type = typeof(TDbContext);
+        var dbSetType = typeof(DbSet<>);
 
-        string[] dbPropertyNames = [.. type.GetProperties()
-            .Where(p => p.PropertyType.Name == dbSetType.Name)
-            .Select(p => p.Name)];
+        string[] dbPropertyNames =
+            [.. type.GetProperties().Where(p => p.PropertyType.Name == dbSetType.Name).Select(p => p.Name)];
 
-        foreach (string entityName in dbPropertyNames)
+        foreach (var entityName in dbPropertyNames)
             CheckTableExistsAndCreateIfMissing(dbContext, entityName);
     }
 
     private static (string tableName, string properties)
         GetSerializedPropertiesString<TDbContext, T>(this TDbContext dbContext) where TDbContext : DbContext
     {
-        string entityName = typeof(T).FullName;
-        IEntityType entityType = dbContext.Model.GetEntityTypes().First(x => x.Name == entityName);
-        string tableName = entityType.GetTableName();
+        var entityName = typeof(T).FullName;
+        var entityType = dbContext.Model.GetEntityTypes().First(x => x.Name == entityName);
+        var tableName = entityType.GetTableName();
 
         string[] columnNames = [.. entityType.GetProperties().Select(propertyType => propertyType.GetColumnName())];
 
@@ -271,10 +268,7 @@ public static class DbContextExtensions
 
         for (var index = 0; index < columnNames.Length; index++)
         {
-            sb.Append('\'')
-                .Append(StringExtensions.FirstCharToLower(columnNames[index]))
-                .Append("', ")
-                .Append(columnNames[index]);
+            sb.Append('\'').Append(columnNames[index].FirstCharToLower()).Append("', ").Append(columnNames[index]);
 
             if (index < columnNames.Length - 1)
                 sb.Append(',');
@@ -285,9 +279,9 @@ public static class DbContextExtensions
 
     private static string GetValidationResultInfo(EntityValidationFail fail, bool detailedInfo = false)
     {
-        int counter = fail.Index;
-        EntityEntry entry = fail.Entry;
-        IReadOnlyCollection<ValidationResult> failedValidations = fail.FailedValidations;
+        var counter = fail.Index;
+        var entry = fail.Entry;
+        var failedValidations = fail.FailedValidations;
 
         var sb = new StringBuilder();
 
@@ -301,7 +295,7 @@ public static class DbContextExtensions
 
         sb.AppendLine("has failed validation with following errors:");
 
-        foreach (ValidationResult val in failedValidations)
+        foreach (var val in failedValidations)
         {
             sb.Append("\t\tOn fields: ")
                 .AppendLine(string.Join(", ", val.MemberNames))
@@ -314,9 +308,9 @@ public static class DbContextExtensions
 
     private static void CheckTableExistsAndCreateIfMissing(DbContext dbContext, string entityName)
     {
-        string defaultSchema = dbContext.Model.GetDefaultSchema();
+        var defaultSchema = dbContext.Model.GetDefaultSchema();
 
-        string tableName = string.IsNullOrWhiteSpace(defaultSchema)
+        var tableName = string.IsNullOrWhiteSpace(defaultSchema)
             ? $"[{entityName}]"
             : $"[{defaultSchema}].[{entityName}]";
 
@@ -328,9 +322,9 @@ public static class DbContextExtensions
         {
             var scriptStart = $"CREATE TABLE {tableName}";
             const string scriptEnd = "GO";
-            string script = dbContext.Database.GenerateCreateScript();
+            var script = dbContext.Database.GenerateCreateScript();
 
-            string[] tableScript = script.Split([scriptStart], StringSplitOptions.RemoveEmptyEntries)
+            var tableScript = script.Split([scriptStart], StringSplitOptions.RemoveEmptyEntries)
                 .Last()
                 .Split([scriptEnd], StringSplitOptions.RemoveEmptyEntries);
 

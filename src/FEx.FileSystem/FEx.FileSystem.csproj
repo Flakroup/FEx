@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+	  <ProjectReference Include="..\Core\FEx.Core.csproj" />
+	  <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+	</ItemGroup>
+
+</Project>

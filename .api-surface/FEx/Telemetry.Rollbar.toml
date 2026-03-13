@@ -1,0 +1,43 @@
+[project]
+name = "FEx.Telemetry.Rollbar"
+path = "rc\\FEx.Telemetry.Rollbar"
+
+[[classes]]
+name = "FExRollbarModule"
+ns = "FEx.Telemetry.Rollbar"
+base = "FExTelemetryModule"
+file = "FExRollbarModule.cs"
+
+[[classes]]
+name = "FExRollbarx"
+ns = "FEx.Telemetry.Rollbar"
+base = "InitializeModule<IRollbarModule, IServiceCollection>"
+file = "FExRollbarx.cs"
+
+[[interfaces]]
+name = "IRollbarConfig"
+ns = "FEx.Telemetry.Rollbar.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IRollbarConfig.cs"
+
+[[interfaces]]
+name = "IRollbarModule"
+ns = "FEx.Telemetry.Rollbar.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IRollbarModule.cs"
+
+[[interfaces]]
+name = "IRollbarService"
+ns = "FEx.Telemetry.Rollbar.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IRollbarService.cs"
+
+[[classes]]
+name = "RollbarConfigBase"
+ns = "FEx.Telemetry.Rollbar.Configuration"
+base = "FExTelemetryConfigBase, IRollbarConfig, IDisposable"
+file = "Configuration\\RollbarConfigBase.cs"
+
+[[classes]]
+name = "RollbarService"
+ns = "FEx.Telemetry.Rollbar.Services"
+base = "IRollbarService"
+file = "Services\\RollbarService.cs"
+

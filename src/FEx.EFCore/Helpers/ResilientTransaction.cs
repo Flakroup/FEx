@@ -1,7 +1,7 @@
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Asyncx.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Data;
 using System.Threading;
@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 namespace FEx.EFCore.Helpers;
 
 /// <summary>
-///     Use of an EF Core resiliency strategy when using multiple DbContexts within an explicit BeginTransaction():
-///     See: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
+/// Use of an EF Core resiliency strategy when using multiple DbContexts within an explicit BeginTransaction():
+/// See: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
 /// </summary>
 public class ResilientTransaction
 {
-    private readonly ILogger<ResilientTransaction> _logger;
+    private readonly IFExLogger _logger;
 
-    public ResilientTransaction(ILogger<ResilientTransaction> logger)
+    public ResilientTransaction(IFExLogger logger)
     {
         _logger = logger;
     }
@@ -28,7 +28,7 @@ public class ResilientTransaction
                                          IsolationLevel isolationLevel = IsolationLevel.Unspecified,
                                          int? delayOnTimeout = null)
     {
-        IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
+        var strategy = context.Database.CreateExecutionStrategy();
 
         return await strategy.ExecuteAsync(() =>
             RunTransactionAsync(context, action, id, isolationLevel, delayOnTimeout));
@@ -40,7 +40,7 @@ public class ResilientTransaction
                                          IsolationLevel isolationLevel = IsolationLevel.Unspecified,
                                          int? delayOnTimeout = null)
     {
-        IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
+        var strategy = context.Database.CreateExecutionStrategy();
 
         return await strategy.ExecuteAsync(() =>
             RunTransactionAsync(context, action, id, isolationLevel, delayOnTimeout));
@@ -52,7 +52,7 @@ public class ResilientTransaction
                         IsolationLevel isolationLevel = IsolationLevel.Unspecified,
                         int? delayOnTimeout = null)
     {
-        IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
+        var strategy = context.Database.CreateExecutionStrategy();
 
         return strategy.Execute(() => RunTransaction(context, action, id, isolationLevel, delayOnTimeout));
     }
@@ -65,8 +65,7 @@ public class ResilientTransaction
     {
         T res;
 
-        await using IDbContextTransaction transaction =
-            await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout);
+        await using var transaction = await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout);
 
         try
         {
@@ -78,7 +77,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                _logger.Error(ex, $"[{id}]\t{ex.Message}");
                 //ignored
             }
         }
@@ -100,8 +99,7 @@ public class ResilientTransaction
     {
         T res;
 
-        await using IDbContextTransaction transaction =
-            await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout);
+        await using var transaction = await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout);
 
         try
         {
@@ -113,7 +111,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                _logger.Error(ex, $"[{id}]\t{ex.Message}");
                 //ignored
             }
         }
@@ -135,7 +133,7 @@ public class ResilientTransaction
     {
         T res;
 
-        using IDbContextTransaction transaction = GetTransaction(context, id, isolationLevel, delayOnTimeout);
+        using var transaction = GetTransaction(context, id, isolationLevel, delayOnTimeout);
 
         try
         {
@@ -147,7 +145,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                _logger.Error(ex, $"[{id}]\t{ex.Message}");
                 //ignored
             }
         }
@@ -175,7 +173,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                _logger.Error(ex, $"[{id}]\t{ex.Message}");
                 //ignored
             }
 
@@ -197,7 +195,7 @@ public class ResilientTransaction
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError($"[{id}]\t{ex.Message}", ex);
+                _logger.Error(ex, $"[{id}]\t{ex.Message}");
                 //ignored
             }
 

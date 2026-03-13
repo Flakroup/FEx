@@ -1,8 +1,7 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
-using System.Reflection;
 
 namespace FEx.Json.Converters;
 
@@ -13,17 +12,17 @@ public class JsonPathConverter : JsonConverter
     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
     {
         var jo = JObject.Load(reader);
-        object targetObj = Activator.CreateInstance(objectType);
+        var targetObj = Activator.CreateInstance(objectType);
 
-        foreach (PropertyInfo prop in objectType.GetProperties().Where(p => p.CanRead && p.CanWrite))
+        foreach (var prop in objectType.GetProperties().Where(p => p.CanRead && p.CanWrite))
         {
-            JsonPropertyAttribute att = prop.GetCustomAttributes(true).OfType<JsonPropertyAttribute>().FirstOrDefault();
+            var att = prop.GetCustomAttributes(true).OfType<JsonPropertyAttribute>().FirstOrDefault();
 
-            string jsonPath = att is not null
+            var jsonPath = att is not null
                 ? att.PropertyName
                 : prop.Name;
 
-            JToken token = jo.SelectToken(jsonPath);
+            var token = jo.SelectToken(jsonPath);
 
             if (token is not null
                 && token.Type != JTokenType.Null)
@@ -40,5 +39,6 @@ public class JsonPathConverter : JsonConverter
         // CanConvert is not called when [JsonConverter] attribute is used
         false;
 
-    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) =>
+        throw new NotImplementedException();
 }

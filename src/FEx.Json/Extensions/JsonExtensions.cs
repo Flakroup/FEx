@@ -1,6 +1,5 @@
+using FEx.Agnostics.Abstractions.Logging;
 using FEx.Json.Converters;
-using FEx.Logging.Abstractions;
-using FEx.Logging.Abstractions.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -63,7 +62,7 @@ public static class JsonExtensions
         }
         catch (Exception ex)
         {
-            FExLoggingFoundation.Logger.LogError(ex);
+            FExStaticLogger.Error(ex); //todo use ExceptionHandler
 
             if (Debugger.IsAttached)
                 File.WriteAllText(Path.Combine(Path.GetTempPath(), "error.json"), json);
@@ -96,27 +95,27 @@ public static class JsonExtensions
     }
 
     /// <summary>
-    ///     Reformats the json.
+    /// Reformats the json.
     /// </summary>
     /// <param name="json">The json.</param>
     /// <returns>
-    ///     System.String
+    /// System.String
     /// </returns>
     public static string ReformatJson(this string json)
     {
-        object obj = JsonConvert.DeserializeObject(json);
+        var obj = JsonConvert.DeserializeObject(json);
 
         return JsonConvert.SerializeObject(obj, Formatting.Indented);
     }
 
     /// <summary>
-    ///     Deserializes the token.
+    /// Deserializes the token.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="jToken">The j token.</param>
     /// <param name="settings">The settings.</param>
     /// <returns>
-    ///     T
+    /// T
     /// </returns>
     public static T DeserializeToken<T>(this JToken jToken, JsonSerializerSettings settings = null) =>
         jToken.ToString().FromJson<T>(settings);
@@ -133,9 +132,9 @@ public static class JsonExtensions
 
     public static void PrettyPrintFile(string orgPath, string destPath)
     {
-        using StreamReader file = File.OpenText(orgPath);
+        using var file = File.OpenText(orgPath);
         using var reader = new JsonTextReader(file);
-        using FileStream destFile = File.OpenWrite(destPath);
+        using var destFile = File.OpenWrite(destPath);
         destFile.SetLength(0);
         using var destFileWriter = new StreamWriter(destFile);
         using var destWriter = new JsonTextWriter(destFileWriter);
@@ -152,7 +151,7 @@ public static class JsonExtensions
 
     public static T DeserializeFromFile<T>(this FileInfo file, JsonSerializerSettings settings = null)
     {
-        using FileStream fStream = file.OpenRead();
+        using var fStream = file.OpenRead();
 
         return fStream.DeserializeFromStream<T>(settings);
     }

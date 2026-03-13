@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.Threading;
+using Microsoft.VisualStudio.Threading;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

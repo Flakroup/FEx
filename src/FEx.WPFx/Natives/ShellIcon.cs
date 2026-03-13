@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
 // <copyright file="ShellIcon.cs" company="Mauricio DIAZ ORLICH (madd0@madd0.com)">
 //   Distributed under Microsoft Public License (MS-PL).
 //   http://www.opensource.org/licenses/MS-PL
@@ -11,9 +11,9 @@ using System.Runtime.InteropServices;
 namespace FEx.WPFx.Natives;
 
 /// <summary>
-///     Get a small or large Icon with an easy C# function call
-///     that returns a 32x32 or 16x16 System.Drawing.Icon depending on which function you call
-///     either GetSmallIcon(string fileName) or GetLargeIcon(string fileName)
+/// Get a small or large Icon with an easy C# function call
+/// that returns a 32x32 or 16x16 System.Drawing.Icon depending on which function you call
+/// either GetSmallIcon(string fileName) or GetLargeIcon(string fileName)
 /// </summary>
 public static class ShellIcon
 {

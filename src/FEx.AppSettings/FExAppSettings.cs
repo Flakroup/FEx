@@ -1,10 +1,11 @@
-﻿using FEx.DI.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
+using FEx.Agnostics.Abstractions;
 
 namespace FEx.AppSettings;
 
-public class FExAppSettings : InitializeModule<IFExAppSettingsModule>
+public class FExAppSettings : FExInitializable
 {
-    protected override void AddServices(IFExAppSettingsModule container, IServiceCollection services) =>
-        FExAppSettingsModule.AddServices(container, services);
+    protected override void OnInitialize()
+    {
+        // AppSettings initialization if needed
+    }
 }

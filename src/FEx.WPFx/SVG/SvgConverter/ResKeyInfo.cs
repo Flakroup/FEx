@@ -1,4 +1,4 @@
-﻿namespace FEx.WPFx.SVG.SvgConverter;
+namespace FEx.WPFx.SVG.SvgConverter;
 
 public class ResKeyInfo
 {

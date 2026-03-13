@@ -13,7 +13,7 @@ public abstract class DialogOptionsBase<TDialog>
 
     protected T ShowDialog<T>(Func<TDialog, T> dialogFunc, IProgressAggregator viewModel)
     {
-        bool wasRunning = viewModel?.Stopwatch?.IsRunning ?? false;
+        var wasRunning = viewModel?.Stopwatch?.IsRunning ?? false;
 
         if (wasRunning)
             viewModel.Stopwatch.Stop();
@@ -22,7 +22,7 @@ public abstract class DialogOptionsBase<TDialog>
         {
             Dialog = MapToDialog();
 
-            T result = dialogFunc(Dialog);
+            var result = dialogFunc(Dialog);
             MapFromDialog(Dialog);
 
             return result;

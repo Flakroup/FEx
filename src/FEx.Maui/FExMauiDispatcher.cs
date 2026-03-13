@@ -1,9 +1,9 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Basics.Abstractions;
-using FEx.Common.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Implementations;
+using FEx.Core.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Dispatching;
 using System;
+using System.Collections;
 using System.Threading.Tasks;
 
 namespace FEx.Maui;
@@ -15,13 +15,17 @@ public class FExMauiDispatcher : FExDispatcher
     public FExMauiDispatcher(ILogger logger,
                              IMainThreadContextProvider mainThreadContextProvider,
                              IDeadlockMonitor deadlockMonitor,
-                             IStackTraceProvider stackTraceProvider)
-        : base(logger, mainThreadContextProvider, deadlockMonitor, stackTraceProvider)
+                             IStackTraceProvider stackTraceProvider,
+                             bool isDeadlockMonitoringEnabled = false)
+        : base(logger, mainThreadContextProvider, deadlockMonitor, stackTraceProvider, isDeadlockMonitoringEnabled)
     {
         _dispatcher = Dispatcher.GetForCurrentThread();
     }
 
-    public override void BeginInvokeOnMainThread(Action action) => _dispatcher.Dispatch(action);
+    public override void BeginInvokeOnMainThread(Action action, object sender = null) => _dispatcher.Dispatch(action);
+
+    public override async Task InvokeOnMainThreadAsync(Action action, object sender = null) =>
+        await _dispatcher.DispatchAsync(action);
 
     public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> func, object sender = null) =>
         await _dispatcher.DispatchAsync(func);
@@ -34,32 +38,10 @@ public class FExMauiDispatcher : FExDispatcher
 
     public override bool CheckAccess(object sender = null) => _dispatcher.IsDispatchRequired;
 
-    public override void InvokeOnIdleMainThread(Action action, object sender = null) => _dispatcher.Dispatch(action);
-
-    public override T InvokeOnIdleMainThread<T>(Func<T> action, object sender = null)
+    public override void EnableCollectionSynchronization(IEnumerable collection,
+                                                         object context,
+                                                         Action<IEnumerable, object, Action, bool> callback)
     {
-        T result = default;
-        _dispatcher.Dispatch(() => result = action());
-
-        return result;
+        // MAUI doesn't need special collection synchronization
     }
-
-    public override void InvokeOnMainThread(Action action, object sender = null) => _dispatcher.Dispatch(action);
-
-    public override T InvokeOnMainThread<T>(Func<T> action, object sender = null)
-    {
-        T result = default;
-        _dispatcher.Dispatch(() => result = action());
-
-        return result;
-    }
-
-    public override async Task InvokeOnIdleMainThreadAsync(Action action, object sender = null) =>
-        await _dispatcher.DispatchAsync(action);
-
-    public override async Task<T> InvokeOnIdleMainThreadAsync<T>(Func<T> action, object sender = null) =>
-        await _dispatcher.DispatchAsync(action);
-
-    public override async Task InvokeOnMainThreadAsync(Action action, object sender = null) =>
-        await _dispatcher.DispatchAsync(action);
 }

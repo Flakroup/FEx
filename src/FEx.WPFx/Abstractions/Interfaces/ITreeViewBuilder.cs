@@ -35,7 +35,7 @@ public interface ITreeViewBuilder<TItem> : ITreeViewBuilder where TItem : Header
     Task GrowTreeAsync(ItemsControl tree, IReadOnlyList<TItem> curr, int i = 0);
 
     /// <summary>
-    ///     Grows the tree.
+    /// Grows the tree.
     /// </summary>
     /// <param name="tree">The tree.</param>
     /// <param name="newNode">The new node.</param>
@@ -44,7 +44,7 @@ public interface ITreeViewBuilder<TItem> : ITreeViewBuilder where TItem : Header
     Task GrowTreeAsync(ItemsControl tree, TItem newNode, int[] location, int i = 0);
 
     /// <summary>
-    ///     Grows the tree.
+    /// Grows the tree.
     /// </summary>
     /// <param name="tree">The tree.</param>
     /// <param name="nodeStub">The node stub.</param>

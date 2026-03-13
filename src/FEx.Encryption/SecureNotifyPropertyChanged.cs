@@ -1,5 +1,5 @@
-﻿using FEx.Basics.Abstractions;
-using FEx.Basics.Extensions;
+using FEx.Agnostics.BaseObjects;
+using FEx.Core.Abstractions.Extensions;
 using FEx.Json.Extensions;
 using System;
 using System.Globalization;
@@ -32,7 +32,7 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
 
     protected T DecryptFromJsonSource<T>(ref string source, [CallerMemberName] string propertyName = null)
     {
-        string json = DecryptFromSource(ref source, propertyName);
+        var json = DecryptFromSource(ref source, propertyName);
 
         try
         {
@@ -68,37 +68,38 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
         return SetProperty(ref backingField, encrypted, onPropertyChanged, propertyName);
     }
 
-    private static bool MatchesUnicodeCategory(char c) => char.GetUnicodeCategory(c) switch
-    {
-        UnicodeCategory.ClosePunctuation => true,
-        UnicodeCategory.ConnectorPunctuation => true,
-        UnicodeCategory.CurrencySymbol => true,
-        UnicodeCategory.DashPunctuation => true,
-        UnicodeCategory.DecimalDigitNumber => true,
-        UnicodeCategory.EnclosingMark => true,
-        UnicodeCategory.FinalQuotePunctuation => true,
-        UnicodeCategory.Format => true,
-        UnicodeCategory.InitialQuotePunctuation => true,
-        UnicodeCategory.LetterNumber => true,
-        UnicodeCategory.LineSeparator => true,
-        UnicodeCategory.LowercaseLetter => true,
-        UnicodeCategory.MathSymbol => true,
-        UnicodeCategory.ModifierLetter => true,
-        UnicodeCategory.ModifierSymbol => true,
-        UnicodeCategory.NonSpacingMark => true,
-        UnicodeCategory.OpenPunctuation => true,
-        UnicodeCategory.OtherLetter => true,
-        UnicodeCategory.OtherNotAssigned => true,
-        UnicodeCategory.OtherNumber => true,
-        UnicodeCategory.OtherPunctuation => true,
-        UnicodeCategory.ParagraphSeparator => true,
-        UnicodeCategory.SpaceSeparator => true,
-        UnicodeCategory.SpacingCombiningMark => true,
-        UnicodeCategory.Surrogate => true,
-        UnicodeCategory.TitlecaseLetter => true,
-        UnicodeCategory.UppercaseLetter => true,
-        _ => false
-    };
+    private static bool MatchesUnicodeCategory(char c) =>
+        char.GetUnicodeCategory(c) switch
+        {
+            UnicodeCategory.ClosePunctuation => true,
+            UnicodeCategory.ConnectorPunctuation => true,
+            UnicodeCategory.CurrencySymbol => true,
+            UnicodeCategory.DashPunctuation => true,
+            UnicodeCategory.DecimalDigitNumber => true,
+            UnicodeCategory.EnclosingMark => true,
+            UnicodeCategory.FinalQuotePunctuation => true,
+            UnicodeCategory.Format => true,
+            UnicodeCategory.InitialQuotePunctuation => true,
+            UnicodeCategory.LetterNumber => true,
+            UnicodeCategory.LineSeparator => true,
+            UnicodeCategory.LowercaseLetter => true,
+            UnicodeCategory.MathSymbol => true,
+            UnicodeCategory.ModifierLetter => true,
+            UnicodeCategory.ModifierSymbol => true,
+            UnicodeCategory.NonSpacingMark => true,
+            UnicodeCategory.OpenPunctuation => true,
+            UnicodeCategory.OtherLetter => true,
+            UnicodeCategory.OtherNotAssigned => true,
+            UnicodeCategory.OtherNumber => true,
+            UnicodeCategory.OtherPunctuation => true,
+            UnicodeCategory.ParagraphSeparator => true,
+            UnicodeCategory.SpaceSeparator => true,
+            UnicodeCategory.SpacingCombiningMark => true,
+            UnicodeCategory.Surrogate => true,
+            UnicodeCategory.TitlecaseLetter => true,
+            UnicodeCategory.UppercaseLetter => true,
+            _ => false
+        };
 
     private string Sanitize(ref string source, string decryptedValue, string propertyName)
     {

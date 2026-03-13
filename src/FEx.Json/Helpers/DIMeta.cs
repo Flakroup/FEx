@@ -1,4 +1,4 @@
-﻿using FEx.DI.Abstractions;
+using FEx.DependencyInjection.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -15,28 +15,29 @@ public sealed class DIMeta : InitializeOnlyModule
         _register = [];
     }
 
-    public override async Task OnCompleteInitializationAsync(IServiceCollection services)
+    public override async ValueTask OnCompleteInitializationAsync(IServiceCollection services)
     {
         await base.OnCompleteInitializationAsync(services);
-        RegisterServices(services);
+        ProcessRegisteredServices(services);
     }
 
     public bool IsRegistred(Type t) => t is not null && _register.ContainsKey(t.FullName!);
 
     public Type RegistredTypeFor(Type t)
     {
-        string key = t?.FullName;
+        var key = t?.FullName;
 
-        return key is not null && _register.TryGetValue(key, out Type value)
+        return key is not null && _register.TryGetValue(key, out var value)
             ? value
             : t;
     }
 
-    protected override void AddServices(object container, IServiceCollection services) => RegisterServices(services);
+    protected override void RegisterServices(object container, IServiceCollection services) =>
+        ProcessRegisteredServices(services);
 
-    private void RegisterServices(IServiceCollection services)
+    private void ProcessRegisteredServices(IServiceCollection services)
     {
-        foreach (ServiceDescriptor s in services)
+        foreach (var s in services)
             _register[s.ServiceType.FullName!] = s.ImplementationType;
     }
 }

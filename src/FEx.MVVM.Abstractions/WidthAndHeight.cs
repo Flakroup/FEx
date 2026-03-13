@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace FEx.MVVM.Abstractions;
 
@@ -42,6 +42,7 @@ public class WidthAndHeight : IComparable<WidthAndHeight>, IEquatable<WidthAndHe
         }
     }
 #else
-        => HashCode.Combine(Width, Height);
+        =>
+            HashCode.Combine(Width, Height);
 #endif
 }

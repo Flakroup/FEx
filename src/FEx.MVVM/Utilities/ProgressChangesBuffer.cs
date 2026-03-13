@@ -1,4 +1,4 @@
-﻿using FEx.Asyncx.Collections;
+using FEx.Asyncx.Collections;
 using FEx.MVVM.Subjects;
 using System.Collections.Generic;
 using System.Linq;

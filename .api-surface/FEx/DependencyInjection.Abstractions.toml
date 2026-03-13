@@ -1,0 +1,89 @@
+[project]
+name = "FEx.DependencyInjection.Abstractions"
+path = "rc\\DependencyInjection.Abstractions"
+
+[[classes]]
+name = "FExServiceProvider"
+ns = "FEx.DependencyInjection.Abstractions"
+base = "IFExServiceProvider"
+file = "FExServiceProvider.cs"
+
+[[classes]]
+name = "InitializeModule"
+ns = "FEx.DependencyInjection.Abstractions"
+base = "FExInitializable, IInitializeModule<TEngineContext>
+    where TContainer : class"
+file = "InitializeModule.cs"
+
+[[classes]]
+name = "InitializeOnlyModule"
+ns = "FEx.DependencyInjection.Abstractions"
+base = "InitializeModule<object, IServiceCollection>"
+file = "InitializeOnlyModule.cs"
+
+[[classes]]
+name = "StaticsBase"
+ns = "FEx.DependencyInjection.Abstractions.Basics"
+base = "FExInitializable"
+file = "Basics\\StaticsBase.cs"
+
+[[enums]]
+name = "ConfigurationPriority"
+ns = "FEx.DependencyInjection.Abstractions.Enums"
+file = "Enums\\ConfigurationPriority.cs"
+
+[[interfaces]]
+name = "IAnyConfigurator"
+ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IAnyConfigurator.cs"
+
+[[interfaces]]
+name = "IAsyncConfigurator"
+ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IAsyncConfigurator.cs"
+
+[[interfaces]]
+name = "IConfigurator"
+ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IConfigurator.cs"
+
+[[interfaces]]
+name = "IFExDependencyInjectionContainer"
+ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IFExDependencyInjectionContainer.cs"
+
+[[interfaces]]
+name = "IFExServiceContainer"
+ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IFExServiceContainer.cs"
+
+[[interfaces]]
+name = "IFExServiceProvider"
+ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IFExServiceProvider.cs"
+
+[[interfaces]]
+name = "IFExStrongInjectServiceProvider"
+ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IFExStrongInjectServiceProvider.cs"
+
+[[interfaces]]
+name = "IInitializeModule"
+ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IInitializeModule.cs"
+
+[[interfaces]]
+name = "IMicrosoftDIConfigurator"
+ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IMicrosoftDIConfigurator.cs"
+
+[[interfaces]]
+name = "IMicrosoftDIConfigurator"
+ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IMicrosoftDIConfigurator.cs"
+
+[[interfaces]]
+name = "IScopeProvider"
+ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IScopeProvider.cs"
+

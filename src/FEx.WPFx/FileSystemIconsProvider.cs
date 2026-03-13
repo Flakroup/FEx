@@ -1,9 +1,7 @@
-using FEx.Abstractions.Flow;
-using FEx.Abstractions.Flow.Errors;
-using FEx.Abstractions.Interfaces;
-using FEx.Common.Extensions;
-using FEx.Extensions.Collections.Dictionaries;
-using FEx.Fundamentals.Utilities;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.FileSystem;
 using FEx.WPFx.Natives;
 using System;
 using System.Drawing;
@@ -32,14 +30,14 @@ public class FileSystemIconsProvider
 
     public async Task<BitmapSource> GetFileIconAsync(string filePath, bool isIconAttachedToFile = true)
     {
-        string key = isIconAttachedToFile
+        var key = isIconAttachedToFile
             ? Path.GetExtension(filePath)
             : filePath;
 
         if (key is null)
             return null;
 
-        if (_iconsCache.TryGetValue(key, out BitmapSource res)
+        if (_iconsCache.TryGetValue(key, out var res)
             && res is not null)
             return res;
 
@@ -70,10 +68,10 @@ public class FileSystemIconsProvider
         if (!isIconAttachedToFile)
             return await CommonWindowsImaging.GetBitmapImageFromFileAsync(filePath, new(16, 16));
 
-        Result<bool, ExceptionError> fileResult = FileSystemUtilities.IsPathFile(filePath);
-        bool isFile = fileResult.IsSuccess && fileResult.Data;
+        var fileResult = FileSystemUtilities.IsPathFile(filePath);
+        var isFile = fileResult.IsSuccess && fileResult.Data;
 
-        Icon icon = isFile!
+        var icon = isFile!
             ? Icon.ExtractAssociatedIcon(filePath)
             : ShellIcon.GetLargeFolderIcon(); //todo cache large folder icon
 
@@ -81,9 +79,9 @@ public class FileSystemIconsProvider
             return null;
 
         var bitmap = icon.ToBitmap();
-        IntPtr hBitmap = bitmap.GetHbitmap();
+        var hBitmap = bitmap.GetHbitmap();
 
-        BitmapSource res = Imaging.CreateBitmapSourceFromHBitmap(hBitmap,
+        var res = Imaging.CreateBitmapSourceFromHBitmap(hBitmap,
             IntPtr.Zero,
             Int32Rect.Empty,
             BitmapSizeOptions.FromEmptyOptions());

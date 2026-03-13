@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -7,29 +7,29 @@ using System.Windows.Data;
 namespace FEx.WPFx.Converters;
 
 /// <summary>
-///     Base class for mapping converters.
+/// Base class for mapping converters.
 /// </summary>
 /// <typeparam name="TIn">The type of the input value.</typeparam>
 /// <typeparam name="TOut">The type of the output value.</typeparam>
 public abstract class BaseMappingConverter<TIn, TOut> : IValueConverter
 {
     /// <summary>
-    ///     The default parameter.
+    /// The default parameter.
     /// </summary>
     private const int DefaultParameter = 0;
 
     /// <summary>
-    ///     The mappings;
+    /// The mappings;
     /// </summary>
     private Dictionary<object, Dictionary<TIn, TOut>> _mappings;
 
     /// <summary>
-    ///     Gets the default value.
+    /// Gets the default value.
     /// </summary>
     protected virtual TOut DefaultValue => default;
 
     /// <summary>
-    ///     Gets the mappings.
+    /// Gets the mappings.
     /// </summary>
     private Dictionary<object, Dictionary<TIn, TOut>> Mappings
     {
@@ -50,7 +50,7 @@ public abstract class BaseMappingConverter<TIn, TOut> : IValueConverter
     }
 
     /// <summary>
-    ///     Converts a value.
+    /// Converts a value.
     /// </summary>
     /// <param name="value">The value produced by the binding source.</param>
     /// <param name="targetType">The type of the binding target property.</param>
@@ -63,9 +63,9 @@ public abstract class BaseMappingConverter<TIn, TOut> : IValueConverter
         {
             var casted = (TIn)value;
 
-            Dictionary<TIn, TOut> selectedMappings = Mappings[parameter ?? DefaultParameter];
+            var selectedMappings = Mappings[parameter ?? DefaultParameter];
 
-            if (selectedMappings.TryGetValue(casted, out TOut result))
+            if (selectedMappings.TryGetValue(casted, out var result))
                 return result;
         }
 
@@ -73,7 +73,7 @@ public abstract class BaseMappingConverter<TIn, TOut> : IValueConverter
     }
 
     /// <summary>
-    ///     Converts a value.
+    /// Converts a value.
     /// </summary>
     /// <param name="value">The value that is produced by the binding target.</param>
     /// <param name="targetType">The type to convert to.</param>
@@ -83,19 +83,19 @@ public abstract class BaseMappingConverter<TIn, TOut> : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
         IDictionary<TIn, TOut> selectedMappings = Mappings[parameter ?? DefaultParameter];
-        KeyValuePair<TIn, TOut> selectedPair = selectedMappings.FirstOrDefault(sm => sm.Value.Equals((TOut)value));
+        var selectedPair = selectedMappings.FirstOrDefault(sm => sm.Value.Equals((TOut)value));
 
         return selectedPair.Key;
     }
 
     /// <summary>
-    ///     Initializes the mappings.
+    /// Initializes the mappings.
     /// </summary>
     /// <returns>Init mappings.</returns>
     protected virtual Dictionary<TIn, TOut> InitializeMappings() => [];
 
     /// <summary>
-    ///     Initializes the parametrized mappings.
+    /// Initializes the parametrized mappings.
     /// </summary>
     protected virtual Dictionary<object, Dictionary<TIn, TOut>> InitializeParametrizedMappings() => [];
 }

@@ -1,8 +1,7 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Basics.Extensions;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Common.Abstractions.Interfaces;
-using FEx.Common.Extensions;
-using FEx.Extensions;
+using FEx.Core.Abstractions.Extensions;
 using FEx.WPFx.Abstractions.Interfaces;
 using FEx.WPFx.Extensions;
 using FEx.WPFx.Helpers;
@@ -26,7 +25,7 @@ using FontFamily = System.Windows.Media.FontFamily;
 namespace FEx.WPFx.Controls;
 
 /// <summary>
-///     Interaction logic for MainWindow.xaml
+/// Interaction logic for MainWindow.xaml
 /// </summary>
 public partial class SplashScreenWindow : Window, INotifyPropertyChanged
 {

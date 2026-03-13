@@ -1,4 +1,4 @@
-﻿namespace FEx.KeyVault;
+namespace FEx.KeyVault;
 
 public interface IKeyVaultCredentials
 {

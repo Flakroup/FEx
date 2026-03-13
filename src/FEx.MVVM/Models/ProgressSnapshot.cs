@@ -1,4 +1,4 @@
-﻿namespace FEx.MVVM.Models;
+namespace FEx.MVVM.Models;
 
 public class ProgressSnapshot
 {

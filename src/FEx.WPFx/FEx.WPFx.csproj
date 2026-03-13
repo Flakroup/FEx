@@ -33,18 +33,20 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MaterialDesignThemes" Version="5.1.0" />
-		<PackageReference Include="SharpVectors.Reloaded" Version="1.8.4.2" />
+		<PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
+		<PackageReference Include="SharpVectors.Reloaded" Version="1.8.5" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FEx.Abstractions\FEx.Abstractions.csproj" />
-	  <ProjectReference Include="..\FEx.DependencyInjection\FEx.DependencyInjection.csproj" />
-	  <ProjectReference Include="..\FEx.Fundamentals\FEx.Fundamentals.csproj" />
-	  <ProjectReference Include="..\FEx.Logging\FEx.Logging.csproj" />
+	  <ProjectReference Include="..\Common\FEx.Common.csproj" />
+	  <ProjectReference Include="..\FEx.Legacy\FEx.Legacy.csproj" />
+	  <ProjectReference Include="..\DependencyInjection\FEx.DependencyInjection.csproj" />
+	  <ProjectReference Include="..\FEx.FileSystem\FEx.FileSystem.csproj" />
+	  <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
 	  <ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
 	  <ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
 	  <ProjectReference Include="..\FEx.Platforms\FEx.Platforms.csproj" />
+	  <ProjectReference Include="..\Logging\FEx.Logging.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

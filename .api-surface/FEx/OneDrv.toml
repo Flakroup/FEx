@@ -1,0 +1,9 @@
+[project]
+name = "FEx.OneDrv"
+path = "rc\\FEx.OneDrv"
+
+[[classes]]
+name = "OneDriveClient"
+ns = "FEx.OneDrv"
+file = "OneDriveClient.cs"
+

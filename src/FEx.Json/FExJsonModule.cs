@@ -1,4 +1,6 @@
-﻿using FEx.DI.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions;
+using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Json.Extensions;
 using FEx.Json.Helpers;
 using FEx.Json.Resolvers;
@@ -10,15 +12,16 @@ using StrongInject.Extensions.DependencyInjection;
 
 namespace FEx.Json;
 
-[Register(typeof(DIMeta), Scope.SingleInstance, typeof(DIMeta), typeof(IInitializeModule))]
+[Register(typeof(DIMeta), Scope.SingleInstance, typeof(DIMeta), typeof(IInitializeModule<IServiceCollection>))]
 [Register(typeof(DIContractResolver), Scope.SingleInstance, typeof(IContractResolver))]
-[Register(typeof(FExJson), Scope.SingleInstance, typeof(FExJson), typeof(IInitializeModule))]
-public class FExJsonModule
+[Register(typeof(FExJson), Scope.SingleInstance, typeof(FExJson), typeof(IFExInitializable))]
+[Register(typeof(FExJsonModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
+public class FExJsonModule : InitializeModule<IFExJsonContainer, IServiceCollection>
 {
     [Factory]
     public static JsonSerializerSettings JsonSerializerSettingsFactory() => JsonExtensions.DefaultSettings;
 
-    public static void AddServices(IFExJsonContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExJsonContainer container, IServiceCollection services)
     {
         services.AddTransientServiceUsingContainer<DIMeta>(container);
         services.AddTransientServiceUsingContainer<JsonSerializerSettings>(container);

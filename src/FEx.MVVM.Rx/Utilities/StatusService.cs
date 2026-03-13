@@ -1,6 +1,6 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Common.Utilities;
-using FEx.Extensions.Collections.Dictionaries;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Common.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
 
@@ -26,7 +26,7 @@ public sealed class StatusService : IStatusService
     {
         key ??= Guid.NewGuid();
 
-        StatusHub hub = StatusHubs.GetOrAddValue(key.Value,
+        var hub = StatusHubs.GetOrAddValue(key.Value,
             () => new(key.Value, onStatusAdded, onStatusRemoved, onStatusesReset));
 
         if (markAsMain)

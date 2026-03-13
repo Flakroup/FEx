@@ -1,10 +1,10 @@
-﻿using FEx.Abstractions;
-using FEx.Abstractions.Enums;
-using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions;
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Asyncx.Helpers;
-using FEx.Common.Extensions;
-using FEx.DI.Abstractions;
-using FEx.Extensions;
+using FEx.Common.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions;
 using FEx.WPFx.Abstractions.Interfaces;
 using FEx.WPFx.Controls;
 using FEx.WPFx.Services;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace FEx.WPFx;
 
-public class Splash : FExInitialize, IFExPriorityInitialize
+public class Splash : FExInitializable, IFExPriorityInitialize
 {
     private readonly IAppConfig _appConfig;
     private readonly IAsyncHelper _asyncHelper;
@@ -32,6 +32,8 @@ public class Splash : FExInitialize, IFExPriorityInitialize
         Priority = -2;
     }
 
+    public static void Close() => SplashScreenWindow.CloseIt?.Invoke(null, EventArgs.Empty);
+
     public void WaitForSplashAndClose()
     {
         if (SplashTask?.IsFinished() == false)
@@ -45,13 +47,11 @@ public class Splash : FExInitialize, IFExPriorityInitialize
         if (!_appConfig.SplashResourceName.IsNotNullOrEmptyString())
             return;
 
-        TaskCompletionSource<bool> tcs = DispatcherService.ShowView(ShowSplashInternal, true);
+        var tcs = DispatcherService.ShowView(ShowSplashInternal, true);
 
         JoinableAsyncHelper.AwaitWithoutDeadlock(() => tcs.Task);
         JoinableAsyncHelper.AwaitWithoutDeadlock(() => SplashScreenWindow.InitializationTask);
     }
-
-    public static void Close() => SplashScreenWindow.CloseIt?.Invoke(null, EventArgs.Empty);
 
     /// <inheritdoc />
     protected override void OnInitialize()

@@ -1,6 +1,5 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.Basics.Abstractions;
-using FEx.Common.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Implementations;
+using FEx.Core.Abstractions.Interfaces;
 using FEx.WPFx.Services;
 using Microsoft.Extensions.Logging;
 using System;
@@ -21,7 +20,8 @@ public class DispatcherContextExecutor : FExDispatcher
 
     public override bool CheckAccess(object sender = null) => DispatcherService.CheckAccess(sender as DispatcherObject);
 
-    public override void BeginInvokeOnMainThread(Action action) => DispatcherService.BeginInvoke(action);
+    public override void BeginInvokeOnMainThread(Action action, object sender = null) =>
+        DispatcherService.BeginInvoke(action);
 
     public override void InvokeOnIdleMainThread(Action action, object sender = null) =>
         DispatcherService.InvokeOnDispatcherContext(action,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Windows;
@@ -9,7 +9,7 @@ using System.Windows.Media;
 namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 /// <summary>
-///     Base class for panels which are supporting virtualization.
+/// Base class for panels which are supporting virtualization.
 /// </summary>
 public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
 {
@@ -49,7 +49,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     public bool CanHorizontallyScroll { get; set; }
 
     /// <summary>
-    ///     Scroll line delta for pixel based scrolling. The default value is 16 dp.
+    /// Scroll line delta for pixel based scrolling. The default value is 16 dp.
     /// </summary>
     public double ScrollLineDelta
     {
@@ -58,7 +58,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     }
 
     /// <summary>
-    ///     Mouse wheel delta for pixel based scrolling. The default value is 48 dp.
+    /// Mouse wheel delta for pixel based scrolling. The default value is 48 dp.
     /// </summary>
     public double MouseWheelDelta
     {
@@ -67,7 +67,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     }
 
     /// <summary>
-    ///     Scroll line delta for item based scrolling. The default value is 1 item.
+    /// Scroll line delta for item based scrolling. The default value is 1 item.
     /// </summary>
     public int ScrollLineDeltaItem
     {
@@ -76,7 +76,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     }
 
     /// <summary>
-    ///     Mouse wheel delta for item based scrolling. The default value is 3 items.
+    /// Mouse wheel delta for item based scrolling. The default value is 3 items.
     /// </summary>
     public int MouseWheelDeltaItem
     {
@@ -96,7 +96,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     protected ScrollUnit ScrollUnit => GetScrollUnit(ItemsControl);
 
     /// <summary>
-    ///     The direction in which the panel scrolls when user turns the mouse wheel.
+    /// The direction in which the panel scrolls when user turns the mouse wheel.
     /// </summary>
     protected ScrollDirection MouseWheelScrollDirection { get; set; } = ScrollDirection.Vertical;
 
@@ -105,28 +105,28 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
     protected VirtualizationMode VirtualizationMode => GetVirtualizationMode(ItemsControl);
 
     /// <summary>
-    ///     Returns true if the panel is in VirtualizationMode.Recycling, otherwise false.
+    /// Returns true if the panel is in VirtualizationMode.Recycling, otherwise false.
     /// </summary>
     protected bool IsRecycling => VirtualizationMode == VirtualizationMode.Recycling;
 
     /// <summary>
-    ///     The cache length before and after the viewport.
+    /// The cache length before and after the viewport.
     /// </summary>
     protected VirtualizationCacheLength CacheLength => GetCacheLength(ItemsControl);
 
     /// <summary>
-    ///     The Unit of the cache length. Can be Pixel, Item or Page.
-    ///     When the ItemsOwner is a group item it can only be pixel or item.
+    /// The Unit of the cache length. Can be Pixel, Item or Page.
+    /// When the ItemsOwner is a group item it can only be pixel or item.
     /// </summary>
     protected VirtualizationCacheLengthUnit CacheLengthUnit => GetCacheLengthUnit(ItemsControl);
 
     /// <summary>
-    ///     The ItemsControl (e.g. ListView).
+    /// The ItemsControl (e.g. ListView).
     /// </summary>
     protected ItemsControl ItemsControl => ItemsControl.GetItemsOwner(this);
 
     /// <summary>
-    ///     The ItemsControl (e.g. ListView) or if the ItemsControl is grouping a GroupItem.
+    /// The ItemsControl (e.g. ListView) or if the ItemsControl is grouping a GroupItem.
     /// </summary>
     protected DependencyObject ItemsOwner
     {
@@ -137,7 +137,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
                 /* Use reflection to access internal method because the public
                  * GetItemsOwner method does always return the itmes control instead
                  * of the real items owner for example the group item when grouping */
-                MethodInfo getItemsOwnerInternalMethod = typeof(ItemsControl).GetMethod("GetItemsOwnerInternal",
+                var getItemsOwnerInternalMethod = typeof(ItemsControl).GetMethod("GetItemsOwnerInternal",
                     BindingFlags.Static | BindingFlags.NonPublic,
                     null,
                     [typeof(DependencyObject)],
@@ -171,7 +171,7 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
 
     public virtual Rect MakeVisible(Visual visual, Rect rectangle)
     {
-        Point pos = visual.TransformToAncestor(this).Transform(BaseModel.ScrollOffset);
+        var pos = visual.TransformToAncestor(this).Transform(BaseModel.ScrollOffset);
 
         double scrollAmountX = 0;
         double scrollAmountY = 0;
@@ -182,8 +182,8 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
         }
         else if (pos.X + rectangle.Width > HorizontalOffset + ViewportWidth)
         {
-            double notVisibleX = pos.X + rectangle.Width - (HorizontalOffset + ViewportWidth);
-            double maxScrollX = pos.X - HorizontalOffset; // keep left of the visual visible
+            var notVisibleX = pos.X + rectangle.Width - (HorizontalOffset + ViewportWidth);
+            var maxScrollX = pos.X - HorizontalOffset; // keep left of the visual visible
             scrollAmountX = Math.Min(notVisibleX, maxScrollX);
         }
 
@@ -193,16 +193,16 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
         }
         else if (pos.Y + rectangle.Height > VerticalOffset + ViewportHeight)
         {
-            double notVisibleY = pos.Y + rectangle.Height - (VerticalOffset + ViewportHeight);
-            double maxScrollY = pos.Y - VerticalOffset; // keep top of the visual visible
+            var notVisibleY = pos.Y + rectangle.Height - (VerticalOffset + ViewportHeight);
+            var maxScrollY = pos.Y - VerticalOffset; // keep top of the visual visible
             scrollAmountY = Math.Min(notVisibleY, maxScrollY);
         }
 
         BaseModel.SetHorizontalOffset(HorizontalOffset + scrollAmountX);
         BaseModel.SetVerticalOffset(VerticalOffset + scrollAmountY);
 
-        double visibleRectWidth = Math.Min(rectangle.Width, ViewportWidth);
-        double visibleRectHeight = Math.Min(rectangle.Height, ViewportHeight);
+        var visibleRectWidth = Math.Min(rectangle.Width, ViewportWidth);
+        var visibleRectHeight = Math.Min(rectangle.Height, ViewportHeight);
 
         return new(scrollAmountX, scrollAmountY, visibleRectWidth, visibleRectHeight);
     }
@@ -231,16 +231,16 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
          * property of the ScrollOwner is false. To prevent a infinite circle the mesasure call is ignored. */
         if (ScrollOwner != null)
         {
-            bool verticalScrollBarGotHidden = ScrollOwner.VerticalScrollBarVisibility == ScrollBarVisibility.Auto
-                                              && ScrollOwner.ComputedVerticalScrollBarVisibility != Visibility.Visible
-                                              && ScrollOwner.ComputedVerticalScrollBarVisibility
-                                              != _previousVerticalScrollBarVisibility;
+            var verticalScrollBarGotHidden = ScrollOwner.VerticalScrollBarVisibility == ScrollBarVisibility.Auto
+                                             && ScrollOwner.ComputedVerticalScrollBarVisibility != Visibility.Visible
+                                             && ScrollOwner.ComputedVerticalScrollBarVisibility
+                                             != _previousVerticalScrollBarVisibility;
 
-            bool horizontalScrollBarGotHidden = ScrollOwner.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto
-                                                && ScrollOwner.ComputedHorizontalScrollBarVisibility
-                                                != Visibility.Visible
-                                                && ScrollOwner.ComputedHorizontalScrollBarVisibility
-                                                != _previousHorizontalScrollBarVisibility;
+            var horizontalScrollBarGotHidden = ScrollOwner.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto
+                                               && ScrollOwner.ComputedHorizontalScrollBarVisibility
+                                               != Visibility.Visible
+                                               && ScrollOwner.ComputedHorizontalScrollBarVisibility
+                                               != _previousHorizontalScrollBarVisibility;
 
             _previousVerticalScrollBarVisibility = ScrollOwner.ComputedVerticalScrollBarVisibility;
             _previousHorizontalScrollBarVisibility = ScrollOwner.ComputedHorizontalScrollBarVisibility;

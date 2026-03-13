@@ -1,14 +1,15 @@
-﻿using FEx.Abstractions.Interfaces;
-using FEx.DI.Abstractions;
+using FEx.Agnostics.Abstractions.Logging;
+using FEx.Core.Abstractions;
+using FEx.Core.Abstractions.Extensions;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions;
 using FEx.Legacy.Asyncx.Abstractions.Interfaces;
 using FEx.Legacy.Asyncx.Enums;
 using FEx.Legacy.Mvvm.Abstractions.Interfaces;
-using FEx.Logging.Abstractions.Extensions;
 using FEx.MVVM.Abstractions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using SynchronizationContextExtensions = FEx.Common.Extensions.SynchronizationContextExtensions;
 
 namespace FEx.Legacy.Mvvm.ViewModels;
 
@@ -18,10 +19,10 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
     private bool _isUiUnlocked;
 
     /// <summary>
-    ///     Gets or sets a value indicating whether View instance related with this ViewModel is unlocked.
+    /// Gets or sets a value indicating whether View instance related with this ViewModel is unlocked.
     /// </summary>
     /// <value>
-    ///     <c>true</c> if related instance of View is unlocked; otherwise, <c>false</c>.
+    /// <c>true</c> if related instance of View is unlocked; otherwise, <c>false</c>.
     /// </value>
     public bool IsUiUnlocked
     {
@@ -30,22 +31,24 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
     }
 
     protected SynchronizationContext OriginSynchronizationContext { get; }
+    protected IFExDispatcher Dispatcher { get; }
 
     public ThreadingAwareViewModel(params IAsyncInitializable[] dependencies)
     {
         _tasksHandler = FExServiceProvider.Get<ITasksHandler>();
-        _logger = this.GetLogger();
-        _initializationSemaphore = new(1, 1);
-        _taskSemaphore = new(1, 1);
-        Type instanceType = GetType();
+        _logger = FExStaticLogger.Instance;
+        _initializationSemaphore = new();
+        _taskSemaphore = new();
+        var instanceType = GetType();
         TypeName = instanceType.Name;
         TypeFullName = instanceType.FullName;
         _dependencies = new();
 
-        foreach (IAsyncInitializable dependency in dependencies)
+        foreach (var dependency in dependencies)
             AddDependency(dependency);
 
         OriginSynchronizationContext = SynchronizationContextExtensions.Get(true);
+        Dispatcher = FExCoreStatics.Dispatcher;
 
         IsUiUnlocked = true;
     }

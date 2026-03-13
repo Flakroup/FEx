@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,21 +11,21 @@ public static class FileUtil
     private const int RmRebootReasonNone = 0;
 
     /// <summary>
-    ///     Find out what process(es) have a lock on the specified file.
+    /// Find out what process(es) have a lock on the specified file.
     /// </summary>
     /// <param name="path">Path of the file.</param>
     /// <returns>Processes locking the file</returns>
     /// <remarks>
-    ///     See also:
-    ///     http://msdn.microsoft.com/en-us/library/windows/desktop/aa373661(v=vs.85).aspx
-    ///     http://wyupdate.googlecode.com/svn-history/r401/trunk/frmFilesInUse.cs (no copyright in code at time of viewing)
+    /// See also:
+    /// http://msdn.microsoft.com/en-us/library/windows/desktop/aa373661(v=vs.85).aspx
+    /// http://wyupdate.googlecode.com/svn-history/r401/trunk/frmFilesInUse.cs (no copyright in code at time of viewing)
     /// </remarks>
     public static List<Process> WhoIsLocking(string path)
     {
         var key = Guid.NewGuid().ToString();
         var processes = new List<Process>();
 
-        int res = RmStartSession(out uint handle, 0, key);
+        var res = RmStartSession(out var handle, 0, key);
 
         if (res != 0)
             throw new("Could not begin restart session.  Unable to determine file locker.");
@@ -47,7 +47,7 @@ public static class FileUtil
             //Note: there's a race condition here -- the first call to RmGetList() returns
             //      the total number of process. However, when we call RmGetList() again to get
             //      the actual processes this number may have increased.
-            res = RmGetList(handle, out uint pnProcInfoNeeded, ref pnProcInfo, null, ref lpdwRebootReasons);
+            res = RmGetList(handle, out var pnProcInfoNeeded, ref pnProcInfo, null, ref lpdwRebootReasons);
 
             if (res == ERROR_MORE_DATA)
             {
@@ -154,7 +154,9 @@ public static class FileUtil
         public readonly RM_APP_TYPE ApplicationType;
         public readonly uint AppStatus;
         public readonly uint TSSessionId;
-        [MarshalAs(UnmanagedType.Bool)] public readonly bool bRestartable;
+
+        [MarshalAs(UnmanagedType.Bool)]
+        public readonly bool bRestartable;
     }
 
     // ReSharper disable InconsistentNaming

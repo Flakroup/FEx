@@ -1,4 +1,4 @@
-﻿using FEx.Abstractions.Interfaces;
+using FEx.Core.Abstractions.Interfaces;
 using System;
 using System.Net;
 using System.Threading.Tasks;
@@ -27,7 +27,7 @@ public class HasInternetConnectionGate
 #if NET
 #pragma warning restore SYSLIB0014
 #endif
-            using WebResponse response = await request.GetResponseAsync();
+            using var response = await request.GetResponseAsync();
 
             return true;
         }

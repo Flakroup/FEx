@@ -1,4 +1,4 @@
-﻿using FEx.Asyncx.Abstractions;
+using FEx.Asyncx.Abstractions;
 using FEx.Asyncx.Interfaces;
 
 namespace FEx.Asyncx.Services;
@@ -18,7 +18,7 @@ public abstract class AsyncWorkersService<TPool, TWorker, TQueue, TConf> : Async
     protected TPool Pool { get; set; }
     protected TConf Config { get; }
 
-    protected AsyncWorkersService(int poolSize, TConf config = default)
+    protected AsyncWorkersService(uint poolSize, TConf config = default)
     {
         Config = config;
         OnConstruction();
@@ -28,7 +28,7 @@ public abstract class AsyncWorkersService<TPool, TWorker, TQueue, TConf> : Async
         BeginInitialization();
     }
 
-    protected abstract TPool GetNewPool(int poolSize);
+    protected abstract TPool GetNewPool(uint poolSize);
 
     protected virtual void OnConstruction()
     {

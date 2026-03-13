@@ -1,11 +1,11 @@
-﻿using FEx.Abstractions;
-using FEx.Abstractions.Interfaces;
-using FEx.Abstractions.Models;
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Extensions.Web;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Models;
+using FEx.Agnostics.Abstractions.Utilities;
+using FEx.Core.Abstractions;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
-using FEx.Extensions;
-using FEx.Extensions.Base.Helpers;
-using FEx.Extensions.Web;
 using JetBrains.Annotations;
 using System;
 using System.ComponentModel;
@@ -106,16 +106,16 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
     protected byte[] Buffer { get; }
 
-    private static ISynchronizedAccessService LockSrv => FExFoundation.SynchronizedAccessService;
+    private static ISynchronizedAccessService LockSrv => FExCoreStatics.SynchronizedAccessService;
 
     private CancellationToken CancellationToken => CancellationTokenSource.Token;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
+    /// Initializes a new instance of the <see cref="FlakHttpClient" /> class with a specific handler.
     /// </summary>
-    /// <param name="pars">The <see cref="T:WebRequestParams" /> parameters for processing HTTP response messages.</param>
+    /// <param name="pars">The <see cref="WebRequestParams" /> parameters for processing HTTP response messages.</param>
     /// <param name="disposeHandler">
-    ///     <see langword="true" /> if the inner handler should be disposed of by Dispose(),
+    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
     /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
@@ -127,14 +127,14 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="T:FlakHttpClient" /> class with a specific handler.
+    /// Initializes a new instance of the <see cref="FlakHttpClient" /> class with a specific handler.
     /// </summary>
     /// <param name="handler">
-    ///     The <see cref="T:System.Net.Http.HttpMessageHandler" /> responsible for processing the HTTP
-    ///     response messages.
+    /// The <see cref="HttpMessageHandler" /> responsible for processing the HTTP
+    /// response messages.
     /// </param>
     /// <param name="disposeHandler">
-    ///     <see langword="true" /> if the inner handler should be disposed of by Dispose(),
+    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
     /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
@@ -187,13 +187,11 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         {
             DState = DownloadState.Connecting;
 
-            using HttpResponseMessage res = await GetAsync(url,
-                HttpCompletionOption.ResponseHeadersRead,
-                CancellationToken);
+            using var res = await GetAsync(url, HttpCompletionOption.ResponseHeadersRead, CancellationToken);
 
             try
             {
-                using (HttpResponseMessage response = res.EnsureSuccessStatusCode())
+                using (var response = res.EnsureSuccessStatusCode())
                     await DoDownloadAsync(filePath, response, lockOnFilePath);
 
                 retry = false;
@@ -219,7 +217,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
     public async Task DoDownloadAsync(string filePath, HttpResponseMessage response, bool lockOnFilePath = true)
     {
-        long length = response.Content.Headers.ContentLength ?? -1;
+        var length = response.Content.Headers.ContentLength ?? -1;
 
         ProgressMaximum = length > 0
             ? length
@@ -236,13 +234,13 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
             try
             {
 #if NETSTANDARD
-                using Stream streamResponse = await response.Content.ReadAsStreamAsync();
+                using var streamResponse = await response.Content.ReadAsStreamAsync();
 #else
-                await using Stream streamResponse = await response.Content.ReadAsStreamAsync(CancellationToken);
+                await using var streamResponse = await response.Content.ReadAsStreamAsync(CancellationToken);
 #endif
                 if (streamResponse is not null)
                 {
-                    string dirPath = Directory.GetParent(filePath).FullName;
+                    var dirPath = Directory.GetParent(filePath).FullName;
                     Directory.CreateDirectory(dirPath);
 
                     using var fileStream = new FileStream(filePath,
@@ -257,7 +255,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
                         while (true)
                         {
-                            int num = await streamResponse.ReadAsync(Buffer, 0, Buffer.Length, CancellationToken);
+                            var num = await streamResponse.ReadAsync(Buffer, 0, Buffer.Length, CancellationToken);
                             int bytesRead;
 
                             if ((bytesRead = num) != 0)
@@ -288,7 +286,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         }
     }
 
-    public async Task DelayAsync() => await Task.Delay(10, CancellationToken);//delay for subsequent connections
+    public async Task DelayAsync() => await Task.Delay(10, CancellationToken); //delay for subsequent connections
 
     #region IDisposable
     protected override void Dispose(bool disposing)
@@ -308,7 +306,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         if (propertyName is null)
             return;
 
-        FExFoundation.Dispatcher.InvokeOnMainThread(EventDelegate, this);
+        FExCoreStatics.Dispatcher.InvokeOnMainThread(EventDelegate, this);
 
         return;
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace FEx.WPFx.SVG.SvgConverter;
@@ -12,7 +12,7 @@ public enum PathIs
 public static class FileUtils
 {
     /// <summary>
-    ///     Creates a relative path from one file or folder to another.
+    /// Creates a relative path from one file or folder to another.
     /// </summary>
     /// <param name="fromPath">Contains the directory that defines the start of the relative path.</param>
     /// <param name="fromIs">Is the fromPath a File or a Folder</param>
@@ -47,8 +47,8 @@ public static class FileUtils
         if (fromUri.Scheme != toUri.Scheme)
             return toPath; // path can't be made relative.
 
-        Uri relativeUri = fromUri.MakeRelativeUri(toUri);
-        string relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+        var relativeUri = fromUri.MakeRelativeUri(toUri);
+        var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
 
         if (string.Equals(toUri.Scheme, "FILE", StringComparison.InvariantCultureIgnoreCase))
             relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);

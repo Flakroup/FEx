@@ -1,0 +1,62 @@
+[project]
+name = "FEx.Common.Abstractions"
+path = "rc\\Common.Abstractions"
+
+[[enums]]
+name = "FExNetworkAccess"
+ns = "FEx.Common.Abstractions.Enums"
+summary = "Various states of the connection to the internet."
+file = "Enums\\FExNetworkAccess.cs"
+
+[[classes]]
+name = "DateTimeProvider"
+ns = "FEx.Common.Abstractions.Helpers"
+file = "Helpers\\DateTimeProvider.cs"
+static = true
+
+[[classes]]
+name = "DateTimeProviderContext"
+ns = "FEx.Common.Abstractions.Helpers"
+base = "IDisposable"
+file = "Helpers\\DateTimeProviderContext.cs"
+
+[[interfaces]]
+name = "IConnectivityChangedSubject"
+ns = "FEx.Common.Abstractions.Interfaces"
+file = "Interfaces\\IConnectivityChangedSubject.cs"
+
+[[interfaces]]
+name = "IDeviceHelper"
+ns = "FEx.Common.Abstractions.Interfaces"
+file = "Interfaces\\IDeviceHelper.cs"
+
+[[interfaces]]
+name = "IFExAppSettings"
+ns = "FEx.Common.Abstractions.Interfaces"
+file = "Interfaces\\IFExAppSettings.cs"
+
+[[interfaces]]
+name = "IFExBaseContainer"
+ns = "FEx.Common.Abstractions.Interfaces"
+file = "Interfaces\\IFExBaseContainer.cs"
+
+[[interfaces]]
+name = "IFExCommonContainer"
+ns = "FEx.Common.Abstractions.Interfaces"
+file = "Interfaces\\IFExCommonContainer.cs"
+
+[[interfaces]]
+name = "IFExInternetConnectionHelper"
+ns = "FEx.Common.Abstractions.Interfaces"
+file = "Interfaces\\IFExInternetConnectionHelper.cs"
+
+[[interfaces]]
+name = "IStatusHub"
+ns = "FEx.Common.Abstractions.Interfaces"
+file = "Interfaces\\IStatusHub.cs"
+
+[[interfaces]]
+name = "IStatusService"
+ns = "FEx.Common.Abstractions.Interfaces"
+file = "Interfaces\\IStatusService.cs"
+

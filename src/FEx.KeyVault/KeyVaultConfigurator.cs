@@ -1,4 +1,4 @@
-﻿using Arcus.Security.Providers.AzureKeyVault.Configuration;
+using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
@@ -14,8 +14,8 @@ public static class KeyVaultConfigurator
     public static void AddAzureKeyVaultWithCertificate(this IConfigurationBuilder config,
                                                        IKeyVaultByCertCredentials credentials)
     {
-        Uri keyVaultEndpoint = GetKeyVaultEndpoint(credentials.KeyVaultName);
-        X509Certificate2 cert = GetCertificate(credentials.AzureADCertThumbprint);
+        var keyVaultEndpoint = GetKeyVaultEndpoint(credentials.KeyVaultName);
+        var cert = GetCertificate(credentials.AzureADCertThumbprint);
 
         config.AddAzureKeyVault(keyVaultEndpoint,
             new ClientCertificateCredential(credentials.AzureADTenantId, credentials.AzureADClientId, cert),
@@ -25,7 +25,7 @@ public static class KeyVaultConfigurator
     public static void AddAzureKeyVaultWithClientSecret(this IConfigurationBuilder config,
                                                         IKeyVaultByClientSecretCredentials credentials)
     {
-        Uri keyVaultEndpoint = GetKeyVaultEndpoint(credentials.KeyVaultName);
+        var keyVaultEndpoint = GetKeyVaultEndpoint(credentials.KeyVaultName);
 
         var clientSecretCredential = new ClientSecretCredential(credentials.AzureADTenantId,
             credentials.AzureADClientId,
@@ -40,8 +40,7 @@ public static class KeyVaultConfigurator
     {
         using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser, OpenFlags.ReadOnly);
 
-        X509Certificate2Collection certs =
-            store.Certificates.Find(X509FindType.FindByThumbprint, certificateThumbprint, false);
+        var certs = store.Certificates.Find(X509FindType.FindByThumbprint, certificateThumbprint, false);
 
         return certs.Single();
     }

@@ -1,7 +1,6 @@
-using FEx.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Logging;
 using FEx.Avaloniax.Abstractions.Interfaces;
-using FEx.Logging.Abstractions.Extensions;
-using System;
+using FEx.Core.Abstractions.Interfaces;
 
 namespace FEx.Avaloniax.Abstractions;
 
@@ -11,15 +10,15 @@ public abstract partial class AsyncInitializableViewModelBase : FExAvaloniaViewM
                                               params IAsyncInitializable[] dependencies)
         : base(navigationService)
     {
-        _logger = this.GetLogger();
-        _initializationSemaphore = new(1, 1);
-        _taskSemaphore = new(1, 1);
-        Type instanceType = GetType();
+        _logger = FExStaticLogger.Instance;
+        _initializationSemaphore = new();
+        _taskSemaphore = new();
+        var instanceType = GetType();
         TypeName = instanceType.Name;
         TypeFullName = instanceType.FullName;
         _dependencies = new();
 
-        foreach (IAsyncInitializable dependency in dependencies)
+        foreach (var dependency in dependencies)
             AddDependency(dependency);
     }
 }

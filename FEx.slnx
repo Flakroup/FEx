@@ -84,9 +84,7 @@
   <Project Path="src/FEx.Json/FEx.Json.csproj" />
   <Project Path="src/FEx.KeyVault/FEx.KeyVault.csproj" />
   <Project Path="src/FEx.Legacy/FEx.Legacy.csproj" />
-  <Project Path="src/FEx.Maui/FEx.Maui.csproj">
-    <Build Solution="*" Project="false" />
-  </Project>
+  <Project Path="src/FEx.Maui/FEx.Maui.csproj" />
   <Project Path="src/MSBuildx/FEx.MSBuildx.csproj" />
   <Project Path="src/FEx.MVVM.Abstractions/FEx.MVVM.Abstractions.csproj" />
   <Project Path="src/FEx.MVVM.Rx/FEx.MVVM.Rx.csproj" />

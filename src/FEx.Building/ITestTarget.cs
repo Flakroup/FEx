@@ -19,7 +19,6 @@ public interface ITestTarget : INukeBuild
             DotNetTest(s => s
                 .SetProjectFile(((FExBuild)this).Solution)
                 .SetConfiguration(((FExBuild)this).Configuration)
-                .EnableNoBuild()
                 .SetResultsDirectory(TestResultsDirectory)
                 .SetLoggers("trx"));
         });

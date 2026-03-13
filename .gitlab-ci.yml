@@ -32,8 +32,11 @@ default:
   tags:
     - johnnyabqpc
   before_script:
+    - $env:GIT_CONFIG_COUNT = '1'
+    - $env:GIT_CONFIG_KEY_0 = "url.https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/.insteadOf"
+    - $env:GIT_CONFIG_VALUE_0 = 'https://gitlab.com/'
     - git submodule sync --recursive
-    - git -c "url.https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/.insteadOf=https://gitlab.com/" submodule update --init --recursive
+    - git submodule update --init --recursive
     - pwsh --version
     - dotnet --version
 

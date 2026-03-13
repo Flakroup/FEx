@@ -35,9 +35,9 @@ public static class UriExtensions
 
     public static async Task<string> DownloadStringAsync(this Uri url)
     {
-        using var a = new HttpClient();
+        using var client = new HttpClient();
 
-        return await a.GetStringAsync(url);
+        return await client.GetStringAsync(url);
     }
 
     private static string GetFileName(Uri responseUri, IDictionary<string, string> responseHeaders)

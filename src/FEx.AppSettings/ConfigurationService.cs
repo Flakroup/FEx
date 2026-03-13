@@ -28,7 +28,7 @@ public class ConfigurationService : IConfigurationService
         }
         else
         {
-            throw new InvalidOperationException("Configuration is already builded");
+            throw new InvalidOperationException("Configuration is already built");
         }
     }
 

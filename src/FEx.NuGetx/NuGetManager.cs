@@ -136,9 +136,9 @@ public class NuGetManager : AsyncInitializable
                                 using (var packageArchiveReader = new PackageArchiveReader(targetPackageStream, true))
                                     targetContentHash = packageArchiveReader.GetContentHash(token);
                             }
-                            catch //(Exception ex)
+                            catch (Exception ex)
                             {
-                                // Logger.LogError(ex.ToString());
+                                Logger.LogError(ex.ToString());
                             }
 
                             backup = bqContentHash != targetContentHash;
@@ -209,7 +209,6 @@ public class NuGetManager : AsyncInitializable
             .Cast<PackageSearchMetadataRegistration>()
             .ToArray();
 
-        //await listedPackages.WithWhenAllAsync(x => DeletePackage(x, source, ApiKey));
         foreach (var pkg in listedPackages)
             await DeletePackageAsync(pkg, apiKey);
     }
@@ -307,22 +306,6 @@ public class NuGetManager : AsyncInitializable
         DownloadResource = await SourceRepository.GetResourceAsync<DownloadResource>();
 
         await RestorePackageByIdAsync("NuGet.CommandLine");
-        //var searchResource = await SourceRepository.GetResourceAsync<PackageSearchResource>();
-        //PackageSearchMetadataBuilder.ClonedPackageSearchMetadata[] packages = (await searchResource.SearchAsync(null, new SearchFilter(true), 0, int.MaxValue, Logger, CancellationToken.None)).Where(x => x.IsListed).Cast<PackageSearchMetadataBuilder.ClonedPackageSearchMetadata>().ToArray();
-        //var bq = new DirectoryInfo("D:\\_NuGetFeedBq");
-        //if (!bq.Exists)
-        //{
-        //    bq.Create();
-        //}
-
-        //PackageIdentity[] allPackages = (await packages.WithWhenAllTasksAsync(GetIdentitiesAsync, true))
-        //    .SelectMany(x => x)
-        //    .OrderBy(x => x.ToString())
-        //    .ToArray();
-        //_counter = 0;
-        //await allPackages.WithWhenAllTasksAsync(pkg => BackupPackageAsync(pkg, bq, allPackages.Length, Settings, DownloadResource, SourceCacheContext, CancellationToken.None), true);
-
-        //SourceCacheContext.Dispose();
     }
 
     private async Task<(DownloadResourceResult result, bool isSuccess)> RestorePackageByIdAsync(

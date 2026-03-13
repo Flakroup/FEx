@@ -64,6 +64,8 @@ secret-scan:
   image:
     name: zricethezav/gitleaks:latest
     entrypoint: [""]
+  before_script: []
+  tags: []
   script:
     - gitleaks detect --source . --no-git --no-banner -v
   rules:

@@ -28,7 +28,7 @@ variables:
 
 # Default settings for all jobs
 default:
-  image: mcr.microsoft.com/dotnet/sdk:10.0-windowsservercore-ltsc2022
+  image: mcr.microsoft.com/dotnet/sdk:10.0
   tags:
     - johnnyabqpc
   hooks:
@@ -46,7 +46,7 @@ default:
     - git submodule foreach --recursive 'git submodule init && git submodule sync && git submodule update'
     - pwsh --version
     - dotnet --version
-    - dotnet workload install maui --skip-sign-check
+    - dotnet workload install maui
     - echo "Environment ready"
 
 ######################################################################

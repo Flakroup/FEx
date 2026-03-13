@@ -31,9 +31,6 @@ variables:
 default:
   tags:
     - johnnyabqpc
-  hooks:
-    pre_get_sources_script:
-      - (git config --local --get-regexp 'url\.https://gitlab-ci-token' 2>$null) | ForEach-Object { git config --local --unset ($_ -split '\s')[0] 2>$null }; $true
   before_script:
     - pwsh --version
     - dotnet --version
@@ -55,6 +52,8 @@ secret-scan:
   image:
     name: zricethezav/gitleaks:latest
     entrypoint: [""]
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
   before_script: []
   tags: []
   script:

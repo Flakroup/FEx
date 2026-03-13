@@ -1,13 +1,10 @@
 using FEx.Building;
 using Nuke.Common;
-using Nuke.Common.IO;
 using Nuke.Common.Tools.DotNet;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
-class Build : FExBuild, ITagTarget
+class Build : FExBuild, ITagTarget, ITestTarget
 {
-    AbsolutePath TestResultsDirectory => RootDirectory / "artifacts" / "test-results";
-
     public static int Main()
     {
         Bootstrap();
@@ -34,17 +31,5 @@ class Build : FExBuild, ITagTarget
         .Executes(() =>
         {
             DotNetBuild(s => GetBuildSettings(s, Solution));
-        });
-
-    Target Test => _ => _
-        .DependsOn(Compile)
-        .Executes(() =>
-        {
-            DotNetTest(s => s
-                .SetProjectFile(Solution)
-                .SetConfiguration(Configuration)
-                .SetNoBuild(true)
-                .SetResultsDirectory(TestResultsDirectory)
-                .AddLoggers("trx"));
         });
 }

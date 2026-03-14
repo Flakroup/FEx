@@ -10,84 +10,67 @@
   <Folder Name="/NFEx/" />
   <Folder Name="/NFEx/Agnostics/">
     <Project Path="src/Agnostics.Abstractions/FEx.Agnostics.Abstractions.csproj">
-      <BuildType Solution="Build|x64" Project="Release" />
-      <BuildType Solution="Build|x86" Project="Release" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="src/Agnostics.TestMocks/FEx.Agnostics.TestMocks.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="src/Agnostics/FEx.Agnostics.csproj">
-      <BuildType Solution="Build|x64" Project="Release" />
-      <BuildType Solution="Build|x86" Project="Release" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
   <Folder Name="/NFEx/Common/">
     <Project Path="src/Common.Abstractions/FEx.Common.Abstractions.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="src/Common/FEx.Common.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
   <Folder Name="/NFEx/Core/">
     <Project Path="src/Core.Abstractions/FEx.Core.Abstractions.csproj">
-      <BuildType Solution="Build|x64" Project="Release" />
-      <BuildType Solution="Build|x86" Project="Release" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="src/Core/FEx.Core.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
   <Folder Name="/NFEx/DI/">
     <Project Path="src/DependencyInjection.Abstractions/FEx.DependencyInjection.Abstractions.csproj">
-      <BuildType Solution="Build|x64" Project="Release" />
-      <BuildType Solution="Build|x86" Project="Release" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="src/DependencyInjection/FEx.DependencyInjection.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
   <Folder Name="/NFEx/Logging/">
     <Project Path="src/Logging.Abstractions/FEx.Logging.Abstractions.csproj">
-      <BuildType Solution="Build|x64" Project="Release" />
-      <BuildType Solution="Build|x86" Project="Release" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="src/Logging/FEx.Logging.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
   <Folder Name="/NFEx/PS/">
     <Project Path="src/PersistentStorage.Abstractions/FEx.PersistentStorage.Abstractions.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="src/PersistentStorage.Rx/FEx.PersistentStorage.Rx.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="src/PersistentStorage/FEx.PersistentStorage.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/FEx.Sample.Avalonia/FEx.Sample.Avalonia.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="samples/FEx.Sample.WebAPI/FEx.Sample.WebAPI.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="samples/FEx.Sample.WPF/FEx.Sample.WPF.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
   <Folder Name="/Solution Items/">
@@ -101,20 +84,16 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/FEx.FTPx/FEx.FTPx.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="src/FEx.NuGetx/FEx.NuGetx.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="src/FEx.Platforms.Windows/FEx.Platforms.Windows.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="src/FEx.Telemetry.Rollbar/FEx.Telemetry.Rollbar.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
   <Folder Name="/src/Agnostics.Abstractions/" />
@@ -128,151 +107,108 @@
     <File Path="test/Directory.Build.props" />
     <File Path="test/Directory.Build.targets" />
     <Project Path="test/FEx.DependencyInjection.Tests/FEx.DependencyInjection.Tests.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="test/FEx.Flurlx.Tests/FEx.Flurlx.Tests.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="test/FEx.Logging.Tests/FEx.Logging.Tests.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="test/FEx.MVVM.Tests/FEx.MVVM.Tests.csproj">
-      <BuildType Solution="Build|*" Project="Release" />
-      <Build Solution="Build|Any CPU" Project="false" />
+      <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
-  <Project Path="build/_build.csproj">
-    <BuildType Solution="Build|Any CPU" Project="Debug" />
-    <BuildType Solution="Build|x64" Project="Release" />
-    <BuildType Solution="Build|x86" Project="Release" />
-    <Build Solution="Debug|Any CPU" Project="false" />
-    <Build Solution="Release|Any CPU" Project="false" />
-  </Project>
+  <Project Path="build/_build.csproj" />
   <Project Path="src/FEx.AppSettings/FEx.AppSettings.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Asyncx/FEx.Asyncx.csproj">
-    <BuildType Solution="Build|x64" Project="Release" />
-    <BuildType Solution="Build|x86" Project="Release" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/AzureDevOpsx/FEx.AzureDevOpsx.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Avaloniax/FEx.Avaloniax.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.AzureStorage/FEx.AzureStorage.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
-  <Project Path="src/FEx.Building/FEx.Building.csproj">
-    <BuildType Solution="Build|x64" Project="Debug" />
-    <BuildType Solution="Build|x86" Project="Debug" />
-  </Project>
+  <Project Path="src/FEx.Building/FEx.Building.csproj" />
   <Project Path="src/FEx.CLI/FEx.CLI.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Downloader/FEx.Downloader.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.EFCore/FEx.EFCore.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Encryption/FEx.Encryption.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.FileSystem/FEx.FileSystem.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Flurlx/FEx.Flurlx.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/Imaging.Windows/FEx.Imaging.Windows.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Json/FEx.Json.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.KeyVault/FEx.KeyVault.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Legacy/FEx.Legacy.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Maui/FEx.Maui.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/MSBuildx/FEx.MSBuildx.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.MVVM.Abstractions/FEx.MVVM.Abstractions.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.MVVM.Rx/FEx.MVVM.Rx.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.MVVM/FEx.MVVM.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.OneDrv/FEx.OneDrv.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Platforms/FEx.Platforms.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.RESXx/FEx.RESXx.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.SecureStorage/FEx.SecureStorage.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/Sqlx.Abstractions/FEx.Sqlx.Abstractions.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/Sqlx/FEx.Sqlx.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Telemetry/FEx.Telemetry.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.WebScraping/FEx.WebScraping.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Webx/FEx.Webx.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.WPFx/FEx.WPFx.csproj">
-    <BuildType Solution="Build|*" Project="Release" />
-    <Build Solution="Build|Any CPU" Project="false" />
+    <Build Solution="Build|*" Project="false" />
   </Project>
 </Solution>

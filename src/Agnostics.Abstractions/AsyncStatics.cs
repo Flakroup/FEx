@@ -203,7 +203,9 @@ public static class AsyncStatics
         action?.Invoke();
     }
 
+#if NET5_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+#endif
     public static void RunAsThread(Action action, ApartmentState? state = null, bool? isBackground = false)
     {
         var thread = new Thread(() => action());

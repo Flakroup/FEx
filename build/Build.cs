@@ -3,7 +3,7 @@ using Nuke.Common;
 using Nuke.Common.Tools.DotNet;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
-class Build : FExBuild, ITagTarget, ITestTarget
+class Build : FExBuild, ITagTarget, ITestTarget, INuGetPublishTarget
 {
     public static int Main()
     {

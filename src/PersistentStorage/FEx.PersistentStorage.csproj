@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>LiteDB-backed local storage and caching service implementations</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

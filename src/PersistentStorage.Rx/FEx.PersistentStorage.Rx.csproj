@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Reactive cached subjects backed by persistent storage with collection aggregation support</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

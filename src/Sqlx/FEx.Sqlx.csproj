@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>$(FullTargetFrameworkIds)</TargetFrameworks>
+		<Description>SQL Server helper with instance discovery, connection extensions, and server property queries</Description>
     </PropertyGroup>
 
     <ItemGroup>

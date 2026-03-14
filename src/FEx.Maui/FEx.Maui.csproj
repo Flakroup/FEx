@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<Description>.NET MAUI dispatcher integration for FEx framework</Description>
 		<UseMaui>true</UseMaui>
 		<SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
 	</PropertyGroup>

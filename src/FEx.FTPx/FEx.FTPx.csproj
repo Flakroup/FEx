@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>FTP client factory and download utilities with resume support</Description>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="FluentFTP" Version="35.0.4" />

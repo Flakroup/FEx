@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>OneDrive client for file operations via Microsoft Graph API</Description>
         <UserSecretsId>a02b56ea-923b-45ca-9153-95c5b63981e4</UserSecretsId>
     </PropertyGroup>
 

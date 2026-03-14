@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Rollbar error tracking integration with DI module and sink configuration</Description>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Azure.Identity" Version="1.17.0" />

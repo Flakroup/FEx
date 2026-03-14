@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Serilog-based logging implementation with file, console, debug, and platform sink configurators</Description>
     </PropertyGroup>
 
     <ItemGroup>

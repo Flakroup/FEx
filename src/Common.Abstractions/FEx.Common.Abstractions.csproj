@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Interfaces and abstractions for device info, connectivity, status services, and app settings</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

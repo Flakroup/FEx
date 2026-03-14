@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>HTTP response extensions, MIME type utilities, and network connectivity helpers</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

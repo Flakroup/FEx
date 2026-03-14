@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Base objects, concurrent collections, comparers, and exception handling implementations</Description>
     </PropertyGroup>
 
     <ItemGroup>

@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<Description>Azure Key Vault configuration helpers for certificate and client secret authentication</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

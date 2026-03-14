@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Interfaces and abstractions for threading, dispatching, exception handling, and reactive subjects</Description>
     </PropertyGroup>
 
     <ItemGroup>

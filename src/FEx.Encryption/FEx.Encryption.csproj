@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>String encryption, hashing, and secure property change notification utilities</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

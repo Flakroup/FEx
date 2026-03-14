@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Secure storage service for persisting sensitive data</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

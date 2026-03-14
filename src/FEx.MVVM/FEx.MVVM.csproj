@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>CommunityToolkit.Mvvm-based MVVM module with ViewModelBase, progress services, and controls</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

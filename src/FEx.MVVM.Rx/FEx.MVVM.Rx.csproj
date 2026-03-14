@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>ReactiveUI-based MVVM module with reactive base objects, observable progress, and linked properties</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

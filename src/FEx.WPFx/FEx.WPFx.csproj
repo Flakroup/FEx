@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(WindowsTargetFrameworkIds)</TargetFrameworks>
+		<Description>WPF integration with app bootstrapper, splash screen, file system icons, and DI modules</Description>
 		<UseWPF>true</UseWPF>
 		<EnableWindowsTargeting>true</EnableWindowsTargeting>
 		<UseWindowsForms>true</UseWindowsForms>

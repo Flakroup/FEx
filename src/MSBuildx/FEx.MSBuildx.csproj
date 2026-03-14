@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>$(WindowsTargetFrameworkIds)</TargetFrameworks>
+		<Description>MSBuild project and solution parsing with NuGet installation tracking and diff support</Description>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
     </PropertyGroup>
 

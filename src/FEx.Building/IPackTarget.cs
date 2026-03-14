@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using Nuke.Common;
 using Nuke.Common.IO;
@@ -9,17 +8,13 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 namespace FEx.Building;
 
-public interface IPackTarget : IGitVersionComponent
+public interface IPackTarget : ICompileTarget, IGitVersionComponent
 {
     sealed AbsolutePath PackagesDirectory => RootDirectory / "artifacts" / "packages";
 
-    [Parameter("Solution file path to pack")]
-    string PackSolution => TryGetValue(() => PackSolution)
-                           ?? NukeBuild.RootDirectory.GlobFiles("*.slnx", "*.sln").FirstOrDefault()?.ToString()
-                           ?? throw new InvalidOperationException("No solution file found. Set --pack-solution or add a .slnx/.sln to the root.");
-
     Target Pack => _ => _
         .Description("Creates NuGet packages with GitVersion-derived version")
+        .DependsOn(Compile)
         .Produces(PackagesDirectory / "*.nupkg")
         .Executes(() =>
         {
@@ -27,23 +22,11 @@ public interface IPackTarget : IGitVersionComponent
 
             var version = NuGetVersion;
 
-            Log.Information("Building {Project} before packing", PackSolution);
-
-            DotNetRestore(s => s
-                .SetProjectFile(PackSolution)
-                .SetProperty("NuGetAudit", !NukeBuild.IsServerBuild));
-
-            DotNetBuild(s => s
-                .SetProjectFile(PackSolution)
-                .SetConfiguration("Release")
-                .SetNoRestore(true)
-                .SetProperty("NuGetAudit", !NukeBuild.IsServerBuild));
-
             Log.Information("Packing with version: {Version}", version);
 
             DotNetPack(s => s
-                .SetProject(PackSolution)
-                .SetConfiguration("Release")
+                .SetProject(Solution)
+                .SetConfiguration(Configuration)
                 .EnableNoBuild()
                 .SetOutputDirectory(PackagesDirectory)
                 .SetVersion(version)

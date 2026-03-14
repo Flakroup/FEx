@@ -462,7 +462,7 @@ public static class StringExtensions
     {
         var stream = new MemoryStream();
 #pragma warning disable IDISP001 // StreamWriter must not be disposed - it would close the returned stream
-        var writer = new StreamWriter(stream, leaveOpen: true);
+        var writer = new StreamWriter(stream, Encoding.UTF8, 1024, leaveOpen: true);
 #pragma warning restore IDISP001
         writer.Write(str);
         writer.Flush();

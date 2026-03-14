@@ -22,7 +22,7 @@ public interface ITagTarget : INuGetPublishTarget
         .OnlyWhenDynamic(() =>
         {
             var branch = Environment.GetEnvironmentVariable("CI_COMMIT_BRANCH");
-            return branch is "main" or "master";
+            return branch is "main" or "master" or "develop";
         }, "Skipping tag: only tags main/master releases")
         .Executes(() =>
         {

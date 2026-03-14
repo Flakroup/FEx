@@ -2,7 +2,9 @@
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
+        <Configurations>Debug;Release;Build</Configurations>
     </PropertyGroup>
 
     <ItemGroup>

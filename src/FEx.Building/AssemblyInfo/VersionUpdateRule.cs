@@ -26,7 +26,7 @@ public class VersionUpdateRule
         }
     }
 
-    public string Update(string version) => Update(new VersionString(version));
+    public string Update(string? version) => Update(new VersionString(version ?? "0.0.0"));
 
     public string Update(VersionString version)
     {

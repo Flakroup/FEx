@@ -12,9 +12,9 @@ public class CSharpUpdater
     private readonly List<ICSharpUpdateRule> _updateRules;
 
     public CSharpUpdater(string newAssemblyVersion,
-                         string newAssemblyFileVersion = null,
-                         string copyright = null,
-                         string company = null)
+                         string? newAssemblyFileVersion = null,
+                         string? copyright = null,
+                         string? company = null)
     {
         _updateRules = [];
 
@@ -55,16 +55,16 @@ public class CSharpUpdater
         return true;
     }
 
-    public static string GetAssemblyVersion(string fileName) => GetAssemblyProperty(fileName, "AssemblyVersion", true);
+    public static string? GetAssemblyVersion(string fileName) => GetAssemblyProperty(fileName, "AssemblyVersion", true);
 
-    public static string GetAssemblyProperty(string fileName, string propertyName, bool isVersionString = false)
+    public static string? GetAssemblyProperty(string fileName, string propertyName, bool isVersionString = false)
     {
         try
         {
             if (fileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
                 foreach (string line in File.ReadAllLines(fileName))
                 {
-                    Group g = isVersionString
+                    Group? g = isVersionString
                         ? GetVersionString(line, propertyName)
                         : GetValueString(line, propertyName);
 
@@ -88,8 +88,8 @@ public class CSharpUpdater
         {
             case CSharpVersionUpdateRule rule:
             {
-                VersionString v = null;
-                Group g = GetVersionString(line, rule.AttributeName);
+                VersionString? v = null;
+                Group? g = GetVersionString(line, rule.AttributeName);
 
                 if (g is not null)
                     VersionString.TryParse(g.Value, out v);
@@ -97,7 +97,7 @@ public class CSharpUpdater
                 if (v is not null)
                 {
                     string newVersion = rule.Update(v);
-                    line = line[..g.Index] + newVersion + line[(g.Index + g.Length)..];
+                    line = line[..g!.Index] + newVersion + line[(g.Index + g.Length)..];
                     updated = true;
                 }
 
@@ -107,9 +107,9 @@ public class CSharpUpdater
             {
                 if (line.Contains(stringRule.AttributeName))
                 {
-                    Group g = GetValueString(line, stringRule.AttributeName);
+                    Group? g = GetValueString(line, stringRule.AttributeName);
                     string newVersion = stringRule.Update(null);
-                    line = line[..g.Index] + newVersion + line[(g.Index + g.Length)..];
+                    line = line[..g!.Index] + newVersion + line[(g.Index + g.Length)..];
                     updated = true;
                 }
 
@@ -120,7 +120,7 @@ public class CSharpUpdater
         return updated;
     }
 
-    public static Group GetVersionString(string input, string attributeName)
+    public static Group? GetVersionString(string input, string attributeName)
     {
         int commentIndex = input.IndexOf("//", StringComparison.Ordinal);
 
@@ -137,7 +137,7 @@ public class CSharpUpdater
             : null;
     }
 
-    public static Group GetValueString(string input, string attributeName)
+    public static Group? GetValueString(string input, string attributeName)
     {
         int commentIndex = input.IndexOf("//", StringComparison.Ordinal);
 

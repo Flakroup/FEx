@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Concurrent observable collections, stack trace utilities, navigation flow, and exception handler</Description>
     </PropertyGroup>
 
     <ItemGroup>

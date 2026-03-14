@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(WindowsTargetFrameworkIds)</TargetFrameworks>
+		<Description>RESX resource file manager implementation</Description>
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>true</UseWindowsForms>
 	</PropertyGroup>

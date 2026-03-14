@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Interfaces, base classes, and extensions for collections, strings, dates, IO, and error handling</Description>
     </PropertyGroup>
 
     <ItemGroup>

@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Application and user settings management with encryption support and DI module registration</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

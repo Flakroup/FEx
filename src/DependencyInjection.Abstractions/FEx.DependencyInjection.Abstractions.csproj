@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Interfaces and abstractions for modular DI registration, service providers, and configurators</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Microsoft.Extensions.DependencyInjection and StrongInject service provider implementations</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

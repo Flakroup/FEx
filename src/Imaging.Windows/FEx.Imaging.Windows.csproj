@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>$(WindowsTargetFrameworkIds)</TargetFrameworks>
+		<Description>Windows image caching service with EF Core-backed file cache and expiration support</Description>
         <UseWPF>true</UseWPF>
     </PropertyGroup>
     <ItemGroup>

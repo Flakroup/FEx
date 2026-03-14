@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Azure Blob Storage service for upload, download, and blob management operations</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

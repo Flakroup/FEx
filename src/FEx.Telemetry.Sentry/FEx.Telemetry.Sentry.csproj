@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Sentry error tracking integration with DI module, sink configuration, and service</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

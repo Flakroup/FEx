@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Newtonsoft.Json serialization extensions, custom converters, and DI-aware contract resolvers</Description>
   </PropertyGroup>
 
   <ItemGroup>

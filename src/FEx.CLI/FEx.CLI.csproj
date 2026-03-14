@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Command-line argument parsing helpers and error data models</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

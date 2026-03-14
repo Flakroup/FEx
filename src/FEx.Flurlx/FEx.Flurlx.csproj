@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Flurl HTTP client extensions with cookie management, Polly resilience policies, and API base classes</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

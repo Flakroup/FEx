@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Implementations for device helpers, internet connectivity, dispatchers, and DI module registration</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

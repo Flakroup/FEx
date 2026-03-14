@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>HTML web scraping with HtmlAgilityPack, XPath builder, and node extraction extensions</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

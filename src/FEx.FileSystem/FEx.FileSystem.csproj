@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Cross-framework file system utilities for directory walking, safe deletion, and compression</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

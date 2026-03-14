@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>HTTP/WebClient file download manager with chunked downloads, progress tracking, and resume support</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

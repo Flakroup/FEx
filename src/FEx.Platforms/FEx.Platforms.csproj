@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Cross-platform services for registry access and platform-specific DI module registration</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

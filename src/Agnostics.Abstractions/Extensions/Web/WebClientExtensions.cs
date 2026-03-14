@@ -23,7 +23,9 @@ public static class WebClientExtensions
 
     public static void PrepareHttpClient(out HttpClient client, WebRequestParams pars, bool resultAsJson = false)
     {
+#pragma warning disable IDISP001 // handler ownership transferred to HttpClient
         var handler = pars.GetHttpClientHandler();
+#pragma warning restore IDISP001
 
         client = handler is not null
             ? new(handler)

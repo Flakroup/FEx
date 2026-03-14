@@ -1,3 +1,4 @@
+#pragma warning disable IDISP003, IDISP004, IDISP007, IDISP012, IDISP025 // Intentional DI container lifecycle patterns
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Helpers;
 using FEx.Agnostics.Abstractions.Interfaces;

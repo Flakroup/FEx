@@ -14,7 +14,7 @@ using System.Threading.Channels;
 
 namespace FEx.Asyncx.Helpers;
 
-public class AsyncProcessingQueue : IDisposable
+public sealed class AsyncProcessingQueue : IDisposable
 {
 #if NETSTANDARD2_0
     private readonly ConcurrentQueue<TaskCompletionSource<bool>> _taskQueue;

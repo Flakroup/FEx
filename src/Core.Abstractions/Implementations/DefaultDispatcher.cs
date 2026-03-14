@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Core.Abstractions.Implementations;
 
+#pragma warning disable VSTHRD001 // Intentional SynchronizationContext usage in default dispatcher
 public class DefaultDispatcher : FExDispatcher
 {
     private readonly SynchronizationContext _mainThreadSynchronizationContext;

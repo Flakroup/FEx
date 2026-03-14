@@ -1,7 +1,10 @@
 ﻿// Made by Frantisek Konopecky, Prague, 2014 - 2016
 //
-// Code comes under MIT licence - Can be used without 
+// Code comes under MIT licence - Can be used without
 // limitations for both personal and commercial purposes.
+//
+// Third-party code - suppress reflection analyzer warnings
+#pragma warning disable REFL008, REFL016, REFL029
 
 using System;
 using System.Collections.Generic;

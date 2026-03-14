@@ -160,7 +160,9 @@ public static class SynchronizationContextExtensions
             {
                 context.Post(_ => AwaitableInternalPost(action, sender, stackTrace, onException, postFinished), null);
 
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
                 return await postFinished.Task;
+#pragma warning restore VSTHRD003
             }
             finally
             {

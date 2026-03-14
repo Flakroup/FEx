@@ -35,6 +35,7 @@ default:
     - git submodule init
     - git config submodule.DevConfigs.url "https://gitlab-ci-token:$env:CI_JOB_TOKEN@gitlab.com/flakroup/devconfigs.git"
     - git submodule update --recursive
+    - git lfs pull
     - pwsh --version
     - dotnet --version
 

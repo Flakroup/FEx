@@ -11,7 +11,7 @@ using Serilog;
 
 namespace FEx.Building;
 
-public abstract class FExBuild : NukeBuild
+public abstract class FExBuild : NukeBuild, ICompileTarget
 {
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     public virtual Configuration Configuration { get; } = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -21,13 +21,14 @@ public abstract class FExBuild : NukeBuild
 
     public static IEnumerable<string> Logo { get; } =
     [
-        " ███████╗███████╗██╗  ██╗██████╗ ██╗   ██╗██╗██╗     ██████╗ ",
-        " ██╔════╝██╔════╝╚██╗██╔╝██╔══██╗██║   ██║██║██║     ██╔══██╗",
-        " █████╗  █████╗   ╚███╔╝ ██████╔╝██║   ██║██║██║     ██║  ██║",
-        " ██╔══╝  ██╔══╝   ██╔██╗ ██╔══██╗██║   ██║██║██║     ██║  ██║",
-        " ██║     ███████╗██╔╝ ██╗██████╔╝╚██████╔╝██║███████╗██████╔╝",
-        " ╚═╝     ╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝╚══════╝╚═════╝ "
-    ];
+        " ███████████ ██████████             ███████████              ███  ████       █████ ",
+        "░░███░░░░░░█░░███░░░░░█            ░░███░░░░░███            ░░░  ░░███      ░░███  ",
+        " ░███   █ ░  ░███  █ ░  █████ █████ ░███    ░███ █████ ████ ████  ░███    ███████  ",
+        " ░███████    ░██████   ░░███ ░░███  ░██████████ ░░███ ░███ ░░███  ░███   ███░░███  ",
+        " ░███░░░█    ░███░░█    ░░░█████░   ░███░░░░░███ ░███ ░███  ░███  ░███  ░███ ░███  ",
+        " ░███  ░     ░███ ░   █  ███░░░███  ░███    ░███ ░███ ░███  ░███  ░███  ░███ ░███  ",
+        " █████       ██████████ █████ █████ ███████████  ░░████████ █████ █████ ░░████████ ",
+        "░░░░░       ░░░░░░░░░░ ░░░░░ ░░░░░ ░░░░░░░░░░░    ░░░░░░░░ ░░░░░ ░░░░░   ░░░░░░░░  "];
 
     public virtual DotNetBuildSettings GetBuildSettings(
         DotNetBuildSettings settings,

@@ -12,7 +12,6 @@
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(DotNetNugetsVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(DotNetNugetsVersion)" />
 		<PackageReference Include="Polly" Version="8.6.4" />
-		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 	</ItemGroup>
 
 </Project>

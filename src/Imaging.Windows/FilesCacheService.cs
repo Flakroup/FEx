@@ -320,7 +320,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
             {
                 ex.HandleException();
 
-                throw ex;
+                throw;
             }
             finally
             {

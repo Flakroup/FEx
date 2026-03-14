@@ -325,7 +325,9 @@ public static class DbContextExtensions
 
         try
         {
-            _ = dbContext.Database.ExecuteSqlRaw($"SELECT TOP(1) * FROM {tableName}"); //Throws on missing table
+#pragma warning disable EF1002 // tableName is built from EF model metadata, not user input
+            _ = dbContext.Database.ExecuteSqlRaw($"SELECT TOP(1) * FROM {tableName}");
+#pragma warning restore EF1002
         }
         catch (Exception)
         {

@@ -6,7 +6,9 @@ namespace FEx.Common.Implementations;
 
 public class SimpleMainThreadContextProvider : IMainThreadContextProvider
 {
+#pragma warning disable CS0067 // Required by IMainThreadContextProvider interface
     public event EventHandler<EventArgs> ThreadHasChanged;
+#pragma warning restore CS0067
     public Thread Thread { get; private set; } = Thread.CurrentThread;
     public bool IsDispatcherContext { get; set; }
     public SynchronizationContext Context { get; }

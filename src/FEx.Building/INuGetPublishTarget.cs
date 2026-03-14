@@ -35,15 +35,28 @@ public interface INuGetPublishTarget : IPackTarget
             }
 
             Log.Information("Pushing {Count} package(s) to {Source}", packages.Count, NuGetSource);
+            Log.Information("NuGetApiKey is {Status}", string.IsNullOrEmpty(NuGetApiKey) ? "EMPTY" : $"set ({NuGetApiKey!.Length} chars)");
+
+            var failed = 0;
 
             foreach (var package in packages)
             {
                 Log.Information("  Pushing {Package}", package.Name);
 
-                DotNetNuGetPush(s => s
-                    .SetTargetPath(package)
-                    .SetSource(NuGetSource)
-                    .SetApiKey(NuGetApiKey!));
+                try
+                {
+                    DotNetNuGetPush(s => s
+                        .SetTargetPath(package)
+                        .SetSource(NuGetSource)
+                        .SetApiKey(NuGetApiKey!)
+                        .SetProcessLogOutput(true));
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Failed to push {Package}: {Message}", package.Name, ex.Message);
+                    failed++;
+                    throw;
+                }
             }
 
             Log.Information("Successfully pushed {Count} package(s) to {Source}", packages.Count, NuGetSource);

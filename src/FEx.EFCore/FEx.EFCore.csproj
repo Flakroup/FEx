@@ -6,9 +6,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Azure.Identity" Version="1.17.0" />
+		<PackageReference Include="Azure.Identity" Version="1.19.0" />
 		<PackageReference Include="EFCore.BulkExtensions" Version="$(BulkExtensionsVersion)" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.2" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EFCoreVersion)" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(EFCoreVersion)" />
@@ -17,7 +17,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(DotNetNugetsVersion)" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
 		<PackageReference Include="System.Formats.Asn1" Version="$(DotNetNugetsVersion)" />
 		<PackageReference Include="System.Text.Json" Version="$(DotNetNugetsVersion)" />
 	</ItemGroup>

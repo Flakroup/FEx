@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+        <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.14.15" />
     </ItemGroup>
 
 </Project>

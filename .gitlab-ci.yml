@@ -1,8 +1,6 @@
 stages:
   - scan
-  - build
-  - test
-  - publish
+  - ci
 
 variables:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
@@ -42,13 +40,17 @@ default:
 ######################################################################
 # CI - NUKE targets from build/Build.cs
 #
-# - push on any branch != main/master  -> Compile (build)
-# - merge request pipeline             -> Test
-# - push on main/master (merge)        -> Publish (Pack + Test + Compile)
+# NUKE chains dependencies internally (--no-build where possible):
+#   Publish -> Pack -> Compile
+#   Test -> Compile
+#
+# - push on feature branch (no open MR)  -> Compile
+# - merge request pipeline               -> Test (includes Compile)
+# - push on develop/main/master          -> Publish (includes Pack + Compile)
 ######################################################################
 
 # ════════════════════════════════════════════
-# SECRET SCAN (kazdy push i MR)
+# SECRET SCAN (every push and MR)
 # ════════════════════════════════════════════
 
 secret-scan:
@@ -65,29 +67,27 @@ secret-scan:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 # ════════════════════════════════════════════
-# BUILD (push na feature brancha)
+# BUILD (push on feature branch, no open MR)
 # ════════════════════════════════════════════
 
 build:
-  stage: build
+  stage: ci
   script:
-    - 'echo "Building FEx (NUKE target: Compile)..."'
     - pwsh ./build.ps1 Compile
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "master" && $CI_OPEN_MERGE_REQUESTS == null'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH != "develop" && $CI_OPEN_MERGE_REQUESTS == null'
       when: on_success
     - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api") && ($ACTION == "build" || $ACTION == "all")'
       when: on_success
     - when: never
 
 # ════════════════════════════════════════════
-# TESTY (merge request)
+# TEST (merge request)
 # ════════════════════════════════════════════
 
 test:
-  stage: test
+  stage: ci
   script:
-    - 'echo "Running tests (NUKE target: Test)..."'
     - pwsh ./build.ps1 Test
   artifacts:
     when: always
@@ -105,13 +105,12 @@ test:
     - when: never
 
 # ════════════════════════════════════════════
-# PUBLISH (merge do main/master)
+# PUBLISH (push on develop/main/master)
 # ════════════════════════════════════════════
 
 publish:
-  stage: publish
+  stage: ci
   script:
-    - 'echo "Publishing to NuGet.org (NUKE target: Publish)..."'
     - pwsh -Command 'if (-not $env:NuGetOrgApiKey) { Write-Error "NuGetOrgApiKey environment variable is not set"; exit 1 }'
     - $env:NuGetApiKey = $env:NuGetOrgApiKey
     - pwsh ./build.ps1 Publish --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"
@@ -125,13 +124,12 @@ publish:
     name: production
 
 # ════════════════════════════════════════════
-# UTILITY: cleanup
+# UTILITY: cleanup (manual only)
 # ════════════════════════════════════════════
 
 cleanup:
   stage: .post
   script:
-    - echo "Cleaning up artifacts..."
     - pwsh ./build.ps1 Clean
   rules:
     - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api") && ($ACTION == "cleanup" || $ACTION == "all")'

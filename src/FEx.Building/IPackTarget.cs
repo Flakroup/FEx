@@ -10,6 +10,8 @@ namespace FEx.Building;
 
 public interface IPackTarget : ICompileTarget, IGitVersionComponent
 {
+    string? PackProject => null;
+
     sealed AbsolutePath PackagesDirectory => RootDirectory / "artifacts" / "packages";
 
     Target Pack => _ => _
@@ -25,7 +27,7 @@ public interface IPackTarget : ICompileTarget, IGitVersionComponent
             Log.Information("Packing with version: {Version}", version);
 
             DotNetPack(s => s
-                .SetProject(Solution)
+                .SetProject(PackProject ?? Solution.Path)
                 .SetConfiguration(Configuration)
                 .EnableNoBuild()
                 .SetOutputDirectory(PackagesDirectory)

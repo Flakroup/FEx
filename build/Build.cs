@@ -1,6 +1,7 @@
 using FEx.Building;
 using Nuke.Common;
 
+[DisableDefaultOutput(DefaultOutput.ErrorsAndWarnings)]
 class Build : FExBuild, ITagTarget, ITestTarget
 {
     public static int Main()

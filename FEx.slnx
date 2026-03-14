@@ -92,9 +92,6 @@
     <Project Path="src/FEx.Platforms.Windows/FEx.Platforms.Windows.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
-    <Project Path="src/FEx.Telemetry.Rollbar/FEx.Telemetry.Rollbar.csproj">
-      <Build Solution="Build|*" Project="false" />
-    </Project>
   </Folder>
   <Folder Name="/src/Agnostics.Abstractions/" />
   <Folder Name="/src/Agnostics/" />

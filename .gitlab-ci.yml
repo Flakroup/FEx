@@ -116,7 +116,7 @@ publish:
     - $env:NuGetApiKey = $env:NuGetOrgApiKey
     - pwsh ./build.ps1 Publish --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master")'
+    - if: '$CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop")'
       when: on_success
     - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api") && ($ACTION == "publish" || $ACTION == "all")'
       when: on_success

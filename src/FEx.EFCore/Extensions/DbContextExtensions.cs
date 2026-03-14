@@ -15,7 +15,9 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -214,10 +216,17 @@ public static class DbContextExtensions
         context.IsPostrgeSql() ? SqlDialect.PostrgeSql :
         context.IsSqlite() ? SqlDialect.Sqlite : null;
 
-    public static string ExecuteReader<TDbContext>(this TDbContext db, string commandText) where TDbContext : DbContext
+    [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities",
+        Justification = "commandText must be a trusted, developer-authored SQL query. Callers must not pass user-controlled strings.")]
+    public static string ExecuteReader<TDbContext>(this TDbContext db, string commandText, params DbParameter[] parameters)
+        where TDbContext : DbContext
     {
         using var command = db.Database.GetDbConnection().CreateCommand();
         command.CommandText = commandText;
+
+        if (parameters.Length > 0)
+            command.Parameters.AddRange(parameters);
+
         db.Database.OpenConnection();
         using var reader = command.ExecuteReader();
         var sb = new StringBuilder();

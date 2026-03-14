@@ -48,8 +48,7 @@ public interface INuGetPublishTarget : IPackTarget
                     DotNetNuGetPush(s => s
                         .SetTargetPath(package)
                         .SetSource(NuGetSource)
-                        .SetApiKey(NuGetApiKey!)
-                        .SetProcessLogOutput(true));
+                        .SetApiKey(NuGetApiKey!));
                 }
                 catch (Exception ex)
                 {

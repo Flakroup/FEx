@@ -19,6 +19,11 @@ public interface ITagTarget : INuGetPublishTarget
             "Skipping tag: not running on CI")
         .OnlyWhenDynamic(() => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI_JOB_TOKEN")),
             "Skipping tag: no CI_JOB_TOKEN")
+        .OnlyWhenDynamic(() =>
+        {
+            var branch = Environment.GetEnvironmentVariable("CI_COMMIT_BRANCH");
+            return branch is "main" or "master";
+        }, "Skipping tag: only tags main/master releases")
         .Executes(() =>
         {
             var tag = $"{TagPrefix}{SemVer}";

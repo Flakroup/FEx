@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.Identity" Version="1.17.0" />
-        <PackageReference Include="Microsoft.Graph" Version="5.93.0" />
+        <PackageReference Include="Azure.Identity" Version="1.19.0" />
+        <PackageReference Include="Microsoft.Graph" Version="5.103.0" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="$(DotNetNugetsVersion)" />
     </ItemGroup>
 

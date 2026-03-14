@@ -46,7 +46,7 @@ public class OneDriveClient
 
             await pageIterator.IterateAsync(cancellationToken);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
         }
 

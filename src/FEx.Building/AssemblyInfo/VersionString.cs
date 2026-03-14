@@ -24,11 +24,13 @@ public class VersionString
 
     public VersionString(string version)
     {
+        Major = Minor = Build = Revision = "0";
+
         if (!Parse(version))
             throw new ArgumentException("Invalid version string");
     }
 
-    public static bool TryParse(string input, out VersionString version)
+    public static bool TryParse(string input, out VersionString? version)
     {
         var temp = new VersionString();
         version = null;

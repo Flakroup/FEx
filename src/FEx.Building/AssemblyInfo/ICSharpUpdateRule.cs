@@ -4,5 +4,5 @@ public interface ICSharpUpdateRule
 {
     string AttributeName { get; }
 
-    string Update(string v);
+    string Update(string? v);
 }

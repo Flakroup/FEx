@@ -12,10 +12,10 @@ public static class NukeLogger
 
 public class NukeLogger<T> : ILogger<T>
 {
-    protected SemaphoreSlim Scope { get; set; }
-    protected object State { get; set; }
+    protected SemaphoreSlim? Scope { get; set; }
+    protected object? State { get; set; }
 
-    public IDisposable BeginScope<TState>(TState state)
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull
     {
         State = state;
         Scope = new(1, 1);
@@ -26,8 +26,8 @@ public class NukeLogger<T> : ILogger<T>
     public void Log<TState>(LogLevel logLevel,
                             EventId eventId,
                             TState state,
-                            Exception exception,
-                            Func<TState, Exception, string> formatter) => Serilog.Log.Write(GetSerilogLogLevel(logLevel), formatter(state, exception));
+                            Exception? exception,
+                            Func<TState, Exception?, string> formatter) => Serilog.Log.Write(GetSerilogLogLevel(logLevel), formatter(state, exception));
 
     public bool IsEnabled(LogLevel logLevel) => Serilog.Log.IsEnabled(GetLogLevel(logLevel));
 

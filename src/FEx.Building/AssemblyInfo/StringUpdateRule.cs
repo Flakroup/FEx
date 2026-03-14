@@ -9,5 +9,5 @@ public class StringUpdateRule
         _rule = rule;
     }
 
-    public string Update(string version = null) => _rule;
+    public string Update(string? version = null) => _rule;
 }

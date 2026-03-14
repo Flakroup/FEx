@@ -12,7 +12,7 @@ public class CSharpVersionUpdateRule : ICSharpUpdateRule
         _updateRule = new(updateRule);
     }
 
-    public string Update(string v) => _updateRule.Update(v);
+    public string Update(string? v) => _updateRule.Update(v);
 
     public string Update(VersionString v) => _updateRule.Update(v);
 }

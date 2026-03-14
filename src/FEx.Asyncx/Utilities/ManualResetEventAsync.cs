@@ -106,9 +106,11 @@ public sealed class ManualResetEventAsync
         // If the token cannot be cancelled, then we dont need to create any sort of linked token source.
         if (!token.CanBeCanceled)
         {
-            // If the wait is indefinite, then we don't need to create a second task at all to wait on, just wait for set. 
+            // If the wait is indefinite, then we don't need to create a second task at all to wait on, just wait for set.
             if (timeoutMS == -1)
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
                 return await _completionSource.Task;
+#pragma warning restore VSTHRD003
 
             timeoutToken = new();
         }
@@ -130,7 +132,9 @@ public sealed class ManualResetEventAsync
                     TaskContinuationOptions.ExecuteSynchronously);
 #pragma warning restore VSTHRD105 // Avoid method overloads that assume TaskScheduler.Current
 
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
             var resultingTask = await Task.WhenAny(_completionSource.Task, delayTask).ConfigureAwait(false);
+#pragma warning restore VSTHRD003
 
             // The actual task finished, not the timeout, so we can cancel our cancellation token and return true.
             if (resultingTask != delayTask)

@@ -16,7 +16,8 @@ public static class XElementExtensions
     public static IXPathNavigable ToXmlElement(this XNode el)
     {
         var doc = new XmlDocument();
-        doc.Load(el.CreateReader());
+        using var reader = el.CreateReader();
+        doc.Load(reader);
 
         return doc.DocumentElement;
     }

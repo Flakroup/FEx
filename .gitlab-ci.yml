@@ -112,7 +112,7 @@ publish:
   script:
     - 'echo "Publishing to NuGet.org (NUKE target: Publish)..."'
     - pwsh -Command 'if (-not $env:NuGetOrgApiKey) { Write-Error "NuGetOrgApiKey environment variable is not set"; exit 1 }'
-    - pwsh ./build.ps1 Publish --configuration Release --nuget-source "https://api.nuget.org/v3/index.json" --nuget-api-key "$NuGetOrgApiKey"
+    - pwsh ./build.ps1 Publish --configuration Release --nuget-source "https://api.nuget.org/v3/index.json" --nuget-api-key "$env:NuGetOrgApiKey"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master")'
       when: on_success

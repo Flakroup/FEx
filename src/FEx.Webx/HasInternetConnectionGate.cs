@@ -14,7 +14,9 @@ public class HasInternetConnectionGate
         _exceptionHandler = exceptionHandler;
     }
 
-    public async Task<bool> CheckAsync(Uri url = null)
+    public Task<bool> CheckAsync() => CheckAsync(null);
+
+    public async Task<bool> CheckAsync(Uri url)
     {
         url ??= new("http://clients3.google.com/generate_204");
 

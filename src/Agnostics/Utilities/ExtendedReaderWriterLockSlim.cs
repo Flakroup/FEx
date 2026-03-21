@@ -9,8 +9,13 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
 {
     private readonly Type _ownerType;
 
+    public ExtendedReaderWriterLockSlim(object owner)
+        : this(owner, LockRecursionPolicy.SupportsRecursion)
+    {
+    }
+
     public ExtendedReaderWriterLockSlim(object owner,
-                                        LockRecursionPolicy recursionPolicy = LockRecursionPolicy.SupportsRecursion)
+                                        LockRecursionPolicy recursionPolicy)
         : base(recursionPolicy)
     {
         _ownerType = owner.GetType();

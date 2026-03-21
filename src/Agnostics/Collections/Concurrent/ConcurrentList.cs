@@ -35,7 +35,12 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     protected List<T> Items { get; }
 
-    public ConcurrentList(IEnumerable<T> collection = null)
+    public ConcurrentList()
+        : this(null)
+    {
+    }
+
+    public ConcurrentList(IEnumerable<T> collection)
     {
         Items = [];
         _lock = new(this);
@@ -135,9 +140,13 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     public void AddUniqueRange(IEnumerable<T> range) => AddRange(range.Distinct().Where(x => !Items.Contains(x)));
 
     /// <inheritdoc />
+    public void AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector) =>
+        AddUniqueRange(range, keySelector, null);
+
+    /// <inheritdoc />
     public void AddUniqueRange<TKey>(IEnumerable<T> range,
                                      Func<T, TKey> keySelector,
-                                     IEqualityComparer<TKey> comparer = null) =>
+                                     IEqualityComparer<TKey> comparer) =>
         AddRange(range.DistinctBy(keySelector, comparer)
             .Where(distinctItem => Items.All(item =>
                 !comparer?.Equals(keySelector(distinctItem), keySelector(item))
@@ -217,9 +226,16 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     }
 
     /// <inheritdoc />
+    public void SortBy<TKey>(Func<T, TKey> selector) =>
+        SortBy(selector, ListSortDirection.Ascending, null);
+
+    public void SortBy<TKey>(Func<T, TKey> selector, ListSortDirection order) =>
+        SortBy(selector, order, null);
+
+    /// <inheritdoc />
     public void SortBy<TKey>(Func<T, TKey> selector,
-                             ListSortDirection order = ListSortDirection.Ascending,
-                             IComparer<TKey> comparer = null)
+                             ListSortDirection order,
+                             IComparer<TKey> comparer)
     {
         Write(() =>
         {
@@ -238,7 +254,11 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     }
 
     /// <inheritdoc />
-    public void Combo(Action<IConcurrentList<T>> action, bool shouldTriggerCollectionReset = false) =>
+    public void Combo(Action<IConcurrentList<T>> action) =>
+        Combo(action, false);
+
+    /// <inheritdoc />
+    public void Combo(Action<IConcurrentList<T>> action, bool shouldTriggerCollectionReset) =>
         Combo(items =>
         {
             action(items);

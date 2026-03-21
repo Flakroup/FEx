@@ -43,10 +43,16 @@ public class AsyncHelper : IAsyncHelper
                                                                  AsyncOptions options = AsyncOptions.ImmediateStart) =>
         await ExecuteTaskOnThreadPoolAsync(() => _dispatcher.InvokeOnMainThreadAsync(func), options);
 
+    public ITaskWrapper FireAndForget(Action action) =>
+        FireAndForget(action, AsyncMode.Default, null, default);
+
+    public ITaskWrapper FireAndForget(Action action, AsyncMode asyncMode) =>
+        FireAndForget(action, asyncMode, null, default);
+
     public ITaskWrapper FireAndForget(Action action,
-                                      AsyncMode asyncMode = AsyncMode.Default,
-                                      IExceptionHandlerOptions options = null,
-                                      CancellationToken cancellationToken = default)
+                                      AsyncMode asyncMode,
+                                      IExceptionHandlerOptions options,
+                                      CancellationToken cancellationToken)
     {
         action.Guard(nameof(action));
         var taskWrapper = new TaskWrapper();
@@ -57,10 +63,16 @@ public class AsyncHelper : IAsyncHelper
         return taskWrapper;
     }
 
+    public ITaskWrapper<T> FireAndForget<T>(Func<T> func) =>
+        FireAndForget(func, AsyncMode.Default, null, default);
+
+    public ITaskWrapper<T> FireAndForget<T>(Func<T> func, AsyncMode asyncMode) =>
+        FireAndForget(func, asyncMode, null, default);
+
     public ITaskWrapper<T> FireAndForget<T>(Func<T> func,
-                                            AsyncMode asyncMode = AsyncMode.Default,
-                                            IExceptionHandlerOptions options = null,
-                                            CancellationToken cancellationToken = default)
+                                            AsyncMode asyncMode,
+                                            IExceptionHandlerOptions options,
+                                            CancellationToken cancellationToken)
     {
         func.Guard(nameof(func));
         var taskWrapper = new TaskWrapper<T>();

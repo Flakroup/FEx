@@ -140,6 +140,7 @@ public class FExCoreStatics : StaticsBase
         _alphanumComparatorFastFactory = null;
     }
 
+#pragma warning disable S2360 // Optional parameters should not be used - Configure uses named arguments pattern, overloads impractical for 10 independent params
     public static void Configure(Func<IStackTraceProvider> stackTraceProviderFactory = null,
                                  Func<IFExDispatcher> dispatcherFactory = null,
                                  Func<IAsyncHelper> asyncHelperFactory = null,
@@ -184,6 +185,7 @@ public class FExCoreStatics : StaticsBase
         if (alphanumComparatorFastFactory is not null)
             _alphanumComparatorFastFactory = alphanumComparatorFastFactory;
     }
+#pragma warning restore S2360
 
     #region Null/default helper types
     private sealed class NullAppInfoProvider : IAppInfoProvider

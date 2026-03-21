@@ -35,7 +35,12 @@ public class FExBehaviorSubject<T> : FExSubject<T>, IFExBehaviorSubject<T>
     /// <exception cref="ObjectDisposedException">Dispose was called.</exception>
     public T Value => _behaviorSubject.Value;
 
-    public FExBehaviorSubject(T defaultValue = default)
+    public FExBehaviorSubject()
+        : this(default)
+    {
+    }
+
+    public FExBehaviorSubject(T defaultValue)
         : base(new BehaviorSubject<T>(defaultValue))
     {
         _behaviorSubject = (BehaviorSubject<T>)_subject;

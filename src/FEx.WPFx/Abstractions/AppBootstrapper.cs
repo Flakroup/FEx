@@ -7,6 +7,7 @@ using FEx.Core.Abstractions.Utilities;
 using FEx.DependencyInjection.Abstractions;
 using FEx.MVVM;
 using FEx.MVVM.Abstractions.Enums;
+using FEx.MVVM.Abstractions.Extensions;
 using FEx.WPFx.Abstractions.Interfaces;
 using FEx.WPFx.WpfBindingErrors;
 using Serilog;
@@ -136,7 +137,8 @@ public abstract class AppBootstrapper<TContainer> : Application
             if (FExMvvm.MessagePopupService.ShowMessage(
                     $"{_appInfoProvider?.Name ?? "App"} is already running.{Environment.NewLine}Do you want to close it?",
                     "Duplicated instance",
-                    button: FExMessageButton.YesNo)
+                    MessageIcon.Exclamation,
+                    FExMessageButton.YesNo)
                 == MessageResult.No)
                 ExitApp(0);
 

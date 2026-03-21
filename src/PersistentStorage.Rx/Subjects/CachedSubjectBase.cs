@@ -1,6 +1,7 @@
 using FEx.Core.Abstractions.Subjects;
 using FEx.PersistentStorage.Abstractions;
 using FEx.PersistentStorage.Abstractions.Enums;
+using FEx.PersistentStorage.Abstractions.Extensions;
 using StrongInject;
 
 namespace FEx.PersistentStorage.Rx.Subjects;

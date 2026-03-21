@@ -41,7 +41,7 @@ public sealed class CacheService : ICacheService
             if (Debugger.IsAttached)
                 _logger.Error(ex);
 
-            Delete<T>();
+            Delete<T>((Expression<Func<T, bool>>)null);
             Add(item);
 
             return true;
@@ -49,7 +49,7 @@ public sealed class CacheService : ICacheService
     }
 
     /// <inheritdoc />
-    public bool Upsert<T>(T item, Expression<Func<T, bool>> predicate = null) where T : ICacheableItem
+    public bool Upsert<T>(T item, Expression<Func<T, bool>> predicate) where T : ICacheableItem
     {
         try
         {
@@ -60,7 +60,7 @@ public sealed class CacheService : ICacheService
             if (Debugger.IsAttached)
                 _logger.Error(ex);
 
-            Delete<T>();
+            Delete<T>((Expression<Func<T, bool>>)null);
             Add(item);
 
             return true;
@@ -68,7 +68,7 @@ public sealed class CacheService : ICacheService
     }
 
     /// <inheritdoc />
-    public void Upsert<T>(IEnumerable<T> items, Expression<Func<T, bool>> predicate = null) where T : ICacheableItem
+    public void Upsert<T>(IEnumerable<T> items, Expression<Func<T, bool>> predicate) where T : ICacheableItem
     {
         try
         {
@@ -79,7 +79,7 @@ public sealed class CacheService : ICacheService
             if (Debugger.IsAttached)
                 _logger.Error(ex);
 
-            Delete<T>();
+            Delete<T>((Expression<Func<T, bool>>)null);
             Add(items);
         }
     }
@@ -91,11 +91,11 @@ public sealed class CacheService : ICacheService
     public bool Delete<T>(IEnumerable<T> items) where T : ICacheableItem => _localStorageService.Delete(items);
 
     /// <inheritdoc />
-    public bool Delete<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem =>
+    public bool Delete<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem =>
         _localStorageService.DeleteAll(predicate);
 
     /// <inheritdoc />
-    public T FirstOrDefault<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem
+    public T FirstOrDefault<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem
     {
         try
         {
@@ -106,14 +106,14 @@ public sealed class CacheService : ICacheService
             if (Debugger.IsAttached)
                 _logger.Error(ex);
 
-            Delete<T>();
+            Delete<T>((Expression<Func<T, bool>>)null);
 
             return default;
         }
     }
 
     /// <inheritdoc />
-    public IReadOnlyCollection<T> Get<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem
+    public IReadOnlyCollection<T> Get<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem
     {
         try
         {
@@ -124,7 +124,7 @@ public sealed class CacheService : ICacheService
             if (Debugger.IsAttached)
                 _logger.Error(ex);
 
-            Delete<T>();
+            Delete<T>((Expression<Func<T, bool>>)null);
 
             return Enumerable.Empty<T>().ToList().AsReadOnly();
         }

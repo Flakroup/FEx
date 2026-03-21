@@ -20,7 +20,7 @@ public class DeviceHelper : IDeviceHelper
     }
 
     /// <inheritdoc />
-    public async ValueTask<bool> WaitForInternetAsync(CancellationToken cancellationToken = default)
+    public async ValueTask<bool> WaitForInternetAsync(CancellationToken cancellationToken)
     {
         if (HasInternet)
             return true;

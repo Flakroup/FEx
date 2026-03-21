@@ -50,9 +50,14 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
             .AsyncSubscribe(OnExcludedPropertiesChanged, _subscriptions);
     }
 
+    public new bool SetProperty<TRet>(ref TRet backingField,
+                                      TRet newValue,
+                                      [CallerMemberName] string propertyName = null) =>
+        SetProperty(ref backingField, newValue, null, propertyName);
+
     public override bool SetProperty<TRet>(ref TRet backingField,
                                            TRet newValue,
-                                           Action<TRet> onPropertyChanged = null,
+                                           Action<TRet> onPropertyChanged,
                                            [CallerMemberName] string propertyName = null)
     {
         if (!base.SetProperty(ref backingField, newValue, onPropertyChanged, propertyName))
@@ -325,7 +330,11 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
     /// <param name="value">Progress value to be added or set</param>
     /// <param name="maximum">Maximal allowed value.</param>
     /// <param name="mode">Progress change mode. ProgressChangeMode.End sets ProgressValue to current ProgressMaximum.</param>
-    public virtual void PrgSet(double? value, double? maximum = null, ProgressChangeMode mode = ProgressChangeMode.Set)
+    public void PrgSet(double? value) => PrgSet(value, null, ProgressChangeMode.Set);
+
+    public void PrgSet(double? value, double? maximum) => PrgSet(value, maximum, ProgressChangeMode.Set);
+
+    public virtual void PrgSet(double? value, double? maximum, ProgressChangeMode mode)
     {
         if (!Timer.IsRunning
             && (maximum.HasValue || value.HasValue)
@@ -354,13 +363,13 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
     /// <summary>
     /// Sets progress value of the ProgressBar to the maximal value
     /// </summary>
-    public void PrgSetEnd() => PrgSet(-1, mode: ProgressChangeMode.End);
+    public void PrgSetEnd() => PrgSet(-1, null, ProgressChangeMode.End);
 
     /// <summary>
     /// Increments current progress value of the ProgressBar
     /// </summary>
     /// <param name="addedValue">The added value.</param>
-    public void PrgAdd(double addedValue = 1) => PrgSet(addedValue, mode: ProgressChangeMode.Add);
+    public void PrgAdd(double addedValue) => PrgSet(addedValue, null, ProgressChangeMode.Add);
 
     /// <summary>
     /// Adds value to the maximum of progress value.
@@ -372,6 +381,6 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
     /// Sets maximal allowed value of the ProgressBar and resets current progress
     /// </summary>
     /// <param name="max"></param>
-    public void PrgSetMax(double max) => PrgSet(0, max);
+    public void PrgSetMax(double max) => PrgSet(0, max, ProgressChangeMode.Set);
     #endregion
 }

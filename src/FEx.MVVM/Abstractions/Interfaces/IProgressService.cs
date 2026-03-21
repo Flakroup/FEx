@@ -22,6 +22,6 @@ public interface IProgressService
         where TCon : IProgressAggregator;
 
     bool UnsubscribeFromProgress(IProgressAggregator receiver, string containerId);
-    TCon GetOrAddContainer<TCon>(bool isMain = false) where TCon : class, IProgressAggregator, new();
+    TCon GetOrAddContainer<TCon>(bool isMain) where TCon : class, IProgressAggregator, new();
     void RemoveContainer(string id);
 }

@@ -35,10 +35,19 @@ public static class ProgressAggregatorExtensions
         viewModel.SetCurrentDownloadState(e.BytesReceived, e.TotalBytesToReceive, e.UserState);
 
     // ReSharper disable UnusedParameter.Global
+    public static void SetCurrentDownloadState(this IProgressAggregator viewModel, double? bytesReceived) =>
+        viewModel.SetCurrentDownloadState(bytesReceived, null, null);
+
     public static void SetCurrentDownloadState(this IProgressAggregator viewModel,
                                                double? bytesReceived,
-                                               double? totalBytesToReceive = null,
-                                               object userState = null)
+                                               double? totalBytesToReceive) =>
+        viewModel.SetCurrentDownloadState(bytesReceived, totalBytesToReceive, null);
+
+    // ReSharper disable UnusedParameter.Global
+    public static void SetCurrentDownloadState(this IProgressAggregator viewModel,
+                                               double? bytesReceived,
+                                               double? totalBytesToReceive,
+                                               object userState)
         // ReSharper restore UnusedParameter.Global
     {
         viewModel.SetIsFileOperation(true);

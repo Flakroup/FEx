@@ -11,6 +11,7 @@ using FEx.Core.Abstractions.Extensions;
 using FEx.Core.Collections.Concurrent;
 using FEx.Flurlx.Models;
 using FEx.Legacy.Web;
+using FEx.MVVM.Abstractions.Extensions;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Utilities;
 using FEx.Webx.Utilities;

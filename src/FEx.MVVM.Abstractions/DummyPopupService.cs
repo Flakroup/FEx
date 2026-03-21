@@ -13,26 +13,26 @@ public class DummyPopupService : IMessagePopupService
     public bool AppIsClosing { get; set; }
 
     public async Task<MessageResult> ShowMessageAsync(string txt,
-                                                      string caption = "Something wrong happened",
-                                                      MessageIcon messageBoxImage = MessageIcon.Exclamation,
-                                                      FExMessageButton button = FExMessageButton.OK,
-                                                      ISupportInitialize ownerWindow = null,
-                                                      bool informUser = true,
-                                                      bool wait = true,
-                                                      Stopwatch sw = null,
-                                                      LogLevel level = LogLevel.Information,
-                                                      Exception exception = null) =>
+                                                      string caption,
+                                                      MessageIcon messageBoxImage,
+                                                      FExMessageButton button,
+                                                      ISupportInitialize ownerWindow,
+                                                      bool informUser,
+                                                      bool wait,
+                                                      Stopwatch sw,
+                                                      LogLevel level,
+                                                      Exception exception) =>
         await Task.FromResult(MessageResult.None);
 
     public MessageResult ShowMessage(string txt,
-                                     string caption = "Something wrong happened",
-                                     MessageIcon messageBoxImage = MessageIcon.Exclamation,
-                                     FExMessageButton button = FExMessageButton.OK,
-                                     ISupportInitialize ownerWindow = null,
-                                     bool informUser = true,
-                                     bool wait = true,
-                                     Stopwatch sw = null,
-                                     LogLevel level = LogLevel.Information,
-                                     Exception exception = null) =>
+                                     string caption,
+                                     MessageIcon messageBoxImage,
+                                     FExMessageButton button,
+                                     ISupportInitialize ownerWindow,
+                                     bool informUser,
+                                     bool wait,
+                                     Stopwatch sw,
+                                     LogLevel level,
+                                     Exception exception) =>
         MessageResult.None;
 }

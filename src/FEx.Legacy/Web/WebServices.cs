@@ -4,6 +4,9 @@ using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Agnostics.Abstractions.Models;
 using FEx.Core.Abstractions.Extensions;
 using FEx.MVVM;
+using FEx.MVVM.Abstractions.Enums;
+using FEx.MVVM.Abstractions.Extensions;
+using Microsoft.Extensions.Logging;
 using FEx.Webx.Models;
 using Newtonsoft.Json;
 using System;
@@ -64,7 +67,7 @@ public static class WebServices
                 {
                     await FExMvvm.MessagePopupService.ShowMessageAsync(
                         $"API response: {GetWebApiResponseCodeInfo(response.StatusCode)}\n\nRequest URL: {requestUrl}\n\nReceived response: {responseBody}\n",
-                        wait: false);
+                        "Something wrong happened", MessageIcon.Exclamation, FExMessageButton.OK, null, true, false, null, LogLevel.Information, null);
 
                     return null;
                 }

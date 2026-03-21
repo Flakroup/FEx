@@ -27,8 +27,18 @@ public class Link : ILink
                 string propertyName,
                 Func<ILinkableNotifyPropertyChanged, object> getPropertyValue,
                 Action<ILink, object, object> onPropertyChange,
+                object defaultValue)
+        : this(propertyType, sender, propertyName, getPropertyValue, onPropertyChange, defaultValue, null)
+    {
+    }
+
+    public Link(Type propertyType,
+                ILinkableNotifyPropertyChanged sender,
+                string propertyName,
+                Func<ILinkableNotifyPropertyChanged, object> getPropertyValue,
+                Action<ILink, object, object> onPropertyChange,
                 object defaultValue,
-                ILink parentLink = null)
+                ILink parentLink)
     {
         _sender = sender.Guard(nameof(sender));
         PropertyType = propertyType.Guard(nameof(propertyType));

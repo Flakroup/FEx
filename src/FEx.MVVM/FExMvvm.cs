@@ -1,7 +1,9 @@
 using FEx.Agnostics.Abstractions;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Core.Abstractions.Interfaces;
+using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace FEx.MVVM;
@@ -27,6 +29,6 @@ public class FExMvvm : FExInitializable
 
     protected override void OnInitialize()
     {
-        _exceptionHandler.Callback = (x, y) => MessagePopupService.ShowMessageAsync(x, informUser: y, wait: false);
+        _exceptionHandler.Callback = (x, y) => MessagePopupService.ShowMessageAsync(x, "Something wrong happened", MessageIcon.Exclamation, FExMessageButton.OK, null, y, false, null, LogLevel.Information, null);
     }
 }

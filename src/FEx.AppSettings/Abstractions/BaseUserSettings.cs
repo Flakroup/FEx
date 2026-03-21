@@ -48,10 +48,12 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
             OnCreated();
     }
 
+#pragma warning disable S2360
     public override bool SetProperty<TRet>(ref TRet backingField,
                                            TRet newValue,
                                            Action<TRet> onPropertyChanged = null,
                                            [CallerMemberName] string propertyName = null) =>
+#pragma warning restore S2360
         base.SetProperty(ref backingField,
             newValue,
             _ =>
@@ -115,7 +117,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
 
 public abstract class BaseUserSettings<T> : BaseUserSettings where T : BaseUserSettings, new()
 {
-    public static T GetSettings(string persistencePath = null, bool isAsync = false)
+    public static T GetSettings(string persistencePath, bool isAsync)
     {
         var content = persistencePath.IsNotNullOrEmptyString() && File.Exists(persistencePath)
             ? File.ReadAllText(persistencePath)
@@ -129,4 +131,10 @@ public abstract class BaseUserSettings<T> : BaseUserSettings where T : BaseUserS
 
         return config;
     }
+
+    public static T GetSettings() =>
+        GetSettings(null, false);
+
+    public static T GetSettings(string persistencePath) =>
+        GetSettings(persistencePath, false);
 }

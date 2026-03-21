@@ -15,5 +15,5 @@ public interface IDeviceHelper
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True when it is connected, false in case of any exception</returns>
-    ValueTask<bool> WaitForInternetAsync(CancellationToken cancellationToken = default);
+    ValueTask<bool> WaitForInternetAsync(CancellationToken cancellationToken);
 }

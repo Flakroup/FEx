@@ -14,7 +14,7 @@ public class FExServiceContainer : IFExServiceContainer
     private IDisposable _container;
     private bool _isDisposed;
 
-    public void RegisterServices<TContainer>(TContainer container, IServiceCollection services = null)
+    public void RegisterServices<TContainer>(TContainer container, IServiceCollection services)
         where TContainer : class, IDisposable
     {
         if (_container is not null)
@@ -41,7 +41,7 @@ public class FExServiceContainer : IFExServiceContainer
         throw new InvalidOperationException($"Couldn't resolve type: {typeof(T).FullName}");
     }
 
-    public T ResolveOrDefault<T>(T fallback = default) =>
+    public T ResolveOrDefault<T>(T fallback) =>
         _container is IContainer<T>
             ? ResolveService<T>()
             : fallback;

@@ -40,7 +40,7 @@ public interface ICacheService : IFileLocalStorageService
     /// <param name="item">Object to be updated or inserted</param>
     /// <param name="predicate">Predicate</param>
     /// <returns>True if insert entity or false if update entity</returns>
-    bool Upsert<T>(T item, Expression<Func<T, bool>> predicate = null) where T : ICacheableItem;
+    bool Upsert<T>(T item, Expression<Func<T, bool>> predicate) where T : ICacheableItem;
 
     /// <summary>
     /// Insert or Update objects based on _id key or predicate.
@@ -48,7 +48,7 @@ public interface ICacheService : IFileLocalStorageService
     /// <typeparam name="T">The type of cacheable object</typeparam>
     /// <param name="items">Objects to be updated or inserted</param>
     /// <param name="predicate">Predicate</param>
-    void Upsert<T>(IEnumerable<T> items, Expression<Func<T, bool>> predicate = null) where T : ICacheableItem;
+    void Upsert<T>(IEnumerable<T> items, Expression<Func<T, bool>> predicate) where T : ICacheableItem;
 
     /// <summary>
     /// Removes cached object of specified type
@@ -69,7 +69,7 @@ public interface ICacheService : IFileLocalStorageService
     /// </summary>
     /// <param name="predicate">Predicate</param>
     /// <typeparam name="T">Type of objects to be removed</typeparam>
-    bool Delete<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem;
+    bool Delete<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem;
 
     /// <summary>
     /// Tries to find an object in cache that meets the requirements of the predicate
@@ -81,7 +81,7 @@ public interface ICacheService : IFileLocalStorageService
     /// not found of exception caught.
     /// </returns>
     /// <remarks>The entire collection of cached objects of specified type will be removed in the case of exception caught.</remarks>
-    T FirstOrDefault<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem;
+    T FirstOrDefault<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem;
 
     /// <summary>
     /// The entire collection of cached objects of specified type matching predicate or all of them if predicate is null.
@@ -90,7 +90,7 @@ public interface ICacheService : IFileLocalStorageService
     /// <typeparam name="T">Type of objects to be retrieved</typeparam>
     /// <returns>Returns all cached objects of specified type matching predicate or all of them if predicate is null</returns>
     /// <remarks>The entire collection of cached objects of specified type will be removed in the case of exception caught.</remarks>
-    IReadOnlyCollection<T> Get<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem;
+    IReadOnlyCollection<T> Get<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem;
 
     /// <summary>
     /// Deletes all items in provided items collection and replaces it with that items

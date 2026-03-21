@@ -22,20 +22,20 @@ public class FExSerilogLogger : IFExLogger
 
     // Trace level
     public void Trace(string message) => Log.Verbose(message);
-    public void Trace(Exception exception, string message = null) => Log.Verbose(exception, message ?? exception.Message);
+    public void Trace(Exception exception, string message) => Log.Verbose(exception, message ?? exception.Message);
 
     // Debug level
     public void Debug(string message) => Log.Debug(message);
-    public void Debug(Exception exception, string message = null) => Log.Debug(exception, message ?? exception.Message);
+    public void Debug(Exception exception, string message) => Log.Debug(exception, message ?? exception.Message);
 
     // Information level
     public void Information(string message) => Log.Information(message);
-    public void Information(Exception exception, string message = null) =>
+    public void Information(Exception exception, string message) =>
         Log.Information(exception, message ?? exception.Message);
 
     // Warning level
     public void Warning(string message) => Log.Warning(message);
-    public void Warning(Exception exception, string message = null) =>
+    public void Warning(Exception exception, string message) =>
         Log.Warning(exception, message ?? exception.Message);
 
     // Error level
@@ -45,7 +45,7 @@ public class FExSerilogLogger : IFExLogger
         ErrorLogged?.Invoke(this, new(message));
     }
 
-    public void Error(Exception exception, string message = null)
+    public void Error(Exception exception, string message)
     {
         Log.Error(exception, message ?? exception.Message);
         ErrorLogged?.Invoke(this, new(message));
@@ -58,7 +58,7 @@ public class FExSerilogLogger : IFExLogger
         ErrorLogged?.Invoke(this, new(message));
     }
 
-    public void Critical(Exception exception, string message = null)
+    public void Critical(Exception exception, string message)
     {
         Log.Fatal(exception, message ?? exception.Message);
         ErrorLogged?.Invoke(this, new(message));

@@ -18,8 +18,13 @@ public static class PropertiesExtensions
 
     public static bool SetPropertyFromExpression<T>(this object target,
                                                     Expression<Func<T>> expression,
+                                                    T value) =>
+        SetPropertyFromExpression(target, expression, value, null);
+
+    public static bool SetPropertyFromExpression<T>(this object target,
+                                                    Expression<Func<T>> expression,
                                                     T value,
-                                                    Action<string> onSet = null)
+                                                    Action<string> onSet)
     {
         expression.Guard(nameof(expression));
 

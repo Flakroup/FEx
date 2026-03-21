@@ -140,7 +140,7 @@ public class AsyncHelper : IAsyncHelper
             result = asyncMode switch
             {
                 AsyncMode.MainThread => await ExecuteDeferredTaskOnMainThreadAsync(func),
-                AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(func, cancellationToken: cancellationToken),
+                AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(func, AsyncOptions.ImmediateStart, cancellationToken),
                 _ => await Task.Run(func, cancellationToken)
             };
 

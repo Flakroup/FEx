@@ -7,7 +7,12 @@ public class FExErrorEventArgs : EventArgs
     public string Message { get; }
     public Exception Exception { get; }
 
-    public FExErrorEventArgs(string message, Exception exception = null)
+    public FExErrorEventArgs(string message)
+        : this(message, null)
+    {
+    }
+
+    public FExErrorEventArgs(string message, Exception exception)
     {
         Message = message;
         Exception = exception;

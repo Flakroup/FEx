@@ -30,7 +30,12 @@ public class Error : IError
         Message = message;
     }
 
-    public Error(IError innerError, string message = null)
+    public Error(IError innerError)
+        : this(innerError, null)
+    {
+    }
+
+    public Error(IError innerError, string message)
         : this(message)
     {
         InnerError = innerError;
@@ -51,13 +56,23 @@ public class Error<TErrorStatus> : Error
 {
     public TErrorStatus Status { get; }
 
-    public Error(TErrorStatus status, string message = null)
+    public Error(TErrorStatus status)
+        : this(status, (string)null)
+    {
+    }
+
+    public Error(TErrorStatus status, string message)
         : base(message)
     {
         Status = status;
     }
 
-    public Error(TErrorStatus status, IError innerError, string message = null)
+    public Error(TErrorStatus status, IError innerError)
+        : this(status, innerError, null)
+    {
+    }
+
+    public Error(TErrorStatus status, IError innerError, string message)
         : base(innerError, message)
     {
         Status = status;

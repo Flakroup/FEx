@@ -100,7 +100,9 @@ public static class TimeSpanExtensions
     /// <param name="timespan">The timespan.</param>
     /// <param name="decimals">The decimals.</param>
     /// <returns>System.String.</returns>
-    public static string GetTime(this TimeSpan timespan, int decimals = 0)
+    public static string GetTime(this TimeSpan timespan) => GetTime(timespan, 0);
+
+    public static string GetTime(this TimeSpan timespan, int decimals)
     {
         if (timespan.TotalMilliseconds < 1000)
             return $"{FillZeros(RoundDown(timespan.TotalMilliseconds, decimals), decimals)} ms.";

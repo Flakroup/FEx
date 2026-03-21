@@ -63,7 +63,9 @@ public abstract partial class AsyncInitializableViewModelBase
         IsInitialized = false;
     }
 
-    public void BeginInitialization(bool waitSynchronouslyForInitialization = false)
+    public void BeginInitialization() => BeginInitialization(false);
+
+    public void BeginInitialization(bool waitSynchronouslyForInitialization)
     {
         if (waitSynchronouslyForInitialization)
         {

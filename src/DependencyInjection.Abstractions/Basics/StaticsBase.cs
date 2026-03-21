@@ -27,7 +27,9 @@ public abstract class StaticsBase : FExInitializable
         }
     }
 
+#pragma warning disable S2360 // Optional parameters should not be used - CallerMemberName requires optional parameter
     protected static T Get<T>(Func<T> localFactory, Func<T> fallback = null, [CallerMemberName] string paramName = null)
+#pragma warning restore S2360
         where T : class
     {
         try

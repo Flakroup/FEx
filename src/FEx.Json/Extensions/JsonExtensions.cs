@@ -48,11 +48,20 @@ public static class JsonExtensions
     }
 
     public static string ToJson(this object self,
-                                JsonSerializerSettings settings = null,
-                                Formatting formatting = Formatting.None) =>
+                                JsonSerializerSettings settings,
+                                Formatting formatting) =>
         JsonConvert.SerializeObject(self, formatting, settings ?? DefaultSettings);
 
-    public static T FromJson<T>(this string json, JsonSerializerSettings settings = null, T fallback = default)
+    public static string ToJson(this object self) =>
+        ToJson(self, null, Formatting.None);
+
+    public static string ToJson(this object self, JsonSerializerSettings settings) =>
+        ToJson(self, settings, Formatting.None);
+
+    public static string ToJson(this object self, Formatting formatting) =>
+        ToJson(self, null, formatting);
+
+    public static T FromJson<T>(this string json, JsonSerializerSettings settings, T fallback)
     {
         try
         {
@@ -71,10 +80,19 @@ public static class JsonExtensions
         }
     }
 
-    public static object FromJson(this string json, JsonSerializerSettings settings = null) =>
+    public static T FromJson<T>(this string json) =>
+        FromJson<T>(json, null, default);
+
+    public static T FromJson<T>(this string json, JsonSerializerSettings settings) =>
+        FromJson<T>(json, settings, default);
+
+    public static object FromJson(this string json, JsonSerializerSettings settings) =>
         JsonConvert.DeserializeObject(json, settings ?? DefaultSettings);
 
-    public static object DeserializeFromStream(this Stream stream, JsonSerializerSettings settings = null)
+    public static object FromJson(this string json) =>
+        FromJson(json, (JsonSerializerSettings)null);
+
+    public static object DeserializeFromStream(this Stream stream, JsonSerializerSettings settings)
     {
         var serializer = JsonSerializer.Create(settings ?? DefaultSettings);
 
@@ -84,7 +102,10 @@ public static class JsonExtensions
         return serializer.Deserialize(jsonTextReader);
     }
 
-    public static T DeserializeFromStream<T>(this Stream stream, JsonSerializerSettings settings = null)
+    public static object DeserializeFromStream(this Stream stream) =>
+        DeserializeFromStream(stream, null);
+
+    public static T DeserializeFromStream<T>(this Stream stream, JsonSerializerSettings settings)
     {
         var serializer = JsonSerializer.Create(settings ?? DefaultSettings);
 
@@ -93,6 +114,9 @@ public static class JsonExtensions
 
         return serializer.Deserialize<T>(jsonTextReader);
     }
+
+    public static T DeserializeFromStream<T>(this Stream stream) =>
+        DeserializeFromStream<T>(stream, null);
 
     /// <summary>
     /// Reformats the json.
@@ -117,8 +141,11 @@ public static class JsonExtensions
     /// <returns>
     /// T
     /// </returns>
-    public static T DeserializeToken<T>(this JToken jToken, JsonSerializerSettings settings = null) =>
+    public static T DeserializeToken<T>(this JToken jToken, JsonSerializerSettings settings) =>
         jToken.ToString().FromJson<T>(settings);
+
+    public static T DeserializeToken<T>(this JToken jToken) =>
+        DeserializeToken<T>(jToken, null);
 
     public static string TrimJsonString(this string jsonValue)
     {
@@ -144,21 +171,41 @@ public static class JsonExtensions
     }
 
     public static string PrettyPrintJson(this string json,
-                                         JsonLoadSettings loadSettings = null,
-                                         JsonSerializerSettings saveSettings = null,
-                                         Formatting formatting = Formatting.Indented) =>
+                                         JsonLoadSettings loadSettings,
+                                         JsonSerializerSettings saveSettings,
+                                         Formatting formatting) =>
         JObject.Parse(json, loadSettings).ToJson(saveSettings, formatting);
 
-    public static T DeserializeFromFile<T>(this FileInfo file, JsonSerializerSettings settings = null)
+    public static string PrettyPrintJson(this string json) =>
+        PrettyPrintJson(json, null, null, Formatting.Indented);
+
+    public static string PrettyPrintJson(this string json, JsonLoadSettings loadSettings) =>
+        PrettyPrintJson(json, loadSettings, null, Formatting.Indented);
+
+    public static string PrettyPrintJson(this string json,
+                                         JsonLoadSettings loadSettings,
+                                         JsonSerializerSettings saveSettings) =>
+        PrettyPrintJson(json, loadSettings, saveSettings, Formatting.Indented);
+
+    public static T DeserializeFromFile<T>(this FileInfo file, JsonSerializerSettings settings)
     {
         using var fStream = file.OpenRead();
 
         return fStream.DeserializeFromStream<T>(settings);
     }
 
+    public static T DeserializeFromFile<T>(this FileInfo file) =>
+        DeserializeFromFile<T>(file, null);
+
     public static void SerializeToFile(this FileInfo file,
                                        object self,
-                                       JsonSerializerSettings settings = null,
-                                       Formatting formatting = Formatting.None) =>
+                                       JsonSerializerSettings settings,
+                                       Formatting formatting) =>
         File.WriteAllText(file.FullName, self.ToJson(settings, formatting));
+
+    public static void SerializeToFile(this FileInfo file, object self) =>
+        SerializeToFile(file, self, null, Formatting.None);
+
+    public static void SerializeToFile(this FileInfo file, object self, JsonSerializerSettings settings) =>
+        SerializeToFile(file, self, settings, Formatting.None);
 }

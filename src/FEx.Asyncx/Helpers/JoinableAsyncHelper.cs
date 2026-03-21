@@ -22,14 +22,20 @@ public static class JoinableAsyncHelper
     public static void SetMainJoinableTaskFactory(Thread mainThread) =>
         MainJTF = GetFactory(mainThread.Guard(nameof(mainThread)), true);
 
+    public static Task DelayWithoutDeadlockAsync(int millisecondsDelay) =>
+        DelayWithoutDeadlockAsync(millisecondsDelay, default);
+
     public static async Task DelayWithoutDeadlockAsync(int millisecondsDelay,
-                                                       CancellationToken cancellationToken = default) =>
+                                                       CancellationToken cancellationToken) =>
         await AwaitWithoutDeadlockAsync(() => Task.Delay(millisecondsDelay, cancellationToken));
 
     public static void DelayWithoutDeadlock(int millisecondsDelay) =>
         AwaitWithoutDeadlock(() => Task.Delay(millisecondsDelay));
 
-    public static async Task AwaitWithoutDeadlockAsync(Func<Task> func, bool onMainThread = false)
+    public static Task AwaitWithoutDeadlockAsync(Func<Task> func) =>
+        AwaitWithoutDeadlockAsync(func, false);
+
+    public static async Task AwaitWithoutDeadlockAsync(Func<Task> func, bool onMainThread)
     {
         var jtf = onMainThread
             ? MainJTF
@@ -38,7 +44,10 @@ public static class JoinableAsyncHelper
         await await jtf.RunAsync(func);
     }
 
-    public static void AwaitWithoutDeadlock(Func<Task> func, bool onMainThread = false)
+    public static void AwaitWithoutDeadlock(Func<Task> func) =>
+        AwaitWithoutDeadlock(func, false);
+
+    public static void AwaitWithoutDeadlock(Func<Task> func, bool onMainThread)
     {
         var jtf = onMainThread
             ? MainJTF
@@ -47,7 +56,10 @@ public static class JoinableAsyncHelper
         jtf.Run(func);
     }
 
-    public static async Task<T> AwaitWithoutDeadlockAsync<T>(Func<Task<T>> func, bool onMainThread = false)
+    public static Task<T> AwaitWithoutDeadlockAsync<T>(Func<Task<T>> func) =>
+        AwaitWithoutDeadlockAsync(func, false);
+
+    public static async Task<T> AwaitWithoutDeadlockAsync<T>(Func<Task<T>> func, bool onMainThread)
     {
         var jtf = onMainThread
             ? MainJTF
@@ -56,7 +68,10 @@ public static class JoinableAsyncHelper
         return await await jtf.RunAsync(func);
     }
 
-    public static T AwaitWithoutDeadlock<T>(Func<Task<T>> func, bool onMainThread = false)
+    public static T AwaitWithoutDeadlock<T>(Func<Task<T>> func) =>
+        AwaitWithoutDeadlock(func, false);
+
+    public static T AwaitWithoutDeadlock<T>(Func<Task<T>> func, bool onMainThread)
     {
         var jtf = onMainThread
             ? MainJTF
@@ -65,7 +80,9 @@ public static class JoinableAsyncHelper
         return jtf.Run(func);
     }
 
-    public static JoinableTaskFactoryHandler GetFactory(Thread thread = null, bool replace = false)
+    public static JoinableTaskFactoryHandler GetFactory() => GetFactory(null, false);
+
+    public static JoinableTaskFactoryHandler GetFactory(Thread thread, bool replace)
     {
         var key = thread?.ManagedThreadId ?? Environment.CurrentManagedThreadId;
         var func = () => GetNew(thread);

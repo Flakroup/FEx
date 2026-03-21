@@ -30,8 +30,11 @@ public abstract class AsyncWorkersPool<TWorker, TResult> : AsyncInitializable
         BeginInitialization();
     }
 
+    public Task<TResult> ExecuteOnPoolAsync(Func<TWorker, string, Task<TResult>> func) =>
+        ExecuteOnPoolAsync(func, null);
+
     public async Task<TResult> ExecuteOnPoolAsync(Func<TWorker, string, Task<TResult>> func,
-                                                  Func<Guid, string> getId = null)
+                                                  Func<Guid, string> getId)
     {
         var guid = Guid.NewGuid();
         var id = getId?.Invoke(guid) ?? guid.ToString();

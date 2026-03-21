@@ -77,7 +77,9 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         IsInitialized = false;
     }
 
-    public void BeginInitialization(bool waitSynchronouslyForInitialization = false)
+    public void BeginInitialization() => BeginInitialization(false);
+
+    public void BeginInitialization(bool waitSynchronouslyForInitialization)
     {
         if (waitSynchronouslyForInitialization)
         {

@@ -73,7 +73,9 @@ public sealed class AsyncProcessingQueue : IDisposable
 #endif
     }
 
-    public AsyncProcessingQueue(uint limit = 10)
+    public AsyncProcessingQueue() : this(10) { }
+
+    public AsyncProcessingQueue(uint limit)
     {
         _semaphore = new();
         _signal = new();
@@ -92,7 +94,9 @@ public sealed class AsyncProcessingQueue : IDisposable
     /// Schedules a task in FIFO order.
     /// </summary>
     /// <returns>Task that completes when the scheduled task finishes</returns>
-    public async Task EnqueueAsync(Func<Task> taskFunc, CancellationToken cancellationToken = default)
+    public Task EnqueueAsync(Func<Task> taskFunc) => EnqueueAsync(taskFunc, default);
+
+    public async Task EnqueueAsync(Func<Task> taskFunc, CancellationToken cancellationToken)
     {
         await GateAsync(cancellationToken);
 
@@ -111,7 +115,9 @@ public sealed class AsyncProcessingQueue : IDisposable
     /// Schedules a task with result in FIFO order.
     /// </summary>
     /// <returns>Task that completes when the scheduled task finishes</returns>
-    public async Task<T> EnqueueAsync<T>(Func<Task<T>> taskFunc, CancellationToken cancellationToken = default)
+    public Task<T> EnqueueAsync<T>(Func<Task<T>> taskFunc) => EnqueueAsync(taskFunc, default);
+
+    public async Task<T> EnqueueAsync<T>(Func<Task<T>> taskFunc, CancellationToken cancellationToken)
     {
         await GateAsync(cancellationToken);
 

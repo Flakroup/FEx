@@ -10,7 +10,12 @@ namespace FEx.Agnostics.Collections.Concurrent;
 [Serializable]
 public class ConcurrentSortableList<T> : ConcurrentList<T> where T : IComparable<T>
 {
-    public ConcurrentSortableList(IEnumerable<T> collection = null)
+    public ConcurrentSortableList()
+        : this(null)
+    {
+    }
+
+    public ConcurrentSortableList(IEnumerable<T> collection)
         : base(collection)
     {
     }

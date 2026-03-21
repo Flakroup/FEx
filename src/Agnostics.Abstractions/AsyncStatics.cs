@@ -10,9 +10,15 @@ public static class AsyncStatics
 {
     public static TimeSpan DefaultDelay { get; set; } = TimeSpan.FromMilliseconds(25); //todo move to conf class
 
+    public static Task ExecuteOnThreadPoolAsync(Action action) =>
+        ExecuteOnThreadPoolAsync(action, AsyncOptions.ImmediateStart);
+
+    public static Task ExecuteOnThreadPoolAsync(Action action, AsyncOptions options) =>
+        ExecuteOnThreadPoolAsync(action, options, default);
+
     public static async Task ExecuteOnThreadPoolAsync(Action action,
-                                                      AsyncOptions options = AsyncOptions.ImmediateStart,
-                                                      CancellationToken cancellationToken = default)
+                                                      AsyncOptions options,
+                                                      CancellationToken cancellationToken)
     {
         if (options.HasFlagFast(AsyncOptions.ImmediateStart))
         {
@@ -27,9 +33,15 @@ public static class AsyncStatics
         await new TaskFactory(TaskScheduler.Default).StartNew(action, cancellationToken);
     }
 
+    public static Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func) =>
+        ExecuteOnThreadPoolAsync(func, AsyncOptions.ImmediateStart);
+
+    public static Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func, AsyncOptions options) =>
+        ExecuteOnThreadPoolAsync(func, options, default);
+
     public static async Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func,
-                                                            AsyncOptions options = AsyncOptions.ImmediateStart,
-                                                            CancellationToken cancellationToken = default)
+                                                            AsyncOptions options,
+                                                            CancellationToken cancellationToken)
     {
         var argumentType = typeof(T);
 
@@ -46,8 +58,11 @@ public static class AsyncStatics
         return await new TaskFactory(TaskScheduler.Default).StartNew(func, cancellationToken);
     }
 
+    public static Task ExecuteTaskOnThreadPoolAsync(Func<Task> func) =>
+        ExecuteTaskOnThreadPoolAsync(func, AsyncOptions.ImmediateStart);
+
     public static async Task ExecuteTaskOnThreadPoolAsync(Func<Task> func,
-                                                          AsyncOptions options = AsyncOptions.ImmediateStart)
+                                                          AsyncOptions options)
     {
         var effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
             ? () => Task.Run(func)
@@ -63,8 +78,11 @@ public static class AsyncStatics
         await await new TaskFactory(TaskScheduler.Default).StartNew(effectiveFunc);
     }
 
+    public static Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> func) =>
+        ExecuteTaskOnThreadPoolAsync(func, AsyncOptions.ImmediateStart);
+
     public static async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> func,
-                                                                AsyncOptions options = AsyncOptions.ImmediateStart)
+                                                                AsyncOptions options)
     {
         var effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
             ? () => Task.Run(func)
@@ -92,7 +110,10 @@ public static class AsyncStatics
     /// The provided
     /// <paramref name="cancellationToken">cancellationToken</paramref> has already been disposed.
     /// </exception>
-    public static async Task DelayAsync(int millisecondsDelay, CancellationToken cancellationToken = default) =>
+    public static Task DelayAsync(int millisecondsDelay) =>
+        DelayAsync(millisecondsDelay, default);
+
+    public static async Task DelayAsync(int millisecondsDelay, CancellationToken cancellationToken) =>
         await ExecuteTaskOnThreadPoolAsync(() => Task.Delay(millisecondsDelay, cancellationToken));
 
     /// <summary>Creates a cancellable task that completes after a specified time interval.</summary>
@@ -115,7 +136,10 @@ public static class AsyncStatics
     /// disposed.
     /// </exception>
     /// <returns>A task that represents the time delay.</returns>
-    public static async Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken = default) =>
+    public static Task DelayAsync(TimeSpan delay) =>
+        DelayAsync(delay, default);
+
+    public static async Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken) =>
         await ExecuteTaskOnThreadPoolAsync(() => SafeDelayAsync(delay, cancellationToken));
 
     /// <summary>

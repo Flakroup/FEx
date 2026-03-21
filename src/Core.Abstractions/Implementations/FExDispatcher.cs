@@ -93,7 +93,7 @@ public abstract class FExDispatcher : IFExDispatcher
     }
 
     /// <inheritdoc />
-    public virtual void SendInContext(Action action, object sender, uint? timeout = 3000)
+    public virtual void SendInContext(Action action, object sender, uint? timeout)
     {
         var isInCtorOrMainContext = IsInCreationContext() || IsInMainContext();
 

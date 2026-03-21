@@ -12,7 +12,12 @@ public class FExSubject<T> : IFExSubject<T>
 
     private bool _isDisposed;
 
-    public FExSubject(ISubject<T> subject = null)
+    public FExSubject()
+        : this(null)
+    {
+    }
+
+    public FExSubject(ISubject<T> subject)
     {
         _subject = subject ?? new Subject<T>();
     }

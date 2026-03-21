@@ -19,7 +19,7 @@ public class DeadlockMonitor : IDeadlockMonitor
         _logger = logger;
     }
 
-    public void Execute(Action action, StackTrace stackTrace = null, uint timeout = 3000)
+    public void Execute(Action action, StackTrace stackTrace, uint timeout)
     {
         stackTrace ??= _stackTraceProvider.GetStackTrace();
 
@@ -36,7 +36,7 @@ public class DeadlockMonitor : IDeadlockMonitor
         }
     }
 
-    private void Callback(object state, uint timeout = 3000)
+    private void Callback(object state, uint timeout)
     {
         var stackTrace = (StackTrace)state;
 

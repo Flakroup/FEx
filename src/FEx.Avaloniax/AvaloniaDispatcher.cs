@@ -54,5 +54,5 @@ public class AvaloniaDispatcher : FExDispatcher
     public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null) =>
         await Dispatcher.InvokeAsync(funcTask);
 
-    public override void SendInContext(Action action, object sender, uint? timeout = 3000) => Dispatcher.Invoke(action);
+    public override void SendInContext(Action action, object sender, uint? timeout) => Dispatcher.Invoke(action);
 }

@@ -5,7 +5,7 @@ namespace FEx.WebScraping.Extensions;
 
 public static class HtmlDocumentExtensions
 {
-    public static string SaveToFile(this HtmlDocument doc, string path = null)
+    public static string SaveToFile(this HtmlDocument doc, string path)
     {
         path ??= $"{Path.GetTempFileName()}.html";
 
@@ -13,4 +13,7 @@ public static class HtmlDocumentExtensions
 
         return path;
     }
+
+    public static string SaveToFile(this HtmlDocument doc) =>
+        SaveToFile(doc, null);
 }

@@ -4,6 +4,7 @@ using FEx.Agnostics.Abstractions.Helpers;
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.DependencyInjection.Abstractions.Basics;
+using FEx.DependencyInjection.Abstractions.Extensions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
@@ -185,7 +186,9 @@ public class FExServiceProvider : IFExServiceProvider
     /// <br />
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>
-    public static T GetOrDefault<T>(T fallback = default) => ServiceContainer.ResolveOrDefault(fallback);
+    public static T GetOrDefault<T>() => ServiceContainer.ResolveOrDefault(default(T));
+
+    public static T GetOrDefault<T>(T fallback) => ServiceContainer.ResolveOrDefault(fallback);
 
     /// <summary>
     /// Disposes the container.
@@ -206,8 +209,16 @@ public class FExServiceProvider : IFExServiceProvider
     /// </summary>
     /// <typeparam name="TContainer"></typeparam>
     /// <returns></returns>
-    public static async ValueTask<TContainer> InitializeAsync<TContainer>(IServiceCollection services = null,
-                                                                          Action<TContainer> configureContainer = null)
+    public static ValueTask<TContainer> InitializeAsync<TContainer>()
+        where TContainer : class, IDisposable, new() =>
+        InitializeAsync<TContainer>(null, null);
+
+    public static ValueTask<TContainer> InitializeAsync<TContainer>(IServiceCollection services)
+        where TContainer : class, IDisposable, new() =>
+        InitializeAsync<TContainer>(services, null);
+
+    public static async ValueTask<TContainer> InitializeAsync<TContainer>(IServiceCollection services,
+                                                                          Action<TContainer> configureContainer)
         where TContainer : class, IDisposable, new()
     {
         // Idempotent: return existing container if already initialized with same type

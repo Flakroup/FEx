@@ -118,31 +118,31 @@ public class RegistryService : IRegistryService
             : null;
     }
 
-    public RegistryKey GetClassesRootSubKey(string subKey, bool writable = true) =>
+    public RegistryKey GetClassesRootSubKey(string subKey, bool writable) =>
         RunClassesRootFunc(lm => GetSubKey(lm, subKey, writable));
 
-    public RegistryKey GetLocalMachineSubKey(string subKey, bool writable = true) =>
+    public RegistryKey GetLocalMachineSubKey(string subKey, bool writable) =>
         RunLocalMachineFunc(lm => GetSubKey(lm, subKey, writable));
 
-    public RegistryKey GetCurrentUserSubKey(string subKey, bool writable = true) =>
+    public RegistryKey GetCurrentUserSubKey(string subKey, bool writable) =>
         RunCurrentUserFunc(cu => GetSubKey(cu, subKey, writable));
 
-    public RegistryKey GetSubKey(RegistryKey registry, string subKey, bool writable = true) =>
+    public RegistryKey GetSubKey(RegistryKey registry, string subKey, bool writable) =>
         registry.OpenSubKey(subKey, writable);
 
-    public RegistryKey GetOrAddCurrentUserSubKey(string subKey, bool writable = true) =>
+    public RegistryKey GetOrAddCurrentUserSubKey(string subKey, bool writable) =>
         RunCurrentUserFunc(cu => GetOrAddSubKey(cu, subKey, writable));
 
-    public RegistryKey GetOrAddLocalMachineSubKey(string subKey, bool writable = true) =>
+    public RegistryKey GetOrAddLocalMachineSubKey(string subKey, bool writable) =>
         RunLocalMachineFunc(lm => GetOrAddSubKey(lm, subKey, writable));
 
-    public void SetStartup(string appName, string executablePath, bool enable, bool global = false)
+    public void SetStartup(string appName, string executablePath, bool enable, bool global)
     {
         const string runKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
 
         using var startupKey = global
-            ? GetOrAddLocalMachineSubKey(runKey)
-            : GetOrAddCurrentUserSubKey(runKey);
+            ? GetOrAddLocalMachineSubKey(runKey, true)
+            : GetOrAddCurrentUserSubKey(runKey, true);
 
         if (enable)
             startupKey.SetValue(appName, executablePath);
@@ -213,7 +213,7 @@ public class RegistryService : IRegistryService
 
     public string GetOrAddRegistryKeyStringValue(string path, string keyName, Func<string> getNewValue)
     {
-        using var reg = GetOrAddCurrentUserSubKey(path);
+        using var reg = GetOrAddCurrentUserSubKey(path, true);
 
         if (PlatformInfoProvider.IsWindows
             && !reg.GetValueNames().Contains(keyName))

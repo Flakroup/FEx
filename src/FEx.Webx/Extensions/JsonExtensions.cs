@@ -11,10 +11,21 @@ namespace FEx.Webx.Extensions;
 
 public static class JsonExtensions
 {
+    public static Task<T> DeserializeRemoteJsonAsync<T>(this Uri url) =>
+        DeserializeRemoteJsonAsync<T>(url, null, false, default);
+
+    public static Task<T> DeserializeRemoteJsonAsync<T>(this Uri url, JsonSerializerSettings settings) =>
+        DeserializeRemoteJsonAsync<T>(url, settings, false, default);
+
+    public static Task<T> DeserializeRemoteJsonAsync<T>(this Uri url,
+                                                        JsonSerializerSettings settings,
+                                                        bool checkNetAvailability) =>
+        DeserializeRemoteJsonAsync<T>(url, settings, checkNetAvailability, default);
+
     public static async Task<T> DeserializeRemoteJsonAsync<T>(this Uri url,
-                                                              JsonSerializerSettings settings = null,
-                                                              bool checkNetAvailability = false,
-                                                              CancellationToken cancellationToken = default)
+                                                              JsonSerializerSettings settings,
+                                                              bool checkNetAvailability,
+                                                              CancellationToken cancellationToken)
     {
         T res = default;
 

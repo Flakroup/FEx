@@ -37,8 +37,11 @@ public class FExCookieJar : IReadOnlyCollection<FlurlCookie>
     /// Important for Max-Age to be enforced correctly.
     /// </param>
     public FExCookieJar
-        AddOrReplace(string name, object value, string originUrl, DateTimeOffset? dateReceived = null) =>
+        AddOrReplace(string name, object value, string originUrl, DateTimeOffset? dateReceived) =>
         AddOrReplace(new(name, value.ToInvariantString(), originUrl, dateReceived));
+
+    public FExCookieJar AddOrReplace(string name, object value, string originUrl) =>
+        AddOrReplace(name, value, originUrl, null);
 
     /// <summary>
     /// Adds a cookie to the jar or replaces one with the same Name/Domain/Path.

@@ -9,7 +9,7 @@ public interface IConfigurationService
     Dictionary<string, string> AppSettings { get; }
     IConfigurationRoot Configuration { get; }
 
-    void Build(IEnumerable<IConfigurationSource> sources = null);
-    bool? GetBoolSetting(string key, bool? defaultValue = null);
+    void Build(IEnumerable<IConfigurationSource> sources);
+    bool? GetBoolSetting(string key, bool? defaultValue);
     T GetSetting<T>(string key, Func<string, T> func);
 }

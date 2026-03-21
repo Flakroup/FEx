@@ -39,9 +39,9 @@ public static class FExConfigurationExtensions
             : appSettings;
     }
 
-    public static TConf GetBindedConfiguration<TConf>(string sectionKey = null,
-                                                      string basePath = null,
-                                                      string settingsFilePath = "appsettings.json")
+    public static TConf GetBindedConfiguration<TConf>(string sectionKey,
+                                                      string basePath,
+                                                      string settingsFilePath)
     {
         var builder = new ConfigurationBuilder();
         builder.SetBasePath(basePath ?? Directory.GetCurrentDirectory()).AddJsonFile(settingsFilePath, false);
@@ -58,22 +58,38 @@ public static class FExConfigurationExtensions
         return appConfiguration;
     }
 
+    public static TConf GetBindedConfiguration<TConf>() =>
+        GetBindedConfiguration<TConf>(null, null, "appsettings.json");
+
+    public static TConf GetBindedConfiguration<TConf>(string sectionKey) =>
+        GetBindedConfiguration<TConf>(sectionKey, null, "appsettings.json");
+
+    public static TConf GetBindedConfiguration<TConf>(string sectionKey, string basePath) =>
+        GetBindedConfiguration<TConf>(sectionKey, basePath, "appsettings.json");
+
     public static void BindJsonNet(this IConfigurationSection config,
                                    object instance,
-                                   Func<string, string> jsonFunc = null)
+                                   Func<string, string> jsonFunc)
     {
         var jsonText = GetSerializedConfig(config, jsonFunc);
 
         JsonConvert.PopulateObject(jsonText, instance);
     }
 
-    public static T BindJsonNet<T>(this IConfigurationSection config, Func<string, string> jsonFunc = null)
+    public static void BindJsonNet(this IConfigurationSection config, object instance) =>
+        BindJsonNet(config, instance, null);
+
+    public static T BindJsonNet<T>(this IConfigurationSection config, Func<string, string> jsonFunc)
         where T : new()
     {
         var jsonText = GetSerializedConfig(config, jsonFunc);
 
         return jsonText.FromJson<T>() ?? new T();
     }
+
+    public static T BindJsonNet<T>(this IConfigurationSection config)
+        where T : new() =>
+        BindJsonNet<T>(config, null);
 
     private static string GetMemberPath(Expression expression)
     {

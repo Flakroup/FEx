@@ -13,7 +13,7 @@ public class ConfigurationService : IConfigurationService
     public IConfigurationRoot Configuration { get; private set; }
     public Dictionary<string, string> AppSettings { get; private set; }
 
-    public void Build(IEnumerable<IConfigurationSource> sources = null)
+    public void Build(IEnumerable<IConfigurationSource> sources)
     {
         if (Configuration is null)
         {
@@ -39,7 +39,7 @@ public class ConfigurationService : IConfigurationService
         return func(AppSettings[key]);
     }
 
-    public bool? GetBoolSetting(string key, bool? defaultValue = null)
+    public bool? GetBoolSetting(string key, bool? defaultValue)
     {
         EnsureConfiguration();
 
@@ -61,6 +61,6 @@ public class ConfigurationService : IConfigurationService
     private void EnsureConfiguration()
     {
         if (Configuration is null)
-            Build();
+            Build(null);
     }
 }

@@ -468,6 +468,7 @@ ehthumbs_vista.db
 .cursorindexingignore
 .cursorrules
 CLAUDE.md
+.claude/
 
 # Internal docs
 Migration.md

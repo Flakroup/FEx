@@ -16,7 +16,7 @@ public class FExInternetConnectionHelper : IFExInternetConnectionHelper
     }
 
     /// <inheritdoc />
-    public bool HasInternet(bool triggersCallbackOnLackOfInternet = true)
+    public bool HasInternet(bool triggersCallbackOnLackOfInternet)
     {
         if (_deviceHelper.HasInternet)
             return true;

@@ -45,7 +45,7 @@ public class LocalStorageService : ILocalStorageService
     public void DeleteExpiredFiles() => DbLock.Write(() => _fileLocalStorageService.DeleteExpiredFiles());
 
     /// <inheritdoc />
-    public IReadOnlyList<T> GetAll<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem =>
+    public IReadOnlyList<T> GetAll<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem =>
         DbLock.ReadWithResult(() =>
         {
             try
@@ -64,7 +64,7 @@ public class LocalStorageService : ILocalStorageService
         });
 
     /// <inheritdoc />
-    public T FirstOrDefault<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem
+    public T FirstOrDefault<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem
     {
         predicate ??= GetTrueExpression<T>();
 
@@ -81,7 +81,7 @@ public class LocalStorageService : ILocalStorageService
     public bool Update<T>(T item) where T : ICacheableItem => DbLock.WriteWithResult(() => Context.Update(item));
 
     /// <inheritdoc />
-    public bool Upsert<T>(T item, Expression<Func<T, bool>> predicate = null) where T : ICacheableItem =>
+    public bool Upsert<T>(T item, Expression<Func<T, bool>> predicate) where T : ICacheableItem =>
         DbLock.WriteWithResult(() =>
         {
             if (predicate is null)
@@ -94,7 +94,7 @@ public class LocalStorageService : ILocalStorageService
         });
 
     /// <inheritdoc />
-    public void Upsert<T>(IEnumerable<T> items, Expression<Func<T, bool>> predicate = null) where T : ICacheableItem =>
+    public void Upsert<T>(IEnumerable<T> items, Expression<Func<T, bool>> predicate) where T : ICacheableItem =>
         DbLock.Write(() =>
         {
             if (predicate is null)
@@ -116,7 +116,7 @@ public class LocalStorageService : ILocalStorageService
         DbLock.WriteWithResult(() => items.All(item => Context.Delete<T>(item.LocalStorageId)));
 
     /// <inheritdoc />
-    public bool DeleteAll<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem =>
+    public bool DeleteAll<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem =>
         DbLock.WriteWithResult(() => InternalDeleteAll(predicate));
 
     /// <inheritdoc />
@@ -124,7 +124,7 @@ public class LocalStorageService : ILocalStorageService
     {
         DbLock.Write(() =>
         {
-            InternalDeleteAll<T>();
+            InternalDeleteAll<T>(null);
             Context.Insert(items);
         });
     }
@@ -133,7 +133,7 @@ public class LocalStorageService : ILocalStorageService
     public BsonValue ReplaceWith<T>(T item) where T : ICacheableItem =>
         DbLock.WriteWithResult(() =>
         {
-            InternalDeleteAll<T>();
+            InternalDeleteAll<T>(null);
 
             return Context.Insert(item);
         });
@@ -151,7 +151,7 @@ public class LocalStorageService : ILocalStorageService
         return Expression.Lambda<Func<T, bool>>(Expression.Constant(true), parameter);
     }
 
-    private bool InternalDeleteAll<T>(Expression<Func<T, bool>> predicate = null) where T : ICacheableItem
+    private bool InternalDeleteAll<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem
     {
         predicate ??= GetTrueExpression<T>();
 

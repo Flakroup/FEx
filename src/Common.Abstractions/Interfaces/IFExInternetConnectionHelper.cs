@@ -8,5 +8,5 @@ public interface IFExInternetConnectionHelper
     /// </summary>
     /// <param name="triggersCallbackOnLackOfInternet">If set to <c>true</c> triggers callback method</param>
     /// <returns>True when it is connected, false in case of any exception</returns>
-    bool HasInternet(bool triggersCallbackOnLackOfInternet = true);
+    bool HasInternet(bool triggersCallbackOnLackOfInternet);
 }

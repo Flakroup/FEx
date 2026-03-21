@@ -22,10 +22,15 @@ public class StatusHub : IDisposable, IStatusHub
 
     protected IDisposableProgress<(Guid key, string status, NotifyCollectionChangedAction action)> StatusChange { get; }
 
+    public StatusHub(Guid key)
+        : this(key, null, null, null)
+    {
+    }
+
     public StatusHub(Guid key,
-                     Action<Guid, string> onStatusAdded = null,
-                     Action<Guid, string> onStatusRemoved = null,
-                     Action onStatusesReset = null)
+                     Action<Guid, string> onStatusAdded,
+                     Action<Guid, string> onStatusRemoved,
+                     Action onStatusesReset)
     {
         Key = key;
         Statuses = new();
@@ -51,7 +56,9 @@ public class StatusHub : IDisposable, IStatusHub
             Reset += (_, _) => onStatusesReset();
     }
 
-    public Guid AddStatus(string status, bool unique = true)
+    public Guid AddStatus(string status) => AddStatus(status, true);
+
+    public Guid AddStatus(string status, bool unique)
     {
         Guid? key = null;
 
@@ -92,7 +99,9 @@ public class StatusHub : IDisposable, IStatusHub
 
     public IList<string> GetStatuses() => Statuses.Values.ToArray();
 
-    public string GetStatusString(string separator = null)
+    public string GetStatusString() => GetStatusString(null);
+
+    public string GetStatusString(string separator)
     {
         if (Statuses.IsEmpty)
             return null;
@@ -115,7 +124,9 @@ public class StatusHub : IDisposable, IStatusHub
         return sb.ToString();
     }
 
-    public DisposableAction Log(string status, bool unique = true)
+    public DisposableAction Log(string status) => Log(status, true);
+
+    public DisposableAction Log(string status, bool unique)
     {
         var statusKey = AddStatus(status, unique);
 

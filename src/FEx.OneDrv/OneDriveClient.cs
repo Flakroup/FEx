@@ -26,7 +26,10 @@ public class OneDriveClient
         };
     }
 
-    public async Task<List<Drive>> ListDrivesAsync(CancellationToken cancellationToken = default)
+    public Task<List<Drive>> ListDrivesAsync() =>
+        ListDrivesAsync(CancellationToken.None);
+
+    public async Task<List<Drive>> ListDrivesAsync(CancellationToken cancellationToken)
     {
         var drives = new List<Drive>();
 

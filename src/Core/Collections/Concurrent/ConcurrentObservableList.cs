@@ -45,7 +45,12 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
     /// to accommodate the number of elements copied.
     /// </summary>
     /// <param name="collection">The collection whose elements are copied to the new list.</param>
-    public ConcurrentObservableList(IEnumerable<T> collection = null)
+    public ConcurrentObservableList()
+        : this(null)
+    {
+    }
+
+    public ConcurrentObservableList(IEnumerable<T> collection)
         : base(collection)
     {
 #pragma warning disable CS0618 // Type or member is obsolete

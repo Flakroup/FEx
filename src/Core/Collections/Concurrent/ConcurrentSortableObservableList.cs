@@ -11,7 +11,12 @@ namespace FEx.Core.Collections.Concurrent;
 [Serializable]
 public class ConcurrentSortableObservableList<T> : ConcurrentObservableList<T> where T : IComparable<T>
 {
-    public ConcurrentSortableObservableList(IEnumerable<T> collection = null)
+    public ConcurrentSortableObservableList()
+        : this(null)
+    {
+    }
+
+    public ConcurrentSortableObservableList(IEnumerable<T> collection)
         : base(collection)
     {
     }

@@ -11,7 +11,12 @@ public class UniqueRandomGenerator
     private readonly HashSet<int> _generatedNumbers = [];
     private readonly int _totalCount;
 
-    public UniqueRandomGenerator(int minValue = 1, int maxValue = 500)
+    public UniqueRandomGenerator()
+        : this(1, 500)
+    {
+    }
+
+    public UniqueRandomGenerator(int minValue, int maxValue)
     {
         _minValue = minValue;
         _maxValue = maxValue;

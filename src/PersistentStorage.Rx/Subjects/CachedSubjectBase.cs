@@ -19,8 +19,14 @@ public abstract class CachedSubjectBase<TData, T, TCacheable> : FExBehaviorSubje
 #endif
 
     protected CachedSubjectBase(ICacheService cacheService,
+                                ClearCacheReason clearCacheReason)
+        : this(cacheService, clearCacheReason, default)
+    {
+    }
+
+    protected CachedSubjectBase(ICacheService cacheService,
                                 ClearCacheReason clearCacheReason,
-                                TData defaultValue = default)
+                                TData defaultValue)
         : base(defaultValue)
     {
         _cacheService = cacheService;

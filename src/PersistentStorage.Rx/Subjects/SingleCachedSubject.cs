@@ -9,8 +9,14 @@ public abstract class SingleCachedSubject<T, TCacheable> : CachedSubjectBase<T, 
     where TCacheable : class, ICacheableItem
 {
     protected SingleCachedSubject(ICacheService cacheService,
+                                  ClearCacheReason clearCacheReason)
+        : this(cacheService, clearCacheReason, default)
+    {
+    }
+
+    protected SingleCachedSubject(ICacheService cacheService,
                                   ClearCacheReason clearCacheReason,
-                                  T defaultValue = default)
+                                  T defaultValue)
         : base(cacheService, clearCacheReason, defaultValue)
     {
     }

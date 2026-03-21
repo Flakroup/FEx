@@ -18,7 +18,7 @@ public interface IFExTimer : IFExNotifyPropertyChanged, IDisposable
     bool IsRunning { get; }
 
     IFExTimer WithCallback(Action callback);
-    IFExTimer WithAsyncCallback(Func<Task> asyncCallback, CancellationToken cancellationToken = default);
+    IFExTimer WithAsyncCallback(Func<Task> asyncCallback, CancellationToken cancellationToken);
     IFExTimer WithInterval(double milliseconds);
     IFExTimer WithInterval(TimeSpan interval);
 

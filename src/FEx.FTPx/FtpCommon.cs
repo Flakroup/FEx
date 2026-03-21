@@ -1,4 +1,5 @@
 ﻿using FEx.Logging;
+using FEx.MVVM.Abstractions.Extensions;
 using FEx.MVVM.Abstractions.Interfaces;
 using FluentFTP;
 using System;

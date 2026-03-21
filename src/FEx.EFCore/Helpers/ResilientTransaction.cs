@@ -22,11 +22,14 @@ public class ResilientTransaction
         _logger = logger;
     }
 
+    public Task<T> ExecuteAsync<T>(DbContext context, Func<Task<T>> action, string id) =>
+        ExecuteAsync(context, action, id, IsolationLevel.Unspecified, null);
+
     public async Task<T> ExecuteAsync<T>(DbContext context,
                                          Func<Task<T>> action,
                                          string id,
-                                         IsolationLevel isolationLevel = IsolationLevel.Unspecified,
-                                         int? delayOnTimeout = null)
+                                         IsolationLevel isolationLevel,
+                                         int? delayOnTimeout)
     {
         var strategy = context.Database.CreateExecutionStrategy();
 
@@ -34,11 +37,14 @@ public class ResilientTransaction
             RunTransactionAsync(context, action, id, isolationLevel, delayOnTimeout));
     }
 
+    public Task<T> ExecuteAsync<T>(DbContext context, Func<T> action, string id) =>
+        ExecuteAsync(context, action, id, IsolationLevel.Unspecified, null);
+
     public async Task<T> ExecuteAsync<T>(DbContext context,
                                          Func<T> action,
                                          string id,
-                                         IsolationLevel isolationLevel = IsolationLevel.Unspecified,
-                                         int? delayOnTimeout = null)
+                                         IsolationLevel isolationLevel,
+                                         int? delayOnTimeout)
     {
         var strategy = context.Database.CreateExecutionStrategy();
 

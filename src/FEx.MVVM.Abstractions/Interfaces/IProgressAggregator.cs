@@ -21,7 +21,7 @@ public interface IProgressAggregator : IProgressStatus, IDisposable
     /// <param name="value">Progress value to be added or set</param>
     /// <param name="maximum">Maximal allowed value.</param>
     /// <param name="mode">Progress change mode. ProgressChangeMode.End sets ProgressValue to current ProgressMaximum.</param>
-    void PrgSet(double? value, double? maximum = null, ProgressChangeMode mode = ProgressChangeMode.Set);
+    void PrgSet(double? value, double? maximum, ProgressChangeMode mode);
 
     /// <summary>
     /// Sets progress value of the ProgressBar to the maximal value
@@ -32,7 +32,7 @@ public interface IProgressAggregator : IProgressStatus, IDisposable
     /// Increments current progress value of the ProgressBar
     /// </summary>
     /// <param name="addedValue">The added value.</param>
-    void PrgAdd(double addedValue = 1);
+    void PrgAdd(double addedValue);
 
     /// <summary>
     /// Adds value to the maximum of progress value.

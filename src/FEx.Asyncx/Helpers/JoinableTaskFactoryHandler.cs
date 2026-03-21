@@ -20,8 +20,10 @@ public class JoinableTaskFactoryHandler
 
     /// <inheritdoc
     ///     cref="M:Microsoft.VisualStudio.Threading.JoinableTaskFactory.Run``1(System.Func{System.Threading.Tasks.Task{``0}},Microsoft.VisualStudio.Threading.JoinableTaskCreationOptions)" />
+    public void Run(Func<Task> asyncMethod) => Run(asyncMethod, JoinableTaskCreationOptions.None);
+
     public void Run(Func<Task> asyncMethod,
-                    JoinableTaskCreationOptions creationOptions = JoinableTaskCreationOptions.None)
+                    JoinableTaskCreationOptions creationOptions)
     {
         if (!_semaphore.Wait(TimeSpan.Zero))
             throw new InvalidOperationException("This operation will lead to deadlock");
@@ -36,8 +38,10 @@ public class JoinableTaskFactoryHandler
         }
     }
 
+    public T Run<T>(Func<Task<T>> asyncMethod) => Run(asyncMethod, JoinableTaskCreationOptions.None);
+
     public T Run<T>(Func<Task<T>> asyncMethod,
-                    JoinableTaskCreationOptions creationOptions = JoinableTaskCreationOptions.None)
+                    JoinableTaskCreationOptions creationOptions)
     {
         if (!_semaphore.Wait(TimeSpan.Zero))
             throw new InvalidOperationException("This operation will lead to deadlock");
@@ -54,10 +58,12 @@ public class JoinableTaskFactoryHandler
 
     /// <inheritdoc
     ///     cref="M:Microsoft.VisualStudio.Threading.JoinableTaskFactory.RunAsync``1(System.Func{System.Threading.Tasks.Task{``0}},System.Boolean,System.String,Microsoft.VisualStudio.Threading.JoinableTaskCreationOptions)" />
+    public Task<JoinableTask> RunAsync(Func<Task> asyncMethod) =>
+        RunAsync(asyncMethod, null, JoinableTaskCreationOptions.None);
+
     public async Task<JoinableTask> RunAsync(Func<Task> asyncMethod,
-                                             string parentToken = null,
-                                             JoinableTaskCreationOptions creationOptions =
-                                                 JoinableTaskCreationOptions.None)
+                                             string parentToken,
+                                             JoinableTaskCreationOptions creationOptions)
     {
         if (!await _semaphore.WaitAsync(TimeSpan.Zero))
             throw new InvalidOperationException("This operation will lead to deadlock");
@@ -72,10 +78,12 @@ public class JoinableTaskFactoryHandler
         }
     }
 
+    public Task<JoinableTask<T>> RunAsync<T>(Func<Task<T>> asyncMethod) =>
+        RunAsync(asyncMethod, null, JoinableTaskCreationOptions.None);
+
     public async Task<JoinableTask<T>> RunAsync<T>(Func<Task<T>> asyncMethod,
-                                                   string parentToken = null,
-                                                   JoinableTaskCreationOptions creationOptions =
-                                                       JoinableTaskCreationOptions.None)
+                                                   string parentToken,
+                                                   JoinableTaskCreationOptions creationOptions)
     {
         if (!await _semaphore.WaitAsync(TimeSpan.Zero))
             throw new InvalidOperationException("This operation will lead to deadlock");

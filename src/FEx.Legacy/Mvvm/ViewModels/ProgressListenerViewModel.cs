@@ -92,7 +92,7 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
         Watch.Restart();
     }
 
-    public void PrgSet(ProgressSnapshot snapshot) => Progress.PrgSet(snapshot.Value, snapshot.Maximum);
+    public void PrgSet(ProgressSnapshot snapshot) => Progress.PrgSet(snapshot.Value, snapshot.Maximum, ProgressChangeMode.Set);
 
     public void PrgSet(double? val, double? max = null, ProgressChangeMode mode = ProgressChangeMode.Set) =>
         Progress.PrgSet(val, max, mode);

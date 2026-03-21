@@ -101,7 +101,10 @@ public sealed class ProgressService : SubscriberBase, IProgressService
         return true;
     }
 
-    public TCon GetOrAddContainer<TCon>(bool isMain = false) where TCon : class, IProgressAggregator, new()
+    public TCon GetOrAddContainer<TCon>() where TCon : class, IProgressAggregator, new() =>
+        GetOrAddContainer<TCon>(false);
+
+    public TCon GetOrAddContainer<TCon>(bool isMain) where TCon : class, IProgressAggregator, new()
     {
         var container = ProgressStatusContainerFactory<TCon>();
         Containers.GetOrAdd(container.Id, container);

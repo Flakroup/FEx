@@ -17,7 +17,9 @@ public class AppViewLocator : IViewLocator
     /// <param name="viewModel">View model.</param>
     /// <param name="contract">Contract.</param>
     /// <returns>The view associated with the given view model.</returns>
+#pragma warning disable S2360
     public IViewFor ResolveView<T>(T viewModel, string contract = null)
+#pragma warning restore S2360
     {
         if (viewModel is null)
             throw new ArgumentNullException(nameof(viewModel));

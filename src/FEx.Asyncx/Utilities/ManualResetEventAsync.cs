@@ -36,7 +36,9 @@ public sealed class ManualResetEventAsync
     /// If you have synchronous continuations, they will run on the thread
     /// which invokes Set, unless you set this to false.
     /// </param>
-    public ManualResetEventAsync(bool isSet = false, bool runSynchronousContinuationsOnSetThread = true)
+    public ManualResetEventAsync() : this(false, true) { }
+
+    public ManualResetEventAsync(bool isSet, bool runSynchronousContinuationsOnSetThread)
     {
         _runSynchronousContinuationsOnSetThread = runSynchronousContinuationsOnSetThread;
         _completionSource = new();
@@ -54,7 +56,9 @@ public sealed class ManualResetEventAsync
     /// A task which waits for the manual reset event. Returns true if the timeout has not expired. Returns false if
     /// the timeout expired.
     /// </returns>
-    public async Task<bool> WaitAsync(TimeSpan? timeout = null, CancellationToken token = default) =>
+    public Task<bool> WaitAsync() => WaitAsync(null, default);
+
+    public async Task<bool> WaitAsync(TimeSpan? timeout, CancellationToken token) =>
         await AwaitCompletionAsync(timeout.HasValue
                 ? (int)timeout.Value.TotalMilliseconds
                 : WaitIndefinitly,

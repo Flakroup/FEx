@@ -24,9 +24,11 @@ public static class GuardExtensions
     /// Throws a <see cref="ArgumentNullException" /> when <paramref name="value" /> is a null reference.
     /// </remarks>
     [ContractAnnotation("value: null => stop")]
+#pragma warning disable S2360 // Optional parameter overload not possible - CallerMemberName requires optional string, creating ambiguity with message parameter
     public static T GuardProperty<T>([CanBeNull] this T value,
                                      string message = null,
                                      [CallerMemberName] string paramName = null) =>
+#pragma warning restore S2360
         value.Guard(static v => v is not null, paramName, message);
 
     /// <summary>
@@ -47,7 +49,11 @@ public static class GuardExtensions
     /// Throws a <see cref="ArgumentNullException" /> when <paramref name="value" /> is a null reference.
     /// </remarks>
     [ContractAnnotation("value: null => stop")]
-    public static T Guard<T>([CanBeNull] this T value, string paramName, string message = null) =>
+    public static T Guard<T>([CanBeNull] this T value, string paramName) =>
+        value.Guard(static v => v is not null, paramName, null);
+
+    [ContractAnnotation("value: null => stop")]
+    public static T Guard<T>([CanBeNull] this T value, string paramName, string message) =>
         value.Guard(static v => v is not null, paramName, message);
 
     /// <summary>
@@ -69,7 +75,11 @@ public static class GuardExtensions
     /// Throws a <see cref="ArgumentNullException" /> if the condition is false.
     /// </remarks>
     [ContractAnnotation("value: null => stop")]
-    public static T Guard<T>([CanBeNull] this T value, Func<T, bool> predicate, string paramName, string message = null)
+    public static T Guard<T>([CanBeNull] this T value, Func<T, bool> predicate, string paramName) =>
+        value.Guard(predicate, paramName, null);
+
+    [ContractAnnotation("value: null => stop")]
+    public static T Guard<T>([CanBeNull] this T value, Func<T, bool> predicate, string paramName, string message)
     {
 #if NET9_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(predicate, nameof(predicate));

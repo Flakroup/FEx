@@ -23,22 +23,22 @@ public class FExDebugLogger : IFExLogger
 
     // Trace level
     public void Trace(string message) => WriteFormattedMessage(TraceLevel, message);
-    public void Trace(Exception exception, string message = null) =>
+    public void Trace(Exception exception, string message) =>
         WriteFormattedMessage(TraceLevel, message, exception);
 
     // Debug level
     public void Debug(string message) => WriteFormattedMessage(DebugLevel, message);
-    public void Debug(Exception exception, string message = null) =>
+    public void Debug(Exception exception, string message) =>
         WriteFormattedMessage(DebugLevel, message, exception);
 
     // Information level
     public void Information(string message) => WriteFormattedMessage(InformationLevel, message);
-    public void Information(Exception exception, string message = null) =>
+    public void Information(Exception exception, string message) =>
         WriteFormattedMessage(InformationLevel, message, exception);
 
     // Warning level
     public void Warning(string message) => WriteFormattedMessage(WarningLevel, message);
-    public void Warning(Exception exception, string message = null) =>
+    public void Warning(Exception exception, string message) =>
         WriteFormattedMessage(WarningLevel, message, exception);
 
     // Error level
@@ -48,7 +48,7 @@ public class FExDebugLogger : IFExLogger
         ErrorLogged?.Invoke(this, new(message));
     }
 
-    public void Error(Exception exception, string message = null)
+    public void Error(Exception exception, string message)
     {
         WriteFormattedMessage(ErrorLevel, message, exception);
         ErrorLogged?.Invoke(this, new(message, exception));
@@ -61,7 +61,7 @@ public class FExDebugLogger : IFExLogger
         ErrorLogged?.Invoke(this, new(message));
     }
 
-    public void Critical(Exception exception, string message = null)
+    public void Critical(Exception exception, string message)
     {
         WriteFormattedMessage(CriticalLevel, message, exception);
         ErrorLogged?.Invoke(this, new(message, exception));

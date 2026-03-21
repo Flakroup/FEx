@@ -5,7 +5,12 @@ namespace FEx.Agnostics.Abstractions.Utilities;
 
 public sealed class SuppressEventsDisposable : DisposableAction
 {
-    public SuppressEventsDisposable(ISuppressEvents suppressedEventSource, Action onNoMoreSuppressedEvents = null)
+    public SuppressEventsDisposable(ISuppressEvents suppressedEventSource)
+        : this(suppressedEventSource, null)
+    {
+    }
+
+    public SuppressEventsDisposable(ISuppressEvents suppressedEventSource, Action onNoMoreSuppressedEvents)
         : base(() => Act(suppressedEventSource, onNoMoreSuppressedEvents))
     {
         ++suppressedEventSource.SuppressedEvents;

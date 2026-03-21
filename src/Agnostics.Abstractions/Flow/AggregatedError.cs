@@ -12,7 +12,12 @@ public class AggregatedError : Error
     {
     }
 
-    public AggregatedError(IReadOnlyCollection<IError> innerErrors, string message = null)
+    public AggregatedError(IReadOnlyCollection<IError> innerErrors)
+        : this(innerErrors, null)
+    {
+    }
+
+    public AggregatedError(IReadOnlyCollection<IError> innerErrors, string message)
         : base(message)
     {
         InnerErrors = innerErrors;

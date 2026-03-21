@@ -1,4 +1,5 @@
 using FEx.Agnostics.Abstractions;
+using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.BaseObjects;
 using FEx.MVVM.Abstractions;
@@ -139,7 +140,7 @@ public class SizedImageCache : NotifyPropertyChanged, IDisposable
             && ImageUpdateAction is not null
             && propertyName.IsIn(nameof(CachedImage), nameof(ImageUpdateAction)))
             ImageUpdateActionTask = AsyncStatics.ExecuteOnThreadPoolAsync(() => ImageUpdateAction(CachedImage),
-                cancellationToken: CancellationToken);
+                AsyncOptions.ImmediateStart, CancellationToken);
     }
 
     #region IDisposable

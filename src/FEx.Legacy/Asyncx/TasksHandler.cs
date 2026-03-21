@@ -86,7 +86,7 @@ public class TasksHandler : ITasksHandler
             result = asyncMode switch
             {
                 AsyncMode.MainThread => await _asyncHelper.ExecuteDeferredTaskOnMainThreadAsync(task),
-                AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(task, cancellationToken: cancellationToken),
+                AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(task, AsyncOptions.ImmediateStart, cancellationToken),
                 _ => await Task.Run(task, cancellationToken)
             };
         }

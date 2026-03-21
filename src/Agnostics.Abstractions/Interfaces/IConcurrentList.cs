@@ -32,7 +32,7 @@ public interface IConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppre
     bool AddUnique(T item);
 
     void AddUniqueRange(IEnumerable<T> range);
-    void AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector, IEqualityComparer<TKey> comparer = null);
+    void AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector, IEqualityComparer<TKey> comparer);
     bool RemoveWhere(Func<T, bool> predicate, out List<T> removedItems);
     void Replace(int index, T item);
     void ReplaceWith(IEnumerable<T> collection);
@@ -106,8 +106,8 @@ public interface IConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppre
     void Sort(Comparison<T> comparison);
 
     void SortBy<TKey>(Func<T, TKey> selector,
-                      ListSortDirection order = ListSortDirection.Ascending,
-                      IComparer<TKey> comparer = null);
+                      ListSortDirection order,
+                      IComparer<TKey> comparer);
 
     /// <summary>
     /// Suppresses all events regarding this collection while executing the specified action.
@@ -118,7 +118,7 @@ public interface IConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppre
     /// Boolean flag indicating whether collection reset event should be triggered
     /// or not
     /// </param>
-    void Combo(Action<IConcurrentList<T>> action, bool shouldTriggerCollectionReset = false);
+    void Combo(Action<IConcurrentList<T>> action, bool shouldTriggerCollectionReset);
 
     bool Combo(Func<IConcurrentList<T>, bool> shouldTriggerCollectionReset);
 

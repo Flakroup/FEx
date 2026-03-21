@@ -18,27 +18,27 @@ public interface IFExLogger
 
     // Trace level (most verbose)
     void Trace(string message);
-    void Trace(Exception exception, string message = null);
+    void Trace(Exception exception, string message);
 
     // Debug level
     void Debug(string message);
-    void Debug(Exception exception, string message = null);
+    void Debug(Exception exception, string message);
 
     // Information level
     void Information(string message);
-    void Information(Exception exception, string message = null);
+    void Information(Exception exception, string message);
 
     // Warning level
     void Warning(string message);
-    void Warning(Exception exception, string message = null);
+    void Warning(Exception exception, string message);
 
     // Error level
     void Error(string message);
-    void Error(Exception exception, string message = null);
+    void Error(Exception exception, string message);
 
     // Critical level (most severe; maps to Serilog.Fatal)
     void Critical(string message);
-    void Critical(Exception exception, string message = null);
+    void Critical(Exception exception, string message);
 
     // Structured logging: Scopes
     IDisposable BeginScope<TState>(TState state);

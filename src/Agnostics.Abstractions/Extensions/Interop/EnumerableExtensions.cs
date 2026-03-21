@@ -35,8 +35,12 @@ public static class EnumerableExtensions
     ///     </para>
     /// </remarks>
     public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
+                                                                 Func<TSource, TKey> keySelector) =>
+        DistinctBy(source, keySelector, null);
+
+    public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
                                                                  Func<TSource, TKey> keySelector,
-                                                                 IEqualityComparer<TKey> comparer = null)
+                                                                 IEqualityComparer<TKey> comparer)
 #if NET6_0_OR_GREATER
         =>
             Enumerable.DistinctBy(source, keySelector, comparer);

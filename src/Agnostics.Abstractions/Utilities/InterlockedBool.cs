@@ -18,7 +18,12 @@ public sealed class InterlockedBool
         }
     }
 
-    public InterlockedBool(bool value = false)
+    public InterlockedBool()
+        : this(false)
+    {
+    }
+
+    public InterlockedBool(bool value)
     {
         Value = value;
     }

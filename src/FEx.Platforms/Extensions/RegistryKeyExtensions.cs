@@ -5,7 +5,7 @@ namespace FEx.Platforms.Extensions;
 
 public static class RegistryKeyExtensions
 {
-    public static T GetKeyValue<T>(this RegistryKey reg, string keyName, T fallback = default)
+    public static T GetKeyValue<T>(this RegistryKey reg, string keyName, T fallback)
     {
         var value = PlatformInfoProvider.IsWindows
 #pragma warning disable CA1416
@@ -17,4 +17,7 @@ public static class RegistryKeyExtensions
             ? (T)value
             : default;
     }
+
+    public static T GetKeyValue<T>(this RegistryKey reg, string keyName) =>
+        GetKeyValue<T>(reg, keyName, default);
 }

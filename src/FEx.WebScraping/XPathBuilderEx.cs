@@ -8,7 +8,7 @@ public sealed class XPathBuilderEx : XPathBuilderBase<XPathBuilderEx>
     {
     }
 
-    public XPathBuilderEx(HtmlNode node = null)
+    public XPathBuilderEx(HtmlNode node)
         : base(node)
     {
     }

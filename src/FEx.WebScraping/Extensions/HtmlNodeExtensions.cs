@@ -20,14 +20,23 @@ public static class HtmlNodeExtensions
     /// <param name="name">The name of the attribute to get. May not be <c>null</c>.</param>
     /// <param name="def">The default value to return if not found.</param>
     /// <returns>The value of the attribute if found, the default value if not found.</returns>
-    public static string GetNodeAttributeStringValue(this HtmlNode value, string name, string def = null) =>
+    public static string GetNodeAttributeStringValue(this HtmlNode value, string name, string def) =>
         value.GetAttributeValue(name, def);
 
-    public static bool GetNodeAttributeBoolValue(this HtmlNode value, string name, bool def = false) =>
+    public static string GetNodeAttributeStringValue(this HtmlNode value, string name) =>
+        GetNodeAttributeStringValue(value, name, null);
+
+    public static bool GetNodeAttributeBoolValue(this HtmlNode value, string name, bool def) =>
         value.GetAttributeValue(name, def);
 
-    public static int GetNodeAttributeIntValue(this HtmlNode value, string name, int def = 0) =>
+    public static bool GetNodeAttributeBoolValue(this HtmlNode value, string name) =>
+        GetNodeAttributeBoolValue(value, name, false);
+
+    public static int GetNodeAttributeIntValue(this HtmlNode value, string name, int def) =>
         value.GetAttributeValue(name, def);
+
+    public static int GetNodeAttributeIntValue(this HtmlNode value, string name) =>
+        GetNodeAttributeIntValue(value, name, 0);
 
     public static string GetSrc(this HtmlNode value) => value.GetNodeAttributeStringValue(Src);
 

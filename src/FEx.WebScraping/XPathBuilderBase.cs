@@ -8,7 +8,12 @@ public abstract class XPathBuilderBase<T> where T : XPathBuilderBase<T>, new()
 {
     protected StringBuilder SB { get; }
 
-    protected XPathBuilderBase(HtmlNode node = null)
+    protected XPathBuilderBase()
+        : this(null)
+    {
+    }
+
+    protected XPathBuilderBase(HtmlNode node)
     {
         SB = new();
 

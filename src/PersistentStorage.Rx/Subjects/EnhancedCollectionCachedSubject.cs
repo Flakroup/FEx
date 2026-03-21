@@ -1,6 +1,7 @@
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.PersistentStorage.Abstractions;
 using FEx.PersistentStorage.Abstractions.Enums;
+using FEx.PersistentStorage.Abstractions.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 

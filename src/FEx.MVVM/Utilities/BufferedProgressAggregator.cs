@@ -41,7 +41,7 @@ public class BufferedProgressAggregator : ProgressAggregator
     /// <param name="value">Progress value to be added or set</param>
     /// <param name="maximum">Maximal allowed value.</param>
     /// <param name="mode">Progress change mode. ProgressChangeMode.End sets ProgressValue to current ProgressMaximum.</param>
-    public override void PrgSet(double? value, double? maximum = null, ProgressChangeMode mode = ProgressChangeMode.Set)
+    public override void PrgSet(double? value, double? maximum, ProgressChangeMode mode)
     {
         if (!Timer.IsRunning
             && (maximum.HasValue || value.HasValue)

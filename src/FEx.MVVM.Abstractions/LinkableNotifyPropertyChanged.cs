@@ -36,10 +36,10 @@ public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILi
         link.Initialize();
     }
 
-    public void Unlink(ILink link, bool resetProperty = false) =>
+    public void Unlink(ILink link, bool resetProperty) =>
         Unlink(link.Id, link.PropertyName, link.PropertyType, resetProperty);
 
-    public void Unlink(Guid linkId, string propertyName, Type propertyType, bool resetProperty = false)
+    public void Unlink(Guid linkId, string propertyName, Type propertyType, bool resetProperty)
     {
         if (!Links.TryGetValue(propertyName, out var links)
             || !links.TryRemove(linkId, out var link))

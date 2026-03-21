@@ -45,7 +45,7 @@ public class FExTimer : ReactiveNotifyPropertyChanged, IFExTimer
         return this;
     }
 
-    public IFExTimer WithAsyncCallback(Func<Task> asyncCallback, CancellationToken cancellationToken = default)
+    public IFExTimer WithAsyncCallback(Func<Task> asyncCallback, CancellationToken cancellationToken)
     {
         _timer?.Dispose();
 

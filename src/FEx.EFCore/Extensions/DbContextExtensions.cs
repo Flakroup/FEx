@@ -55,18 +55,22 @@ public static class DbContextExtensions
         };
     }
 
+    public static Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext)
+        where TDbContext : DbContext =>
+        dbContext.ValidateAndSaveChangesAsync(null, true, true, null, null, null, null);
+
     public static async Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext,
-                                                                     string id = null,
-                                                                     bool validateAllProperties = true,
-                                                                     bool acceptAllChangesOnSuccess = true,
+                                                                     string id,
+                                                                     bool validateAllProperties,
+                                                                     bool acceptAllChangesOnSuccess,
                                                                      Action<string, IReadOnlyCollection<EntityEntry>>
-                                                                         onValidationStart = null,
+                                                                         onValidationStart,
                                                                      Action<string, EntityValidationFail>
-                                                                         onFaultyEntity = null,
+                                                                         onFaultyEntity,
                                                                      Action<string, IReadOnlyCollection<
-                                                                         EntityValidationFail>> onValidationFail = null,
+                                                                         EntityValidationFail>> onValidationFail,
                                                                      Action<string, IReadOnlyCollection<EntityEntry>>
-                                                                         onValidationSuccess = null)
+                                                                         onValidationSuccess)
         where TDbContext : DbContext
     {
         id ??= Guid.NewGuid().ToString();
@@ -86,17 +90,21 @@ public static class DbContextExtensions
         Information($"[{id}]\t{res} rows affected");
     }
 
+    public static Result<Error> ValidateChangedEntities<TDbContext>(this TDbContext dbContext)
+        where TDbContext : DbContext =>
+        dbContext.ValidateChangedEntities(null, true, null, null, null, null);
+
     public static Result<Error> ValidateChangedEntities<TDbContext>(this TDbContext dbContext,
-                                                                    string id = null,
-                                                                    bool validateAllProperties = true,
+                                                                    string id,
+                                                                    bool validateAllProperties,
                                                                     Action<string, IReadOnlyCollection<EntityEntry>>
-                                                                        onValidationStart = null,
+                                                                        onValidationStart,
                                                                     Action<string, EntityValidationFail>
-                                                                        onFaultyEntity = null,
+                                                                        onFaultyEntity,
                                                                     Action<string, IReadOnlyCollection<
-                                                                        EntityValidationFail>> onValidationFail = null,
+                                                                        EntityValidationFail>> onValidationFail,
                                                                     Action<string, IReadOnlyCollection<EntityEntry>>
-                                                                        onValidationSuccess = null)
+                                                                        onValidationSuccess)
         where TDbContext : DbContext
     {
         id ??= Guid.NewGuid().ToString();

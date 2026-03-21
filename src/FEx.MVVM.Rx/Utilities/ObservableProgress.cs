@@ -77,15 +77,27 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
     /// <param name="predicate">This predicate will be used to limit subscription triggering by Where statement.</param>
     /// <param name="limitToCurrentThread">Subscription triggering will be limited to current thread by ObserveOn statement.</param>
     /// <returns></returns>
+    public static IDisposableProgress<T> CreateForUiWithBuffer(TimeSpan sampleTimeSpan, Action<IList<T>> handler) =>
+        CreateForUiWithBuffer(sampleTimeSpan, handler, null, false);
+
     public static IDisposableProgress<T> CreateForUiWithBuffer(TimeSpan sampleTimeSpan,
                                                                Action<IList<T>> handler,
-                                                               Func<IList<T>, bool> predicate = null,
-                                                               bool limitToCurrentThread = false) =>
+                                                               Func<IList<T>, bool> predicate) =>
+        CreateForUiWithBuffer(sampleTimeSpan, handler, predicate, false);
+
+    public static IDisposableProgress<T> CreateForUiWithBuffer(TimeSpan sampleTimeSpan,
+                                                               Action<IList<T>> handler,
+                                                               Func<IList<T>, bool> predicate,
+                                                               bool limitToCurrentThread) =>
         Create(handler, p => p.Buffer(sampleTimeSpan).Where(x => predicate?.Invoke(x) ?? true), limitToCurrentThread);
 
     public static IDisposableProgress<T> Create<TRet>(Action<TRet> handler,
+                                                      Func<ObservableProgress<T>, IObservable<TRet>> subFunc) =>
+        Create(handler, subFunc, false);
+
+    public static IDisposableProgress<T> Create<TRet>(Action<TRet> handler,
                                                       Func<ObservableProgress<T>, IObservable<TRet>> subFunc,
-                                                      bool limitToCurrentThread = false) =>
+                                                      bool limitToCurrentThread) =>
         new ObservableProgressWithSubscription(new(new Subject<T>()),
             p => Subscribe(subFunc(p), handler, limitToCurrentThread));
 
@@ -99,35 +111,33 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
     /// <param name="handler">The progress update handler that updates the UI.</param>
     /// <param name="scheduler">The scheduler to inject into the <c>Sample</c> operator.</param>
     /// <param name="limitToCurrentThread">Subscription triggering will be limited to current thread by ObserveOn statement.</param>
+    public static IDisposableProgress<T> CreateForUiWithSample(TimeSpan sampleTimeSpan, Action<T> handler) =>
+        CreateForUiWithSample(sampleTimeSpan, handler, null, false);
+
     public static IDisposableProgress<T> CreateForUiWithSample(TimeSpan sampleTimeSpan,
                                                                Action<T> handler,
-                                                               IScheduler scheduler = null,
-                                                               bool limitToCurrentThread = false) =>
+                                                               IScheduler scheduler) =>
+        CreateForUiWithSample(sampleTimeSpan, handler, scheduler, false);
+
+    public static IDisposableProgress<T> CreateForUiWithSample(TimeSpan sampleTimeSpan,
+                                                               Action<T> handler,
+                                                               IScheduler scheduler,
+                                                               bool limitToCurrentThread) =>
         Create(handler, p => p.Sample(sampleTimeSpan, scheduler ?? DefaultScheduler.Instance), limitToCurrentThread);
 
-    /// <summary>
-    /// Creates a progress handler with common UI options: updates are sampled on 100ms intervals, and the
-    /// <paramref name="handler" /> is executed on the UI thread. This method must be called from the UI thread. The UI
-    /// should already be initialized with the default state; <paramref name="handler" /> is not invoked with an initial
-    /// value.
-    /// </summary>
-    /// <param name="handler">The progress update handler that updates the UI.</param>
-    /// <param name="limitToCurrentThread">Subscription triggering will be limited to current thread by ObserveOn statement.</param>
-    public static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler, bool limitToCurrentThread = false) =>
+    public static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler) =>
+        CreateForUiWithSample(handler, false);
+
+    public static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler, bool limitToCurrentThread) =>
         CreateForUiWithSample(TimeSpan.FromMilliseconds(100), handler, null, limitToCurrentThread);
 
-    /// <summary>
-    /// Creates a progress handler with common UI options: updates are sampled on 100ms intervals, and the
-    /// <paramref name="handler" /> is executed on the UI thread. This method must be called from the UI thread. The UI
-    /// should already be initialized with the default state; <paramref name="handler" /> is not invoked with an initial
-    /// value.
-    /// </summary>
-    /// <param name="handler">The progress update handler that updates the UI.</param>
-    /// <param name="scheduler">The scheduler to inject into the <c>Sample</c> operator.</param>
-    /// <param name="limitToCurrentThread">Subscription triggering will be limited to current thread by ObserveOn statement.</param>
+    public static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler,
+                                                               IScheduler scheduler) =>
+        CreateForUiWithSample(TimeSpan.FromMilliseconds(100), handler, scheduler, false);
+
     public static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler,
                                                                IScheduler scheduler,
-                                                               bool limitToCurrentThread = false) =>
+                                                               bool limitToCurrentThread) =>
         CreateForUiWithSample(TimeSpan.FromMilliseconds(100), handler, scheduler, limitToCurrentThread);
 
     private static IDisposable Subscribe<TRet>(IObservable<TRet> observable,

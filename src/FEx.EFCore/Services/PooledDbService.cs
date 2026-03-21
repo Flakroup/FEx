@@ -106,9 +106,9 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     }
 
     public async Task RunActionInDbContextAsync(Action<TDbContext> func,
-                                                string errorMessage = null,
-                                                bool saveChanges = true,
-                                                bool useTransaction = true) =>
+                                                string errorMessage,
+                                                bool saveChanges,
+                                                bool useTransaction) =>
         await RunFuncInDbContextAsync(dbContext =>
             {
                 func(dbContext);
@@ -126,10 +126,10 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
         await RunWithinTransactionAsync(func, errorMessage, saveChanges, useTransaction);
 
     public T RunWithinTransaction<T>(Func<TDbContext, T> func,
-                                     string errorMessage = null,
-                                     bool saveChanges = true,
-                                     bool useTransaction = true,
-                                     IsolationLevel isolationLevel = IsolationLevel.Unspecified)
+                                     string errorMessage,
+                                     bool saveChanges,
+                                     bool useTransaction,
+                                     IsolationLevel isolationLevel)
     {
         using var scope = _scopeProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
@@ -254,12 +254,15 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
 
             Mappings = new ReadOnlyDictionary<string, Mapping>(mappings);
             TableMappings = new(Mappings.ToDictionary(x => x.Key, x => x.Value.TableName));
-        });
+        }, null, true, true);
+
+    protected Result<Error> ValidateAndSaveChanges(TDbContext dbContext, string id) =>
+        ValidateAndSaveChanges(dbContext, id, true, true);
 
     protected Result<Error> ValidateAndSaveChanges(TDbContext dbContext,
                                                    string id,
-                                                   bool validateAllProperties = true,
-                                                   bool acceptAllChangesOnSuccess = true)
+                                                   bool validateAllProperties,
+                                                   bool acceptAllChangesOnSuccess)
     {
         var result = dbContext.ValidateChangedEntities(null,
             validateAllProperties,

@@ -39,10 +39,15 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
             OnPropertyChangedInternal(propertyName);
     }
 
+    public bool SetProperty<TRet>(ref TRet backingField,
+                                  TRet newValue,
+                                  [CallerMemberName] string propertyName = null) =>
+        SetProperty(ref backingField, newValue, null, propertyName);
+
     [NotifyPropertyChangedInvocator]
     public virtual bool SetProperty<TRet>(ref TRet backingField,
                                           TRet newValue,
-                                          Action<TRet> onPropertyChanged = null,
+                                          Action<TRet> onPropertyChanged,
                                           [CallerMemberName] string propertyName = null)
     {
         propertyName.Guard(nameof(propertyName));

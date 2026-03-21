@@ -18,11 +18,13 @@ public sealed class StatusService : IStatusService
         StatusHubs = new();
     }
 
-    public IStatusHub GetOrAdd(Guid? key = null,
-                               Action<Guid, string> onStatusAdded = null,
-                               Action<Guid, string> onStatusRemoved = null,
-                               Action onStatusesReset = null,
-                               bool markAsMain = false)
+    public IStatusHub GetOrAdd() => GetOrAdd(null, null, null, null, false);
+
+    public IStatusHub GetOrAdd(Guid? key,
+                               Action<Guid, string> onStatusAdded,
+                               Action<Guid, string> onStatusRemoved,
+                               Action onStatusesReset,
+                               bool markAsMain)
     {
         key ??= Guid.NewGuid();
 
@@ -35,10 +37,16 @@ public sealed class StatusService : IStatusService
         return hub;
     }
 
-    public Guid LogToMainHub(string status, bool unique = true) => MainHub?.AddStatus(status, unique) ?? Guid.Empty;
+    public Guid LogToMainHub(string status) => LogToMainHub(status, true);
+
+    public Guid LogToMainHub(string status, bool unique) => MainHub?.AddStatus(status, unique) ?? Guid.Empty;
 
     public void RemoveMainLog(Guid statusKey) => MainHub?.RemoveStatus(statusKey);
 
-    public DisposableAction Log(string status, IStatusHub hub = null, bool unique = true) =>
+    public DisposableAction Log(string status) => Log(status, null, true);
+
+    public DisposableAction Log(string status, IStatusHub hub) => Log(status, hub, true);
+
+    public DisposableAction Log(string status, IStatusHub hub, bool unique) =>
         (hub ?? MainHub).Log(status, unique);
 }

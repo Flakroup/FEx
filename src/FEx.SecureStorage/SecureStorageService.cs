@@ -2,12 +2,13 @@ using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.IO;
 using FEx.Encryption;
 using FEx.Json.Extensions;
+using FEx.SecureStorage.Abstractions;
 using System;
 using System.IO;
 
 namespace FEx.SecureStorage;
 
-public class SecureStorageService
+public class SecureStorageService : ISecureStorageService
 {
     private const string FexFileExtension = ".sfex";
     private readonly DirectoryInfo _storage;
@@ -19,6 +20,12 @@ public class SecureStorageService
 
         _storage = SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile]
             .Directory.GetDescendantDirectory(".fexStorage");
+    }
+
+    public SecureStorageService(string cipher, DirectoryInfo storage)
+    {
+        _cipher = cipher;
+        _storage = storage;
     }
 
     public T Get<T>(string key)

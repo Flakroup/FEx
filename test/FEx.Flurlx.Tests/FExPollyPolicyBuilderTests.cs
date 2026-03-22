@@ -15,7 +15,7 @@ using Xunit;
 
 namespace FEx.Flurlx.Tests;
 
-public class FExPollyPolicyBuilderTests
+public sealed class FExPollyPolicyBuilderTests
 {
     private readonly IFExLogger _mockLogger;
     private readonly FExPollyPolicyBuilder _policyBuilder;

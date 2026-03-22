@@ -1,7 +1,6 @@
 using FEx.Logging.Abstractions.Interfaces;
 using Serilog.Events;
 using Shouldly;
-using System;
 using Xunit;
 
 namespace FEx.Logging.Tests;
@@ -9,14 +8,15 @@ namespace FEx.Logging.Tests;
 /// <summary>
 /// Tests to verify Serilog is correctly configured via IFExLoggingConfigurator.
 /// </summary>
-public class SerilogConfigurationTests : IDisposable
+public sealed class SerilogConfigurationTests
 {
     [Fact]
     public void LoggingConfigurator_ShouldAllowPropertyConfiguration()
     {
         // Arrange
         using var container = new TestContainer();
-        var configurator = container.Resolve<IFExLoggingConfigurator>().Value;
+        using var configuratorOwned = container.Resolve<IFExLoggingConfigurator>();
+        var configurator = configuratorOwned.Value;
 
         // Act
         configurator.ExternalLoggingLevel = LogEventLevel.Warning;
@@ -27,12 +27,4 @@ public class SerilogConfigurationTests : IDisposable
         configurator.ExternalLoggingLevel.ShouldBe(LogEventLevel.Warning);
         configurator.ExternalDebugLoggingLevel.ShouldBe(LogEventLevel.Error);
     }
-
-    #region IDisposable
-    public void Dispose()
-    {
-        // No cleanup needed - each test creates its own container with using statement
-        GC.SuppressFinalize(this);
-    }
-    #endregion
 }

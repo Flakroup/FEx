@@ -9,7 +9,7 @@ using Xunit;
 namespace FEx.DependencyInjection.Tests;
 
 [Collection("FExServiceProvider")] // Disable parallel execution due to static state
-public class MultiDITests : IDisposable
+public sealed class MultiDITests : IDisposable
 {
     [Fact]
     public async Task StrongInjectOnly_ShouldInitializeWithoutMicrosoftDI()
@@ -50,7 +50,8 @@ public class MultiDITests : IDisposable
         using var container = new TestContainer();
 
         // Act - Get Microsoft DI specific modules directly from container
-        var microsoftModules = container.Resolve<IInitializeModule<IServiceCollection>[]>().Value;
+        using var microsoftModulesOwned = container.Resolve<IInitializeModule<IServiceCollection>[]>();
+        var microsoftModules = microsoftModulesOwned.Value;
 
         // Assert
         microsoftModules.ShouldNotBeNull();
@@ -64,9 +65,7 @@ public class MultiDITests : IDisposable
     #region IDisposable
     public void Dispose()
     {
-        // Cleanup per-test containers
         FExServiceProvider.Release();
-        GC.SuppressFinalize(this);
     }
     #endregion
 

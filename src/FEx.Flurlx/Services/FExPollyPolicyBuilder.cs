@@ -135,7 +135,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
     /// Builds a Bulkhead policy to limit concurrent requests.
     /// Critical for slow APIs to prevent overwhelming the endpoint.
     /// </summary>
-    private AsyncBulkheadPolicy<IFlurlResponse> BuildBulkheadPolicy(PollyPolicyConfiguration config)
+    private IAsyncPolicy<IFlurlResponse> BuildBulkheadPolicy(PollyPolicyConfiguration config)
     {
         return Policy.BulkheadAsync<IFlurlResponse>(config.MaxParallelization,
                 config.MaxQueuingActions,
@@ -152,7 +152,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
     /// Builds a Fallback policy for graceful degradation.
     /// Returns a 503 Service Unavailable response when all retries are exhausted.
     /// </summary>
-    private AsyncFallbackPolicy<IFlurlResponse> BuildFallbackPolicy()
+    private IAsyncPolicy<IFlurlResponse> BuildFallbackPolicy()
     {
         return Policy<IFlurlResponse>.Handle<Exception>()
             .FallbackAsync((result, context, _) =>
@@ -181,7 +181,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
     /// Fallback response implementation for graceful degradation.
     /// </summary>
     [SuppressMessage("ReSharper", "UnusedMember.Local")]
-    private class FExFallbackResponse : IFlurlResponse
+    private sealed class FExFallbackResponse : IFlurlResponse
     {
         public int StatusCode { get; init; }
         public IFlurlRequest Request => null;

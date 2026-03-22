@@ -13,7 +13,7 @@ namespace FEx.Logging;
 /// Serilog-backed implementation of IFExLogger.
 /// Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
 /// </summary>
-public class FExSerilogLogger : IFExLogger
+public class FExSerilogLogger : IFExLogger, IDisposable
 {
     public event EventHandler<FExErrorEventArgs> ErrorLogged;
 
@@ -84,7 +84,7 @@ public class FExSerilogLogger : IFExLogger
     public void EndScope()
     {
         _state = null;
-        _scope.TryDispose();
+        _scope?.Dispose();
         _scope = null;
     }
 
@@ -104,4 +104,13 @@ public class FExSerilogLogger : IFExLogger
 
         loggerState.RemoveLabel(key);
     }
+
+    #region IDisposable
+    public void Dispose()
+    {
+        _scope?.Dispose();
+        _scope = null;
+        _state = null;
+    }
+    #endregion
 }

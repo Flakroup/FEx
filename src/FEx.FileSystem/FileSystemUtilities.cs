@@ -503,13 +503,12 @@ public class FileSystemUtilities
 
         try
         {
-            var sr = new StreamReader(path, true);
+            using var sr = new StreamReader(path, true);
 
             while (sr.Peek() >= 0)
                 sr.Read();
 
             enc = Encoding.GetEncoding(Convert.ToInt32(sr.CurrentEncoding.CodePage.ToString()));
-            sr.Close();
         }
         catch (Exception ex)
         {

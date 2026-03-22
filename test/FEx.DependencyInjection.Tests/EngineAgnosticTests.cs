@@ -12,7 +12,7 @@ namespace FEx.DependencyInjection.Tests;
 /// Tests to verify the engine-agnostic Multi-DI architecture works correctly.
 /// </summary>
 [Collection("FExServiceProvider")] // Disable parallel execution due to static state
-public class EngineAgnosticTests : IDisposable
+public sealed class EngineAgnosticTests : IDisposable
 {
     [Fact]
     public void GenericModuleInterface_ShouldSupportEngineSpecificContexts()
@@ -21,7 +21,8 @@ public class EngineAgnosticTests : IDisposable
         using var container = new TestContainer();
 
         // Act - Get Microsoft DI specific modules directly from container
-        var microsoftModules = container.Resolve<IInitializeModule<IServiceCollection>[]>().Value;
+        using var microsoftModulesOwned = container.Resolve<IInitializeModule<IServiceCollection>[]>();
+        var microsoftModules = microsoftModulesOwned.Value;
 
         // Assert
         microsoftModules.ShouldNotBeNull();
@@ -81,7 +82,8 @@ public class EngineAgnosticTests : IDisposable
         using var container = new TestContainer();
 
         // Act - Verify Microsoft DI modules exist (proving the pattern works)
-        var microsoftModules = container.Resolve<IInitializeModule<IServiceCollection>[]>().Value;
+        using var microsoftModulesOwned = container.Resolve<IInitializeModule<IServiceCollection>[]>();
+        var microsoftModules = microsoftModulesOwned.Value;
 
         // Assert - Architecture should support any engine context
         typeof(IInitializeModule<>).IsGenericTypeDefinition.ShouldBeTrue();
@@ -100,9 +102,7 @@ public class EngineAgnosticTests : IDisposable
     #region IDisposable
     public void Dispose()
     {
-        // Cleanup per-test containers
         FExServiceProvider.Release();
-        GC.SuppressFinalize(this);
     }
     #endregion
 }

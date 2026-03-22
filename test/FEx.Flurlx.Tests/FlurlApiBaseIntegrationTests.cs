@@ -24,7 +24,7 @@ using Xunit;
 
 namespace FEx.Flurlx.Tests;
 
-public class FlurlApiBaseIntegrationTests : IDisposable
+public sealed class FlurlApiBaseIntegrationTests : IDisposable
 {
     private readonly WireMockServer _mockServer;
     private readonly IFlurlClient _flurlClient;
@@ -275,7 +275,7 @@ public class FlurlApiBaseIntegrationTests : IDisposable
 
     #region Test API Implementation
     [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Local")]
-    private class TestApi : FlurlApiBase
+    private sealed class TestApi : FlurlApiBase
     {
         public TestApi(IFlurlConfigurator flurlConfigurator)
             : base(flurlConfigurator)
@@ -309,13 +309,13 @@ public class FlurlApiBaseIntegrationTests : IDisposable
         }
     }
 
-    private class TestData
+    private sealed class TestData
     {
         public int Id { get; set; }
         public string Name { get; set; }
     }
 
-    private class TestRequestData
+    private sealed class TestRequestData
     {
         public string Value { get; set; }
         public int Count { get; set; }

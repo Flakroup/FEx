@@ -87,13 +87,12 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
     }
 
     private async Task<MessageResult> ShowMessageBoxOnceAndCacheAsync(string message,
-                                                                      string caption = "Something wrong happened",
-                                                                      bool wait = true,
-                                                                      MessageBoxImage messageBoxImage =
-                                                                          MessageBoxImage.Exclamation,
-                                                                      MessageBoxButton buttons = MessageBoxButton.OK,
-                                                                      Window owner = null,
-                                                                      Stopwatch sw = null)
+                                                                      string caption,
+                                                                      bool wait,
+                                                                      MessageBoxImage messageBoxImage,
+                                                                      MessageBoxButton buttons,
+                                                                      Window owner,
+                                                                      Stopwatch sw)
     {
         if (Application.Current is null
             || !MessagesCache.Add(message))
@@ -125,7 +124,11 @@ public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
         return MessageResult.None;
     }
 
-    private void Log(string txt, LogLevel level = LogLevel.Information, Exception exception = null) =>
+    private void Log(string txt) => Log(txt, LogLevel.Information);
+
+    private void Log(string txt, LogLevel level) => Log(txt, level, null);
+
+    private void Log(string txt, LogLevel level, Exception exception) =>
         _logger.Log(level, exception, txt);
 
     #region IDisposable

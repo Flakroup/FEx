@@ -153,10 +153,12 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
         PropertyChanged.HandlePropertyChanged(this, propertyName);
     }
 
+#pragma warning disable S2360 // CallerMemberName requires optional parameter
     protected bool SetProperty<T>(ref T backingField,
                                   T newValue,
                                   Action<T> onPropertyChanged = null,
                                   [CallerMemberName] string propertyName = null) =>
+#pragma warning restore S2360
         this.SetPropertyStatic(ref backingField,
             newValue,
             p => WhenPropertyChanged(p, newValue, onPropertyChanged),

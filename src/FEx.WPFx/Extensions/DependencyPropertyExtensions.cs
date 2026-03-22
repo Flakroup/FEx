@@ -6,6 +6,8 @@ using System.Windows;
 
 namespace FEx.WPFx.Extensions;
 
+#pragma warning disable S2360 // Factory methods with callback-style optional parameters - overloads impractical
+
 public static class DependencyPropertyExtensions
 {
     public static DependencyProperty CreateTwoWayDependencyProperty<TView, TProperty>(
@@ -142,3 +144,5 @@ public static class DependencyPropertyExtensions
                 ? null
                 : (b, v) => coerceValue(((TView)b, (TProperty)v)));
 }
+
+#pragma warning restore S2360

@@ -7,13 +7,14 @@
 
 	<ItemGroup>
 	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+	  <PackageReference Include="System.Reactive" Version="6.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Core\FEx.Core.csproj" />
 		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
 		<ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
-		<ProjectReference Include="..\FEx.MVVM.Rx\FEx.MVVM.Rx.csproj" />
+		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
 		<ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
 	</ItemGroup>
 

@@ -1,4 +1,4 @@
-using FEx.MVVM.Abstractions;
+using FEx.MVVM.Rx.BaseObjects;
 using System.Windows.Input;
 
 namespace FEx.WPFx.Models;

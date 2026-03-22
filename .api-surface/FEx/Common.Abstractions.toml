@@ -9,6 +9,30 @@ summary = "Various states of the connection to the internet."
 file = "Enums\\FExNetworkAccess.cs"
 
 [[classes]]
+name = "DeviceHelperExtensions"
+ns = "FEx.Common.Abstractions.Extensions"
+file = "Extensions\\DeviceHelperExtensions.cs"
+static = true
+
+[[extensions]]
+name = "WaitForInternetAsync"
+sig = "ValueTask<bool> WaitForInternetAsync(this IDeviceHelper helper)"
+returns = "ValueTask<bool>"
+file = "Extensions\\DeviceHelperExtensions.cs"
+
+[[classes]]
+name = "FExInternetConnectionHelperExtensions"
+ns = "FEx.Common.Abstractions.Extensions"
+file = "Extensions\\FExInternetConnectionHelperExtensions.cs"
+static = true
+
+[[extensions]]
+name = "HasInternet"
+sig = "bool HasInternet(this IFExInternetConnectionHelper helper)"
+returns = "bool"
+file = "Extensions\\FExInternetConnectionHelperExtensions.cs"
+
+[[classes]]
 name = "DateTimeProvider"
 ns = "FEx.Common.Abstractions.Helpers"
 file = "Helpers\\DateTimeProvider.cs"

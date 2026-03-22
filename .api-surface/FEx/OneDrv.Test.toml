@@ -1,9 +1,0 @@
-[project]
-name = "FEX.OneDrv.Test"
-path = "est\\FEX.OneDrv.Test"
-
-[[classes]]
-name = "OneDriveClientTests"
-ns = "FEX.OneDrv.Test"
-file = "OneDriveClientTests.cs"
-

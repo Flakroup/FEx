@@ -11,7 +11,7 @@
 
 ## 🎯 What is FEx?
 
-**FEx** (Flak Essentials eXtended) is a modern, extensible application framework for .NET that provides:
+**FEx** (Flakroup Extensions) is a modern, extensible application framework for .NET that provides:
 
 - ✅ **Multi-Platform Support** - .NET 9.0, .NET Standard 2.0/2.1, .NET Framework 4.8.1
 - ✅ **Multi-DI Engine Architecture** - Use StrongInject, Microsoft DI, or bring your own

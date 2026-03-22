@@ -87,6 +87,12 @@ returns = "bool"
 file = "Extensions\\CachedFileExtensions.cs"
 
 [[classes]]
+name = "CacheServiceExtensions"
+ns = "FEx.PersistentStorage.Abstractions.Extensions"
+file = "Extensions\\CacheServiceExtensions.cs"
+static = true
+
+[[classes]]
 name = "ClearCacheReasonExtensions"
 ns = "FEx.PersistentStorage.Abstractions.Extensions"
 file = "Extensions\\ClearCacheReasonExtensions.cs"
@@ -97,6 +103,12 @@ name = "HasFlagFast"
 sig = "bool HasFlagFast(this ClearCacheReason value, ClearCacheReason flag)"
 returns = "bool"
 file = "Extensions\\ClearCacheReasonExtensions.cs"
+
+[[classes]]
+name = "LocalStorageServiceExtensions"
+ns = "FEx.PersistentStorage.Abstractions.Extensions"
+file = "Extensions\\LocalStorageServiceExtensions.cs"
+static = true
 
 [[classes]]
 name = "FExCachedFile"

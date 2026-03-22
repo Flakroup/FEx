@@ -7,7 +7,7 @@ using FEx.DependencyInjection.Abstractions;
 using FEx.Legacy.Asyncx.Abstractions.Interfaces;
 using FEx.Legacy.Asyncx.Enums;
 using FEx.Legacy.Mvvm.Abstractions.Interfaces;
-using FEx.MVVM.Abstractions;
+using FEx.MVVM.Rx.BaseObjects;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

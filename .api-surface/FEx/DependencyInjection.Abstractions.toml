@@ -32,6 +32,12 @@ name = "ConfigurationPriority"
 ns = "FEx.DependencyInjection.Abstractions.Enums"
 file = "Enums\\ConfigurationPriority.cs"
 
+[[classes]]
+name = "FExServiceContainerExtensions"
+ns = "FEx.DependencyInjection.Abstractions.Extensions"
+file = "Extensions\\FExServiceContainerExtensions.cs"
+static = true
+
 [[interfaces]]
 name = "IAnyConfigurator"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"

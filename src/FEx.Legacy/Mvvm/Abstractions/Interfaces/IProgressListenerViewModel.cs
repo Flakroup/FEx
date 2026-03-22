@@ -1,4 +1,5 @@
 using FEx.MVVM.Abstractions.Interfaces;
+using FEx.MVVM.Interfaces;
 
 namespace FEx.Legacy.Mvvm.Abstractions.Interfaces;
 

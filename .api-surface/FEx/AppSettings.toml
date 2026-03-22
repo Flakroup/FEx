@@ -60,6 +60,18 @@ file = "Extensions\\ConfigurationManagerExtensions.cs"
 static = true
 
 [[classes]]
+name = "ConfigurationServiceExtensions"
+ns = "FEx.AppSettings.Extensions"
+file = "Extensions\\ConfigurationServiceExtensions.cs"
+static = true
+
+[[extensions]]
+name = "Build"
+sig = "void Build(this IConfigurationService service)"
+returns = "void"
+file = "Extensions\\ConfigurationServiceExtensions.cs"
+
+[[classes]]
 name = "FExConfigurationExtensions"
 ns = "FEx.AppSettings.Extensions"
 file = "Extensions\\FExConfigurationExtensions.cs"
@@ -69,7 +81,13 @@ static = true
 name = "BindJsonNet"
 sig = "void BindJsonNet(this IConfigurationSection config,
                                    object instance,
-                                   Func<string, string> jsonFunc = null)"
+                                   Func<string, string> jsonFunc)"
+returns = "void"
+file = "Extensions\\FExConfigurationExtensions.cs"
+
+[[extensions]]
+name = "BindJsonNet"
+sig = "void BindJsonNet(this IConfigurationSection config, object instance)"
 returns = "void"
 file = "Extensions\\FExConfigurationExtensions.cs"
 

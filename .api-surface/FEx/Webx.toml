@@ -43,6 +43,12 @@ file = "Extensions\\UriExtensions.cs"
 static = true
 
 [[extensions]]
+name = "GetFileNameAsync"
+sig = "Task<string> GetFileNameAsync(this Uri url)"
+returns = "Task<string>"
+file = "Extensions\\UriExtensions.cs"
+
+[[extensions]]
 name = "GetFileName"
 sig = "string GetFileName(this HttpWebResponse response)"
 returns = "string"

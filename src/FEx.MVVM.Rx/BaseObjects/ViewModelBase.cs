@@ -1,8 +1,7 @@
 using FEx.MVVM.Abstractions.Interfaces;
-using FEx.MVVM.Rx.BaseObjects;
 using System;
 
-namespace FEx.MVVM.Abstractions;
+namespace FEx.MVVM.Rx.BaseObjects;
 
 public abstract class ViewModelBase : LinkableReactiveNotifyPropertyChanged, IViewModelBase, IEquatable<ViewModelBase>
 {

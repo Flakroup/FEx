@@ -1,7 +1,8 @@
+using FEx.MVVM.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
 
-namespace FEx.MVVM.Abstractions.Interfaces;
+namespace FEx.MVVM.Interfaces;
 
 /// <summary>
 /// Has progress status container instance

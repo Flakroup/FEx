@@ -4,7 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 
-namespace FEx.MVVM.Abstractions;
+namespace FEx.MVVM;
 
 public class Link : ILink
 {

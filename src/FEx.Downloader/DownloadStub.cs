@@ -60,11 +60,16 @@ public class DownloadStub : NotifyPropertyChanged, IDownloadStub
     {
     }
 
+    public DownloadStub(string url, string filePath)
+        : this(new Uri(url), filePath, null, null, 50)
+    {
+    }
+
     public DownloadStub(string url,
                         string filePath,
-                        string md5Checksum = null,
-                        WebRequestParams pars = null,
-                        int parallelChunks = 50)
+                        string md5Checksum,
+                        WebRequestParams pars,
+                        int parallelChunks)
         : this(new Uri(url), filePath, md5Checksum, pars, parallelChunks)
     {
     }
@@ -78,11 +83,16 @@ public class DownloadStub : NotifyPropertyChanged, IDownloadStub
     {
     }
 
+    public DownloadStub(Uri url, string filePath)
+        : this(url, filePath, null, null, 50)
+    {
+    }
+
     public DownloadStub(Uri url,
                         string filePath,
-                        string md5Checksum = null,
-                        WebRequestParams pars = null,
-                        int parallelChunks = 50)
+                        string md5Checksum,
+                        WebRequestParams pars,
+                        int parallelChunks)
     {
         MD5Checksum = md5Checksum;
         Url = url;
@@ -98,7 +108,10 @@ public class DownloadStub : NotifyPropertyChanged, IDownloadStub
         DState = item.DState;
     }
 
-    public async Task LoadTargetFileNameAsync(string dirPath = null, string fallback = null)
+    public Task LoadTargetFileNameAsync() =>
+        LoadTargetFileNameAsync(null, null);
+
+    public async Task LoadTargetFileNameAsync(string dirPath, string fallback)
     {
         string fileName = (await Url.GetFileNameAsync() ?? fallback).Guard(nameof(fileName));
 

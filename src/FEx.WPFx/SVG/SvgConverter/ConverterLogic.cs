@@ -38,8 +38,14 @@ public static class ConverterLogic
     public static string SvgFileToXaml(ConvertedSvgData svg,
                                        ResultMode resultMode,
                                        ResKeyInfo resKeyInfo,
+                                       bool filterPixelsPerDip) =>
+        SvgFileToXaml(svg, resultMode, resKeyInfo, filterPixelsPerDip, null);
+
+    public static string SvgFileToXaml(ConvertedSvgData svg,
+                                       ResultMode resultMode,
+                                       ResKeyInfo resKeyInfo,
                                        bool filterPixelsPerDip,
-                                       WpfDrawingSettings wpfDrawingSettings = null)
+                                       WpfDrawingSettings wpfDrawingSettings)
     {
         var obj = ConvertSvgToObject(svg, resultMode, wpfDrawingSettings, out var name, resKeyInfo);
 

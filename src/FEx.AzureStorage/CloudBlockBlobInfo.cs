@@ -28,7 +28,9 @@ public class CloudBlockBlobInfo
         set => Blob.Properties.ContentType = value;
     }
 
-    public CloudBlockBlobInfo(CloudBlockBlob blob, bool? exists = null)
+    public CloudBlockBlobInfo(CloudBlockBlob blob) : this(blob, null) { }
+
+    public CloudBlockBlobInfo(CloudBlockBlob blob, bool? exists)
     {
         Blob = blob;
         EnsureMetadata();
@@ -41,10 +43,12 @@ public class CloudBlockBlobInfo
 
     public string GetMetadata(string key) => Metadata.TryGetKeyValue(key);
 
-    public async Task<bool> EnsureExistsAsync(bool primaryOnly = false,
-                                              BlobRequestOptions options = null,
-                                              OperationContext operationContext = null,
-                                              CancellationToken cancellationToken = default)
+    public Task<bool> EnsureExistsAsync() => EnsureExistsAsync(false, null, null, default);
+
+    public async Task<bool> EnsureExistsAsync(bool primaryOnly,
+                                              BlobRequestOptions options,
+                                              OperationContext operationContext,
+                                              CancellationToken cancellationToken)
     {
         if (cancellationToken == CancellationToken.None)
             cancellationToken = CancellationToken.None;
@@ -57,19 +61,24 @@ public class CloudBlockBlobInfo
     /// <summary>
     /// Fetches the attributes asynchronous.
     /// </summary>
+    public Task FetchAttributesAsync() => FetchAttributesAsync(null, null, null, default);
+
+    /// <summary>
+    /// Fetches the attributes asynchronous.
+    /// </summary>
     /// <param name="accessCondition">The access condition.</param>
     /// <param name="options">The options.</param>
     /// <param name="operationContext">The operation context.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    public async Task FetchAttributesAsync(AccessCondition accessCondition = null,
-                                           BlobRequestOptions options = null,
-                                           OperationContext operationContext = null,
-                                           CancellationToken cancellationToken = default)
+    public async Task FetchAttributesAsync(AccessCondition accessCondition,
+                                           BlobRequestOptions options,
+                                           OperationContext operationContext,
+                                           CancellationToken cancellationToken)
     {
         if (cancellationToken == CancellationToken.None)
             cancellationToken = CancellationToken.None;
 
-        if (await EnsureExistsAsync(cancellationToken: cancellationToken))
+        if (await EnsureExistsAsync(false, null, null, cancellationToken))
         {
             await Blob.FetchAttributesAsync(accessCondition, options, operationContext, cancellationToken);
             EnsureMetadata();

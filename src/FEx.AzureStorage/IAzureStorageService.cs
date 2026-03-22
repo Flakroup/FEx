@@ -10,79 +10,79 @@ namespace FEx.AzureStorage;
 
 public interface IAzureStorageService
 {
-    void Configure(string connStr, int parallelOpsMultiplier = 8);
+    void Configure(string connStr, int parallelOpsMultiplier);
 
     Task<(CloudBlockBlob blob, bool isSuccess)> CopyBlobAsync(string containerName,
                                                               string srcBlob,
                                                               string destBlob,
-                                                              bool overwrite = true,
-                                                              Func<CloudBlob, Task> blobAction = null);
+                                                              bool overwrite,
+                                                              Func<CloudBlob, Task> blobAction);
 
     Task<bool> DeleteBlobAsync(CloudBlockBlob blob,
-                               DeleteSnapshotsOption deleteSnapshotsOption = DeleteSnapshotsOption.None,
-                               AccessCondition accessCondition = null,
-                               BlobRequestOptions options = null,
-                               OperationContext operationContext = null,
-                               CancellationToken cancellationToken = default);
+                               DeleteSnapshotsOption deleteSnapshotsOption,
+                               AccessCondition accessCondition,
+                               BlobRequestOptions options,
+                               OperationContext operationContext,
+                               CancellationToken cancellationToken);
 
     Task<bool> DownloadLatestBlobsAsync(string downloadDir,
                                         string containerName,
-                                        bool deleteOldFiles = true,
-                                        string deleteFilesMask = "*.*",
-                                        bool noDownload = false,
+                                        bool deleteOldFiles,
+                                        string deleteFilesMask,
+                                        bool noDownload,
                                         params string[] paths);
 
     Task<bool> ExistsAsync(CloudBlockBlob blob,
-                           bool primaryOnly = false,
-                           BlobRequestOptions options = null,
-                           OperationContext operationContext = null,
-                           CancellationToken cancellationToken = default);
+                           bool primaryOnly,
+                           BlobRequestOptions options,
+                           OperationContext operationContext,
+                           CancellationToken cancellationToken);
 
     Task<bool> ExistsAsync(string containerName,
                            string path,
                            string fileName,
-                           bool primaryOnly = false,
-                           BlobRequestOptions options = null,
-                           OperationContext operationContext = null,
-                           CancellationToken cancellationToken = default);
+                           bool primaryOnly,
+                           BlobRequestOptions options,
+                           OperationContext operationContext,
+                           CancellationToken cancellationToken);
 
     Task<CloudBlockBlobInfo> GetBlobAsync(string path,
-                                          CloudBlobContainer container = null,
-                                          string containerName = null,
-                                          CancellationToken cancellationToken = default);
+                                          CloudBlobContainer container,
+                                          string containerName,
+                                          CancellationToken cancellationToken);
 
-    Task<IList<T>> GetBlobsAsync<T>(string containerName, string path, bool useFlatBlobListing = false)
+    Task<IList<T>> GetBlobsAsync<T>(string containerName, string path, bool useFlatBlobListing)
         where T : CloudBlob;
 
     CloudBlobContainer GetCloudBlobContainer(string containerName);
 
     Task<IList<CloudBlockBlob>> GetCloudBlockBlobsAsync(string containerName,
                                                         string path,
-                                                        bool useFlatBlobListing = false);
+                                                        bool useFlatBlobListing);
 
     Task<IList<CloudBlockBlobInfo>> GetCloudBlockBlobsInfoAsync(string containerName,
                                                                 string path,
-                                                                bool useFlatBlobListing = false);
+                                                                bool useFlatBlobListing);
 
     Task<(string fileName, FileInfo localPath)> ProcessBlobAsync(string containerName, string downloadDir, string path);
 
     Task<(FileInfo file, CloudBlockBlobInfo blob)> UploadFileAsync(string path,
                                                                    bool overwrite,
                                                                    FileInfo file,
-                                                                   string containerName = null,
-                                                                   CloudBlobContainer container = null,
-                                                                   CancellationToken cancellationToken = default);
+                                                                   string containerName,
+                                                                   CloudBlobContainer container,
+                                                                   CancellationToken cancellationToken);
 
     Task<IDictionary<FileInfo, CloudBlockBlobInfo>> UploadFilesAsync(string containerName,
                                                                      string path,
-                                                                     bool overwrite = false,
-                                                                     bool oneByOne = false,
+                                                                     bool overwrite,
+                                                                     bool oneByOne,
                                                                      params FileInfo[] files);
 
     Task<(string file, CloudBlockBlob blob)> UploadStreamAsync(string path,
                                                                bool overwrite,
                                                                string fileName,
                                                                Stream stream,
-                                                               string containerName = null,
-                                                               CloudBlobContainer container = null);
+                                                               string containerName,
+                                                               CloudBlobContainer container);
 }

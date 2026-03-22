@@ -85,7 +85,9 @@ public abstract class AppBootstrapper<TContainer> : Application
         ExitIfInitializationHasFailed();
     }
 
-    protected virtual void ExitIfInitializationHasFailed(int exitCode = 1)
+    protected virtual void ExitIfInitializationHasFailed() => ExitIfInitializationHasFailed(1);
+
+    protected virtual void ExitIfInitializationHasFailed(int exitCode)
     {
         if (_exceptionHandler.LastException is null)
             return;
@@ -93,7 +95,9 @@ public abstract class AppBootstrapper<TContainer> : Application
         ExitApp(exitCode);
     }
 
-    protected virtual void ExitApp(int exitCode = 1) => Environment.Exit(exitCode);
+    protected virtual void ExitApp() => ExitApp(1);
+
+    protected virtual void ExitApp(int exitCode) => Environment.Exit(exitCode);
 
     protected virtual bool HasInitializationFailed() => _exceptionHandler.LastException is not null;
 

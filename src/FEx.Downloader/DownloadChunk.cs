@@ -117,7 +117,10 @@ public class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
         FixChunkFileSize();
     }
 
-    public async Task WriteBytesAsync(byte[] buffer, int offset, int bytesToWrite, CancellationToken token = default)
+    public Task WriteBytesAsync(byte[] buffer, int offset, int bytesToWrite) =>
+        WriteBytesAsync(buffer, offset, bytesToWrite, CancellationToken.None);
+
+    public async Task WriteBytesAsync(byte[] buffer, int offset, int bytesToWrite, CancellationToken token)
     {
         FileStream.Seek(Size, SeekOrigin.Begin);
         await FileStream.WriteAsync(buffer, offset, bytesToWrite, token);

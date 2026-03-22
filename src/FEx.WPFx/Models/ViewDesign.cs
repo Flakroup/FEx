@@ -94,13 +94,27 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
         set => SetProperty(ref _borderBackground, value);
     }
 
-    public ViewDesign(Func<Brush> backgroundFactory = null,
-                      Func<Brush> controlBackgroundFactory = null,
-                      Func<Brush> foregroundFactory = null,
-                      Func<Brush> headerBackgroundFactory = null,
-                      Func<Brush> borderBackgroundFactory = null,
-                      FontFamily fontFamily = null,
-                      double fontSize = 13)
+    public ViewDesign()
+        : this(null, null, null, null, null, null, 13)
+    {
+    }
+
+    public ViewDesign(Func<Brush> backgroundFactory,
+                      Func<Brush> controlBackgroundFactory,
+                      Func<Brush> foregroundFactory,
+                      Func<Brush> headerBackgroundFactory,
+                      Func<Brush> borderBackgroundFactory)
+        : this(backgroundFactory, controlBackgroundFactory, foregroundFactory, headerBackgroundFactory, borderBackgroundFactory, null, 13)
+    {
+    }
+
+    public ViewDesign(Func<Brush> backgroundFactory,
+                      Func<Brush> controlBackgroundFactory,
+                      Func<Brush> foregroundFactory,
+                      Func<Brush> headerBackgroundFactory,
+                      Func<Brush> borderBackgroundFactory,
+                      FontFamily fontFamily,
+                      double fontSize)
     {
         _backgroundFactory = backgroundFactory;
         _controlBackgroundFactory = controlBackgroundFactory;

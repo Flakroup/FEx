@@ -29,17 +29,17 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
 
     public void AddChildNode(string rootNodeName,
                              List<string> nodePath,
-                             string name = null,
-                             bool unique = true,
-                             string iconPath = null,
-                             bool isIconAttachedToFile = true,
-                             bool isExpanded = false)
+                             string name,
+                             bool unique,
+                             string iconPath,
+                             bool isIconAttachedToFile,
+                             bool isExpanded)
     {
         var rootNodeStub = GetRootNodeStub(rootNodeName);
         rootNodeStub.AddChildNode(nodePath, name, unique, iconPath, isIconAttachedToFile, isExpanded);
     }
 
-    public void AddChildNodes(string rootNodeName, IEnumerable<FExTreeViewNode> childNodes, bool unique = true)
+    public void AddChildNodes(string rootNodeName, IEnumerable<FExTreeViewNode> childNodes, bool unique)
     {
         var rootNodeStub = GetRootNodeStub(rootNodeName);
         rootNodeStub.AddChildNodes(childNodes, unique);
@@ -49,21 +49,22 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
 
     public void AddChildNode(string rootNodeName,
                              string nodePath,
-                             string name = null,
-                             char pathSeparator = '\\',
-                             bool unique = true,
-                             string iconPath = null,
-                             bool isExpanded = false) =>
+                             string name,
+                             char pathSeparator,
+                             bool unique,
+                             string iconPath,
+                             bool isExpanded) =>
         AddChildNode(rootNodeName,
             FExTreeViewNode.GetNodePath(nodePath, pathSeparator),
             name,
             unique,
             iconPath,
+            true,
             isExpanded);
 
     public abstract Task<TItem> GetTreeViewItemAsync(FExTreeViewNode nodeStub);
 
-    public async Task GrowTreeAsync(ItemsControl tree, IReadOnlyList<TItem> curr, int i = 0)
+    public async Task GrowTreeAsync(ItemsControl tree, IReadOnlyList<TItem> curr, int i)
     {
         var items = tree.Items.OfType<TItem>().ToArray();
 
@@ -84,7 +85,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
     /// <param name="newNode">The new node.</param>
     /// <param name="location">The location.</param>
     /// <param name="i">The i.</param>
-    public async Task GrowTreeAsync(ItemsControl tree, TItem newNode, int[] location, int i = 0)
+    public async Task GrowTreeAsync(ItemsControl tree, TItem newNode, int[] location, int i)
     {
         while (location[i] > tree.Items.Count) //todo is it necessary
             tree.Items.Add(new TItem());
@@ -104,8 +105,8 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
     /// <param name="setDirectoriesIcons">if set to <c>true</c> [set directories icons].</param>
     public async Task GrowTreeAsync(TItem tree,
                                     FExTreeViewNode nodeStub,
-                                    int locationIndex = 0,
-                                    bool setDirectoriesIcons = false)
+                                    int locationIndex,
+                                    bool setDirectoriesIcons)
     {
         // //string header = PostInContext(() => tree.Header.ToString());
         //
@@ -138,8 +139,8 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
     public async Task GrowTreeAsync(TItem tree,
                                     FExTreeViewNode nodeStub,
                                     IList<string> headers,
-                                    int locationIndex = 0,
-                                    bool setDirectoriesIcons = false)
+                                    int locationIndex,
+                                    bool setDirectoriesIcons)
     {
         if (tree != null)
         {
@@ -179,7 +180,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
         }
     }
 
-    public async Task<TItem> GetTreeNodeAsync(string rootNodeName, bool setDirectoriesIcons = false)
+    public async Task<TItem> GetTreeNodeAsync(string rootNodeName, bool setDirectoriesIcons)
     {
         var rootNode = GetRootNodeStub(rootNodeName);
         var res = await GetTreeViewItemAsync(rootNode);

@@ -9,28 +9,28 @@ namespace FEx.Legacy.Asyncx.Abstractions.Interfaces;
 public interface ITasksHandler
 {
     Task RunAsync(Action task,
-                  JobSpecs? specs = null,
-                  Action<JobSpecs?> pre = null,
-                  Action<bool, JobSpecs?> post = null,
-                  AsyncMode asyncMode = AsyncMode.ThreadPool,
-                  CancellationToken cancellationToken = default);
+                  JobSpecs? specs,
+                  Action<JobSpecs?> pre,
+                  Action<bool, JobSpecs?> post,
+                  AsyncMode asyncMode,
+                  CancellationToken cancellationToken);
 
     Task<T> RunTaskAsync<T>(Func<Task<T>> task,
-                            JobSpecs? specs = null,
-                            Action<JobSpecs?> pre = null,
-                            Action<bool, JobSpecs?> post = null,
-                            AsyncMode asyncMode = AsyncMode.ThreadPool);
+                            JobSpecs? specs,
+                            Action<JobSpecs?> pre,
+                            Action<bool, JobSpecs?> post,
+                            AsyncMode asyncMode);
 
     Task RunTaskAsync(Func<Task> task,
-                      JobSpecs? specs = null,
-                      Action<JobSpecs?> pre = null,
-                      Action<bool, JobSpecs?> post = null,
-                      AsyncMode asyncMode = AsyncMode.ThreadPool);
+                      JobSpecs? specs,
+                      Action<JobSpecs?> pre,
+                      Action<bool, JobSpecs?> post,
+                      AsyncMode asyncMode);
 
     Task<T> RunFuncAsync<T>(Func<T> task,
-                            JobSpecs? specs = null,
-                            Action<JobSpecs?> pre = null,
-                            Action<bool, JobSpecs?> post = null,
-                            AsyncMode asyncMode = AsyncMode.ThreadPool,
-                            CancellationToken cancellationToken = default);
+                            JobSpecs? specs,
+                            Action<JobSpecs?> pre,
+                            Action<bool, JobSpecs?> post,
+                            AsyncMode asyncMode,
+                            CancellationToken cancellationToken);
 }

@@ -41,9 +41,12 @@ public class DownloadService : ProgressAggregator
         SetFinished = true;
     }
 
+    public Task<IDownloadItem> AddDownloadStubAsync(IDownloadStub stub) =>
+        AddDownloadStubAsync(stub, true, true);
+
     public async Task<IDownloadItem> AddDownloadStubAsync(IDownloadStub stub,
-                                                          bool cancelAndReplaceOldOne = true,
-                                                          bool startDownload = true)
+                                                          bool cancelAndReplaceOldOne,
+                                                          bool startDownload)
     {
         var idx = new DownloadIndex(stub);
 

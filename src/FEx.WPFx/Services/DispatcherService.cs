@@ -19,9 +19,15 @@ public static class DispatcherService
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
+    public static void InvokeOnDispatcherContext(Action action) =>
+        InvokeOnDispatcherContext(action, null, DispatcherPriority.Send);
+
+    public static void InvokeOnDispatcherContext(Action action, DispatcherObject sender) =>
+        InvokeOnDispatcherContext(action, sender, DispatcherPriority.Send);
+
     public static void InvokeOnDispatcherContext(Action action,
-                                                 DispatcherObject sender = null,
-                                                 DispatcherPriority priority = DispatcherPriority.Send)
+                                                 DispatcherObject sender,
+                                                 DispatcherPriority priority)
     {
         var dispatcherObject = sender.GetDispatcherObject();
 
@@ -38,9 +44,15 @@ public static class DispatcherService
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
+    public static Task InvokeOnDispatcherContextAsync(Action action) =>
+        InvokeOnDispatcherContextAsync(action, null, DispatcherPriority.Send);
+
+    public static Task InvokeOnDispatcherContextAsync(Action action, DispatcherObject sender) =>
+        InvokeOnDispatcherContextAsync(action, sender, DispatcherPriority.Send);
+
     public static async Task InvokeOnDispatcherContextAsync(Action action,
-                                                            DispatcherObject sender = null,
-                                                            DispatcherPriority priority = DispatcherPriority.Send)
+                                                            DispatcherObject sender,
+                                                            DispatcherPriority priority)
     {
         var dispatcherObject = sender.GetDispatcherObject();
 
@@ -57,9 +69,15 @@ public static class DispatcherService
     /// <param name="action">The action.</param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
+    public static T InvokeOnDispatcherContext<T>(Func<T> action) =>
+        InvokeOnDispatcherContext(action, null, DispatcherPriority.Send);
+
+    public static T InvokeOnDispatcherContext<T>(Func<T> action, DispatcherObject sender) =>
+        InvokeOnDispatcherContext(action, sender, DispatcherPriority.Send);
+
     public static T InvokeOnDispatcherContext<T>(Func<T> action,
-                                                 DispatcherObject sender = null,
-                                                 DispatcherPriority priority = DispatcherPriority.Send)
+                                                 DispatcherObject sender,
+                                                 DispatcherPriority priority)
     {
         var dispatcherObject = sender.GetDispatcherObject();
 
@@ -76,11 +94,21 @@ public static class DispatcherService
     /// <param name="cancellationToken"></param>
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
+    public static Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action) =>
+        InvokeOnDispatcherContextAsync(action, null, DispatcherPriority.Send, default);
+
+    public static Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action, DispatcherObject sender) =>
+        InvokeOnDispatcherContextAsync(action, sender, DispatcherPriority.Send, default);
+
+    public static Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action,
+                                                            DispatcherObject sender,
+                                                            DispatcherPriority priority) =>
+        InvokeOnDispatcherContextAsync(action, sender, priority, default);
+
     public static async Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action,
-                                                                  DispatcherObject sender = null,
-                                                                  DispatcherPriority priority = DispatcherPriority.Send,
-                                                                  CancellationToken cancellationToken =
-                                                                      default) //todo support ct
+                                                                  DispatcherObject sender,
+                                                                  DispatcherPriority priority,
+                                                                  CancellationToken cancellationToken)
     {
         var dispatcherObject = sender.GetDispatcherObject();
 
@@ -89,9 +117,15 @@ public static class DispatcherService
             : await dispatcherObject.Dispatcher.InvokeAsync(action, priority, cancellationToken);
     }
 
+    public static Task ExecuteTaskInDispatcherContextAsync(Func<Task> funcTask) =>
+        ExecuteTaskInDispatcherContextAsync(funcTask, null, DispatcherPriority.Send);
+
+    public static Task ExecuteTaskInDispatcherContextAsync(Func<Task> funcTask, DispatcherObject sender) =>
+        ExecuteTaskInDispatcherContextAsync(funcTask, sender, DispatcherPriority.Send);
+
     public static async Task ExecuteTaskInDispatcherContextAsync(Func<Task> funcTask,
-                                                                 DispatcherObject sender = null,
-                                                                 DispatcherPriority priority = DispatcherPriority.Send)
+                                                                 DispatcherObject sender,
+                                                                 DispatcherPriority priority)
     {
         var dispatcherObject = sender.GetDispatcherObject();
 
@@ -101,10 +135,15 @@ public static class DispatcherService
             await dispatcherObject.Dispatcher.Invoke(funcTask, priority);
     }
 
+    public static Task<T> ExecuteTaskInDispatcherContextAsync<T>(Func<Task<T>> funcTask) =>
+        ExecuteTaskInDispatcherContextAsync(funcTask, null, DispatcherPriority.Send);
+
+    public static Task<T> ExecuteTaskInDispatcherContextAsync<T>(Func<Task<T>> funcTask, DispatcherObject sender) =>
+        ExecuteTaskInDispatcherContextAsync(funcTask, sender, DispatcherPriority.Send);
+
     public static async Task<T> ExecuteTaskInDispatcherContextAsync<T>(Func<Task<T>> funcTask,
-                                                                       DispatcherObject sender = null,
-                                                                       DispatcherPriority priority =
-                                                                           DispatcherPriority.Send)
+                                                                       DispatcherObject sender,
+                                                                       DispatcherPriority priority)
     {
         var dispatcherObject = sender.GetDispatcherObject();
 
@@ -118,7 +157,10 @@ public static class DispatcherService
     /// </summary>
     /// <param name="viewFunc">The view function.</param>
     /// <param name="isModal">if set to <c>true</c> [is modal].</param>
-    public static TaskCompletionSource<bool> ShowView<T>(Func<T> viewFunc, bool isModal = false) where T : Window
+    public static TaskCompletionSource<bool> ShowView<T>(Func<T> viewFunc) where T : Window =>
+        ShowView(viewFunc, false);
+
+    public static TaskCompletionSource<bool> ShowView<T>(Func<T> viewFunc, bool isModal) where T : Window
     {
         var tcs = new TaskCompletionSource<bool>();
         var thread = new Thread(() => ShowView(viewFunc, isModal, tcs));
@@ -140,9 +182,15 @@ public static class DispatcherService
     /// <returns>True if you're on the dispatcher thread, otherwise - false</returns>
     public static bool CheckAccess(DispatcherObject sender) => sender.GetDispatcherObject().Dispatcher.CheckAccess();
 
+    public static void BeginInvoke(Action action) =>
+        BeginInvoke(action, null, DispatcherPriority.Normal);
+
+    public static void BeginInvoke(Action action, DispatcherObject sender) =>
+        BeginInvoke(action, sender, DispatcherPriority.Normal);
+
     public static void BeginInvoke(Action action,
-                                   DispatcherObject sender = null,
-                                   DispatcherPriority priority = DispatcherPriority.Normal)
+                                   DispatcherObject sender,
+                                   DispatcherPriority priority)
     {
         var dispatcherObject = sender.GetDispatcherObject();
 

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 
-namespace FEx.MVVM.Abstractions;
+namespace FEx.MVVM;
 
 public abstract class SubscriberBase
 {

@@ -1,9 +1,9 @@
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Core.Abstractions.Helpers;
 using FEx.Core.Collections.Concurrent;
-using FEx.MVVM.Abstractions;
 using FEx.MVVM.Abstractions.Events;
 using FEx.MVVM.Abstractions.Interfaces;
+using FEx.MVVM.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

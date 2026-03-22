@@ -35,8 +35,13 @@ file = "Configuration.cs"
 [[classes]]
 name = "FExBuild"
 ns = "FEx.Building"
-base = "NukeBuild"
+base = "NukeBuild, ICompileTarget"
 file = "FExBuild.cs"
+
+[[interfaces]]
+name = "ICompileTarget"
+ns = "FEx.Building"
+file = "ICompileTarget.cs"
 
 [[interfaces]]
 name = "IGitVersionComponent"
@@ -62,6 +67,11 @@ file = "IRepositoryInfo.cs"
 name = "ITagTarget"
 ns = "FEx.Building"
 file = "ITagTarget.cs"
+
+[[interfaces]]
+name = "ITestTarget"
+ns = "FEx.Building"
+file = "ITestTarget.cs"
 
 [[classes]]
 name = "NukeExtensions"
@@ -130,4 +140,11 @@ file = "AssemblyInfo\\VersionString.cs"
 name = "VersionUpdateRule"
 ns = "FEx.Building.AssemblyInfo"
 file = "AssemblyInfo\\VersionUpdateRule.cs"
+
+[[classes]]
+name = "JoinableTaskHelper"
+ns = "FEx.Building.Helpers"
+summary = "Minimal JoinableTask wrapper for running async code synchronously in NUKE targets without deadlocks."
+file = "Helpers\\JoinableTaskHelper.cs"
+static = true
 

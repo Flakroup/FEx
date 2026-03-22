@@ -1,6 +1,6 @@
+using FEx.Agnostics.BaseObjects;
 using FEx.Core.Abstractions.Extensions;
 using FEx.MVVM.Abstractions.Interfaces;
-using FEx.MVVM.Rx.BaseObjects;
 using System;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace FEx.MVVM.Utilities;
 
-public class FExTimer : ReactiveNotifyPropertyChanged, IFExTimer
+public class FExTimer : NotifyPropertyChanged, IFExTimer
 {
     private bool _isDisposed;
     private bool _isRunning;

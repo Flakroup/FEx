@@ -276,4 +276,12 @@ Write-Host "  Enums:       $totalEnums"
 Write-Host "  Extensions:  $totalExtMethods"
 Write-Host "  Output:      $OutputDir" -ForegroundColor Green
 
+# Auto-sync to Obsidian vault
+$syncScript = Join-Path $ScriptRoot "Sync-ApiSurfaceToObsidian.ps1"
+if (Test-Path $syncScript) {
+    Write-Host ""
+    Write-Host "Syncing to Obsidian vault..." -ForegroundColor Cyan
+    & $syncScript -ApiSurfacePath $OutputDir
+}
+
 #endregion

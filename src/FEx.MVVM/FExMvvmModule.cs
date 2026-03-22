@@ -2,6 +2,7 @@ using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.MVVM.Abstractions.Interfaces;
+using FEx.MVVM.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 using StrongInject.Extensions.DependencyInjection;

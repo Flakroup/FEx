@@ -533,11 +533,41 @@ file = "Extensions\\BitmapExtensions.cs"
 static = true
 
 [[extensions]]
+name = "ToBitmapImageAsync"
+sig = "Task<BitmapImage> ToBitmapImageAsync(this Stream stream)"
+returns = "Task<BitmapImage>"
+file = "Extensions\\BitmapExtensions.cs"
+
+[[extensions]]
+name = "ToBitmapImageAsync"
+sig = "Task<BitmapImage> ToBitmapImageAsync(this Stream stream, bool forceLoad)"
+returns = "Task<BitmapImage>"
+file = "Extensions\\BitmapExtensions.cs"
+
+[[extensions]]
+name = "ToBitmapImageAsync"
+sig = "Task<BitmapImage> ToBitmapImageAsync(this Stream stream, bool forceLoad, bool forceMemoryStream)"
+returns = "Task<BitmapImage>"
+file = "Extensions\\BitmapExtensions.cs"
+
+[[extensions]]
+name = "ToBitmapImage"
+sig = "BitmapImage ToBitmapImage(this Stream stream)"
+returns = "BitmapImage"
+file = "Extensions\\BitmapExtensions.cs"
+
+[[extensions]]
+name = "ToBitmapImage"
+sig = "BitmapImage ToBitmapImage(this Stream stream, bool forceLoad)"
+returns = "BitmapImage"
+file = "Extensions\\BitmapExtensions.cs"
+
+[[extensions]]
 name = "ToBitmapImage"
 sig = "BitmapImage ToBitmapImage(this Stream stream,
-                                            bool forceLoad = false,
-                                            int decodePixelHeight = 0,
-                                            int decodePixelWidth = 0)"
+                                            bool forceLoad,
+                                            int decodePixelHeight,
+                                            int decodePixelWidth)"
 returns = "BitmapImage"
 file = "Extensions\\BitmapExtensions.cs"
 
@@ -553,6 +583,27 @@ name = "SaveToFile"
 sig = "void SaveToFile(this BitmapSource image, string filePath)"
 returns = "void"
 summary = "Saves to file."
+file = "Extensions\\BitmapExtensions.cs"
+
+[[extensions]]
+name = "ToBitmapImageAsync"
+sig = "Task<BitmapImage> ToBitmapImageAsync(this byte[] array)"
+returns = "Task<BitmapImage>"
+summary = "Saves to file."
+file = "Extensions\\BitmapExtensions.cs"
+
+[[extensions]]
+name = "ToBitmapImageAsync"
+sig = "Task<BitmapImage> ToBitmapImageAsync(this Image image)"
+returns = "Task<BitmapImage>"
+summary = "Takes a bitmap and converts it to an image that can be handled by WPF ImageBrush"
+file = "Extensions\\BitmapExtensions.cs"
+
+[[extensions]]
+name = "ToBitmapImageAsync"
+sig = "Task<BitmapImage> ToBitmapImageAsync(this Image image, ImageFormat imageFormat)"
+returns = "Task<BitmapImage>"
+summary = "Takes a bitmap and converts it to an image that can be handled by WPF ImageBrush"
 file = "Extensions\\BitmapExtensions.cs"
 
 [[classes]]
@@ -592,6 +643,120 @@ name = "DependencyPropertyExtensions"
 ns = "FEx.WPFx.Extensions"
 file = "Extensions\\DependencyPropertyExtensions.cs"
 static = true
+
+[[classes]]
+name = "TreeViewBuilderExtensions"
+ns = "FEx.WPFx.Extensions"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
+static = true
+
+[[extensions]]
+name = "AddChildNode"
+sig = "void AddChildNode(this ITreeViewBuilder builder,
+                                    string rootNodeName,
+                                    List<string> nodePath)"
+returns = "void"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
+
+[[extensions]]
+name = "AddChildNode"
+sig = "void AddChildNode(this ITreeViewBuilder builder,
+                                    string rootNodeName,
+                                    List<string> nodePath,
+                                    string name)"
+returns = "void"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
+
+[[extensions]]
+name = "AddChildNode"
+sig = "void AddChildNode(this ITreeViewBuilder builder,
+                                    string rootNodeName,
+                                    List<string> nodePath,
+                                    string name,
+                                    bool unique)"
+returns = "void"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
+
+[[extensions]]
+name = "AddChildNode"
+sig = "void AddChildNode(this ITreeViewBuilder builder,
+                                    string rootNodeName,
+                                    List<string> nodePath,
+                                    string name,
+                                    bool unique,
+                                    string iconPath)"
+returns = "void"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
+
+[[extensions]]
+name = "AddChildNode"
+sig = "void AddChildNode(this ITreeViewBuilder builder,
+                                    string rootNodeName,
+                                    List<string> nodePath,
+                                    string name,
+                                    bool unique,
+                                    string iconPath,
+                                    bool isIconAttachedToFile)"
+returns = "void"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
+
+[[extensions]]
+name = "AddChildNode"
+sig = "void AddChildNode(this ITreeViewBuilder builder,
+                                    string rootNodeName,
+                                    string nodePath)"
+returns = "void"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
+
+[[extensions]]
+name = "AddChildNode"
+sig = "void AddChildNode(this ITreeViewBuilder builder,
+                                    string rootNodeName,
+                                    string nodePath,
+                                    string name)"
+returns = "void"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
+
+[[extensions]]
+name = "AddChildNode"
+sig = "void AddChildNode(this ITreeViewBuilder builder,
+                                    string rootNodeName,
+                                    string nodePath,
+                                    string name,
+                                    char pathSeparator)"
+returns = "void"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
+
+[[extensions]]
+name = "AddChildNode"
+sig = "void AddChildNode(this ITreeViewBuilder builder,
+                                    string rootNodeName,
+                                    string nodePath,
+                                    string name,
+                                    char pathSeparator,
+                                    bool unique)"
+returns = "void"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
+
+[[extensions]]
+name = "AddChildNode"
+sig = "void AddChildNode(this ITreeViewBuilder builder,
+                                    string rootNodeName,
+                                    string nodePath,
+                                    string name,
+                                    char pathSeparator,
+                                    bool unique,
+                                    string iconPath)"
+returns = "void"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
+
+[[extensions]]
+name = "AddChildNodes"
+sig = "void AddChildNodes(this ITreeViewBuilder builder,
+                                     string rootNodeName,
+                                     IEnumerable<FExTreeViewNode> childNodes)"
+returns = "void"
+file = "Extensions\\TreeViewBuilderExtensions.cs"
 
 [[classes]]
 name = "TreeViewItemExtensions"

@@ -104,6 +104,18 @@ ns = "FEx.Downloader.Enums"
 file = "Enums\\DownloadState.cs"
 
 [[classes]]
+name = "DownloadRangeExtensions"
+ns = "FEx.Downloader.Extensions"
+file = "Extensions\\DownloadRangeExtensions.cs"
+static = true
+
+[[extensions]]
+name = "DoDownloadAsync"
+sig = "Task DoDownloadAsync(this IDownloadRange downloadRange)"
+returns = "Task"
+file = "Extensions\\DownloadRangeExtensions.cs"
+
+[[classes]]
 name = "HttpClientServiceStub"
 ns = "FEx.Downloader.Models"
 base = "IEquatable<HttpClientServiceStub>"

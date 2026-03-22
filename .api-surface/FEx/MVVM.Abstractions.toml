@@ -15,16 +15,15 @@ base = "IEquatable<FExTreeViewNode>"
 file = "FExTreeViewNode.cs"
 
 [[classes]]
-name = "Link"
-ns = "FEx.MVVM.Abstractions"
-base = "ILink"
-file = "Link.cs"
-
-[[classes]]
 name = "LinkableNotifyPropertyChanged"
 ns = "FEx.MVVM.Abstractions"
 base = "NotifyPropertyChanged, ILinkableNotifyPropertyChanged"
 file = "LinkableNotifyPropertyChanged.cs"
+
+[[classes]]
+name = "LinkManager"
+ns = "FEx.MVVM.Abstractions"
+file = "LinkManager.cs"
 
 [[classes]]
 name = "WidthAndHeight"
@@ -98,6 +97,114 @@ name = "ProgressPropertyChangedEventArgs"
 ns = "FEx.MVVM.Abstractions.Events"
 base = "EventArgs"
 file = "Events\\ProgressPropertyChangedEventArgs.cs"
+
+[[classes]]
+name = "FExTimerExtensions"
+ns = "FEx.MVVM.Abstractions.Extensions"
+file = "Extensions\\FExTimerExtensions.cs"
+static = true
+
+[[extensions]]
+name = "WithAsyncCallback"
+sig = "IFExTimer WithAsyncCallback(this IFExTimer timer, Func<Task> asyncCallback)"
+returns = "IFExTimer"
+file = "Extensions\\FExTimerExtensions.cs"
+
+[[classes]]
+name = "LinkableNotifyPropertyChangedExtensions"
+ns = "FEx.MVVM.Abstractions.Extensions"
+file = "Extensions\\LinkableNotifyPropertyChangedExtensions.cs"
+static = true
+
+[[extensions]]
+name = "Unlink"
+sig = "void Unlink(this ILinkableNotifyPropertyChanged source, ILink link)"
+returns = "void"
+file = "Extensions\\LinkableNotifyPropertyChangedExtensions.cs"
+
+[[extensions]]
+name = "Unlink"
+sig = "void Unlink(this ILinkableNotifyPropertyChanged source, Guid linkId, string propertyName, Type propertyType)"
+returns = "void"
+file = "Extensions\\LinkableNotifyPropertyChangedExtensions.cs"
+
+[[classes]]
+name = "MessagePopupServiceExtensions"
+ns = "FEx.MVVM.Abstractions.Extensions"
+file = "Extensions\\MessagePopupServiceExtensions.cs"
+static = true
+
+[[extensions]]
+name = "ShowMessageAsync"
+sig = "Task<MessageResult> ShowMessageAsync(this IMessagePopupService service, string txt)"
+returns = "Task<MessageResult>"
+file = "Extensions\\MessagePopupServiceExtensions.cs"
+
+[[extensions]]
+name = "ShowMessageAsync"
+sig = "Task<MessageResult> ShowMessageAsync(this IMessagePopupService service, string txt, string caption)"
+returns = "Task<MessageResult>"
+file = "Extensions\\MessagePopupServiceExtensions.cs"
+
+[[extensions]]
+name = "ShowMessageAsync"
+sig = "Task<MessageResult> ShowMessageAsync(this IMessagePopupService service, string txt, string caption, MessageIcon messageBoxImage)"
+returns = "Task<MessageResult>"
+file = "Extensions\\MessagePopupServiceExtensions.cs"
+
+[[extensions]]
+name = "ShowMessageAsync"
+sig = "Task<MessageResult> ShowMessageAsync(this IMessagePopupService service, string txt, string caption, MessageIcon messageBoxImage, FExMessageButton button)"
+returns = "Task<MessageResult>"
+file = "Extensions\\MessagePopupServiceExtensions.cs"
+
+[[extensions]]
+name = "ShowMessage"
+sig = "MessageResult ShowMessage(this IMessagePopupService service, string txt)"
+returns = "MessageResult"
+file = "Extensions\\MessagePopupServiceExtensions.cs"
+
+[[extensions]]
+name = "ShowMessage"
+sig = "MessageResult ShowMessage(this IMessagePopupService service, string txt, string caption)"
+returns = "MessageResult"
+file = "Extensions\\MessagePopupServiceExtensions.cs"
+
+[[extensions]]
+name = "ShowMessage"
+sig = "MessageResult ShowMessage(this IMessagePopupService service, string txt, string caption, MessageIcon messageBoxImage)"
+returns = "MessageResult"
+file = "Extensions\\MessagePopupServiceExtensions.cs"
+
+[[extensions]]
+name = "ShowMessage"
+sig = "MessageResult ShowMessage(this IMessagePopupService service, string txt, string caption, MessageIcon messageBoxImage, FExMessageButton button)"
+returns = "MessageResult"
+file = "Extensions\\MessagePopupServiceExtensions.cs"
+
+[[classes]]
+name = "ProgressAggregatorExtensions"
+ns = "FEx.MVVM.Abstractions.Extensions"
+file = "Extensions\\ProgressAggregatorExtensions.cs"
+static = true
+
+[[extensions]]
+name = "PrgSet"
+sig = "void PrgSet(this IProgressAggregator aggregator, double? value)"
+returns = "void"
+file = "Extensions\\ProgressAggregatorExtensions.cs"
+
+[[extensions]]
+name = "PrgSet"
+sig = "void PrgSet(this IProgressAggregator aggregator, double? value, double? maximum)"
+returns = "void"
+file = "Extensions\\ProgressAggregatorExtensions.cs"
+
+[[extensions]]
+name = "PrgAdd"
+sig = "void PrgAdd(this IProgressAggregator aggregator)"
+returns = "void"
+file = "Extensions\\ProgressAggregatorExtensions.cs"
 
 [[interfaces]]
 name = "IAsyncCommand"

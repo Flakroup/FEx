@@ -17,6 +17,7 @@
 		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
 		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
 		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
+		<ProjectReference Include="..\FEx.MVVM.Rx\FEx.MVVM.Rx.csproj" />
 		<ProjectReference Include="..\FEx.Platforms\FEx.Platforms.csproj" />
 	</ItemGroup>
 

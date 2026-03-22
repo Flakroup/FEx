@@ -46,20 +46,50 @@ static = true
 [[extensions]]
 name = "ToJson"
 sig = "string ToJson(this object self,
-                                JsonSerializerSettings settings = null,
-                                Formatting formatting = Formatting.None)"
+                                JsonSerializerSettings settings,
+                                Formatting formatting)"
+returns = "string"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "ToJson"
+sig = "string ToJson(this object self)"
+returns = "string"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "ToJson"
+sig = "string ToJson(this object self, JsonSerializerSettings settings)"
+returns = "string"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "ToJson"
+sig = "string ToJson(this object self, Formatting formatting)"
 returns = "string"
 file = "Extensions\\JsonExtensions.cs"
 
 [[extensions]]
 name = "FromJson"
-sig = "object FromJson(this string json, JsonSerializerSettings settings = null)"
+sig = "object FromJson(this string json, JsonSerializerSettings settings)"
+returns = "object"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "FromJson"
+sig = "object FromJson(this string json)"
 returns = "object"
 file = "Extensions\\JsonExtensions.cs"
 
 [[extensions]]
 name = "DeserializeFromStream"
-sig = "object DeserializeFromStream(this Stream stream, JsonSerializerSettings settings = null)"
+sig = "object DeserializeFromStream(this Stream stream, JsonSerializerSettings settings)"
+returns = "object"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "DeserializeFromStream"
+sig = "object DeserializeFromStream(this Stream stream)"
 returns = "object"
 file = "Extensions\\JsonExtensions.cs"
 
@@ -80,9 +110,29 @@ file = "Extensions\\JsonExtensions.cs"
 [[extensions]]
 name = "PrettyPrintJson"
 sig = "string PrettyPrintJson(this string json,
-                                         JsonLoadSettings loadSettings = null,
-                                         JsonSerializerSettings saveSettings = null,
-                                         Formatting formatting = Formatting.Indented)"
+                                         JsonLoadSettings loadSettings,
+                                         JsonSerializerSettings saveSettings,
+                                         Formatting formatting)"
+returns = "string"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "PrettyPrintJson"
+sig = "string PrettyPrintJson(this string json)"
+returns = "string"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "PrettyPrintJson"
+sig = "string PrettyPrintJson(this string json, JsonLoadSettings loadSettings)"
+returns = "string"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "PrettyPrintJson"
+sig = "string PrettyPrintJson(this string json,
+                                         JsonLoadSettings loadSettings,
+                                         JsonSerializerSettings saveSettings)"
 returns = "string"
 file = "Extensions\\JsonExtensions.cs"
 
@@ -90,8 +140,20 @@ file = "Extensions\\JsonExtensions.cs"
 name = "SerializeToFile"
 sig = "void SerializeToFile(this FileInfo file,
                                        object self,
-                                       JsonSerializerSettings settings = null,
-                                       Formatting formatting = Formatting.None)"
+                                       JsonSerializerSettings settings,
+                                       Formatting formatting)"
+returns = "void"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "SerializeToFile"
+sig = "void SerializeToFile(this FileInfo file, object self)"
+returns = "void"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "SerializeToFile"
+sig = "void SerializeToFile(this FileInfo file, object self, JsonSerializerSettings settings)"
 returns = "void"
 file = "Extensions\\JsonExtensions.cs"
 

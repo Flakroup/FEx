@@ -36,3 +36,51 @@ ns = "FEx.Platforms.Extensions"
 file = "Extensions\\RegistryKeyExtensions.cs"
 static = true
 
+[[classes]]
+name = "RegistryServiceExtensions"
+ns = "FEx.Platforms.Extensions"
+file = "Extensions\\RegistryServiceExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetClassesRootSubKey"
+sig = "RegistryKey GetClassesRootSubKey(this IRegistryService service, string subKey)"
+returns = "RegistryKey"
+file = "Extensions\\RegistryServiceExtensions.cs"
+
+[[extensions]]
+name = "GetLocalMachineSubKey"
+sig = "RegistryKey GetLocalMachineSubKey(this IRegistryService service, string subKey)"
+returns = "RegistryKey"
+file = "Extensions\\RegistryServiceExtensions.cs"
+
+[[extensions]]
+name = "GetCurrentUserSubKey"
+sig = "RegistryKey GetCurrentUserSubKey(this IRegistryService service, string subKey)"
+returns = "RegistryKey"
+file = "Extensions\\RegistryServiceExtensions.cs"
+
+[[extensions]]
+name = "GetSubKey"
+sig = "RegistryKey GetSubKey(this IRegistryService service, RegistryKey registry, string subKey)"
+returns = "RegistryKey"
+file = "Extensions\\RegistryServiceExtensions.cs"
+
+[[extensions]]
+name = "GetOrAddCurrentUserSubKey"
+sig = "RegistryKey GetOrAddCurrentUserSubKey(this IRegistryService service, string subKey)"
+returns = "RegistryKey"
+file = "Extensions\\RegistryServiceExtensions.cs"
+
+[[extensions]]
+name = "GetOrAddLocalMachineSubKey"
+sig = "RegistryKey GetOrAddLocalMachineSubKey(this IRegistryService service, string subKey)"
+returns = "RegistryKey"
+file = "Extensions\\RegistryServiceExtensions.cs"
+
+[[extensions]]
+name = "SetStartup"
+sig = "void SetStartup(this IRegistryService service, string appName, string executablePath, bool enable)"
+returns = "void"
+file = "Extensions\\RegistryServiceExtensions.cs"
+

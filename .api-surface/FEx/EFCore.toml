@@ -93,9 +93,15 @@ file = "Extensions\\DbContextOptionsBuilderExtensions.cs"
 
 [[extensions]]
 name = "UseSqlServer"
+sig = "bool UseSqlServer(this DbContextOptionsBuilder options, IFExDbConfig config)"
+returns = "bool"
+file = "Extensions\\DbContextOptionsBuilderExtensions.cs"
+
+[[extensions]]
+name = "UseSqlServer"
 sig = "bool UseSqlServer(this DbContextOptionsBuilder options,
                                     IFExDbConfig config,
-                                    Action<SqlServerDbContextOptionsBuilder> configure = null)"
+                                    Action<SqlServerDbContextOptionsBuilder> configure)"
 returns = "bool"
 file = "Extensions\\DbContextOptionsBuilderExtensions.cs"
 
@@ -110,6 +116,12 @@ name = "GetMappedProperties"
 sig = "IReadOnlyCollection<string> GetMappedProperties(this IEntityType entityType)"
 returns = "IReadOnlyCollection<string>"
 file = "Extensions\\EntityTypeExtensions.cs"
+
+[[classes]]
+name = "PooledDbServiceExtensions"
+ns = "FEx.EFCore.Extensions"
+file = "Extensions\\PooledDbServiceExtensions.cs"
+static = true
 
 [[classes]]
 name = "EFCoreHelper"

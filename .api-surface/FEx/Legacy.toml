@@ -53,6 +53,24 @@ sig = "bool HasFlagFast(this JobSpecs? value, JobSpecs flag)"
 returns = "bool"
 file = "Asyncx\\Enums\\JobSpecs.cs"
 
+[[classes]]
+name = "TasksHandlerExtensions"
+ns = "FEx.Legacy.Asyncx.Extensions"
+file = "Asyncx\\Extensions\\TasksHandlerExtensions.cs"
+static = true
+
+[[extensions]]
+name = "RunAsync"
+sig = "Task RunAsync(this ITasksHandler handler, Action task)"
+returns = "Task"
+file = "Asyncx\\Extensions\\TasksHandlerExtensions.cs"
+
+[[extensions]]
+name = "RunTaskAsync"
+sig = "Task RunTaskAsync(this ITasksHandler handler, Func<Task> task)"
+returns = "Task"
+file = "Asyncx\\Extensions\\TasksHandlerExtensions.cs"
+
 [[interfaces]]
 name = "ICachedImageStorage"
 ns = "FEx.Legacy.Imaging.Abstractions.Interfaces"
@@ -62,6 +80,42 @@ file = "Imaging\\Abstractions\\Interfaces\\ICachedImageStorage.cs"
 name = "IIndexEntryBase"
 ns = "FEx.Legacy.Imaging.Abstractions.Interfaces"
 file = "Imaging\\Abstractions\\Interfaces\\IIndexEntryBase.cs"
+
+[[classes]]
+name = "CachedImageStorageExtensions"
+ns = "FEx.Legacy.Imaging.Extensions"
+file = "Imaging\\Extensions\\CachedImageStorageExtensions.cs"
+static = true
+
+[[extensions]]
+name = "EntryCacheShouldBePrepared"
+sig = "bool EntryCacheShouldBePrepared(this ICachedImageStorage storage, IIndexEntryBase entry)"
+returns = "bool"
+file = "Imaging\\Extensions\\CachedImageStorageExtensions.cs"
+
+[[extensions]]
+name = "GetEntryBaseAsync"
+sig = "Task<IIndexEntryBase> GetEntryBaseAsync(this ICachedImageStorage storage, Uri fileUrl)"
+returns = "Task<IIndexEntryBase>"
+file = "Imaging\\Extensions\\CachedImageStorageExtensions.cs"
+
+[[extensions]]
+name = "PrepareCacheAndGetEntryBaseAsync"
+sig = "Task<IIndexEntryBase> PrepareCacheAndGetEntryBaseAsync(this ICachedImageStorage storage, Uri fileUrl)"
+returns = "Task<IIndexEntryBase>"
+file = "Imaging\\Extensions\\CachedImageStorageExtensions.cs"
+
+[[extensions]]
+name = "PrepareCacheEntryAsync"
+sig = "Task<bool> PrepareCacheEntryAsync(this ICachedImageStorage storage, IIndexEntryBase entry)"
+returns = "Task<bool>"
+file = "Imaging\\Extensions\\CachedImageStorageExtensions.cs"
+
+[[extensions]]
+name = "CacheAllAsync"
+sig = "Task CacheAllAsync(this ICachedImageStorage storage)"
+returns = "Task"
+file = "Imaging\\Extensions\\CachedImageStorageExtensions.cs"
 
 [[classes]]
 name = "MappedDriveResolver"
@@ -137,6 +191,54 @@ file = "Mvvm\\Abstractions\\Interfaces\\IRunAsyncView.cs"
 name = "IThreadingAwareViewModel"
 ns = "FEx.Legacy.Mvvm.Abstractions.Interfaces"
 file = "Mvvm\\Abstractions\\Interfaces\\IThreadingAwareViewModel.cs"
+
+[[classes]]
+name = "RunAsyncExtensions"
+ns = "FEx.Legacy.Mvvm.Extensions"
+file = "Mvvm\\Extensions\\RunAsyncExtensions.cs"
+static = true
+
+[[extensions]]
+name = "RunAsync"
+sig = "Task RunAsync(this IRunAsync runner, Action action)"
+returns = "Task"
+file = "Mvvm\\Extensions\\RunAsyncExtensions.cs"
+
+[[extensions]]
+name = "RunTaskAsync"
+sig = "Task RunTaskAsync(this IRunAsync runner, Func<Task> function)"
+returns = "Task"
+file = "Mvvm\\Extensions\\RunAsyncExtensions.cs"
+
+[[classes]]
+name = "RunAsyncViewExtensions"
+ns = "FEx.Legacy.Mvvm.Extensions"
+file = "Mvvm\\Extensions\\RunAsyncViewExtensions.cs"
+static = true
+
+[[extensions]]
+name = "RunAsync"
+sig = "Task RunAsync(this IRunAsyncView runner, Action action)"
+returns = "Task"
+file = "Mvvm\\Extensions\\RunAsyncViewExtensions.cs"
+
+[[extensions]]
+name = "RunTaskAsync"
+sig = "Task RunTaskAsync(this IRunAsyncView runner, Func<Task> function)"
+returns = "Task"
+file = "Mvvm\\Extensions\\RunAsyncViewExtensions.cs"
+
+[[classes]]
+name = "ThreadingAwareViewModelExtensions"
+ns = "FEx.Legacy.Mvvm.Extensions"
+file = "Mvvm\\Extensions\\ThreadingAwareViewModelExtensions.cs"
+static = true
+
+[[extensions]]
+name = "PostMainJob"
+sig = "void PostMainJob(this IThreadingAwareViewModel viewModel)"
+returns = "void"
+file = "Mvvm\\Extensions\\ThreadingAwareViewModelExtensions.cs"
 
 [[classes]]
 name = "DelayedNotificationObserver"

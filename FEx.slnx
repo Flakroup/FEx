@@ -187,6 +187,9 @@
   <Project Path="src/FEx.RESXx/FEx.RESXx.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
+  <Project Path="src/SecureStorage.Abstractions/FEx.SecureStorage.Abstractions.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
   <Project Path="src/FEx.SecureStorage/FEx.SecureStorage.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>

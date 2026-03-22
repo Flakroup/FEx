@@ -210,7 +210,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
                     bool hasInvalidContentLength = response.ContentLength == -1;
 
                     using var file =
-                        DownloadItem.CreateFromResponse(response, filePath, false, pars, md5Checksum: checksum);
+                        DownloadItem.CreateFromResponse(response, filePath, false, pars, 0, 50, checksum, default);
 
                     if (await file.DownloadFileAsync())
                     {

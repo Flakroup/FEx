@@ -10,6 +10,7 @@ using FEx.Core.Abstractions.Extensions;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Clients;
 using FEx.Downloader.Enums;
+using FEx.Downloader.Extensions;
 using FEx.FileSystem;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Extensions;
@@ -259,12 +260,19 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     private DownloadItem(Uri url,
                          string filePath,
+                         bool reportProgress)
+        : this(url, filePath, reportProgress, null, 50, -1, null, default)
+    {
+    }
+
+    private DownloadItem(Uri url,
+                         string filePath,
                          bool reportProgress,
-                         WebRequestParams pars = null,
-                         int parallelRanges = 50,
-                         long dataLength = -1,
-                         string md5Checksum = null,
-                         CancellationToken cancellationToken = default)
+                         WebRequestParams pars,
+                         int parallelRanges,
+                         long dataLength,
+                         string md5Checksum,
+                         CancellationToken cancellationToken)
     {
         ReportProgress = reportProgress;
 
@@ -428,9 +436,13 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         return IsDownloaded;
     }
 
+    public static Task<DownloadItem> CreateAsync(IDownloadStub downloadItem,
+                                                   bool reportProgress) =>
+        CreateAsync(downloadItem, reportProgress, CancellationToken.None);
+
     public static async Task<DownloadItem> CreateAsync(IDownloadStub downloadItem,
                                                        bool reportProgress,
-                                                       CancellationToken cancellationToken = default)
+                                                       CancellationToken cancellationToken)
     {
         if (downloadItem.FilePath is null
             && downloadItem.DirPath is not null
@@ -447,14 +459,19 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             cancellationToken);
     }
 
+    public static Task<DownloadItem> CreateAsync(string url,
+                                                  string path,
+                                                  bool reportProgress) =>
+        CreateAsync(new Uri(url), path, reportProgress, null, 50, -1, null, default);
+
     public static async Task<DownloadItem> CreateAsync(string url,
                                                        string path,
                                                        bool reportProgress,
-                                                       WebRequestParams pars = null,
-                                                       int parallelChunks = 50,
-                                                       long dataLength = -1,
-                                                       string md5Checksum = null,
-                                                       CancellationToken cancellationToken = default) =>
+                                                       WebRequestParams pars,
+                                                       int parallelChunks,
+                                                       long dataLength,
+                                                       string md5Checksum,
+                                                       CancellationToken cancellationToken) =>
         await CreateAsync(new Uri(url),
             path,
             reportProgress,
@@ -464,14 +481,19 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             md5Checksum,
             cancellationToken);
 
+    public static Task<DownloadItem> CreateAsync(Uri url,
+                                                  string path,
+                                                  bool reportProgress) =>
+        CreateAsync(url, path, reportProgress, null, 50, -1, null, default);
+
     public static async Task<DownloadItem> CreateAsync(Uri url,
                                                        string path,
                                                        bool reportProgress,
-                                                       WebRequestParams pars = null,
-                                                       int parallelChunks = 50,
-                                                       long dataLength = -1,
-                                                       string md5Checksum = null,
-                                                       CancellationToken cancellationToken = default)
+                                                       WebRequestParams pars,
+                                                       int parallelChunks,
+                                                       long dataLength,
+                                                       string md5Checksum,
+                                                       CancellationToken cancellationToken)
     {
         var res = new DownloadItem(url,
             path,
@@ -490,12 +512,17 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     public static DownloadItem CreateFromResponse(HttpWebResponse response,
                                                   string filePath,
+                                                  bool reportProgress) =>
+        CreateFromResponse(response, filePath, reportProgress, null, 0, 50, null, default);
+
+    public static DownloadItem CreateFromResponse(HttpWebResponse response,
+                                                  string filePath,
                                                   bool reportProgress,
-                                                  WebRequestParams pars = null,
-                                                  long ping = 0,
-                                                  int parallelChunks = 50,
-                                                  string md5Checksum = null,
-                                                  CancellationToken cancellationToken = default)
+                                                  WebRequestParams pars,
+                                                  long ping,
+                                                  int parallelChunks,
+                                                  string md5Checksum,
+                                                  CancellationToken cancellationToken)
     {
         var res = new DownloadItem(response.ResponseUri,
             filePath,

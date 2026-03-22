@@ -33,8 +33,18 @@ public sealed class FlakWebClient : WebClient
 
     public Uri DownloadedFileAddress { get; private set; }
 
-    public FlakWebClient(WebRequestParams pars = null,
-                         Action<object, DownloadProgressChangedEventArgs> downloadProgressHandler = null)
+    public FlakWebClient()
+        : this(null, null)
+    {
+    }
+
+    public FlakWebClient(WebRequestParams pars)
+        : this(pars, null)
+    {
+    }
+
+    public FlakWebClient(WebRequestParams pars,
+                         Action<object, DownloadProgressChangedEventArgs> downloadProgressHandler)
     {
         pars ??= new();
 

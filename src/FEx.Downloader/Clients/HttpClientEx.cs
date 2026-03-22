@@ -119,9 +119,24 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
-    public HttpClientEx(WebRequestParams pars = null,
-                        bool disposeHandler = true,
-                        CancellationTokenSource cancellationTokenSource = default)
+    public HttpClientEx()
+        : this((WebRequestParams)null, true, default)
+    {
+    }
+
+    public HttpClientEx(WebRequestParams pars)
+        : this(pars, true, default)
+    {
+    }
+
+    public HttpClientEx(WebRequestParams pars, bool disposeHandler)
+        : this(pars, disposeHandler, default)
+    {
+    }
+
+    public HttpClientEx(WebRequestParams pars,
+                        bool disposeHandler,
+                        CancellationTokenSource cancellationTokenSource)
         : this(pars.GetHttpClientHandler(), disposeHandler, cancellationTokenSource)
     {
     }
@@ -138,9 +153,19 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
+    public HttpClientEx(HttpClientHandler handler)
+        : this(handler, true, default)
+    {
+    }
+
+    public HttpClientEx(HttpClientHandler handler, bool disposeHandler)
+        : this(handler, disposeHandler, default)
+    {
+    }
+
     public HttpClientEx(HttpClientHandler handler,
-                        bool disposeHandler = true,
-                        CancellationTokenSource cancellationTokenSource = default)
+                        bool disposeHandler,
+                        CancellationTokenSource cancellationTokenSource)
         : base(handler, disposeHandler)
     {
         Buffer = new byte[BufferSize];
@@ -179,7 +204,10 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     public override bool Equals(object obj) =>
         ReferenceEquals(this, obj) || obj is FlakHttpClient other && Equals(other);
 
-    public async Task DownloadFileAsync(Uri url, string filePath, bool lockOnFilePath = true)
+    public Task DownloadFileAsync(Uri url, string filePath) =>
+        DownloadFileAsync(url, filePath, true);
+
+    public async Task DownloadFileAsync(Uri url, string filePath, bool lockOnFilePath)
     {
         var retry = true;
 
@@ -215,7 +243,10 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         }
     }
 
-    public async Task DoDownloadAsync(string filePath, HttpResponseMessage response, bool lockOnFilePath = true)
+    public Task DoDownloadAsync(string filePath, HttpResponseMessage response) =>
+        DoDownloadAsync(filePath, response, true);
+
+    public async Task DoDownloadAsync(string filePath, HttpResponseMessage response, bool lockOnFilePath)
     {
         var length = response.Content.Headers.ContentLength ?? -1;
 
@@ -301,6 +332,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     #region INotifyPropertyChanged
     public event PropertyChangedEventHandler PropertyChanged;
 
+#pragma warning disable S2360 // CallerMemberName requires optional parameter
     public void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         if (propertyName is null)
@@ -327,6 +359,8 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
         return true;
     }
+
+#pragma warning restore S2360
 
     [NotifyPropertyChangedInvocator]
     private void NotifyChanged([CallerMemberName] string propertyName = null)

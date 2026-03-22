@@ -43,7 +43,7 @@ public class AzureStorageService : IAzureStorageService
         _md5Semaphore = new(1, 1);
     }
 
-    public void Configure(string connStr, int parallelOperationsPerProcessorCount = 8)
+    public void Configure(string connStr, int parallelOperationsPerProcessorCount)
     {
         var parallelOperationsCount = Environment.ProcessorCount * parallelOperationsPerProcessorCount;
         ConnStr = connStr;
@@ -83,9 +83,9 @@ public class AzureStorageService : IAzureStorageService
 
     public async Task<bool> DownloadLatestBlobsAsync(string downloadDir,
                                                      string containerName,
-                                                     bool deleteOldFiles = true,
-                                                     string deleteFilesMask = "*.*",
-                                                     bool noDownload = false,
+                                                     bool deleteOldFiles,
+                                                     string deleteFilesMask,
+                                                     bool noDownload,
                                                      params string[] paths)
     {
         Directory.CreateDirectory(downloadDir);
@@ -139,15 +139,15 @@ public class AzureStorageService : IAzureStorageService
         bool overwrite,
         string fileName,
         Stream stream,
-        string containerName = null,
-        CloudBlobContainer container = null)
+        string containerName,
+        CloudBlobContainer container)
     {
         container = container ?? GetCloudBlobContainer(containerName);
         var blobName = GetBlobName(path, fileName);
         Log.LogInformation($"Preparing blob for container {containerName} and path {blobName}");
         var destBlob = container.GetBlockBlobReference(blobName);
         var state = GetBlobProgressState(blobName, StorageOperation.Upload);
-        state.Reset(blobName, Convert.ToDouble(stream.Length));
+        state.Reset(blobName, Convert.ToDouble(stream.Length), null);
 
         var context = new SingleTransferContext
         {
@@ -163,15 +163,15 @@ public class AzureStorageService : IAzureStorageService
     }
 
     public async Task<CloudBlockBlobInfo> GetBlobAsync(string path,
-                                                       CloudBlobContainer container = null,
-                                                       string containerName = null,
-                                                       CancellationToken cancellationToken = default)
+                                                       CloudBlobContainer container,
+                                                       string containerName,
+                                                       CancellationToken cancellationToken)
     {
         container = container ?? GetCloudBlobContainer(containerName);
         var destBlob = new CloudBlockBlobInfo(container.GetBlockBlobReference(path));
 
-        if (await destBlob.EnsureExistsAsync(cancellationToken: cancellationToken))
-            await destBlob.FetchAttributesAsync(cancellationToken: cancellationToken);
+        if (await destBlob.EnsureExistsAsync(false, null, null, cancellationToken))
+            await destBlob.FetchAttributesAsync(null, null, null, cancellationToken);
 
         return destBlob;
     }
@@ -179,17 +179,17 @@ public class AzureStorageService : IAzureStorageService
     public async Task<IList<CloudBlockBlobInfo>> GetCloudBlockBlobsInfoAsync(
         string containerName,
         string path,
-        bool useFlatBlobListing = false) =>
+        bool useFlatBlobListing) =>
         (await GetBlobsAsync<CloudBlockBlob>(containerName, path, useFlatBlobListing)).AsParallel()
         .Select(x => new CloudBlockBlobInfo(x))
         .ToArray();
 
     public async Task<IList<CloudBlockBlob>> GetCloudBlockBlobsAsync(string containerName,
                                                                      string path,
-                                                                     bool useFlatBlobListing = false) =>
+                                                                     bool useFlatBlobListing) =>
         await GetBlobsAsync<CloudBlockBlob>(containerName, path, useFlatBlobListing);
 
-    public async Task<IList<T>> GetBlobsAsync<T>(string containerName, string path, bool useFlatBlobListing = false)
+    public async Task<IList<T>> GetBlobsAsync<T>(string containerName, string path, bool useFlatBlobListing)
         where T : CloudBlob
     {
         var container = GetCloudBlobContainer(containerName);
@@ -203,10 +203,10 @@ public class AzureStorageService : IAzureStorageService
     public async Task<bool> ExistsAsync(string containerName,
                                         string path,
                                         string fileName,
-                                        bool primaryOnly = false,
-                                        BlobRequestOptions options = null,
-                                        OperationContext operationContext = null,
-                                        CancellationToken cancellationToken = default)
+                                        bool primaryOnly,
+                                        BlobRequestOptions options,
+                                        OperationContext operationContext,
+                                        CancellationToken cancellationToken)
     {
         var container = GetCloudBlobContainer(containerName);
         var blobName = $"{path}/{fileName}";
@@ -216,10 +216,10 @@ public class AzureStorageService : IAzureStorageService
     }
 
     public async Task<bool> ExistsAsync(CloudBlockBlob blob,
-                                        bool primaryOnly = false,
-                                        BlobRequestOptions options = null,
-                                        OperationContext operationContext = null,
-                                        CancellationToken cancellationToken = default)
+                                        bool primaryOnly,
+                                        BlobRequestOptions options,
+                                        OperationContext operationContext,
+                                        CancellationToken cancellationToken)
     {
         if (cancellationToken == CancellationToken.None)
             cancellationToken = CancellationToken.None;
@@ -231,8 +231,8 @@ public class AzureStorageService : IAzureStorageService
         string containerName,
         string srcBlob,
         string destBlob,
-        bool overwrite = true,
-        Func<CloudBlob, Task> blobAction = null)
+        bool overwrite,
+        Func<CloudBlob, Task> blobAction)
     {
         var container = GetCloudBlobContainer(containerName);
         var sourceBlob = container.GetBlockBlobReference(srcBlob);
@@ -242,7 +242,7 @@ public class AzureStorageService : IAzureStorageService
             var destinationBlob = container.GetBlockBlobReference(destBlob);
 
             var state = GetBlobProgressState(destBlob, StorageOperation.Upload);
-            state.Reset(destBlob, Convert.ToDouble(srcBlob.Length));
+            state.Reset(destBlob, Convert.ToDouble(srcBlob.Length), null);
 
             var context = new SingleTransferContext
             {
@@ -268,8 +268,8 @@ public class AzureStorageService : IAzureStorageService
     public async Task<IDictionary<FileInfo, CloudBlockBlobInfo>> UploadFilesAsync(
         string containerName,
         string path,
-        bool overwrite = false,
-        bool oneByOne = false,
+        bool overwrite,
+        bool oneByOne,
         params FileInfo[] files)
     {
         if (files.Length == 0)
@@ -279,14 +279,14 @@ public class AzureStorageService : IAzureStorageService
 
         if (!oneByOne)
             return (await files.WithWhenAllTasksAsync(file =>
-                UploadFileAsync(path, overwrite, file, containerName, container))).ToDictionary(x => x.file,
+                UploadFileAsync(path, overwrite, file, containerName, container, CancellationToken.None))).ToDictionary(x => x.file,
                 x => x.blob);
 
         var result = new Dictionary<FileInfo, CloudBlockBlobInfo>();
 
         foreach (var f in files)
         {
-            var (file, destBlob) = await UploadFileAsync(path, overwrite, f, containerName, container);
+            var (file, destBlob) = await UploadFileAsync(path, overwrite, f, containerName, container, CancellationToken.None);
 
             result.Add(file, destBlob);
         }
@@ -298,16 +298,16 @@ public class AzureStorageService : IAzureStorageService
         string path,
         bool overwrite,
         FileInfo file,
-        string containerName = null,
-        CloudBlobContainer container = null,
-        CancellationToken cancellationToken = default)
+        string containerName,
+        CloudBlobContainer container,
+        CancellationToken cancellationToken)
     {
         container ??= GetCloudBlobContainer(containerName);
         var blobName = GetBlobName(path, file.Name);
         Log.LogInformation($"Preparing blob for container {containerName} and path {blobName}");
         var destBlob = container.GetBlockBlobReference(blobName);
         var state = GetBlobProgressState(blobName, StorageOperation.Upload);
-        state.Reset(blobName, Convert.ToDouble(file.Length));
+        state.Reset(blobName, Convert.ToDouble(file.Length), null);
 
         var context = new SingleTransferContext
         {
@@ -324,11 +324,11 @@ public class AzureStorageService : IAzureStorageService
     }
 
     public async Task<bool> DeleteBlobAsync(CloudBlockBlob blob,
-                                            DeleteSnapshotsOption deleteSnapshotsOption = DeleteSnapshotsOption.None,
-                                            AccessCondition accessCondition = null,
-                                            BlobRequestOptions options = null,
-                                            OperationContext operationContext = null,
-                                            CancellationToken cancellationToken = default) =>
+                                            DeleteSnapshotsOption deleteSnapshotsOption,
+                                            AccessCondition accessCondition,
+                                            BlobRequestOptions options,
+                                            OperationContext operationContext,
+                                            CancellationToken cancellationToken) =>
         await blob.DeleteIfExistsAsync(deleteSnapshotsOption,
             accessCondition,
             options,
@@ -396,7 +396,7 @@ public class AzureStorageService : IAzureStorageService
     }
 
     private async Task<(FileInfo localFile, CloudBlockBlob sourceBlob, bool shouldBeDownloaded)>
-        PrepareBlobDownloadAsync(string containerName, string fileName, FileInfo localFile, bool noDownload = false)
+        PrepareBlobDownloadAsync(string containerName, string fileName, FileInfo localFile, bool noDownload)
     {
         CloudBlockBlob sourceBlob = null;
         var shouldBeDownloaded = false;
@@ -409,7 +409,7 @@ public class AzureStorageService : IAzureStorageService
             var totalSize = Convert.ToDouble(sourceBlob.Properties.Length);
 
             var state = GetBlobProgressState(sourceBlob.Name, StorageOperation.Download);
-            state.Reset(sourceBlob.Name, totalSize);
+            state.Reset(sourceBlob.Name, totalSize, null);
 
             if (!noDownload)
             {
@@ -432,7 +432,7 @@ public class AzureStorageService : IAzureStorageService
     }
 
     private ProgressState GetBlobProgressState(string blobName, StorageOperation operation) =>
-        ProgressStates.GetOrAddValue(blobName, () => new(ProgressReporter, operation));
+        ProgressStates.GetOrAddValue(blobName, () => new(ProgressReporter, operation, null, null));
 
     private async Task RunBlobDownloadAsync(FileInfo localFile, CloudBlockBlob sourceBlob, bool shouldBeDownloaded)
     {
@@ -445,7 +445,7 @@ public class AzureStorageService : IAzureStorageService
             Log.LogInformation(
                 $"Downloading blob {sourceBlob.Name} to: {localFile.FullName} {ProgressState.GetProgress(totalSize)}");
 
-            state.Reset(sourceBlob.Name, totalSize);
+            state.Reset(sourceBlob.Name, totalSize, null);
 
             var context = new SingleTransferContext
             {

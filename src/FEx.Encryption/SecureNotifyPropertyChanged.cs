@@ -44,6 +44,7 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
         }
     }
 
+#pragma warning disable S2360 // CallerMemberName requires optional parameter
     protected bool EncryptJsonSource<T>(ref string backingField,
                                         T newValue,
                                         Action<string> onPropertyChanged = null,
@@ -54,6 +55,7 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
                                  string newValue,
                                  Action<string> onPropertyChanged = null,
                                  [CallerMemberName] string propertyName = null)
+#pragma warning restore S2360
     {
         string encrypted = null;
 

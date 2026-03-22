@@ -47,10 +47,10 @@ public class FExWpfx : FExInitializable
     /// The culture to use. If <c>null</c>,
     /// <see cref="CultureInfo.CurrentCulture" /> is used.
     /// </param>
-    public static void OverrideFormattingOnUI(CultureInfo culture = null)
-    {
-        culture ??= CultureInfo.CurrentCulture;
+    public static void OverrideFormattingOnUI() => OverrideFormattingOnUI(CultureInfo.CurrentCulture);
 
+    public static void OverrideFormattingOnUI(CultureInfo culture)
+    {
         FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement),
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
     }

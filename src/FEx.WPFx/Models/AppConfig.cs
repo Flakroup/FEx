@@ -21,14 +21,24 @@ public class AppConfig : IAppConfig
     public Image WindowIcon { get; protected set; }
     public string ChangelogWindowHeader { get; protected set; }
 
-    public AppConfig(IViewDesign mainDesign = null,
-                     IViewDesign splashDesign = null,
-                     string splashResourceName = null,
-                     WidthAndHeight splashSize = null,
-                     string applicationLogoResourceName = null,
-                     string windowIconName = null,
-                     string changelogWindowHeader = null)
+    public AppConfig()
+        : this(null, null, null, null, null, null, null)
+    {
+    }
 
+    public AppConfig(IViewDesign mainDesign,
+                     IViewDesign splashDesign)
+        : this(mainDesign, splashDesign, null, null, null, null, null)
+    {
+    }
+
+    public AppConfig(IViewDesign mainDesign,
+                     IViewDesign splashDesign,
+                     string splashResourceName,
+                     WidthAndHeight splashSize,
+                     string applicationLogoResourceName,
+                     string windowIconName,
+                     string changelogWindowHeader)
     {
         MainDesign = mainDesign ?? new ViewDesign();
         SplashDesign = splashDesign ?? new ViewDesign();

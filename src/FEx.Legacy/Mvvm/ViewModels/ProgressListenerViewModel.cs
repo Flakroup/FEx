@@ -34,7 +34,12 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
     protected IFExTimer Timer => Progress.Timer;
     protected Stopwatch Stopwatch => Progress.Stopwatch;
 
-    public ProgressListenerViewModel(bool useMainProgressContainer = false, params IAsyncInitializable[] dependencies)
+    public ProgressListenerViewModel(params IAsyncInitializable[] dependencies)
+        : this(false, dependencies)
+    {
+    }
+
+    public ProgressListenerViewModel(bool useMainProgressContainer, params IAsyncInitializable[] dependencies)
         : base(dependencies)
     {
         Progress = ProgressSrv.GetOrAddContainer<T>(useMainProgressContainer);
@@ -73,7 +78,7 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
     public bool UnsubscribeFromProgress(IProgressAggregator container) =>
         ProgressSrv.UnsubscribeFromProgress(this, container);
 
-    public override void PostMainJob(bool showTimeInfo = true)
+    public override void PostMainJob(bool showTimeInfo)
     {
         base.PostMainJob(showTimeInfo);
         Watch.Stop();
@@ -94,7 +99,10 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
 
     public void PrgSet(ProgressSnapshot snapshot) => Progress.PrgSet(snapshot.Value, snapshot.Maximum, ProgressChangeMode.Set);
 
-    public void PrgSet(double? val, double? max = null, ProgressChangeMode mode = ProgressChangeMode.Set) =>
+    public void PrgSet(double? val) =>
+        Progress.PrgSet(val, null, ProgressChangeMode.Set);
+
+    public void PrgSet(double? val, double? max, ProgressChangeMode mode) =>
         Progress.PrgSet(val, max, mode);
 
     public void Busy() => Progress.Busy();
@@ -105,7 +113,9 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
 
     public void PrgSetMax(double max) => Progress.PrgSetMax(max);
 
-    public void PrgAdd(double val = 1) => Progress.PrgAdd(val);
+    public void PrgAdd() => Progress.PrgAdd(1);
+
+    public void PrgAdd(double val) => Progress.PrgAdd(val);
 
     public void PrgMaxAdd(double addedValue) => Progress.PrgMaxAdd(addedValue);
 

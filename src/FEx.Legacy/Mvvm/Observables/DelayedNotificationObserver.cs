@@ -13,7 +13,12 @@ public class DelayedNotificationObserver<T> : IDisposable
     protected Func<T> Get { get; }
     protected Action<T> Set { get; }
 
-    public DelayedNotificationObserver(Func<T> getFunc, Action<T> setFunc, TimeSpan delayTimeSpan = default)
+    public DelayedNotificationObserver(Func<T> getFunc, Action<T> setFunc)
+        : this(getFunc, setFunc, default)
+    {
+    }
+
+    public DelayedNotificationObserver(Func<T> getFunc, Action<T> setFunc, TimeSpan delayTimeSpan)
     {
         Get = getFunc;
         Set = setFunc;

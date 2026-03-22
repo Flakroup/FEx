@@ -20,20 +20,25 @@ public class ProgressState
     protected Stopwatch Sw { get; }
 
     public ProgressState(IProgress<string> progress,
+                         StorageOperation operation) : this(progress, operation, null, null) { }
+
+    public ProgressState(IProgress<string> progress,
                          StorageOperation operation,
-                         string name = null,
-                         double? totalSize = null)
+                         string name,
+                         double? totalSize)
     {
         OperationString = operation.GetEnumValueDescription();
         _progress = progress;
         Sw = new();
-        Reset(name, totalSize);
+        Reset(name, totalSize, null);
     }
 
     public static string GetProgress(double prg) =>
         FileLengthConverter.ConvertFileLengthToString(prg, LengthType.Bytes, LengthType.AutoDetect, 2);
 
-    public void Reset(string name = null, double? totalSize = null, StorageOperation? operation = null)
+    public void Reset() => Reset(null, null, null);
+
+    public void Reset(string name, double? totalSize, StorageOperation? operation)
     {
         if (Sw.IsRunning)
             Sw.Stop();

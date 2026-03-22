@@ -28,7 +28,9 @@ public class FileSystemIconsProvider
         _dispatcher = dispatcher;
     }
 
-    public async Task<BitmapSource> GetFileIconAsync(string filePath, bool isIconAttachedToFile = true)
+    public Task<BitmapSource> GetFileIconAsync(string filePath) => GetFileIconAsync(filePath, true);
+
+    public async Task<BitmapSource> GetFileIconAsync(string filePath, bool isIconAttachedToFile)
     {
         var key = isIconAttachedToFile
             ? Path.GetExtension(filePath)

@@ -39,9 +39,24 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
-    public FlakHttpClient(WebRequestParams pars = null,
-                          bool disposeHandler = true,
-                          CancellationTokenSource cancellationTokenSource = default)
+    public FlakHttpClient()
+        : this((WebRequestParams)null, true, default)
+    {
+    }
+
+    public FlakHttpClient(WebRequestParams pars)
+        : this(pars, true, default)
+    {
+    }
+
+    public FlakHttpClient(WebRequestParams pars, bool disposeHandler)
+        : this(pars, disposeHandler, default)
+    {
+    }
+
+    public FlakHttpClient(WebRequestParams pars,
+                          bool disposeHandler,
+                          CancellationTokenSource cancellationTokenSource)
         : this(pars.GetHttpClientHandler(), disposeHandler, cancellationTokenSource)
     {
     }
@@ -58,9 +73,19 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
+    public FlakHttpClient(HttpClientHandler handler)
+        : this(handler, true, default)
+    {
+    }
+
+    public FlakHttpClient(HttpClientHandler handler, bool disposeHandler)
+        : this(handler, disposeHandler, default)
+    {
+    }
+
     public FlakHttpClient(HttpClientHandler handler,
-                          bool disposeHandler = true,
-                          CancellationTokenSource cancellationTokenSource = default)
+                          bool disposeHandler,
+                          CancellationTokenSource cancellationTokenSource)
     {
         Mode = ProgressOperationMode.Stream;
         Client = new(handler, disposeHandler, cancellationTokenSource);
@@ -75,7 +100,10 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
 
     public async Task DelayAsync() => await Client.DelayAsync();
 
-    public async Task DoDownloadAsync(string filePath, HttpResponseMessage response, bool lockOnFilePath = true) =>
+    public async Task DoDownloadAsync(string filePath, HttpResponseMessage response) =>
+        await Client.DoDownloadAsync(filePath, response, true);
+
+    public async Task DoDownloadAsync(string filePath, HttpResponseMessage response, bool lockOnFilePath) =>
         await Client.DoDownloadAsync(filePath, response, lockOnFilePath);
 
     public async Task<HttpResponseMessage> GetAsync(Uri requestUri,

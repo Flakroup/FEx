@@ -67,10 +67,22 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
                          WebRequestParams pars,
                          long maxChunkSize,
                          string filePath,
+                         long dataLength)
+        : this(from, to, directory, url, pars, maxChunkSize, filePath, dataLength, null, null, default)
+    {
+    }
+
+    public DownloadRange(long from,
+                         long to,
+                         DirectoryInfo directory,
+                         Uri url,
+                         WebRequestParams pars,
+                         long maxChunkSize,
+                         string filePath,
                          long dataLength,
-                         IProgress<double> progress = null,
-                         IProgress<bool> connPrg = null,
-                         CancellationToken token = default)
+                         IProgress<double> progress,
+                         IProgress<bool> connPrg,
+                         CancellationToken token)
     {
         From = from;
         To = to;
@@ -105,7 +117,7 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
         HandleChunks();
     }
 
-    public async Task DoDownloadAsync(int retryCount = 3)
+    public async Task DoDownloadAsync(int retryCount)
     {
         var from = From;
         var to = To;

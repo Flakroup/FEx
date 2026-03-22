@@ -6,5 +6,5 @@ public interface IDownloadRange : IDownloadBase, IDownloadPart
 {
     bool IsConnected { get; }
 
-    Task DoDownloadAsync(int retryCount = 3);
+    Task DoDownloadAsync(int retryCount);
 }

@@ -82,22 +82,27 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
     public static ILogger<T> CreateLogger<T>(ILoggerFactory factory) => factory.CreateLogger<T>();
 
     [Factory]
-    public static ILogger CreateLogger(LoggerProviderCollection providerCollection) =>
-        GetSerilogLoggerFactory(providerCollection).CreateLogger(string.Empty);
+    public static ILogger CreateLogger(ILoggerFactory factory) =>
+        factory.CreateLogger(string.Empty);
+
+    private static ILoggerFactory _convenienceFactory;
+
+    private static ILoggerFactory GetConvenienceFactory() =>
+        _convenienceFactory ??= new SerilogLoggerFactory(null, false, GetLoggerProviderCollection(LoggerProviders));
 
     public static ILogger<T> CreateLogger<T>() =>
-        GetSerilogLoggerFactory(GetLoggerProviderCollection(LoggerProviders)).CreateLogger<T>();
+        GetConvenienceFactory().CreateLogger<T>();
 
     public static ILogger CreateLogger(Type senderType)
     {
-        var loggerFactory = (SerilogLoggerFactory)GetSerilogLoggerFactory(GetLoggerProviderCollection(LoggerProviders));
+        var factory = GetConvenienceFactory();
 
         var methodInfo = typeof(LoggerFactoryExtensions).GetMethods()
             .Single(static x => x.Name == nameof(LoggerFactoryExtensions.CreateLogger) && x.IsGenericMethod);
 
         var genericMethod = methodInfo.MakeGenericMethod(senderType);
 
-        return (ILogger)genericMethod.Invoke(loggerFactory, [loggerFactory]);
+        return (ILogger)genericMethod.Invoke(factory, [factory]);
     }
 
     public static void Log(string message,

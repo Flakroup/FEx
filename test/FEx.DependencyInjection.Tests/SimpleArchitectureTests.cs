@@ -2,7 +2,6 @@ using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -12,7 +11,7 @@ namespace FEx.DependencyInjection.Tests;
 /// <summary>
 /// Simplified tests to validate the Multi-DI architecture fundamentals.
 /// </summary>
-public sealed class SimpleArchitectureTests : IDisposable
+public sealed class SimpleArchitectureTests
 {
     [Fact]
     public void MultiDIArchitecture_ShouldCompileAndBuildSuccessfully()
@@ -63,11 +62,4 @@ public sealed class SimpleArchitectureTests : IDisposable
         configureMethod.ReturnType.ShouldBe(typeof(ValueTask), "Should return ValueTask for async configuration");
     }
 
-    #region IDisposable
-    public void Dispose()
-    {
-        // Cleanup
-        GC.SuppressFinalize(this);
-    }
-    #endregion
 }

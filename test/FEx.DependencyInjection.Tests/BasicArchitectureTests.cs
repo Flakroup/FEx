@@ -18,7 +18,7 @@ public sealed class BasicArchitectureTests
     {
         // Arrange & Act
         using var container = new TestContainer();
-        var serviceContainer = container.Resolve<IFExServiceContainer>();
+        using var serviceContainer = container.Resolve<IFExServiceContainer>();
 
         // Assert
         serviceContainer.Value.ShouldNotBeNull();
@@ -29,7 +29,7 @@ public sealed class BasicArchitectureTests
     {
         // Arrange & Act
         using var container = new TestContainer();
-        var serviceProvider = container.Resolve<IFExServiceProvider>();
+        using var serviceProvider = container.Resolve<IFExServiceProvider>();
 
         // Assert
         serviceProvider.Value.ShouldNotBeNull();
@@ -41,7 +41,7 @@ public sealed class BasicArchitectureTests
     {
         // Arrange & Act
         using var container = new TestContainer();
-        var microsoftProvider = container.Resolve<FExMicrosoftDIServiceProvider>();
+        using var microsoftProvider = container.Resolve<FExMicrosoftDIServiceProvider>();
 
         // Assert
         microsoftProvider.Value.ShouldNotBeNull();
@@ -69,7 +69,7 @@ public sealed class BasicArchitectureTests
     {
         // Arrange
         using var container = new TestContainer();
-        var serviceProvider = container.Resolve<IFExServiceProvider>();
+        using var serviceProvider = container.Resolve<IFExServiceProvider>();
 
         // Act & Assert
         await serviceProvider.Value.ConfigureServiceProviderAsync();

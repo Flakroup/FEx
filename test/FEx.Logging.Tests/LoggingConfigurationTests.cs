@@ -1,11 +1,10 @@
 using FEx.Logging.Abstractions.Interfaces;
 using Shouldly;
-using System;
 using Xunit;
 
 namespace FEx.Logging.Tests;
 
-public class LoggingConfigurationTests : IDisposable
+public sealed class LoggingConfigurationTests
 {
     [Fact]
     public void LoggingModule_ShouldResolveAllRequiredServices()
@@ -14,20 +13,12 @@ public class LoggingConfigurationTests : IDisposable
         using var container = new TestContainer();
 
         // Assert
-        var loggingService = container.Resolve<IFExLoggingService>();
-        var configurator = container.Resolve<IFExLoggingConfigurator>();
-        var configuration = container.Resolve<ILoggingConfiguration>();
+        using var loggingService = container.Resolve<IFExLoggingService>();
+        using var configurator = container.Resolve<IFExLoggingConfigurator>();
+        using var configuration = container.Resolve<ILoggingConfiguration>();
 
         loggingService.Value.ShouldNotBeNull();
         configurator.Value.ShouldNotBeNull();
         configuration.Value.ShouldNotBeNull();
     }
-
-    #region IDisposable
-    public void Dispose()
-    {
-        // No cleanup needed - each test creates its own container with using statement
-        GC.SuppressFinalize(this);
-    }
-    #endregion
 }

@@ -12,7 +12,7 @@ namespace FEx.DependencyInjection.Tests;
 [RegisterModule(typeof(FExDependencyInjectionModule))]
 [Register(typeof(FExStrongInjectServiceProvider), Scope.SingleInstance, typeof(IFExServiceProvider))]
 [Register(typeof(FExMicrosoftDIServiceProvider), Scope.SingleInstance)]
-public partial class TestContainer : TestBase, IFExDependencyInjectionContainer, IContainer<IFExServiceProvider>,
+public sealed partial class TestContainer : TestBase, IFExDependencyInjectionContainer, IContainer<IFExServiceProvider>,
     IContainer<FExMicrosoftDIServiceProvider>, IContainer<IInitializeModule<IServiceCollection>[]>
 {
     [Factory]

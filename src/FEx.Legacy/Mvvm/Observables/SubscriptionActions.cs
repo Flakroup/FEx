@@ -8,14 +8,22 @@ public class SubscriptionActions<T>
     public Action<Exception> OnError { get; }
     public Action OnCompleted { get; }
 
-    public SubscriptionActions(Action<T> onNext, Action<Exception> onError = null, Action onCompleted = null)
+    public SubscriptionActions(Action<T> onNext)
+        : this(onNext, null, null)
+    {
+    }
+
+    public SubscriptionActions(Action<T> onNext, Action<Exception> onError, Action onCompleted)
     {
         OnNext = onNext;
         OnError = onError;
         OnCompleted = onCompleted;
     }
 
-    public IDisposable GetSubscription(IObservable<T> observable, T subscriptionArgument = default)
+    public IDisposable GetSubscription(IObservable<T> observable) =>
+        GetSubscription(observable, default);
+
+    public IDisposable GetSubscription(IObservable<T> observable, T subscriptionArgument)
     {
         if (OnNext is not null)
         {

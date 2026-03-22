@@ -18,7 +18,7 @@ namespace FEx.Logging.Tests;
 [RegisterModule(typeof(FExCoreModule))]
 [Register(typeof(FExStrongInjectServiceProvider), Scope.SingleInstance, typeof(IFExServiceProvider))]
 [Register(typeof(FExMicrosoftDIServiceProvider), Scope.SingleInstance)]
-public partial class TestContainer : TestBase, IFExLoggingContainer, IFExDependencyInjectionContainer,
+public sealed partial class TestContainer : TestBase, IFExLoggingContainer, IFExDependencyInjectionContainer,
     IFExCoreContainer, IContainer<IFExServiceContainer>, IContainer<IFExServiceProvider>,
     IContainer<FExMicrosoftDIServiceProvider>
 {

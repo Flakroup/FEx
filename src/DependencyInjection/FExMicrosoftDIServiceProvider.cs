@@ -81,7 +81,7 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
 
     public TContainer GetContainer<TContainer>() where TContainer : class => _provider as TContainer;
 
-    public IScopeProvider CreateScope() => new MicrosoftDIScopeProviderAdapter(_provider.CreateScope());
+    public IScopeProvider CreateScope() => new MicrosoftDIScopeProviderAdapter(_provider);
 
     public T GetInstance<T>() => GetRequiredService<T>();
 
@@ -116,18 +116,14 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
     #endregion
 }
 
-internal sealed class MicrosoftDIScopeProviderAdapter : IScopeProvider, IDisposable
+internal sealed class MicrosoftDIScopeProviderAdapter : IScopeProvider
 {
-    private readonly IServiceScope _scope;
+    private readonly IServiceProvider _serviceProvider;
 
-    public MicrosoftDIScopeProviderAdapter(IServiceScope scope)
+    public MicrosoftDIScopeProviderAdapter(IServiceProvider serviceProvider)
     {
-        _scope = scope;
+        _serviceProvider = serviceProvider;
     }
 
-    public IServiceScope CreateScope() => _scope.ServiceProvider.CreateScope();
-
-    #region IDisposable
-    public void Dispose() => _scope?.Dispose();
-    #endregion
+    public IServiceScope CreateScope() => _serviceProvider.CreateScope();
 }

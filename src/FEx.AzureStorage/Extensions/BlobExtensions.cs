@@ -73,16 +73,16 @@ public static class BlobExtensions
         this CloudBlobContainer client,
         string prefix,
         CancellationToken cancellationToken) =>
-        client.ListBlobsAsync(prefix, cancellationToken, false, BlobListingDetails.None, null, null);
+        client.ListBlobsAsync(prefix, false, BlobListingDetails.None, null, null, cancellationToken);
 
     public static async Task<Result<IList<IListBlobItem>, StackError>> ListBlobsAsync(
         this CloudBlobContainer client,
         string prefix,
-        CancellationToken cancellationToken,
         bool useFlatBlobListing,
         BlobListingDetails blobListingDetails,
         BlobRequestOptions options,
-        OperationContext operationContext)
+        OperationContext operationContext,
+        CancellationToken cancellationToken)
     {
         if (prefix.IsNotNullOrEmptyString())
         {

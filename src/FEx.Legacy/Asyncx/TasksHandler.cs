@@ -24,18 +24,18 @@ public class TasksHandler : ITasksHandler
     }
 
     public async Task RunAsync(Action task,
-                               JobSpecs? specs = null,
-                               Action<JobSpecs?> pre = null,
-                               Action<bool, JobSpecs?> post = null,
-                               AsyncMode asyncMode = AsyncMode.ThreadPool,
-                               CancellationToken cancellationToken = default) =>
+                               JobSpecs? specs,
+                               Action<JobSpecs?> pre,
+                               Action<bool, JobSpecs?> post,
+                               AsyncMode asyncMode,
+                               CancellationToken cancellationToken) =>
         await RunFuncAsync(task.Wrap, specs, pre, post, asyncMode, cancellationToken);
 
     public async Task<T> RunTaskAsync<T>(Func<Task<T>> task,
-                                         JobSpecs? specs = null,
-                                         Action<JobSpecs?> pre = null,
-                                         Action<bool, JobSpecs?> post = null,
-                                         AsyncMode asyncMode = AsyncMode.ThreadPool)
+                                         JobSpecs? specs,
+                                         Action<JobSpecs?> pre,
+                                         Action<bool, JobSpecs?> post,
+                                         AsyncMode asyncMode)
     {
         var taskId = Guid.NewGuid();
         _tasksInfoSubject.AddTask(taskId);
@@ -68,11 +68,11 @@ public class TasksHandler : ITasksHandler
     }
 
     public async Task<T> RunFuncAsync<T>(Func<T> task,
-                                         JobSpecs? specs = null,
-                                         Action<JobSpecs?> pre = null,
-                                         Action<bool, JobSpecs?> post = null,
-                                         AsyncMode asyncMode = AsyncMode.ThreadPool,
-                                         CancellationToken cancellationToken = default)
+                                         JobSpecs? specs,
+                                         Action<JobSpecs?> pre,
+                                         Action<bool, JobSpecs?> post,
+                                         AsyncMode asyncMode,
+                                         CancellationToken cancellationToken)
     {
         var taskId = Guid.NewGuid();
         _tasksInfoSubject.AddTask(taskId);
@@ -105,9 +105,9 @@ public class TasksHandler : ITasksHandler
     }
 
     public async Task RunTaskAsync(Func<Task> task,
-                                   JobSpecs? specs = null,
-                                   Action<JobSpecs?> pre = null,
-                                   Action<bool, JobSpecs?> post = null,
-                                   AsyncMode asyncMode = AsyncMode.ThreadPool) =>
+                                   JobSpecs? specs,
+                                   Action<JobSpecs?> pre,
+                                   Action<bool, JobSpecs?> post,
+                                   AsyncMode asyncMode) =>
         await RunTaskAsync(task.WrapTaskAsync, specs, pre, post, asyncMode);
 }

@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Logging;
 using FEx.Core.Abstractions;
 using FEx.Core.Abstractions.Extensions;
@@ -53,37 +54,41 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
         IsUiUnlocked = true;
     }
 
-    public async Task RunAsync(Action action, JobSpecs? specs = null, Action pre = null, Action<bool> post = null) =>
-        await _tasksHandler.RunAsync(action, specs, s => Prefix(s, pre), (isSuccess, s) => Suffix(s, post, isSuccess));
+    public async Task RunAsync(Action action, JobSpecs? specs, Action pre, Action<bool> post) =>
+        await _tasksHandler.RunAsync(action, specs, s => Prefix(s, pre), (isSuccess, s) => Suffix(s, post, isSuccess), AsyncMode.ThreadPool, default);
 
     public async Task RunTaskAsync(Func<Task> function,
-                                   JobSpecs? specs = null,
-                                   Action pre = null,
-                                   Action<bool> post = null) =>
+                                   JobSpecs? specs,
+                                   Action pre,
+                                   Action<bool> post) =>
         await _tasksHandler.RunTaskAsync(function,
             specs,
             s => Prefix(s, pre),
-            (isSuccess, s) => Suffix(s, post, isSuccess));
+            (isSuccess, s) => Suffix(s, post, isSuccess),
+            AsyncMode.ThreadPool);
 
     public async Task<TResult> RunTaskAsync<TResult>(Func<Task<TResult>> function,
-                                                     JobSpecs? specs = null,
-                                                     Action pre = null,
-                                                     Action<bool> post = null) =>
+                                                     JobSpecs? specs,
+                                                     Action pre,
+                                                     Action<bool> post) =>
         await _tasksHandler.RunTaskAsync(function,
             specs,
             s => Prefix(s, pre),
-            (isSuccess, s) => Suffix(s, post, isSuccess));
+            (isSuccess, s) => Suffix(s, post, isSuccess),
+            AsyncMode.ThreadPool);
 
     public async Task<TResult> RunFuncAsync<TResult>(Func<TResult> function,
-                                                     JobSpecs? specs = null,
-                                                     Action pre = null,
-                                                     Action<bool> post = null) =>
+                                                     JobSpecs? specs,
+                                                     Action pre,
+                                                     Action<bool> post) =>
         await _tasksHandler.RunFuncAsync(function,
             specs,
             s => Prefix(s, pre),
-            (isSuccess, s) => Suffix(s, post, isSuccess));
+            (isSuccess, s) => Suffix(s, post, isSuccess),
+            AsyncMode.ThreadPool,
+            default);
 
-    public virtual void PostMainJob(bool showTimeInfo = true)
+    public virtual void PostMainJob(bool showTimeInfo)
     {
     }
 

@@ -34,6 +34,24 @@ ns = "FEx.Core.Abstractions.Enums"
 file = "Enums\\NavigationFlow.cs"
 
 [[classes]]
+name = "DeadlockMonitorExtensions"
+ns = "FEx.Core.Abstractions.Extensions"
+file = "Extensions\\DeadlockMonitorExtensions.cs"
+static = true
+
+[[extensions]]
+name = "Execute"
+sig = "void Execute(this IDeadlockMonitor monitor, Action action)"
+returns = "void"
+file = "Extensions\\DeadlockMonitorExtensions.cs"
+
+[[extensions]]
+name = "Execute"
+sig = "void Execute(this IDeadlockMonitor monitor, Action action, uint timeout)"
+returns = "void"
+file = "Extensions\\DeadlockMonitorExtensions.cs"
+
+[[classes]]
 name = "EventsExtensions"
 ns = "FEx.Core.Abstractions.Extensions"
 file = "Extensions\\EventsExtensions.cs"
@@ -66,6 +84,18 @@ sig = "void HandleException(this Exception ex,
                                        params (string, object)"
 returns = "void"
 file = "Extensions\\ExceptionExtensions.cs"
+
+[[classes]]
+name = "FExDispatcherExtensions"
+ns = "FEx.Core.Abstractions.Extensions"
+file = "Extensions\\FExDispatcherExtensions.cs"
+static = true
+
+[[extensions]]
+name = "SendInContext"
+sig = "void SendInContext(this IFExDispatcher dispatcher, Action action, object sender)"
+returns = "void"
+file = "Extensions\\FExDispatcherExtensions.cs"
 
 [[classes]]
 name = "ObservableExtensions"

@@ -5,6 +5,7 @@ using FEx.Core.Abstractions.Interfaces;
 using FEx.Legacy.Mvvm.Abstractions.Interfaces;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
+using FEx.MVVM.Interfaces;
 using FEx.MVVM.Extensions;
 using FEx.MVVM.Models;
 using FEx.MVVM.Services;

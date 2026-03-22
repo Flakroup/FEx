@@ -37,7 +37,13 @@ static = true
 
 [[extensions]]
 name = "SaveToFile"
-sig = "string SaveToFile(this HtmlDocument doc, string path = null)"
+sig = "string SaveToFile(this HtmlDocument doc, string path)"
+returns = "string"
+file = "Extensions\\HtmlDocumentExtensions.cs"
+
+[[extensions]]
+name = "SaveToFile"
+sig = "string SaveToFile(this HtmlDocument doc)"
 returns = "string"
 file = "Extensions\\HtmlDocumentExtensions.cs"
 
@@ -49,21 +55,42 @@ static = true
 
 [[extensions]]
 name = "GetNodeAttributeStringValue"
-sig = "string GetNodeAttributeStringValue(this HtmlNode value, string name, string def = null)"
+sig = "string GetNodeAttributeStringValue(this HtmlNode value, string name, string def)"
+returns = "string"
+summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "GetNodeAttributeStringValue"
+sig = "string GetNodeAttributeStringValue(this HtmlNode value, string name)"
 returns = "string"
 summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
 file = "Extensions\\HtmlNodeExtensions.cs"
 
 [[extensions]]
 name = "GetNodeAttributeBoolValue"
-sig = "bool GetNodeAttributeBoolValue(this HtmlNode value, string name, bool def = false)"
+sig = "bool GetNodeAttributeBoolValue(this HtmlNode value, string name, bool def)"
+returns = "bool"
+summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "GetNodeAttributeBoolValue"
+sig = "bool GetNodeAttributeBoolValue(this HtmlNode value, string name)"
 returns = "bool"
 summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
 file = "Extensions\\HtmlNodeExtensions.cs"
 
 [[extensions]]
 name = "GetNodeAttributeIntValue"
-sig = "int GetNodeAttributeIntValue(this HtmlNode value, string name, int def = 0)"
+sig = "int GetNodeAttributeIntValue(this HtmlNode value, string name, int def)"
+returns = "int"
+summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
+file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[extensions]]
+name = "GetNodeAttributeIntValue"
+sig = "int GetNodeAttributeIntValue(this HtmlNode value, string name)"
 returns = "int"
 summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
 file = "Extensions\\HtmlNodeExtensions.cs"
@@ -100,7 +127,6 @@ file = "Extensions\\HtmlNodeExtensions.cs"
 name = "IsInBody"
 sig = "bool IsInBody(this HtmlNode value)"
 returns = "bool"
-summary = "Helper method to get the value of an attribute of this node. If the attribute is not found, the default value will be returned."
 file = "Extensions\\HtmlNodeExtensions.cs"
 
 [[extensions]]
@@ -116,4 +142,95 @@ sig = "HtmlNodeCollection SelectNodes(this HtmlNode value, Func<XPathBuilderEx, 
 returns = "HtmlNodeCollection"
 summary = "Selects a list of nodes matching the expression."
 file = "Extensions\\HtmlNodeExtensions.cs"
+
+[[classes]]
+name = "WebBrowserScraperExtensions"
+ns = "FEx.WebScraping.Extensions"
+file = "Extensions\\WebBrowserScraperExtensions.cs"
+static = true
+
+[[extensions]]
+name = "LoadHtmlDocumentAsync"
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebBrowserScraper scraper, Uri pageLink)"
+returns = "Task<HtmlDocument>"
+file = "Extensions\\WebBrowserScraperExtensions.cs"
+
+[[extensions]]
+name = "LoadHtmlDocumentAsync"
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebBrowserScraper scraper, Uri pageLink,
+                                                           Action<HtmlWeb> configWeb)"
+returns = "Task<HtmlDocument>"
+file = "Extensions\\WebBrowserScraperExtensions.cs"
+
+[[extensions]]
+name = "LoadAsync"
+sig = "Task LoadAsync(this IWebBrowserScraper scraper, Uri pageLink,
+                                 Action<Uri, HtmlWeb, HtmlDocument> action)"
+returns = "Task"
+file = "Extensions\\WebBrowserScraperExtensions.cs"
+
+[[extensions]]
+name = "LoadAsync"
+sig = "Task LoadAsync(this IWebBrowserScraper scraper, Uri pageLink,
+                                 Action<Uri, HtmlWeb, HtmlDocument> action,
+                                 Action<HtmlWeb> configWeb)"
+returns = "Task"
+file = "Extensions\\WebBrowserScraperExtensions.cs"
+
+[[classes]]
+name = "WebScraperExtensions"
+ns = "FEx.WebScraping.Extensions"
+file = "Extensions\\WebScraperExtensions.cs"
+static = true
+
+[[extensions]]
+name = "LoadHtmlDocumentAsync"
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, Uri pageLink)"
+returns = "Task<HtmlDocument>"
+file = "Extensions\\WebScraperExtensions.cs"
+
+[[extensions]]
+name = "LoadHtmlDocumentAsync"
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, Uri pageLink,
+                                                           Action<HtmlWeb> configWeb)"
+returns = "Task<HtmlDocument>"
+file = "Extensions\\WebScraperExtensions.cs"
+
+[[extensions]]
+name = "LoadHtmlDocumentAsync"
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, Uri pageLink,
+                                                           Action<HtmlWeb> configWeb,
+                                                           Encoding encoding)"
+returns = "Task<HtmlDocument>"
+file = "Extensions\\WebScraperExtensions.cs"
+
+[[extensions]]
+name = "LoadHtmlDocumentAsync"
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, Uri pageLink,
+                                                           Action<HtmlWeb> configWeb,
+                                                           Encoding encoding,
+                                                           NetworkCredential credential)"
+returns = "Task<HtmlDocument>"
+file = "Extensions\\WebScraperExtensions.cs"
+
+[[extensions]]
+name = "LoadHtmlDocumentAsync"
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, HtmlWeb web, Uri pageLink)"
+returns = "Task<HtmlDocument>"
+file = "Extensions\\WebScraperExtensions.cs"
+
+[[extensions]]
+name = "LoadHtmlDocumentAsync"
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, HtmlWeb web, Uri pageLink,
+                                                           Encoding encoding)"
+returns = "Task<HtmlDocument>"
+file = "Extensions\\WebScraperExtensions.cs"
+
+[[extensions]]
+name = "LoadHtmlDocumentAsync"
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, HtmlWeb web, Uri pageLink,
+                                                           Encoding encoding,
+                                                           NetworkCredential credential)"
+returns = "Task<HtmlDocument>"
+file = "Extensions\\WebScraperExtensions.cs"
 

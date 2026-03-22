@@ -104,6 +104,42 @@ ns = "FEx.Flurlx.Extensions"
 file = "Extensions\\UrlExtensions.cs"
 static = true
 
+[[extensions]]
+name = "CalculateSizeAsync"
+sig = "Task<double> CalculateSizeAsync(this Url url)"
+returns = "Task<double>"
+file = "Extensions\\UrlExtensions.cs"
+
+[[extensions]]
+name = "CalculateSizeAsync"
+sig = "Task<double> CalculateSizeAsync(this Url url, LengthType unit)"
+returns = "Task<double>"
+file = "Extensions\\UrlExtensions.cs"
+
+[[extensions]]
+name = "GetBytesAsync"
+sig = "Task<MemoryStream> GetBytesAsync(this Url url)"
+returns = "Task<MemoryStream>"
+file = "Extensions\\UrlExtensions.cs"
+
+[[extensions]]
+name = "GetBytesAsync"
+sig = "Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client)"
+returns = "Task<MemoryStream>"
+file = "Extensions\\UrlExtensions.cs"
+
+[[extensions]]
+name = "GetBytesAsync"
+sig = "Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client, SeekOrigin origin)"
+returns = "Task<MemoryStream>"
+file = "Extensions\\UrlExtensions.cs"
+
+[[extensions]]
+name = "GetBytesAsync"
+sig = "Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client, SeekOrigin origin, long offset)"
+returns = "Task<MemoryStream>"
+file = "Extensions\\UrlExtensions.cs"
+
 [[enums]]
 name = "RequestMethod"
 ns = "FEx.Flurlx.Models"

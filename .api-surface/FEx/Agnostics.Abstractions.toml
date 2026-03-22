@@ -189,6 +189,12 @@ returns = "int"
 file = "Extensions\\CollectionExtensions.cs"
 
 [[classes]]
+name = "ConcurrentListExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\ConcurrentListExtensions.cs"
+static = true
+
+[[classes]]
 name = "DateTimeExtensions"
 ns = "FEx.Agnostics.Abstractions.Extensions"
 file = "Extensions\\DateTimeExtensions.cs"
@@ -653,6 +659,48 @@ sig = "string BuildMessage(this Exception ex)"
 returns = "string"
 summary = "Gets a formatted string from the exception."
 file = "Extensions\\ExceptionExtensions.cs"
+
+[[classes]]
+name = "FExLoggerExtensions"
+ns = "FEx.Agnostics.Abstractions.Extensions"
+file = "Extensions\\FExLoggerExtensions.cs"
+static = true
+
+[[extensions]]
+name = "Trace"
+sig = "void Trace(this IFExLogger logger, Exception exception)"
+returns = "void"
+file = "Extensions\\FExLoggerExtensions.cs"
+
+[[extensions]]
+name = "Debug"
+sig = "void Debug(this IFExLogger logger, Exception exception)"
+returns = "void"
+file = "Extensions\\FExLoggerExtensions.cs"
+
+[[extensions]]
+name = "Information"
+sig = "void Information(this IFExLogger logger, Exception exception)"
+returns = "void"
+file = "Extensions\\FExLoggerExtensions.cs"
+
+[[extensions]]
+name = "Warning"
+sig = "void Warning(this IFExLogger logger, Exception exception)"
+returns = "void"
+file = "Extensions\\FExLoggerExtensions.cs"
+
+[[extensions]]
+name = "Error"
+sig = "void Error(this IFExLogger logger, Exception exception)"
+returns = "void"
+file = "Extensions\\FExLoggerExtensions.cs"
+
+[[extensions]]
+name = "Critical"
+sig = "void Critical(this IFExLogger logger, Exception exception)"
+returns = "void"
+file = "Extensions\\FExLoggerExtensions.cs"
 
 [[classes]]
 name = "FileInfoExtensions"
@@ -1402,7 +1450,14 @@ file = "Extensions\\TimeSpanExtensions.cs"
 
 [[extensions]]
 name = "GetTime"
-sig = "string GetTime(this TimeSpan timespan, int decimals = 0)"
+sig = "string GetTime(this TimeSpan timespan)"
+returns = "string"
+summary = "Gets the time from ."
+file = "Extensions\\TimeSpanExtensions.cs"
+
+[[extensions]]
+name = "GetTime"
+sig = "string GetTime(this TimeSpan timespan, int decimals)"
 returns = "string"
 summary = "Gets the time from ."
 file = "Extensions\\TimeSpanExtensions.cs"

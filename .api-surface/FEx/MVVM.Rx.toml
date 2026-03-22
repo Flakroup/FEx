@@ -45,6 +45,12 @@ base = "ReactiveObject, IFExNotifyPropertyChanged"
 file = "BaseObjects\\ReactiveNotifyPropertyChanged.cs"
 
 [[classes]]
+name = "ViewModelBase"
+ns = "FEx.MVVM.Rx.BaseObjects"
+base = "LinkableReactiveNotifyPropertyChanged, IViewModelBase, IEquatable<ViewModelBase>"
+file = "BaseObjects\\ViewModelBase.cs"
+
+[[classes]]
 name = "ReactiveObjectExtensions"
 ns = "FEx.MVVM.Rx.Extensions"
 file = "Extensions\\ReactiveObjectExtensions.cs"

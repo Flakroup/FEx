@@ -1,6 +1,6 @@
 using FEx.Common.Abstractions.Interfaces;
 using FEx.Json;
-using FEx.MVVM.Abstractions.Interfaces;
+using FEx.MVVM.Interfaces;
 using FEx.MVVM.Rx.Abstractions.Interfaces;
 using FEx.Platforms.Abstractions.Interfaces;
 using System.Diagnostics.CodeAnalysis;

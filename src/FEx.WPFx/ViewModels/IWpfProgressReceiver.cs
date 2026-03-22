@@ -1,4 +1,4 @@
-using FEx.MVVM.Abstractions.Interfaces;
+using FEx.MVVM.Interfaces;
 
 namespace FEx.WPFx.ViewModels;
 

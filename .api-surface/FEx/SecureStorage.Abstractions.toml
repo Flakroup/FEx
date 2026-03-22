@@ -1,0 +1,9 @@
+[project]
+name = "FEx.SecureStorage.Abstractions"
+path = "rc\\SecureStorage.Abstractions"
+
+[[interfaces]]
+name = "ISecureStorageService"
+ns = "FEx.SecureStorage.Abstractions"
+file = "ISecureStorageService.cs"
+

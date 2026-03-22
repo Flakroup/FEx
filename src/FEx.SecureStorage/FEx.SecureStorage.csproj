@@ -6,8 +6,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
 	  <ProjectReference Include="..\FEx.Encryption\FEx.Encryption.csproj" />
 	  <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+	  <ProjectReference Include="..\SecureStorage.Abstractions\FEx.SecureStorage.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

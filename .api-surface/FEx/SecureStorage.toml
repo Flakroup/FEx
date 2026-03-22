@@ -2,8 +2,20 @@
 name = "FEx.SecureStorage"
 path = "rc\\FEx.SecureStorage"
 
+[[interfaces]]
+name = "ISecureStorageContainer"
+ns = "FEx.SecureStorage"
+file = "ISecureStorageContainer.cs"
+
+[[classes]]
+name = "SecureStorageModule"
+ns = "FEx.SecureStorage"
+base = "InitializeModule<ISecureStorageContainer, IServiceCollection>"
+file = "SecureStorageModule.cs"
+
 [[classes]]
 name = "SecureStorageService"
 ns = "FEx.SecureStorage"
+base = "ISecureStorageService"
 file = "SecureStorageService.cs"
 

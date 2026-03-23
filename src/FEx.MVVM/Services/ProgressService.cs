@@ -96,7 +96,9 @@ public sealed class ProgressService : SubscriberBase, IProgressService
         var def = entry.SingleOrDefault(x => x.Container.Id == receiver.Id);
 
         if (def is null)
+        {
             return false;
+        }
 
         entry.Remove(def);
 

@@ -10,6 +10,7 @@ public class FExSubject<T> : IFExSubject<T>
     protected readonly ISubject<T> _subject;
 #pragma warning restore IDISP008 // Don't assign member with injected and created disposables
 
+    private readonly ISubject<T> _syncSubject;
     private bool _isDisposed;
 
     public FExSubject()
@@ -20,6 +21,7 @@ public class FExSubject<T> : IFExSubject<T>
     public FExSubject(ISubject<T> subject)
     {
         _subject = subject ?? new Subject<T>();
+        _syncSubject = Subject.Synchronize(_subject);
     }
 
     public virtual void OnNext(T value) => SynchronizedOnNext(value);
@@ -34,9 +36,9 @@ public class FExSubject<T> : IFExSubject<T>
     /// </returns>
     public IDisposable Subscribe(IObserver<T> observer) => _subject.Subscribe(observer);
 
-    protected void SynchronizedOnNext(T value) => Subject.Synchronize(_subject).OnNext(value);
+    protected void SynchronizedOnNext(T value) => _syncSubject.OnNext(value);
 
-    protected void SynchronizedOnCompleted() => Subject.Synchronize(_subject).OnCompleted();
+    protected void SynchronizedOnCompleted() => _syncSubject.OnCompleted();
 
     #region IDisposable
     protected virtual void Dispose(bool isDisposing)
@@ -44,8 +46,13 @@ public class FExSubject<T> : IFExSubject<T>
         if (_isDisposed)
             return;
 
-        if (isDisposing && _subject is IDisposable disposable)
-            disposable.Dispose();
+        if (isDisposing)
+        {
+            _syncSubject.OnCompleted();
+
+            if (_subject is IDisposable disposable)
+                disposable.Dispose();
+        }
 
         _isDisposed = true;
     }

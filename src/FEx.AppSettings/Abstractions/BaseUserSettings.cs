@@ -7,7 +7,6 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.AppSettings.Abstractions;
@@ -24,9 +23,6 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
     }
 
     [JsonIgnore]
-    public SemaphoreSlim SettingsLock { get; private set; }
-
-    [JsonIgnore]
     public bool IsAsync { get; private set; }
 
     public virtual void Initialize(string persistencePath, (bool hasBeenReadFromFile, bool isAsync) tuple)
@@ -37,10 +33,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
         PersistencePath = persistencePath;
 
         if (PersistencePath.IsNotNullOrEmptyString())
-        {
             Directory.CreateDirectory(Path.GetDirectoryName(PersistencePath)!);
-            SettingsLock = FExCoreStatics.SynchronizedAccessService.EnsureLock(PersistencePath);
-        }
 
         IsAsync = tuple.isAsync;
 
@@ -75,7 +68,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
         if (PersistencePath.IsNullOrEmptyString())
             return;
 
-        SettingsLock.Wait();
+        FExCoreStatics.SynchronizedAccessService.Wait(PersistencePath);
 
         try
         {
@@ -83,7 +76,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
         }
         finally
         {
-            SettingsLock?.Release();
+            FExCoreStatics.SynchronizedAccessService.Release(PersistencePath);
         }
     }
 
@@ -92,7 +85,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
         if (PersistencePath.IsNullOrEmptyString())
             return;
 
-        await SettingsLock.WaitAsync();
+        await FExCoreStatics.SynchronizedAccessService.WaitAsync(PersistencePath);
 
         try
         {
@@ -104,7 +97,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
         }
         finally
         {
-            SettingsLock?.Release();
+            FExCoreStatics.SynchronizedAccessService.Release(PersistencePath);
         }
     }
 

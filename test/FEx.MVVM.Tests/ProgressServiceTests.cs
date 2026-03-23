@@ -66,13 +66,17 @@ public sealed class ProgressServiceTests
         var tasks = new Task<ProgressService>[10];
 
         for (var i = 0; i < tasks.Length; i++)
+        {
             tasks[i] = Task.Run(() => ProgressService.Instance);
+        }
 
         Task.WaitAll(tasks);
 
         var first = tasks[0].Result;
 
         for (var i = 1; i < tasks.Length; i++)
+        {
             tasks[i].Result.ShouldBeSameAs(first);
+        }
     }
 }

@@ -15,11 +15,11 @@ namespace FEx.MVVM.Services;
 
 public sealed class ProgressService : SubscriberBase, IProgressService
 {
-    private static ProgressService _instance;
+    private static readonly Lazy<ProgressService> _lazy = new(() => new ProgressService());
 
     public static string MainContainerId { get; private set; }
 
-    public static ProgressService Instance => _instance ??= new();
+    public static ProgressService Instance => _lazy.Value;
 
     public ConcurrentDictionary<string, IProgressAggregator> Containers { get; }
     public ConcurrentDictionary<string, ISet<ReceiverDefinition>> Listeners { get; }
@@ -90,13 +90,15 @@ public sealed class ProgressService : SubscriberBase, IProgressService
 
     public bool UnsubscribeFromProgress(IProgressAggregator receiver, string containerId)
     {
-        if (!Listeners.ContainsKey(containerId))
+        if (!Listeners.TryGetValue(containerId, out var entry))
             return false;
 
-        var entry = Listeners[containerId];
-        var def = entry.Single(x => x.Container.Id == receiver.Id);
+        var def = entry.SingleOrDefault(x => x.Container.Id == receiver.Id);
+
+        if (def is null)
+            return false;
+
         entry.Remove(def);
-        OnListenerAttached(def, containerId);
 
         return true;
     }

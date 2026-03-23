@@ -170,11 +170,13 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         if (maximum is >= 0D)
             Maximum = maximum.Value;
 
-        if (value is >= 0D
-            && value.Value <= Maximum)
-            Value = value.Value;
-        else
-            LogError("Invalid progress state");
+        if (value.HasValue)
+        {
+            if (value.Value >= 0D && value.Value <= Maximum)
+                Value = value.Value;
+            else
+                LogError($"ProcessSetPrg: value {value.Value} out of range [0, {Maximum}]");
+        }
     }
 
     protected virtual void ProcessAddPrg(double? value, double? maximum)
@@ -182,11 +184,13 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         if (maximum is > 0D)
             Maximum += maximum.Value;
 
-        if (value is > 0D
-            && value + Value <= Maximum)
-            Value += value.Value;
-        else
-            LogError("Invalid progress state");
+        if (value.HasValue)
+        {
+            if (value.Value > 0D && value.Value + Value <= Maximum)
+                Value += value.Value;
+            else
+                LogError($"ProcessAddPrg: adding {value.Value} to {Value} exceeds maximum {Maximum}");
+        }
     }
 
     protected virtual void TimerCallback()
@@ -214,10 +218,14 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
 
     protected virtual void UpdateProgressInfo()
     {
+        var value = Value;
+
+        if (value <= 0)
+            return;
+
         var elapsed = Stopwatch.Elapsed;
         var elapsedMilliseconds = elapsed.TotalMilliseconds;
         var maximum = Maximum;
-        var value = Value;
         var percentage = Percentage;
         var avgMs = elapsedMilliseconds / value;
 
@@ -315,6 +323,9 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
 
         if (disposing)
         {
+            Timer?.Stop();
+            Timer?.Dispose();
+            Stopwatch?.Stop();
             _changedPropertiesSubject?.Dispose();
             _subscriptions?.Dispose();
         }

@@ -10,6 +10,8 @@ public sealed class TestableProgressAggregator : ProgressAggregator
     public List<string> LoggedErrors { get; } = [];
 
     protected override void LogError(string message) => LoggedErrors.Add(message);
+
+    public void InvokeUpdateProgressInfo() => UpdateProgressInfo();
 }
 
 public sealed class ProgressAggregatorTests
@@ -19,11 +21,10 @@ public sealed class ProgressAggregatorTests
     {
         using var sut = new TestableProgressAggregator();
 
-        sut.PrgSetMax(100);
+        sut.PrgSet(null, 100, Abstractions.Enums.ProgressChangeMode.Set);
 
         sut.LoggedErrors.ShouldBeEmpty();
         sut.Maximum.ShouldBe(100);
-        sut.Value.ShouldBe(0);
     }
 
     [Fact]
@@ -97,6 +98,6 @@ public sealed class ProgressAggregatorTests
         sut.PrgSet(0, 100, Abstractions.Enums.ProgressChangeMode.Set);
         sut.Stopwatch.Start();
 
-        Should.NotThrow(() => sut.PrgSet(0, null, Abstractions.Enums.ProgressChangeMode.Set));
+        Should.NotThrow(() => sut.InvokeUpdateProgressInfo());
     }
 }

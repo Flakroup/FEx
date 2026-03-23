@@ -168,40 +168,28 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
     protected virtual void ProcessSetPrg(double? value, double? maximum)
     {
         if (maximum is >= 0D)
-        {
             Maximum = maximum.Value;
-        }
 
         if (value.HasValue)
         {
             if (value.Value >= 0D && value.Value <= Maximum)
-            {
                 Value = value.Value;
-            }
             else
-            {
                 LogError($"ProcessSetPrg: value {value.Value} out of range [0, {Maximum}]");
-            }
         }
     }
 
     protected virtual void ProcessAddPrg(double? value, double? maximum)
     {
         if (maximum is > 0D)
-        {
             Maximum += maximum.Value;
-        }
 
         if (value.HasValue)
         {
             if (value.Value > 0D && value.Value + Value <= Maximum)
-            {
                 Value += value.Value;
-            }
             else
-            {
                 LogError($"ProcessAddPrg: adding {value.Value} to {Value} exceeds maximum {Maximum}");
-            }
         }
     }
 
@@ -233,9 +221,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         var value = Value;
 
         if (value <= 0)
-        {
             return;
-        }
 
         var elapsed = Stopwatch.Elapsed;
         var elapsedMilliseconds = elapsed.TotalMilliseconds;

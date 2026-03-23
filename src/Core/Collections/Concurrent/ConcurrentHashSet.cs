@@ -1,5 +1,6 @@
 using FEx.Agnostics.Abstractions.Extensions;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -9,7 +10,7 @@ namespace FEx.Core.Collections.Concurrent;
 /// <summary>
 /// https://stackoverflow.com/questions/18922985/concurrent-hashsett-in-net-framework
 /// </summary>
-public class ConcurrentHashSet<T> : HashSet<T>
+public class ConcurrentHashSet<T> : HashSet<T>, IEnumerable<T>
 {
     private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion); //todo use extended
 
@@ -32,7 +33,19 @@ public class ConcurrentHashSet<T> : HashSet<T>
     {
     }
 
-    public new IEnumerator<T> GetEnumerator() => RunLocked(base.GetEnumerator);
+    public new IEnumerator<T> GetEnumerator() => GetSnapshot().GetEnumerator();
+
+    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetSnapshot().GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetSnapshot().GetEnumerator();
+
+    private List<T> GetSnapshot() => RunLocked(() =>
+    {
+        var array = new T[base.Count];
+        base.CopyTo(array, 0);
+
+        return new List<T>(array);
+    });
 
     public TR RunLocked<TR>(Func<TR> func)
     {

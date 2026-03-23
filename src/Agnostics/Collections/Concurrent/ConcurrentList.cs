@@ -124,7 +124,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     {
         var index = Write(() =>
         {
-            if (!Items.Contains(item))
+            if (Items.Contains(item))
                 return -1;
 
             var count = Items.Count;
@@ -317,7 +317,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
 
             using (SuppressEvents())
             {
-                Remove(oldIndex);
+                RemoveAt(oldIndex);
                 Insert(newIndex, movedItem);
             }
 

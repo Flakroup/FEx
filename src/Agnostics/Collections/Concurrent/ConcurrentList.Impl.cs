@@ -26,16 +26,16 @@ public partial class ConcurrentList<T>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <inheritdoc cref="List{T}.Contains" />
-    public bool Contains(object value) => Contains((object)(T)value);
+    public bool Contains(object value) => Contains((T)value);
 
     /// <inheritdoc cref="List{T}.IndexOf(T)" />
-    public int IndexOf(object value) => IndexOf((object)(T)value);
+    public int IndexOf(object value) => IndexOf((T)value);
 
     /// <inheritdoc cref="List{T}.Insert" />
-    public void Insert(int index, object value) => Insert(index, (object)(T)value);
+    public void Insert(int index, object value) => Insert(index, (T)value);
 
     /// <inheritdoc cref="List{T}.Remove" />
-    public void Remove(object value) => Remove((object)(T)value);
+    public void Remove(object value) => Remove((T)value);
 
     public void Read(Action action) => _lock.Read(action);
 

@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<IsTestProject>true</IsTestProject>
 	</PropertyGroup>
 
 	<ItemGroup>

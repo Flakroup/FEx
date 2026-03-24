@@ -139,7 +139,7 @@ public sealed class AsyncProcessingQueue : IDisposable
 #if !NETSTANDARD2_0
         await
 #endif
-        using var registration = cancellationToken.Register(() => gate.TrySetResult(true));
+        using var registration = cancellationToken.Register(() => gate.TrySetCanceled(cancellationToken));
 
 #if NETSTANDARD2_0
         _taskQueue.Enqueue(gate);
@@ -160,7 +160,7 @@ public sealed class AsyncProcessingQueue : IDisposable
             await WaitWhileAboveLimitAsync();
 
             while (QueuedCount > 0
-                   && _currentRunning >= _concurrencyLimit
+                   && _currentRunning < _concurrencyLimit
                    && _taskQueue.TryDequeue(out var gate))
                 ReleaseGate(gate);
         }
@@ -183,7 +183,9 @@ public sealed class AsyncProcessingQueue : IDisposable
     private void ReleaseGate(TaskCompletionSource<bool> gate)
     {
         Interlocked.Increment(ref _currentRunning);
-        gate.TrySetResult(true);
+
+        if (!gate.TrySetResult(true))
+            Interlocked.Decrement(ref _currentRunning);
     }
 
     /// <summary>
@@ -198,6 +200,10 @@ public sealed class AsyncProcessingQueue : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+#if !NETSTANDARD2_0
+        _taskChannel.Writer.TryComplete();
+#endif
         _signal?.Dispose();
+        _semaphore?.Dispose();
     }
 }

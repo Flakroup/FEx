@@ -115,6 +115,9 @@
     <Project Path="test/FEx.MVVM.Tests/FEx.MVVM.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.FileSystem.Tests/FEx.FileSystem.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
   </Folder>
   <Project Path="build/_build.csproj" />
   <Project Path="src/FEx.AppSettings/FEx.AppSettings.csproj">

@@ -1,4 +1,4 @@
-namespace FEx.Avaloniax.Enums;
+namespace FEx.AppSettings.Abstractions;
 
 public enum AppTheme
 {

@@ -153,7 +153,7 @@ public static class ListExtensions
 
         var shorterCount = shorter.Count;
         var longerCount = longer.Count;
-        var arrayB = new BitArray(shorterCount);
+        var arrayB = new BitArray(longerCount);
         var count = 0;
 
         for (var i = 0; i < shorterCount; i++)
@@ -162,14 +162,16 @@ public static class ListExtensions
 
             for (var j = 0; j < longerCount; j++)
             {
-                if (!arrayB[i])
+                if (!arrayB[j])
                 {
                     var tB = longer[j];
 
                     if (tA.Equals(tB))
                     {
                         count++;
-                        arrayB[i] = true;
+                        arrayB[j] = true;
+
+                        break;
                     }
                 }
             }

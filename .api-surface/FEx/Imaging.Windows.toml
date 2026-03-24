@@ -1,11 +1,12 @@
 [project]
 name = "FEx.Imaging.Windows"
-path = "rc\\Imaging.Windows"
+path = "src\\Imaging.Windows"
 
 [[classes]]
 name = "CachedImage"
 ns = "FEx.Imaging.Windows"
-base = "ReactiveNotifyPropertyChanged, IDisposable"
+base = "ReactiveNotifyPropertyChanged, IDisposable
+#pragma warning restore IDISP025"
 file = "CachedImage.cs"
 
 [[classes]]
@@ -78,7 +79,8 @@ file = "LazyImagesHandler.cs"
 [[classes]]
 name = "SizedImageCache"
 ns = "FEx.Imaging.Windows"
-base = "NotifyPropertyChanged, IDisposable"
+base = "NotifyPropertyChanged, IDisposable
+#pragma warning restore IDISP025"
 file = "SizedImageCache.cs"
 
 [[classes]]
@@ -114,7 +116,8 @@ file = "Model\\FilesCacheContext.cs"
 [[classes]]
 name = "IndexEntry"
 ns = "FEx.Imaging.Windows.Model"
-base = "IndexEntryBase, IDisposable"
+base = "IndexEntryBase, IDisposable
+#pragma warning restore IDISP025"
 file = "Model\\IndexEntry.cs"
 
 [[classes]]

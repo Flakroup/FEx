@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Logging.Abstractions"
-path = "rc\\Logging.Abstractions"
+path = "src\\Logging.Abstractions"
 
 [[classes]]
 name = "FExLoggingStatics"

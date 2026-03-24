@@ -1,6 +1,6 @@
 [project]
 name = "FEx.AzureDevOpsx"
-path = "rc\\AzureDevOpsx"
+path = "src\\AzureDevOpsx"
 
 [[classes]]
 name = "AuthenticatedUserInfo"
@@ -10,6 +10,7 @@ file = "AuthenticatedUserInfo.cs"
 [[classes]]
 name = "FuncProcessor"
 ns = "FEx.AzureDevOpsx"
+base = "IDisposable"
 file = "FuncProcessor.cs"
 
 [[classes]]
@@ -22,7 +23,7 @@ file = "Project.cs"
 [[classes]]
 name = "ProjectsCollection"
 ns = "FEx.AzureDevOpsx"
-base = "NotifyPropertyChanged"
+base = "NotifyPropertyChanged, IDisposable"
 summary = "Container for TFS projects collection properties https://www.visualstudio.com/en-us/docs/integrate/api/tfs/project-collections"
 file = "ProjectsCollection.cs"
 

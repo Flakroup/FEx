@@ -64,7 +64,7 @@ public static class FtpDownloader
                     viewModel?.IfNotNull(v => v.SetStatusInfo(ex.Message));
                 }
 
-                Thread.Sleep(1000);
+                await Task.Delay(1000);
             }
         }
         catch (Exception ex)
@@ -146,18 +146,17 @@ public static class FtpDownloader
                             while (readCount > 0
                                    && pos < cacheLength)
                             {
-                                buffer = new byte[1];
+                                var toRead = Math.Min(8192, cacheLength - pos);
+                                buffer = new byte[toRead];
                                 readCount = await stream.ReadAsync(buffer, 0, buffer.Length);
                                 _retryCount = 0;
 
                                 if (readCount > 0)
                                 {
-                                    cache.AddRange(buffer);
+                                    cache.AddRange(new ArraySegment<byte>(buffer, 0, readCount));
                                     pos += readCount;
                                     prg += readCount;
-
-                                    if (prg % 10 == 0)
-                                        viewModel?.PrgSet(prg);
+                                    viewModel?.PrgSet(prg);
                                 }
                             }
 
@@ -181,10 +180,7 @@ public static class FtpDownloader
                                 {
                                     if (_retryCount >= 10)
                                     {
-                                        //byte[] buffer = new byte[1];
-                                        //fs.Write(buffer, 0, buffer.Length);
-                                        //Common.LogIt($"{fileName} byte at position {offset + prg + 1}  replaced with 0 due to {retryCount} unsuccessfull read attempts.\n", false);
-                                        _retryCount = 0;
+                                        var failedRetryCount = _retryCount;
 
                                         var newOffset = await DetectOffsetAsync(serverUri,
                                             offset + prg,
@@ -195,8 +191,10 @@ public static class FtpDownloader
                                         var buffer = new byte[newOffset - (offset + prg)];
                                         await fs.WriteAsync(buffer, 0, buffer.Length);
 
+                                        _retryCount = 0;
+
                                         await FExMvvm.MessagePopupService.ShowMessageAsync(
-                                            $"{fileName} bytes at position {offset + prg + 1}-{newOffset} replaced with 0 due to {_retryCount} unsuccessfull read attempts.\n",
+                                            $"{fileName} bytes at position {offset + prg + 1}-{newOffset} replaced with 0 due to {failedRetryCount} unsuccessful read attempts.\n",
                                             "Something wrong happened", MessageIcon.Exclamation, FExMessageButton.OK, null, true, false, null, LogLevel.Information, null);
                                     }
                                     else
@@ -326,7 +324,6 @@ public static class FtpDownloader
                    && newOffset < fileSize)
             {
                 var resp = await TryGetResponseAsync(serverUri, username, password, offset);
-
                 var response = resp.Value;
 
                 if (!resp.Key)
@@ -334,82 +331,43 @@ public static class FtpDownloader
 
                 try
                 {
-                    var stream = response.GetResponseStream();
+                    using var stream = response.GetResponseStream();
 
-                    try
+                    if (stream is not null)
                     {
-                        if (stream is not null)
+                        var buffer = new byte[1];
+                        readCount = await stream.ReadAsync(buffer, 0, buffer.Length);
+                        newOffset--;
+
+                        while (readCount > 0)
                         {
-                            var buffer = new byte[1];
-                            readCount = await stream.ReadAsync(buffer, 0, buffer.Length);
+                            var innerResp = await TryGetResponseAsync(serverUri, username, password, offset);
 
-                            try
-                            {
-                                stream.Close();
-                            }
-                            catch (Exception ex)
-                            {
-                                ex.HandleException();
-                            }
-
-                            newOffset--;
-
-                            try
-                            {
-                                while (readCount > 0)
-                                {
-                                    resp = await TryGetResponseAsync(serverUri, username, password, offset);
-                                    response = resp.Value;
-
-                                    if (!resp.Key)
-                                        return newOffset;
-
-                                    stream = response.GetResponseStream();
-
-                                    if (stream is not null)
-                                    {
-                                        buffer = new byte[1];
-                                        readCount = await stream.ReadAsync(buffer, 0, buffer.Length);
-                                        viewModel?.PrgSet(newOffset - offset);
-                                        viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
-                                        //viewModel.ThreadsInfo = $"{newOffset / (double)fileSize * 100}%";
-                                        newOffset--;
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                ex.HandleException();
-
-                                try
-                                {
-                                    stream?.Close();
-                                }
-                                catch (Exception closeEx)
-                                {
-                                    closeEx.HandleException();
-                                }
-
+                            if (!innerResp.Key)
                                 return newOffset;
+
+                            using var innerStream = innerResp.Value.GetResponseStream();
+
+                            if (innerStream is not null)
+                            {
+                                buffer = new byte[1];
+                                readCount = await innerStream.ReadAsync(buffer, 0, buffer.Length);
+                                viewModel?.PrgSet(newOffset - offset);
+                                viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
+                                newOffset--;
                             }
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        ex.HandleException();
-                    }
-
-                    stream?.Close();
                 }
                 catch (Exception ex)
                 {
                     ex.HandleException();
+                    return newOffset;
                 }
 
                 viewModel?.PrgSet(newOffset - offset);
                 viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
 
-                //viewModel.ThreadsInfo = $"{newOffset / (double)fileSize * 100}%";
                 if (readCount <= 0)
                     newOffset += 1024 * 1024 / 2;
             }

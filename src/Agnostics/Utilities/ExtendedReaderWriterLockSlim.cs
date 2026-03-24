@@ -60,13 +60,14 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
     private void EnterLock(LockType type)
     {
         var retry = 0;
+        const int maxRetries = 10;
         var timeout = TimeSpan.FromSeconds(30);
 
         while (true)
         {
             var hasLock = type == LockType.Write
                 ? TryEnterWriteLock(timeout)
-                : TryEnterUpgradeableReadLock(timeout);
+                : TryEnterReadLock(timeout);
 
             if (hasLock)
                 break;
@@ -74,7 +75,11 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
             retry++;
 
             FExStaticLogger.Warning(
-                $"Couldn't acquire lock for {_ownerType.FullName} in {timeout.GetTime()}. Retrying {retry} time...");
+                $"Couldn't acquire {type} lock for {_ownerType.FullName} in {timeout.GetTime()}. Retrying {retry}/{maxRetries}...");
+
+            if (retry >= maxRetries)
+                throw new TimeoutException(
+                    $"Failed to acquire {type} lock for {_ownerType.FullName} after {maxRetries} retries ({maxRetries * 30}s total).");
         }
     }
 
@@ -83,7 +88,7 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
         if (type == LockType.Write)
             ExitWriteLock();
         else
-            ExitUpgradeableReadLock();
+            ExitReadLock();
     }
 
     private enum LockType

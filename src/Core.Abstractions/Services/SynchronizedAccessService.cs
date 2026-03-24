@@ -76,7 +76,11 @@ public sealed class SynchronizedAccessService : ISynchronizedAccessService, IDis
         }
     }
 
-    public void Release(string key) => EnsureLock(key).Release();
+    public void Release(string key)
+    {
+        if (key is not null && AccessSemaphores.TryGetValue(key, out var semaphore))
+            semaphore.Release();
+    }
 
     public async Task WaitAsync(string key, int maxParallel = 1, CancellationToken cancellationToken = default) =>
         await EnsureLock(key, maxParallel).WaitAsync(cancellationToken);
@@ -86,14 +90,16 @@ public sealed class SynchronizedAccessService : ISynchronizedAccessService, IDis
 
     public void RemoveLock(string key)
     {
-        if (!AccessSemaphores.TryGetValue(key, out var accessSemaphore))
+        if (!AccessSemaphores.TryRemove(key, out var semaphore))
             return;
 
-        if (accessSemaphore.CurrentCount == 0)
+        if (semaphore.CurrentCount == 0)
+        {
+            AccessSemaphores.TryAdd(key, semaphore);
             throw new InvalidOperationException($"Key {key} is still busy");
+        }
 
-        if (AccessSemaphores.TryRemove(key, out var semaphore))
-            semaphore.Dispose();
+        semaphore.Dispose();
     }
 
     #region IDisposable

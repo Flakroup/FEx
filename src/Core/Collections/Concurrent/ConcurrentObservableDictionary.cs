@@ -154,7 +154,7 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
         var flag = _dictionary.TryAdd(key, value);
 
         if (flag)
-            OnAddToCollection(new(key, _dictionary[key]), -1);
+            OnAddToCollection(new(key, value), -1);
 
         return flag;
     }
@@ -184,11 +184,21 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
                               Func<TKey, TValue> addValueFactory,
                               Func<TKey, TValue, TValue> updateValueFactory)
     {
-        var hasKey = _dictionary.TryGetValue(key, out var oldValue);
-        var value = _dictionary.AddOrUpdate(key, addValueFactory, updateValueFactory);
+        var wasUpdated = false;
+        var capturedOldValue = default(TValue);
 
-        if (hasKey)
-            OnReplaceInCollection(new(key, value), new(key, oldValue), -1);
+        var value = _dictionary.AddOrUpdate(
+            key,
+            addValueFactory,
+            (k, existing) =>
+            {
+                wasUpdated = true;
+                capturedOldValue = existing;
+                return updateValueFactory(k, existing);
+            });
+
+        if (wasUpdated)
+            OnReplaceInCollection(new(key, value), new(key, capturedOldValue), -1);
         else
             OnAddToCollection(new(key, value), -1);
 
@@ -225,7 +235,7 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
     }
 
     private bool ValueIsEqual(TKey key, TValue val) =>
-        _dictionary.ContainsKey(key) && EqualityHelper.IsEqual(ref val, _dictionary[key]);
+        _dictionary.TryGetValue(key, out var existing) && EqualityHelper.IsEqual(ref val, existing);
 
     private void UpdateWithNotification(TKey key, TValue value)
     {

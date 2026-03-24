@@ -40,7 +40,7 @@ namespace FEx.AzureDevOpsx;
 ///     Container for TFS projects collection properties
 ///     https://www.visualstudio.com/en-us/docs/integrate/api/tfs/project-collections
 /// </summary>
-public class ProjectsCollection : NotifyPropertyChanged
+public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
 {
     private bool _isChecked;
     private ConcurrentObservableList<Workspace> _workspaces;
@@ -140,7 +140,9 @@ public class ProjectsCollection : NotifyPropertyChanged
     /// </value>
     public Uri Url { get; }
 
+#pragma warning disable IDISP002 // obtained from environment.Server, shared resource
     internal TfsTeamProjectCollection TfsTeamProjectCollection { get; }
+#pragma warning restore IDISP002
 
     private TfsEnvironment TfsEnvironment { get; }
 
@@ -245,7 +247,7 @@ public class ProjectsCollection : NotifyPropertyChanged
     /// <summary>
     ///     Gets the myself information.
     /// </summary>
-    protected async Task GetMyselfInfoAsync()
+    private async Task GetMyselfInfoAsync()
     {
         var requestString = $"projectCollections/{Identifier.ToString().ToLower(CultureInfo.InvariantCulture)}";
         string json = await GetRequestResultAsync(requestString, true,
@@ -264,13 +266,13 @@ public class ProjectsCollection : NotifyPropertyChanged
     /// <returns>
     ///     List{Change}
     /// </returns>
-    protected async Task LoadShelvesetChangesAsync(ShelvesetContent shelveset, IProgressAggregator viewModel)
+    private async Task LoadShelvesetChangesAsync(ShelvesetContent shelveset, IProgressAggregator viewModel)
     {
         await shelveset.LoadChangesAsync();
         viewModel?.PrgAdd();
     }
 
-    protected async Task RefreshOwnerImageAsync(ShelvesetContent shelvesetContent, IProgressAggregator viewModel = null)
+    private async Task RefreshOwnerImageAsync(ShelvesetContent shelvesetContent, IProgressAggregator viewModel = null)
     {
         await shelvesetContent.Owner.RefreshImageAsync(TfsEnvironment);
         viewModel?.PrgAdd();
@@ -323,13 +325,13 @@ public class ProjectsCollection : NotifyPropertyChanged
     /// <param name="ommitCodes">The ommit codes.</param>
     /// <param name="cookies">The cookies.</param>
     /// <returns></returns>
-    internal Task<ResponseResult> PatchRequestResultAsync(string requestUrl, string patchContent, List<HttpStatusCode> ommitCodes = null, List<Cookie> cookies = null)
+    internal async Task<ResponseResult> PatchRequestResultAsync(string requestUrl, string patchContent, List<HttpStatusCode> ommitCodes = null, List<Cookie> cookies = null)
     {
         requestUrl = $"{BaseApiUri}/{requestUrl}";
         requestUrl = Uri.EscapeUriString(requestUrl);
-        HttpClient client = WebServices.PrepareHttpClient(requestUrl, TfsTeamProjectCollection.ConfigurationServer.Credentials, false, cookies);
-        HttpContent patch = new StringContent(patchContent, Encoding.UTF8, MediaTypes.ApplicationJson.GetEnumValueDescription());
-        return WebServices.HandleResponseAsync(requestUrl, ommitCodes, () => client.PatchAsync(requestUrl, patch));
+        using var client = WebServices.PrepareHttpClient(requestUrl, TfsTeamProjectCollection.ConfigurationServer.Credentials, false, cookies);
+        using HttpContent patch = new StringContent(patchContent, Encoding.UTF8, MediaTypes.ApplicationJson.GetEnumValueDescription());
+        return await WebServices.HandleResponseAsync(requestUrl, ommitCodes, () => client.PatchAsync(requestUrl, patch));
     }
 
     /// <summary>
@@ -449,5 +451,10 @@ public class ProjectsCollection : NotifyPropertyChanged
     {
         Shelvesets.Clear();
         Shelvesets.AddRange(await ListShelvesetsAsync(int.MaxValue));
+    }
+
+    public void Dispose()
+    {
+        Connection?.Dispose();
     }
 }

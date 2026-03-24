@@ -73,14 +73,14 @@ public class FileSystemIconsProvider
         var fileResult = FileSystemUtilities.IsPathFile(filePath);
         var isFile = fileResult.IsSuccess && fileResult.Data;
 
-        var icon = isFile!
+        using var icon = isFile!
             ? Icon.ExtractAssociatedIcon(filePath)
             : ShellIcon.GetLargeFolderIcon(); //todo cache large folder icon
 
         if (icon is null)
             return null;
 
-        var bitmap = icon.ToBitmap();
+        using var bitmap = icon.ToBitmap();
         var hBitmap = bitmap.GetHbitmap();
 
         var res = Imaging.CreateBitmapSourceFromHBitmap(hBitmap,

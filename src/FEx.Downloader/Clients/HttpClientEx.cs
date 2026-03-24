@@ -12,7 +12,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -120,7 +119,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public HttpClientEx()
-        : this((WebRequestParams)null, true, default)
+        : this(new WebRequestParams(), true, default)
     {
     }
 
@@ -198,8 +197,17 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
     public static bool operator !=(HttpClientEx left, HttpClientEx right) => !Equals(left, right);
 
-    public override int GetHashCode() =>
-        BitConverter.ToInt32(Encoding.UTF8.GetBytes($"{FilePath}@{Url.AbsoluteUri}"), 0);
+    public override int GetHashCode()
+#if NETSTANDARD
+    {
+        unchecked
+        {
+            return (FilePath?.GetHashCode() ?? 0) * 397 ^ (Url?.AbsoluteUri?.GetHashCode() ?? 0);
+        }
+    }
+#else
+        => HashCode.Combine(FilePath, Url?.AbsoluteUri);
+#endif
 
     public override bool Equals(object obj) =>
         ReferenceEquals(this, obj) || obj is FlakHttpClient other && Equals(other);
@@ -324,7 +332,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     {
         base.Dispose(disposing);
 
-        if (disposing || _ownCTS)
+        if (disposing && _ownCTS)
             CancellationTokenSource.Dispose();
     }
     #endregion

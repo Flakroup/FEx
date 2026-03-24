@@ -97,7 +97,7 @@ public class DownloadService : ProgressAggregator
             if (cancelAndReplaceOldOne)
             {
                 await Downloads[idx].CancelAsync();
-                DetachListeners(di);
+                DetachListeners(Downloads[idx]);
                 Downloads.ReplaceAndDisposeOldValue(idx, () => di);
                 AttachListeners(di);
             }

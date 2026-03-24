@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -914,8 +913,17 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     public bool Equals(IDownloadBase other) => other is not null && FilePath == other.FilePath && Url == other.Url;
 
-    public override int GetHashCode() =>
-        BitConverter.ToInt32(Encoding.UTF8.GetBytes($"{FilePath}@{Url.AbsoluteUri}"), 0);
+    public override int GetHashCode()
+#if NETSTANDARD
+    {
+        unchecked
+        {
+            return (FilePath?.GetHashCode() ?? 0) * 397 ^ (Url?.AbsoluteUri?.GetHashCode() ?? 0);
+        }
+    }
+#else
+        => HashCode.Combine(FilePath, Url?.AbsoluteUri);
+#endif
 
     public int CompareTo(object obj) =>
         Equals(obj)

@@ -115,7 +115,7 @@ public sealed class FlakWebClient : WebClient
     {
         try
         {
-            using var res = base.GetWebResponse(request);
+            var res = base.GetWebResponse(request);
             ReadCookies(res);
             var response = (HttpWebResponse)res;
 

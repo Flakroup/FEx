@@ -75,7 +75,7 @@ public static class EnumerableExtensions
     }
 
     public static bool None<T>(this IEnumerable<T> source, Func<T, bool> predicate = null) =>
-        FindInEnumerable(source, predicate) is null;
+        predicate is null ? !source.Any() : !source.Any(predicate);
 
     /// <summary>
     /// Determines whether I'm null or empty.
@@ -345,7 +345,7 @@ public static class EnumerableExtensions
 
         var shorterCount = shorter.Count();
         var longerCount = longer.Count();
-        var arrayB = new BitArray(shorterCount);
+        var arrayB = new BitArray(longerCount);
         var count = 0;
 
         for (var i = 0; i < shorterCount; i++)
@@ -354,14 +354,16 @@ public static class EnumerableExtensions
 
             for (var j = 0; j < longerCount; j++)
             {
-                if (!arrayB[i])
+                if (!arrayB[j])
                 {
                     var tB = longer.ElementAt(j);
 
                     if (tA.Equals(tB))
                     {
                         count++;
-                        arrayB[i] = true;
+                        arrayB[j] = true;
+
+                        break;
                     }
                 }
             }

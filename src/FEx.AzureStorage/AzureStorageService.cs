@@ -239,10 +239,11 @@ public class AzureStorageService : IAzureStorageService
 
         if (await sourceBlob.ExistsAsync())
         {
+            await sourceBlob.FetchAttributesAsync();
             var destinationBlob = container.GetBlockBlobReference(destBlob);
 
             var state = GetBlobProgressState(destBlob, StorageOperation.Upload);
-            state.Reset(destBlob, Convert.ToDouble(srcBlob.Length), null);
+            state.Reset(destBlob, Convert.ToDouble(sourceBlob.Properties.Length), null);
 
             var context = new SingleTransferContext
             {

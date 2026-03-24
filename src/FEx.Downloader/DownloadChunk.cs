@@ -154,7 +154,7 @@ public class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
     public void Dispose()
     {
         CloseFileStream();
-        GC.Collect();
+        GC.SuppressFinalize(this);
     }
     #endregion
 }

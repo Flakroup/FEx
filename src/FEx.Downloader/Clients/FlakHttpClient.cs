@@ -40,7 +40,7 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public FlakHttpClient()
-        : this((WebRequestParams)null, true, default)
+        : this(new WebRequestParams(), true, default)
     {
     }
 

@@ -49,30 +49,35 @@ public class FtpClientFactory
     public async Task<FtpClient> CreateAsync(NetworkCredential credentials = null, ProxyInfo proxy = null, int port = 0)
     {
         await _semaphore.WaitAsync();
-        FtpClient client;
 
-        if (proxy != null)
-            client = new FtpClientHttp11Proxy(proxy);
-        else
-            client = new();
+        try
+        {
+            FtpClient client;
 
-        if (HostUri != null)
-            client.Host = HostUri.AbsoluteUri;
+            if (proxy != null)
+                client = new FtpClientHttp11Proxy(proxy);
+            else
+                client = new();
 
-        if (credentials != null)
-            client.Credentials = credentials;
+            if (HostUri != null)
+                client.Host = HostUri.AbsoluteUri;
 
-        if (port != 0)
-            client.Port = port;
+            if (credentials != null)
+                client.Credentials = credentials;
 
-        //client.Encoding = Encoding.UTF8;
-        //client.EncryptionMode = FtpEncryptionMode.Explicit;
-        //client.SslProtocols = SslProtocols.Tls;
-        //client.ValidateCertificate += OnValidateCertificate;
-        //client.DataConnectionType = FtpDataConnectionType.PASV;
-        FtpTrace.WriteLine($"FTPClient::ConnectionType = \'{client.ConnectionType}\'");
+            if (port != 0)
+                client.Port = port;
 
-        return client;
+            FtpTrace.WriteLine($"FTPClient::ConnectionType = \'{client.ConnectionType}\'");
+
+            return client;
+        }
+        catch
+        {
+            _semaphore.Release();
+
+            throw;
+        }
     }
 
     public async Task ReleaseClientAsync(FtpClient client)

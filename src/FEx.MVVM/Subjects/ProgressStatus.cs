@@ -161,8 +161,14 @@ public class ProgressStatus : LinkableNotifyPropertyChanged, IProgressStatus
         var pv = Value;
         var pm = Maximum;
 
-        if (!(pv > 0)
-            && !(pm > 0))
+        if (pm <= 0)
+        {
+            PrecisePercentage = 0;
+
+            return;
+        }
+
+        if (pv <= 0)
         {
             PrecisePercentage = 0;
 

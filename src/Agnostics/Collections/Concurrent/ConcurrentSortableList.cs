@@ -20,7 +20,8 @@ public class ConcurrentSortableList<T> : ConcurrentList<T> where T : IComparable
     {
     }
 
-    public void Sort(ListSortDirection order) =>
+    public void Sort(ListSortDirection order)
+    {
         Write(() =>
         {
             if (order == ListSortDirection.Ascending)
@@ -28,4 +29,7 @@ public class ConcurrentSortableList<T> : ConcurrentList<T> where T : IComparable
             else
                 Items.Sort(static (a, b) => -1 * a.CompareTo(b));
         });
+
+        WhenCollectionHasBeenReordered();
+    }
 }

@@ -397,7 +397,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
             OnAddToCollection(itemsToAdd[i], startingIndex + i);
     }
 
-    private void WhenCollectionHasBeenReordered()
+    protected void WhenCollectionHasBeenReordered()
     {
         OnIndexerPropertyChanged();
         OnCollectionReset();

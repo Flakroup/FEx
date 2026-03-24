@@ -384,20 +384,25 @@ public class TfsEnvironment : NotifyPropertyChanged
         return null;
     }
 
-    public Task<TResponse> RunProcAsync<TResponse>(string requestUrl,
+    public async Task<TResponse> RunProcAsync<TResponse>(string requestUrl,
                                                    IDictionary<string, object> args = null,
                                                    JsonSerializerSettings settings = null,
                                                    IList<HttpStatusCode> ommitCodes = null,
                                                    RequestMethod method = RequestMethod.GET)
-        where TResponse : BaseTfsResponse, new() =>
-        new FuncProcessor(requestUrl, Server.Credentials, EnvironmentId, args, method).RunAsync<TResponse>(settings,
-            ommitCodes);
+        where TResponse : BaseTfsResponse, new()
+    {
+        using var processor = new FuncProcessor(requestUrl, Server.Credentials, EnvironmentId, args, method);
+        return await processor.RunAsync<TResponse>(settings, ommitCodes);
+    }
 
-    public Task<string> RunRawAsync(string requestUrl,
+    public async Task<string> RunRawAsync(string requestUrl,
                                     IDictionary<string, object> args = null,
                                     IList<HttpStatusCode> ommitCodes = null,
-                                    RequestMethod method = RequestMethod.GET) =>
-        new FuncProcessor(requestUrl, Server.Credentials, EnvironmentId, args, method).RunRawAsync(ommitCodes);
+                                    RequestMethod method = RequestMethod.GET)
+    {
+        using var processor = new FuncProcessor(requestUrl, Server.Credentials, EnvironmentId, args, method);
+        return await processor.RunRawAsync(ommitCodes);
+    }
 
     private static Task<ImageSource> GetUserImageAsync(Uri serverUri, ICredentials credentials, Guid tfsUserId)
     {
@@ -412,13 +417,11 @@ public class TfsEnvironment : NotifyPropertyChanged
     /// <returns></returns>
     private string GetDefaultUserName()
     {
-        TfsConfigurationServer server = null;
+        if (ServerUri is null)
+            return null;
 
-        if (ServerUri != null)
-        {
-            server = new(ServerUri, GetVssCredentials(true));
-            server.Authenticate();
-        }
+        using var server = new TfsConfigurationServer(ServerUri, GetVssCredentials(true));
+        server.Authenticate();
 
         return server.GetCurrentUserName();
     }
@@ -450,7 +453,7 @@ public class TfsEnvironment : NotifyPropertyChanged
             CollectionsNames.AddRange(CollectionNodesCache.Select(x => x.Resource.DisplayName).OrderBy(x => x));
             NotifyProgress();
             ProgressViewModel?.PrgSetMax(CollectionNodesCache.Count);
-            IFExTimer flakTimer = new FExTimer().WithCallback(NotifyProgress);
+            using IFExTimer flakTimer = new FExTimer().WithCallback(NotifyProgress);
             flakTimer.Start();
             var tasks = CollectionNodesCache.Select(GetTfsProjectsCollectionsInfoAsync).ToList();
             _projectsCollections.Clear();

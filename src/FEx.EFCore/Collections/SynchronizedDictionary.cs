@@ -206,6 +206,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             cacheObservable =
                 _observables.Aggregate(cacheObservable, (current, o) => current.AutoRefreshOnObservable(o));
 
+        _cacheSubscription?.Dispose();
         _cacheSubscription = cacheObservable.Buffer(TimeSpan.FromMilliseconds(100))
             .Where(x => x.Count > 0 && x.Any(c => c.Count > 0))
             .Select(x =>

@@ -84,6 +84,10 @@ public static class WebServices
 
                 responseBody = null;
             }
+            finally
+            {
+                response?.Dispose();
+            }
         }
 
         return responseBody;
@@ -98,7 +102,9 @@ public static class WebServices
         {
             try
             {
+#pragma warning disable IDISP003 // retry loop, response is null on re-entry after exception
                 response = await responseFunc();
+#pragma warning restore IDISP003
                 retry = 0;
             }
             catch (Exception ex)
@@ -268,6 +274,10 @@ public static class WebServices
 
             ex.HandleException(custom: ("additionalInfo",
                 $"API response: {webApiResp}\n\nRequest URL: {requestUrl}\n\nReceived response: {responseBody}\n"));
+        }
+        finally
+        {
+            response?.Dispose();
         }
 
         return new(isSuccess, responseBody);

@@ -11,7 +11,9 @@ namespace FEx.Core.Collections.Concurrent;
 /// Thread-safe HashSet using composition with ReaderWriterLockSlim.
 /// https://stackoverflow.com/questions/18922985/concurrent-hashsett-in-net-framework
 /// </summary>
+#pragma warning disable IDISP025 // generic collection, may be subclassed
 public class ConcurrentHashSet<T> : ISet<T>, IReadOnlyCollection<T>, IDisposable
+#pragma warning restore IDISP025
 {
     private readonly HashSet<T> _set;
     private readonly ReaderWriterLockSlim _lock = new();

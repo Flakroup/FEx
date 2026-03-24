@@ -88,7 +88,9 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
     private static ILoggerFactory _convenienceFactory;
 
     private static ILoggerFactory GetConvenienceFactory() =>
+#pragma warning disable IDISP004 // application-lifetime singleton
         _convenienceFactory ??= new SerilogLoggerFactory(null, false, GetLoggerProviderCollection(LoggerProviders));
+#pragma warning restore IDISP004
 
     public static ILogger<T> CreateLogger<T>() =>
         GetConvenienceFactory().CreateLogger<T>();

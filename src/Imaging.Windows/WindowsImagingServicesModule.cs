@@ -21,7 +21,9 @@ public class WindowsImagingServicesModule
 {
     public static void AddServices(IWindowsImagingServicesModule container, IServiceCollection services)
     {
+#pragma warning disable IDISP004 // DI container manages lifetime
         IFilesCacheServiceConfig config = container.Resolve<IFilesCacheServiceConfig>().Value;
+#pragma warning restore IDISP004
 
         services.AddSingletonServiceUsingContainer<IFilesCacheServiceConfig>(container);
         services.AddSingletonServiceUsingContainer<IIndexEntryConfig>(container);

@@ -48,11 +48,13 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
         var retryPolicy = BuildRetryPolicy(config);
         var circuitBreakerPolicy = BuildCircuitBreakerPolicy(config);
         var timeoutPolicy = BuildTimeoutPolicy(config);
+#pragma warning disable IDISP001 // Polly policy, stateless, composed via WrapAsync
         var bulkheadPolicy = BuildBulkheadPolicy(config);
 
         IAsyncPolicy<IFlurlResponse> fallbackPolicy = config.EnableFallback
             ? BuildFallbackPolicy()
             : Policy.NoOpAsync<IFlurlResponse>();
+#pragma warning restore IDISP001
 
         // Wrap all policies together (order matters!)
         // Fallback -> Retry -> Circuit Breaker -> Timeout -> Bulkhead
@@ -137,6 +139,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
     /// </summary>
     private IAsyncPolicy<IFlurlResponse> BuildBulkheadPolicy(PollyPolicyConfiguration config)
     {
+#pragma warning disable IDISP005 // Polly BulkheadAsync policy, stateless
         return Policy.BulkheadAsync<IFlurlResponse>(config.MaxParallelization,
                 config.MaxQueuingActions,
             _ =>
@@ -146,6 +149,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
 
                 return Task.CompletedTask;
             });
+#pragma warning restore IDISP005
     }
 
     /// <summary>

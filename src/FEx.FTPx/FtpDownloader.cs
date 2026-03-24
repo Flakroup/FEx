@@ -255,7 +255,9 @@ public static class FtpDownloader
                 || serverUri.Scheme == Uri.UriSchemeHttps)
             {
                 using var wc = new FlakWebClient();
+#pragma warning disable IDISP004 // false positive, stream unused - only reading headers
                 wc.OpenRead(serverUri);
+#pragma warning restore IDISP004
                 bytesTotal = Convert.ToInt64(wc.ResponseHeaders["Content-Length"]);
             }
             else if (serverUri.Scheme == Uri.UriSchemeFtp)
@@ -294,7 +296,9 @@ public static class FtpDownloader
 
         try
         {
+#pragma warning disable IDISP001 // false positive, ownership transferred to caller via return value
             response = (FtpWebResponse)await request.GetResponseAsync();
+#pragma warning restore IDISP001
 
             return new(true, response);
         }

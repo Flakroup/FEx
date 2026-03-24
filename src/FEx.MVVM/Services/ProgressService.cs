@@ -62,7 +62,9 @@ public sealed class ProgressService : SubscriberBase, IProgressService
                 var set = new ConcurrentHashSet<ReceiverDefinition>(def.Yield());
                 hasBeenAdded = true;
 
+#pragma warning disable IDISP005 // stored in Listeners dictionary, cleanup via DetachContainer
                 return set;
+#pragma warning restore IDISP005
             },
             (_, v) =>
             {

@@ -175,21 +175,22 @@ public static class DirectoryWalker
         {
             folder.Refresh();
 
-            if (folder.Exists)
-            {
-                folder.Delete(recursive);
+            if (!folder.Exists)
+                return true;
 
-                if (logDeletions)
-                    Log.Debug($"Deleted: {folder.FullName}");
-            }
+            if (recursive)
+                return DeleteRecursive(folder, logDeletions);
+
+            folder.Delete(false);
+
+            if (logDeletions)
+                Log.Debug("Deleted: {Path}", folder.FullName);
 
             return true;
         }
         catch (Exception ex)
         {
-            if (logDeletions)
-                Log.Error(ex, $"Failed to delete: {folder.FullName}");
-
+            Log.Warning("Cannot delete {Path}: {Message}", folder.FullName, ex.Message);
             return false;
         }
     }
@@ -205,15 +206,57 @@ public static class DirectoryWalker
                 file.Delete();
 
                 if (logDeletions)
-                    Log.Debug($"Deleted: {file.FullName}");
+                    Log.Debug("Deleted: {Path}", file.FullName);
             }
 
             return true;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Failed to delete: {file.FullName}");
+            Log.Warning("Cannot delete {Path}: {Message}", file.FullName, ex.Message);
+            return false;
+        }
+    }
 
+    private static bool DeleteRecursive(DirectoryInfo folder, bool logDeletions)
+    {
+        var success = true;
+
+        try
+        {
+            foreach (var file in folder.EnumerateFiles("*", DefaultOptions))
+            {
+                if (!file.SafeDelete(logDeletions))
+                    success = false;
+            }
+
+            foreach (var subDir in folder.EnumerateDirectories("*", DefaultOptions))
+            {
+                if (!DeleteRecursive(subDir, logDeletions))
+                    success = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Cannot enumerate {Path}: {Message}", folder.FullName, ex.Message);
+            return false;
+        }
+
+        if (!success)
+            return false;
+
+        try
+        {
+            folder.Delete(false);
+
+            if (logDeletions)
+                Log.Debug("Deleted: {Path}", folder.FullName);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Cannot delete {Path}: {Message}", folder.FullName, ex.Message);
             return false;
         }
     }

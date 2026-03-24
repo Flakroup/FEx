@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace FEx.AzureDevOpsx;
 
-public class FuncProcessor
+public sealed class FuncProcessor : IDisposable
 {
     public static ConcurrentDictionary<string, SemaphoreSlim> RateLimits { get; } = new ConcurrentDictionary<string, SemaphoreSlim>();
     public static string ExpectedContentType { get; } = "application/json";
@@ -91,6 +91,7 @@ public class FuncProcessor
 
         try
         {
+#pragma warning disable IDISP003 // switch-case, only one branch executes
             IFlurlResponse response;
             switch (Method)
             {
@@ -110,6 +111,7 @@ public class FuncProcessor
                     response = await request.GetAsync(cancellationToken: CancellationToken);
                     break;
             }
+#pragma warning restore IDISP003
 
             using (response)
             {
@@ -135,5 +137,10 @@ public class FuncProcessor
         }
 
         return null;
+    }
+
+    public void Dispose()
+    {
+        CancellationTokenSource?.Dispose();
     }
 }

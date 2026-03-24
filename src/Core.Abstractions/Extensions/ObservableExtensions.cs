@@ -211,9 +211,9 @@ public static class ObservableExtensions
 
     public static IDisposable SubscribeWithoutOverlap<T>(this IObservable<T> source, Action<T> action)
     {
-#pragma warning disable IDISP001
+        var disposable = new CompositeDisposable();
         var sampler = new Subject<Unit>();
-#pragma warning restore IDISP001
+        disposable.Add(sampler);
 
         var sub = source.Sample(sampler)
             .Subscribe(l =>
@@ -222,24 +222,24 @@ public static class ObservableExtensions
                 sampler.OnNext(Unit.Default);
             });
 
-        // start sampling when we have a first value
-#pragma warning disable IDISP004
-        source.Take(1).Subscribe(_ => sampler.OnNext(Unit.Default));
-#pragma warning restore IDISP004
+        disposable.Add(sub);
 
-        return sub;
+        // start sampling when we have a first value
+        var takeSub = source.Take(1).Subscribe(_ => sampler.OnNext(Unit.Default));
+        disposable.Add(takeSub);
+
+        return disposable;
     }
 
     public static IObservable<TResult> FromTdf<T, TResult>(this IObservable<T> source,
                                                            Func<IPropagatorBlock<T, TResult>> blockFactory) =>
-        Observable.Defer(() =>
+        Observable.Create<TResult>(observer =>
         {
             var block = blockFactory();
-#pragma warning disable IDISP004
-            source.Subscribe(block.AsObserver());
-#pragma warning restore IDISP004
+            var sourceSub = source.Subscribe(block.AsObserver());
+            var blockSub = block.AsObservable().Subscribe(observer);
 
-            return block.AsObservable();
+            return new CompositeDisposable(sourceSub, blockSub);
         });
 
     public static IObservable<TResult> FromTdf<T, TResult>(this IObservable<T> source,

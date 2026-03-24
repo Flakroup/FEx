@@ -154,6 +154,29 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
         return obj.GetType() == GetType() && Equals((FExTreeViewNode)obj);
     }
 
-    public override int GetHashCode() => NodePath?.GetHashCode() ?? 0;
+    public override int GetHashCode()
+    {
+        if (NodePath is null)
+            return 0;
+
+#if NETSTANDARD
+        unchecked
+        {
+            var hash = 17;
+
+            foreach (var segment in NodePath)
+                hash = hash * 31 + (segment?.GetHashCode() ?? 0);
+
+            return hash;
+        }
+#else
+        var hash = new HashCode();
+
+        foreach (var segment in NodePath)
+            hash.Add(segment);
+
+        return hash.ToHashCode();
+#endif
+    }
     #endregion
 }

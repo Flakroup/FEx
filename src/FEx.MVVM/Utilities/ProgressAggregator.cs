@@ -328,6 +328,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
             Stopwatch?.Stop();
             _changedPropertiesSubject?.Dispose();
             _subscriptions?.Dispose();
+            ProgressPropertyChanged = null;
         }
 
         _isDisposed = true;

@@ -119,6 +119,7 @@ public class Cmd : ICmd
 
     protected virtual void StartProc()
     {
+        Proc?.Dispose();
         Proc = new();
         AttachToOutput();
         Proc.StartInfo = StartInfo;

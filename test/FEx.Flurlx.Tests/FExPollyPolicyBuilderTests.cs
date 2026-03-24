@@ -84,6 +84,7 @@ public sealed class FExPollyPolicyBuilderTests
         var attemptCount = 0;
 
         // Act
+#pragma warning disable IDISP001 // mock IFlurlResponse from NSubstitute, no real resources
         var result = await policy.ExecuteAsync(async _ =>
             {
                 attemptCount++;
@@ -95,6 +96,7 @@ public sealed class FExPollyPolicyBuilderTests
                 return CreateResponse((int)HttpStatusCode.OK);
             },
             CancellationToken.None);
+#pragma warning restore IDISP001
 
         // Assert
         result.StatusCode.ShouldBe((int)HttpStatusCode.OK);
@@ -115,6 +117,7 @@ public sealed class FExPollyPolicyBuilderTests
         var attemptCount = 0;
 
         // Act
+#pragma warning disable IDISP001 // mock IFlurlResponse from NSubstitute, no real resources
         var result = await policy.ExecuteAsync(async _ =>
             {
                 attemptCount++;
@@ -123,6 +126,7 @@ public sealed class FExPollyPolicyBuilderTests
                 return CreateResponse((int)HttpStatusCode.BadRequest);
             },
             CancellationToken.None);
+#pragma warning restore IDISP001
 
         // Assert
         result.StatusCode.ShouldBe((int)HttpStatusCode.BadRequest);
@@ -213,7 +217,7 @@ public sealed class FExPollyPolicyBuilderTests
         var policy = _policyBuilder.BuildFullSuitePolicy(config);
         var concurrentCount = 0;
         var maxConcurrentCount = 0;
-        var semaphore = new SemaphoreSlim(1, 1);
+        using var semaphore = new SemaphoreSlim(1, 1);
 
         // Act - Try to run 5 requests concurrently
         var tasks = new Task<IFlurlResponse>[5];
@@ -277,6 +281,7 @@ public sealed class FExPollyPolicyBuilderTests
         var policy = _policyBuilder.BuildFullSuitePolicy(config);
 
         // Act - All retries should fail, fallback should activate
+#pragma warning disable IDISP001 // mock IFlurlResponse from NSubstitute, no real resources
         var result = await policy.ExecuteAsync(async _ =>
             {
                 await Task.CompletedTask;
@@ -284,6 +289,7 @@ public sealed class FExPollyPolicyBuilderTests
                 throw new HttpRequestException("Complete failure");
             },
             CancellationToken.None);
+#pragma warning restore IDISP001
 
         // Assert
         result.ShouldNotBeNull();
@@ -340,6 +346,7 @@ public sealed class FExPollyPolicyBuilderTests
         var attemptCount = 0;
 
         // Act
+#pragma warning disable IDISP001 // mock IFlurlResponse from NSubstitute, no real resources
         var result = await policy.ExecuteAsync(async _ =>
             {
                 attemptCount++;
@@ -351,6 +358,7 @@ public sealed class FExPollyPolicyBuilderTests
                 return CreateResponse((int)HttpStatusCode.OK);
             },
             CancellationToken.None);
+#pragma warning restore IDISP001
 
         // Assert
         result.StatusCode.ShouldBe((int)HttpStatusCode.OK);

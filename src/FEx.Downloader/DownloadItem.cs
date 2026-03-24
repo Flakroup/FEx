@@ -384,6 +384,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
                             DState = DownloadState.Finished;
                             TotalPrg = DataLength;
+                            PrgSetEnd();
                         }
 
                         UpdateProgressInfo();
@@ -677,6 +678,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
             File.Refresh();
             TotalPrg = File.Length;
+            PrgSetEnd();
 
             DState = DownloadState.Finished;
         }

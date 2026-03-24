@@ -1,6 +1,6 @@
 [project]
 name = "FEx.MSBuildx"
-path = "rc\\MSBuildx"
+path = "src\\MSBuildx"
 
 [[classes]]
 name = "DiffResult"
@@ -20,7 +20,7 @@ file = "MSProjectItem.cs"
 [[classes]]
 name = "MSProjectNuGetInstallation"
 ns = "FEx.MSBuildx"
-base = "NuGetPackageInstallation"
+base = "NuGetPackageInstallation, IDisposable"
 file = "MSProjectNuGetInstallation.cs"
 
 [[classes]]

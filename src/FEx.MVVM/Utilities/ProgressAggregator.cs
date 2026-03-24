@@ -323,8 +323,10 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
 
         if (disposing)
         {
+#pragma warning disable IDISP007 // Timer created internally, this class owns it
             Timer?.Stop();
             Timer?.Dispose();
+#pragma warning restore IDISP007
             Stopwatch?.Stop();
             _changedPropertiesSubject?.Dispose();
             _subscriptions?.Dispose();

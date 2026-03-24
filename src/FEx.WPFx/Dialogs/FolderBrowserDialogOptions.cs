@@ -63,7 +63,9 @@ public sealed class FolderBrowserDialogOptions : FolderBrowserDialogOptionsBase<
             return;
 
         _isDisposed = true;
+#pragma warning disable IDISP007 // Dialog created internally by MapToDialog, this class owns it
         Dialog?.Dispose();
+#pragma warning restore IDISP007
     }
     #endregion
 }

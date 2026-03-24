@@ -333,7 +333,9 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         base.Dispose(disposing);
 
         if (disposing && _ownCTS)
+#pragma warning disable IDISP007 // conditional on _ownCTS ownership flag
             CancellationTokenSource.Dispose();
+#pragma warning restore IDISP007
     }
     #endregion
 

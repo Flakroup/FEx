@@ -10,7 +10,9 @@ using System.Windows.Media.Imaging;
 
 namespace FEx.Imaging.Windows.Model;
 
+#pragma warning disable IDISP025 // has protected members for subclassing
 public class IndexEntry : IndexEntryBase, IDisposable
+#pragma warning restore IDISP025
 {
     private Uri _url;
     private CachedImage _cachedImage;
@@ -44,9 +46,11 @@ public class IndexEntry : IndexEntryBase, IDisposable
             {
                 AbsoluteUri = Url?.AbsoluteUri;
 
+#pragma warning disable IDISP003 // semaphore from LockSrv, not owned
                 Semaphore = AbsoluteUri is not null
                     ? LockSrv.EnsureLock(AbsoluteUri)
                     : null;
+#pragma warning restore IDISP003
 
                 FileName = GetFileName(Url);
 
@@ -116,9 +120,11 @@ public class IndexEntry : IndexEntryBase, IDisposable
         protected internal set => SetProperty(ref _isDownloading, value);
     }
 
+#pragma warning disable IDISP008 // semaphore from LockSrv, ownership managed externally
     [JsonIgnore]
     [NotMapped]
     protected internal SemaphoreSlim Semaphore { get; protected set; }
+#pragma warning restore IDISP008
 
     private static ISynchronizedAccessService LockSrv => FExCoreStatics.SynchronizedAccessService;
 

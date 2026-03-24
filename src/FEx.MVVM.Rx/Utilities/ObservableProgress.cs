@@ -15,7 +15,9 @@ namespace FEx.MVVM.Rx.Utilities;
 /// <typeparam name="T">The type of progress updates.</typeparam>
 public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<T>
 {
+#pragma warning disable IDISP008 // dual injection pattern, class manages lifecycle
     private readonly ISubject<T> _subject;
+#pragma warning restore IDISP008
     private int _isDisposed;
 
     public bool IsDisposed
@@ -202,8 +204,10 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
         public void Dispose()
         {
             IsDisposed = true;
+#pragma warning disable IDISP007 // class owns these fields, proper dispose
             _progress?.Dispose();
             _subscription?.Dispose();
+#pragma warning restore IDISP007
         }
         #endregion
     }

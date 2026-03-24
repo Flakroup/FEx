@@ -35,9 +35,11 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
     public ObservableCollection<User> Users { get; } = new();
     public ObservableCollection<Post> Posts { get; } = new();
 
+#pragma warning disable IDISP006 // ReactiveUI commands, disposed by ViewModel lifecycle
     public ReactiveCommand<Unit, Unit> LoadUsersCommand { get; }
     public ReactiveCommand<Unit, Unit> LoadPostsCommand { get; }
     public ReactiveCommand<Unit, Unit> TestResilienceCommand { get; }
+#pragma warning restore IDISP006
 
     public MainWindowViewModel()
     {

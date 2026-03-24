@@ -78,8 +78,10 @@ public static class BitmapExtensions
         if (result.CanFreeze)
             result.Freeze();
 
+#pragma warning disable IDISP007 // intentional dispose after BitmapCacheOption.OnLoad
         if (forceLoad)
             stream.Dispose();
+#pragma warning restore IDISP007
 
         // if you dispose of the memory stream here, the image will be toast (burnt toast)
         // (as the dispatcher won't have run yet).

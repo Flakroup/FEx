@@ -7,9 +7,10 @@ using System.Linq;
 
 namespace FEx.MSBuildx;
 
-public class MSProjectNuGetInstallation : NuGetPackageInstallation
+public sealed class MSProjectNuGetInstallation : NuGetPackageInstallation, IDisposable
 {
     private string _projects;
+    private readonly IDisposable _subscription;
 
     public ConcurrentObservableList<MSProject> MSProjects { get; }
 
@@ -24,7 +25,7 @@ public class MSProjectNuGetInstallation : NuGetPackageInstallation
     {
         MSProjects = [];
 
-        MSProjects.CollectionChangedObservable.Subscribe(_ =>
+        _subscription = MSProjects.CollectionChangedObservable.Subscribe(_ =>
             Projects = string.Join(", ", MSProjects.Select(x => x.Name).OrderAlphanumBy(x => x)));
     }
 
@@ -32,5 +33,10 @@ public class MSProjectNuGetInstallation : NuGetPackageInstallation
     {
         if (MSProjects.All(x => x.Name != project.Name))
             MSProjects.Add(project);
+    }
+
+    public void Dispose()
+    {
+        _subscription?.Dispose();
     }
 }

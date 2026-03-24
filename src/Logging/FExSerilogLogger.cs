@@ -13,7 +13,9 @@ namespace FEx.Logging;
 /// Serilog-backed implementation of IFExLogger.
 /// Maps Critical → Serilog.Fatal, implements structured logging via LogContext.
 /// </summary>
+#pragma warning disable IDISP025 // logger, may be extended
 public class FExSerilogLogger : IFExLogger, IDisposable
+#pragma warning restore IDISP025
 {
     public event EventHandler<FExErrorEventArgs> ErrorLogged;
 

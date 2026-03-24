@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Core"
-path = "rc\\Core"
+path = "src\\Core"
 
 [[classes]]
 name = "FExCoreModule"
@@ -17,8 +17,9 @@ static = true
 [[classes]]
 name = "ConcurrentHashSet"
 ns = "FEx.Core.Collections.Concurrent"
-base = "HashSet<T>"
-summary = "https://stackoverflow.com/questions/18922985/concurrent-hashsett-in-net-framework"
+base = "ISet<T>, IReadOnlyCollection<T>, IDisposable
+#pragma warning restore IDISP025"
+summary = "Thread-safe HashSet using composition with ReaderWriterLockSlim. https://stackoverflow.com/questions/18922985/concurrent-hashsett-in-net-framework"
 file = "Collections\\Concurrent\\ConcurrentHashSet.cs"
 
 [[classes]]

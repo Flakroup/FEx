@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Platforms"
-path = "rc\\FEx.Platforms"
+path = "src\\FEx.Platforms"
 
 [[classes]]
 name = "FExPlatforms"

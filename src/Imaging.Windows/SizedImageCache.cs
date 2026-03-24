@@ -13,7 +13,9 @@ using System.Windows.Media.Imaging;
 
 namespace FEx.Imaging.Windows;
 
+#pragma warning disable IDISP025 // may be subclassed
 public class SizedImageCache : NotifyPropertyChanged, IDisposable
+#pragma warning restore IDISP025
 {
     private BitmapImage _cachedImage;
     private bool _isLoadingImage;
@@ -149,7 +151,9 @@ public class SizedImageCache : NotifyPropertyChanged, IDisposable
         LoadingSemaphore?.Dispose();
 
         if (OwnCTS)
+#pragma warning disable IDISP007 // conditional on OwnCTS ownership flag
             CancellationTokenSource.Dispose();
+#pragma warning restore IDISP007
     }
     #endregion
 }

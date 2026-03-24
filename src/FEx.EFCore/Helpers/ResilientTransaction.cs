@@ -183,8 +183,7 @@ public class ResilientTransaction
                 //ignored
             }
 
-            if (delayOnTimeout.HasValue)
-                await Task.Delay(delayOnTimeout.Value);
+            await Task.Delay(delayOnTimeout ?? 100);
         } while (true);
     }
 
@@ -205,8 +204,7 @@ public class ResilientTransaction
                 //ignored
             }
 
-            if (delayOnTimeout.HasValue)
-                JoinableAsyncHelper.DelayWithoutDeadlock(delayOnTimeout.Value);
+            JoinableAsyncHelper.DelayWithoutDeadlock(delayOnTimeout ?? 100);
         } while (true);
     }
 }

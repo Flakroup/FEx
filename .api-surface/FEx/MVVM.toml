@@ -1,6 +1,6 @@
 [project]
 name = "FEx.MVVM"
-path = "rc\\FEx.MVVM"
+path = "src\\FEx.MVVM"
 
 [[classes]]
 name = "FExMvvm"
@@ -29,6 +29,7 @@ file = "Link.cs"
 [[classes]]
 name = "SubscriberBase"
 ns = "FEx.MVVM"
+base = "IDisposable"
 file = "BaseObjects\\SubscriberBase.cs"
 
 [[classes]]

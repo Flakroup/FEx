@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Encryption"
-path = "rc\\FEx.Encryption"
+path = "src\\FEx.Encryption"
 
 [[classes]]
 name = "EncryptionHelper"

@@ -1,6 +1,6 @@
 [project]
 name = "FEx.SecureStorage"
-path = "rc\\FEx.SecureStorage"
+path = "src\\FEx.SecureStorage"
 
 [[interfaces]]
 name = "ISecureStorageContainer"

@@ -1,6 +1,6 @@
 [project]
 name = "FEx.MVVM.Abstractions"
-path = "rc\\FEx.MVVM.Abstractions"
+path = "src\\FEx.MVVM.Abstractions"
 
 [[classes]]
 name = "DummyPopupService"

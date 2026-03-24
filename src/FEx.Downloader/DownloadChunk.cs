@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Downloader;
 
-public class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
+public sealed class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
 {
     private long _size;
     private FileStream _fileStream;
@@ -30,7 +30,7 @@ public class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
     public long Size
     {
         get => _size;
-        protected set
+        private set
         {
             if (SetProperty(ref _size, value))
             {
@@ -70,7 +70,7 @@ public class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
         set => SetProperty(ref _isFileStreamOpen, value);
     }
 
-    protected IProgress<double> Progress { get; }
+    private IProgress<double> Progress { get; }
 
     public DownloadChunk(long from, long to, DirectoryInfo directory, IProgress<double> progress)
         : this(new ContentRangeHeaderValue(from, to), directory, progress)
@@ -128,7 +128,7 @@ public class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
         Progress?.Report(bytesToWrite);
     }
 
-    protected void FixChunkFileSize()
+    private void FixChunkFileSize()
     {
         CloseFileStream();
 
@@ -139,7 +139,7 @@ public class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
                 fileStream.SetLength(Size);
     }
 
-    protected void CloseFileStream()
+    private void CloseFileStream()
     {
         if (IsFileStreamOpen)
         {
@@ -154,7 +154,6 @@ public class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
     public void Dispose()
     {
         CloseFileStream();
-        GC.SuppressFinalize(this);
     }
     #endregion
 }

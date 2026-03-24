@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Downloader;
 
-public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
+public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
 {
     private long _size;
     private bool _isConnected;
@@ -46,18 +46,18 @@ public class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisposable
     public long Size
     {
         get => _size;
-        protected set => SetProperty(ref _size, value);
+        private set => SetProperty(ref _size, value);
     }
 
     public bool IsConnected
     {
         get => _isConnected;
-        protected set => SetProperty(ref _isConnected, value, x => ConnPrg?.Report(x));
+        private set => SetProperty(ref _isConnected, value, x => ConnPrg?.Report(x));
     }
 
-    protected byte[] Buffer { get; }
+    private byte[] Buffer { get; }
 
-    protected long ReadenBytes { get; set; }
+    private long ReadenBytes { get; set; }
     private CancellationToken CancellationToken { get; }
 
     public DownloadRange(long from,

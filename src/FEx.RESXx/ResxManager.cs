@@ -45,13 +45,12 @@ public class ResxManager : IResxManager
                 File.SetAttributes(path, FileAttributes.Normal);
 
             //Write the combined resource file
-            var resourceWriter = new ResXResourceWriter(path);
+            using var resourceWriter = new ResXResourceWriter(path);
 
             foreach (var entry in resourceEntries)
                 resourceWriter.AddResource(entry.Key, resourceEntries[entry.Key]);
 
             resourceWriter.Generate();
-            resourceWriter.Close();
         }
     }
 
@@ -62,7 +61,7 @@ public class ResxManager : IResxManager
         if (File.Exists(path))
         {
             //Get existing resources
-            var reader = new ResXResourceReader(path);
+            using var reader = new ResXResourceReader(path);
             resourceEntries = new();
 
             foreach (DictionaryEntry entry in reader)
@@ -74,8 +73,6 @@ public class ResxManager : IResxManager
                     && !resourceEntries.ContainsValue(value))
                     resourceEntries.Add(key, value);
             }
-
-            reader.Close();
         }
 
         return resourceEntries;
@@ -88,7 +85,7 @@ public class ResxManager : IResxManager
     public string[] Resgen(string resx, string resxDesigner, string fileName, string projectNamespace)
     {
         var generatedCodeNamespace = $"{projectNamespace}.Properties";
-        var codeProvider = new CSharpCodeProvider();
+        using var codeProvider = new CSharpCodeProvider();
 
         var code = StronglyTypedResourceBuilder.Create(resx,
             fileName,

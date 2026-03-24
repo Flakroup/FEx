@@ -12,10 +12,10 @@ using System.Windows;
 
 namespace FEx.WPFx.Implementations;
 
-public class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
+public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposable
 {
-    protected ConcurrentHashSet<string> MessagesCache { get; }
-    protected SemaphoreSlim MessagesCacheSemaphore { get; }
+    private ConcurrentHashSet<string> MessagesCache { get; }
+    private SemaphoreSlim MessagesCacheSemaphore { get; }
 
     public WpfMessagePopupService(ILogger<WpfMessagePopupService> logger)
         : base(logger)

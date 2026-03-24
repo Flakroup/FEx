@@ -37,6 +37,11 @@ public class FExTimer : NotifyPropertyChanged, IFExTimer
         Interval = FExMvvm.DefaultUIRefreshInterval;
     }
 
+    /// <summary>
+    /// Sets the timer callback. Subscribes to <see cref="IntervalObservable"/> using the current <see cref="Interval"/>.
+    /// <para><b>Important:</b> Call <see cref="WithInterval(TimeSpan)"/> before this method.
+    /// Calling WithInterval after WithCallback does not update the existing subscription.</para>
+    /// </summary>
     public IFExTimer WithCallback(Action callback)
     {
         _timer?.Dispose();
@@ -45,6 +50,11 @@ public class FExTimer : NotifyPropertyChanged, IFExTimer
         return this;
     }
 
+    /// <summary>
+    /// Sets the async timer callback. Subscribes to <see cref="IntervalObservable"/> using the current <see cref="Interval"/>.
+    /// <para><b>Important:</b> Call <see cref="WithInterval(TimeSpan)"/> before this method.
+    /// Calling WithInterval after WithAsyncCallback does not update the existing subscription.</para>
+    /// </summary>
     public IFExTimer WithAsyncCallback(Func<Task> asyncCallback, CancellationToken cancellationToken)
     {
         _timer?.Dispose();

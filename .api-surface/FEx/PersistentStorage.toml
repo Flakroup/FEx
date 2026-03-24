@@ -1,6 +1,6 @@
 [project]
 name = "FEx.PersistentStorage"
-path = "rc\\PersistentStorage"
+path = "src\\PersistentStorage"
 
 [[classes]]
 name = "CacheService"

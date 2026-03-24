@@ -41,12 +41,14 @@ public sealed class AvaloniaScheduler : LocalScheduler
             });
         else
             // Execute after delay on UI thread
+#pragma warning disable IDISP004 // Avalonia manages DispatcherTimer lifecycle
             DispatcherTimer.RunOnce(() =>
                 {
                     if (!cancellation.Token.IsCancellationRequested)
                         composite.Add(action(this, state));
                 },
                 dueTime);
+#pragma warning restore IDISP004
 
         return composite;
     }

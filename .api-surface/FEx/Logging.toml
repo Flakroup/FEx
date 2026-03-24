@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Logging"
-path = "rc\\Logging"
+path = "src\\Logging"
 
 [[classes]]
 name = "DefaultPlatformLogger"
@@ -29,7 +29,8 @@ file = "FExLoggingService.cs"
 [[classes]]
 name = "FExSerilogLogger"
 ns = "FEx.Logging"
-base = "IFExLogger"
+base = "IFExLogger, IDisposable
+#pragma warning restore IDISP025"
 summary = "Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext."
 file = "FExSerilogLogger.cs"
 

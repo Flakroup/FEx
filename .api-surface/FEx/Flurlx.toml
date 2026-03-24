@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Flurlx"
-path = "rc\\FEx.Flurlx"
+path = "src\\FEx.Flurlx"
 
 [[classes]]
 name = "FExCookieJar"

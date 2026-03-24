@@ -183,7 +183,7 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
 
         var flurlConfigurator = GetMocks(_flurlClient, timeoutPolicy);
 
-        var timeoutApi = new TestApi(flurlConfigurator);
+        using var timeoutApi = new TestApi(flurlConfigurator);
 
         _mockServer.Given(Request.Create().WithPath("/api/slow").UsingGet())
             .RespondWith(Response.Create()
@@ -212,7 +212,7 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
 
         var flurlConfigurator = GetMocks(_flurlClient, bulkheadPolicy);
 
-        var bulkheadApi = new TestApi(flurlConfigurator);
+        using var bulkheadApi = new TestApi(flurlConfigurator);
 
         _mockServer.Given(Request.Create().WithPath("/api/concurrent").UsingGet())
             .RespondWith(Response.Create()
@@ -257,9 +257,11 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
     private static IFlurlConfigurator GetMocks(IFlurlClient flurlClient,
                                                IAsyncPolicy<IFlurlResponse> resiliencePolicy)
     {
+#pragma warning disable IDISP004 // mock from NSubstitute, no real resources
         var flurlConfigurator = Substitute.For<IFlurlConfigurator>();
         flurlConfigurator.GetClient().Returns(flurlClient);
         flurlConfigurator.GetResiliencePolicy().Returns(resiliencePolicy);
+#pragma warning restore IDISP004
 
         return flurlConfigurator;
     }

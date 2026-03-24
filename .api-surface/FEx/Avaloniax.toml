@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Avaloniax"
-path = "rc\\FEx.Avaloniax"
+path = "src\\FEx.Avaloniax"
 
 [[classes]]
 name = "AvaloniaDispatcher"

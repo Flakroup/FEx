@@ -9,6 +9,8 @@ namespace FEx.Sample.WPF;
 /// Demonstrates StrongInject-only Multi-DI pattern (no Microsoft DI).
 /// </summary>
 [RegisterModule(typeof(FExModule))]
+#pragma warning disable IDISP025 // StrongInject generated container
 public partial class AppContainer : FExModule, IFExContainer
+#pragma warning restore IDISP025
 {
 }

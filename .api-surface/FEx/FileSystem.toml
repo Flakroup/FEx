@@ -1,6 +1,6 @@
 [project]
 name = "FEx.FileSystem"
-path = "rc\\FEx.FileSystem"
+path = "src\\FEx.FileSystem"
 
 [[classes]]
 name = "DirectoryInfoEnumerationExtensions"

@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Sqlx.Abstractions"
-path = "rc\\Sqlx.Abstractions"
+path = "src\\Sqlx.Abstractions"
 
 [[interfaces]]
 name = "ISqlDbHelper"

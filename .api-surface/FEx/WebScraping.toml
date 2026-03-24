@@ -1,6 +1,6 @@
 [project]
 name = "FEx.WebScraping"
-path = "rc\\FEx.WebScraping"
+path = "src\\FEx.WebScraping"
 
 [[classes]]
 name = "HtmlWebHelper"

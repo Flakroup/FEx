@@ -63,7 +63,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     public int ParallelRanges { get; private set; }
 
+#pragma warning disable IDISP008 // semaphore from LockSrv, ownership managed externally
     public WebResponse Response { get; protected set; }
+#pragma warning restore IDISP008
 
     public DirectoryInfo TempDirectory { get; protected set; }
 
@@ -103,7 +105,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                             File = new(fP);
 
                         if (fP is not null)
+#pragma warning disable IDISP003 // semaphore from LockSrv, not owned
                             Semaphore = LockSrv.EnsureLock(fP);
+#pragma warning restore IDISP003
                     });
         }
     }

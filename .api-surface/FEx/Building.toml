@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Building"
-path = "rc\\FEx.Building"
+path = "src\\FEx.Building"
 
 [[classes]]
 name = "BuildExtensions"

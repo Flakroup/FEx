@@ -1,6 +1,6 @@
 [project]
 name = "FEx.SecureStorage.Abstractions"
-path = "rc\\SecureStorage.Abstractions"
+path = "src\\SecureStorage.Abstractions"
 
 [[interfaces]]
 name = "ISecureStorageService"

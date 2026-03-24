@@ -24,7 +24,9 @@ public class ElevatedCmd : Cmd
     protected override void StartProc()
     {
         AttachToOutput();
+#pragma warning disable IDISP003 // Process managed by base class Cmd
         Proc = AdminHelper.StartElevated(StartInfo);
+#pragma warning restore IDISP003
     }
 
     protected override void OnStarted(bool waitForExit, Action<ICmd> onStarted)

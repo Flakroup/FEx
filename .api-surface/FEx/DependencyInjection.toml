@@ -1,6 +1,6 @@
 [project]
 name = "FEx.DependencyInjection"
-path = "rc\\DependencyInjection"
+path = "src\\DependencyInjection"
 
 [[classes]]
 name = "FExDependencyInjectionModule"
@@ -17,7 +17,7 @@ file = "FExMicrosoftDIServiceProvider.cs"
 [[classes]]
 name = "MicrosoftDIScopeProviderAdapter"
 ns = "FEx.DependencyInjection"
-base = "IScopeProvider, IDisposable"
+base = "IScopeProvider"
 file = "FExMicrosoftDIServiceProvider.cs"
 
 [[classes]]

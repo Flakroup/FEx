@@ -11,16 +11,16 @@ using System.Text;
 
 namespace FEx.MVVM.Rx.Utilities;
 
-public class StatusHub : IDisposable, IStatusHub
+public sealed class StatusHub : IDisposable, IStatusHub
 {
     public EventHandler<(Guid key, string status)> StatusAdded;
     public EventHandler<(Guid key, string status)> StatusRemoved;
     public EventHandler<EventArgs> Reset;
 
     public Guid Key { get; }
-    protected ConcurrentDictionary<Guid, string> Statuses { get; }
+    private ConcurrentDictionary<Guid, string> Statuses { get; }
 
-    protected IDisposableProgress<(Guid key, string status, NotifyCollectionChangedAction action)> StatusChange { get; }
+    private IDisposableProgress<(Guid key, string status, NotifyCollectionChangedAction action)> StatusChange { get; }
 
     public StatusHub(Guid key)
         : this(key, null, null, null)

@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Core.Abstractions"
-path = "rc\\Core.Abstractions"
+path = "src\\Core.Abstractions"
 
 [[classes]]
 name = "FExCoreStatics"

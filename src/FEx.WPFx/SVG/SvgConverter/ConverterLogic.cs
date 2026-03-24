@@ -368,7 +368,7 @@ public static class ConverterLogic
             OptimizePath = true
         };
 
-        var reader = new FileSvgReader(wpfDrawingSettings);
+        using var reader = new FileSvgReader(wpfDrawingSettings);
 
         //this is straight forward, but in this version of the dlls there is an error when name starts with a digit
         //var uri = new Uri(Path.GetFullPath(filepath));

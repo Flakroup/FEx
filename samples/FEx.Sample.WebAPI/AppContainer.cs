@@ -15,7 +15,9 @@ namespace FEx.Sample.WebAPI;
 [Register(typeof(FExStrongInjectServiceProvider), Scope.SingleInstance, typeof(IFExServiceProvider))]
 [Register(typeof(FExMicrosoftDIServiceProvider), Scope.SingleInstance)]
 [Register(typeof(SampleApiModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
+#pragma warning disable IDISP025 // StrongInject generated container
 public partial class AppContainer : TestBase, IContainer<IFExServiceProvider>, IContainer<FExMicrosoftDIServiceProvider>
+#pragma warning restore IDISP025
 {
     [Factory]
     public static ILogger CreateLogger() => NullLogger.Instance;

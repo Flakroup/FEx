@@ -1,6 +1,6 @@
 [project]
 name = "FEx.MVVM.Tests"
-path = "est\\FEx.MVVM.Tests"
+path = "test\\FEx.MVVM.Tests"
 
 [[classes]]
 name = "LinkedPropertiesTests"
@@ -24,4 +24,20 @@ name = "SingleParent"
 ns = "FEx.MVVM.Tests"
 base = "LinkableNotifyPropertyChanged"
 file = "LinkedPropertiesTests.cs"
+
+[[classes]]
+name = "TestableProgressAggregator"
+ns = "FEx.MVVM.Tests"
+base = "ProgressAggregator"
+file = "ProgressAggregatorTests.cs"
+
+[[classes]]
+name = "ProgressAggregatorTests"
+ns = "FEx.MVVM.Tests"
+file = "ProgressAggregatorTests.cs"
+
+[[classes]]
+name = "ProgressServiceTests"
+ns = "FEx.MVVM.Tests"
+file = "ProgressServiceTests.cs"
 

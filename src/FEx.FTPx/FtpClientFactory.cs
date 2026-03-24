@@ -87,7 +87,9 @@ public class FtpClientFactory
             if (client.IsConnected)
                 await client.DisconnectAsync();
 
+#pragma warning disable IDISP007 // factory release pattern, client created by CreateAsync
             client.Dispose();
+#pragma warning restore IDISP007
         }
 
         _semaphore.Release();
@@ -117,7 +119,9 @@ public class FtpClientFactory
 
     public static async Task<FtpClientFactory> GetInstanceAsync(string hostUri, int maxParallel = 5)
     {
+#pragma warning disable IDISP001 // semaphore from LockSrv, lifetime managed by lock service
         var semaphore = LockSrv.EnsureLock($"{hostUri}@{nameof(FtpClientFactory)}_Instance");
+#pragma warning restore IDISP001
         await semaphore.WaitAsync();
         var res = Instances.GetOrAdd(hostUri, _ => new(hostUri, maxParallel));
         semaphore.Release();

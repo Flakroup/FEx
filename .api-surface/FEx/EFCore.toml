@@ -1,6 +1,6 @@
 [project]
 name = "FEx.EFCore"
-path = "rc\\FEx.EFCore"
+path = "src\\FEx.EFCore"
 
 [[classes]]
 name = "FExEFCore"

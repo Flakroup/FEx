@@ -1,6 +1,6 @@
 [project]
 name = "FEx.DependencyInjection.Tests"
-path = "est\\FEx.DependencyInjection.Tests"
+path = "test\\FEx.DependencyInjection.Tests"
 
 [[classes]]
 name = "BasicArchitectureTests"
@@ -31,7 +31,6 @@ file = "MultiDITests.cs"
 [[classes]]
 name = "SimpleArchitectureTests"
 ns = "FEx.DependencyInjection.Tests"
-base = "IDisposable"
 summary = "Simplified tests to validate the Multi-DI architecture fundamentals."
 file = "SimpleArchitectureTests.cs"
 

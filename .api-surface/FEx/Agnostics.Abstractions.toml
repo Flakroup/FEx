@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Agnostics.Abstractions"
-path = "rc\\Agnostics.Abstractions"
+path = "src\\Agnostics.Abstractions"
 
 [[classes]]
 name = "AsyncStatics"

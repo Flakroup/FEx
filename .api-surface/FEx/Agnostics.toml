@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Agnostics"
-path = "rc\\Agnostics"
+path = "src\\Agnostics"
 
 [[classes]]
 name = "NotifyPropertyChanged"

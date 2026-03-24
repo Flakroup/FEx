@@ -45,7 +45,5 @@ public class DeadlockMonitor : IDeadlockMonitor
             stackTrace);
 
         _logger.LogError(ex);
-
-        throw ex;
     }
 }

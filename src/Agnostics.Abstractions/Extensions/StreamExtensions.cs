@@ -23,7 +23,7 @@ public static class StreamExtensions
 #else
         var buffer = new Memory<byte>(new byte[BufferSize]);
 #endif
-        var writtenBytes = 0;
+        var writtenBytes = 0L;
 
         sourceStream.Guard(nameof(sourceStream));
 
@@ -36,7 +36,7 @@ public static class StreamExtensions
         await using var stream = sourceStream;
 #pragma warning restore IDISP007
 #endif
-        progressMaximumSet?.BeginInvoke(stream.Length, null, null);
+        progressMaximumSet?.Invoke(stream.Length);
 
         while (true)
         {
@@ -54,10 +54,10 @@ public static class StreamExtensions
 #else
             if (num != 0)
             {
-                await destStream.WriteAsync(buffer, cancellationToken);
+                await destStream.WriteAsync(buffer.Slice(0, num), cancellationToken);
 #endif
                 writtenBytes += num;
-                progressValueSet?.BeginInvoke(writtenBytes, null, null);
+                progressValueSet?.Invoke(writtenBytes);
 
                 if (writtenBytes == length)
                     break;
@@ -76,7 +76,7 @@ public static class StreamExtensions
                                           long? length = null)
     {
         var buffer = new byte[BufferSize];
-        var writtenBytes = 0;
+        var writtenBytes = 0L;
 
         sourceStream.Guard(nameof(sourceStream));
 
@@ -84,7 +84,7 @@ public static class StreamExtensions
         using var stream = sourceStream;
 #pragma warning restore IDISP007
 
-        progressMaximumSet?.BeginInvoke(stream.Length, null, null);
+        progressMaximumSet?.Invoke(stream.Length);
 
         while (true)
         {
@@ -95,7 +95,7 @@ public static class StreamExtensions
             {
                 destStream.Write(buffer, 0, bytesRead);
                 writtenBytes += num;
-                progressValueSet?.BeginInvoke(writtenBytes, null, null);
+                progressValueSet?.Invoke(writtenBytes);
 
                 if (writtenBytes == length)
                     break;

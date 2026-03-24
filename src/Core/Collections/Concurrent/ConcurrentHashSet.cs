@@ -8,44 +8,312 @@ using System.Threading;
 namespace FEx.Core.Collections.Concurrent;
 
 /// <summary>
+/// Thread-safe HashSet using composition with ReaderWriterLockSlim.
 /// https://stackoverflow.com/questions/18922985/concurrent-hashsett-in-net-framework
 /// </summary>
-public class ConcurrentHashSet<T> : HashSet<T>, IEnumerable<T>
+public class ConcurrentHashSet<T> : ISet<T>, IReadOnlyCollection<T>, IDisposable
 {
-    private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion); //todo use extended
-
-    public ConcurrentHashSet(IEnumerable<T> collection)
-        : base(collection)
-    {
-    }
+    private readonly HashSet<T> _set;
+    private readonly ReaderWriterLockSlim _lock = new();
 
     public ConcurrentHashSet()
     {
+        _set = new HashSet<T>();
+    }
+
+    public ConcurrentHashSet(IEnumerable<T> collection)
+    {
+        _set = new HashSet<T>(collection);
     }
 
     public ConcurrentHashSet(IEqualityComparer<T> comparer)
-        : base(comparer)
     {
+        _set = new HashSet<T>(comparer);
     }
 
     public ConcurrentHashSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
-        : base(collection, comparer)
     {
+        _set = new HashSet<T>(collection, comparer);
     }
 
-    public new IEnumerator<T> GetEnumerator() => GetSnapshot().GetEnumerator();
-
-    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetSnapshot().GetEnumerator();
-
-    IEnumerator IEnumerable.GetEnumerator() => GetSnapshot().GetEnumerator();
-
-    private List<T> GetSnapshot() => RunLocked(() =>
+    public int Count
     {
-        var array = new T[base.Count];
-        base.CopyTo(array, 0);
+        get
+        {
+            _lock.EnterReadLock();
 
-        return new List<T>(array);
-    });
+            try
+            {
+                return _set.Count;
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
+        }
+    }
+
+    public bool IsReadOnly => false;
+
+    public bool Add(T item)
+    {
+        _lock.EnterWriteLock();
+
+        try
+        {
+            return _set.Add(item);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    void ICollection<T>.Add(T item) => Add(item);
+
+    public bool Remove(T item)
+    {
+        _lock.EnterWriteLock();
+
+        try
+        {
+            return _set.Remove(item);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    public void Clear()
+    {
+        _lock.EnterWriteLock();
+
+        try
+        {
+            _set.Clear();
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    public bool Contains(T item)
+    {
+        _lock.EnterReadLock();
+
+        try
+        {
+            return _set.Contains(item);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    public void CopyTo(T[] array, int arrayIndex)
+    {
+        _lock.EnterReadLock();
+
+        try
+        {
+            _set.CopyTo(array, arrayIndex);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    public void UnionWith(IEnumerable<T> other)
+    {
+        _lock.EnterWriteLock();
+
+        try
+        {
+            _set.UnionWith(other);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    public void IntersectWith(IEnumerable<T> other)
+    {
+        _lock.EnterWriteLock();
+
+        try
+        {
+            _set.IntersectWith(other);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    public void ExceptWith(IEnumerable<T> other)
+    {
+        _lock.EnterWriteLock();
+
+        try
+        {
+            _set.ExceptWith(other);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    public void SymmetricExceptWith(IEnumerable<T> other)
+    {
+        _lock.EnterWriteLock();
+
+        try
+        {
+            _set.SymmetricExceptWith(other);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    public bool IsSubsetOf(IEnumerable<T> other)
+    {
+        _lock.EnterReadLock();
+
+        try
+        {
+            return _set.IsSubsetOf(other);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    public bool IsSupersetOf(IEnumerable<T> other)
+    {
+        _lock.EnterReadLock();
+
+        try
+        {
+            return _set.IsSupersetOf(other);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    public bool IsProperSupersetOf(IEnumerable<T> other)
+    {
+        _lock.EnterReadLock();
+
+        try
+        {
+            return _set.IsProperSupersetOf(other);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    public bool IsProperSubsetOf(IEnumerable<T> other)
+    {
+        _lock.EnterReadLock();
+
+        try
+        {
+            return _set.IsProperSubsetOf(other);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    public bool Overlaps(IEnumerable<T> other)
+    {
+        _lock.EnterReadLock();
+
+        try
+        {
+            return _set.Overlaps(other);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    public bool SetEquals(IEnumerable<T> other)
+    {
+        _lock.EnterReadLock();
+
+        try
+        {
+            return _set.SetEquals(other);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    public int RemoveWhere(Predicate<T> match)
+    {
+        _lock.EnterWriteLock();
+
+        try
+        {
+            return _set.RemoveWhere(match);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    public void AddRange(IEnumerable<T> items)
+    {
+        var deferredList = items?.ToList();
+
+        if (deferredList.IsNullOrEmpty())
+            return;
+
+        _lock.EnterWriteLock();
+
+        try
+        {
+            foreach (var item in deferredList)
+                _set.Add(item);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    public List<T> GetSnapshot()
+    {
+        _lock.EnterReadLock();
+
+        try
+        {
+            return _set.ToList();
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
 
     public TR RunLocked<TR>(Func<TR> func)
     {
@@ -77,55 +345,12 @@ public class ConcurrentHashSet<T> : HashSet<T>, IEnumerable<T>
         }
     }
 
-    #region Implementation of ICollection<T> ...ish
-    public new bool Add(T item) => RunLocked(() => base.Add(item));
+    public IEnumerator<T> GetEnumerator() => GetSnapshot().GetEnumerator();
 
-    public new void UnionWith(IEnumerable<T> other) => RunLocked(() => base.UnionWith(other));
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public new void IntersectWith(IEnumerable<T> other) => RunLocked(() => base.IntersectWith(other));
-
-    public new void ExceptWith(IEnumerable<T> other) => RunLocked(() => base.ExceptWith(other));
-
-    public new void SymmetricExceptWith(IEnumerable<T> other) => RunLocked(() => base.SymmetricExceptWith(other));
-
-    public new bool IsSubsetOf(IEnumerable<T> other) => RunLocked(() => base.IsSubsetOf(other));
-
-    public new bool IsSupersetOf(IEnumerable<T> other) => RunLocked(() => base.IsSupersetOf(other));
-
-    public new bool IsProperSupersetOf(IEnumerable<T> other) => RunLocked(() => base.IsProperSupersetOf(other));
-
-    public new bool IsProperSubsetOf(IEnumerable<T> other) => RunLocked(() => base.IsProperSubsetOf(other));
-
-    public new bool Overlaps(IEnumerable<T> other) => RunLocked(() => base.Overlaps(other));
-
-    public new bool SetEquals(IEnumerable<T> other) => RunLocked(() => base.SetEquals(other));
-
-    public new void Clear() => RunLocked(base.Clear);
-
-    public new bool Contains(T item) => RunLocked(() => base.Contains(item));
-
-    public new void CopyTo(T[] array, int arrayIndex) => RunLocked(() => base.CopyTo(array, arrayIndex));
-
-    public new bool Remove(T item) => RunLocked(() => base.Remove(item));
-
-    public new int RemoveWhere(Predicate<T> match) => RunLocked(() => base.RemoveWhere(match));
-
-    public new int Count => RunLocked(() => base.Count);
-
-    public bool IsReadOnly => false;
-
-    public void AddRange(IEnumerable<T> items)
+    public void Dispose()
     {
-        var deferredList = items?.ToList();
-
-        if (deferredList.IsNullOrEmpty())
-            return;
-
-        RunLocked(() =>
-        {
-            foreach (var item in deferredList)
-                base.Add(item);
-        });
+        _lock.Dispose();
     }
-    #endregion
 }

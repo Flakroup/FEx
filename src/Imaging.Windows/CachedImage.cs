@@ -21,7 +21,9 @@ using System.Windows.Media.Imaging;
 
 namespace FEx.Imaging.Windows;
 
+#pragma warning disable IDISP025 // may be subclassed
 public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
+#pragma warning restore IDISP025
 {
     private readonly bool _ownCTS;
 
@@ -133,7 +135,9 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
 
                     if (useHttpClientService)
                     {
+#pragma warning disable IDISP001 // cached singleton, disposed via RemoveInstanceAsync
                         HttpClientService httpClientService = await HttpClientService.GetInstanceAsync(Url.Host, pars);
+#pragma warning restore IDISP001
 
                         return await httpClientService.DoHttpClientActionAsync(client =>
                                 InternalPrepareCacheAsync(client, refresh),
@@ -329,7 +333,9 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
         Parallel.ForEach(CachedImages.Values, ci => ci?.Dispose());
 
         if (_ownCTS)
+#pragma warning disable IDISP007 // conditional on _ownCTS ownership flag
             CancellationTokenSource.Dispose();
+#pragma warning restore IDISP007
     }
     #endregion
 }

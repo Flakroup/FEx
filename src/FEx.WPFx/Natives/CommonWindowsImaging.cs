@@ -82,10 +82,12 @@ public static class CommonWindowsImaging
                 {
                     Stream stream;
 
+#pragma warning disable IDISP001 // ToBitmapImageAsync handles stream disposal
                     if (Path.GetExtension(file.FullName) == RegistrySrv.GetDefaultExtension(MediaTypes.ImageSvgXml))
                         stream = SvgCommon.ConvertSvgFileToDrawingImage(file.FullName).ToMemoryStream();
                     else
                         stream = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+#pragma warning restore IDISP001
 
                     //ToBitmapImageAsync handles stream disposal if needed
                     res = await stream.ToBitmapImageAsync(forceLoad,

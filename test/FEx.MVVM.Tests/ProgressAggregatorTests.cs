@@ -72,9 +72,10 @@ public sealed class ProgressAggregatorTests
 
         sut.Timer.IsRunning.ShouldBeTrue();
 
+#pragma warning disable IDISP016, IDISP017 // intentional post-dispose assertion in test
         sut.Dispose();
-
         sut.Timer.IsRunning.ShouldBeFalse();
+#pragma warning restore IDISP016, IDISP017
     }
 
     [Fact]
@@ -85,9 +86,10 @@ public sealed class ProgressAggregatorTests
 
         sut.Stopwatch.IsRunning.ShouldBeTrue();
 
+#pragma warning disable IDISP016, IDISP017 // intentional post-dispose assertion in test
         sut.Dispose();
-
         sut.Stopwatch.IsRunning.ShouldBeFalse();
+#pragma warning restore IDISP016, IDISP017
     }
 
     [Fact]

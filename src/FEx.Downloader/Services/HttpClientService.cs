@@ -61,7 +61,9 @@ public class HttpClientService : IDisposable
         if (!Instances.ContainsKey(stub.Host)
             || Instances[stub.Host] is null)
         {
+#pragma warning disable IDISP001 // semaphore from LockSrv, lifetime managed by lock service
             var loadingSemaphore = LockSrv.EnsureLock($"{nameof(HttpClientService)}@{stub.Host}");
+#pragma warning restore IDISP001
             await loadingSemaphore.WaitAsync();
 
             try
@@ -82,7 +84,9 @@ public class HttpClientService : IDisposable
     {
         if (Instances.TryGetValue(urlHost, out var instance))
         {
+#pragma warning disable IDISP001 // semaphore from LockSrv, lifetime managed by lock service
             var loadingSemaphore = LockSrv.EnsureLock($"{nameof(HttpClientService)}@{urlHost}");
+#pragma warning restore IDISP001
             await loadingSemaphore.WaitAsync();
 
             try

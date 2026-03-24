@@ -31,7 +31,9 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     public DirectoryInfo FilesCacheDir => Config.FilesCacheDir;
     public IndexEntriesCache FilesCacheIndex { get; }
 
+#pragma warning disable IDISP002 // semaphore from LockSrv, lifetime managed by lock service
     protected SemaphoreSlim InitializationSemaphore { get; }
+#pragma warning restore IDISP002
     protected ISynchronizedAccessService LockSrv { get; }
 
     public FilesCacheService(IFilesCacheServiceConfig config,
@@ -57,14 +59,18 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
 
     public string GetFileName(Uri imageLink) => GetFile(imageLink)?.Name;
 
+#pragma warning disable IDISP005 // caller receives cached entry, does not own it
     public async Task<IIndexEntryBase> GetEntryBaseAsync(Uri fileUrl, bool addNew = true, string fileName = null) =>
         await GetEntryAsync(fileUrl, addNew, fileName);
+#pragma warning restore IDISP005
 
+#pragma warning disable IDISP005 // caller receives cached entry, does not own it
     public async Task<IIndexEntryBase> PrepareCacheAndGetEntryBaseAsync(
         Uri fileUrl,
         WebRequestParams pars = null,
         bool refresh = false) =>
         await PrepareCacheAndGetEntryAsync(fileUrl, pars, refresh);
+#pragma warning restore IDISP005
 
     public async Task RemoveIndexEntriesAsync(params string[] ids)
     {
@@ -96,7 +102,9 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                                                  bool forceMemoryStream = false,
                                                  HttpWebResponse response = null)
     {
+#pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         IndexEntry entry = await GetEntryAsync(fileUrl);
+#pragma warning restore IDISP001
 
         return await entry.CachedImage.GetImageAsync(size,
             pars,
@@ -112,7 +120,9 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
 
     public async Task RemoveImageUpdateAsync(Uri fileUrl, WidthAndHeight size = null)
     {
+#pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         IndexEntry entry = await GetEntryAsync(fileUrl);
+#pragma warning restore IDISP001
         entry.CachedImage.RemoveImageUpdate(size);
     }
 
@@ -123,7 +133,9 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                                                  bool force = false)
     {
         var fileName = $"{fileUrl.AbsoluteUri.GenerateMd5OfString()}.{extension}";
+#pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         IndexEntry entry = await GetEntryAsync(fileUrl, fileName: fileName);
+#pragma warning restore IDISP001
 
         if (entry.FilePath is not null
             && File.Exists(entry.FilePath)
@@ -146,7 +158,9 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
 
     public async Task<bool> IsFileBeingDownloadedAsync(Uri fileUrl)
     {
+#pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         IndexEntry entry = await GetEntryAsync(fileUrl, false);
+#pragma warning restore IDISP001
 
         return entry?.IsDownloading ?? false;
     }
@@ -156,7 +170,9 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                                                           bool refresh = false,
                                                           HttpWebResponse response = null)
     {
+#pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         IndexEntry entry = await PrepareCacheAndGetEntryAsync(fileUrl, pars, refresh, response);
+#pragma warning restore IDISP001
 
         return entry.DoesCacheExists()
             ? entry.LocalUri
@@ -165,7 +181,9 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
 
     public async Task<bool> IsFilePresentAsync(Uri fileUrl)
     {
+#pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         IndexEntry entry = await GetEntryAsync(fileUrl, false);
+#pragma warning restore IDISP001
 
         return entry.DoesCacheExists();
     }
@@ -256,7 +274,9 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                                               HttpWebResponse response = null,
                                               Func<Uri, Uri> urlModifier = null)
     {
+#pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         IndexEntry entry = await PrepareCacheAndGetEntryAsync(fileUrl, pars, refresh, response, urlModifier);
+#pragma warning restore IDISP001
 
         return entry.DoesCacheExists();
     }
@@ -391,7 +411,9 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
             return;
 
         if (disposing)
+#pragma warning disable IDISP007 // injected via DI, but this service takes ownership of the cache
             FilesCacheIndex?.Dispose();
+#pragma warning restore IDISP007
 
         _isDisposed = true;
         base.Dispose(disposing);

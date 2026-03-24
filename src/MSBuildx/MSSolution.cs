@@ -73,7 +73,9 @@ public class MSSolution : AsyncInitializable
 
                 if (nuGet is null)
                 {
+#pragma warning disable IDISP001 // lifetime managed by InstalledNuGetPackages collection
                     nuGet = new(pkg);
+#pragma warning restore IDISP001
                     InstalledNuGetPackages.Add(nuGet);
                 }
 

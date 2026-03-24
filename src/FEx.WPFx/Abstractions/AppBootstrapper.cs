@@ -130,7 +130,9 @@ public abstract class AppBootstrapper<TContainer> : Application
 
     protected virtual void EnsureSingleInstance()
     {
+#pragma warning disable IDISP004 // intentional using(_=LogToHub) pattern for scoped status logging
         using (_ = LogToHub("Checking duplicated instances"))
+#pragma warning restore IDISP004
         {
             var otherInstances = AppUtility.GetOtherInstances();
             var isSingleInstance = otherInstances.Length == 0;
@@ -164,6 +166,7 @@ public abstract class AppBootstrapper<TContainer> : Application
         {
             EnsureSingleInstance();
 
+#pragma warning disable IDISP004 // intentional using(_=LogToHub) pattern for scoped status logging
             using (_ = LogToHub("Initializing app"))
             {
                 OnConstruction(e);
@@ -182,6 +185,7 @@ public abstract class AppBootstrapper<TContainer> : Application
 
             using (_ = LogToHub("Finalizing startup"))
                 AfterStartup(e);
+#pragma warning restore IDISP004
         }
         catch (Exception ex)
         {

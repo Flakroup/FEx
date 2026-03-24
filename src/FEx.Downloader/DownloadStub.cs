@@ -6,7 +6,6 @@ using FEx.Downloader.Enums;
 using FEx.Webx.Extensions;
 using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FEx.Downloader;
@@ -123,8 +122,17 @@ public class DownloadStub : NotifyPropertyChanged, IDownloadStub
 
     public bool Equals(IDownloadBase other) => other is not null && FilePath == other.FilePath && Url == other.Url;
 
-    public override int GetHashCode() =>
-        BitConverter.ToInt32(Encoding.UTF8.GetBytes($"{FilePath}@{Url.AbsoluteUri}"), 0);
+    public override int GetHashCode()
+#if NETSTANDARD
+    {
+        unchecked
+        {
+            return (FilePath?.GetHashCode() ?? 0) * 397 ^ (Url?.AbsoluteUri?.GetHashCode() ?? 0);
+        }
+    }
+#else
+        => HashCode.Combine(FilePath, Url?.AbsoluteUri);
+#endif
 
     public int CompareTo(object obj) =>
         Equals(obj)

@@ -220,6 +220,20 @@ public static class DirectoryWalker
 
     private static bool DeleteRecursive(DirectoryInfo folder, bool logDeletions)
     {
+        try
+        {
+            folder.Delete(true);
+
+            if (logDeletions)
+                Log.Debug("Deleted: {Path}", folder.FullName);
+
+            return true;
+        }
+        catch
+        {
+            // Fast path failed - fall back to manual enumeration (handles locked files)
+        }
+
         var success = true;
 
         try

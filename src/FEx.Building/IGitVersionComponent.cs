@@ -55,7 +55,10 @@ public interface IGitVersionComponent : INukeBuild
             .Select(o => o.Text)
             .JoinNewLine();
 
-        var info = JsonSerializer.Deserialize<GitVersionInfo>(json)
+        var jsonOptions = new JsonSerializerOptions();
+        jsonOptions.Converters.Add(new LenientStringConverter());
+
+        var info = JsonSerializer.Deserialize<GitVersionInfo>(json, jsonOptions)
                    ?? throw new InvalidOperationException("GitVersion returned empty output");
 
         Log.Information("GitVersion: SemVer={SemVer} NuGet={NuGetVersion} Branch={Branch}",
@@ -151,4 +154,15 @@ public sealed record GitVersionInfo
             InformationalVersion = $"{semver}+Branch.{BranchName}.Sha.{Sha}",
         };
     }
+}
+
+internal sealed class LenientStringConverter : JsonConverter<string>
+{
+    public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+        reader.TokenType == JsonTokenType.Number
+            ? (reader.TryGetInt64(out var n) ? n.ToString() : reader.GetDouble().ToString(System.Globalization.CultureInfo.InvariantCulture))
+            : reader.GetString() ?? "";
+
+    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options) =>
+        writer.WriteStringValue(value);
 }

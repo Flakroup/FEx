@@ -18,7 +18,7 @@ namespace FEx.SecureStorage;
 [SupportedOSPlatform("linux")]
 public class LinuxLibsecretSecureStorageService : ISecureStorageService
 {
-    private const string Libsecret = "libsecret-1.so.0";
+    private const string Libsecret = "libsecret-1.so.0"; // gitleaks:allow
     private const string DefaultServiceName = "com.flakroup.fex.securestorage";
 
     private readonly string _serviceName;

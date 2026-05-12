@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Sqlx"
-path = "src\\Sqlx"
+path = "rc\\Sqlx"
 
 [[classes]]
 name = "SqlDbHelper"

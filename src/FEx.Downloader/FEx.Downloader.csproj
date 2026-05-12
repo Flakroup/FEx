@@ -13,7 +13,7 @@
 	  <ProjectReference Include="..\Core\FEx.Core.csproj" />
 	  <ProjectReference Include="..\FEx.FileSystem\FEx.FileSystem.csproj" />
 	  <ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
-	  <ProjectReference Include="..\FEx.MVVM.Rx\FEx.MVVM.Rx.csproj" />
+	  <ProjectReference Include="..\FEx.MVVM.Rx.Legacy\FEx.MVVM.Rx.Legacy.csproj" />
 	  <ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
 	</ItemGroup>
 

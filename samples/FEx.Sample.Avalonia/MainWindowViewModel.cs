@@ -44,11 +44,11 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
     public MainWindowViewModel()
     {
         // Commands execute on background thread, so we need to marshal UI updates
-        LoadUsersCommand = ReactiveCommand.CreateFromTask(LoadUsersAsync, outputScheduler: RxApp.MainThreadScheduler);
-        LoadPostsCommand = ReactiveCommand.CreateFromTask(LoadPostsAsync, outputScheduler: RxApp.MainThreadScheduler);
+        LoadUsersCommand = ReactiveCommand.CreateFromTask(LoadUsersAsync, outputScheduler: RxSchedulers.MainThreadScheduler);
+        LoadPostsCommand = ReactiveCommand.CreateFromTask(LoadPostsAsync, outputScheduler: RxSchedulers.MainThreadScheduler);
 
         TestResilienceCommand =
-            ReactiveCommand.CreateFromTask(TestResilienceAsync, outputScheduler: RxApp.MainThreadScheduler);
+            ReactiveCommand.CreateFromTask(TestResilienceAsync, outputScheduler: RxSchedulers.MainThreadScheduler);
 
         _api = FExServiceProvider.Get<JsonPlaceholderApi>();
     }

@@ -10,32 +10,31 @@ public class AppViewLocator : IViewLocator
 {
     public static bool SupportsRecycling => false;
 
-    /// <summary>
-    /// Determines the view for an associated ViewModel.
-    /// </summary>
-    /// <typeparam name="T">The view model type.</typeparam>
-    /// <param name="viewModel">View model.</param>
-    /// <param name="contract">Contract.</param>
-    /// <returns>The view associated with the given view model.</returns>
 #pragma warning disable S2360
-    public IViewFor ResolveView<T>(T viewModel, string contract = null)
+    public IViewFor<TViewModel> ResolveView<TViewModel>(string contract = null) where TViewModel : class =>
+        (IViewFor<TViewModel>)CreateView(typeof(TViewModel), null);
 #pragma warning restore S2360
+
+    public IViewFor ResolveView(object viewModel, string contract = null)
     {
         if (viewModel is null)
             throw new ArgumentNullException(nameof(viewModel));
 
-        var vmType = viewModel.GetType();
-
         if (viewModel is not FExAvaloniaViewModelBase)
             throw new ArgumentOutOfRangeException(nameof(viewModel),
-                $"{vmType.Name} does not inherit from {nameof(FExAvaloniaViewModelBase)}");
+                $"{viewModel.GetType().Name} does not inherit from {nameof(FExAvaloniaViewModelBase)}");
 
-        var vmAssembly = vmType.Assembly;
+        return CreateView(viewModel.GetType(), viewModel);
+    }
+
+    private static IViewFor CreateView(Type vmType, object viewModel)
+    {
         var name = vmType.Name!.Replace("ViewModel", "View"); //todo cache types and check inheritance
-        var type = vmAssembly.GetTypes().First(t => name.Equals(t.Name));
+        var type = vmType.Assembly.GetTypes().First(t => name.Equals(t.Name));
         var view = (IViewFor)Activator.CreateInstance(type);
 
-        if (view is StyledElement styledElement)
+        if (view is StyledElement styledElement
+            && viewModel is not null)
             styledElement.DataContext = viewModel;
 
         return view;

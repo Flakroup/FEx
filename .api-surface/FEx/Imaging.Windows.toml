@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Imaging.Windows"
-path = "src\\Imaging.Windows"
+path = "rc\\Imaging.Windows"
 
 [[classes]]
 name = "CachedImage"

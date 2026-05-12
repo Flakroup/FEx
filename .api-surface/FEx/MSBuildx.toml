@@ -1,6 +1,6 @@
 [project]
 name = "FEx.MSBuildx"
-path = "src\\MSBuildx"
+path = "rc\\MSBuildx"
 
 [[classes]]
 name = "DiffResult"

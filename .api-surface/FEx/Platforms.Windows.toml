@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Platforms.Windows"
-path = "src\\FEx.Platforms.Windows"
+path = "rc\\FEx.Platforms.Windows"
 
 [[classes]]
 name = "FileSystemExtensions"

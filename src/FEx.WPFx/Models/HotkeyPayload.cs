@@ -1,4 +1,4 @@
-using FEx.MVVM.Rx.BaseObjects;
+using FEx.MVVM.Rx.Legacy.BaseObjects;
 using System.Windows.Input;
 
 namespace FEx.WPFx.Models;

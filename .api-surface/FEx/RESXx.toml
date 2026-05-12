@@ -1,6 +1,6 @@
 [project]
 name = "FEx.RESXx"
-path = "src\\FEx.RESXx"
+path = "rc\\FEx.RESXx"
 
 [[classes]]
 name = "ResxManager"

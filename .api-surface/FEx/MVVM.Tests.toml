@@ -1,6 +1,6 @@
 [project]
 name = "FEx.MVVM.Tests"
-path = "test\\FEx.MVVM.Tests"
+path = "est\\FEx.MVVM.Tests"
 
 [[classes]]
 name = "LinkedPropertiesTests"

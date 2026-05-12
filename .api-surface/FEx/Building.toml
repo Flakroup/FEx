@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Building"
-path = "src\\FEx.Building"
+path = "rc\\FEx.Building"
 
 [[classes]]
 name = "BuildExtensions"
@@ -42,6 +42,12 @@ file = "FExBuild.cs"
 name = "ICompileTarget"
 ns = "FEx.Building"
 file = "ICompileTarget.cs"
+
+[[classes]]
+name = "LenientStringConverter"
+ns = "FEx.Building"
+base = "JsonConverter<string>"
+file = "IGitVersionComponent.cs"
 
 [[interfaces]]
 name = "IGitVersionComponent"

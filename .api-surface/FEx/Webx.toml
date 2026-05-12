@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Webx"
-path = "src\\FEx.Webx"
+path = "rc\\FEx.Webx"
 
 [[classes]]
 name = "FExWebx"

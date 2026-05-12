@@ -1,6 +1,6 @@
 [project]
 name = "FEx.CLI"
-path = "src\\FEx.CLI"
+path = "rc\\FEx.CLI"
 
 [[classes]]
 name = "CommandLineParserHelper"

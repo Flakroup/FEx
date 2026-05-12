@@ -11,7 +11,7 @@ public class FExAvaloniax : FExInitializable
     protected override void OnInitialize()
     {
         // Configure ReactiveUI to use Avalonia's UI thread scheduler
-        RxApp.MainThreadScheduler = AvaloniaScheduler.Instance;
+        RxSchedulers.MainThreadScheduler = AvaloniaScheduler.Instance;
     }
 }
 

@@ -4,7 +4,7 @@ using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Json;
 using FEx.MVVM;
-using FEx.MVVM.Rx;
+using FEx.MVVM.Rx.Legacy;
 using FEx.Platforms;
 using FEx.WPFx.Abstractions.Interfaces;
 using FEx.WPFx.Implementations;

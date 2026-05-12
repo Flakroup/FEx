@@ -18,11 +18,11 @@ public class FExMvvmRx : FExInitializable
     protected override void OnInitialize()
     {
 #if NETFRAMEWORK
-            RxApp.MainThreadScheduler = DispatcherScheduler.Current;
+            RxSchedulers.MainThreadScheduler = DispatcherScheduler.Current;
 #else
-        if (RxApp.MainThreadScheduler is DefaultScheduler)
-            RxApp.MainThreadScheduler = CurrentThreadScheduler.Instance;
+        if (RxSchedulers.MainThreadScheduler is DefaultScheduler)
+            RxSchedulers.MainThreadScheduler = CurrentThreadScheduler.Instance;
 #endif
-        RxApp.TaskpoolScheduler = TaskPoolScheduler.Default;
+        RxSchedulers.TaskpoolScheduler = TaskPoolScheduler.Default;
     }
 }

@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
 		<Description>Avalonia UI integration with dispatcher, message popups, ReactiveUI scheduler, and app bootstrapper</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="ReactiveUI.Avalonia" Version="11.3.8" />
-		<PackageReference Include="MessageBox.Avalonia" Version="3.2.0" />
+		<PackageReference Include="ReactiveUI.Avalonia" Version="12.0.1" />
+		<PackageReference Include="MessageBox.Avalonia" Version="12.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

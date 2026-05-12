@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Logging"
-path = "src\\Logging"
+path = "rc\\Logging"
 
 [[classes]]
 name = "DefaultPlatformLogger"

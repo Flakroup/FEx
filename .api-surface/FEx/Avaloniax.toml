@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Avaloniax"
-path = "src\\FEx.Avaloniax"
+path = "rc\\FEx.Avaloniax"
 
 [[classes]]
 name = "AvaloniaDispatcher"
@@ -85,6 +85,17 @@ file = "Abstractions\\Interfaces\\IFExContainer.cs"
 name = "INavigationService"
 ns = "FEx.Avaloniax.Abstractions.Interfaces"
 file = "Abstractions\\Interfaces\\INavigationService.cs"
+
+[[classes]]
+name = "FExDesktopWindow"
+ns = "FEx.Avaloniax.Desktop"
+base = "Window"
+file = "Desktop\\FExDesktopWindow.cs"
+
+[[classes]]
+name = "FExTrayIcon"
+ns = "FEx.Avaloniax.Desktop"
+file = "Desktop\\FExTrayIcon.cs"
 
 [[classes]]
 name = "AppViewLocator"

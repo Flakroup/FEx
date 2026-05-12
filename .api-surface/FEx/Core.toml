@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Core"
-path = "src\\Core"
+path = "rc\\Core"
 
 [[classes]]
 name = "FExCoreModule"

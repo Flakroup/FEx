@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Json"
-path = "src\\FEx.Json"
+path = "rc\\FEx.Json"
 
 [[classes]]
 name = "FExJson"

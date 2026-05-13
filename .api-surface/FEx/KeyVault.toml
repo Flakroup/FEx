@@ -1,6 +1,6 @@
 [project]
 name = "FEx.KeyVault"
-path = "src\\FEx.KeyVault"
+path = "rc\\FEx.KeyVault"
 
 [[interfaces]]
 name = "IKeyVaultCredentials"

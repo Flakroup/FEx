@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Telemetry"
-path = "src\\FEx.Telemetry"
+path = "rc\\FEx.Telemetry"
 
 [[classes]]
 name = "FExTelemetryConfigBase"

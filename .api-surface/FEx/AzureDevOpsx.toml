@@ -1,6 +1,6 @@
 [project]
 name = "FEx.AzureDevOpsx"
-path = "src\\AzureDevOpsx"
+path = "rc\\AzureDevOpsx"
 
 [[classes]]
 name = "AuthenticatedUserInfo"

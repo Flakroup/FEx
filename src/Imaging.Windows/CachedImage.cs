@@ -7,7 +7,7 @@ using FEx.Downloader;
 using FEx.Downloader.Clients;
 using FEx.Logging;
 using FEx.MVVM.Abstractions;
-using FEx.MVVM.Rx.BaseObjects;
+using FEx.MVVM.Rx.Legacy.BaseObjects;
 using FEx.Webx.Extensions;
 using FEx.Downloader.Services;
 using FEx.Imaging.Windows.Model;

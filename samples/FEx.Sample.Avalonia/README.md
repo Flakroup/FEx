@@ -59,7 +59,7 @@ await Dispatcher.UIThread.InvokeAsync(() =>
 ```csharp
 LoadUsersCommand = ReactiveCommand.CreateFromTask(
     LoadUsersAsync, 
-    outputScheduler: RxApp.MainThreadScheduler
+    outputScheduler: RxSchedulers.MainThreadScheduler
 );
 ```
 
@@ -161,7 +161,7 @@ dotnet run
 
 ---
 
-**Built with:** .NET 9.0 | Avalonia 11.3.7 | Flurl.Http 4.x | Polly 8.x | ReactiveUI 20.x
+**Built with:** .NET 10.0 | Avalonia 12.0 | Flurl.Http 4.x | Polly 8.x | ReactiveUI 23.x
 
 
 

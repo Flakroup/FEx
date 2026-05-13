@@ -1,0 +1,9 @@
+[project]
+name = "FEx.FileSystem.Tests"
+path = "est\\FEx.FileSystem.Tests"
+
+[[classes]]
+name = "DirectoryWalkerSafeDeleteTests"
+ns = "FEx.FileSystem.Tests"
+file = "DirectoryWalkerSafeDeleteTests.cs"
+

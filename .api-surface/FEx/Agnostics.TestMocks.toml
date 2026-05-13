@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Agnostics.TestMocks"
-path = "src\\Agnostics.TestMocks"
+path = "rc\\Agnostics.TestMocks"
 
 [[classes]]
 name = "TestBase"

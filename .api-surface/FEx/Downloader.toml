@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Downloader"
-path = "src\\FEx.Downloader"
+path = "rc\\FEx.Downloader"
 
 [[classes]]
 name = "DownloadChunk"

@@ -1,6 +1,6 @@
 [project]
 name = "FEx.MVVM"
-path = "src\\FEx.MVVM"
+path = "rc\\FEx.MVVM"
 
 [[classes]]
 name = "FExMvvm"

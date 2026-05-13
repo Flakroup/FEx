@@ -184,6 +184,9 @@
   <Project Path="src/FEx.MVVM/FEx.MVVM.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
+  <Project Path="src/FEx.OneDrv.Abstractions/FEx.OneDrv.Abstractions.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
   <Project Path="src/FEx.OneDrv/FEx.OneDrv.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>

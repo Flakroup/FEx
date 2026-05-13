@@ -26,4 +26,8 @@
         <ProjectReference Include="..\FEx.OneDrv.Abstractions\FEx.OneDrv.Abstractions.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="FEx.OneDrv.Tests" />
+    </ItemGroup>
+
 </Project>

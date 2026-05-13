@@ -1,9 +1,93 @@
 [project]
 name = "FEx.OneDrv"
-path = "rc\\FEx.OneDrv"
+path = "src\\FEx.OneDrv"
+
+[[classes]]
+name = "FExOneDrvModule"
+ns = "FEx.OneDrv"
+base = "InitializeOnlyModule"
+file = "FExOneDrvModule.cs"
+
+[[classes]]
+name = "GraphResiliencePipeline"
+ns = "FEx.OneDrv"
+file = "GraphResiliencePipeline.cs"
+static = true
+
+[[classes]]
+name = "IsExternalInit"
+ns = "System.Runtime.CompilerServices"
+file = "IsExternalInit.cs"
+static = true
+
+[[classes]]
+name = "MsalAuthService"
+ns = "FEx.OneDrv"
+base = "IOneDriveAuthService"
+file = "MsalAuthService.cs"
 
 [[classes]]
 name = "OneDriveClient"
 ns = "FEx.OneDrv"
+base = "IOneDriveClient"
 file = "OneDriveClient.cs"
+
+[[classes]]
+name = "OneDriveItemEnumerator"
+ns = "FEx.OneDrv"
+base = "IOneDriveItemEnumerator"
+file = "OneDriveItemEnumerator.cs"
+
+[[classes]]
+name = "OneDriveThumbnailService"
+ns = "FEx.OneDrv"
+base = "IOneDriveThumbnailService"
+file = "OneDriveThumbnailService.cs"
+
+[[classes]]
+name = "OneDrvServiceCollectionExtensions"
+ns = "FEx.OneDrv"
+file = "OneDrvServiceCollectionExtensions.cs"
+static = true
+
+[[extensions]]
+name = "AddOneDrv"
+sig = "IServiceCollection AddOneDrv(this IServiceCollection services, OneDriveOptions options)"
+returns = "IServiceCollection"
+file = "OneDrvServiceCollectionExtensions.cs"
+
+[[classes]]
+name = "GraphClientHelper"
+ns = "FEx.OneDrv.Auth"
+file = "Auth\\GraphClientHelper.cs"
+static = true
+
+[[classes]]
+name = "StaticAccessTokenProvider"
+ns = "FEx.OneDrv.Auth"
+base = "IAccessTokenProvider"
+file = "Auth\\StaticAccessTokenProvider.cs"
+
+[[interfaces]]
+name = "IFExOneDrvContainer"
+ns = "FEx.OneDrv.DI"
+file = "DI\\IFExOneDrvContainer.cs"
+
+[[classes]]
+name = "DriveItemMapper"
+ns = "FEx.OneDrv.Models"
+file = "Models\\DriveItemMapper.cs"
+static = true
+
+[[classes]]
+name = "OneDriveFile"
+ns = "FEx.OneDrv.Models"
+base = "IOneDriveFile"
+file = "Models\\OneDriveFile.cs"
+
+[[classes]]
+name = "OneDriveFolder"
+ns = "FEx.OneDrv.Models"
+base = "IOneDriveFolder"
+file = "Models\\OneDriveFolder.cs"
 

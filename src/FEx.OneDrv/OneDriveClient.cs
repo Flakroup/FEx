@@ -4,6 +4,7 @@ using FEx.OneDrv.Auth;
 using FEx.OneDrv.Models;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -26,22 +27,25 @@ public sealed class OneDriveClient : IOneDriveClient
     {
         var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
         var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
-        var result = new List<IOneDriveFile>();
-
-        DriveItemCollectionResponse response;
         var parentId = string.IsNullOrEmpty(folderId) || folderId == "root" ? "root" : folderId;
-        response = await client.Drives[driveId].Items[parentId].Children.GetAsync(cancellationToken: cancellationToken);
+        var result = new List<IOneDriveFile>();
+        var pipeline = GraphResiliencePipeline.Create(_logger);
 
-        var pageIterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(
-            client, response,
-            item =>
-            {
-                if (item.File != null)
-                    result.Add(DriveItemMapper.MapFile(item));
-                return true;
-            });
+        await pipeline.ExecuteAsync(async cancelToken =>
+        {
+            result.Clear();
+            var response = await client.Drives[driveId].Items[parentId].Children.GetAsync(cancellationToken: cancelToken);
+            var iterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(
+                client, response,
+                item =>
+                {
+                    if (item.File != null)
+                        result.Add(DriveItemMapper.MapFile(item));
+                    return true;
+                });
+            await iterator.IterateAsync(cancelToken);
+        }, cancellationToken);
 
-        await pageIterator.IterateAsync(cancellationToken);
         _logger.Information($"Listed {result.Count} files in folder {folderId ?? "root"}");
         return result;
     }
@@ -53,7 +57,11 @@ public sealed class OneDriveClient : IOneDriveClient
 
         var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
         var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
-        var item = await client.Drives[driveId].Items[itemId].GetAsync(cancellationToken: cancellationToken);
+        var pipeline = GraphResiliencePipeline.Create(_logger);
+
+        var item = await pipeline.ExecuteAsync(
+            async cancelToken => await client.Drives[driveId].Items[itemId].GetAsync(cancellationToken: cancelToken),
+            cancellationToken);
         return DriveItemMapper.MapFile(item);
     }
 
@@ -61,22 +69,26 @@ public sealed class OneDriveClient : IOneDriveClient
     {
         var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
         var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
-        var result = new List<IOneDriveFolder>();
-
-        DriveItemCollectionResponse response;
         var parentId = string.IsNullOrEmpty(folderId) || folderId == "root" ? "root" : folderId;
-        response = await client.Drives[driveId].Items[parentId].Children.GetAsync(cancellationToken: cancellationToken);
+        var result = new List<IOneDriveFolder>();
+        var pipeline = GraphResiliencePipeline.Create(_logger);
 
-        var pageIterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(
-            client, response,
-            item =>
-            {
-                if (item.Folder != null)
-                    result.Add(DriveItemMapper.MapFolder(item));
-                return true;
-            });
+        await pipeline.ExecuteAsync(async cancelToken =>
+        {
+            result.Clear();
+            var response = await client.Drives[driveId].Items[parentId].Children.GetAsync(cancellationToken: cancelToken);
+            var iterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(
+                client, response,
+                item =>
+                {
+                    if (item.Folder != null)
+                        result.Add(DriveItemMapper.MapFolder(item));
+                    return true;
+                });
+            await iterator.IterateAsync(cancelToken);
+        }, cancellationToken);
 
-        await pageIterator.IterateAsync(cancellationToken);
+        _logger.Information($"Listed {result.Count} folders in folder {folderId ?? "root"}");
         return result;
     }
 }

@@ -4,8 +4,8 @@ using FEx.OneDrv.Auth;
 using FEx.OneDrv.Models;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using Polly;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -29,28 +29,31 @@ public sealed class OneDriveItemEnumerator : IOneDriveItemEnumerator
     {
         var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
         var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
-        var buffer = new ConcurrentQueue<IOneDriveFile>();
-
         var parentId = string.IsNullOrEmpty(folderId) || folderId == "root" ? "root" : folderId;
-        var response = await client.Drives[driveId].Items[parentId].Children.GetAsync(cancellationToken: cancellationToken);
+        var files = new List<IOneDriveFile>();
+        var pipeline = GraphResiliencePipeline.Create(_logger);
 
-        var pageIterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(
-            client, response,
-            item =>
-            {
-                if (item.File != null)
-                    buffer.Enqueue(DriveItemMapper.MapFile(item));
-                return true;
-            });
+        await pipeline.ExecuteAsync(async cancelToken =>
+        {
+            files.Clear();
+            var response = await client.Drives[driveId].Items[parentId].Children.GetAsync(cancellationToken: cancelToken);
+            var iterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(
+                client, response,
+                item =>
+                {
+                    if (item.File != null)
+                        files.Add(DriveItemMapper.MapFile(item));
+                    return true;
+                });
+            await iterator.IterateAsync(cancelToken);
+        }, cancellationToken);
 
-        await pageIterator.IterateAsync(cancellationToken);
+        _logger.Information($"Enumerated {files.Count} items in folder {folderId ?? "root"}");
 
-        while (buffer.TryDequeue(out var file))
+        foreach (var file in files)
         {
             cancellationToken.ThrowIfCancellationRequested();
             yield return file;
         }
-
-        _logger.Information($"Enumerated items in folder {folderId ?? "root"}");
     }
 }

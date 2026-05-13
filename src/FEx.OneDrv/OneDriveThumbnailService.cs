@@ -1,6 +1,7 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.OneDrv.Abstractions;
 using FEx.OneDrv.Auth;
+using Polly;
 using System;
 using System.IO;
 using System.Net.Http;
@@ -37,7 +38,11 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
 
         var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
         var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
-        var thumbnails = await client.Drives[driveId].Items[itemId].Thumbnails.GetAsync(cancellationToken: cancellationToken);
+        var pipeline = GraphResiliencePipeline.Create(_logger);
+
+        var thumbnails = await pipeline.ExecuteAsync(
+            async cancelToken => await client.Drives[driveId].Items[itemId].Thumbnails.GetAsync(cancellationToken: cancelToken),
+            cancellationToken);
 
         var url = thumbnails?.Value?.Count > 0 ? thumbnails.Value[0].Medium?.Url : null;
         if (url == null)

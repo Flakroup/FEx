@@ -1,0 +1,34 @@
+[project]
+name = "FEx.McpServer"
+path = "ools\\FEx.McpServer"
+
+[[classes]]
+name = "ApiEntry"
+ns = "FEx.McpServer.Services"
+file = "Services\\ApiEntry.cs"
+
+[[classes]]
+name = "ProjectInfo"
+ns = "FEx.McpServer.Services"
+file = "Services\\ApiEntry.cs"
+
+[[classes]]
+name = "ApiSurfaceConfig"
+ns = "FEx.McpServer.Services"
+file = "Services\\ApiEntry.cs"
+
+[[enums]]
+name = "ApiEntryType"
+ns = "FEx.McpServer.Services"
+file = "Services\\ApiEntry.cs"
+
+[[classes]]
+name = "TomlApiSurfaceReader"
+ns = "FEx.McpServer.Services"
+file = "Services\\TomlApiSurfaceReader.cs"
+
+[[classes]]
+name = "FExApiTools"
+ns = "FEx.McpServer.Tools"
+file = "Tools\\FExApiTools.cs"
+

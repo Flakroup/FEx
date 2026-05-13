@@ -1,6 +1,6 @@
 [project]
 name = "FEx.DependencyInjection.Abstractions"
-path = "src\\DependencyInjection.Abstractions"
+path = "rc\\DependencyInjection.Abstractions"
 
 [[classes]]
 name = "FExServiceProvider"

@@ -1,6 +1,12 @@
 [project]
 name = "FEx.Telemetry.Sentry"
-path = "src\\FEx.Telemetry.Sentry"
+path = "rc\\FEx.Telemetry.Sentry"
+
+[[classes]]
+name = "FExSentryConfig"
+ns = "FEx.Telemetry.Sentry"
+base = "FExTelemetryConfigBase, ISentryConfig"
+file = "FExSentryConfig.cs"
 
 [[classes]]
 name = "FExSentryModule"
@@ -35,6 +41,18 @@ name = "SentryConfigBase"
 ns = "FEx.Telemetry.Sentry.Configuration"
 base = "ISentryConfig"
 file = "Configuration\\SentryConfigBase.cs"
+
+[[classes]]
+name = "SentryServiceExtensions"
+ns = "FEx.Telemetry.Sentry.Extensions"
+file = "Extensions\\SentryServiceExtensions.cs"
+static = true
+
+[[extensions]]
+name = "InitializeFromConfig"
+sig = "void InitializeFromConfig(this ISentryService service, FExSentryConfig config, Assembly appAssembly)"
+returns = "void"
+file = "Extensions\\SentryServiceExtensions.cs"
 
 [[classes]]
 name = "SentryService"

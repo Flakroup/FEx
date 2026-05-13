@@ -1,6 +1,6 @@
 [project]
 name = "FEx.WPFx"
-path = "src\\FEx.WPFx"
+path = "rc\\FEx.WPFx"
 
 [[classes]]
 name = "FExModule"

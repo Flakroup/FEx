@@ -1,6 +1,6 @@
 [project]
 name = "FEx.PersistentStorage.Abstractions"
-path = "src\\PersistentStorage.Abstractions"
+path = "rc\\PersistentStorage.Abstractions"
 
 [[classes]]
 name = "CacheableItem"

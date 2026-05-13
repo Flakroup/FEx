@@ -1,6 +1,6 @@
 [project]
 name = "FEx.PersistentStorage"
-path = "src\\PersistentStorage"
+path = "rc\\PersistentStorage"
 
 [[classes]]
 name = "CacheService"
@@ -13,6 +13,12 @@ name = "DatabaseProvider"
 ns = "FEx.PersistentStorage"
 base = "IDatabaseProvider, IDisposable"
 file = "DatabaseProvider.cs"
+
+[[classes]]
+name = "DefaultDatabaseFilePathResolver"
+ns = "FEx.PersistentStorage"
+base = "IDatabaseFilePathResolver"
+file = "DefaultDatabaseFilePathResolver.cs"
 
 [[classes]]
 name = "FExPersistentStorageModule"

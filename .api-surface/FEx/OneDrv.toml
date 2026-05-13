@@ -1,6 +1,6 @@
 [project]
 name = "FEx.OneDrv"
-path = "src\\FEx.OneDrv"
+path = "rc\\FEx.OneDrv"
 
 [[classes]]
 name = "OneDriveClient"

@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Asyncx"
-path = "src\\FEx.Asyncx"
+path = "rc\\FEx.Asyncx"
 
 [[classes]]
 name = "FExAsyncx"

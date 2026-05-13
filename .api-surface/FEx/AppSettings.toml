@@ -1,6 +1,6 @@
 [project]
 name = "FEx.AppSettings"
-path = "src\\FEx.AppSettings"
+path = "rc\\FEx.AppSettings"
 
 [[classes]]
 name = "ConfigurationService"
@@ -24,6 +24,11 @@ file = "FExAppSettingsModule.cs"
 name = "IFExAppSettingsModule"
 ns = "FEx.AppSettings"
 file = "IFExAppSettingsModule.cs"
+
+[[enums]]
+name = "AppTheme"
+ns = "FEx.AppSettings.Abstractions"
+file = "Abstractions\\AppTheme.cs"
 
 [[classes]]
 name = "BaseUserSettings"

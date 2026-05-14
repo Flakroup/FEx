@@ -12,6 +12,8 @@ namespace FEx.OneDrv;
 
 public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
 {
+    private static readonly HttpClient SharedHttpClient = new();
+
     private readonly IOneDriveAuthService _authService;
     private readonly OneDriveOptions _options;
     private readonly IFExLogger _logger;
@@ -30,11 +32,13 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
 
         var cachePath = GetCachePath(itemId);
         if (File.Exists(cachePath))
+        {
 #if NETSTANDARD
             return await Task.Run(() => File.ReadAllBytes(cachePath), cancellationToken);
 #else
             return await File.ReadAllBytesAsync(cachePath, cancellationToken);
 #endif
+        }
 
         var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
         var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
@@ -48,13 +52,14 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
         if (url == null)
             return null;
 
-        using var http = new HttpClient();
-#if NETSTANDARD
-        using var resp = await http.GetAsync(url, cancellationToken);
-        var bytes = await resp.Content.ReadAsByteArrayAsync();
-#else
-        var bytes = await http.GetByteArrayAsync(url, cancellationToken);
-#endif
+        var bytes = await pipeline.ExecuteAsync(
+            async cancelToken =>
+            {
+                using var resp = await SharedHttpClient.GetAsync(url, cancelToken);
+                resp.EnsureSuccessStatusCode();
+                return await resp.Content.ReadAsByteArrayAsync();
+            },
+            cancellationToken);
 
         var cacheDir = Path.GetDirectoryName(cachePath);
         if (!string.IsNullOrEmpty(cacheDir))

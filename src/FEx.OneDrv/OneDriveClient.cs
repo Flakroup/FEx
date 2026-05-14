@@ -1,7 +1,10 @@
-using Azure.Identity;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.OneDrv.Abstractions;
+using FEx.OneDrv.Auth;
+using FEx.OneDrv.Models;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
-using Microsoft.Identity.Client;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -9,64 +12,83 @@ using System.Threading.Tasks;
 
 namespace FEx.OneDrv;
 
-public class OneDriveClient
+public sealed class OneDriveClient : IOneDriveClient
 {
-    private readonly string[] _scopes;
-    private readonly PublicClientApplicationOptions _appConfiguration;
+    private readonly IOneDriveAuthService _authService;
+    private readonly IFExLogger _logger;
 
-    public OneDriveClient()
+    public OneDriveClient(IOneDriveAuthService authService, IFExLogger logger)
     {
-        _scopes = ["User.Read", "Files.Read", "Files.Read.All"];
-
-        _appConfiguration = new()
-        {
-            Instance = "https://login.microsoftonline.com/",
-            ClientId = Environment.GetEnvironmentVariable("OneDriveAppClientId", EnvironmentVariableTarget.User),
-            TenantId = "common"
-        };
+        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public Task<List<Drive>> ListDrivesAsync() =>
-        ListDrivesAsync(CancellationToken.None);
-
-    public async Task<List<Drive>> ListDrivesAsync(CancellationToken cancellationToken)
+    public async Task<IList<IOneDriveFile>> ListFilesAsync(string folderId, CancellationToken cancellationToken)
     {
-        var drives = new List<Drive>();
+        var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
+        var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
+        var parentId = string.IsNullOrEmpty(folderId) || folderId == "root" ? "root" : folderId;
+        var result = new List<IOneDriveFile>();
+        var pipeline = GraphResiliencePipeline.Create(_logger);
 
-        try
+        await pipeline.ExecuteAsync(async cancelToken =>
         {
-            var client = GetGraphServiceClient();
-            var r = await client.Me.Drives.GetAsync(cancellationToken: cancellationToken);
-
-            var pageIterator = PageIterator<Drive, DriveCollectionResponse>.CreatePageIterator(client,
-                r,
-                d =>
+            result.Clear();
+            var response = await client.Drives[driveId].Items[parentId].Children.GetAsync(cancellationToken: cancelToken);
+            var iterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(
+                client, response,
+                item =>
                 {
-                    drives.Add(d);
-
+                    if (item.File != null)
+                        result.Add(DriveItemMapper.MapFile(item));
                     return true;
                 });
+            await iterator.IterateAsync(cancelToken);
+        }, cancellationToken);
 
-            await pageIterator.IterateAsync(cancellationToken);
-        }
-        catch (Exception)
-        {
-        }
-
-        return drives;
+        _logger.Information($"Listed {result.Count} files in folder {folderId ?? "root"}");
+        return result;
     }
 
-    private GraphServiceClient GetGraphServiceClient()
+    public async Task<IOneDriveFile> GetFileAsync(string itemId, CancellationToken cancellationToken)
     {
-        var interactiveBrowserCredentialOptions = new InteractiveBrowserCredentialOptions
+        if (string.IsNullOrWhiteSpace(itemId))
+            throw new ArgumentNullException(nameof(itemId));
+
+        var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
+        var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
+        var pipeline = GraphResiliencePipeline.Create(_logger);
+
+        var item = await pipeline.ExecuteAsync(
+            async cancelToken => await client.Drives[driveId].Items[itemId].GetAsync(cancellationToken: cancelToken),
+            cancellationToken);
+        return DriveItemMapper.MapFile(item);
+    }
+
+    public async Task<IList<IOneDriveFolder>> ListFoldersAsync(string folderId, CancellationToken cancellationToken)
+    {
+        var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
+        var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
+        var parentId = string.IsNullOrEmpty(folderId) || folderId == "root" ? "root" : folderId;
+        var result = new List<IOneDriveFolder>();
+        var pipeline = GraphResiliencePipeline.Create(_logger);
+
+        await pipeline.ExecuteAsync(async cancelToken =>
         {
-            ClientId = _appConfiguration.ClientId
-        };
+            result.Clear();
+            var response = await client.Drives[driveId].Items[parentId].Children.GetAsync(cancellationToken: cancelToken);
+            var iterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(
+                client, response,
+                item =>
+                {
+                    if (item.Folder != null)
+                        result.Add(DriveItemMapper.MapFolder(item));
+                    return true;
+                });
+            await iterator.IterateAsync(cancelToken);
+        }, cancellationToken);
 
-        var interactiveBrowserCredential = new InteractiveBrowserCredential(interactiveBrowserCredentialOptions);
-
-        return
-            new(interactiveBrowserCredential,
-                _scopes); // you can pass the TokenCredential directly to the GraphServiceClient
+        _logger.Information($"Listed {result.Count} folders in folder {folderId ?? "root"}");
+        return result;
     }
 }

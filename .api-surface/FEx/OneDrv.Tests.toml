@@ -1,0 +1,24 @@
+[project]
+name = "FEx.OneDrv.Tests"
+path = "test\\FEx.OneDrv.Tests"
+
+[[classes]]
+name = "DriveItemMapperTests"
+ns = "FEx.OneDrv.Tests"
+file = "DriveItemMapperTests.cs"
+
+[[classes]]
+name = "GraphResiliencePipelineTests"
+ns = "FEx.OneDrv.Tests"
+file = "GraphResiliencePipelineTests.cs"
+
+[[classes]]
+name = "OneDriveOptionsTests"
+ns = "FEx.OneDrv.Tests"
+file = "OneDriveOptionsTests.cs"
+
+[[classes]]
+name = "OneDrvServiceCollectionExtensionsTests"
+ns = "FEx.OneDrv.Tests"
+file = "OneDrvServiceCollectionExtensionsTests.cs"
+

@@ -14,6 +14,7 @@ public sealed class MsalAuthService : IOneDriveAuthService
 {
     private readonly OneDriveOptions _options;
     private readonly IFExLogger _logger;
+    private readonly SemaphoreSlim _appLock = new(1, 1);
     private IPublicClientApplication _app;
 
     public MsalAuthService(OneDriveOptions options, IFExLogger logger)
@@ -24,19 +25,24 @@ public sealed class MsalAuthService : IOneDriveAuthService
 
     public async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken)
     {
-        var app = await GetOrBuildAppAsync();
+        var app = await GetOrBuildAppAsync(cancellationToken);
         var scopes = _options.Scopes.ToArray();
 
         var accounts = await app.GetAccountsAsync();
-        try
+        var firstAccount = accounts.FirstOrDefault();
+
+        if (firstAccount != null)
         {
-            var result = await app.AcquireTokenSilent(scopes, accounts.FirstOrDefault())
-                                  .ExecuteAsync(cancellationToken);
-            return result.AccessToken;
-        }
-        catch (MsalUiRequiredException)
-        {
-            _logger.Information("Silent token acquisition failed - falling back to interactive");
+            try
+            {
+                var result = await app.AcquireTokenSilent(scopes, firstAccount)
+                                      .ExecuteAsync(cancellationToken);
+                return result.AccessToken;
+            }
+            catch (MsalUiRequiredException)
+            {
+                _logger.Information("Silent token acquisition failed - falling back to interactive");
+            }
         }
 
         var interactiveResult = await app.AcquireTokenInteractive(scopes)
@@ -46,7 +52,7 @@ public sealed class MsalAuthService : IOneDriveAuthService
 
     public async Task SignOutAsync(CancellationToken cancellationToken)
     {
-        var app = await GetOrBuildAppAsync();
+        var app = await GetOrBuildAppAsync(cancellationToken);
         var accounts = (await app.GetAccountsAsync()).ToList();
         foreach (var account in accounts)
             await app.RemoveAsync(account);
@@ -54,21 +60,33 @@ public sealed class MsalAuthService : IOneDriveAuthService
         _logger.Information("Signed out all OneDrive accounts");
     }
 
-    private async Task<IPublicClientApplication> GetOrBuildAppAsync()
+    private async Task<IPublicClientApplication> GetOrBuildAppAsync(CancellationToken cancellationToken)
     {
         if (_app != null)
             return _app;
 
-        var builder = PublicClientApplicationBuilder.Create(_options.ClientId)
-            .WithAuthority($"https://login.microsoftonline.com/{_options.TenantId}")
-            .WithDefaultRedirectUri();
+        await _appLock.WaitAsync(cancellationToken);
+        try
+        {
+            if (_app != null)
+                return _app;
 
-        _app = builder.Build();
+            var builder = PublicClientApplicationBuilder.Create(_options.ClientId)
+                .WithAuthority($"https://login.microsoftonline.com/{_options.TenantId}")
+                .WithDefaultRedirectUri();
 
-        if (!string.IsNullOrWhiteSpace(_options.TokenCachePath))
-            await RegisterTokenCacheAsync(_app.UserTokenCache);
+            var app = builder.Build();
 
-        return _app;
+            if (!string.IsNullOrWhiteSpace(_options.TokenCachePath))
+                await RegisterTokenCacheAsync(app.UserTokenCache);
+
+            _app = app;
+            return _app;
+        }
+        finally
+        {
+            _appLock.Release();
+        }
     }
 
     private async Task RegisterTokenCacheAsync(ITokenCache tokenCache)

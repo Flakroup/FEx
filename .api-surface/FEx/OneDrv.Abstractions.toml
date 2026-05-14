@@ -1,0 +1,39 @@
+[project]
+name = "FEx.OneDrv.Abstractions"
+path = "src\\FEx.OneDrv.Abstractions"
+
+[[interfaces]]
+name = "IOneDriveAuthService"
+ns = "FEx.OneDrv.Abstractions"
+file = "IOneDriveAuthService.cs"
+
+[[interfaces]]
+name = "IOneDriveClient"
+ns = "FEx.OneDrv.Abstractions"
+file = "IOneDriveClient.cs"
+
+[[interfaces]]
+name = "IOneDriveFile"
+ns = "FEx.OneDrv.Abstractions"
+file = "IOneDriveFile.cs"
+
+[[interfaces]]
+name = "IOneDriveFolder"
+ns = "FEx.OneDrv.Abstractions"
+file = "IOneDriveFolder.cs"
+
+[[interfaces]]
+name = "IOneDriveItemEnumerator"
+ns = "FEx.OneDrv.Abstractions"
+file = "IOneDriveItemEnumerator.cs"
+
+[[interfaces]]
+name = "IOneDriveThumbnailService"
+ns = "FEx.OneDrv.Abstractions"
+file = "IOneDriveThumbnailService.cs"
+
+[[classes]]
+name = "OneDriveOptions"
+ns = "FEx.OneDrv.Abstractions"
+file = "OneDriveOptions.cs"
+

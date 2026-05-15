@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FEx.OneDrv.Auth;
 
-internal sealed class GraphServiceClientCache : IGraphServiceClientCache, IDisposable
+public sealed class GraphServiceClientCache : IGraphServiceClientCache, IDisposable
 {
     private readonly IOneDriveAuthService _auth;
     private readonly Func<IAccessTokenProvider, GraphServiceClient> _clientFactory;

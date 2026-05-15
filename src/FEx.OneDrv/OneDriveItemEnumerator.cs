@@ -1,6 +1,5 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.OneDrv.Abstractions;
-using FEx.OneDrv.Auth;
 using FEx.OneDrv.Models;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
@@ -14,12 +13,12 @@ namespace FEx.OneDrv;
 
 public sealed class OneDriveItemEnumerator : IOneDriveItemEnumerator
 {
-    private readonly IOneDriveAuthService _authService;
+    private readonly IGraphServiceClientCache _graphCache;
     private readonly IFExLogger _logger;
 
-    public OneDriveItemEnumerator(IOneDriveAuthService authService, IFExLogger logger)
+    public OneDriveItemEnumerator(IGraphServiceClientCache graphCache, IFExLogger logger)
     {
-        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        _graphCache = graphCache ?? throw new ArgumentNullException(nameof(graphCache));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -27,8 +26,7 @@ public sealed class OneDriveItemEnumerator : IOneDriveItemEnumerator
         string folderId,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
-        var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
+        var (client, driveId) = await _graphCache.GetAsync(cancellationToken);
         var parentId = string.IsNullOrEmpty(folderId) || folderId == "root" ? "root" : folderId;
         var files = new List<IOneDriveFile>();
         var pipeline = GraphResiliencePipeline.Create(_logger);

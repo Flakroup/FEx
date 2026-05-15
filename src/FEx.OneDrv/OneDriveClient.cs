@@ -1,6 +1,5 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.OneDrv.Abstractions;
-using FEx.OneDrv.Auth;
 using FEx.OneDrv.Models;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
@@ -14,19 +13,18 @@ namespace FEx.OneDrv;
 
 public sealed class OneDriveClient : IOneDriveClient
 {
-    private readonly IOneDriveAuthService _authService;
+    private readonly IGraphServiceClientCache _graphCache;
     private readonly IFExLogger _logger;
 
-    public OneDriveClient(IOneDriveAuthService authService, IFExLogger logger)
+    public OneDriveClient(IGraphServiceClientCache graphCache, IFExLogger logger)
     {
-        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        _graphCache = graphCache ?? throw new ArgumentNullException(nameof(graphCache));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<IList<IOneDriveFile>> ListFilesAsync(string folderId, CancellationToken cancellationToken)
     {
-        var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
-        var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
+        var (client, driveId) = await _graphCache.GetAsync(cancellationToken);
         var parentId = string.IsNullOrEmpty(folderId) || folderId == "root" ? "root" : folderId;
         var result = new List<IOneDriveFile>();
         var pipeline = GraphResiliencePipeline.Create(_logger);
@@ -55,8 +53,7 @@ public sealed class OneDriveClient : IOneDriveClient
         if (string.IsNullOrWhiteSpace(itemId))
             throw new ArgumentNullException(nameof(itemId));
 
-        var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
-        var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
+        var (client, driveId) = await _graphCache.GetAsync(cancellationToken);
         var pipeline = GraphResiliencePipeline.Create(_logger);
 
         var item = await pipeline.ExecuteAsync(
@@ -67,8 +64,7 @@ public sealed class OneDriveClient : IOneDriveClient
 
     public async Task<IList<IOneDriveFolder>> ListFoldersAsync(string folderId, CancellationToken cancellationToken)
     {
-        var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
-        var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
+        var (client, driveId) = await _graphCache.GetAsync(cancellationToken);
         var parentId = string.IsNullOrEmpty(folderId) || folderId == "root" ? "root" : folderId;
         var result = new List<IOneDriveFolder>();
         var pipeline = GraphResiliencePipeline.Create(_logger);

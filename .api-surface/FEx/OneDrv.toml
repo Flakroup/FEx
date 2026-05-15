@@ -57,16 +57,16 @@ returns = "IServiceCollection"
 file = "OneDrvServiceCollectionExtensions.cs"
 
 [[classes]]
-name = "GraphClientHelper"
-ns = "FEx.OneDrv.Auth"
-file = "Auth\\GraphClientHelper.cs"
-static = true
-
-[[classes]]
-name = "StaticAccessTokenProvider"
+name = "DelegatingAccessTokenProvider"
 ns = "FEx.OneDrv.Auth"
 base = "IAccessTokenProvider"
-file = "Auth\\StaticAccessTokenProvider.cs"
+file = "Auth\\DelegatingAccessTokenProvider.cs"
+
+[[classes]]
+name = "GraphServiceClientCache"
+ns = "FEx.OneDrv.Auth"
+base = "IGraphServiceClientCache"
+file = "Auth\\GraphServiceClientCache.cs"
 
 [[interfaces]]
 name = "IFExOneDrvContainer"

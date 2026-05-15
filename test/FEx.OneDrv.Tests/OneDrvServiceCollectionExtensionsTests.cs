@@ -21,6 +21,7 @@ public sealed class OneDrvServiceCollectionExtensionsTests
         var provider = services.BuildServiceProvider();
 
         provider.GetService<IOneDriveAuthService>().ShouldNotBeNull();
+        provider.GetService<IGraphServiceClientCache>().ShouldNotBeNull();
         provider.GetService<IOneDriveClient>().ShouldNotBeNull();
         provider.GetService<IOneDriveItemEnumerator>().ShouldNotBeNull();
         provider.GetService<IOneDriveThumbnailService>().ShouldNotBeNull();

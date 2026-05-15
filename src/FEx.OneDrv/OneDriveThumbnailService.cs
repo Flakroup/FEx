@@ -1,6 +1,5 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.OneDrv.Abstractions;
-using FEx.OneDrv.Auth;
 using Polly;
 using System;
 using System.IO;
@@ -14,13 +13,13 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
 {
     private static readonly HttpClient SharedHttpClient = new();
 
-    private readonly IOneDriveAuthService _authService;
+    private readonly IGraphServiceClientCache _graphCache;
     private readonly OneDriveOptions _options;
     private readonly IFExLogger _logger;
 
-    public OneDriveThumbnailService(IOneDriveAuthService authService, OneDriveOptions options, IFExLogger logger)
+    public OneDriveThumbnailService(IGraphServiceClientCache graphCache, OneDriveOptions options, IFExLogger logger)
     {
-        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        _graphCache = graphCache ?? throw new ArgumentNullException(nameof(graphCache));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -40,8 +39,7 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
 #endif
         }
 
-        var client = await GraphClientHelper.CreateAsync(_authService, cancellationToken);
-        var driveId = await GraphClientHelper.GetDefaultDriveIdAsync(client, cancellationToken);
+        var (client, driveId) = await _graphCache.GetAsync(cancellationToken);
         var pipeline = GraphResiliencePipeline.Create(_logger);
 
         var thumbnails = await pipeline.ExecuteAsync(

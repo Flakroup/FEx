@@ -1,4 +1,5 @@
 using FEx.OneDrv.Abstractions;
+using FEx.OneDrv.Auth;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FEx.OneDrv;
@@ -9,6 +10,7 @@ public static class OneDrvServiceCollectionExtensions
     {
         services.AddSingleton(options);
         services.AddSingleton<IOneDriveAuthService, MsalAuthService>();
+        services.AddSingleton<IGraphServiceClientCache, GraphServiceClientCache>();
         services.AddSingleton<IOneDriveItemEnumerator, OneDriveItemEnumerator>();
         services.AddSingleton<IOneDriveThumbnailService, OneDriveThumbnailService>();
         services.AddSingleton<IOneDriveClient, OneDriveClient>();

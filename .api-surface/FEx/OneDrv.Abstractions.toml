@@ -3,6 +3,11 @@ name = "FEx.OneDrv.Abstractions"
 path = "src\\FEx.OneDrv.Abstractions"
 
 [[interfaces]]
+name = "IGraphServiceClientCache"
+ns = "FEx.OneDrv.Abstractions"
+file = "IGraphServiceClientCache.cs"
+
+[[interfaces]]
 name = "IOneDriveAuthService"
 ns = "FEx.OneDrv.Abstractions"
 file = "IOneDriveAuthService.cs"

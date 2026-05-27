@@ -119,6 +119,29 @@ ns = "FEx.FileSystem"
 file = "FileSystemUtilities.cs"
 
 [[classes]]
+name = "GitWorktreeExtensions"
+ns = "FEx.FileSystem"
+file = "GitWorktreeExtensions.cs"
+static = true
+
+[[enums]]
+name = "GitWorktreeKind"
+ns = "FEx.FileSystem"
+file = "GitWorktreeExtensions.cs"
+
+[[extensions]]
+name = "GetGitWorktreeKind"
+sig = "GitWorktreeKind GetGitWorktreeKind(this DirectoryInfo dir)"
+returns = "GitWorktreeKind"
+file = "GitWorktreeExtensions.cs"
+
+[[extensions]]
+name = "IsGitWorktree"
+sig = "bool IsGitWorktree(this DirectoryInfo dir)"
+returns = "bool"
+file = "GitWorktreeExtensions.cs"
+
+[[classes]]
 name = "CompressionHelper"
 ns = "FEx.FileSystem.Helpers"
 file = "Helpers\\CompressionHelper.cs"

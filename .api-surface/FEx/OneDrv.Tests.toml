@@ -1,6 +1,6 @@
 [project]
 name = "FEx.OneDrv.Tests"
-path = "test\\FEx.OneDrv.Tests"
+path = "est\\FEx.OneDrv.Tests"
 
 [[classes]]
 name = "DriveItemMapperTests"
@@ -11,6 +11,11 @@ file = "DriveItemMapperTests.cs"
 name = "GraphResiliencePipelineTests"
 ns = "FEx.OneDrv.Tests"
 file = "GraphResiliencePipelineTests.cs"
+
+[[classes]]
+name = "GraphServiceClientCacheTests"
+ns = "FEx.OneDrv.Tests"
+file = "GraphServiceClientCacheTests.cs"
 
 [[classes]]
 name = "OneDriveOptionsTests"

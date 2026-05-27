@@ -1,6 +1,6 @@
 [project]
 name = "FEx.OneDrv"
-path = "src\\FEx.OneDrv"
+path = "rc\\FEx.OneDrv"
 
 [[classes]]
 name = "FExOneDrvModule"
@@ -65,13 +65,8 @@ file = "Auth\\DelegatingAccessTokenProvider.cs"
 [[classes]]
 name = "GraphServiceClientCache"
 ns = "FEx.OneDrv.Auth"
-base = "IGraphServiceClientCache"
+base = "IGraphServiceClientCache, IDisposable"
 file = "Auth\\GraphServiceClientCache.cs"
-
-[[interfaces]]
-name = "IFExOneDrvContainer"
-ns = "FEx.OneDrv.DI"
-file = "DI\\IFExOneDrvContainer.cs"
 
 [[classes]]
 name = "DriveItemMapper"

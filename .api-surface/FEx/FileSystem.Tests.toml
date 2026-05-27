@@ -7,3 +7,8 @@ name = "DirectoryWalkerSafeDeleteTests"
 ns = "FEx.FileSystem.Tests"
 file = "DirectoryWalkerSafeDeleteTests.cs"
 
+[[classes]]
+name = "GitWorktreeExtensionsTests"
+ns = "FEx.FileSystem.Tests"
+file = "GitWorktreeExtensionsTests.cs"
+

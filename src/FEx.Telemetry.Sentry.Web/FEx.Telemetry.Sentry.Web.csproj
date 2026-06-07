@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<Description>ASP.NET Core integration of FEx.Telemetry.Sentry via Sentry.AspNetCore (UseSentry wrapper, env-var DSN resolution)</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Sentry.AspNetCore" Version="6.1.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\FEx.Telemetry.Sentry\FEx.Telemetry.Sentry.csproj" />
+	</ItemGroup>
+
+</Project>

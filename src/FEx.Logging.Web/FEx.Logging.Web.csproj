@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<Description>ASP.NET Core integration of FEx.Logging via Serilog.AspNetCore (UseSerilog wrapper, host bootstrap helper)</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Logging\FEx.Logging.csproj" />
+	</ItemGroup>
+
+</Project>

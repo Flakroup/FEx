@@ -8,13 +8,20 @@ using System.IO;
 
 namespace FEx.SecureStorage;
 
-public class SecureStorageService : ISecureStorageService
+/// <summary>
+/// Cross-platform fallback storage that persists values as encrypted files under
+/// <c>~/.fexStorage/</c>. Uses a per-user/per-machine cipher derived from
+/// <c>{UserName}@{MachineName}</c>. Not OS-level secure - prefer
+/// <c>WindowsDpapiSecureStorageService</c>, <c>MacOsKeychainSecureStorageService</c>
+/// or <c>LinuxLibsecretSecureStorageService</c> when available.
+/// </summary>
+public class FileSecureStorageService : ISecureStorageService
 {
     private const string FexFileExtension = ".sfex";
     private readonly DirectoryInfo _storage;
     private readonly string _cipher;
 
-    public SecureStorageService()
+    public FileSecureStorageService()
     {
         _cipher = $"{Environment.UserName}@{Environment.MachineName}".GenerateMd5OfString();
 
@@ -22,7 +29,7 @@ public class SecureStorageService : ISecureStorageService
             .Directory.GetDescendantDirectory(".fexStorage");
     }
 
-    public SecureStorageService(string cipher, DirectoryInfo storage)
+    public FileSecureStorageService(string cipher, DirectoryInfo storage)
     {
         _cipher = cipher;
         _storage = storage;

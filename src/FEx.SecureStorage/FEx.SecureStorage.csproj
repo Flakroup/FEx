@@ -12,4 +12,8 @@
 	  <ProjectReference Include="..\SecureStorage.Abstractions\FEx.SecureStorage.Abstractions.csproj" />
 	</ItemGroup>
 
+	<ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
+	</ItemGroup>
+
 </Project>

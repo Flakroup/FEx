@@ -1,0 +1,36 @@
+name: Publish (NuGet)
+
+# Manual-only. Publishes FEx packages to nuget.org using GitVersion-derived
+# version (pre-release on develop). Requires the NUGET_API_KEY repo secret;
+# without it the NUKE Publish target skips (OnlyWhenDynamic), so it is safe.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          lfs: true
+          fetch-depth: 0   # GitVersion needs full history + tags
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore workloads (MAUI for FEx.Maui)
+        run: dotnet workload restore FEx.slnx
+      - name: Publish to nuget.org
+        env:
+          NuGetApiKey: ${{ secrets.NUGET_API_KEY }}
+        run: pwsh ./build.ps1 Publish --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"

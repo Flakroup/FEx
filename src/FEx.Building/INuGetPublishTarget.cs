@@ -1,4 +1,3 @@
-using System;
 using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.Tools.DotNet;
@@ -10,20 +9,19 @@ namespace FEx.Building;
 
 public interface INuGetPublishTarget : IPackTarget
 {
-    [Parameter("NuGet source URL for pushing packages")]
+    [Parameter("NuGet source URL for pushing packages (default: nuget.org)")]
     string NuGetSource => TryGetValue(() => NuGetSource)
-                          ?? $"{Environment.GetEnvironmentVariable("CI_API_V4_URL")}/projects/{Environment.GetEnvironmentVariable("CI_PROJECT_ID")}/packages/nuget/index.json";
+                          ?? "https://api.nuget.org/v3/index.json";
 
     [Parameter("NuGet API key for pushing packages")]
     [Secret]
-    string? NuGetApiKey => TryGetValue(() => NuGetApiKey)
-                           ?? Environment.GetEnvironmentVariable("CI_JOB_TOKEN");
+    string? NuGetApiKey => TryGetValue(() => NuGetApiKey);
 
     Target Publish => _ => _
         .Description("Publishes NuGet packages to the configured feed")
         .DependsOn(Pack)
         .OnlyWhenDynamic(() => !string.IsNullOrEmpty(NuGetApiKey),
-            "Skipping publish: no NuGetApiKey / CI_JOB_TOKEN configured")
+            "Skipping publish: no NuGetApiKey configured")
         .Executes(() =>
         {
             var packages = PackagesDirectory.GlobFiles("*.nupkg");

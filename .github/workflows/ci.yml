@@ -36,6 +36,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+      - name: Restore workloads (MAUI for FEx.Maui)
+        run: dotnet workload restore FEx.slnx
       - name: Compile
         run: pwsh ./build.ps1 Compile
 
@@ -51,6 +53,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+      - name: Restore workloads (MAUI for FEx.Maui)
+        run: dotnet workload restore FEx.slnx
       - name: Test
         run: pwsh ./build.ps1 Test
       - name: Upload test results

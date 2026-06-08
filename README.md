@@ -2,9 +2,8 @@
 
 **Next-generation, multi-platform, multi-DI .NET application framework**
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Tests](https://img.shields.io/badge/tests-22%2F22-brightgreen)]()
-[![.NET](https://img.shields.io/badge/.NET-9.0%20%7C%20Standard%202.0%2F2.1%20%7C%204.8.1-512BD4)]()
+[![CI](https://github.com/Flakroup/FEx/actions/workflows/ci.yml/badge.svg)](https://github.com/Flakroup/FEx/actions/workflows/ci.yml)
+[![.NET](https://img.shields.io/badge/.NET-10.0%20%7C%20Standard%202.0%2F2.1%20%7C%204.8.1-512BD4)]()
 [![License](https://img.shields.io/badge/license-Flakroup-blue)]()
 
 ---
@@ -13,7 +12,7 @@
 
 **FEx** (Flakroup Extensions) is a modern, extensible application framework for .NET that provides:
 
-- ✅ **Multi-Platform Support** - .NET 9.0, .NET Standard 2.0/2.1, .NET Framework 4.8.1
+- ✅ **Multi-Platform Support** - .NET 10.0, .NET Standard 2.0/2.1, .NET Framework 4.8.1
 - ✅ **Multi-DI Engine Architecture** - Use StrongInject, Microsoft DI, or bring your own
 - ✅ **Framework-Agnostic Core** - Business logic independent of DI engine choice
 - ✅ **Rich Extension Library** - 32+ extension method classes for common operations
@@ -270,19 +269,17 @@ See complete working sample: [`samples/FEx.Sample.WebAPI`](samples/FEx.Sample.We
 
 ## 🧪 Testing
 
-```bash
-# Run all tests
-dotnet test
+Tests are written with **xUnit v3** and run through the NUKE build. They
+execute automatically in CI (GitHub Actions) on every push and pull request.
 
-# Run specific test project
+```bash
+# Run the full test suite (NUKE - builds then tests)
+pwsh ./build.ps1 Test
+
+# Or run a single project directly
 dotnet test test/FEx.DependencyInjection.Tests
 dotnet test test/FEx.Logging.Tests
 ```
-
-**Current Test Coverage:**
-- ✅ 22/22 tests passing
-- ✅ DI Architecture (16 tests)
-- ✅ Logging Infrastructure (6 tests)
 
 ---
 
@@ -322,9 +319,11 @@ FEx/
 │   ├── Directory.Build.props
 │   └── Directory.Build.targets
 │
+├── .github/workflows/            # GitHub Actions (ci.yml, publish.yml)
 ├── Directory.Build.props         # Solution-wide settings
 ├── Directory.Build.targets
-├── FEx.sln                       # Solution file
+├── build.ps1                     # NUKE build entry point
+├── FEx.slnx                      # Solution file
 └── README.md                     # This file
 ```
 
@@ -336,10 +335,10 @@ FEx supports **multiple target frameworks** for maximum compatibility:
 
 | Project Type | Frameworks | Use Case |
 |--------------|------------|----------|
-| **Core/Agnostics** | .NET 9.0, .NET Standard 2.0, 2.1 | Maximum compatibility |
-| **Windows-specific** | .NET 9.0-windows, .NET 4.8.1 | WPF, platform APIs |
-| **Feature Projects** | .NET 9.0, .NET Standard 2.1 | Modern APIs |
-| **Tests** | .NET 9.0 | Latest features |
+| **Core/Agnostics** | .NET 10.0, .NET Standard 2.0, 2.1 | Maximum compatibility |
+| **Windows-specific** | .NET 10.0-windows, .NET 4.8.1 | WPF, platform APIs |
+| **Feature Projects** | .NET 10.0, .NET Standard 2.1 | Modern APIs |
+| **Tests** | .NET 10.0 | Latest features |
 
 ---
 
@@ -347,7 +346,7 @@ FEx supports **multiple target frameworks** for maximum compatibility:
 
 ### Prerequisites
 
-- .NET 9.0 SDK or later
+- .NET 10.0 SDK or later
 - Visual Studio 2022+ or JetBrains Rider
 - (Optional) StrongInject source generator support
 
@@ -375,6 +374,14 @@ dotnet build -c Release
 4. **Test in samples**: Run `FEx.Sample.WPF` or `FEx.Sample.WebAPI`
 5. **Commit** with meaningful message (handled by git hooks)
 
+### Continuous Integration (GitHub Actions)
+
+- **`ci.yml`** - runs on every push and pull request:
+  - `secret-scan` (gitleaks) on `ubuntu-latest`
+  - `compile` / `test` via NUKE `build.ps1` on `windows-latest` (required for the WPF + .NET Framework 4.8.1 projects)
+  - Checkout uses `submodules: recursive` + `lfs: true`; the MAUI workload is restored for `FEx.Maui`
+- **`publish.yml`** - manual `workflow_dispatch` only. Packs and pushes all FEx packages to **nuget.org** at the GitVersion-derived (pre-release) version and tags the release. Requires the `NUGET_API_KEY` repository secret; the NUKE `Publish` target is skipped when it is absent.
+
 ---
 
 ## 📚 Documentation
@@ -400,9 +407,10 @@ dotnet build -c Release
 - [x] Core framework projects (Agnostics, Core, DI, Logging, Common)
 - [x] 28+ feature projects (MVVM, WPFx, Json, EFCore, etc.)
 - [x] Sample applications (WPF + WebAPI)
-- [x] Test infrastructure (22 tests passing)
-- [x] .NET 9.0 support
+- [x] Test infrastructure (xUnit v3)
+- [x] .NET 10.0 support
 - [x] Cross-platform compatibility
+- [x] GitHub Actions CI/CD (build + test + NuGet publish to nuget.org)
 
 ### 🚧 In Progress
 - [ ] **FlakEssentials Migration** - Migrating remaining components from FlakEssentials framework
@@ -410,7 +418,6 @@ dotnet build -c Release
 - [ ] **Expanded Test Coverage** - Additional tests for feature projects
 
 ### 🔮 Future Plans
-- [ ] NuGet package publishing
 - [ ] Additional DI engine support (Autofac, Unity)
 - [ ] Avalonia UI enhancements
 - [ ] MAUI framework completion
@@ -444,7 +451,7 @@ Copyright © **Flakroup** 2025-2026. All rights reserved.
 FEx is the evolution of **FlakEssentials**, rebuilt from the ground up to enable:
 - ✅ True cross-platform compatibility
 - ✅ DI engine independence
-- ✅ Modern .NET 9.0 features
+- ✅ Modern .NET 10.0 features
 - ✅ Clean, maintainable architecture
 
 Special thanks to the .NET community for excellent libraries:
@@ -457,7 +464,7 @@ Special thanks to the .NET community for excellent libraries:
 ## 📞 Contact & Support
 
 - **Organization**: Flakroup
-- **Repository**: Internal GitLab
+- **Repository**: [github.com/Flakroup/FEx](https://github.com/Flakroup/FEx)
 - **Status**: Production Ready (pending FlakEssentials migration completion)
 
 ---

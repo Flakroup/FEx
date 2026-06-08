@@ -17,35 +17,14 @@ public interface ITagTarget : INuGetPublishTarget
         .After(Publish)
         .OnlyWhenDynamic(() => NukeBuild.IsServerBuild,
             "Skipping tag: not running on CI")
-        .OnlyWhenDynamic(() => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI_JOB_TOKEN")),
-            "Skipping tag: no CI_JOB_TOKEN")
-        .OnlyWhenDynamic(() =>
-        {
-            var branch = Environment.GetEnvironmentVariable("CI_COMMIT_BRANCH");
-            return branch is "main" or "master" or "develop";
-        }, "Skipping tag: only tags main/master releases")
+        .OnlyWhenDynamic(() => ResolveCiRemote() is not null,
+            "Skipping tag: no supported CI remote/token (GitHub Actions or GitLab CI)")
+        .OnlyWhenDynamic(() => IsReleaseBranch(ResolveCiRemote()?.Branch),
+            "Skipping tag: only tags main/master/develop")
         .Executes(() =>
         {
+            var remote = ResolveCiRemote()!.Value;
             var tag = $"{TagPrefix}{SemVer}";
-
-            Log.Information("Creating Git tag: {Tag}", tag);
-
-            RunGit("config user.email \"ci@flakroup.com\"");
-            RunGit("config user.name \"CI\"");
-
-            var serverUrl = Environment.GetEnvironmentVariable("CI_SERVER_URL");
-            var projectPath = Environment.GetEnvironmentVariable("CI_PROJECT_PATH");
-            var jobToken = Environment.GetEnvironmentVariable("CI_JOB_TOKEN");
-
-            if (string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(projectPath))
-            {
-                Log.Warning("CI_SERVER_URL or CI_PROJECT_PATH not set - cannot push tag");
-                return;
-            }
-
-            var host = new Uri(serverUrl).Host;
-            var scheme = new Uri(serverUrl).Scheme;
-            var authenticatedUrl = $"{scheme}://gitlab-ci-token:{jobToken}@{host}/{projectPath}.git";
 
             if (TagExists(tag))
             {
@@ -53,11 +32,56 @@ public interface ITagTarget : INuGetPublishTarget
                 return;
             }
 
+            Log.Information("Creating Git tag: {Tag}", tag);
+
+            RunGit("config user.email \"ci@flakroup.com\"");
+            RunGit("config user.name \"CI\"");
             RunGit($"tag {tag}");
-            RunGit($"push {authenticatedUrl} {tag}");
+            RunGit($"push {remote.PushUrl} {tag}");
 
             Log.Information("Successfully pushed tag {Tag}", tag);
         });
+
+    // Resolves the authenticated push URL and current branch for the active CI
+    // provider (GitHub Actions or GitLab CI). Returns null when neither is
+    // detected or the required token/context is missing. The token is never
+    // logged (RunGit uses logInvocation: false).
+    static (string? Branch, string PushUrl)? ResolveCiRemote()
+    {
+        // GitHub Actions
+        if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+        {
+            var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+            var repository = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY"); // owner/repo
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(repository))
+                return null;
+
+            var server = Environment.GetEnvironmentVariable("GITHUB_SERVER_URL") ?? "https://github.com";
+            var host = new Uri(server).Host;
+            var branch = Environment.GetEnvironmentVariable("GITHUB_REF_NAME");
+
+            return (branch, $"https://x-access-token:{token}@{host}/{repository}.git");
+        }
+
+        // GitLab CI
+        if (Environment.GetEnvironmentVariable("GITLAB_CI") == "true")
+        {
+            var token = Environment.GetEnvironmentVariable("CI_JOB_TOKEN");
+            var serverUrl = Environment.GetEnvironmentVariable("CI_SERVER_URL");
+            var projectPath = Environment.GetEnvironmentVariable("CI_PROJECT_PATH");
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(projectPath))
+                return null;
+
+            var uri = new Uri(serverUrl);
+            var branch = Environment.GetEnvironmentVariable("CI_COMMIT_BRANCH");
+
+            return (branch, $"{uri.Scheme}://gitlab-ci-token:{token}@{uri.Host}/{projectPath}.git");
+        }
+
+        return null;
+    }
+
+    static bool IsReleaseBranch(string? branch) => branch is "main" or "master" or "develop";
 
     static bool TagExists(string tag)
     {

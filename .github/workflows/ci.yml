@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    tags-ignore:
+      - '**'   # version tags are pushed by publish.yml; the commit was already built
   pull_request:
 
 concurrency:

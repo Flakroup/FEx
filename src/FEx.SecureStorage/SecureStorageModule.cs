@@ -25,17 +25,12 @@ public class SecureStorageModule : InitializeModule<ISecureStorageContainer, ISe
     {
 #if NET5_0_OR_GREATER
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
             return new WindowsDpapiSecureStorageService();
-        }
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
             return new MacOsKeychainSecureStorageService();
-        }
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
             try
             {
                 return new LinuxLibsecretSecureStorageService();
@@ -44,7 +39,6 @@ public class SecureStorageModule : InitializeModule<ISecureStorageContainer, ISe
             {
                 // libsecret-1.so.0 not installed - fall through to file fallback.
             }
-        }
 #endif
         return new FileSecureStorageService();
     }

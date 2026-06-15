@@ -35,14 +35,10 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
     public MacOsKeychainSecureStorageService(string serviceName)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
             throw new PlatformNotSupportedException("MacOsKeychainSecureStorageService requires macOS.");
-        }
 
         if (string.IsNullOrWhiteSpace(serviceName))
-        {
             throw new ArgumentException("serviceName must be a non-empty string.", nameof(serviceName));
-        }
 
         _serviceName = serviceName;
     }
@@ -50,9 +46,7 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
     public T Get<T>(string key)
     {
         if (string.IsNullOrEmpty(key))
-        {
             throw new ArgumentException("key must be a non-empty string.", nameof(key));
-        }
 
         var serviceBytes = Encoding.UTF8.GetBytes(_serviceName);
         var accountBytes = Encoding.UTF8.GetBytes(key);
@@ -68,9 +62,7 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
             itemRef: IntPtr.Zero);
 
         if (status == errSecItemNotFound)
-        {
             throw new FileNotFoundException($"Keychain item not found for key '{key}' in service '{_serviceName}'.");
-        }
 
         ThrowIfError(status, "SecKeychainFindGenericPassword");
 
@@ -85,18 +77,14 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
         finally
         {
             if (passwordPtr != IntPtr.Zero)
-            {
                 SecKeychainItemFreeContent(IntPtr.Zero, passwordPtr);
-            }
         }
     }
 
     public void Set(string key, object content)
     {
         if (string.IsNullOrEmpty(key))
-        {
             throw new ArgumentException("key must be a non-empty string.", nameof(key));
-        }
 
         var serviceBytes = Encoding.UTF8.GetBytes(_serviceName);
         var accountBytes = Encoding.UTF8.GetBytes(key);
@@ -140,14 +128,10 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
             finally
             {
                 if (existingPasswordPtr != IntPtr.Zero)
-                {
                     SecKeychainItemFreeContent(IntPtr.Zero, existingPasswordPtr);
-                }
 
                 if (existingItemRef != IntPtr.Zero)
-                {
                     CFRelease(existingItemRef);
-                }
             }
 
             return;
@@ -156,17 +140,13 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
         ThrowIfError(status, "SecKeychainAddGenericPassword");
 
         if (itemRef != IntPtr.Zero)
-        {
             CFRelease(itemRef);
-        }
     }
 
     private static void ThrowIfError(int status, string operation)
     {
         if (status != errSecSuccess)
-        {
             throw new InvalidOperationException($"{operation} failed with OSStatus {status}.");
-        }
     }
 
     [DllImport(SecurityFramework)]

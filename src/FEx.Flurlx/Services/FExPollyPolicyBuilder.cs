@@ -3,8 +3,6 @@ using FEx.Flurlx.Configuration;
 using Flurl.Http;
 using Flurl.Util;
 using Polly;
-using Polly.Bulkhead;
-using Polly.Fallback;
 using Polly.Timeout;
 using System;
 using System.Collections.Generic;

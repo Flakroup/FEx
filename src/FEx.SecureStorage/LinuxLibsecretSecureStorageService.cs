@@ -32,14 +32,10 @@ public class LinuxLibsecretSecureStorageService : ISecureStorageService
     public LinuxLibsecretSecureStorageService(string serviceName)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
             throw new PlatformNotSupportedException("LinuxLibsecretSecureStorageService requires Linux.");
-        }
 
         if (string.IsNullOrWhiteSpace(serviceName))
-        {
             throw new ArgumentException("serviceName must be a non-empty string.", nameof(serviceName));
-        }
 
         _serviceName = serviceName;
 
@@ -58,9 +54,7 @@ public class LinuxLibsecretSecureStorageService : ISecureStorageService
     public T Get<T>(string key)
     {
         if (string.IsNullOrEmpty(key))
-        {
             throw new ArgumentException("key must be a non-empty string.", nameof(key));
-        }
 
         var passwordPtr = secret_password_lookup_sync(
             schema: _schema,
@@ -73,9 +67,7 @@ public class LinuxLibsecretSecureStorageService : ISecureStorageService
         ThrowIfGError(errorPtr, "secret_password_lookup_sync");
 
         if (passwordPtr == IntPtr.Zero)
-        {
             throw new System.IO.FileNotFoundException($"libsecret item not found for key '{key}' in service '{_serviceName}'.");
-        }
 
         try
         {
@@ -93,9 +85,7 @@ public class LinuxLibsecretSecureStorageService : ISecureStorageService
     public void Set(string key, object content)
     {
         if (string.IsNullOrEmpty(key))
-        {
             throw new ArgumentException("key must be a non-empty string.", nameof(key));
-        }
 
         var json = content.ToJson();
 
@@ -113,9 +103,7 @@ public class LinuxLibsecretSecureStorageService : ISecureStorageService
         ThrowIfGError(errorPtr, "secret_password_store_sync");
 
         if (!stored)
-        {
             throw new InvalidOperationException("secret_password_store_sync returned false without setting a GError.");
-        }
     }
 
     private static IntPtr BuildSchema(string serviceName)
@@ -134,9 +122,7 @@ public class LinuxLibsecretSecureStorageService : ISecureStorageService
     private static void ThrowIfGError(IntPtr errorPtr, string operation)
     {
         if (errorPtr == IntPtr.Zero)
-        {
             return;
-        }
 
         // GError layout: { GQuark domain; gint code; gchar* message; }
         // gchar* message lives at offset sizeof(GQuark) + sizeof(gint) which is 8 on

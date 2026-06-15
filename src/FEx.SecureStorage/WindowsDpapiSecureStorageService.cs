@@ -26,9 +26,7 @@ public class WindowsDpapiSecureStorageService : ISecureStorageService
     public WindowsDpapiSecureStorageService()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
             throw new PlatformNotSupportedException("WindowsDpapiSecureStorageService requires Windows.");
-        }
 
         _storage = SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile]
             .Directory.GetDescendantDirectory(".fexStorage-dpapi");
@@ -37,9 +35,7 @@ public class WindowsDpapiSecureStorageService : ISecureStorageService
     public WindowsDpapiSecureStorageService(DirectoryInfo storage)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
             throw new PlatformNotSupportedException("WindowsDpapiSecureStorageService requires Windows.");
-        }
 
         _storage = storage;
     }

@@ -209,8 +209,7 @@ public class FExServiceProvider : IFExServiceProvider
     /// </summary>
     /// <typeparam name="TContainer"></typeparam>
     /// <returns></returns>
-    public static ValueTask<TContainer> InitializeAsync<TContainer>()
-        where TContainer : class, IDisposable, new() =>
+    public static ValueTask<TContainer> InitializeAsync<TContainer>() where TContainer : class, IDisposable, new() =>
         InitializeAsync<TContainer>(null, null);
 
     public static ValueTask<TContainer> InitializeAsync<TContainer>(IServiceCollection services)

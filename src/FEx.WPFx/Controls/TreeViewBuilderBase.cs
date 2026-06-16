@@ -103,10 +103,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
     /// <param name="nodeStub">The node stub.</param>
     /// <param name="locationIndex">Index of the location.</param>
     /// <param name="setDirectoriesIcons">if set to <c>true</c> [set directories icons].</param>
-    public async Task GrowTreeAsync(TItem tree,
-                                    FExTreeViewNode nodeStub,
-                                    int locationIndex,
-                                    bool setDirectoriesIcons)
+    public async Task GrowTreeAsync(TItem tree, FExTreeViewNode nodeStub, int locationIndex, bool setDirectoriesIcons)
     {
         // //string header = PostInContext(() => tree.Header.ToString());
         //

@@ -27,27 +27,30 @@ public class NukeLogger<T> : ILogger<T>
                             EventId eventId,
                             TState state,
                             Exception? exception,
-                            Func<TState, Exception?, string> formatter) => Serilog.Log.Write(GetSerilogLogLevel(logLevel), formatter(state, exception));
+                            Func<TState, Exception?, string> formatter) =>
+        Serilog.Log.Write(GetSerilogLogLevel(logLevel), formatter(state, exception));
 
     public bool IsEnabled(LogLevel logLevel) => Serilog.Log.IsEnabled(GetLogLevel(logLevel));
 
-    private static LogEventLevel GetLogLevel(LogLevel logLevel) => logLevel switch
-    {
-        LogLevel.Trace => LogEventLevel.Verbose,
-        LogLevel.Debug => LogEventLevel.Debug,
-        LogLevel.Information or LogLevel.None => LogEventLevel.Information,
-        LogLevel.Warning => LogEventLevel.Warning,
-        LogLevel.Error => LogEventLevel.Error,
-        LogLevel.Critical => LogEventLevel.Fatal,
-        _ => throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null)
-    };
+    private static LogEventLevel GetLogLevel(LogLevel logLevel) =>
+        logLevel switch
+        {
+            LogLevel.Trace => LogEventLevel.Verbose,
+            LogLevel.Debug => LogEventLevel.Debug,
+            LogLevel.Information or LogLevel.None => LogEventLevel.Information,
+            LogLevel.Warning => LogEventLevel.Warning,
+            LogLevel.Error => LogEventLevel.Error,
+            LogLevel.Critical => LogEventLevel.Fatal,
+            _ => throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null)
+        };
 
-    private static LogEventLevel GetSerilogLogLevel(LogLevel logLevel) => logLevel switch
-    {
-        LogLevel.Trace or LogLevel.Debug => LogEventLevel.Debug,
-        LogLevel.Information or LogLevel.None => LogEventLevel.Information,
-        LogLevel.Warning => LogEventLevel.Warning,
-        LogLevel.Error or LogLevel.Critical => LogEventLevel.Error,
-        _ => throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null)
-    };
+    private static LogEventLevel GetSerilogLogLevel(LogLevel logLevel) =>
+        logLevel switch
+        {
+            LogLevel.Trace or LogLevel.Debug => LogEventLevel.Debug,
+            LogLevel.Information or LogLevel.None => LogEventLevel.Information,
+            LogLevel.Warning => LogEventLevel.Warning,
+            LogLevel.Error or LogLevel.Critical => LogEventLevel.Error,
+            _ => throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null)
+        };
 }

@@ -261,9 +261,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     protected CancellationToken CancellationToken => CancellationTokenSource.Token;
     private static ISynchronizedAccessService LockSrv => FExCoreStatics.SynchronizedAccessService;
 
-    private DownloadItem(Uri url,
-                         string filePath,
-                         bool reportProgress)
+    private DownloadItem(Uri url, string filePath, bool reportProgress)
         : this(url, filePath, reportProgress, null, 50, -1, null, default)
     {
     }
@@ -440,8 +438,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         return IsDownloaded;
     }
 
-    public static Task<DownloadItem> CreateAsync(IDownloadStub downloadItem,
-                                                   bool reportProgress) =>
+    public static Task<DownloadItem> CreateAsync(IDownloadStub downloadItem, bool reportProgress) =>
         CreateAsync(downloadItem, reportProgress, CancellationToken.None);
 
     public static async Task<DownloadItem> CreateAsync(IDownloadStub downloadItem,
@@ -463,9 +460,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             cancellationToken);
     }
 
-    public static Task<DownloadItem> CreateAsync(string url,
-                                                  string path,
-                                                  bool reportProgress) =>
+    public static Task<DownloadItem> CreateAsync(string url, string path, bool reportProgress) =>
         CreateAsync(new Uri(url), path, reportProgress, null, 50, -1, null, default);
 
     public static async Task<DownloadItem> CreateAsync(string url,
@@ -485,9 +480,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             md5Checksum,
             cancellationToken);
 
-    public static Task<DownloadItem> CreateAsync(Uri url,
-                                                  string path,
-                                                  bool reportProgress) =>
+    public static Task<DownloadItem> CreateAsync(Uri url, string path, bool reportProgress) =>
         CreateAsync(url, path, reportProgress, null, 50, -1, null, default);
 
     public static async Task<DownloadItem> CreateAsync(Uri url,
@@ -514,9 +507,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         return res;
     }
 
-    public static DownloadItem CreateFromResponse(HttpWebResponse response,
-                                                  string filePath,
-                                                  bool reportProgress) =>
+    public static DownloadItem CreateFromResponse(HttpWebResponse response, string filePath, bool reportProgress) =>
         CreateFromResponse(response, filePath, reportProgress, null, 0, 50, null, default);
 
     public static DownloadItem CreateFromResponse(HttpWebResponse response,
@@ -928,7 +919,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         }
     }
 #else
-        => HashCode.Combine(FilePath, Url?.AbsoluteUri);
+        =>
+            HashCode.Combine(FilePath, Url?.AbsoluteUri);
 #endif
 
     public int CompareTo(object obj) =>

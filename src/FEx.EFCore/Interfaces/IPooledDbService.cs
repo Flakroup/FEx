@@ -25,10 +25,7 @@ public interface IPooledDbService<out TDbContext> : IAsyncInitializable where TD
     Task<bool> RunMigrationsAsync();
     Task MigrateAsync();
 
-    Task RunActionInDbContextAsync(Action<TDbContext> func,
-                                   string errorMessage,
-                                   bool saveChanges,
-                                   bool useTransaction);
+    Task RunActionInDbContextAsync(Action<TDbContext> func, string errorMessage, bool saveChanges, bool useTransaction);
 
     Task<T> RunFuncInDbContextAsync<T>(Func<TDbContext, T> func,
                                        string errorMessage = null,

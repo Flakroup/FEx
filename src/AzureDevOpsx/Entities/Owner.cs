@@ -53,10 +53,10 @@ public class Owner : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Gets or sets the owner image URL.
+    /// Gets or sets the owner image URL.
     /// </summary>
     /// <value>
-    ///     The image URL.
+    /// The image URL.
     /// </value>
     [JsonProperty("imageUrl")]
     public Uri ImageUrl
@@ -73,6 +73,7 @@ public class Owner : NotifyPropertyChanged
             if (_image == null
                 && ImageUrl != null)
                 _ = Task.Run(RefreshImage);
+
             return _image;
         }
         private set => SetProperty(ref _image, value);
@@ -85,7 +86,8 @@ public class Owner : NotifyPropertyChanged
         {
             if (_tfsEnvironment == null
                 || _tfsEnvironment.EnvironmentId != EnvironmentId)
-                _tfsEnvironment = TfsService.Instance.TfsEnvironments.FindInEnumerable(x => x.EnvironmentId == EnvironmentId);
+                _tfsEnvironment =
+                    TfsService.Instance.TfsEnvironments.FindInEnumerable(x => x.EnvironmentId == EnvironmentId);
 
             return _tfsEnvironment;
         }

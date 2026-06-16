@@ -28,12 +28,7 @@ public class ErrorData
         }
     }
 
-    public ErrorData(ErrorType tag,
-                     NameInfo nameInfo,
-                     string token,
-                     string setName,
-                     string verb,
-                     Exception exception)
+    public ErrorData(ErrorType tag, NameInfo nameInfo, string token, string setName, string verb, Exception exception)
     {
         Tag = tag;
         NameInfo = nameInfo;

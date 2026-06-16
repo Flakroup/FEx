@@ -14,4 +14,3 @@ public class FExAvaloniax : FExInitializable
         RxSchedulers.MainThreadScheduler = AvaloniaScheduler.Instance;
     }
 }
-

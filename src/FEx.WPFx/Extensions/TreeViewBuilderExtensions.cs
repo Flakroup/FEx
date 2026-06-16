@@ -8,9 +8,7 @@ namespace FEx.WPFx.Extensions;
 
 public static class TreeViewBuilderExtensions
 {
-    public static void AddChildNode(this ITreeViewBuilder builder,
-                                    string rootNodeName,
-                                    List<string> nodePath) =>
+    public static void AddChildNode(this ITreeViewBuilder builder, string rootNodeName, List<string> nodePath) =>
         builder.AddChildNode(rootNodeName, nodePath, null, true, null, true, false);
 
     public static void AddChildNode(this ITreeViewBuilder builder,
@@ -43,15 +41,10 @@ public static class TreeViewBuilderExtensions
                                     bool isIconAttachedToFile) =>
         builder.AddChildNode(rootNodeName, nodePath, name, unique, iconPath, isIconAttachedToFile, false);
 
-    public static void AddChildNode(this ITreeViewBuilder builder,
-                                    string rootNodeName,
-                                    string nodePath) =>
+    public static void AddChildNode(this ITreeViewBuilder builder, string rootNodeName, string nodePath) =>
         builder.AddChildNode(rootNodeName, nodePath, null, '\\', true, null, false);
 
-    public static void AddChildNode(this ITreeViewBuilder builder,
-                                    string rootNodeName,
-                                    string nodePath,
-                                    string name) =>
+    public static void AddChildNode(this ITreeViewBuilder builder, string rootNodeName, string nodePath, string name) =>
         builder.AddChildNode(rootNodeName, nodePath, name, '\\', true, null, false);
 
     public static void AddChildNode(this ITreeViewBuilder builder,
@@ -85,47 +78,39 @@ public static class TreeViewBuilderExtensions
 
     public static Task GrowTreeAsync<TItem>(this ITreeViewBuilder<TItem> builder,
                                             ItemsControl tree,
-                                            IReadOnlyList<TItem> curr)
-        where TItem : HeaderedItemsControl, new() =>
+                                            IReadOnlyList<TItem> curr) where TItem : HeaderedItemsControl, new() =>
         builder.GrowTreeAsync(tree, curr, 0);
 
     public static Task GrowTreeAsync<TItem>(this ITreeViewBuilder<TItem> builder,
                                             ItemsControl tree,
                                             TItem newNode,
-                                            int[] location)
-        where TItem : HeaderedItemsControl, new() =>
+                                            int[] location) where TItem : HeaderedItemsControl, new() =>
         builder.GrowTreeAsync(tree, newNode, location, 0);
 
-    public static Task GrowTreeAsync<TItem>(this ITreeViewBuilder<TItem> builder,
-                                            TItem tree,
-                                            FExTreeViewNode nodeStub)
+    public static Task GrowTreeAsync<TItem>(this ITreeViewBuilder<TItem> builder, TItem tree, FExTreeViewNode nodeStub)
         where TItem : HeaderedItemsControl, new() =>
         builder.GrowTreeAsync(tree, nodeStub, 0, false);
 
     public static Task GrowTreeAsync<TItem>(this ITreeViewBuilder<TItem> builder,
                                             TItem tree,
                                             FExTreeViewNode nodeStub,
-                                            int locationIndex)
-        where TItem : HeaderedItemsControl, new() =>
+                                            int locationIndex) where TItem : HeaderedItemsControl, new() =>
         builder.GrowTreeAsync(tree, nodeStub, locationIndex, false);
 
     public static Task GrowTreeAsync<TItem>(this ITreeViewBuilder<TItem> builder,
                                             TItem tree,
                                             FExTreeViewNode nodeStub,
-                                            IList<string> headers)
-        where TItem : HeaderedItemsControl, new() =>
+                                            IList<string> headers) where TItem : HeaderedItemsControl, new() =>
         builder.GrowTreeAsync(tree, nodeStub, headers, 0, false);
 
     public static Task GrowTreeAsync<TItem>(this ITreeViewBuilder<TItem> builder,
                                             TItem tree,
                                             FExTreeViewNode nodeStub,
                                             IList<string> headers,
-                                            int locationIndex)
-        where TItem : HeaderedItemsControl, new() =>
+                                            int locationIndex) where TItem : HeaderedItemsControl, new() =>
         builder.GrowTreeAsync(tree, nodeStub, headers, locationIndex, false);
 
-    public static Task<TItem> GetTreeNodeAsync<TItem>(this ITreeViewBuilder<TItem> builder,
-                                                      string rootNodeName)
+    public static Task<TItem> GetTreeNodeAsync<TItem>(this ITreeViewBuilder<TItem> builder, string rootNodeName)
         where TItem : HeaderedItemsControl, new() =>
         builder.GetTreeNodeAsync(rootNodeName, false);
 }

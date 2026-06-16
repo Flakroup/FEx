@@ -44,7 +44,8 @@ public class WindowsDpapiSecureStorageService : ISecureStorageService
     {
         var file = _storage.GetDescendantFile(key + DpapiFileExtension);
         var encrypted = File.ReadAllBytes(file.FullName);
-        var decrypted = ProtectedData.Unprotect(encrypted, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
+        var decrypted =
+ ProtectedData.Unprotect(encrypted, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
         var json = System.Text.Encoding.UTF8.GetString(decrypted);
 
         return json.FromJson<T>();

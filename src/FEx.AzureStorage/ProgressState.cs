@@ -19,13 +19,12 @@ public class ProgressState
     public string ElapsedTime => Sw.GetTime();
     protected Stopwatch Sw { get; }
 
-    public ProgressState(IProgress<string> progress,
-                         StorageOperation operation) : this(progress, operation, null, null) { }
+    public ProgressState(IProgress<string> progress, StorageOperation operation)
+        : this(progress, operation, null, null)
+    {
+    }
 
-    public ProgressState(IProgress<string> progress,
-                         StorageOperation operation,
-                         string name,
-                         double? totalSize)
+    public ProgressState(IProgress<string> progress, StorageOperation operation, string name, double? totalSize)
     {
         OperationString = operation.GetEnumValueDescription();
         _progress = progress;

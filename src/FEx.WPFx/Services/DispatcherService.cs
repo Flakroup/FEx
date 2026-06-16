@@ -25,9 +25,7 @@ public static class DispatcherService
     public static void InvokeOnDispatcherContext(Action action, DispatcherObject sender) =>
         InvokeOnDispatcherContext(action, sender, DispatcherPriority.Send);
 
-    public static void InvokeOnDispatcherContext(Action action,
-                                                 DispatcherObject sender,
-                                                 DispatcherPriority priority)
+    public static void InvokeOnDispatcherContext(Action action, DispatcherObject sender, DispatcherPriority priority)
     {
         var dispatcherObject = sender.GetDispatcherObject();
 
@@ -75,9 +73,7 @@ public static class DispatcherService
     public static T InvokeOnDispatcherContext<T>(Func<T> action, DispatcherObject sender) =>
         InvokeOnDispatcherContext(action, sender, DispatcherPriority.Send);
 
-    public static T InvokeOnDispatcherContext<T>(Func<T> action,
-                                                 DispatcherObject sender,
-                                                 DispatcherPriority priority)
+    public static T InvokeOnDispatcherContext<T>(Func<T> action, DispatcherObject sender, DispatcherPriority priority)
     {
         var dispatcherObject = sender.GetDispatcherObject();
 
@@ -182,15 +178,12 @@ public static class DispatcherService
     /// <returns>True if you're on the dispatcher thread, otherwise - false</returns>
     public static bool CheckAccess(DispatcherObject sender) => sender.GetDispatcherObject().Dispatcher.CheckAccess();
 
-    public static void BeginInvoke(Action action) =>
-        BeginInvoke(action, null, DispatcherPriority.Normal);
+    public static void BeginInvoke(Action action) => BeginInvoke(action, null, DispatcherPriority.Normal);
 
     public static void BeginInvoke(Action action, DispatcherObject sender) =>
         BeginInvoke(action, sender, DispatcherPriority.Normal);
 
-    public static void BeginInvoke(Action action,
-                                   DispatcherObject sender,
-                                   DispatcherPriority priority)
+    public static void BeginInvoke(Action action, DispatcherObject sender, DispatcherPriority priority)
     {
         var dispatcherObject = sender.GetDispatcherObject();
 

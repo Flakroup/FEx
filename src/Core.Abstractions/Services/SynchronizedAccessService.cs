@@ -78,7 +78,8 @@ public sealed class SynchronizedAccessService : ISynchronizedAccessService, IDis
 
     public void Release(string key)
     {
-        if (key is not null && AccessSemaphores.TryGetValue(key, out var semaphore))
+        if (key is not null
+            && AccessSemaphores.TryGetValue(key, out var semaphore))
             semaphore.Release();
     }
 
@@ -96,6 +97,7 @@ public sealed class SynchronizedAccessService : ISynchronizedAccessService, IDis
         if (semaphore.CurrentCount == 0)
         {
             AccessSemaphores.TryAdd(key, semaphore);
+
             throw new InvalidOperationException($"Key {key} is still busy");
         }
 

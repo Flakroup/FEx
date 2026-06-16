@@ -19,7 +19,8 @@ public static class DataGridBehavior
     public static bool GetDisplayRowNumber(DependencyObject target) =>
         (bool)(target.GetValue(DisplayRowNumberProperty) ?? false);
 
-    public static void SetDisplayRowNumber(DependencyObject target, bool value) => target.SetValue(DisplayRowNumberProperty, value);
+    public static void SetDisplayRowNumber(DependencyObject target, bool value) =>
+        target.SetValue(DisplayRowNumberProperty, value);
 
     private static void OnDisplayRowNumberChanged(DependencyObject target, DependencyPropertyChangedEventArgs e)
     {
@@ -73,17 +74,16 @@ public static class DataGridBehavior
     private static void GetVisualChildCollection<T>(this DependencyObject parent, ICollection<T> visualCollection)
         where T : Visual
     {
-        int count = VisualTreeHelper.GetChildrenCount(parent);
+        var count = VisualTreeHelper.GetChildrenCount(parent);
 
         for (var i = 0; i < count; i++)
         {
-            DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+            var child = VisualTreeHelper.GetChild(parent, i);
 
             if (child is T visual)
                 visualCollection.Add(visual);
 
-            if (child is not null)
-                GetVisualChildCollection(child, visualCollection);
+            child?.GetVisualChildCollection(visualCollection);
         }
     }
     #endregion

@@ -83,7 +83,7 @@ public static class TimeSpanExtensions
     /// </summary>
     /// <param name="stopwatch">The stopwatch.</param>
     /// <returns><see cref="System.String" />. with time.</returns>
-    public static string GetTime(this Stopwatch stopwatch) => GetTime(stopwatch.Elapsed);
+    public static string GetTime(this Stopwatch stopwatch) => stopwatch.Elapsed.GetTime();
 
     /// <summary>
     /// Gets the time.
@@ -100,19 +100,19 @@ public static class TimeSpanExtensions
     /// <param name="timespan">The timespan.</param>
     /// <param name="decimals">The decimals.</param>
     /// <returns>System.String.</returns>
-    public static string GetTime(this TimeSpan timespan) => GetTime(timespan, 0);
+    public static string GetTime(this TimeSpan timespan) => timespan.GetTime(0);
 
     public static string GetTime(this TimeSpan timespan, int decimals)
     {
         if (timespan.TotalMilliseconds < 1000)
-            return $"{FillZeros(RoundDown(timespan.TotalMilliseconds, decimals), decimals)} ms.";
+            return $"{FillZeros(timespan.TotalMilliseconds.RoundDown(decimals), decimals)} ms.";
 
         return timespan.TotalSeconds < 60
             ?
-            $"{timespan.Seconds} sec. {FillZeros(RoundDown(timespan.TotalMilliseconds - timespan.Seconds * 1000, decimals), decimals)} ms."
+            $"{timespan.Seconds} sec. {FillZeros((timespan.TotalMilliseconds - timespan.Seconds * 1000).RoundDown(decimals), decimals)} ms."
             : timespan.TotalMinutes < 60
-                ? $"{timespan.Minutes} min. {FillZeros(RoundDown(timespan.TotalSeconds - timespan.Minutes * 60, decimals), decimals)} sec."
-                : $"{timespan.Hours} h. {FillZeros(RoundDown(timespan.TotalMinutes - timespan.Hours * 60, decimals), decimals)} min.";
+                ? $"{timespan.Minutes} min. {FillZeros((timespan.TotalSeconds - timespan.Minutes * 60).RoundDown(decimals), decimals)} sec."
+                : $"{timespan.Hours} h. {FillZeros((timespan.TotalMinutes - timespan.Hours * 60).RoundDown(decimals), decimals)} min.";
     }
 
     public static double RoundDown(this double i, double decimalPlaces)

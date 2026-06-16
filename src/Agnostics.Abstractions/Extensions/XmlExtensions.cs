@@ -51,7 +51,7 @@ public static class XmlExtensions
         var data = Encoding.ASCII.GetBytes(xml);
         using var stream = new MemoryStream(data, 0, data.Length);
 
-        return ValidateAndDeserialize<T>(serializer, stream, func);
+        return serializer.ValidateAndDeserialize<T>(stream, func);
     }
 
     public static T ValidateAndDeserialize<T>(this XmlSerializer serializer, Stream stream, Func<XmlSchemaSet> func)

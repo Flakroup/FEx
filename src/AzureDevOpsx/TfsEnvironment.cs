@@ -217,7 +217,7 @@ public class TfsEnvironment : NotifyPropertyChanged
         ProjectsCollectionsIsBusy = false;
         ProjectsCollectionsIsDirty = true;
         _projectsCollections.Clear();
-        bool res = await GetServerAsync(autoLogIn, username, password);
+        var res = await GetServerAsync(autoLogIn, username, password);
         IsConnecting = false;
 
         return res;
@@ -235,8 +235,7 @@ public class TfsEnvironment : NotifyPropertyChanged
                 && (Server == null
                     || Server.Uri != ServerUri
                     || !Server.HasAuthenticated
-                    || UserName.IsNotNullOrWhiteSpace()
-                    && GetDefaultUserName() != GetCurrentUserName()))
+                    || UserName.IsNotNullOrWhiteSpace() && GetDefaultUserName() != GetCurrentUserName()))
                 return await LoginAsync(username, password);
 
             return true;
@@ -270,7 +269,7 @@ public class TfsEnvironment : NotifyPropertyChanged
             if (password == null)
                 password = Password;
 
-            bool toAuthenitcation = Server == null || Server?.Uri != ServerUri || !Server.HasAuthenticated;
+            var toAuthenitcation = Server == null || Server?.Uri != ServerUri || !Server.HasAuthenticated;
 
             if (username != UserName
                 || Password != password)
@@ -302,8 +301,7 @@ public class TfsEnvironment : NotifyPropertyChanged
                     await GetBuildServerVersionAsync();
 
                     if (SuccessfullyAuthenticated != null)
-                        await Task.Run(() =>
-                            SuccessfullyAuthenticated(null, null));
+                        await Task.Run(() => SuccessfullyAuthenticated(null, null));
                 }
             }
 
@@ -329,7 +327,7 @@ public class TfsEnvironment : NotifyPropertyChanged
             if (await GetServerAsync()
                 && ProjectsCollections.Any(x => x.IsEnabled))
             {
-                TfsTeamProjectCollection tfs = ProjectsCollections.Count > 1
+                var tfs = ProjectsCollections.Count > 1
                     ? ProjectsCollections.First(x => x.IsEnabled).TfsTeamProjectCollection
                     : ProjectsCollections[0].TfsTeamProjectCollection;
 
@@ -385,23 +383,25 @@ public class TfsEnvironment : NotifyPropertyChanged
     }
 
     public async Task<TResponse> RunProcAsync<TResponse>(string requestUrl,
-                                                   IDictionary<string, object> args = null,
-                                                   JsonSerializerSettings settings = null,
-                                                   IList<HttpStatusCode> ommitCodes = null,
-                                                   RequestMethod method = RequestMethod.GET)
+                                                         IDictionary<string, object> args = null,
+                                                         JsonSerializerSettings settings = null,
+                                                         IList<HttpStatusCode> omitCodes = null,
+                                                         RequestMethod method = RequestMethod.GET)
         where TResponse : BaseTfsResponse, new()
     {
         using var processor = new FuncProcessor(requestUrl, Server.Credentials, EnvironmentId, args, method);
-        return await processor.RunAsync<TResponse>(settings, ommitCodes);
+
+        return await processor.RunAsync<TResponse>(settings, omitCodes);
     }
 
     public async Task<string> RunRawAsync(string requestUrl,
-                                    IDictionary<string, object> args = null,
-                                    IList<HttpStatusCode> ommitCodes = null,
-                                    RequestMethod method = RequestMethod.GET)
+                                          IDictionary<string, object> args = null,
+                                          IList<HttpStatusCode> omitCodes = null,
+                                          RequestMethod method = RequestMethod.GET)
     {
         using var processor = new FuncProcessor(requestUrl, Server.Credentials, EnvironmentId, args, method);
-        return await processor.RunRawAsync(ommitCodes);
+
+        return await processor.RunRawAsync(omitCodes);
     }
 
     private static Task<ImageSource> GetUserImageAsync(Uri serverUri, ICredentials credentials, Guid tfsUserId)
@@ -428,7 +428,7 @@ public class TfsEnvironment : NotifyPropertyChanged
 
     private async Task<AuthenticatedUserInfo> LoadUserInfoAsync()
     {
-        string json = await WebServices.GetRequestResultAsync($"{ServerUri}/_apis/connectiondata", GetCredentials());
+        var json = await WebServices.GetRequestResultAsync($"{ServerUri}/_apis/connectiondata", GetCredentials());
 
         return JsonConvert.DeserializeObject<AuthenticatedUserInfo>(json);
     }
@@ -453,7 +453,7 @@ public class TfsEnvironment : NotifyPropertyChanged
             CollectionsNames.AddRange(CollectionNodesCache.Select(x => x.Resource.DisplayName).OrderBy(x => x));
             NotifyProgress();
             ProgressViewModel?.PrgSetMax(CollectionNodesCache.Count);
-            using IFExTimer flakTimer = new FExTimer().WithCallback(NotifyProgress);
+            using var flakTimer = new FExTimer().WithCallback(NotifyProgress);
             flakTimer.Start();
             var tasks = CollectionNodesCache.Select(GetTfsProjectsCollectionsInfoAsync).ToList();
             _projectsCollections.Clear();

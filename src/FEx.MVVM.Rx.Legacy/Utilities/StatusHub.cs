@@ -56,8 +56,6 @@ public sealed class StatusHub : IDisposable, IStatusHub
             Reset += (_, _) => onStatusesReset();
     }
 
-    public Guid AddStatus(string status) => AddStatus(status, true);
-
     public Guid AddStatus(string status, bool unique)
     {
         Guid? key = null;
@@ -99,8 +97,6 @@ public sealed class StatusHub : IDisposable, IStatusHub
 
     public IList<string> GetStatuses() => Statuses.Values.ToArray();
 
-    public string GetStatusString() => GetStatusString(null);
-
     public string GetStatusString(string separator)
     {
         if (Statuses.IsEmpty)
@@ -124,14 +120,18 @@ public sealed class StatusHub : IDisposable, IStatusHub
         return sb.ToString();
     }
 
-    public DisposableAction Log(string status) => Log(status, true);
-
     public DisposableAction Log(string status, bool unique)
     {
         var statusKey = AddStatus(status, unique);
 
         return new(() => RemoveStatus(statusKey));
     }
+
+    public Guid AddStatus(string status) => AddStatus(status, true);
+
+    public string GetStatusString() => GetStatusString(null);
+
+    public DisposableAction Log(string status) => Log(status, true);
 
     private void StatusChanged((Guid key, string status, NotifyCollectionChangedAction action) v) =>
         StatusChanged(v.key, v.status, v.action);

@@ -1,6 +1,5 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.OneDrv.Abstractions;
-using Polly;
 using System;
 using System.IO;
 using System.Net.Http;
@@ -30,6 +29,7 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
             throw new ArgumentNullException(nameof(itemId));
 
         var cachePath = GetCachePath(itemId);
+
         if (File.Exists(cachePath))
         {
 #if NETSTANDARD
@@ -42,24 +42,32 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
         var (client, driveId) = await _graphCache.GetAsync(cancellationToken);
         var pipeline = GraphResiliencePipeline.Create(_logger);
 
-        var thumbnails = await pipeline.ExecuteAsync(
-            async cancelToken => await client.Drives[driveId].Items[itemId].Thumbnails.GetAsync(cancellationToken: cancelToken),
+        var thumbnails = await pipeline.ExecuteAsync(async cancelToken =>
+                await client.Drives[driveId].Items[itemId].Thumbnails.GetAsync(cancellationToken: cancelToken),
             cancellationToken);
 
-        var url = thumbnails?.Value?.Count > 0 ? thumbnails.Value[0].Medium?.Url : null;
+        var url = thumbnails?.Value?.Count > 0
+            ? thumbnails.Value[0].Medium?.Url
+            : null;
+
         if (url == null)
             return null;
 
-        var bytes = await pipeline.ExecuteAsync(
-            async cancelToken =>
+        var bytes = await pipeline.ExecuteAsync(async cancelToken =>
             {
                 using var resp = await SharedHttpClient.GetAsync(url, cancelToken);
                 resp.EnsureSuccessStatusCode();
+
+#if NETSTANDARD
                 return await resp.Content.ReadAsByteArrayAsync();
+#else
+                return await resp.Content.ReadAsByteArrayAsync(cancelToken);
+#endif
             },
             cancellationToken);
 
         var cacheDir = Path.GetDirectoryName(cachePath);
+
         if (!string.IsNullOrEmpty(cacheDir))
             Directory.CreateDirectory(cacheDir);
 
@@ -69,6 +77,7 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
         await File.WriteAllBytesAsync(cachePath, bytes, cancellationToken);
 #endif
         _logger.Information($"Cached thumbnail for item {itemId}");
+
         return bytes;
     }
 

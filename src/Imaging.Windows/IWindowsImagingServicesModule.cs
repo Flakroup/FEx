@@ -1,6 +1,6 @@
 using FEx.EFCore.Interfaces;
-using FEx.Legacy.Imaging.Abstractions.Interfaces;
 using FEx.Imaging.Windows.Model;
+using FEx.Legacy.Imaging.Abstractions.Interfaces;
 using StrongInject;
 using System.Diagnostics.CodeAnalysis;
 

@@ -30,4 +30,3 @@ public class LoggerState : Dictionary<string, object>, ILoggerState
             ? JsonSerializer.Serialize(this)
             : string.Empty;
 }
-

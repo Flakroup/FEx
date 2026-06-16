@@ -75,7 +75,9 @@ public static class EnumerableExtensions
     }
 
     public static bool None<T>(this IEnumerable<T> source, Func<T, bool> predicate = null) =>
-        predicate is null ? !source.Any() : !source.Any(predicate);
+        predicate is null
+            ? !source.Any()
+            : !source.Any(predicate);
 
     /// <summary>
     /// Determines whether I'm null or empty.
@@ -374,14 +376,14 @@ public static class EnumerableExtensions
 
     public static IEnumerable<T> GetAllItemsChildren<T>(this IEnumerable<T> items,
                                                         Func<T, IEnumerable<T>> getChildrenFunc) =>
-        items?.SelectMany(item => item.Yield().Concat(GetAllItemChildren(item, getChildrenFunc)));
+        items?.SelectMany(item => item.Yield().Concat(item.GetAllItemChildren(getChildrenFunc)));
 
     public static IEnumerable<T> GetAllItemChildren<T>(this T item, Func<T, IEnumerable<T>> getChildrenFunc)
     {
         var children = getChildrenFunc(item);
 
         return children.IsNotNullOrEmptyEnumerable()
-            ? children.Concat(children.SelectMany(x => GetAllItemChildren(x, getChildrenFunc)))
+            ? children.Concat(children.SelectMany(x => x.GetAllItemChildren(getChildrenFunc)))
             : [];
     }
 

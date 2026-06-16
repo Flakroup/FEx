@@ -39,7 +39,12 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
     {
     }
 
-    public FExTreeViewNode(string path, string name, char pathSeparator, string iconPath, bool isIconAttachedToFile, bool isExpanded)
+    public FExTreeViewNode(string path,
+                           string name,
+                           char pathSeparator,
+                           string iconPath,
+                           bool isIconAttachedToFile,
+                           bool isExpanded)
         : this(GetNodePath(path, pathSeparator), name, iconPath, isIconAttachedToFile, isExpanded)
     {
     }
@@ -73,8 +78,7 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
         IsExpanded = isExpanded;
     }
 
-    public static List<string> GetNodePath(string nodePath) =>
-        GetNodePath(nodePath, '\\');
+    public static List<string> GetNodePath(string nodePath) => GetNodePath(nodePath, '\\');
 
     public static List<string> GetNodePath(string nodePath, char pathSeparator) =>
         pathSeparator != '\0'
@@ -84,8 +88,7 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
                 nodePath
             ];
 
-    public static string FixTreeViewItemName(string name) =>
-        FixTreeViewItemName(name, "_");
+    public static string FixTreeViewItemName(string name) => FixTreeViewItemName(name, "_");
 
     public static string FixTreeViewItemName(string name, string replacement)
     {
@@ -104,16 +107,24 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
             : IconPath;
     }
 
-    public void AddChildNode(string nodePath) =>
-        AddChildNode(nodePath, null, '\\', true, null, false);
+    public void AddChildNode(string nodePath) => AddChildNode(nodePath, null, '\\', true, null, false);
 
-    public void AddChildNode(string nodePath, string name, char pathSeparator, bool unique, string iconPath, bool isExpanded) =>
+    public void AddChildNode(string nodePath,
+                             string name,
+                             char pathSeparator,
+                             bool unique,
+                             string iconPath,
+                             bool isExpanded) =>
         AddChildNode(GetNodePath(nodePath, pathSeparator), name, unique, iconPath, true, isExpanded);
 
-    public void AddChildNode(List<string> nodePath) =>
-        AddChildNode(nodePath, null, true, null, true, false);
+    public void AddChildNode(List<string> nodePath) => AddChildNode(nodePath, null, true, null, true, false);
 
-    public void AddChildNode(List<string> nodePath, string name, bool unique, string iconPath, bool isIconAttachedToFile, bool isExpanded)
+    public void AddChildNode(List<string> nodePath,
+                             string name,
+                             bool unique,
+                             string iconPath,
+                             bool isIconAttachedToFile,
+                             bool isExpanded)
     {
         var node = new FExTreeViewNode(nodePath, name, iconPath, isIconAttachedToFile, isExpanded);
 
@@ -123,8 +134,7 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
             ChildNodes.Add(node);
     }
 
-    public void AddChildNodes(IEnumerable<FExTreeViewNode> nodes) =>
-        AddChildNodes(nodes, true);
+    public void AddChildNodes(IEnumerable<FExTreeViewNode> nodes) => AddChildNodes(nodes, true);
 
     public void AddChildNodes(IEnumerable<FExTreeViewNode> nodes, bool unique)
     {

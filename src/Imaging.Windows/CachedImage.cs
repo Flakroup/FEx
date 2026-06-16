@@ -5,12 +5,12 @@ using FEx.Agnostics.Abstractions.Models;
 using FEx.Core.Collections.Concurrent;
 using FEx.Downloader;
 using FEx.Downloader.Clients;
+using FEx.Downloader.Services;
+using FEx.Imaging.Windows.Model;
 using FEx.Logging;
 using FEx.MVVM.Abstractions;
 using FEx.MVVM.Rx.Legacy.BaseObjects;
 using FEx.Webx.Extensions;
-using FEx.Downloader.Services;
-using FEx.Imaging.Windows.Model;
 using System;
 using System.IO;
 using System.Net;
@@ -82,7 +82,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
                                                  bool useHttpClientService = false,
                                                  HttpWebResponse response = null)
     {
-        SizedImageCache res = EnsureSize(size);
+        var res = EnsureSize(size);
 
         try
         {
@@ -136,7 +136,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
                     if (useHttpClientService)
                     {
 #pragma warning disable IDISP001 // cached singleton, disposed via RemoveInstanceAsync
-                        HttpClientService httpClientService = await HttpClientService.GetInstanceAsync(Url.Host, pars);
+                        var httpClientService = await HttpClientService.GetInstanceAsync(Url.Host, pars);
 #pragma warning restore IDISP001
 
                         return await httpClientService.DoHttpClientActionAsync(client =>
@@ -177,7 +177,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
     public void OnParentConfigurationChange() => CachedImages.Clear();
 
     /// <summary>
-    ///     Internals the prepare cache asynchronous.
+    /// Internals the prepare cache asynchronous.
     /// </summary>
     /// <param name="pars">The pars.</param>
     /// <param name="refresh">if set to <c>true</c> [refresh].</param>
@@ -196,13 +196,13 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
             {
                 try
                 {
-                    Uri calledUrl = urlModifier is not null
+                    var calledUrl = urlModifier is not null
                         ? urlModifier(Url)
                         : Url;
 
                     response ??= await calledUrl.GetUriHttpResponseAsync(pars);
 
-                    string filePath = ResetCacheFile(response);
+                    var filePath = ResetCacheFile(response);
 
                     if (!CacheIsInvalid(refresh))
                     {
@@ -211,7 +211,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
                         return true;
                     }
 
-                    bool hasInvalidContentLength = response.ContentLength == -1;
+                    var hasInvalidContentLength = response.ContentLength == -1;
 
                     using var file =
                         DownloadItem.CreateFromResponse(response, filePath, false, pars, 0, 50, checksum, default);
@@ -269,7 +269,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
     private string ResetCacheFile(string extension, long contentLength)
     {
         Extension = extension;
-        string filePath = Path.Combine(FilesCacheDirPath, FileName + Extension);
+        var filePath = Path.Combine(FilesCacheDirPath, FileName + Extension);
         ResponseContentLength = contentLength;
         ParentIndexEntry.ResetCacheFile(filePath);
 
@@ -282,13 +282,12 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
 
         while (retry)
         {
-            using HttpResponseMessage res =
-                await client.GetAsync(Url, HttpCompletionOption.ResponseHeadersRead, CancellationToken);
+            using var res = await client.GetAsync(Url, HttpCompletionOption.ResponseHeadersRead, CancellationToken);
 
             try
             {
-                using HttpResponseMessage response = res.EnsureSuccessStatusCode();
-                string filePath = ResetCacheFile(response);
+                using var response = res.EnsureSuccessStatusCode();
+                var filePath = ResetCacheFile(response);
 
                 refresh = CacheIsInvalid(refresh);
 

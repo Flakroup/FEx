@@ -99,8 +99,7 @@ public static class DbContextExtensions
                                                                     bool validateAllProperties,
                                                                     Action<string, IReadOnlyCollection<EntityEntry>>
                                                                         onValidationStart,
-                                                                    Action<string, EntityValidationFail>
-                                                                        onFaultyEntity,
+                                                                    Action<string, EntityValidationFail> onFaultyEntity,
                                                                     Action<string, IReadOnlyCollection<
                                                                         EntityValidationFail>> onValidationFail,
                                                                     Action<string, IReadOnlyCollection<EntityEntry>>
@@ -224,10 +223,13 @@ public static class DbContextExtensions
         context.IsPostrgeSql() ? SqlDialect.PostrgeSql :
         context.IsSqlite() ? SqlDialect.Sqlite : null;
 
-    [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities",
-        Justification = "commandText must be a trusted, developer-authored SQL query. Callers must not pass user-controlled strings.")]
-    public static string ExecuteReader<TDbContext>(this TDbContext db, string commandText, params DbParameter[] parameters)
-        where TDbContext : DbContext
+    [SuppressMessage("Security",
+        "CA2100:Review SQL queries for security vulnerabilities",
+        Justification =
+            "commandText must be a trusted, developer-authored SQL query. Callers must not pass user-controlled strings.")]
+    public static string ExecuteReader<TDbContext>(this TDbContext db,
+                                                   string commandText,
+                                                   params DbParameter[] parameters) where TDbContext : DbContext
     {
         using var command = db.Database.GetDbConnection().CreateCommand();
         command.CommandText = commandText;

@@ -29,6 +29,15 @@ public class FExMvvm : FExInitializable
 
     protected override void OnInitialize()
     {
-        _exceptionHandler.Callback = (x, y) => MessagePopupService.ShowMessageAsync(x, "Something wrong happened", MessageIcon.Exclamation, FExMessageButton.OK, null, y, false, null, LogLevel.Information, null);
+        _exceptionHandler.Callback = (x, y) => MessagePopupService.ShowMessageAsync(x,
+            "Something wrong happened",
+            MessageIcon.Exclamation,
+            FExMessageButton.OK,
+            null,
+            y,
+            false,
+            null,
+            LogLevel.Information,
+            null);
     }
 }

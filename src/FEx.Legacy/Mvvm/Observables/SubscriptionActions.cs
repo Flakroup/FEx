@@ -20,8 +20,7 @@ public class SubscriptionActions<T>
         OnCompleted = onCompleted;
     }
 
-    public IDisposable GetSubscription(IObservable<T> observable) =>
-        GetSubscription(observable, default);
+    public IDisposable GetSubscription(IObservable<T> observable) => GetSubscription(observable, default);
 
     public IDisposable GetSubscription(IObservable<T> observable, T subscriptionArgument)
     {

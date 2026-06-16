@@ -7,14 +7,17 @@ namespace FEx.AzureDevOpsx.Responses;
 
 public class ShelvesetResponse : BaseTfsResponse
 {
-    public static JsonSerializerSettings Settings { get; } = new JsonSerializerSettings
+    public static JsonSerializerSettings Settings { get; } = new()
     {
         MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
         DateParseHandling = DateParseHandling.None,
         MissingMemberHandling = MissingMemberHandling.Error,
         Converters =
         {
-            new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
+            new IsoDateTimeConverter
+            {
+                DateTimeStyles = DateTimeStyles.AssumeUniversal
+            }
         }
     };
 

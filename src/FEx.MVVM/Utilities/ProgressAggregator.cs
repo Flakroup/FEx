@@ -50,14 +50,9 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
             .AsyncSubscribe(OnExcludedPropertiesChanged, _subscriptions);
     }
 
-    public new bool SetProperty<TRet>(ref TRet backingField,
-                                      TRet newValue,
-                                      [CallerMemberName] string propertyName = null) =>
-        SetProperty(ref backingField, newValue, null, propertyName);
-
     public override bool SetProperty<TRet>(ref TRet backingField,
                                            TRet newValue,
-                                           Action<TRet> onPropertyChanged,
+                                           Action<TRet> onPropertyChanged = null,
                                            [CallerMemberName] string propertyName = null)
     {
         if (!base.SetProperty(ref backingField, newValue, onPropertyChanged, propertyName))
@@ -161,6 +156,11 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         nameof(IProgressStatus.State)
     ];
 
+    public bool SetProperty<TRet>(ref TRet backingField,
+                                  TRet newValue,
+                                  [CallerMemberName] string propertyName = null) =>
+        SetProperty(ref backingField, newValue, null, propertyName);
+
     protected virtual void LogError(string message) => FExStaticLogger.Error(message);
 
     protected virtual void ProcessEndPrg() => Value = Maximum;
@@ -172,7 +172,8 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
 
         if (value.HasValue)
         {
-            if (value.Value >= 0D && value.Value <= Maximum)
+            if (value.Value >= 0D
+                && value.Value <= Maximum)
                 Value = value.Value;
             else
                 LogError($"ProcessSetPrg: value {value.Value} out of range [0, {Maximum}]");
@@ -186,7 +187,8 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
 
         if (value.HasValue)
         {
-            if (value.Value > 0D && value.Value + Value <= Maximum)
+            if (value.Value > 0D
+                && value.Value + Value <= Maximum)
                 Value += value.Value;
             else
                 LogError($"ProcessAddPrg: adding {value.Value} to {Value} exceeds maximum {Maximum}");
@@ -240,37 +242,37 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         switch (Mode)
         {
             case ProgressOperationMode.Standard:
-            {
-                var avg = est.IsNotNullOrEmptyString()
-                    ? $"AVG: {avgMs.GetTime()}"
-                    : string.Empty;
+                {
+                    var avg = est.IsNotNullOrEmptyString()
+                        ? $"AVG: {avgMs.GetTime()}"
+                        : string.Empty;
 
-                Info =
-                    $"{percentage}% {value}/{maximum}{(Unit.IsNotNullOrEmptyString() ? $"{Unit}" : string.Empty)} {est} {avg}";
+                    Info =
+                        $"{percentage}% {value}/{maximum}{(Unit.IsNotNullOrEmptyString() ? $"{Unit}" : string.Empty)} {est} {avg}";
 
-                break;
-            }
+                    break;
+                }
             case ProgressOperationMode.Stream:
-            {
-                var curBt = FileLengthConverter.ConvertFileLengthToString(value,
-                    LengthType.Bytes,
-                    LengthType.AutoDetect);
+                {
+                    var curBt = FileLengthConverter.ConvertFileLengthToString(value,
+                        LengthType.Bytes,
+                        LengthType.AutoDetect);
 
-                var curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
-                    LengthType.Bytes,
-                    LengthType.AutoDetect);
+                    var curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
+                        LengthType.Bytes,
+                        LengthType.AutoDetect);
 
-                var curr = elapsed.TotalSeconds;
+                    var curr = elapsed.TotalSeconds;
 
-                var kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
-                    LengthType.Bytes,
-                    LengthType.AutoDetect,
-                    1);
+                    var kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
+                        LengthType.Bytes,
+                        LengthType.AutoDetect,
+                        1);
 
-                Info = $"{percentage}% {curBt}/{curTb} {kbPerSec}/sec {est}";
+                    Info = $"{percentage}% {curBt}/{curTb} {kbPerSec}/sec {est}";
 
-                break;
-            }
+                    break;
+                }
             default:
                 throw new ArgumentOutOfRangeException(nameof(Mode), $"{Mode} is not handled");
         }

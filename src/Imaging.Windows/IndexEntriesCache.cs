@@ -43,14 +43,14 @@ public class IndexEntriesCache : SynchronizedDictionary<string, IndexEntry, File
 
     public async Task<int> RemoveIndexEntriesOfMissingFilesAsync(HashSet<string> existingFiles)
     {
-        int removedEntries =
+        var removedEntries =
             await _dbSrv.RunTaskInDbContextAsync(ctx => RemoveIndexEntriesOfMissingFilesAsync(ctx, existingFiles));
 
         UseIndex = true;
 
         if (existingFiles.Count > 0)
         {
-            Result<FileInfo, ExceptionError>[] results = await existingFiles.WithWhenAllAsync(SafeDeleteFile);
+            var results = await existingFiles.WithWhenAllAsync(SafeDeleteFile);
             var errors = results.Where(x => x.IsFailure).Select(x => x.Error).ToList();
 
             if (errors.Count > 0)
@@ -69,7 +69,7 @@ public class IndexEntriesCache : SynchronizedDictionary<string, IndexEntry, File
 
         if (results.Count > 0)
         {
-            string[] paths = results.Select(x => x.Data.FullName).ToArray();
+            var paths = results.Select(x => x.Data.FullName).ToArray();
             entries.RemoveFromDictionaryWhere((_, v) => paths.Contains(v.FullName));
         }
 
@@ -122,13 +122,14 @@ public class IndexEntriesCache : SynchronizedDictionary<string, IndexEntry, File
         return await RemoveIndexEntriesAsync(ctx, ids);
     }
 
-    private async Task<int> RemoveIndexEntriesAsync(FilesCacheContext ctx, ICollection<string> ids) => ids.IsNotNullOrEmptyCollection()
+    private async Task<int> RemoveIndexEntriesAsync(FilesCacheContext ctx, ICollection<string> ids) =>
+        ids.IsNotNullOrEmptyCollection()
             ? await DbSetAccessor(ctx).Where(x => ids.Contains(x.AbsoluteUri)).BatchDeleteAsync()
             : 0;
 
     private Result<FileInfo, ExceptionError> SafeDeleteFile(FileInfo file)
     {
-        Result<ExceptionError> result = FileSystemUtilities.SafeDeleteFile(file);
+        var result = FileSystemUtilities.SafeDeleteFile(file);
 
         return result.IsSuccess
             ? file

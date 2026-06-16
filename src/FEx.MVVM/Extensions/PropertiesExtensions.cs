@@ -15,10 +15,8 @@ public static class PropertiesExtensions
     private const string WrongUnaryExpressionMessage =
         "Wrong unary expression\nshould be called with expression like\n() => PropertyName";
 
-    public static bool SetPropertyFromExpression<T>(this object target,
-                                                    Expression<Func<T>> expression,
-                                                    T value) =>
-        SetPropertyFromExpression(target, expression, value, null);
+    public static bool SetPropertyFromExpression<T>(this object target, Expression<Func<T>> expression, T value) =>
+        target.SetPropertyFromExpression(expression, value, null);
 
     public static bool SetPropertyFromExpression<T>(this object target,
                                                     Expression<Func<T>> expression,

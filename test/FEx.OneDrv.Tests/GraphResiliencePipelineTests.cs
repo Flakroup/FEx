@@ -1,5 +1,4 @@
 using FEx.Agnostics.Abstractions.Interfaces;
-using FEx.OneDrv;
 using Microsoft.Graph.Models.ODataErrors;
 using NSubstitute;
 using Shouldly;
@@ -27,12 +26,17 @@ public sealed class GraphResiliencePipelineTests
         var attemptCount = 0;
 
         await pipeline.ExecuteAsync(async _ =>
-        {
-            attemptCount++;
-            await Task.CompletedTask;
-            if (attemptCount < 3)
-                throw new ODataError { ResponseStatusCode = 429 };
-        }, CancellationToken.None);
+            {
+                attemptCount++;
+                await Task.CompletedTask;
+
+                if (attemptCount < 3)
+                    throw new ODataError
+                    {
+                        ResponseStatusCode = 429
+                    };
+            },
+            CancellationToken.None);
 
         attemptCount.ShouldBe(3);
         _logger.Received(2).Warning(Arg.Any<string>());
@@ -45,12 +49,17 @@ public sealed class GraphResiliencePipelineTests
         var attemptCount = 0;
 
         await pipeline.ExecuteAsync(async _ =>
-        {
-            attemptCount++;
-            await Task.CompletedTask;
-            if (attemptCount < 2)
-                throw new ODataError { ResponseStatusCode = 503 };
-        }, CancellationToken.None);
+            {
+                attemptCount++;
+                await Task.CompletedTask;
+
+                if (attemptCount < 2)
+                    throw new ODataError
+                    {
+                        ResponseStatusCode = 503
+                    };
+            },
+            CancellationToken.None);
 
         attemptCount.ShouldBe(2);
     }
@@ -64,11 +73,13 @@ public sealed class GraphResiliencePipelineTests
         await Should.ThrowAsync<HttpRequestException>(async () =>
         {
             await pipeline.ExecuteAsync(async _ =>
-            {
-                attemptCount++;
-                await Task.CompletedTask;
-                throw new HttpRequestException("transient network failure");
-            }, CancellationToken.None);
+                {
+                    attemptCount++;
+                    await Task.CompletedTask;
+
+                    throw new HttpRequestException("transient network failure");
+                },
+                CancellationToken.None);
         });
 
         attemptCount.ShouldBe(4);
@@ -83,11 +94,16 @@ public sealed class GraphResiliencePipelineTests
         await Should.ThrowAsync<ODataError>(async () =>
         {
             await pipeline.ExecuteAsync(async _ =>
-            {
-                attemptCount++;
-                await Task.CompletedTask;
-                throw new ODataError { ResponseStatusCode = 404 };
-            }, CancellationToken.None);
+                {
+                    attemptCount++;
+                    await Task.CompletedTask;
+
+                    throw new ODataError
+                    {
+                        ResponseStatusCode = 404
+                    };
+                },
+                CancellationToken.None);
         });
 
         attemptCount.ShouldBe(1);
@@ -102,11 +118,13 @@ public sealed class GraphResiliencePipelineTests
         await Should.ThrowAsync<InvalidOperationException>(async () =>
         {
             await pipeline.ExecuteAsync(async _ =>
-            {
-                attemptCount++;
-                await Task.CompletedTask;
-                throw new InvalidOperationException("not transient");
-            }, CancellationToken.None);
+                {
+                    attemptCount++;
+                    await Task.CompletedTask;
+
+                    throw new InvalidOperationException("not transient");
+                },
+                CancellationToken.None);
         });
 
         attemptCount.ShouldBe(1);
@@ -119,12 +137,17 @@ public sealed class GraphResiliencePipelineTests
         var attemptCount = 0;
 
         await pipeline.ExecuteAsync(async _ =>
-        {
-            attemptCount++;
-            await Task.CompletedTask;
-            if (attemptCount < 3)
-                throw new ODataError { ResponseStatusCode = 429 };
-        }, CancellationToken.None);
+            {
+                attemptCount++;
+                await Task.CompletedTask;
+
+                if (attemptCount < 3)
+                    throw new ODataError
+                    {
+                        ResponseStatusCode = 429
+                    };
+            },
+            CancellationToken.None);
 
         _logger.Received(2).Warning(Arg.Is<string>(s => s.Contains("Graph API retry")));
     }

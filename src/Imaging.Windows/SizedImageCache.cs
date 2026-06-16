@@ -142,7 +142,8 @@ public class SizedImageCache : NotifyPropertyChanged, IDisposable
             && ImageUpdateAction is not null
             && propertyName.IsIn(nameof(CachedImage), nameof(ImageUpdateAction)))
             ImageUpdateActionTask = AsyncStatics.ExecuteOnThreadPoolAsync(() => ImageUpdateAction(CachedImage),
-                AsyncOptions.ImmediateStart, CancellationToken);
+                AsyncOptions.ImmediateStart,
+                CancellationToken);
     }
 
     #region IDisposable

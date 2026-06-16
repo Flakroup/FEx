@@ -7,11 +7,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="Arcus.Security.Providers.AzureKeyVault" Version="2.0.0" />
-		<PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
-		<PackageReference Include="Azure.Identity" Version="1.19.0" />
+		<PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.1" />
+		<PackageReference Include="Azure.Identity" Version="1.21.0" />
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(DotNetNugetsVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(DotNetNugetsVersion)" />
-		<PackageReference Include="Polly" Version="8.6.4" />
+		<PackageReference Include="Polly" Version="8.7.0" />
 	</ItemGroup>
 
 </Project>

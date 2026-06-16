@@ -4,7 +4,9 @@ namespace FEx.MSBuildx;
 
 public enum ProjectItemType
 {
-    [Description("None")] None,
+    [Description("None")]
+    None,
 
-    [Description("EmbeddedResource")] EmbeddedResource
+    [Description("EmbeddedResource")]
+    EmbeddedResource
 }

@@ -11,9 +11,7 @@ public interface ICachedImageStorage
     bool EntryCacheShouldBePrepared(IIndexEntryBase entry, bool refresh);
     Task<IIndexEntryBase> GetEntryBaseAsync(Uri fileUrl, bool addNew, string fileName);
 
-    Task<IIndexEntryBase> PrepareCacheAndGetEntryBaseAsync(Uri fileUrl,
-                                                           WebRequestParams pars,
-                                                           bool refresh);
+    Task<IIndexEntryBase> PrepareCacheAndGetEntryBaseAsync(Uri fileUrl, WebRequestParams pars, bool refresh);
 
     Task<bool> PrepareCacheEntryAsync(IIndexEntryBase entry,
                                       WebRequestParams pars,

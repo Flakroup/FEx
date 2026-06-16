@@ -305,7 +305,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
             var item = _items[itemIndex];
 
-            var container = _itemContainerManager.Realize(itemIndex, out var _, out var isNewContainer);
+            var container = _itemContainerManager.Realize(itemIndex, out _, out var isNewContainer);
 
             if (isNewContainer)
                 _childrenCollection.AddChild(container);

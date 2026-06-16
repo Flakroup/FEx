@@ -38,8 +38,12 @@ public static class DirectoryWalker
                                                                              DirectoryFilterDelegate predicate = null,
                                                                              string searchPattern = "*",
                                                                              FExEnumerationOptions options = null,
-                                                                             DirectoryFilterDelegate skipRecursionPredicate = null) =>
-        await SafeGetAllDirectoriesAsync(new DirectoryInfo(rootPath), predicate, searchPattern, options, skipRecursionPredicate);
+                                                                             DirectoryFilterDelegate
+                                                                                 skipRecursionPredicate = null) =>
+        await new DirectoryInfo(rootPath).SafeGetAllDirectoriesAsync(predicate,
+            searchPattern,
+            options,
+            skipRecursionPredicate);
 
     /// <summary>
     /// Recursively gets all subdirectories from a root directory, ignoring
@@ -49,7 +53,8 @@ public static class DirectoryWalker
                                                                              DirectoryFilterDelegate predicate = null,
                                                                              string searchPattern = "*",
                                                                              FExEnumerationOptions options = null,
-                                                                             DirectoryFilterDelegate skipRecursionPredicate = null)
+                                                                             DirectoryFilterDelegate
+                                                                                 skipRecursionPredicate = null)
     {
         if (!root.Exists)
             throw new DirectoryNotFoundException($"Specified path doesn't exist: {root.FullName}");
@@ -92,13 +97,14 @@ public static class DirectoryWalker
 
                 foreach (var subDir in current.EnumerateDirectories("*", options ?? DefaultOptions))
                 {
-                    if (!hasSkip || !skipDirectoryPredicate!(subDir))
+                    if (!hasSkip
+                        || !skipDirectoryPredicate!(subDir))
                         stack.Push(subDir);
                 }
             }
             catch
             {
-                AddToErrorPaths(current);
+                current.AddToErrorPaths();
             }
         }
 
@@ -121,9 +127,9 @@ public static class DirectoryWalker
                                                                               DirectoryFilterDelegate predicate = null,
                                                                               string searchPattern = "*",
                                                                               FExEnumerationOptions options = null,
-                                                                              DirectoryFilterDelegate skipRecursionPredicate = null) =>
-        await SafeGetAllDirectoriesAsync(root,
-            dir => dir.IsLeaf() && (predicate is null || predicate(dir)),
+                                                                              DirectoryFilterDelegate
+                                                                                  skipRecursionPredicate = null) =>
+        await root.SafeGetAllDirectoriesAsync(dir => dir.IsLeaf() && (predicate is null || predicate(dir)),
             searchPattern,
             options,
             skipRecursionPredicate);
@@ -191,6 +197,7 @@ public static class DirectoryWalker
         catch (Exception ex)
         {
             Log.Warning("Cannot delete {Path}: {Message}", folder.FullName, ex.Message);
+
             return false;
         }
     }
@@ -214,6 +221,7 @@ public static class DirectoryWalker
         catch (Exception ex)
         {
             Log.Warning("Cannot delete {Path}: {Message}", file.FullName, ex.Message);
+
             return false;
         }
     }
@@ -253,6 +261,7 @@ public static class DirectoryWalker
         catch (Exception ex)
         {
             Log.Warning("Cannot enumerate {Path}: {Message}", folder.FullName, ex.Message);
+
             return false;
         }
 
@@ -271,6 +280,7 @@ public static class DirectoryWalker
         catch (Exception ex)
         {
             Log.Warning("Cannot delete {Path}: {Message}", folder.FullName, ex.Message);
+
             return false;
         }
     }
@@ -303,7 +313,7 @@ public static class DirectoryWalker
         }
         catch
         {
-            AddToErrorPaths(current);
+            current.AddToErrorPaths();
 
             return [];
         }

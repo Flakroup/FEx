@@ -30,7 +30,7 @@ public class MSProjectItem
     }
 
     private ProjectItemType? GetProjectItemType() =>
-        ProjectItemTypes.ForwardIndex.TryGetValue(ItemType, out ProjectItemType res)
+        ProjectItemTypes.ForwardIndex.TryGetValue(ItemType, out var res)
             ? res
             : null;
 }

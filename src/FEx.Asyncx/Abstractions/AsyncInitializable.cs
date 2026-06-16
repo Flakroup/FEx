@@ -77,8 +77,6 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         IsInitialized = false;
     }
 
-    public void BeginInitialization() => BeginInitialization(false);
-
     public void BeginInitialization(bool waitSynchronouslyForInitialization)
     {
         if (waitSynchronouslyForInitialization)
@@ -94,6 +92,8 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
 
         Task InitFuncAsync() => AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
     }
+
+    public void BeginInitialization() => BeginInitialization(false);
 
     protected static async Task<Result<ExceptionError>> SafeInitializeAsync(IAsyncInitializable dependency)
     {

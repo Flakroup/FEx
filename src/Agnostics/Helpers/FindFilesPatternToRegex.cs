@@ -16,7 +16,7 @@ public static class FindFilesPatternToRegex
     private static Regex CatchExtentionRegex { get; } = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
 
     public static string FindFileEmulator(this string pattern, string name) =>
-        FindFilesEmulator(pattern, name).FirstOrDefault();
+        pattern.FindFilesEmulator(name).FirstOrDefault();
 
     public static IEnumerable<string> FindFilesEmulator(this string pattern, params string[] names) =>
         FindFilesEmulator(names, patterns: pattern);

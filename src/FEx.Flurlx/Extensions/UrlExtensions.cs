@@ -12,15 +12,11 @@ namespace FEx.Flurlx.Extensions;
 
 public static class UrlExtensions
 {
-    public static Task<double> CalculateSizeAsync(this Url url) =>
-        CalculateSizeAsync(url, LengthType.Megabytes, null);
+    public static Task<double> CalculateSizeAsync(this Url url) => url.CalculateSizeAsync(LengthType.Megabytes, null);
 
-    public static Task<double> CalculateSizeAsync(this Url url, LengthType unit) =>
-        CalculateSizeAsync(url, unit, null);
+    public static Task<double> CalculateSizeAsync(this Url url, LengthType unit) => url.CalculateSizeAsync(unit, null);
 
-    public static async Task<double> CalculateSizeAsync(this Url url,
-                                                        LengthType unit,
-                                                        IFlurlClient client)
+    public static async Task<double> CalculateSizeAsync(this Url url, LengthType unit, IFlurlClient client)
     {
         var dispose = false;
 
@@ -48,17 +44,16 @@ public static class UrlExtensions
         }
     }
 
-    public static Task<MemoryStream> GetBytesAsync(this Url url) =>
-        GetBytesAsync(url, null, SeekOrigin.Begin, 0, null);
+    public static Task<MemoryStream> GetBytesAsync(this Url url) => url.GetBytesAsync(null, SeekOrigin.Begin, 0, null);
 
     public static Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client) =>
-        GetBytesAsync(url, client, SeekOrigin.Begin, 0, null);
+        url.GetBytesAsync(client, SeekOrigin.Begin, 0, null);
 
     public static Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client, SeekOrigin origin) =>
-        GetBytesAsync(url, client, origin, 0, null);
+        url.GetBytesAsync(client, origin, 0, null);
 
     public static Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client, SeekOrigin origin, long offset) =>
-        GetBytesAsync(url, client, origin, offset, null);
+        url.GetBytesAsync(client, origin, offset, null);
 
     public static async Task<MemoryStream> GetBytesAsync(this Url url,
                                                          IFlurlClient client,

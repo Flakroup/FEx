@@ -133,8 +133,7 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
     public static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler, bool limitToCurrentThread) =>
         CreateForUiWithSample(TimeSpan.FromMilliseconds(100), handler, null, limitToCurrentThread);
 
-    public static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler,
-                                                               IScheduler scheduler) =>
+    public static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler, IScheduler scheduler) =>
         CreateForUiWithSample(TimeSpan.FromMilliseconds(100), handler, scheduler, false);
 
     public static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler,

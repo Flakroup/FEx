@@ -187,13 +187,13 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
         var wasUpdated = false;
         var capturedOldValue = default(TValue);
 
-        var value = _dictionary.AddOrUpdate(
-            key,
+        var value = _dictionary.AddOrUpdate(key,
             addValueFactory,
             (k, existing) =>
             {
                 wasUpdated = true;
                 capturedOldValue = existing;
+
                 return updateValueFactory(k, existing);
             });
 

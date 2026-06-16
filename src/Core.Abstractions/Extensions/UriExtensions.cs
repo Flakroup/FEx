@@ -92,7 +92,7 @@ public static class UriExtensions
 
     public static async Task<Dictionary<string, string>>
         GetResponseHeadersAsync(this Uri url, WebRequestParams pars = null) =>
-        await DoHttpResponseFuncAsync(url, (response, _) => response.GetAllHeaders(), pars);
+        await url.DoHttpResponseFuncAsync((response, _) => response.GetAllHeaders(), pars);
 
     public static async Task<T> DoHttpResponseFuncTaskAsync<T>(this Uri url,
                                                                Func<HttpWebResponse, HttpWebRequest, Task<T>> func,

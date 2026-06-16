@@ -16,10 +16,9 @@ namespace FEx.Logging;
 public class FExSerilogLogger : IFExLogger, IDisposable
 #pragma warning restore IDISP025
 {
-    public event EventHandler<FExErrorEventArgs> ErrorLogged;
-
     private object _state;
     private IDisposable _scope;
+    public event EventHandler<FExErrorEventArgs> ErrorLogged;
 
     // Trace level
     public void Trace(string message) => Log.Verbose(message);
@@ -31,13 +30,14 @@ public class FExSerilogLogger : IFExLogger, IDisposable
 
     // Information level
     public void Information(string message) => Log.Information(message);
+
     public void Information(Exception exception, string message) =>
         Log.Information(exception, message ?? exception.Message);
 
     // Warning level
     public void Warning(string message) => Log.Warning(message);
-    public void Warning(Exception exception, string message) =>
-        Log.Warning(exception, message ?? exception.Message);
+
+    public void Warning(Exception exception, string message) => Log.Warning(exception, message ?? exception.Message);
 
     // Error level
     public void Error(string message)
@@ -71,11 +71,11 @@ public class FExSerilogLogger : IFExLogger, IDisposable
         _state = state;
         _scope?.Dispose();
         _scope = LogContext.PushProperty("Scope", state);
+
         return _scope;
     }
 
-    public IDisposable BeginLabeledScope(params (string, object)[] state) => 
-        BeginLabeledScope(new LoggerState(state));
+    public IDisposable BeginLabeledScope(params (string, object)[] state) => BeginLabeledScope(new LoggerState(state));
 
     public IDisposable BeginLabeledScope(IDictionary<string, object> argsCustom) =>
         BeginLabeledScope(new LoggerState(argsCustom));

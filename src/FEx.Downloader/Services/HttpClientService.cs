@@ -54,7 +54,8 @@ public class HttpClientService : IDisposable
         return res;
     }
 
-    public static async Task PrepareInstanceAsync(string urlHost, WebRequestParams pars = null, int clientsCount = 2) => await PrepareInstanceAsync(new(urlHost, pars, clientsCount));
+    public static async Task PrepareInstanceAsync(string urlHost, WebRequestParams pars = null, int clientsCount = 2) =>
+        await PrepareInstanceAsync(new(urlHost, pars, clientsCount));
 
     public static async Task PrepareInstanceAsync(HttpClientServiceStub stub)
     {

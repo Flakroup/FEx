@@ -74,21 +74,27 @@ public class FExLoggingService : IFExLoggingService
         {
             case LogLevel.Trace:
                 LogTrace<T>(message, exception);
+
                 break;
             case LogLevel.Debug:
                 LogDebug<T>(message, exception);
+
                 break;
             case LogLevel.Information:
                 LogInformation<T>(message, exception);
+
                 break;
             case LogLevel.Warning:
                 LogWarning<T>(message, exception);
+
                 break;
             case LogLevel.Error:
                 LogError<T>(message, exception);
+
                 break;
             case LogLevel.Critical:
                 LogCritical<T>(message, exception);
+
                 break;
             case LogLevel.None:
                 break;

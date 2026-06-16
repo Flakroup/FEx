@@ -62,7 +62,7 @@ public static class ExceptionExtensions
     public static string BuildMessage(this Exception ex)
     {
         var message = new StringBuilder();
-        BuildMessage(ex, ref message);
+        ex.BuildMessage(ref message);
 
         return message.ToString();
     }
@@ -137,7 +137,7 @@ public static class ExceptionExtensions
         if (ex.InnerException is not null)
         {
             message.AppendLine("Inner Exception:");
-            BuildMessage(ex.InnerException, ref message);
+            ex.InnerException.BuildMessage(ref message);
         }
     }
 }

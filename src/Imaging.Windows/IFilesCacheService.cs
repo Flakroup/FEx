@@ -1,9 +1,9 @@
 using FEx.Agnostics.Abstractions.Flow;
 using FEx.Agnostics.Abstractions.Models;
 using FEx.Core.Abstractions.Interfaces;
+using FEx.Imaging.Windows.Model;
 using FEx.Legacy.Imaging.Abstractions.Interfaces;
 using FEx.MVVM.Abstractions;
-using FEx.Imaging.Windows.Model;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

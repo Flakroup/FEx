@@ -5,6 +5,5 @@ namespace FEx.Downloader.Extensions;
 
 public static class DownloadRangeExtensions
 {
-    public static Task DoDownloadAsync(this IDownloadRange downloadRange) =>
-        downloadRange.DoDownloadAsync(3);
+    public static Task DoDownloadAsync(this IDownloadRange downloadRange) => downloadRange.DoDownloadAsync(3);
 }

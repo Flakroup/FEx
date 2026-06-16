@@ -55,12 +55,14 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
     }
 
     public async Task RunAsync(Action action, JobSpecs? specs, Action pre, Action<bool> post) =>
-        await _tasksHandler.RunAsync(action, specs, s => Prefix(s, pre), (isSuccess, s) => Suffix(s, post, isSuccess), AsyncMode.ThreadPool, default);
+        await _tasksHandler.RunAsync(action,
+            specs,
+            s => Prefix(s, pre),
+            (isSuccess, s) => Suffix(s, post, isSuccess),
+            AsyncMode.ThreadPool,
+            default);
 
-    public async Task RunTaskAsync(Func<Task> function,
-                                   JobSpecs? specs,
-                                   Action pre,
-                                   Action<bool> post) =>
+    public async Task RunTaskAsync(Func<Task> function, JobSpecs? specs, Action pre, Action<bool> post) =>
         await _tasksHandler.RunTaskAsync(function,
             specs,
             s => Prefix(s, pre),

@@ -44,32 +44,6 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
         }
     }
 
-#pragma warning disable S2360 // CallerMemberName requires optional parameter
-    protected bool EncryptJsonSource<T>(ref string backingField,
-                                        T newValue,
-                                        Action<string> onPropertyChanged = null,
-                                        [CallerMemberName] string propertyName = null) =>
-        EncryptSource(ref backingField, newValue?.ToJson(), onPropertyChanged, propertyName);
-
-    protected bool EncryptSource(ref string backingField,
-                                 string newValue,
-                                 Action<string> onPropertyChanged = null,
-                                 [CallerMemberName] string propertyName = null)
-#pragma warning restore S2360
-    {
-        string encrypted = null;
-
-        if (newValue is not null)
-        {
-            encrypted = StringHasher.EncryptString(FExEncryption.PassPhrase, newValue);
-
-            if (newValue != StringHasher.DecryptString(FExEncryption.PassPhrase, encrypted))
-                throw new InvalidDataException("Inconsistent data detected");
-        }
-
-        return SetProperty(ref backingField, encrypted, onPropertyChanged, propertyName);
-    }
-
     private static bool MatchesUnicodeCategory(char c) =>
         char.GetUnicodeCategory(c) switch
         {
@@ -111,5 +85,31 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
         EncryptSource(ref source, null);
 
         return null;
+    }
+
+#pragma warning disable S2360 // CallerMemberName requires optional parameter
+    protected bool EncryptJsonSource<T>(ref string backingField,
+                                        T newValue,
+                                        Action<string> onPropertyChanged = null,
+                                        [CallerMemberName] string propertyName = null) =>
+        EncryptSource(ref backingField, newValue?.ToJson(), onPropertyChanged, propertyName);
+
+    protected bool EncryptSource(ref string backingField,
+                                 string newValue,
+                                 Action<string> onPropertyChanged = null,
+                                 [CallerMemberName] string propertyName = null)
+#pragma warning restore S2360
+    {
+        string encrypted = null;
+
+        if (newValue is not null)
+        {
+            encrypted = StringHasher.EncryptString(FExEncryption.PassPhrase, newValue);
+
+            if (newValue != StringHasher.DecryptString(FExEncryption.PassPhrase, encrypted))
+                throw new InvalidDataException("Inconsistent data detected");
+        }
+
+        return SetProperty(ref backingField, encrypted, onPropertyChanged, propertyName);
     }
 }

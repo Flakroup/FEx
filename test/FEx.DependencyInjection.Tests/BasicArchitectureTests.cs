@@ -1,3 +1,4 @@
+using System;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -82,7 +83,7 @@ public sealed class BasicArchitectureTests
         // Validate all key types are available and correctly designed
 
         // Core provider interface
-        typeof(IFExServiceProvider).GetMethod("ConfigureServiceProviderAsync").ShouldNotBeNull();
+        typeof(IFExServiceProvider).GetMethod(nameof(IFExServiceProvider.ConfigureServiceProviderAsync), Type.EmptyTypes).ShouldNotBeNull();
 
         // Generic module interfaces
         typeof(IInitializeModule<IServiceCollection>).ShouldNotBeNull();

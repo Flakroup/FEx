@@ -36,7 +36,10 @@ public sealed class ManualResetEventAsync
     /// If you have synchronous continuations, they will run on the thread
     /// which invokes Set, unless you set this to false.
     /// </param>
-    public ManualResetEventAsync() : this(false, true) { }
+    public ManualResetEventAsync()
+        : this(false, true)
+    {
+    }
 
     public ManualResetEventAsync(bool isSet, bool runSynchronousContinuationsOnSetThread)
     {

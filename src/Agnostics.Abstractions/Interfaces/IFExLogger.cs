@@ -6,7 +6,8 @@ namespace FEx.Agnostics.Abstractions.Interfaces;
 
 /// <summary>
 /// Framework-agnostic logger interface aligned with Microsoft.Extensions.Logging semantics.
-/// Provides leveled logging (Trace/Debug/Info/Warning/Error/Critical), structured logging via scopes/labels, and low-level error event hooks.
+/// Provides leveled logging (Trace/Debug/Info/Warning/Error/Critical), structured logging via scopes/labels, and low-level
+/// error event hooks.
 /// </summary>
 public interface IFExLogger
 {

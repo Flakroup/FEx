@@ -117,7 +117,7 @@ public class ProgressStatus : LinkableNotifyPropertyChanged, IProgressStatus
         ExcludedProperties = new(ProgressAggregatorExtensions.ListenerPropertyNames);
     }
 
-    public override void OnPropertyChanged(string propertyName)
+    public override void OnPropertyChanged(string propertyName = null)
     {
         if (ExcludedProperties.Contains(propertyName))
         {

@@ -140,13 +140,8 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     public void AddUniqueRange(IEnumerable<T> range) => AddRange(range.Distinct().Where(x => !Items.Contains(x)));
 
     /// <inheritdoc />
-    public void AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector) =>
-        AddUniqueRange(range, keySelector, null);
-
-    /// <inheritdoc />
-    public void AddUniqueRange<TKey>(IEnumerable<T> range,
-                                     Func<T, TKey> keySelector,
-                                     IEqualityComparer<TKey> comparer) =>
+    public void
+        AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector, IEqualityComparer<TKey> comparer) =>
         AddRange(range.DistinctBy(keySelector, comparer)
             .Where(distinctItem => Items.All(item =>
                 !comparer?.Equals(keySelector(distinctItem), keySelector(item))
@@ -226,16 +221,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     }
 
     /// <inheritdoc />
-    public void SortBy<TKey>(Func<T, TKey> selector) =>
-        SortBy(selector, ListSortDirection.Ascending, null);
-
-    public void SortBy<TKey>(Func<T, TKey> selector, ListSortDirection order) =>
-        SortBy(selector, order, null);
-
-    /// <inheritdoc />
-    public void SortBy<TKey>(Func<T, TKey> selector,
-                             ListSortDirection order,
-                             IComparer<TKey> comparer)
+    public void SortBy<TKey>(Func<T, TKey> selector, ListSortDirection order, IComparer<TKey> comparer)
     {
         Write(() =>
         {
@@ -252,10 +238,6 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
 
         WhenCollectionHasBeenReordered();
     }
-
-    /// <inheritdoc />
-    public void Combo(Action<IConcurrentList<T>> action) =>
-        Combo(action, false);
 
     /// <inheritdoc />
     public void Combo(Action<IConcurrentList<T>> action, bool shouldTriggerCollectionReset) =>
@@ -309,6 +291,18 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
         WhenItemIsRemoved(index, removedItem);
     }
 
+    /// <inheritdoc />
+    public void AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector) =>
+        AddUniqueRange(range, keySelector, null);
+
+    /// <inheritdoc />
+    public void SortBy<TKey>(Func<T, TKey> selector) => SortBy(selector, ListSortDirection.Ascending, null);
+
+    public void SortBy<TKey>(Func<T, TKey> selector, ListSortDirection order) => SortBy(selector, order, null);
+
+    /// <inheritdoc />
+    public void Combo(Action<IConcurrentList<T>> action) => Combo(action, false);
+
     protected virtual void MoveItem(int oldIndex, int newIndex)
     {
         var movedItem = Write(() =>
@@ -340,6 +334,12 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
         WhenItemIsReplaced(index, item, replacedItem);
 
         return replacedItem;
+    }
+
+    protected void WhenCollectionHasBeenReordered()
+    {
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
     }
 
     private T RemoveAtCore(int index) =>
@@ -395,12 +395,6 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
 
         for (var i = 0; i < itemsToAdd.Count; i++)
             OnAddToCollection(itemsToAdd[i], startingIndex + i);
-    }
-
-    protected void WhenCollectionHasBeenReordered()
-    {
-        OnIndexerPropertyChanged();
-        OnCollectionReset();
     }
 
     private void WhenCollectionHasBeenReset()

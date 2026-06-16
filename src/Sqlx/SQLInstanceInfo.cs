@@ -3,12 +3,14 @@ using FEx.Core.Abstractions.Extensions;
 using FEx.Sqlx.Enums;
 using FEx.Sqlx.Extensions;
 using Microsoft.SqlServer.Management.Smo;
-using Microsoft.SqlServer.Management.Smo.Wmi;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+#if NETFRAMEWORK
+using Microsoft.SqlServer.Management.Smo.Wmi;
+#endif
 
 namespace FEx.Sqlx;
 
@@ -66,6 +68,7 @@ public class SQLInstanceInfo
 
     protected Server Server { get; set; }
 
+#if NETFRAMEWORK
     public SQLInstanceInfo(ServerInstance serverInstance, ManagedComputer comp)
     {
         const string defaultInstance = "MSSQLSERVER";
@@ -74,6 +77,7 @@ public class SQLInstanceInfo
             ? comp.Name
             : $"{comp.Name}\\{serverInstance.Name}";
     }
+#endif
 
     public SQLInstanceInfo(string instanceName)
     {
@@ -94,7 +98,7 @@ public class SQLInstanceInfo
             await using var conn = new SqlConnection(connStr);
 #endif
             await conn.OpenAsync();
-            IDictionary<string, object>[] result = await conn.RunSqlAsync(SqlConnectionExtensions.PropsSQL);
+            var result = await conn.RunSqlAsync(SqlConnectionExtensions.PropsSQL);
 
             props = result.ToDictionary(
                 x => (ServerProp)Enum.Parse(typeof(ServerProp), Convert.ToString(x["propertyname"])),
@@ -131,7 +135,7 @@ public class SQLInstanceInfo
                     $"Data Source={SQLInstance};Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
 
             conn.Open();
-            IDictionary<string, object>[] result = conn.RunSql(SqlConnectionExtensions.PropsSQL);
+            var result = conn.RunSql(SqlConnectionExtensions.PropsSQL);
 
             props = result.ToDictionary(
                 x => (ServerProp)Enum.Parse(typeof(ServerProp), Convert.ToString(x["propertyname"])),
@@ -155,6 +159,100 @@ public class SQLInstanceInfo
             ProcessProps(props);
 
         return true;
+    }
+
+    private static void SafePropertySet<T>(Action<T> propSet, Func<T> valueGet, Func<T> serverValueGet = null)
+    {
+        var failed = false;
+        T result = default;
+
+        if (serverValueGet is not null)
+            try
+            {
+                result = serverValueGet();
+                propSet(result);
+            }
+            catch
+            {
+                failed = true;
+                //ignored
+            }
+
+        if (serverValueGet is null
+            || failed
+            || result is null)
+            try
+            {
+                propSet(valueGet());
+            }
+            catch
+            {
+                //ignored
+            }
+    }
+
+    private static string GetServerEngineEdition(int? value) =>
+        value.HasValue
+            ? SqlConnectionExtensions.ServerEngineEditions.ForwardIndex[value.Value]
+            : null;
+
+    private static string GetServerEditionID(long? value) =>
+        value.HasValue
+            ? SqlConnectionExtensions.ServerEditionIDs.ForwardIndex[value.Value]
+            : null;
+
+    private static short? GetShort(IDictionary<ServerProp, string> props, ServerProp sP)
+    {
+        var stringValue = props.TryGetKeyValue(sP);
+
+        return stringValue.IsNotNullOrEmptyString()
+            ? Convert.ToInt16(stringValue)
+            : null;
+    }
+
+    private static int? GetInt(IDictionary<ServerProp, string> props, ServerProp sP)
+    {
+        var stringValue = props.TryGetKeyValue(sP);
+
+        return stringValue.IsNotNullOrEmptyString()
+            ? Convert.ToInt32(stringValue)
+            : null;
+    }
+
+    private static long? GetLong(IDictionary<ServerProp, string> props, ServerProp sP)
+    {
+        var stringValue = props.TryGetKeyValue(sP);
+
+        return stringValue.IsNotNullOrEmptyString()
+            ? Convert.ToInt64(stringValue)
+            : null;
+    }
+
+    private static Version GetVersion(IDictionary<ServerProp, string> props, ServerProp sP)
+    {
+        var stringValue = props.TryGetKeyValue(sP);
+
+        return stringValue is not null
+            ? Version.Parse(stringValue)
+            : null;
+    }
+
+    private static bool? GetBoolFromInt(IDictionary<ServerProp, string> props, ServerProp sP)
+    {
+        var intValue = GetInt(props, sP);
+
+        return intValue.HasValue
+            ? Convert.ToBoolean(intValue.Value)
+            : null;
+    }
+
+    private static DateTime? GetDateTime(IDictionary<ServerProp, string> props, ServerProp sP)
+    {
+        var stringValue = props.TryGetKeyValue(sP);
+
+        return stringValue is not null
+            ? DateTime.Parse(stringValue)
+            : null;
     }
 
     private void ProcessProps(IDictionary<ServerProp, string> props)
@@ -308,99 +406,5 @@ public class SQLInstanceInfo
         {
             ex.HandleException(false);
         }
-    }
-
-    private static void SafePropertySet<T>(Action<T> propSet, Func<T> valueGet, Func<T> serverValueGet = null)
-    {
-        var failed = false;
-        T result = default;
-
-        if (serverValueGet is not null)
-            try
-            {
-                result = serverValueGet();
-                propSet(result);
-            }
-            catch
-            {
-                failed = true;
-                //ignored
-            }
-
-        if (serverValueGet is null
-            || failed
-            || result is null)
-            try
-            {
-                propSet(valueGet());
-            }
-            catch
-            {
-                //ignored
-            }
-    }
-
-    private static string GetServerEngineEdition(int? value) =>
-        value.HasValue
-            ? SqlConnectionExtensions.ServerEngineEditions.ForwardIndex[value.Value]
-            : null;
-
-    private static string GetServerEditionID(long? value) =>
-        value.HasValue
-            ? SqlConnectionExtensions.ServerEditionIDs.ForwardIndex[value.Value]
-            : null;
-
-    private static short? GetShort(IDictionary<ServerProp, string> props, ServerProp sP)
-    {
-        string stringValue = props.TryGetKeyValue(sP);
-
-        return stringValue.IsNotNullOrEmptyString()
-            ? Convert.ToInt16(stringValue)
-            : null;
-    }
-
-    private static int? GetInt(IDictionary<ServerProp, string> props, ServerProp sP)
-    {
-        string stringValue = props.TryGetKeyValue(sP);
-
-        return stringValue.IsNotNullOrEmptyString()
-            ? Convert.ToInt32(stringValue)
-            : null;
-    }
-
-    private static long? GetLong(IDictionary<ServerProp, string> props, ServerProp sP)
-    {
-        string stringValue = props.TryGetKeyValue(sP);
-
-        return stringValue.IsNotNullOrEmptyString()
-            ? Convert.ToInt64(stringValue)
-            : null;
-    }
-
-    private static Version GetVersion(IDictionary<ServerProp, string> props, ServerProp sP)
-    {
-        string stringValue = props.TryGetKeyValue(sP);
-
-        return stringValue is not null
-            ? Version.Parse(stringValue)
-            : null;
-    }
-
-    private static bool? GetBoolFromInt(IDictionary<ServerProp, string> props, ServerProp sP)
-    {
-        int? intValue = GetInt(props, sP);
-
-        return intValue.HasValue
-            ? Convert.ToBoolean(intValue.Value)
-            : null;
-    }
-
-    private static DateTime? GetDateTime(IDictionary<ServerProp, string> props, ServerProp sP)
-    {
-        string stringValue = props.TryGetKeyValue(sP);
-
-        return stringValue is not null
-            ? DateTime.Parse(stringValue)
-            : null;
     }
 }

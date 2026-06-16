@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 
-namespace FEx.MVVM;
+namespace FEx.MVVM.BaseObjects;
 
 public abstract class SubscriberBase : IDisposable
 {
@@ -12,6 +12,7 @@ public abstract class SubscriberBase : IDisposable
         Subscriptions = new();
     }
 
+    #region IDisposable
     public void Dispose()
     {
         Dispose(true);
@@ -28,4 +29,5 @@ public abstract class SubscriberBase : IDisposable
 
         Subscriptions.Clear();
     }
+    #endregion
 }

@@ -1,4 +1,5 @@
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.AzureStorage.Extensions;
 using FEx.Json.Extensions;
@@ -63,7 +64,7 @@ public class AzureStorageService : IAzureStorageService
 
         var containerClient = await GetBlobContainerClientAsync(containerName);
 
-        var blob = await containerClient.GetBlobsAsync(prefix: path)
+        var blob = await containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, path, CancellationToken.None)
             .OrderByDescending(x => x.Properties.LastModified)
             .FirstOrDefaultAsync();
 
@@ -280,14 +281,16 @@ public class AzureStorageService : IAzureStorageService
 
         if (!oneByOne)
             return (await files.WithWhenAllTasksAsync(file =>
-                UploadFileAsync(path, overwrite, file, containerName, container, CancellationToken.None))).ToDictionary(x => x.file,
+                UploadFileAsync(path, overwrite, file, containerName, container, CancellationToken.None))).ToDictionary(
+                x => x.file,
                 x => x.blob);
 
         var result = new Dictionary<FileInfo, CloudBlockBlobInfo>();
 
         foreach (var f in files)
         {
-            var (file, destBlob) = await UploadFileAsync(path, overwrite, f, containerName, container, CancellationToken.None);
+            var (file, destBlob) =
+                await UploadFileAsync(path, overwrite, f, containerName, container, CancellationToken.None);
 
             result.Add(file, destBlob);
         }
@@ -526,7 +529,7 @@ public class AzureStorageService : IAzureStorageService
 
     private void SaveResults(IDictionary<string, string> resDictionary)
     {
-        var resultJson = resDictionary.ToJson(formatting: Formatting.Indented);
+        var resultJson = resDictionary.ToJson(Formatting.Indented);
         File.WriteAllText("result.json", resultJson);
         Log.LogInformation(resultJson);
     }

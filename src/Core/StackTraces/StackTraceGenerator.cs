@@ -130,7 +130,7 @@ public class StackTraceGenerator : IStackTraceProvider
         lGenerator.Emit(OpCodes.Ldfld, field);
         lGenerator.Emit(OpCodes.Ldloc_0);
         lGenerator.Emit(OpCodes.Ldfld, fieldInfo);
-        lGenerator.Emit(OpCodes.Call, typeof(MethodHandleAndILOffset).GetMethod("Create"));
+        lGenerator.Emit(OpCodes.Call, typeof(MethodHandleAndILOffset).GetMethod(nameof(MethodHandleAndILOffset.Create), [typeof(nint[]), typeof(int[])]));
         lGenerator.Emit(OpCodes.Ret);
 
         var getMethodRuntimeHandle =
@@ -237,7 +237,7 @@ public class StackTraceGenerator : IStackTraceProvider
 
         // ReSharper disable UnusedMember.Local
         public static MethodHandleAndILOffset[] Create(IntPtr[] methods, int[] offsets)
-            // ReSharper restore UnusedMember.Local
+        // ReSharper restore UnusedMember.Local
         {
             var methodHandleAndILOffset = new MethodHandleAndILOffset[methods.Length];
 

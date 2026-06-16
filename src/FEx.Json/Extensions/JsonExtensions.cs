@@ -164,8 +164,22 @@ public static class JsonExtensions
     public static string PrettyPrintJson(this string json,
                                          JsonLoadSettings loadSettings,
                                          JsonSerializerSettings saveSettings,
-                                         Formatting formatting) =>
-        JObject.Parse(json, loadSettings).ToJson(saveSettings, formatting);
+                                         Formatting formatting)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return json;
+
+        try
+        {
+            return JToken.Parse(json, loadSettings).ToJson(saveSettings, formatting);
+        }
+        catch (JsonException)
+        {
+            // Content is not valid JSON (e.g. a plain-text error body like "Service Unavailable"
+            // or a bare string). Pretty-printing must be total - return the content unchanged.
+            return json;
+        }
+    }
 
     public static string PrettyPrintJson(this string json) => json.PrettyPrintJson(null, null, Formatting.Indented);
 

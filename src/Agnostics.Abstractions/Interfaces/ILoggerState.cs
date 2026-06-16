@@ -15,4 +15,3 @@ public interface ILoggerState : IDictionary<string, object>, IDictionary, IReadO
     void AddOrUpdateLabel(string key, object value);
     void RemoveLabel(string key);
 }
-

@@ -254,8 +254,7 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
 
     private static FExPollyPolicyBuilder GetPolicyBuilder() => new(Substitute.For<IFExLogger>());
 
-    private static IFlurlConfigurator GetMocks(IFlurlClient flurlClient,
-                                               IAsyncPolicy<IFlurlResponse> resiliencePolicy)
+    private static IFlurlConfigurator GetMocks(IFlurlClient flurlClient, IAsyncPolicy<IFlurlResponse> resiliencePolicy)
     {
 #pragma warning disable IDISP004 // mock from NSubstitute, no real resources
         var flurlConfigurator = Substitute.For<IFlurlConfigurator>();

@@ -8,14 +8,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(DotNetNugetsVersion)" />
+        <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.14.15" />
         <PackageReference Include="Nuke.Common" Version="10.1.0" />
         <PackageReference Include="Nuke.Utilities" Version="10.1.0" />
-        <PackageReference Include="NuGet.Packaging" Version="6.14.0" />
-        <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.14.15" />
+        <PackageReference Include="NuGet.Packaging" Version="7.6.0" />
+        <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.9" />
     </ItemGroup>
 
 </Project>

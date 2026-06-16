@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -28,7 +27,7 @@ public class VerticalTextBlock : TextBlock
         if (str is not null
             && prop is not null)
         {
-            IEnumerable<Run> inlines = str.Select(x => new Run(x + Environment.NewLine));
+            var inlines = str.Select(x => new Run(x + Environment.NewLine));
             prop.Inlines.Clear();
             prop.Inlines.AddRange(inlines);
         }

@@ -25,15 +25,13 @@ public static class JoinableAsyncHelper
     public static Task DelayWithoutDeadlockAsync(int millisecondsDelay) =>
         DelayWithoutDeadlockAsync(millisecondsDelay, default);
 
-    public static async Task DelayWithoutDeadlockAsync(int millisecondsDelay,
-                                                       CancellationToken cancellationToken) =>
+    public static async Task DelayWithoutDeadlockAsync(int millisecondsDelay, CancellationToken cancellationToken) =>
         await AwaitWithoutDeadlockAsync(() => Task.Delay(millisecondsDelay, cancellationToken));
 
     public static void DelayWithoutDeadlock(int millisecondsDelay) =>
         AwaitWithoutDeadlock(() => Task.Delay(millisecondsDelay));
 
-    public static Task AwaitWithoutDeadlockAsync(Func<Task> func) =>
-        AwaitWithoutDeadlockAsync(func, false);
+    public static Task AwaitWithoutDeadlockAsync(Func<Task> func) => AwaitWithoutDeadlockAsync(func, false);
 
     public static async Task AwaitWithoutDeadlockAsync(Func<Task> func, bool onMainThread)
     {
@@ -44,8 +42,7 @@ public static class JoinableAsyncHelper
         await await jtf.RunAsync(func);
     }
 
-    public static void AwaitWithoutDeadlock(Func<Task> func) =>
-        AwaitWithoutDeadlock(func, false);
+    public static void AwaitWithoutDeadlock(Func<Task> func) => AwaitWithoutDeadlock(func, false);
 
     public static void AwaitWithoutDeadlock(Func<Task> func, bool onMainThread)
     {
@@ -56,8 +53,7 @@ public static class JoinableAsyncHelper
         jtf.Run(func);
     }
 
-    public static Task<T> AwaitWithoutDeadlockAsync<T>(Func<Task<T>> func) =>
-        AwaitWithoutDeadlockAsync(func, false);
+    public static Task<T> AwaitWithoutDeadlockAsync<T>(Func<Task<T>> func) => AwaitWithoutDeadlockAsync(func, false);
 
     public static async Task<T> AwaitWithoutDeadlockAsync<T>(Func<Task<T>> func, bool onMainThread)
     {
@@ -68,8 +64,7 @@ public static class JoinableAsyncHelper
         return await await jtf.RunAsync(func);
     }
 
-    public static T AwaitWithoutDeadlock<T>(Func<Task<T>> func) =>
-        AwaitWithoutDeadlock(func, false);
+    public static T AwaitWithoutDeadlock<T>(Func<Task<T>> func) => AwaitWithoutDeadlock(func, false);
 
     public static T AwaitWithoutDeadlock<T>(Func<Task<T>> func, bool onMainThread)
     {

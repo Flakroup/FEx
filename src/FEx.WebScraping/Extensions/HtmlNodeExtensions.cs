@@ -24,19 +24,19 @@ public static class HtmlNodeExtensions
         value.GetAttributeValue(name, def);
 
     public static string GetNodeAttributeStringValue(this HtmlNode value, string name) =>
-        GetNodeAttributeStringValue(value, name, null);
+        value.GetNodeAttributeStringValue(name, null);
 
     public static bool GetNodeAttributeBoolValue(this HtmlNode value, string name, bool def) =>
         value.GetAttributeValue(name, def);
 
     public static bool GetNodeAttributeBoolValue(this HtmlNode value, string name) =>
-        GetNodeAttributeBoolValue(value, name, false);
+        value.GetNodeAttributeBoolValue(name, false);
 
     public static int GetNodeAttributeIntValue(this HtmlNode value, string name, int def) =>
         value.GetAttributeValue(name, def);
 
     public static int GetNodeAttributeIntValue(this HtmlNode value, string name) =>
-        GetNodeAttributeIntValue(value, name, 0);
+        value.GetNodeAttributeIntValue(name, 0);
 
     public static string GetSrc(this HtmlNode value) => value.GetNodeAttributeStringValue(Src);
 

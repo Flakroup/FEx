@@ -2,6 +2,7 @@ using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
+using FEx.Sqlx.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
@@ -37,7 +38,7 @@ public static class DbContextOptionsBuilderExtensions
             sqliteDbContextOptionsBuilder => sqliteDbContextOptionsBuilder.CommandTimeout(config.CommandTimeout));
 
     public static bool UseSqlServer(this DbContextOptionsBuilder options, IFExDbConfig config) =>
-        UseSqlServer(options, config, null);
+        options.UseSqlServer(config, null);
 
     public static bool UseSqlServer(this DbContextOptionsBuilder options,
                                     IFExDbConfig config,

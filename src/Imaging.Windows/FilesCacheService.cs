@@ -6,9 +6,9 @@ using FEx.Agnostics.Abstractions.Models;
 using FEx.Asyncx.Abstractions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.FileSystem;
+using FEx.Imaging.Windows.Model;
 using FEx.Legacy.Imaging.Abstractions.Interfaces;
 using FEx.MVVM.Abstractions;
-using FEx.Imaging.Windows.Model;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -103,7 +103,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                                                  HttpWebResponse response = null)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
-        IndexEntry entry = await GetEntryAsync(fileUrl);
+        var entry = await GetEntryAsync(fileUrl);
 #pragma warning restore IDISP001
 
         return await entry.CachedImage.GetImageAsync(size,
@@ -121,7 +121,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     public async Task RemoveImageUpdateAsync(Uri fileUrl, WidthAndHeight size = null)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
-        IndexEntry entry = await GetEntryAsync(fileUrl);
+        var entry = await GetEntryAsync(fileUrl);
 #pragma warning restore IDISP001
         entry.CachedImage.RemoveImageUpdate(size);
     }
@@ -134,7 +134,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     {
         var fileName = $"{fileUrl.AbsoluteUri.GenerateMd5OfString()}.{extension}";
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
-        IndexEntry entry = await GetEntryAsync(fileUrl, fileName: fileName);
+        var entry = await GetEntryAsync(fileUrl, fileName: fileName);
 #pragma warning restore IDISP001
 
         if (entry.FilePath is not null
@@ -142,7 +142,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
             && !force)
             return false;
 
-        FileInfo file = FilesCacheDir.GetDescendantFile(fileName);
+        var file = FilesCacheDir.GetDescendantFile(fileName);
         defaultImage.Save(file.FullName, format);
 
         entry.FilePath ??= file.FullName;
@@ -159,7 +159,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     public async Task<bool> IsFileBeingDownloadedAsync(Uri fileUrl)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
-        IndexEntry entry = await GetEntryAsync(fileUrl, false);
+        var entry = await GetEntryAsync(fileUrl, false);
 #pragma warning restore IDISP001
 
         return entry?.IsDownloading ?? false;
@@ -171,7 +171,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                                                           HttpWebResponse response = null)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
-        IndexEntry entry = await PrepareCacheAndGetEntryAsync(fileUrl, pars, refresh, response);
+        var entry = await PrepareCacheAndGetEntryAsync(fileUrl, pars, refresh, response);
 #pragma warning restore IDISP001
 
         return entry.DoesCacheExists()
@@ -182,7 +182,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     public async Task<bool> IsFilePresentAsync(Uri fileUrl)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
-        IndexEntry entry = await GetEntryAsync(fileUrl, false);
+        var entry = await GetEntryAsync(fileUrl, false);
 #pragma warning restore IDISP001
 
         return entry.DoesCacheExists();
@@ -212,7 +212,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
             {
                 if (entry.Cache?.Name is not null)
                 {
-                    (bool isPresent, FileInfo fileInfo) = files.GetValue(entry.Cache.Name);
+                    var (isPresent, fileInfo) = files.GetValue(entry.Cache.Name);
 
                     if (isPresent && fileInfo is not null)
                     {
@@ -237,20 +237,20 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
         var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
 
         //remove not present in index files from disk
-        string[] except = await FilesCacheIndex.ForAllFuncAsync((_, v) => v.FilePath);
-        string[] filesToRemove = files.Values.Select(x => x.FullName).Except(except).ToArray();
+        var except = await FilesCacheIndex.ForAllFuncAsync((_, v) => v.FilePath);
+        var filesToRemove = files.Values.Select(x => x.FullName).Except(except).ToArray();
 
         Parallel.ForEach(filesToRemove,
             file =>
             {
-                Result<ExceptionError> res = FileSystemUtilities.SafeDeleteFile(file);
+                var res = FileSystemUtilities.SafeDeleteFile(file);
 
                 if (res.IsFailure)
                     errors.Add(res.Error);
             });
 
         //remove not existing files from index
-        IndexEntry[] toRemove = (await FilesCacheIndex.ForAllFuncAsync((_, entry) =>
+        var toRemove = (await FilesCacheIndex.ForAllFuncAsync((_, entry) =>
             {
                 entry.Cache?.Refresh();
 
@@ -275,7 +275,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                                               Func<Uri, Uri> urlModifier = null)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
-        IndexEntry entry = await PrepareCacheAndGetEntryAsync(fileUrl, pars, refresh, response, urlModifier);
+        var entry = await PrepareCacheAndGetEntryAsync(fileUrl, pars, refresh, response, urlModifier);
 #pragma warning restore IDISP001
 
         return entry.DoesCacheExists();
@@ -287,7 +287,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                                                                HttpWebResponse response = null,
                                                                Func<Uri, Uri> urlModifier = null)
     {
-        IndexEntry entry = await GetEntryAsync(fileUrl);
+        var entry = await GetEntryAsync(fileUrl);
 
         await PrepareCacheEntryAsync(pars, refresh, response, entry, urlModifier: urlModifier);
 
@@ -329,7 +329,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                     {
                         await FilesCacheIndex.CacheAllAsync();
 
-                        Result<AggregatedError> result = await OptimizeCacheAsync();
+                        var result = await OptimizeCacheAsync();
 
                         if (!result.IsSuccess)
                             throw result.Error.ToAggregateException();
@@ -359,7 +359,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
             }
             else
             {
-                IndexEntry entry = entries[0];
+                var entry = entries[0];
                 FilesCacheIndex.Remove(entry.AbsoluteUri);
             }
         }
@@ -388,7 +388,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
         if (imageLink is null)
             return null;
 
-        IndexEntry entry = FilesCacheIndex[imageLink];
+        var entry = FilesCacheIndex[imageLink];
 
         if (entry is not null)
         {
@@ -399,7 +399,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                 : null;
         }
 
-        string fileName = IndexEntry.GetFileName(imageLink);
+        var fileName = IndexEntry.GetFileName(imageLink);
 
         return FilesCacheDir.GetFiles($"{fileName}.*").SingleOrDefault();
     }

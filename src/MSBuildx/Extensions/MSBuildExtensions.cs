@@ -1,6 +1,5 @@
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -17,10 +16,9 @@ public static class MSBuildExtensions
     {
         projectFilePath = Path.GetFullPath(projectFilePath);
 
-        ICollection<Project> loadedProjects =
-            ProjectCollection.GlobalProjectCollection.GetLoadedProjects(projectFilePath);
+        var loadedProjects = ProjectCollection.GlobalProjectCollection.GetLoadedProjects(projectFilePath);
 
-        Project project = loadedProjects.Count > 0
+        var project = loadedProjects.Count > 0
             ? loadedProjects.First()
             : Project.FromFile(projectFilePath, new());
 

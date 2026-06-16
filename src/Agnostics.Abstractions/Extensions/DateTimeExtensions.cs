@@ -4,6 +4,7 @@ using System.Globalization;
 using DateInterval = FEx.Agnostics.Abstractions.Enums.DateInterval;
 #if NET9_0_OR_GREATER
 using Microsoft.VisualBasic;
+
 #else
 using Conversion = FEx.Agnostics.Abstractions.Utilities.FExConversion;
 #endif
@@ -18,14 +19,14 @@ public static class DateTimeExtensions
     /// <param name="value">The date to check.</param>
     /// <returns>True if in 1753-01-01 - 9999-12-31 range; otherwise False.</returns>
     public static bool InSqlRange(this DateTime value) =>
-        InRange(value, DateTimeDefaults.SqlMin, DateTimeDefaults.SqlMax);
+        value.InRange(DateTimeDefaults.SqlMin, DateTimeDefaults.SqlMax);
 
     /// <summary>
     /// Gets a value indicating if value is between or equal Minimum - Maximum values for a SqlDateTime or is null.
     /// </summary>
     /// <param name="value">The date to check.</param>
     /// <returns>True if in 1753-01-01 - 9999-12-31 range; otherwise False.</returns>
-    public static bool InSqlRangeOrNull(this DateTime? value) => value is null || InSqlRange(value.Value);
+    public static bool InSqlRangeOrNull(this DateTime? value) => value is null || value.Value.InSqlRange();
 
     /// <summary>
     /// Gets a value indicating if value is between or equal Minimum - Maximum values.
@@ -239,7 +240,7 @@ public static class DateTimeExtensions
                                          double min,
                                          double max,
                                          DayOfWeek? dayOfWeek = null) =>
-        DateDiff(date1, date2, interval, dayOfWeek) is var result && result >= min && result <= max;
+        date1.DateDiff(date2, interval, dayOfWeek) is var result && result >= min && result <= max;
 
     /// <summary>
     /// Returns a <see langword="Double" /> specifying the number of time intervals between two

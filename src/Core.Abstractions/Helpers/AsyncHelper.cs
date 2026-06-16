@@ -43,12 +43,6 @@ public class AsyncHelper : IAsyncHelper
                                                                  AsyncOptions options = AsyncOptions.ImmediateStart) =>
         await ExecuteTaskOnThreadPoolAsync(() => _dispatcher.InvokeOnMainThreadAsync(func), options);
 
-    public ITaskWrapper FireAndForget(Action action) =>
-        FireAndForget(action, AsyncMode.Default, null, default);
-
-    public ITaskWrapper FireAndForget(Action action, AsyncMode asyncMode) =>
-        FireAndForget(action, asyncMode, null, default);
-
     public ITaskWrapper FireAndForget(Action action,
                                       AsyncMode asyncMode,
                                       IExceptionHandlerOptions options,
@@ -62,12 +56,6 @@ public class AsyncHelper : IAsyncHelper
 
         return taskWrapper;
     }
-
-    public ITaskWrapper<T> FireAndForget<T>(Func<T> func) =>
-        FireAndForget(func, AsyncMode.Default, null, default);
-
-    public ITaskWrapper<T> FireAndForget<T>(Func<T> func, AsyncMode asyncMode) =>
-        FireAndForget(func, asyncMode, null, default);
 
     public ITaskWrapper<T> FireAndForget<T>(Func<T> func,
                                             AsyncMode asyncMode,
@@ -121,6 +109,16 @@ public class AsyncHelper : IAsyncHelper
         return deferredList.Select(x => FireTaskAndForget(x, asyncMode, options)).ToList().AsReadOnly();
     }
 
+    public ITaskWrapper FireAndForget(Action action) => FireAndForget(action, AsyncMode.Default, null, default);
+
+    public ITaskWrapper FireAndForget(Action action, AsyncMode asyncMode) =>
+        FireAndForget(action, asyncMode, null, default);
+
+    public ITaskWrapper<T> FireAndForget<T>(Func<T> func) => FireAndForget(func, AsyncMode.Default, null, default);
+
+    public ITaskWrapper<T> FireAndForget<T>(Func<T> func, AsyncMode asyncMode) =>
+        FireAndForget(func, asyncMode, null, default);
+
     private static void SetResult<T>(T result, ITaskWrapperBase taskWrapper)
     {
         switch (taskWrapper)
@@ -152,7 +150,9 @@ public class AsyncHelper : IAsyncHelper
             result = asyncMode switch
             {
                 AsyncMode.MainThread => await ExecuteDeferredTaskOnMainThreadAsync(func),
-                AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(func, AsyncOptions.ImmediateStart, cancellationToken),
+                AsyncMode.ThreadPool => await ExecuteOnThreadPoolAsync(func,
+                    AsyncOptions.ImmediateStart,
+                    cancellationToken),
                 _ => await Task.Run(func, cancellationToken)
             };
 

@@ -462,7 +462,7 @@ public static class StringExtensions
     {
         var stream = new MemoryStream();
 #pragma warning disable IDISP001 // StreamWriter must not be disposed - it would close the returned stream
-        var writer = new StreamWriter(stream, Encoding.UTF8, 1024, leaveOpen: true);
+        var writer = new StreamWriter(stream, Encoding.UTF8, 1024, true);
 #pragma warning restore IDISP001
         writer.Write(str);
         writer.Flush();
@@ -503,7 +503,7 @@ public static class StringExtensions
         value.IsNullOrEmptyString() || value.IsNullOrWhiteSpace();
 
     public static bool MatchesRegex(this string text, string regexPattern) =>
-        MatchesRegex(text, new Regex(regexPattern));
+        text.MatchesRegex(new Regex(regexPattern));
 
     public static bool MatchesRegex(this string text, Regex regex)
     {
@@ -731,7 +731,7 @@ public static class StringExtensions
 
     public static string GetGuidString(this Guid? guid) =>
         guid.HasValue
-            ? GetGuidString(guid.Value)
+            ? guid.Value.GetGuidString()
             : null;
 
     public static string GetGuidString(this Guid guid) => $"{{{guid.ToString().ToUpper()}}}";

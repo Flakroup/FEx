@@ -5,9 +5,8 @@ using FEx.Agnostics.Abstractions.Models;
 using FEx.Core.Abstractions.Extensions;
 using FEx.MVVM;
 using FEx.MVVM.Abstractions.Enums;
-using FEx.MVVM.Abstractions.Extensions;
-using Microsoft.Extensions.Logging;
 using FEx.Webx.Models;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -26,20 +25,20 @@ public static class WebServices
     public static Dictionary<int, string> StatusCodes { get; set; } = [];
 
     /// <summary>
-    ///     Handles GET requests.
+    /// Handles GET requests.
     /// </summary>
     /// <param name="requestUrl">Pass only what's after <see cref="BaseRequestUrl" /></param>
     /// <param name="credentials">The credentials.</param>
     /// <param name="resultAsJson">Set to true (which is default) if you expect JSON in response. Else set to false.</param>
-    /// <param name="ommitCodes">List of expected - not critical status codes.</param>
+    /// <param name="omitCodes">List of expected - not critical status codes.</param>
     /// <param name="cookies">The cookies.</param>
     /// <returns>
-    ///     <see cref="string" /> with requested data.
+    /// <see cref="string" /> with requested data.
     /// </returns>
     public static async Task<string> GetRequestResultAsync(string requestUrl,
                                                            ICredentials credentials = null,
                                                            bool resultAsJson = true,
-                                                           List<HttpStatusCode> ommitCodes = null,
+                                                           List<HttpStatusCode> omitCodes = null,
                                                            List<Cookie> cookies = null)
     {
         string responseBody = null;
@@ -56,7 +55,7 @@ public static class WebServices
                 response = await GetHttpResponseAsync(() => client.GetAsync(requestUrl));
                 responseBody = await response.Content.ReadAsStringAsync();
 
-                if (ommitCodes?.Contains(response.StatusCode) != true)
+                if (omitCodes?.Contains(response.StatusCode) != true)
                 {
                     response.EnsureSuccessStatusCode();
 
@@ -67,7 +66,15 @@ public static class WebServices
                 {
                     await FExMvvm.MessagePopupService.ShowMessageAsync(
                         $"API response: {GetWebApiResponseCodeInfo(response.StatusCode)}\n\nRequest URL: {requestUrl}\n\nReceived response: {responseBody}\n",
-                        "Something wrong happened", MessageIcon.Exclamation, FExMessageButton.OK, null, true, false, null, LogLevel.Information, null);
+                        "Something wrong happened",
+                        MessageIcon.Exclamation,
+                        FExMessageButton.OK,
+                        null,
+                        true,
+                        false,
+                        null,
+                        LogLevel.Information,
+                        null);
 
                     return null;
                 }
@@ -127,7 +134,7 @@ public static class WebServices
     }
 
     /// <summary>
-    ///     Converts the XML to json.
+    /// Converts the XML to json.
     /// </summary>
     /// <param name="responseBody">The response body.</param>
     /// <returns></returns>
@@ -146,7 +153,7 @@ public static class WebServices
     }
 
     /// <summary>
-    ///     Prepares the HTTP client.
+    /// Prepares the HTTP client.
     /// </summary>
     /// <param name="address">The address.</param>
     /// <param name="credentials">The credentials.</param>
@@ -158,7 +165,7 @@ public static class WebServices
                                                ICredentials credentials,
                                                bool resultAsJson,
                                                IEnumerable<Cookie> cookies = null)
-    // ReSharper restore UnusedParameter.Global
+        // ReSharper restore UnusedParameter.Global
     {
         var pars = new WebRequestParams(cookies)
         {
@@ -212,18 +219,18 @@ public static class WebServices
     //}
 
     /// <summary>
-    ///     Handles POST requests.
+    /// Handles POST requests.
     /// </summary>
     /// <param name="requestUrl">Pass only what's after <see cref="BaseRequestUrl" /></param>
     /// <param name="postContent">Serialized JSON object to send in POST request.</param>
     /// <param name="credentials"></param>
-    /// <param name="ommitCodes">List of expected - not critical status codes.</param>
+    /// <param name="omitCodes">List of expected - not critical status codes.</param>
     /// <param name="cookies"></param>
     /// <returns><see cref="bool" /> indicating success of operation.</returns>
     public static async Task<ResponseResult> PostRequestResultAsync(string requestUrl,
                                                                     string postContent,
                                                                     ICredentials credentials = null,
-                                                                    List<HttpStatusCode> ommitCodes = null,
+                                                                    List<HttpStatusCode> omitCodes = null,
                                                                     List<Cookie> cookies = null)
     {
         requestUrl = Uri.EscapeUriString(BaseRequestUrl + requestUrl);
@@ -233,20 +240,20 @@ public static class WebServices
             Encoding.UTF8,
             MediaTypes.ApplicationJson.GetEnumValueDescription());
 
-        return await HandleResponseAsync(requestUrl, ommitCodes, () => client.PostAsync(requestUrl, post));
+        return await HandleResponseAsync(requestUrl, omitCodes, () => client.PostAsync(requestUrl, post));
     }
 
     /// <summary>
-    ///     Handles the response.
+    /// Handles the response.
     /// </summary>
     /// <param name="requestUrl">The request URL.</param>
-    /// <param name="ommitCodes">The ommit codes.</param>
+    /// <param name="omitCodes">The omit codes.</param>
     /// <param name="responseHandler">The response handler.</param>
     /// <returns>
-    ///     System.Boolean
+    /// System.Boolean
     /// </returns>
     public static async Task<ResponseResult> HandleResponseAsync(string requestUrl,
-                                                                 List<HttpStatusCode> ommitCodes,
+                                                                 List<HttpStatusCode> omitCodes,
                                                                  Func<Task<HttpResponseMessage>> responseHandler)
     {
         HttpResponseMessage response = null;
@@ -257,7 +264,7 @@ public static class WebServices
         {
             response = await GetHttpResponseAsync(responseHandler);
 
-            if (ommitCodes?.Contains(response.StatusCode) != true)
+            if (omitCodes?.Contains(response.StatusCode) != true)
             {
                 responseBody = await response.Content.ReadAsStringAsync();
                 response.EnsureSuccessStatusCode();
@@ -284,7 +291,7 @@ public static class WebServices
     }
 
     /// <summary>
-    ///     Translates <see cref="HttpStatusCode" /> to API status message.
+    /// Translates <see cref="HttpStatusCode" /> to API status message.
     /// </summary>
     /// <param name="statusCode"><see cref="HttpStatusCode" /> which to translate from.</param>
     /// <returns>Message <see cref="string" /></returns>
@@ -292,7 +299,7 @@ public static class WebServices
         GetWebApiResponseCodeInfo((int)statusCode);
 
     /// <summary>
-    ///     Translates <see cref="HttpStatusCode" /> to API status message.
+    /// Translates <see cref="HttpStatusCode" /> to API status message.
     /// </summary>
     /// <param name="statusCode"><see cref="HttpStatusCode" /> which to translate from.</param>
     /// <returns>Message <see cref="string" /></returns>

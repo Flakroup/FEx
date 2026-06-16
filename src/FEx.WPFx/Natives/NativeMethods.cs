@@ -59,7 +59,6 @@ public static class NativeMethods
 
     public static List<KeyValuePair<uint, Window>> GetRootWindowsOfProcess(Process process)
     {
-
         var rootWindows = GetChildWindows(IntPtr.Zero);
         var dsProcRootWindows = new List<KeyValuePair<uint, Window>>();
 
@@ -102,11 +101,11 @@ public static class NativeMethods
         Marshal.StructureToPtr(mmi, lParam, true);
     }
 
-    public static void MaximizeWindow(this Process proc) => MaximizeWindow(proc.MainWindowHandle);
+    public static void MaximizeWindow(this Process proc) => proc.MainWindowHandle.MaximizeWindow();
 
     public static void MaximizeWindow(this IntPtr hwnd) => ShowWindow(hwnd, (int)Natives.ShowWindow.SW_MAXIMIZE);
 
-    public static void MinimizeWindow(this Process proc) => MinimizeWindow(proc.MainWindowHandle);
+    public static void MinimizeWindow(this Process proc) => proc.MainWindowHandle.MinimizeWindow();
 
     public static void MinimizeWindow(this IntPtr hwnd) => ShowWindow(hwnd, (int)Natives.ShowWindow.SW_MINIMIZE);
 

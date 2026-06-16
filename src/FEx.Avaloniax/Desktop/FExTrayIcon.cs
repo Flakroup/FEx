@@ -7,56 +7,12 @@ namespace FEx.Avaloniax.Desktop;
 
 public class FExTrayIcon
 {
-    private TrayIcon _trayIcon;
     private readonly string _toolTipText;
+    private TrayIcon _trayIcon;
 
     public FExTrayIcon(string toolTipText)
     {
         _toolTipText = toolTipText;
-    }
-
-    public void Initialize(WindowIcon icon)
-    {
-        _trayIcon = new TrayIcon
-        {
-            Icon = icon,
-            ToolTipText = _toolTipText,
-            IsVisible = false,
-            Menu = CreateMenu()
-        };
-
-        _trayIcon.Clicked += OnTrayIconClicked;
-
-        var icons = new TrayIcons { _trayIcon };
-        TrayIcon.SetIcons(Application.Current!, icons);
-    }
-
-    public void Show()
-    {
-        if (_trayIcon is not null)
-            _trayIcon.IsVisible = true;
-    }
-
-    public void Hide()
-    {
-        if (_trayIcon is not null)
-            _trayIcon.IsVisible = false;
-    }
-
-    public void ShowMainWindow()
-    {
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            var mainWindow = desktop.MainWindow;
-            if (mainWindow is not null)
-            {
-                mainWindow.Show();
-                mainWindow.WindowState = WindowState.Normal;
-                mainWindow.Activate();
-            }
-        }
-
-        Hide();
     }
 
     public static void ExitApplication()
@@ -67,6 +23,53 @@ public class FExTrayIcon
             desktop.MainWindow?.Close();
             desktop.Shutdown();
         }
+    }
+
+    public void Initialize(WindowIcon icon)
+    {
+        _trayIcon = new()
+        {
+            Icon = icon,
+            ToolTipText = _toolTipText,
+            IsVisible = false,
+            Menu = CreateMenu()
+        };
+
+        _trayIcon.Clicked += OnTrayIconClicked;
+
+        var icons = new TrayIcons
+        {
+            _trayIcon
+        };
+
+        TrayIcon.SetIcons(Application.Current!, icons);
+    }
+
+    public void Show()
+    {
+        _trayIcon?.IsVisible = true;
+    }
+
+    public void Hide()
+    {
+        _trayIcon?.IsVisible = false;
+    }
+
+    public void ShowMainWindow()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var mainWindow = desktop.MainWindow;
+
+            if (mainWindow is not null)
+            {
+                mainWindow.Show();
+                mainWindow.WindowState = WindowState.Normal;
+                mainWindow.Activate();
+            }
+        }
+
+        Hide();
     }
 
     private void OnTrayIconClicked(object sender, EventArgs e) => ShowMainWindow();

@@ -1,8 +1,6 @@
-using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Services;
 using FEx.MVVM.Utilities;
 using Shouldly;
-using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 

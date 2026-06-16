@@ -36,7 +36,7 @@ public static class EnumerableExtensions
     /// </remarks>
     public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
                                                                  Func<TSource, TKey> keySelector) =>
-        DistinctBy(source, keySelector, null);
+        source.DistinctBy(keySelector, null);
 
     public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
                                                                  Func<TSource, TKey> keySelector,

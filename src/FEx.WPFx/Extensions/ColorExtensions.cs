@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Windows.Media;
 using DColor = System.Drawing.Color;
 using MColor = System.Windows.Media.Color;
 

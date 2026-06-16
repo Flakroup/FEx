@@ -3,6 +3,7 @@ using FEx.Core.Abstractions.Helpers;
 using FEx.Core.Collections.Concurrent;
 using FEx.MVVM.Abstractions.Events;
 using FEx.MVVM.Abstractions.Interfaces;
+using FEx.MVVM.BaseObjects;
 using FEx.MVVM.Interfaces;
 using System;
 using System.Collections.Concurrent;
@@ -15,7 +16,7 @@ namespace FEx.MVVM.Services;
 
 public sealed class ProgressService : SubscriberBase, IProgressService
 {
-    private static readonly Lazy<ProgressService> _lazy = new(() => new ProgressService());
+    private static readonly Lazy<ProgressService> _lazy = new(() => new());
 
     public static string MainContainerId { get; private set; }
 
@@ -105,9 +106,6 @@ public sealed class ProgressService : SubscriberBase, IProgressService
         return true;
     }
 
-    public TCon GetOrAddContainer<TCon>() where TCon : class, IProgressAggregator, new() =>
-        GetOrAddContainer<TCon>(false);
-
     public TCon GetOrAddContainer<TCon>(bool isMain) where TCon : class, IProgressAggregator, new()
     {
         var container = ProgressStatusContainerFactory<TCon>();
@@ -126,6 +124,9 @@ public sealed class ProgressService : SubscriberBase, IProgressService
 
         DetachContainer(container.Id);
     }
+
+    public TCon GetOrAddContainer<TCon>() where TCon : class, IProgressAggregator, new() =>
+        GetOrAddContainer<TCon>(false);
 
     private static void ReportToListener(ReceiverDefinition def, string propertyName, object value)
     {

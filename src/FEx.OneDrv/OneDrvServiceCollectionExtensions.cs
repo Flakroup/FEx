@@ -14,6 +14,7 @@ public static class OneDrvServiceCollectionExtensions
         services.AddSingleton<IOneDriveItemEnumerator, OneDriveItemEnumerator>();
         services.AddSingleton<IOneDriveThumbnailService, OneDriveThumbnailService>();
         services.AddSingleton<IOneDriveClient, OneDriveClient>();
+
         return services;
     }
 }

@@ -369,10 +369,12 @@ public sealed class FExPollyPolicyBuilderTests
     {
         var resp = Substitute.For<IFlurlResponse>();
         resp.StatusCode.Returns(statusCode);
+
         if (content != null)
             resp.GetStringAsync().Returns(content);
         else
             resp.GetStringAsync().Returns(string.Empty);
+
         return resp;
     }
 }

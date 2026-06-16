@@ -1,4 +1,5 @@
 using FEx.Agnostics.Abstractions;
+using FEx.Sqlx.Abstractions;
 using System.Threading.Tasks;
 
 namespace FEx.EFCore;

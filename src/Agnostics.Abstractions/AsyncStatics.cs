@@ -3,6 +3,9 @@ using FEx.Agnostics.Abstractions.Extensions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+#if NET5_0_OR_GREATER
+using System.Runtime.Versioning;
+#endif
 
 namespace FEx.Agnostics.Abstractions;
 
@@ -61,8 +64,7 @@ public static class AsyncStatics
     public static Task ExecuteTaskOnThreadPoolAsync(Func<Task> func) =>
         ExecuteTaskOnThreadPoolAsync(func, AsyncOptions.ImmediateStart);
 
-    public static async Task ExecuteTaskOnThreadPoolAsync(Func<Task> func,
-                                                          AsyncOptions options)
+    public static async Task ExecuteTaskOnThreadPoolAsync(Func<Task> func, AsyncOptions options)
     {
         var effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
             ? () => Task.Run(func)
@@ -81,8 +83,7 @@ public static class AsyncStatics
     public static Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> func) =>
         ExecuteTaskOnThreadPoolAsync(func, AsyncOptions.ImmediateStart);
 
-    public static async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> func,
-                                                                AsyncOptions options)
+    public static async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> func, AsyncOptions options)
     {
         var effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
             ? () => Task.Run(func)
@@ -110,8 +111,7 @@ public static class AsyncStatics
     /// The provided
     /// <paramref name="cancellationToken">cancellationToken</paramref> has already been disposed.
     /// </exception>
-    public static Task DelayAsync(int millisecondsDelay) =>
-        DelayAsync(millisecondsDelay, default);
+    public static Task DelayAsync(int millisecondsDelay) => DelayAsync(millisecondsDelay, default);
 
     public static async Task DelayAsync(int millisecondsDelay, CancellationToken cancellationToken) =>
         await ExecuteTaskOnThreadPoolAsync(() => Task.Delay(millisecondsDelay, cancellationToken));
@@ -136,8 +136,7 @@ public static class AsyncStatics
     /// disposed.
     /// </exception>
     /// <returns>A task that represents the time delay.</returns>
-    public static Task DelayAsync(TimeSpan delay) =>
-        DelayAsync(delay, default);
+    public static Task DelayAsync(TimeSpan delay) => DelayAsync(delay, default);
 
     public static async Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken) =>
         await ExecuteTaskOnThreadPoolAsync(() => SafeDelayAsync(delay, cancellationToken));
@@ -228,7 +227,7 @@ public static class AsyncStatics
     }
 
 #if NET5_0_OR_GREATER
-    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    [SupportedOSPlatform("windows")]
 #endif
     public static void RunAsThread(Action action, ApartmentState? state = null, bool? isBackground = false)
     {

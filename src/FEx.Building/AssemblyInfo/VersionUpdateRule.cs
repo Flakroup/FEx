@@ -14,7 +14,7 @@ public class VersionUpdateRule
         if (_partRules.Length is < 2 or > 4)
             throw new ArgumentException("Expecting 2-4 version parts");
 
-        foreach (string partRule in _partRules)
+        foreach (var partRule in _partRules)
         {
             if (partRule is "+" or "=")
             {
@@ -42,8 +42,8 @@ public class VersionUpdateRule
 
         for (var index = 0; index < _partRules.Length; index++)
         {
-            string rule = _partRules[index];
-            string inPart = inParts[index];
+            var rule = _partRules[index];
+            var inPart = inParts[index];
 
             switch (rule)
             {
@@ -57,7 +57,7 @@ public class VersionUpdateRule
                 case "+" when inPart.Length == 0:
                     throw new ArgumentException("Can't increment missing value");
                 case "+":
-                    int.TryParse(inPart, out int inNumber);
+                    int.TryParse(inPart, out var inNumber);
                     inNumber++;
                     outParts.Add(inNumber.ToString());
 

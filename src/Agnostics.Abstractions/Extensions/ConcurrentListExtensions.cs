@@ -12,16 +12,12 @@ public static class ConcurrentListExtensions
                                                Func<T, TKey> keySelector) =>
         list.AddUniqueRange(range, keySelector, null);
 
-    public static void SortBy<T, TKey>(this IConcurrentList<T> list,
-                                       Func<T, TKey> selector) =>
+    public static void SortBy<T, TKey>(this IConcurrentList<T> list, Func<T, TKey> selector) =>
         list.SortBy(selector, ListSortDirection.Ascending, null);
 
-    public static void SortBy<T, TKey>(this IConcurrentList<T> list,
-                                       Func<T, TKey> selector,
-                                       ListSortDirection order) =>
+    public static void SortBy<T, TKey>(this IConcurrentList<T> list, Func<T, TKey> selector, ListSortDirection order) =>
         list.SortBy(selector, order, null);
 
-    public static void Combo<T>(this IConcurrentList<T> list,
-                                Action<IConcurrentList<T>> action) =>
+    public static void Combo<T>(this IConcurrentList<T> list, Action<IConcurrentList<T>> action) =>
         list.Combo(action, false);
 }

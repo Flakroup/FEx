@@ -103,7 +103,7 @@ public class ShelvesetContent : NotifyPropertyChanged
 
     public async Task LoadChangesAsync()
     {
-        string jsonStr = await TfsEnvironment.RunRawAsync(Url.AbsoluteUri,
+        var jsonStr = await TfsEnvironment.RunRawAsync(Url.AbsoluteUri,
             new Dictionary<string, object>
             {
                 ["maxChangeCount"] = int.MaxValue
@@ -117,7 +117,7 @@ public class ShelvesetContent : NotifyPropertyChanged
 
         if (jsonStr != null)
         {
-            ShelvesetContent res = jsonStr.FromJson<ShelvesetContent>(ShelvesetResponse.Settings);
+            var res = jsonStr.FromJson<ShelvesetContent>(ShelvesetResponse.Settings);
             Refresh(res);
             GetShelve();
         }
@@ -129,11 +129,10 @@ public class ShelvesetContent : NotifyPropertyChanged
 
     private void GetShelve()
     {
-        VersionControlServer vcs = TfsEnvironment.ProjectsCollections[0]
-            .TfsTeamProjectCollection.GetService<VersionControlServer>();
+        var vcs = TfsEnvironment.ProjectsCollections[0].TfsTeamProjectCollection.GetService<VersionControlServer>();
 
-        Shelveset[] sh = vcs.QueryShelvesets(Name, Owner.UniqueName);
-        PendingSet[] ch = vcs.QueryShelvedChanges(sh[0]);
+        var sh = vcs.QueryShelvesets(Name, Owner.UniqueName);
+        var ch = vcs.QueryShelvedChanges(sh[0]);
 
         Changes = ch[0]
             .PendingChanges.Select(x => new ShelvesetChange

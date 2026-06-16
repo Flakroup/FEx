@@ -36,8 +36,7 @@ public class FExCookieJar : IReadOnlyCollection<FlurlCookie>
     /// Date/time that original Set-Cookie header was received. Defaults to current date/time.
     /// Important for Max-Age to be enforced correctly.
     /// </param>
-    public FExCookieJar
-        AddOrReplace(string name, object value, string originUrl, DateTimeOffset? dateReceived) =>
+    public FExCookieJar AddOrReplace(string name, object value, string originUrl, DateTimeOffset? dateReceived) =>
         AddOrReplace(new(name, value.ToInvariantString(), originUrl, dateReceived));
 
     public FExCookieJar AddOrReplace(string name, object value, string originUrl) =>

@@ -242,19 +242,22 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
 
     protected async Task EnsureMappingSnapshotAsync() =>
         await RunActionInDbContextAsync(dbContext =>
-        {
-            var mappings = dbContext.Model.GetEntityTypes()
-                .Select(t => new Mapping
-                {
-                    ClrTypeName = t.ClrType.FullName.Guard("ClrTypeName"),
-                    TableName = t.GetTableName(),
-                    Properties = t.GetMappedProperties()
-                })
-                .ToDictionary(mapping => mapping.ClrTypeName);
+            {
+                var mappings = dbContext.Model.GetEntityTypes()
+                    .Select(t => new Mapping
+                    {
+                        ClrTypeName = t.ClrType.FullName.Guard("ClrTypeName"),
+                        TableName = t.GetTableName(),
+                        Properties = t.GetMappedProperties()
+                    })
+                    .ToDictionary(mapping => mapping.ClrTypeName);
 
-            Mappings = new ReadOnlyDictionary<string, Mapping>(mappings);
-            TableMappings = new(Mappings.ToDictionary(x => x.Key, x => x.Value.TableName));
-        }, null, true, true);
+                Mappings = new ReadOnlyDictionary<string, Mapping>(mappings);
+                TableMappings = new(Mappings.ToDictionary(x => x.Key, x => x.Value.TableName));
+            },
+            null,
+            true,
+            true);
 
     protected Result<Error> ValidateAndSaveChanges(TDbContext dbContext, string id) =>
         ValidateAndSaveChanges(dbContext, id, true, true);

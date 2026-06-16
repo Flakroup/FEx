@@ -36,6 +36,7 @@ public sealed class GraphServiceClientCache : IGraphServiceClientCache, IDisposa
             return cached;
 
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+
         try
         {
             if (_cached is { } cachedInsideLock)
@@ -46,6 +47,7 @@ public sealed class GraphServiceClientCache : IGraphServiceClientCache, IDisposa
             var driveId = await _driveIdFactory(client, cancellationToken).ConfigureAwait(false);
 
             _cached = (client, driveId);
+
             return _cached.Value;
         }
         finally
@@ -56,14 +58,18 @@ public sealed class GraphServiceClientCache : IGraphServiceClientCache, IDisposa
 
     public void Invalidate() => _cached = null;
 
-    public void Dispose() => _lock.Dispose();
-
     private static GraphServiceClient DefaultClientFactory(IAccessTokenProvider tokenProvider) =>
         new(new BaseBearerTokenAuthenticationProvider(tokenProvider));
 
-    private static async Task<string> DefaultDriveIdFactoryAsync(GraphServiceClient client, CancellationToken cancellationToken)
+    private static async Task<string> DefaultDriveIdFactoryAsync(GraphServiceClient client,
+                                                                 CancellationToken cancellationToken)
     {
         var drive = await client.Me.Drive.GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+
         return drive?.Id ?? throw new InvalidOperationException("Could not retrieve the user's default OneDrive ID");
     }
+
+    #region IDisposable
+    public void Dispose() => _lock.Dispose();
+    #endregion
 }

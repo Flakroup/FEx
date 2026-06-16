@@ -626,7 +626,7 @@ public static class PlatformInfoProvider
     }
 
 #if NET
-    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    [SupportedOSPlatform("windows")]
     private static string ReadOurKey(string field, string defaultValue, string[] splitResult)
     {
         var backSlash = "";

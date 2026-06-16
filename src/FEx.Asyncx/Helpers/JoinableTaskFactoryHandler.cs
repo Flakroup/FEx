@@ -22,8 +22,7 @@ public class JoinableTaskFactoryHandler
     ///     cref="M:Microsoft.VisualStudio.Threading.JoinableTaskFactory.Run``1(System.Func{System.Threading.Tasks.Task{``0}},Microsoft.VisualStudio.Threading.JoinableTaskCreationOptions)" />
     public void Run(Func<Task> asyncMethod) => Run(asyncMethod, JoinableTaskCreationOptions.None);
 
-    public void Run(Func<Task> asyncMethod,
-                    JoinableTaskCreationOptions creationOptions)
+    public void Run(Func<Task> asyncMethod, JoinableTaskCreationOptions creationOptions)
     {
         if (!_semaphore.Wait(TimeSpan.Zero))
             throw new InvalidOperationException("This operation will lead to deadlock");
@@ -40,8 +39,7 @@ public class JoinableTaskFactoryHandler
 
     public T Run<T>(Func<Task<T>> asyncMethod) => Run(asyncMethod, JoinableTaskCreationOptions.None);
 
-    public T Run<T>(Func<Task<T>> asyncMethod,
-                    JoinableTaskCreationOptions creationOptions)
+    public T Run<T>(Func<Task<T>> asyncMethod, JoinableTaskCreationOptions creationOptions)
     {
         if (!_semaphore.Wait(TimeSpan.Zero))
             throw new InvalidOperationException("This operation will lead to deadlock");

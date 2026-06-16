@@ -12,15 +12,15 @@ namespace FEx.Webx.Extensions;
 public static class JsonExtensions
 {
     public static Task<T> DeserializeRemoteJsonAsync<T>(this Uri url) =>
-        DeserializeRemoteJsonAsync<T>(url, null, false, default);
+        url.DeserializeRemoteJsonAsync<T>(null, false, default);
 
     public static Task<T> DeserializeRemoteJsonAsync<T>(this Uri url, JsonSerializerSettings settings) =>
-        DeserializeRemoteJsonAsync<T>(url, settings, false, default);
+        url.DeserializeRemoteJsonAsync<T>(settings, false, default);
 
     public static Task<T> DeserializeRemoteJsonAsync<T>(this Uri url,
                                                         JsonSerializerSettings settings,
                                                         bool checkNetAvailability) =>
-        DeserializeRemoteJsonAsync<T>(url, settings, checkNetAvailability, default);
+        url.DeserializeRemoteJsonAsync<T>(settings, checkNetAvailability, default);
 
     public static async Task<T> DeserializeRemoteJsonAsync<T>(this Uri url,
                                                               JsonSerializerSettings settings,

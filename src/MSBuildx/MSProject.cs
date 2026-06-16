@@ -155,7 +155,7 @@ public class MSProject
         ProjectType = projectType;
         PropertiesDictionary = Project.Properties.OrderBy(x => x.Name).ToDictionary(x => x.Name, x => x.EvaluatedValue);
 
-        foreach (KeyValuePair<string, List<string>> p in project.ConditionedProperties)
+        foreach (var p in project.ConditionedProperties)
             PropertiesDictionary.AddOrUpdateValue(p.Key, () => string.Join(";", p.Value));
 
         IncludedFiles = new ConcurrentList<MSProjectItem>();
@@ -183,11 +183,11 @@ public class MSProject
 
         if (is64Bit && !OutDir.Contains("\\x64\\"))
         {
-            string relPath = OutDir.Replace("bin\\", "");
+            var relPath = OutDir.Replace("bin\\", "");
             OutDir = "bin\\x64\\" + relPath;
         }
 
-        string initialMSBuildProjectExtensionsPath =
+        var initialMSBuildProjectExtensionsPath =
             PropertiesDictionary.TryGetKeyValue("_InitialMSBuildProjectExtensionsPath")
             ?? Path.Combine(ProjectDir, "obj");
 
@@ -214,9 +214,9 @@ public class MSProject
 
         IsAspNetCore = NuGetPackages.Any(x => x.Id == "Microsoft.AspNetCore.App");
 
-        string outRoot = OutDir.GetPathParts().First();
+        var outRoot = OutDir.GetPathParts().First();
         BinDir = Path.GetFullPath(Path.Combine(ProjectDir, outRoot));
-        bool isPackagesConfig = AllEvaluatedItems.Any(x => x.EvaluatedInclude.Contains(PkgsConfStr));
+        var isPackagesConfig = AllEvaluatedItems.Any(x => x.EvaluatedInclude.Contains(PkgsConfStr));
 
         if (isPackagesConfig)
         {
@@ -265,8 +265,8 @@ public class MSProject
             IgnoredDirectories.Add(OutDirPath);
 
         Files = new(Directory.GetFiles(ProjectDir, "*.*", SearchOption.AllDirectories)
-                .Except(IgnoredDirectories.SelectMany(x => Directory.GetFiles(x, "*.*", SearchOption.AllDirectories)))
-                .Select(x => x.Replace(ProjectDir, string.Empty)));
+            .Except(IgnoredDirectories.SelectMany(x => Directory.GetFiles(x, "*.*", SearchOption.AllDirectories)))
+            .Select(x => x.Replace(ProjectDir, string.Empty)));
 
         IgnoredFiles = new List<DiffResult>();
         RefreshIgnoredFiles();
@@ -286,11 +286,11 @@ public class MSProject
 
     private static PackageIdentity GetPackageIdentity(ProjectItem item)
     {
-        string versionString = item.DirectMetadata.First(x => x.Name == "Version").EvaluatedValue;
+        var versionString = item.DirectMetadata.First(x => x.Name == "Version").EvaluatedValue;
 
-        if (!NuGetVersion.TryParse(versionString, out NuGetVersion version))
+        if (!NuGetVersion.TryParse(versionString, out var version))
         {
-            if (VersionRange.TryParse(versionString, out VersionRange versionRange))
+            if (VersionRange.TryParse(versionString, out var versionRange))
                 version = versionRange.MinVersion;
             else
                 throw new($"Provided version string {versionString} is invalid");

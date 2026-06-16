@@ -2,8 +2,8 @@ using FEx.Agnostics.Abstractions;
 using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Flow;
-using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Asyncx.Helpers;
 using FEx.Core.Abstractions.Interfaces;
 using System;
@@ -63,9 +63,6 @@ public partial class ThreadingAwareViewModel
         IsInitialized = false;
     }
 
-    public void BeginInitialization() =>
-        BeginInitialization(false);
-
     public void BeginInitialization(bool waitSynchronouslyForInitialization)
     {
         if (waitSynchronouslyForInitialization)
@@ -81,6 +78,8 @@ public partial class ThreadingAwareViewModel
 
         Task InitFuncAsync() => AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeAsync);
     }
+
+    public void BeginInitialization() => BeginInitialization(false);
 
     protected static async Task<Result<ExceptionError>> SafeInitializeAsync(IAsyncInitializable dependency)
     {

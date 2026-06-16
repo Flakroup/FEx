@@ -14,6 +14,5 @@ public static class HtmlDocumentExtensions
         return path;
     }
 
-    public static string SaveToFile(this HtmlDocument doc) =>
-        SaveToFile(doc, null);
+    public static string SaveToFile(this HtmlDocument doc) => doc.SaveToFile(null);
 }

@@ -1,5 +1,4 @@
 using FEx.Agnostics.Abstractions.Interfaces;
-using FEx.OneDrv;
 using FEx.OneDrv.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -15,7 +14,11 @@ public sealed class OneDrvServiceCollectionExtensionsTests
     {
         var services = new ServiceCollection();
         services.AddSingleton(Substitute.For<IFExLogger>());
-        var options = new OneDriveOptions { ClientId = "test-client" };
+
+        var options = new OneDriveOptions
+        {
+            ClientId = "test-client"
+        };
 
         services.AddOneDrv(options);
         var provider = services.BuildServiceProvider();
@@ -34,7 +37,11 @@ public sealed class OneDrvServiceCollectionExtensionsTests
         var services = new ServiceCollection();
         services.AddSingleton(Substitute.For<IFExLogger>());
 
-        services.AddOneDrv(new OneDriveOptions { ClientId = "x" });
+        services.AddOneDrv(new()
+        {
+            ClientId = "x"
+        });
+
         var provider = services.BuildServiceProvider();
 
         var client1 = provider.GetService<IOneDriveClient>();

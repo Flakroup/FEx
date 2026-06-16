@@ -17,6 +17,7 @@ public sealed class DefaultDatabaseFilePathResolver : IDatabaseFilePathResolver
     public string GetDatabasesFolderPath()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
         return Path.Combine(appData, _appName, "Data");
     }
 }

@@ -149,7 +149,8 @@ public class IndexEntry : IndexEntryBase, IDisposable
             ? uri.GenerateMd5OfString()
             : null;
 
-    protected override void OnAbsoluteUriChange() => Url = AbsoluteUri.IsNotNullOrEmptyString()
+    protected override void OnAbsoluteUriChange() =>
+        Url = AbsoluteUri.IsNotNullOrEmptyString()
             ? new Uri(AbsoluteUri)
             : null;
 
@@ -230,7 +231,7 @@ public class IndexEntry : IndexEntryBase, IDisposable
             if (Cache?.Exists == true
                 && Cache.Extension != ".svg")
             {
-                using FileStream imageStream = Cache.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var imageStream = Cache.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
                 var decoder = BitmapDecoder.Create(imageStream,
                     BitmapCreateOptions.IgnoreColorProfile,

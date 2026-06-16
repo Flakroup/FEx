@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Humanizer" Version="3.0.1" />
+        <PackageReference Include="Humanizer" Version="3.0.10" />
         <PackageReference Include="Nuke.Utilities" Version="10.1.0" />
         <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
         <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />

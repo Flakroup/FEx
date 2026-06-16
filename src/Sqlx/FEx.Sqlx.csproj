@@ -6,10 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Dapper" Version="2.1.35" />
-        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.2" />
-        <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="172.76.0" />
-        <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+        <PackageReference Include="Dapper" Version="2.1.79" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+        <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="181.25.0" />
+        <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
     </ItemGroup>
 
     <ItemGroup>

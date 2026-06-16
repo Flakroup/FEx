@@ -80,17 +80,17 @@ public sealed class FuncProcessor : IDisposable
         response.FromJson<TResponse>(settings);
 
     public async Task<TResponse> RunAsync<TResponse>(JsonSerializerSettings settings = null,
-                                                     IList<HttpStatusCode> ommitCodes = null)
+                                                     IList<HttpStatusCode> omitCodes = null)
         where TResponse : BaseTfsResponse, new()
     {
-        var res = await RunRawAsync(ommitCodes);
+        var res = await RunRawAsync(omitCodes);
 
         return res != null
             ? ProcessResponse<TResponse>(res, settings)
             : default;
     }
 
-    public async Task<string> RunRawAsync(IList<HttpStatusCode> ommitCodes = null)
+    public async Task<string> RunRawAsync(IList<HttpStatusCode> omitCodes = null)
     {
         using var handler = new HttpClientHandler
         {
@@ -143,8 +143,8 @@ public sealed class FuncProcessor : IDisposable
             {
                 var statusCode = (HttpStatusCode)response.StatusCode;
 
-                if (ommitCodes.IsNullOrEmptyList()
-                    || !ommitCodes.Contains(statusCode))
+                if (omitCodes.IsNullOrEmptyList()
+                    || !omitCodes.Contains(statusCode))
                 {
                     var content = await response.GetStringAsync();
                     var contentType = response.Headers.FirstOrDefault("Content-Type");
@@ -162,8 +162,8 @@ public sealed class FuncProcessor : IDisposable
         {
             var statusCode = (HttpStatusCode)(ex.StatusCode ?? 0);
 
-            if (ommitCodes != null
-                && ommitCodes.Contains(statusCode))
+            if (omitCodes != null
+                && omitCodes.Contains(statusCode))
                 return null;
 
             throw;

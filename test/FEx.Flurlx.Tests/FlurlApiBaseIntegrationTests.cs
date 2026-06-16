@@ -145,6 +145,26 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task GetResponseAsync_DtoWithDateOnly_DeserializesViaSystemTextJson()
+    {
+        // Regression: split-brain serializer. The API emits DateOnly as "2026-06-16"; Newtonsoft
+        // (the old default) could not read it -> crash. System.Text.Json (net7+) handles it natively.
+        _mockServer.Given(Request.Create().WithPath("/api/dated").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody("{\"id\":7,\"bookedOn\":\"2026-06-16\"}"));
+
+        // Act
+        var result = await _testApi.GetDatedAsync();
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(7);
+        result.BookedOn.ShouldBe(new DateOnly(2026, 6, 16));
+    }
+
+    [Fact]
     public async Task GetResponseAsync_WithQueryParameters_AppendsCorrectly()
     {
         // Arrange
@@ -295,6 +315,9 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
         public async Task<TestData> GetConcurrentDataAsync(CancellationToken ct = default) =>
             await GetResponseAsync<TestData>("api/concurrent", method: RequestMethod.GET, cancellationToken: ct);
 
+        public async Task<DatedData> GetDatedAsync(CancellationToken ct = default) =>
+            await GetResponseAsync<DatedData>("api/dated", method: RequestMethod.GET, cancellationToken: ct);
+
         public async Task<TestData> CreateDataAsync(TestRequestData requestData, CancellationToken ct = default) =>
             await GetResponseAsync<TestData, TestRequestData>("api/create",
                 method: RequestMethod.POST,
@@ -320,6 +343,12 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
     {
         public string Value { get; set; }
         public int Count { get; set; }
+    }
+
+    private sealed class DatedData
+    {
+        public int Id { get; set; }
+        public DateOnly BookedOn { get; set; }
     }
     #endregion
 }

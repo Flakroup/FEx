@@ -3,12 +3,12 @@ using FEx.Asyncx.Abstractions;
 using FEx.Flurlx.Abstractions.Interfaces;
 using FEx.Flurlx.Extensions;
 using FEx.Flurlx.Models;
-using FEx.Json.Extensions;
 using Flurl.Http;
 using Polly;
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,9 +37,31 @@ public abstract class FlurlApiBase : AsyncInitializable
         BeginInitialization();
     }
 
+    private static readonly JsonSerializerOptions PrettyPrintOptions = new() { WriteIndented = true };
+
     protected static string GetStatusMessage(HttpStatusCode statusCode) => statusCode.ToString();
 
     protected static bool IsSuccess(IFlurlResponse response) => response.IsSuccessStatusCode();
+
+    /// <summary>
+    /// Indents <paramref name="content"/> when it is valid JSON; returns it unchanged otherwise
+    /// (e.g. a plain-text error body). Total - never throws on malformed input.
+    /// </summary>
+    private static string PrettyPrintOrRaw(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return content;
+
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            return JsonSerializer.Serialize(document.RootElement, PrettyPrintOptions);
+        }
+        catch (JsonException)
+        {
+            return content;
+        }
+    }
 
     protected virtual async Task<T> GetResponseAsync<T, TReq>(string apiPath,
                                                               Func<IFlurlRequest, IFlurlRequest> func = null,
@@ -82,16 +104,16 @@ public abstract class FlurlApiBase : AsyncInitializable
                 var statusCode = (HttpStatusCode)httpResponse.StatusCode;
 #if NET5_0_OR_GREATER
                 throw new HttpRequestException(
-                    $"Request {method} {responseUri} has failed. {GetStatusMessage(statusCode)}{Environment.NewLine}{content.PrettyPrintJson()}",
+                    $"Request {method} {responseUri} has failed. {GetStatusMessage(statusCode)}{Environment.NewLine}{PrettyPrintOrRaw(content)}",
                     null,
                     statusCode);
 #else
                 throw new HttpRequestException(
-                    $"Request {method} {responseUri} has failed. {GetStatusMessage(statusCode)}{Environment.NewLine}{content.PrettyPrintJson()}");
+                    $"Request {method} {responseUri} has failed. {GetStatusMessage(statusCode)}{Environment.NewLine}{PrettyPrintOrRaw(content)}");
 #endif
             }
 
-            var res = content.FromJson<T>();
+            var res = FlurlClient.Settings.JsonSerializer.Deserialize<T>(content);
 
             return res;
         }

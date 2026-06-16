@@ -1,25 +1,19 @@
-using FEx.Agnostics.Abstractions.Interfaces;
-using FEx.DependencyInjection.Abstractions;
-using FEx.DependencyInjection.Abstractions.Interfaces;
-using FEx.Flurlx.Abstractions.Interfaces;
-using FEx.Flurlx.Services;
 using Flurl.Http.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
-using StrongInject.Extensions.DependencyInjection;
+using System.Text.Json;
 
 namespace FEx.Flurlx;
 
-[Register(typeof(FlurlConfigurator), Scope.SingleInstance, typeof(IFlurlConfigurator))]
-[Register(typeof(FlurlClientCache), Scope.SingleInstance, typeof(IFlurlClientCache))]
-[Register(typeof(FExPollyPolicyBuilder), Scope.SingleInstance, typeof(IFExPollyPolicyBuilder))]
-[Register(typeof(FExFlurlx), Scope.SingleInstance, typeof(FExFlurlx), typeof(IFExInitializable))]
-[Register(typeof(FExFlurlxModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
-public class FExFlurlxModule : InitializeModule<IFExFlurlxContainer, IServiceCollection>
+/// <summary>
+/// Default FEx.Flurlx module: serializer-agnostic core registrations plus a
+/// System.Text.Json serializer (<see cref="DefaultJsonSerializer"/> with
+/// <see cref="JsonSerializerDefaults.Web"/>). Zero Newtonsoft dependency.
+/// For Newtonsoft, register the FEx.Flurlx.Newtonsoft module instead of this one.
+/// </summary>
+[RegisterModule(typeof(FExFlurlxBaseModule))]
+public class FExFlurlxModule
 {
-    protected override void RegisterServices(IFExFlurlxContainer container, IServiceCollection services)
-    {
-        services.AddSingletonServiceUsingContainer<IFlurlConfigurator>(container);
-        services.AddSingletonServiceUsingContainer<IFlurlClientCache>(container);
-    }
+    [Factory(Scope.SingleInstance)]
+    public static ISerializer JsonSerializerFactory() =>
+        new DefaultJsonSerializer(new JsonSerializerOptions(JsonSerializerDefaults.Web));
 }

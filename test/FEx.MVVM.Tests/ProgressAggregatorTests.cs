@@ -1,6 +1,8 @@
+using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Utilities;
 using Shouldly;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Xunit;
 
 namespace FEx.MVVM.Tests;
@@ -9,9 +11,9 @@ public sealed class TestableProgressAggregator : ProgressAggregator
 {
     public List<string> LoggedErrors { get; } = [];
 
-    protected override void LogError(string message) => LoggedErrors.Add(message);
-
     public void InvokeUpdateProgressInfo() => UpdateProgressInfo();
+
+    protected override void LogError(string message) => LoggedErrors.Add(message);
 }
 
 public sealed class ProgressAggregatorTests
@@ -21,7 +23,7 @@ public sealed class ProgressAggregatorTests
     {
         using var sut = new TestableProgressAggregator();
 
-        sut.PrgSet(null, 100, Abstractions.Enums.ProgressChangeMode.Set);
+        sut.PrgSet(null, 100, ProgressChangeMode.Set);
 
         sut.LoggedErrors.ShouldBeEmpty();
         sut.Maximum.ShouldBe(100);
@@ -45,7 +47,7 @@ public sealed class ProgressAggregatorTests
         using var sut = new TestableProgressAggregator();
 
         sut.PrgSetMax(100);
-        sut.PrgSet(200, null, Abstractions.Enums.ProgressChangeMode.Set);
+        sut.PrgSet(200, null, ProgressChangeMode.Set);
 
         sut.LoggedErrors.Count.ShouldBe(1);
         sut.LoggedErrors[0].ShouldContain("out of range");
@@ -93,11 +95,12 @@ public sealed class ProgressAggregatorTests
     }
 
     [Fact]
+    [SuppressMessage("ReSharper", "ConvertClosureToMethodGroup")]
     public void UpdateProgressInfo_ValueIsZero_ShouldNotThrow()
     {
         using var sut = new TestableProgressAggregator();
 
-        sut.PrgSet(0, 100, Abstractions.Enums.ProgressChangeMode.Set);
+        sut.PrgSet(0, 100, ProgressChangeMode.Set);
         sut.Stopwatch.Start();
 
         Should.NotThrow(() => sut.InvokeUpdateProgressInfo());

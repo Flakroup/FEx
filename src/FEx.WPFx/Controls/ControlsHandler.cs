@@ -27,7 +27,7 @@ public static class ControlsHandler
             }
         });
 
-        ApplySortDirection(dataGrid, col, listSortDirection, clear);
+        dataGrid.ApplySortDirection(col, listSortDirection, clear);
         dataGrid.InvokeOnDispatcherContext(dataGrid.Items.Refresh);
     }
 
@@ -36,14 +36,15 @@ public static class ControlsHandler
                                              ListSortDirection listSortDirection,
                                              bool clear = true)
     {
-        DataGridColumn column = dataGrid.Columns[GetColumnIndex(dataGrid, columnName)];
-        ApplySortDescriptions(dataGrid, column, GetSortPropertyName(column), listSortDirection, clear);
+        var column = dataGrid.Columns[dataGrid.GetColumnIndex(columnName)];
+        dataGrid.ApplySortDescriptions(column, column.GetSortPropertyName(), listSortDirection, clear);
     }
 
     public static void ApplySortDescriptions(this DataGrid dataGrid,
                                              DataGridColumn column,
                                              ListSortDirection listSortDirection,
-                                             bool clear = true) => ApplySortDescriptions(dataGrid, column, GetSortPropertyName(column), listSortDirection, clear);
+                                             bool clear = true) =>
+        dataGrid.ApplySortDescriptions(column, column.GetSortPropertyName(), listSortDirection, clear);
 
     public static string GetSortPropertyName(this DataGridColumn col) => col.SortMemberPath;
 
@@ -52,7 +53,7 @@ public static class ControlsHandler
         try
         {
             if (dataGrid is not null)
-                return dataGrid.Columns.Single(c => GetColumnHeader(c) == columnName).DisplayIndex;
+                return dataGrid.Columns.Single(c => c.GetColumnHeader() == columnName).DisplayIndex;
         }
         catch (Exception ex)
         {
@@ -76,16 +77,17 @@ public static class ControlsHandler
             : null;
     }
 
-    public static void ClearSortDirections(this DataGrid dataGrid) => dataGrid.InvokeOnDispatcherContext(() =>
-                                                                           {
-                                                                               if (dataGrid is not null)
-                                                                                   foreach (DataGridColumn c in dataGrid.Columns)
-                                                                                       c.SortDirection = null;
-                                                                           });
+    public static void ClearSortDirections(this DataGrid dataGrid) =>
+        dataGrid.InvokeOnDispatcherContext(() =>
+        {
+            if (dataGrid is not null)
+                foreach (var c in dataGrid.Columns)
+                    c.SortDirection = null;
+        });
 
     public static void SetColumnVisibility(this DataGrid dataGrid, string columnName, bool visible)
     {
-        int idx = GetColumnIndex(dataGrid, columnName);
+        var idx = dataGrid.GetColumnIndex(columnName);
 
         if (dataGrid is not null)
         {
@@ -105,7 +107,7 @@ public static class ControlsHandler
                                            bool clear = true)
     {
         if (clear)
-            ClearSortDirections(dataGrid);
+            dataGrid.ClearSortDirections();
 
         col.InvokeOnDispatcherContext(() => col.SortDirection = listSortDirection);
     }

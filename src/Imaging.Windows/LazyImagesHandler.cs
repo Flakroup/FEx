@@ -22,7 +22,8 @@ public class LazyImagesHandler
         Cache = filesCacheService;
     }
 
-    public bool AnyOtherImageTaskIsRunning(string key) => ImagesTasks.Where(x => x.Key != key).Select(x => x.Value).Any(x => x.IsRunning());
+    public bool AnyOtherImageTaskIsRunning(string key) =>
+        ImagesTasks.Where(x => x.Key != key).Select(x => x.Value).Any(x => x.IsRunning());
 
     public async Task<bool> GetImageTaskAsync(string propertyName) => await ImagesTasks.TryGetKeyValue(propertyName);
 
@@ -70,7 +71,7 @@ public class LazyImagesHandler
         try
         {
             beforeAction?.Invoke();
-            BitmapImage img = await Cache.GetImageAsync(imageUrl, size, pars, refresh, forceLoad, forceMemoryStream);
+            var img = await Cache.GetImageAsync(imageUrl, size, pars, refresh, forceLoad, forceMemoryStream);
             imageSetAction(img);
 
             return true;

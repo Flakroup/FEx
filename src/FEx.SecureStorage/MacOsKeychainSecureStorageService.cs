@@ -21,9 +21,9 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
     private const string SecurityFramework = "/System/Library/Frameworks/Security.framework/Security";
     private const string DefaultServiceName = "com.flakroup.fex.securestorage";
 
-    private const int errSecSuccess = 0;
-    private const int errSecItemNotFound = -25300;
-    private const int errSecDuplicateItem = -25299;
+    private const int ErrSecSuccess = 0;
+    private const int ErrSecItemNotFound = -25300;
+    private const int ErrSecDuplicateItem = -25299;
 
     private readonly string _serviceName;
 
@@ -61,7 +61,7 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
             passwordData: out var passwordPtr,
             itemRef: IntPtr.Zero);
 
-        if (status == errSecItemNotFound)
+        if (status == ErrSecItemNotFound)
             throw new FileNotFoundException($"Keychain item not found for key '{key}' in service '{_serviceName}'.");
 
         ThrowIfError(status, "SecKeychainFindGenericPassword");
@@ -100,7 +100,7 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
             passwordData: passwordBytes,
             itemRef: out var itemRef);
 
-        if (status == errSecDuplicateItem)
+        if (status == ErrSecDuplicateItem)
         {
             // Find the existing item and overwrite its data.
             var findStatus = SecKeychainFindGenericPasswordWithRef(
@@ -145,7 +145,7 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
 
     private static void ThrowIfError(int status, string operation)
     {
-        if (status != errSecSuccess)
+        if (status != ErrSecSuccess)
             throw new InvalidOperationException($"{operation} failed with OSStatus {status}.");
     }
 

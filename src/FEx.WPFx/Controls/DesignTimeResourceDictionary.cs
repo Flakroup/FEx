@@ -12,7 +12,7 @@ public class DesignTimeResourceDictionary : ResourceDictionary
 
     public DesignTimeResourceDictionary()
     {
-        FieldInfo fieldInfo =
+        var fieldInfo =
             typeof(ResourceDictionary).GetField("_mergedDictionaries", BindingFlags.Instance | BindingFlags.NonPublic);
 
         fieldInfo?.SetValue(this, _noopMergedDictionaries);

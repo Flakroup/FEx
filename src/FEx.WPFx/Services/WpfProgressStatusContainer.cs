@@ -37,6 +37,14 @@ public class WpfProgressStatusContainer : ProgressAggregator, IWpfProgressStatus
         }
     }
 
+    public override List<string> GetProperties()
+    {
+        var properties = base.GetProperties();
+        properties.Add(nameof(IWpfProgressStatusContainer.TaskbarProgressState));
+
+        return properties;
+    }
+
     public override void SetIsIndeterminate(bool value)
     {
         base.SetIsIndeterminate(value);
@@ -59,14 +67,7 @@ public class WpfProgressStatusContainer : ProgressAggregator, IWpfProgressStatus
 
     public void SetPrgState(TaskbarItemProgressState value) => TaskbarProgressState = value;
 
-    public override List<string> GetProperties()
-    {
-        List<string> properties = base.GetProperties();
-        properties.Add(nameof(IWpfProgressStatusContainer.TaskbarProgressState));
-
-        return properties;
-    }
-
-    public void SetProgressState() => TaskbarProgressState = IsIndeterminate ? TaskbarItemProgressState.Indeterminate :
+    public void SetProgressState() =>
+        TaskbarProgressState = IsIndeterminate ? TaskbarItemProgressState.Indeterminate :
             Value.PreciseEquals(Maximum, 3) ? TaskbarItemProgressState.None : TaskbarItemProgressState.Normal;
 }

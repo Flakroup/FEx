@@ -1,8 +1,8 @@
 using FEx.DependencyInjection.Abstractions;
 using FEx.EFCore.Extensions;
 using FEx.EFCore.Interfaces;
-using FEx.Legacy.Imaging.Abstractions.Interfaces;
 using FEx.Imaging.Windows.Model;
+using FEx.Legacy.Imaging.Abstractions.Interfaces;
 using FEx.Sqlx.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
@@ -22,7 +22,7 @@ public class WindowsImagingServicesModule
     public static void AddServices(IWindowsImagingServicesModule container, IServiceCollection services)
     {
 #pragma warning disable IDISP004 // DI container manages lifetime
-        IFilesCacheServiceConfig config = container.Resolve<IFilesCacheServiceConfig>().Value;
+        var config = container.Resolve<IFilesCacheServiceConfig>().Value;
 #pragma warning restore IDISP004
 
         services.AddSingletonServiceUsingContainer<IFilesCacheServiceConfig>(container);

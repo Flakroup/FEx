@@ -4,10 +4,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Dispatching;
 using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace FEx.Maui;
 
+[SuppressMessage("ReSharper", "OptionalParameterHierarchyMismatch")]
 public class FExMauiDispatcher : FExDispatcher
 {
     private readonly IDispatcher _dispatcher;

@@ -62,9 +62,9 @@ public class CSharpUpdater
         try
         {
             if (fileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
-                foreach (string line in File.ReadAllLines(fileName))
+                foreach (var line in File.ReadAllLines(fileName))
                 {
-                    Group? g = isVersionString
+                    var g = isVersionString
                         ? GetVersionString(line, propertyName)
                         : GetValueString(line, propertyName);
 
@@ -89,14 +89,14 @@ public class CSharpUpdater
             case CSharpVersionUpdateRule rule:
             {
                 VersionString? v = null;
-                Group? g = GetVersionString(line, rule.AttributeName);
+                var g = GetVersionString(line, rule.AttributeName);
 
                 if (g is not null)
                     VersionString.TryParse(g.Value, out v);
 
                 if (v is not null)
                 {
-                    string newVersion = rule.Update(v);
+                    var newVersion = rule.Update(v);
                     line = line[..g!.Index] + newVersion + line[(g.Index + g.Length)..];
                     updated = true;
                 }
@@ -107,8 +107,8 @@ public class CSharpUpdater
             {
                 if (line.Contains(stringRule.AttributeName))
                 {
-                    Group? g = GetValueString(line, stringRule.AttributeName);
-                    string newVersion = stringRule.Update(null);
+                    var g = GetValueString(line, stringRule.AttributeName);
+                    var newVersion = stringRule.Update(null);
                     line = line[..g!.Index] + newVersion + line[(g.Index + g.Length)..];
                     updated = true;
                 }
@@ -122,7 +122,7 @@ public class CSharpUpdater
 
     public static Group? GetVersionString(string input, string attributeName)
     {
-        int commentIndex = input.IndexOf("//", StringComparison.Ordinal);
+        var commentIndex = input.IndexOf("//", StringComparison.Ordinal);
 
         if (commentIndex != -1)
             input = input[..commentIndex];
@@ -130,7 +130,7 @@ public class CSharpUpdater
         var attributeMatch = $"(?:(?:{attributeName})|(?:{attributeName}Attribute))";
 
         var regex = new Regex($@"^\s*\[assembly: {attributeMatch}\(""(?<Version>[0-9\.\*]+)""\)\]");
-        Match m = regex.Match(input);
+        var m = regex.Match(input);
 
         return m.Success
             ? m.Groups["Version"]
@@ -139,7 +139,7 @@ public class CSharpUpdater
 
     public static Group? GetValueString(string input, string attributeName)
     {
-        int commentIndex = input.IndexOf("//", StringComparison.Ordinal);
+        var commentIndex = input.IndexOf("//", StringComparison.Ordinal);
 
         if (commentIndex != -1)
             input = input[..commentIndex];
@@ -147,7 +147,7 @@ public class CSharpUpdater
         var attributeMatch = $"(?:(?:{attributeName})|(?:{attributeName}Attribute))";
 
         var regex = new Regex($@"^\s*\[assembly: {attributeMatch}\(""(?<Value>[^\""]*)""\)\]");
-        Match m = regex.Match(input);
+        var m = regex.Match(input);
 
         return m.Success
             ? m.Groups["Value"]
@@ -156,14 +156,14 @@ public class CSharpUpdater
 
     public void UpdateFile(string fileName)
     {
-        string[] lines = File.ReadAllLines(fileName);
+        var lines = File.ReadAllLines(fileName);
 
         File.WriteAllLines(fileName, lines.Select(UpdateLine).ToArray());
     }
 
     private string UpdateLine(string line)
     {
-        foreach (ICSharpUpdateRule rule in _updateRules)
+        foreach (var rule in _updateRules)
         {
             if (UpdateLineWithRule(ref line, rule))
                 break;

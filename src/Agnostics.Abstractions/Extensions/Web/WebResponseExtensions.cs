@@ -22,7 +22,7 @@ public static class WebResponseExtensions
                                                                   int rangeFrom,
                                                                   int rangeTo,
                                                                   WebRequestParams pars = null) =>
-        await TryGetRangeAsync(response.ResponseUri, response.GetAllHeaders(), rangeFrom, rangeTo, pars);
+        await response.ResponseUri.TryGetRangeAsync(response.GetAllHeaders(), rangeFrom, rangeTo, pars);
 
     public static async Task<(bool, LengthType)> TryGetRangeAsync(this Uri responseUri,
                                                                   Dictionary<string, string> responseHeaders,
@@ -47,7 +47,7 @@ public static class WebResponseExtensions
     {
         var resultHeaders = response.GetAllHeaders();
 
-        return GetContentRange(resultHeaders.TryGetKeyValue(ContentRangeHeaderName));
+        return resultHeaders.TryGetKeyValue(ContentRangeHeaderName).GetContentRange();
     }
 
     public static ContentRangeHeaderValue GetContentRange(this string rangeHeader)

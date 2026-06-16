@@ -82,7 +82,7 @@ public static class GuardExtensions
     public static T Guard<T>([CanBeNull] this T value, Func<T, bool> predicate, string paramName, string message)
     {
 #if NET9_0_OR_GREATER
-        ArgumentNullException.ThrowIfNull(predicate, nameof(predicate));
+        ArgumentNullException.ThrowIfNull(predicate);
 #else
         if (predicate is null)
             throw new ArgumentNullException(nameof(predicate));

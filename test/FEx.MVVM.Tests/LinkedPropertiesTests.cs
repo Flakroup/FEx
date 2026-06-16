@@ -16,7 +16,7 @@ public sealed class LinkedPropertiesTests
 
         var p = new SingleParent(true)
         {
-            Child = new Child
+            Child = new()
             {
                 Info =
                 {
@@ -26,7 +26,7 @@ public sealed class LinkedPropertiesTests
             }
         };
 
-        Child c = p.Child;
+        var c = p.Child;
         Assert.Equal(aName, p.ChildName);
         Assert.Equal(aAge, p.ChildAge);
 
@@ -57,7 +57,7 @@ public class Child : LinkableNotifyPropertyChanged
 
     public Child()
     {
-        Info = new ChildInfo();
+        Info = new();
     }
 }
 
@@ -100,19 +100,24 @@ public class SingleParent : LinkableNotifyPropertyChanged
 
     public static void Link(SingleParent p)
     {
-        p.Link(x => x.Child, (l, c) =>
-        {
-            l.RelinkChildren(c, () =>
+        p.Link(x => x.Child,
+            (l, c) =>
             {
-                c.LinkChild(x => x.Info, (cl, i) =>
-                {
-                    cl.RelinkChildren(i, () =>
+                l.RelinkChildren(c,
+                    () =>
                     {
-                        i.LinkChild(x => x.Age, a => p.ChildAge = a, cl);
-                        i.LinkChild(x => x.Name, n => p.ChildName = n, cl);
+                        c.LinkChild(x => x.Info,
+                            (cl, i) =>
+                            {
+                                cl.RelinkChildren(i,
+                                    () =>
+                                    {
+                                        i.LinkChild(x => x.Age, a => p.ChildAge = a, cl);
+                                        i.LinkChild(x => x.Name, n => p.ChildName = n, cl);
+                                    });
+                            },
+                            l);
                     });
-                }, l);
             });
-        });
     }
 }

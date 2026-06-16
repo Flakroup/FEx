@@ -18,6 +18,5 @@ public static class RegistryKeyExtensions
             : default;
     }
 
-    public static T GetKeyValue<T>(this RegistryKey reg, string keyName) =>
-        GetKeyValue<T>(reg, keyName, default);
+    public static T GetKeyValue<T>(this RegistryKey reg, string keyName) => reg.GetKeyValue<T>(keyName, default);
 }

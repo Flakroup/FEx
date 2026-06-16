@@ -4,8 +4,8 @@ using FEx.SecureStorage.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 using StrongInject.Extensions.DependencyInjection;
-using System;
 #if NET5_0_OR_GREATER
+using System;
 using System.Runtime.InteropServices;
 #endif
 
@@ -15,7 +15,7 @@ namespace FEx.SecureStorage;
 public class SecureStorageModule : InitializeModule<ISecureStorageContainer, IServiceCollection>
 {
     /// <summary>
-    /// Picks the most secure <see cref="ISecureStorageService"/> available on the
+    /// Picks the most secure <see cref="ISecureStorageService" /> available on the
     /// current OS. Order: Windows DPAPI &gt; macOS Keychain &gt; Linux libsecret &gt;
     /// cross-platform file fallback. If libsecret is missing on Linux the factory
     /// silently falls back to the file implementation.
@@ -45,6 +45,6 @@ public class SecureStorageModule : InitializeModule<ISecureStorageContainer, ISe
 
     protected override void RegisterServices(ISecureStorageContainer container, IServiceCollection services)
     {
-        services.AddSingletonServiceUsingContainer<ISecureStorageService>(container);
+        services.AddSingletonServiceUsingContainer(container);
     }
 }

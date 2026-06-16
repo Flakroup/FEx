@@ -16,8 +16,7 @@ namespace FEx.WPFx.Extensions;
 
 public static class BitmapExtensions
 {
-    public static Task<BitmapImage> ToBitmapImageAsync(this Stream stream) =>
-        stream.ToBitmapImageAsync(false);
+    public static Task<BitmapImage> ToBitmapImageAsync(this Stream stream) => stream.ToBitmapImageAsync(false);
 
     public static Task<BitmapImage> ToBitmapImageAsync(this Stream stream, bool forceLoad) =>
         stream.ToBitmapImageAsync(forceLoad, true);
@@ -34,11 +33,10 @@ public static class BitmapExtensions
         if (forceMemoryStream && stream is not MemoryStream)
             stream = await stream.CopyToMemoryStreamAsync(true);
 
-        return ToBitmapImage(stream, forceLoad, decodePixelHeight, decodePixelWidth);
+        return stream.ToBitmapImage(forceLoad, decodePixelHeight, decodePixelWidth);
     }
 
-    public static BitmapImage ToBitmapImage(this Stream stream) =>
-        stream.ToBitmapImage(false);
+    public static BitmapImage ToBitmapImage(this Stream stream) => stream.ToBitmapImage(false);
 
     public static BitmapImage ToBitmapImage(this Stream stream, bool forceLoad) =>
         stream.ToBitmapImage(forceLoad, 0, 0);
@@ -129,8 +127,7 @@ public static class BitmapExtensions
         encoder.Save(fileStream);
     }
 
-    public static Task<BitmapImage> ToBitmapImageAsync(this byte[] array) =>
-        array.ToBitmapImageAsync(false);
+    public static Task<BitmapImage> ToBitmapImageAsync(this byte[] array) => array.ToBitmapImageAsync(false);
 
     public static async Task<BitmapImage> ToBitmapImageAsync(this byte[] array, bool forceLoad)
     {
@@ -148,15 +145,12 @@ public static class BitmapExtensions
     /// <returns>
     /// The image as a BitmapImage for WPF
     /// </returns>
-    public static Task<BitmapImage> ToBitmapImageAsync(this Image image) =>
-        image.ToBitmapImageAsync(null, false);
+    public static Task<BitmapImage> ToBitmapImageAsync(this Image image) => image.ToBitmapImageAsync(null, false);
 
     public static Task<BitmapImage> ToBitmapImageAsync(this Image image, ImageFormat imageFormat) =>
         image.ToBitmapImageAsync(imageFormat, false);
 
-    public static async Task<BitmapImage> ToBitmapImageAsync(this Image image,
-                                                             ImageFormat imageFormat,
-                                                             bool forceLoad)
+    public static async Task<BitmapImage> ToBitmapImageAsync(this Image image, ImageFormat imageFormat, bool forceLoad)
     {
         //https://stackoverflow.com/questions/25326137/converting-bitmap-to-imagesource-made-my-images-background-black
         using var stream = new MemoryStream();

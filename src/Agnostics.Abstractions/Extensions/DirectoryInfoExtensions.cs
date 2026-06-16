@@ -27,8 +27,7 @@ public static class DirectoryInfoExtensions
     }
 
     public static FileInfo GetDescendantFile(this DirectoryInfo dir, params string[] descendants) =>
-        GetDescendantFileSystemObject(dir,
-            path =>
+        dir.GetDescendantFileSystemObject(path =>
             {
                 var file = new FileInfo(path);
                 file.Directory?.Create();
@@ -38,8 +37,7 @@ public static class DirectoryInfoExtensions
             descendants);
 
     public static DirectoryInfo GetDescendantDirectory(this DirectoryInfo dir, params string[] descendants) =>
-        GetDescendantFileSystemObject(dir,
-            path =>
+        dir.GetDescendantFileSystemObject(path =>
             {
                 var directory = new DirectoryInfo(path);
                 directory.Create();
@@ -51,16 +49,16 @@ public static class DirectoryInfoExtensions
     public static T GetDescendantFileSystemObject<T>(this string directoryPath,
                                                      Func<string, T> activator,
                                                      params string[] descendants) =>
-        GetDescendantFileSystemObject(new DirectoryInfo(directoryPath), activator, descendants);
+        new DirectoryInfo(directoryPath).GetDescendantFileSystemObject(activator, descendants);
 
     public static T GetDescendantFileSystemObject<T>(this DirectoryInfo dir,
                                                      Func<string, T> activator,
                                                      params string[] descendants) =>
-        activator(GetDescendantPath(dir, descendants));
+        activator(dir.GetDescendantPath(descendants));
 
     public static string GetSpecialDirectoryPathDescendants(this Environment.SpecialFolder folder,
                                                             params string[] descendants) =>
-        GetSpecialDirectory(folder).Directory.GetDescendantPath(descendants);
+        folder.GetSpecialDirectory().Directory.GetDescendantPath(descendants);
 
     public static SpecialDirectory GetSpecialDirectory(this Environment.SpecialFolder folder) =>
         SpecialDirectory.SpecialDirectories.TryGetReadOnlyKeyValue(folder);

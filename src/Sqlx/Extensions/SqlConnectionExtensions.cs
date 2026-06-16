@@ -48,7 +48,7 @@ public static class SqlConnectionExtensions
     public static async Task<Dictionary<string, long>> LoadTablesAsync(this SqlConnection connection)
     {
         const string sql = "select * from sys.tables order by name";
-        IDictionary<string, object>[] result = await connection.RunSqlAsync(sql);
+        var result = await connection.RunSqlAsync(sql);
 
         return result.ToDictionary(x => Convert.ToString(x["name"]),
             x => Convert.ToInt64(Convert.ToString(x["object_id"])));
@@ -60,7 +60,7 @@ public static class SqlConnectionExtensions
         IProgress<bool> prg = null)
     {
         var sql = $"select name from sys.columns where object_id={tableId}";
-        IDictionary<string, object>[] result = await connection.RunSqlAsync(sql);
+        var result = await connection.RunSqlAsync(sql);
         prg?.Report(true);
 
         return (tableId, result.Select(x => Convert.ToString(x["name"])).ToArray());
@@ -68,7 +68,7 @@ public static class SqlConnectionExtensions
 
     private static string GetPropsSQL()
     {
-        StringBuilder sb = new StringBuilder().AppendLine("DECLARE @props TABLE (propertyname sysname PRIMARY KEY)")
+        var sb = new StringBuilder().AppendLine("DECLARE @props TABLE (propertyname sysname PRIMARY KEY)")
             .AppendLine("INSERT INTO @props(propertyname)");
 
         for (var i = 0; i < ServerProps.ForwardIndex.Count; i++)

@@ -5,10 +5,12 @@ using FEx.Core.Abstractions.Implementations;
 using FEx.Core.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace FEx.Avaloniax;
 
+[SuppressMessage("ReSharper", "OptionalParameterHierarchyMismatch")]
 public class AvaloniaDispatcher : FExDispatcher
 {
     protected static Dispatcher Dispatcher => Dispatcher.UIThread;

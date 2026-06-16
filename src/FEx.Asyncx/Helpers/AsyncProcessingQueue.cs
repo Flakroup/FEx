@@ -1,3 +1,8 @@
+#if NETSTANDARD2_0
+using System.Collections.Concurrent;
+#else
+using System.Threading.Channels;
+#endif
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Asyncx.Utilities;
@@ -5,12 +10,6 @@ using FEx.Core.Abstractions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-#if NETSTANDARD2_0
-using System.Collections.Concurrent;
-
-#else
-using System.Threading.Channels;
-#endif
 
 namespace FEx.Asyncx.Helpers;
 
@@ -73,7 +72,10 @@ public sealed class AsyncProcessingQueue : IDisposable
 #endif
     }
 
-    public AsyncProcessingQueue() : this(10) { }
+    public AsyncProcessingQueue()
+        : this(10)
+    {
+    }
 
     public AsyncProcessingQueue(uint limit)
     {
@@ -139,7 +141,7 @@ public sealed class AsyncProcessingQueue : IDisposable
 #if !NETSTANDARD2_0
         await
 #endif
-        using var registration = cancellationToken.Register(() => gate.TrySetCanceled(cancellationToken));
+            using var registration = cancellationToken.Register(() => gate.TrySetCanceled(cancellationToken));
 
 #if NETSTANDARD2_0
         _taskQueue.Enqueue(gate);

@@ -29,7 +29,7 @@ public static class ErrorExtensions
             return false;
         }
 
-        return TryGetError(error.InnerError, out foundError);
+        return error.InnerError.TryGetError(out foundError);
     }
 
     public static TError Wrap<TError>(this IError errorToWrap) where TError : class, IError, new()

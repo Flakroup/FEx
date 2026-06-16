@@ -12,6 +12,10 @@
         <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
     </ItemGroup>
 
+    <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkId)'">
+        <PackageReference Include="System.Management" Version="$(DotNetNugetsVersion)" />
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
         <ProjectReference Include="..\Core\FEx.Core.csproj" />

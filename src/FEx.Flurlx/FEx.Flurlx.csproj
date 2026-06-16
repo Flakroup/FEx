@@ -8,10 +8,8 @@
 	<ItemGroup>
 		<PackageReference Include="Flurl" Version="4.0.0" />
 		<PackageReference Include="Flurl.Http" Version="4.0.2" />
-		<PackageReference Include="Flurl.Http.Newtonsoft" Version="0.9.1" />
 		<PackageReference Include="Polly" Version="8.7.0" />
 		<PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="StrongInject" Version="1.4.4" />
 		<PackageReference Include="System.Text.Json" Version="$(DotNetNugetsVersion)" />
 	</ItemGroup>
@@ -22,7 +20,6 @@
 		<ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
 		<ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
 		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
-		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
 		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
 		<ProjectReference Include="..\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
 	</ItemGroup>

@@ -6,9 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="DynamicData" Version="9.4.1" />
+        <PackageReference Include="DynamicData" Version="9.4.31" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-        <PackageReference Include="System.Reactive.Linq" Version="6.1.0" />
         <PackageReference Include="TimeZoneConverter" Version="7.2.0" />
     </ItemGroup>
 

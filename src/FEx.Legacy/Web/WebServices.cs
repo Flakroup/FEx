@@ -30,7 +30,7 @@ public static class WebServices
     /// <param name="requestUrl">Pass only what's after <see cref="BaseRequestUrl" /></param>
     /// <param name="credentials">The credentials.</param>
     /// <param name="resultAsJson">Set to true (which is default) if you expect JSON in response. Else set to false.</param>
-    /// <param name="ommitCodes">List of expected - not critical status codes.</param>
+    /// <param name="omitCodes">List of expected - not critical status codes.</param>
     /// <param name="cookies">The cookies.</param>
     /// <returns>
     /// <see cref="string" /> with requested data.
@@ -38,7 +38,7 @@ public static class WebServices
     public static async Task<string> GetRequestResultAsync(string requestUrl,
                                                            ICredentials credentials = null,
                                                            bool resultAsJson = true,
-                                                           List<HttpStatusCode> ommitCodes = null,
+                                                           List<HttpStatusCode> omitCodes = null,
                                                            List<Cookie> cookies = null)
     {
         string responseBody = null;
@@ -55,7 +55,7 @@ public static class WebServices
                 response = await GetHttpResponseAsync(() => client.GetAsync(requestUrl));
                 responseBody = await response.Content.ReadAsStringAsync();
 
-                if (ommitCodes?.Contains(response.StatusCode) != true)
+                if (omitCodes?.Contains(response.StatusCode) != true)
                 {
                     response.EnsureSuccessStatusCode();
 
@@ -224,13 +224,13 @@ public static class WebServices
     /// <param name="requestUrl">Pass only what's after <see cref="BaseRequestUrl" /></param>
     /// <param name="postContent">Serialized JSON object to send in POST request.</param>
     /// <param name="credentials"></param>
-    /// <param name="ommitCodes">List of expected - not critical status codes.</param>
+    /// <param name="omitCodes">List of expected - not critical status codes.</param>
     /// <param name="cookies"></param>
     /// <returns><see cref="bool" /> indicating success of operation.</returns>
     public static async Task<ResponseResult> PostRequestResultAsync(string requestUrl,
                                                                     string postContent,
                                                                     ICredentials credentials = null,
-                                                                    List<HttpStatusCode> ommitCodes = null,
+                                                                    List<HttpStatusCode> omitCodes = null,
                                                                     List<Cookie> cookies = null)
     {
         requestUrl = Uri.EscapeUriString(BaseRequestUrl + requestUrl);
@@ -240,20 +240,20 @@ public static class WebServices
             Encoding.UTF8,
             MediaTypes.ApplicationJson.GetEnumValueDescription());
 
-        return await HandleResponseAsync(requestUrl, ommitCodes, () => client.PostAsync(requestUrl, post));
+        return await HandleResponseAsync(requestUrl, omitCodes, () => client.PostAsync(requestUrl, post));
     }
 
     /// <summary>
     /// Handles the response.
     /// </summary>
     /// <param name="requestUrl">The request URL.</param>
-    /// <param name="ommitCodes">The ommit codes.</param>
+    /// <param name="omitCodes">The omit codes.</param>
     /// <param name="responseHandler">The response handler.</param>
     /// <returns>
     /// System.Boolean
     /// </returns>
     public static async Task<ResponseResult> HandleResponseAsync(string requestUrl,
-                                                                 List<HttpStatusCode> ommitCodes,
+                                                                 List<HttpStatusCode> omitCodes,
                                                                  Func<Task<HttpResponseMessage>> responseHandler)
     {
         HttpResponseMessage response = null;
@@ -264,7 +264,7 @@ public static class WebServices
         {
             response = await GetHttpResponseAsync(responseHandler);
 
-            if (ommitCodes?.Contains(response.StatusCode) != true)
+            if (omitCodes?.Contains(response.StatusCode) != true)
             {
                 responseBody = await response.Content.ReadAsStringAsync();
                 response.EnsureSuccessStatusCode();

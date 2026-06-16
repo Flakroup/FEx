@@ -31,23 +31,23 @@ public sealed class TfsService : ThreadingAwareViewModel
         set
         {
             var isSet = false;
+
             Dispatcher.InvokeOnIdleMainThread(() =>
             {
                 if (_selectedEnvironment?.Name != value?.Name
                     || _selectedEnvironment?.ServerUri != value?.ServerUri)
                 {
-                    if (SelectedEnvironment != null)
-                        SelectedEnvironment.SuccessfullyAuthenticated -= OnUriChanged;
+                    SelectedEnvironment?.SuccessfullyAuthenticated -= OnUriChanged;
 
                     if (SetProperty(ref _selectedEnvironment, value))
                     {
-                        if (SelectedEnvironment != null)
-                            SelectedEnvironment.SuccessfullyAuthenticated += OnUriChanged;
+                        SelectedEnvironment?.SuccessfullyAuthenticated += OnUriChanged;
 
                         isSet = true;
                     }
                 }
             });
+
             if (isSet)
                 SelectedEnvironmentHasChanged?.Invoke(_selectedEnvironment, EventArgs.Empty);
         }
@@ -58,25 +58,40 @@ public sealed class TfsService : ThreadingAwareViewModel
     public static void SetEnvironments(IDictionary<string, Uri> environments, IProgressAggregator mainViewModel)
     {
         Instance.TfsEnvironments.Clear();
-        Instance.TfsEnvironments.AddRange(environments.Select(x => new TfsEnvironment(x.Key, x.Value, mainViewModel, ImagesCacheDirPath)));
+
+        Instance.TfsEnvironments.AddRange(environments.Select(x =>
+            new TfsEnvironment(x.Key, x.Value, mainViewModel, ImagesCacheDirPath)));
     }
 
     public static string GetEnvironmentId(string requestUrl, ICredentials credentials)
     {
-        return Instance.TfsEnvironments.FindInEnumerable(x => x.GetCredentials() == credentials && requestUrl.StartsWith(x.Server.Uri.AbsoluteUri))
+        return Instance.TfsEnvironments
+            .FindInEnumerable(x => x.GetCredentials() == credentials && requestUrl.StartsWith(x.Server.Uri.AbsoluteUri))
             ?.EnvironmentId;
     }
 
-    public Task<TResponse> RunProcAsync<TResponse>(string requestUrl, string environmentId, IDictionary<string, object> args = null, IList<HttpStatusCode> ommitCodes = null, JsonSerializerSettings settings = null, RequestMethod method = RequestMethod.GET) where TResponse : BaseTfsResponse, new()
+    public Task<TResponse> RunProcAsync<TResponse>(string requestUrl,
+                                                   string environmentId,
+                                                   IDictionary<string, object> args = null,
+                                                   IList<HttpStatusCode> omitCodes = null,
+                                                   JsonSerializerSettings settings = null,
+                                                   RequestMethod method = RequestMethod.GET)
+        where TResponse : BaseTfsResponse, new()
     {
-        TfsEnvironment env = TfsEnvironments.First(x => x.EnvironmentId == environmentId);
-        return env.RunProcAsync<TResponse>(requestUrl, args, settings, ommitCodes, method);
+        var env = TfsEnvironments.First(x => x.EnvironmentId == environmentId);
+
+        return env.RunProcAsync<TResponse>(requestUrl, args, settings, omitCodes, method);
     }
 
-    public Task<string> RunRawAsync(string requestUrl, string environmentId, IDictionary<string, object> args = null, IList<HttpStatusCode> ommitCodes = null, RequestMethod method = RequestMethod.GET)
+    public Task<string> RunRawAsync(string requestUrl,
+                                    string environmentId,
+                                    IDictionary<string, object> args = null,
+                                    IList<HttpStatusCode> omitCodes = null,
+                                    RequestMethod method = RequestMethod.GET)
     {
-        TfsEnvironment env = TfsEnvironments.First(x => x.EnvironmentId == environmentId);
-        return env.RunRawAsync(requestUrl, args, ommitCodes, method);
+        var env = TfsEnvironments.First(x => x.EnvironmentId == environmentId);
+
+        return env.RunRawAsync(requestUrl, args, omitCodes, method);
     }
 
     private void OnSelectedEnvironmentHasChanged(object sender, EventArgs eventArgs)
@@ -91,9 +106,8 @@ public sealed class TfsService : ThreadingAwareViewModel
     }
 
     #region Singleton
-
     private static volatile TfsService _instance;
-    private static object SyncRoot { get; } = new object();
+    private static object SyncRoot { get; } = new();
 
     public static TfsService Instance
     {
@@ -103,7 +117,7 @@ public sealed class TfsService : ThreadingAwareViewModel
                 lock (SyncRoot)
                 {
                     if (_instance == null)
-                        _instance = new TfsService();
+                        _instance = new();
                 }
 
             return _instance;
@@ -123,6 +137,5 @@ public sealed class TfsService : ThreadingAwareViewModel
             || TfsEnvironments.All(x => x.ServerUri != SelectedEnvironment.ServerUri))
             SelectedEnvironment = TfsEnvironments.FindInEnumerable();
     }
-
     #endregion
 }

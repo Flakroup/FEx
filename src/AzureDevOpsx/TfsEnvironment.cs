@@ -385,23 +385,23 @@ public class TfsEnvironment : NotifyPropertyChanged
     public async Task<TResponse> RunProcAsync<TResponse>(string requestUrl,
                                                          IDictionary<string, object> args = null,
                                                          JsonSerializerSettings settings = null,
-                                                         IList<HttpStatusCode> ommitCodes = null,
+                                                         IList<HttpStatusCode> omitCodes = null,
                                                          RequestMethod method = RequestMethod.GET)
         where TResponse : BaseTfsResponse, new()
     {
         using var processor = new FuncProcessor(requestUrl, Server.Credentials, EnvironmentId, args, method);
 
-        return await processor.RunAsync<TResponse>(settings, ommitCodes);
+        return await processor.RunAsync<TResponse>(settings, omitCodes);
     }
 
     public async Task<string> RunRawAsync(string requestUrl,
                                           IDictionary<string, object> args = null,
-                                          IList<HttpStatusCode> ommitCodes = null,
+                                          IList<HttpStatusCode> omitCodes = null,
                                           RequestMethod method = RequestMethod.GET)
     {
         using var processor = new FuncProcessor(requestUrl, Server.Credentials, EnvironmentId, args, method);
 
-        return await processor.RunRawAsync(ommitCodes);
+        return await processor.RunRawAsync(omitCodes);
     }
 
     private static Task<ImageSource> GetUserImageAsync(Uri serverUri, ICredentials credentials, Guid tfsUserId)

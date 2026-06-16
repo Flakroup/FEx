@@ -4,6 +4,7 @@ using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging.Abstractions;
 using StrongInject;
+using StrongInject.Modules;
 
 namespace FEx.Sample.WebAPI;
 
@@ -11,12 +12,14 @@ namespace FEx.Sample.WebAPI;
 /// StrongInject container for the Web API application.
 /// Demonstrates Multi-DI pattern: StrongInject + Microsoft DI integration.
 /// </summary>
+[RegisterModule(typeof(CollectionsModule))]
 [RegisterModule(typeof(FExDependencyInjectionModule))]
 [Register(typeof(FExStrongInjectServiceProvider), Scope.SingleInstance, typeof(IFExServiceProvider))]
 [Register(typeof(FExMicrosoftDIServiceProvider), Scope.SingleInstance)]
 [Register(typeof(SampleApiModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 #pragma warning disable IDISP025 // StrongInject generated container
-public partial class AppContainer : TestBase, IContainer<IFExServiceProvider>, IContainer<FExMicrosoftDIServiceProvider>
+public partial class AppContainer : TestBase, IFExDependencyInjectionContainer, IContainer<IFExServiceProvider>,
+    IContainer<FExMicrosoftDIServiceProvider>, IContainer<IInitializeModule<IServiceCollection>[]>
 #pragma warning restore IDISP025
 {
     [Factory]

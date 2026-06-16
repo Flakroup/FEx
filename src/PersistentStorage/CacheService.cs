@@ -42,7 +42,7 @@ public sealed class CacheService : ICacheService
             if (Debugger.IsAttached)
                 _logger.Error(ex);
 
-            Delete<T>((Expression<Func<T, bool>>)null);
+            Delete((Expression<Func<T, bool>>)null);
             Add(item);
 
             return true;
@@ -61,7 +61,7 @@ public sealed class CacheService : ICacheService
             if (Debugger.IsAttached)
                 _logger.Error(ex);
 
-            Delete<T>((Expression<Func<T, bool>>)null);
+            Delete((Expression<Func<T, bool>>)null);
             Add(item);
 
             return true;
@@ -80,7 +80,7 @@ public sealed class CacheService : ICacheService
             if (Debugger.IsAttached)
                 _logger.Error(ex);
 
-            Delete<T>((Expression<Func<T, bool>>)null);
+            Delete((Expression<Func<T, bool>>)null);
             Add(items);
         }
     }
@@ -107,7 +107,7 @@ public sealed class CacheService : ICacheService
             if (Debugger.IsAttached)
                 _logger.Error(ex);
 
-            Delete<T>((Expression<Func<T, bool>>)null);
+            Delete((Expression<Func<T, bool>>)null);
 
             return default;
         }
@@ -125,7 +125,7 @@ public sealed class CacheService : ICacheService
             if (Debugger.IsAttached)
                 _logger.Error(ex);
 
-            Delete<T>((Expression<Func<T, bool>>)null);
+            Delete((Expression<Func<T, bool>>)null);
 
             return Enumerable.Empty<T>().ToList().AsReadOnly();
         }

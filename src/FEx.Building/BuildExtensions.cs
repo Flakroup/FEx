@@ -1,12 +1,11 @@
-using System;
 using Serilog;
+using System;
 
 namespace FEx.Building;
 
 public static class BuildExtensions
 {
-    public static void LogError<T>(this ILogger logger, T exception)
-        where T : Exception =>
+    public static void LogError<T>(this ILogger logger, T exception) where T : Exception =>
         logger.Error(exception, exception.ToString());
 
     public static void LogError(this Exception ex) => Log.Logger.Error(ex, ex.ToString());

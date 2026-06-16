@@ -16,8 +16,7 @@ namespace FEx.Webx.Extensions;
 
 public static class UriExtensions
 {
-    public static Task<string> GetFileNameAsync(this Uri url) =>
-        GetFileNameAsync(url, null);
+    public static Task<string> GetFileNameAsync(this Uri url) => url.GetFileNameAsync(null);
 
     public static async Task<string> GetFileNameAsync(this Uri url, WebRequestParams pars) =>
         await url.DoHttpResponseFuncAsync((response, _) => response.GetFileName(), pars);

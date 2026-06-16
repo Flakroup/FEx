@@ -35,17 +35,14 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
     public ObservableCollection<User> Users { get; } = new();
     public ObservableCollection<Post> Posts { get; } = new();
 
-#pragma warning disable IDISP006 // ReactiveUI commands, disposed by ViewModel lifecycle
-    public ReactiveCommand<Unit, Unit> LoadUsersCommand { get; }
-    public ReactiveCommand<Unit, Unit> LoadPostsCommand { get; }
-    public ReactiveCommand<Unit, Unit> TestResilienceCommand { get; }
-#pragma warning restore IDISP006
-
     public MainWindowViewModel()
     {
         // Commands execute on background thread, so we need to marshal UI updates
-        LoadUsersCommand = ReactiveCommand.CreateFromTask(LoadUsersAsync, outputScheduler: RxSchedulers.MainThreadScheduler);
-        LoadPostsCommand = ReactiveCommand.CreateFromTask(LoadPostsAsync, outputScheduler: RxSchedulers.MainThreadScheduler);
+        LoadUsersCommand =
+            ReactiveCommand.CreateFromTask(LoadUsersAsync, outputScheduler: RxSchedulers.MainThreadScheduler);
+
+        LoadPostsCommand =
+            ReactiveCommand.CreateFromTask(LoadPostsAsync, outputScheduler: RxSchedulers.MainThreadScheduler);
 
         TestResilienceCommand =
             ReactiveCommand.CreateFromTask(TestResilienceAsync, outputScheduler: RxSchedulers.MainThreadScheduler);
@@ -142,6 +139,7 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
             {
                 StatusText =
                     $"✅ Resilience test passed! All concurrent requests handled successfully at {DateTime.Now:HH:mm:ss}";
+
                 IsBusy = false;
             });
         }
@@ -154,4 +152,10 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
             });
         }
     }
+
+#pragma warning disable IDISP006 // ReactiveUI commands, disposed by ViewModel lifecycle
+    public ReactiveCommand<Unit, Unit> LoadUsersCommand { get; }
+    public ReactiveCommand<Unit, Unit> LoadPostsCommand { get; }
+    public ReactiveCommand<Unit, Unit> TestResilienceCommand { get; }
+#pragma warning restore IDISP006
 }

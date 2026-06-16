@@ -51,9 +51,9 @@ public class MSSolution : AsyncInitializable
 
     private void AddProject(ProjectInSolution project)
     {
-        MSProject msProj = project.FromFile(SolutionPackagesDir);
+        var msProj = project.FromFile(SolutionPackagesDir);
 
-        foreach (PackageIdentity pkg in msProj.NuGetPackages)
+        foreach (var pkg in msProj.NuGetPackages)
         {
             NuGetPackages.AddOrUpdate(pkg,
                 _ =>
@@ -69,7 +69,7 @@ public class MSSolution : AsyncInitializable
 
             InstalledNuGetPackages.Write(() =>
             {
-                MSProjectNuGetInstallation nuGet = InstalledNuGetPackages.FirstOrDefault(x => x.Name == pkg.Id);
+                var nuGet = InstalledNuGetPackages.FirstOrDefault(x => x.Name == pkg.Id);
 
                 if (nuGet is null)
                 {

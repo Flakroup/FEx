@@ -23,11 +23,13 @@ public class FExShellWindow<TViewModel> : FExWindow<TViewModel> where TViewModel
         }
     }
 
-    private void OnCanResizeWindow(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = ResizeMode is ResizeMode.CanResize or ResizeMode.CanResizeWithGrip;
-
-    private void OnCanMinimizeWindow(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = ResizeMode != ResizeMode.NoResize;
-
     private static void OnCanSystemMenu(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = true;
+
+    private void OnCanResizeWindow(object sender, CanExecuteRoutedEventArgs e) =>
+        e.CanExecute = ResizeMode is ResizeMode.CanResize or ResizeMode.CanResizeWithGrip;
+
+    private void OnCanMinimizeWindow(object sender, CanExecuteRoutedEventArgs e) =>
+        e.CanExecute = ResizeMode != ResizeMode.NoResize;
 
     private void OnCloseWindow(object target, ExecutedRoutedEventArgs e) => SystemCommands.CloseWindow(this);
 

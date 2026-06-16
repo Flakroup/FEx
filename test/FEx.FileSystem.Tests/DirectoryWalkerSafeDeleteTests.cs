@@ -1,12 +1,13 @@
-using FEx.FileSystem;
 using Shouldly;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
 using Xunit;
 
 namespace FEx.FileSystem.Tests;
 
+[SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
 public sealed class DirectoryWalkerSafeDeleteTests
 {
     // ── DirectoryInfo overload ──────────────────────────────────────────────
@@ -18,7 +19,7 @@ public sealed class DirectoryWalkerSafeDeleteTests
         var dir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
 
         // Act
-        var result = dir.SafeDelete(recursive: false);
+        var result = dir.SafeDelete(false);
 
         // Assert
         result.ShouldBeTrue();
@@ -33,7 +34,7 @@ public sealed class DirectoryWalkerSafeDeleteTests
         try
         {
             // Act
-            var result = new DirectoryInfo(dir.FullName).SafeDelete(recursive: false);
+            var result = new DirectoryInfo(dir.FullName).SafeDelete(false);
 
             // Assert
             result.ShouldBeTrue();
@@ -42,7 +43,8 @@ public sealed class DirectoryWalkerSafeDeleteTests
         }
         finally
         {
-            if (dir.Exists) dir.Delete(true);
+            if (dir.Exists)
+                dir.Delete(true);
         }
     }
 
@@ -57,7 +59,7 @@ public sealed class DirectoryWalkerSafeDeleteTests
             File.WriteAllText(Path.Combine(dir.FullName, "file.txt"), "data");
 
             // Act
-            var result = new DirectoryInfo(dir.FullName).SafeDelete(recursive: false);
+            var result = new DirectoryInfo(dir.FullName).SafeDelete(false);
 
             // Assert
             result.ShouldBeFalse();
@@ -66,7 +68,8 @@ public sealed class DirectoryWalkerSafeDeleteTests
         }
         finally
         {
-            if (dir.Exists) dir.Delete(true);
+            if (dir.Exists)
+                dir.Delete(true);
         }
     }
 
@@ -82,7 +85,7 @@ public sealed class DirectoryWalkerSafeDeleteTests
             File.WriteAllText(Path.Combine(dir.FullName, "b.txt"), "data");
 
             // Act
-            var result = new DirectoryInfo(dir.FullName).SafeDelete(recursive: true);
+            var result = new DirectoryInfo(dir.FullName).SafeDelete(true);
 
             // Assert
             result.ShouldBeTrue();
@@ -91,7 +94,8 @@ public sealed class DirectoryWalkerSafeDeleteTests
         }
         finally
         {
-            if (dir.Exists) dir.Delete(true);
+            if (dir.Exists)
+                dir.Delete(true);
         }
     }
 
@@ -110,7 +114,7 @@ public sealed class DirectoryWalkerSafeDeleteTests
             File.WriteAllText(Path.Combine(deep.FullName, "deep.txt"), "data");
 
             // Act
-            var result = new DirectoryInfo(dir.FullName).SafeDelete(recursive: true);
+            var result = new DirectoryInfo(dir.FullName).SafeDelete(true);
 
             // Assert
             result.ShouldBeTrue();
@@ -119,7 +123,8 @@ public sealed class DirectoryWalkerSafeDeleteTests
         }
         finally
         {
-            if (dir.Exists) dir.Delete(true);
+            if (dir.Exists)
+                dir.Delete(true);
         }
     }
 
@@ -142,7 +147,7 @@ public sealed class DirectoryWalkerSafeDeleteTests
             using var lockStream = new FileStream(lockedPath, FileMode.Open, FileAccess.Read, FileShare.None);
 
             // Act
-            var result = new DirectoryInfo(dir.FullName).SafeDelete(recursive: true);
+            var result = new DirectoryInfo(dir.FullName).SafeDelete(true);
 
             // Assert
             result.ShouldBeFalse();
@@ -151,7 +156,8 @@ public sealed class DirectoryWalkerSafeDeleteTests
         }
         finally
         {
-            if (dir.Exists) dir.Delete(true);
+            if (dir.Exists)
+                dir.Delete(true);
         }
     }
 
@@ -188,7 +194,8 @@ public sealed class DirectoryWalkerSafeDeleteTests
         }
         finally
         {
-            if (File.Exists(path)) File.Delete(path);
+            if (File.Exists(path))
+                File.Delete(path);
         }
     }
 
@@ -215,10 +222,10 @@ public sealed class DirectoryWalkerSafeDeleteTests
         }
         finally
         {
-            if (File.Exists(path)) File.Delete(path);
+            if (File.Exists(path))
+                File.Delete(path);
         }
     }
 
-    private static string TempPath() =>
-        Path.Combine(Path.GetTempPath(), $"FExTest_{Guid.NewGuid()}");
+    private static string TempPath() => Path.Combine(Path.GetTempPath(), $"FExTest_{Guid.NewGuid()}");
 }

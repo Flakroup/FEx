@@ -246,10 +246,10 @@ public static class TaskExtensions
         return null;
     }
 
-    public static Func<Task<object>> WrapTask(this Func<Task> taskFunc) => () => WrapTaskAsync(taskFunc);
+    public static Func<Task<object>> WrapTask(this Func<Task> taskFunc) => taskFunc.WrapTaskAsync;
 
     public static Func<Task<object>> WrapTask<T>(this Func<T, Task> taskFunc, T arg) =>
-        () => WrapTaskAsync(taskFunc, arg);
+        () => taskFunc.WrapTaskAsync(arg);
 
     public static async Task<object> WrapTaskAsync<T>(this Func<T, Task> taskFunc, T arg)
     {

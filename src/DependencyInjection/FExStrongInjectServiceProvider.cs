@@ -16,7 +16,7 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
 
     public FExStrongInjectServiceProvider()
     {
-        _method = GetType()
+        _method = typeof(FExStrongInjectServiceProvider)
             .GetMethods()
             .Single(x => x.IsGenericMethod && x.Name == nameof(GetRequiredService) && x.GetParameters().Length == 0);
     }

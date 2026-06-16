@@ -9,15 +9,18 @@ namespace FEx.WPFx.Extensions;
 
 public static class DependencyObjectExtensions
 {
-    public static TViewModel GetViewModel<TViewModel>(this FrameworkElement view) => view.InvokeOnDispatcherContext(() => (TViewModel)view.DataContext);
+    public static TViewModel GetViewModel<TViewModel>(this FrameworkElement view) =>
+        view.InvokeOnDispatcherContext(() => (TViewModel)view.DataContext);
 
     public static void InvokeOnDispatcherContext(this DependencyObject sender,
                                                  Action action,
-                                                 DispatcherPriority priority = DispatcherPriority.Send) => DispatcherService.InvokeOnDispatcherContext(action, sender, priority);
+                                                 DispatcherPriority priority = DispatcherPriority.Send) =>
+        DispatcherService.InvokeOnDispatcherContext(action, sender, priority);
 
     public static async Task InvokeOnDispatcherContextAsync(this DependencyObject sender,
                                                             Action action,
-                                                            DispatcherPriority priority = DispatcherPriority.Send) => await DispatcherService.InvokeOnDispatcherContextAsync(action, sender, priority);
+                                                            DispatcherPriority priority = DispatcherPriority.Send) =>
+        await DispatcherService.InvokeOnDispatcherContextAsync(action, sender, priority);
 
     public static async Task<T> InvokeOnDispatcherContextAsync<T>(this DependencyObject sender,
                                                                   Func<T> action,
@@ -38,7 +41,7 @@ public static class DependencyObjectExtensions
 
             if (elt is not null)
             {
-                BindingExpression binding = BindingOperations.GetBindingExpression(elt, property);
+                var binding = BindingOperations.GetBindingExpression(elt, property);
 
                 binding?.UpdateSource();
             }

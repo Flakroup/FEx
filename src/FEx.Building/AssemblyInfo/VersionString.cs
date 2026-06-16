@@ -54,7 +54,7 @@ public class VersionString
 
     private bool Parse(string input)
     {
-        Match match = VersionRegex.Match(input);
+        var match = VersionRegex.Match(input);
 
         if (match.Success)
         {

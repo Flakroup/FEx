@@ -21,16 +21,17 @@ public sealed class GraphServiceClientCacheTests
         var driveIdFactoryCalls = 0;
         var dummyClient = CreateDummyClient();
 
-        using var cache = new GraphServiceClientCache(
-            auth,
+        using var cache = new GraphServiceClientCache(auth,
             _ =>
             {
                 clientFactoryCalls++;
+
                 return dummyClient;
             },
             (_, _) =>
             {
                 driveIdFactoryCalls++;
+
                 return Task.FromResult("drive-1");
             });
 
@@ -52,11 +53,11 @@ public sealed class GraphServiceClientCacheTests
         var clientFactoryCalls = 0;
         var dummyClient = CreateDummyClient();
 
-        using var cache = new GraphServiceClientCache(
-            auth,
+        using var cache = new GraphServiceClientCache(auth,
             _ =>
             {
                 clientFactoryCalls++;
+
                 return dummyClient;
             },
             (_, _) => Task.FromResult("drive-1"));
@@ -75,20 +76,22 @@ public sealed class GraphServiceClientCacheTests
         var clientFactoryCalls = 0;
         var dummyClient = CreateDummyClient();
 
-        using var cache = new GraphServiceClientCache(
-            auth,
+        using var cache = new GraphServiceClientCache(auth,
             _ =>
             {
                 Interlocked.Increment(ref clientFactoryCalls);
+
                 return dummyClient;
             },
             async (_, ct) =>
             {
                 await Task.Delay(20, ct);
+
                 return "drive-1";
             });
 
         var tasks = new Task[8];
+
         for (var i = 0; i < tasks.Length; i++)
             tasks[i] = cache.GetAsync(CancellationToken.None);
 
@@ -106,6 +109,7 @@ public sealed class GraphServiceClientCacheTests
     private static GraphServiceClient CreateDummyClient()
     {
         var tokenProvider = new DelegatingAccessTokenProvider(_ => Task.FromResult("dummy"));
-        return new GraphServiceClient(new BaseBearerTokenAuthenticationProvider(tokenProvider));
+
+        return new(new BaseBearerTokenAuthenticationProvider(tokenProvider));
     }
 }

@@ -28,10 +28,8 @@ public partial class AppContainer : TestBase, IContainer<IFExServiceProvider>, I
 /// </summary>
 public class SampleApiModule : InitializeOnlyModule
 {
-    public override ValueTask OnCompleteInitializationAsync(IServiceCollection services)
-    {
+    public override ValueTask OnCompleteInitializationAsync(IServiceCollection services) =>
         // Custom API services can be registered here
         // This demonstrates how app-specific services integrate with FEx modules
-        return ValueTask.CompletedTask;
-    }
+        ValueTask.CompletedTask;
 }

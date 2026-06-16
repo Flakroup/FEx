@@ -49,7 +49,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
 #pragma warning disable IDISP001 // Polly policy, stateless, composed via WrapAsync
         var bulkheadPolicy = BuildBulkheadPolicy(config);
 
-        IAsyncPolicy<IFlurlResponse> fallbackPolicy = config.EnableFallback
+        var fallbackPolicy = config.EnableFallback
             ? BuildFallbackPolicy()
             : Policy.NoOpAsync<IFlurlResponse>();
 #pragma warning restore IDISP001
@@ -72,6 +72,11 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
         {
             StatusCode = (int)HttpStatusCode.ServiceUnavailable
         };
+
+    private static async Task OnFallbackAsync(DelegateResult<IFlurlResponse> delegateResult, Context context)
+    {
+        await Task.CompletedTask;
+    }
 
     /// <summary>
     /// Builds a Retry policy with exponential backoff.
@@ -139,7 +144,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
     {
 #pragma warning disable IDISP005 // Polly BulkheadAsync policy, stateless
         return Policy.BulkheadAsync<IFlurlResponse>(config.MaxParallelization,
-                config.MaxQueuingActions,
+            config.MaxQueuingActions,
             _ =>
             {
                 _logger.Warning(
@@ -163,7 +168,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
                         $"[FExPolly] Fallback activated due to: {result.Exception?.Message ?? "Unknown error"}");
 
                     // Future enhancement: Try to get cached response
-                        if (context.TryGetValue("CacheKey", out var cacheKey))
+                    if (context.TryGetValue("CacheKey", out var cacheKey))
                         _logger?.Information($"[FExPolly] Attempting to retrieve cached data for key: {cacheKey}");
 
                     // Create a fallback response with 503 Service Unavailable
@@ -172,11 +177,6 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
                     return Task.FromResult(fallbackResponse);
                 },
                 OnFallbackAsync);
-    }
-
-    private static async Task OnFallbackAsync(DelegateResult<IFlurlResponse> delegateResult, Context context)
-    {
-        await Task.CompletedTask;
     }
 
     /// <summary>

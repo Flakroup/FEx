@@ -39,9 +39,7 @@ public static class FExConfigurationExtensions
             : appSettings;
     }
 
-    public static TConf GetBindedConfiguration<TConf>(string sectionKey,
-                                                      string basePath,
-                                                      string settingsFilePath)
+    public static TConf GetBindedConfiguration<TConf>(string sectionKey, string basePath, string settingsFilePath)
     {
         var builder = new ConfigurationBuilder();
         builder.SetBasePath(basePath ?? Directory.GetCurrentDirectory()).AddJsonFile(settingsFilePath, false);
@@ -67,9 +65,7 @@ public static class FExConfigurationExtensions
     public static TConf GetBindedConfiguration<TConf>(string sectionKey, string basePath) =>
         GetBindedConfiguration<TConf>(sectionKey, basePath, "appsettings.json");
 
-    public static void BindJsonNet(this IConfigurationSection config,
-                                   object instance,
-                                   Func<string, string> jsonFunc)
+    public static void BindJsonNet(this IConfigurationSection config, object instance, Func<string, string> jsonFunc)
     {
         var jsonText = GetSerializedConfig(config, jsonFunc);
 
@@ -77,19 +73,16 @@ public static class FExConfigurationExtensions
     }
 
     public static void BindJsonNet(this IConfigurationSection config, object instance) =>
-        BindJsonNet(config, instance, null);
+        config.BindJsonNet(instance, null);
 
-    public static T BindJsonNet<T>(this IConfigurationSection config, Func<string, string> jsonFunc)
-        where T : new()
+    public static T BindJsonNet<T>(this IConfigurationSection config, Func<string, string> jsonFunc) where T : new()
     {
         var jsonText = GetSerializedConfig(config, jsonFunc);
 
         return jsonText.FromJson<T>() ?? new T();
     }
 
-    public static T BindJsonNet<T>(this IConfigurationSection config)
-        where T : new() =>
-        BindJsonNet<T>(config, null);
+    public static T BindJsonNet<T>(this IConfigurationSection config) where T : new() => config.BindJsonNet<T>(null);
 
     private static string GetMemberPath(Expression expression)
     {

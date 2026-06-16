@@ -3,11 +3,13 @@ using FEx.Core.Abstractions.Interfaces;
 using FEx.WPFx.Services;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace FEx.WPFx.Implementations;
 
+[SuppressMessage("ReSharper", "OptionalParameterHierarchyMismatch")]
 public class DispatcherContextExecutor : FExDispatcher
 {
     public DispatcherContextExecutor(ILogger<DispatcherContextExecutor> logger,
@@ -20,8 +22,7 @@ public class DispatcherContextExecutor : FExDispatcher
 
     public override bool CheckAccess(object sender) => DispatcherService.CheckAccess(sender as DispatcherObject);
 
-    public override void BeginInvokeOnMainThread(Action action, object sender) =>
-        DispatcherService.BeginInvoke(action);
+    public override void BeginInvokeOnMainThread(Action action, object sender) => DispatcherService.BeginInvoke(action);
 
     public override void InvokeOnIdleMainThread(Action action, object sender) =>
         DispatcherService.InvokeOnDispatcherContext(action,

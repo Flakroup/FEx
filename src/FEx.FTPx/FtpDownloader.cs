@@ -9,14 +9,13 @@ using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Extensions;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Extensions;
-using Microsoft.Extensions.Logging;
 using FEx.Webx.Utilities;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.FTPx;
@@ -195,7 +194,15 @@ public static class FtpDownloader
 
                                         await FExMvvm.MessagePopupService.ShowMessageAsync(
                                             $"{fileName} bytes at position {offset + prg + 1}-{newOffset} replaced with 0 due to {failedRetryCount} unsuccessful read attempts.\n",
-                                            "Something wrong happened", MessageIcon.Exclamation, FExMessageButton.OK, null, true, false, null, LogLevel.Information, null);
+                                            "Something wrong happened",
+                                            MessageIcon.Exclamation,
+                                            FExMessageButton.OK,
+                                            null,
+                                            true,
+                                            false,
+                                            null,
+                                            LogLevel.Information,
+                                            null);
                                     }
                                     else
                                     {
@@ -366,6 +373,7 @@ public static class FtpDownloader
                 catch (Exception ex)
                 {
                     ex.HandleException();
+
                     return newOffset;
                 }
 

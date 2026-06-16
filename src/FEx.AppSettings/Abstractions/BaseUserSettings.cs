@@ -101,7 +101,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
         }
     }
 
-    protected virtual string SerializedInstance() => this.ToJson(formatting: Formatting.Indented);
+    protected virtual string SerializedInstance() => this.ToJson(Formatting.Indented);
 
     protected virtual void OnCreated()
     {
@@ -125,9 +125,7 @@ public abstract class BaseUserSettings<T> : BaseUserSettings where T : BaseUserS
         return config;
     }
 
-    public static T GetSettings() =>
-        GetSettings(null, false);
+    public static T GetSettings() => GetSettings(null, false);
 
-    public static T GetSettings(string persistencePath) =>
-        GetSettings(persistencePath, false);
+    public static T GetSettings(string persistencePath) => GetSettings(persistencePath, false);
 }

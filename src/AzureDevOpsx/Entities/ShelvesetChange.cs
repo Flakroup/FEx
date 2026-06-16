@@ -27,16 +27,13 @@ public class ShelvesetChange
             if (_type == null)
             {
                 _type = ChangeType.None;
-                foreach (string changeType in ChangeTypeString.Split(',')
-                             .Select(x => x.Trim())
-                             .ToArray())
+
+                foreach (var changeType in ChangeTypeString.Split(',').Select(x => x.Trim()).ToArray())
                 {
                     if (_type == ChangeType.None)
-                        _type = TfsExtensions.ChangeTypes.FirstOrDefault(x => x.Value.IsEqual(changeType))
-                            .Key;
+                        _type = TfsExtensions.ChangeTypes.FirstOrDefault(x => x.Value.IsEqual(changeType)).Key;
                     else
-                        _type |= TfsExtensions.ChangeTypes.FirstOrDefault(x => x.Value.IsEqual(changeType))
-                            .Key;
+                        _type |= TfsExtensions.ChangeTypes.FirstOrDefault(x => x.Value.IsEqual(changeType)).Key;
                 }
             }
 

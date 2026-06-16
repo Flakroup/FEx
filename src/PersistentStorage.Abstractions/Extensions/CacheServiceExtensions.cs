@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace FEx.PersistentStorage.Abstractions.Extensions;
 
@@ -11,7 +13,7 @@ public static class CacheServiceExtensions
         service.Upsert(items, null);
 
     public static bool Delete<T>(this ICacheService service) where T : ICacheableItem =>
-        service.Delete<T>((System.Linq.Expressions.Expression<System.Func<T, bool>>)null);
+        service.Delete((Expression<Func<T, bool>>)null);
 
     public static T FirstOrDefault<T>(this ICacheService service) where T : ICacheableItem =>
         service.FirstOrDefault<T>(null);

@@ -38,6 +38,8 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
     private static IFExLoggingService _loggingSrv;
     private static IFExLoggingConfigurator _configuration;
 
+    private static ILoggerFactory _convenienceFactory;
+
     [Instance]
     public static ILoggerProvider[] LoggerProviders { get; set; } = [];
 
@@ -82,18 +84,9 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
     public static ILogger<T> CreateLogger<T>(ILoggerFactory factory) => factory.CreateLogger<T>();
 
     [Factory]
-    public static ILogger CreateLogger(ILoggerFactory factory) =>
-        factory.CreateLogger(string.Empty);
+    public static ILogger CreateLogger(ILoggerFactory factory) => factory.CreateLogger(string.Empty);
 
-    private static ILoggerFactory _convenienceFactory;
-
-    private static ILoggerFactory GetConvenienceFactory() =>
-#pragma warning disable IDISP004 // application-lifetime singleton
-        _convenienceFactory ??= new SerilogLoggerFactory(null, false, GetLoggerProviderCollection(LoggerProviders));
-#pragma warning restore IDISP004
-
-    public static ILogger<T> CreateLogger<T>() =>
-        GetConvenienceFactory().CreateLogger<T>();
+    public static ILogger<T> CreateLogger<T>() => GetConvenienceFactory().CreateLogger<T>();
 
     public static ILogger CreateLogger(Type senderType)
     {
@@ -161,4 +154,9 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
         services.AddSingletonServiceUsingContainer<LoggerProviderCollection>(container);
         services.AddSingletonServiceUsingContainer<ILoggerFactory>(container);
     }
+
+    private static ILoggerFactory GetConvenienceFactory() =>
+#pragma warning disable IDISP004 // application-lifetime singleton
+        _convenienceFactory ??= new SerilogLoggerFactory(null, false, GetLoggerProviderCollection(LoggerProviders));
+#pragma warning restore IDISP004
 }

@@ -18,8 +18,8 @@ using System.Web;
 namespace FEx.AzureDevOpsx;
 
 /// <summary>
-///     Container for TFS project properties
-///     https://www.visualstudio.com/en-us/docs/integrate/api/tfs/projects
+/// Container for TFS project properties
+/// https://www.visualstudio.com/en-us/docs/integrate/api/tfs/projects
 /// </summary>
 [JsonConverter(typeof(JsonPathConverter))]
 public class Project : NotifyPropertyChanged
@@ -44,10 +44,10 @@ public class Project : NotifyPropertyChanged
     private string _idOfRepo;
 
     /// <summary>
-    ///     Gets a value indicating whether this instance is workspace present.
+    /// Gets a value indicating whether this instance is workspace present.
     /// </summary>
     /// <value>
-    ///     <c>true</c> if this instance is workspace present; otherwise, <c>false</c>.
+    /// <c>true</c> if this instance is workspace present; otherwise, <c>false</c>.
     /// </value>
     public bool IsWorkspacePresent
     {
@@ -62,7 +62,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     URL of project default team.
+    /// URL of project default team.
     /// </summary>
     public Uri DefaultTeamUrl
     {
@@ -73,7 +73,7 @@ public class Project : NotifyPropertyChanged
     public TfsConfigurationServer Server => Collection.TfsTeamProjectCollection.ConfigurationServer;
 
     /// <summary>
-    ///     ID of project default team.
+    /// ID of project default team.
     /// </summary>
     [JsonProperty("defaultTeam.id")]
     public string DefaultTeamId
@@ -83,7 +83,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Name  of project default team.
+    /// Name  of project default team.
     /// </summary>
     [JsonProperty("defaultTeam.name")]
     public string DefaultTeamName
@@ -93,7 +93,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     URL of project dashboard site.
+    /// URL of project dashboard site.
     /// </summary>
     [JsonProperty("_links.web.href")]
     public Uri WebUrl
@@ -103,7 +103,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     ID (<see cref="Guid" />) of the project.
+    /// ID (<see cref="Guid" />) of the project.
     /// </summary>
     [JsonProperty("id")]
     public string Id
@@ -113,7 +113,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Name of the project.
+    /// Name of the project.
     /// </summary>
     [JsonProperty("name")]
     public string Name
@@ -123,7 +123,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Description of the project.
+    /// Description of the project.
     /// </summary>
     [JsonProperty("description")]
     public string Description
@@ -133,7 +133,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Base TFS REST API URL of the project.
+    /// Base TFS REST API URL of the project.
     /// </summary>
     [JsonProperty("url")]
     public Uri ApiUrl
@@ -143,7 +143,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     State of the project.
+    /// State of the project.
     /// </summary>
     [JsonProperty("state")]
     public string StateString
@@ -153,7 +153,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     State of the project.
+    /// State of the project.
     /// </summary>
     public ProjectState State
     {
@@ -162,7 +162,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Source control type of the project.
+    /// Source control type of the project.
     /// </summary>
     [JsonProperty("capabilities.versioncontrol.sourceControlType")]
     public string SourceControlTypeString
@@ -172,7 +172,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Source control type of the project.
+    /// Source control type of the project.
     /// </summary>
     public SourceControlTypes SourceControlType
     {
@@ -181,7 +181,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Process template name of the project.
+    /// Process template name of the project.
     /// </summary>
     [JsonProperty("capabilities.processTemplate.templateName")]
     public string ProcessTemplateName
@@ -191,7 +191,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Collection name of the project.
+    /// Collection name of the project.
     /// </summary>
     public ProjectsCollection Collection
     {
@@ -204,12 +204,12 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Collection name of the project.
+    /// Collection name of the project.
     /// </summary>
     public string CollectionName => Collection.Name;
 
     /// <summary>
-    ///     URL of project code explorer site.
+    /// URL of project code explorer site.
     /// </summary>
     public Uri CodeSite
     {
@@ -218,7 +218,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     ID of Git project repository.
+    /// ID of Git project repository.
     /// </summary>
     public string IdOfRepo
     {
@@ -227,7 +227,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Initializes new <see cref="Project" /> class instance.
+    /// Initializes new <see cref="Project" /> class instance.
     /// </summary>
     public Project()
     {
@@ -235,13 +235,15 @@ public class Project : NotifyPropertyChanged
 
     public async Task RefreshAsync()
     {
-        SourceControlType = TfsExtensions.SourceControlTypes.FirstOrDefault(x => x.Value.IsEqual(SourceControlTypeString))
+        SourceControlType = TfsExtensions.SourceControlTypes
+            .FirstOrDefault(x => x.Value.IsEqual(SourceControlTypeString))
             .Key;
+
         DefaultTeamUrl = WebUrl != null && DefaultTeamName != null
             ? new Uri(Uri.EscapeUriString($"{WebUrl}/{DefaultTeamName}/_admin?_a=members"))
             : null;
-        State = TfsExtensions.ProjectStates.FirstOrDefault(x => x.Value.IsEqual(StateString))
-            .Key;
+
+        State = TfsExtensions.ProjectStates.FirstOrDefault(x => x.Value.IsEqual(StateString)).Key;
         CodeSite = GetProjectCodeSiteUrl();
         IdOfRepo = await GitGetRepoIdAsync();
         ProjectWorkspaces = this.GetProjectWorkspaces();
@@ -249,20 +251,21 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Gets the file hyperlink.
+    /// Gets the file hyperlink.
     /// </summary>
     /// <param name="serverItem">The server item.</param>
     /// <returns>Uri.</returns>
     public async Task<Uri> GetFileHyperlinkAsync(string serverItem)
     {
-        string file = await GetFileContentAsync(serverItem);
+        var file = await GetFileContentAsync(serverItem);
+
         return file.IsNotNullOrEmptyString()
-            ? new Uri($"{CodeSite.AbsoluteUri}?path={HttpUtility.UrlEncode(VerifyFilePath(serverItem))}&_a=contents")
+            ? new($"{CodeSite.AbsoluteUri}?path={HttpUtility.UrlEncode(VerifyFilePath(serverItem))}&_a=contents")
             : CodeSite;
     }
 
     /// <summary>
-    ///     Gets contents of file at specified path in specified project.
+    /// Gets contents of file at specified path in specified project.
     /// </summary>
     /// <param name="serverItem"></param>
     /// <returns></returns>
@@ -281,15 +284,17 @@ public class Project : NotifyPropertyChanged
     {
         serverItem = VerifyFilePath(serverItem);
         var requestString = $"tfvc/items/?path={serverItem}";
+
         return Collection.GetRequestResultAsync(requestString, false, [HttpStatusCode.NotFound]);
     }
 
     public Task<string> GitGetFileContentAsync(string serverItem)
     {
-        serverItem = serverItem.Replace("$\\" + Name, string.Empty)
-            .Replace("\\", "/");
-        string requestString = "git/" + Name + "/repositories/" + Name + "/items?scopePath=" + serverItem;
-        return Collection.GetRequestResultAsync(requestString, false,
+        serverItem = serverItem.Replace("$\\" + Name, string.Empty).Replace("\\", "/");
+        var requestString = "git/" + Name + "/repositories/" + Name + "/items?scopePath=" + serverItem;
+
+        return Collection.GetRequestResultAsync(requestString,
+            false,
             [HttpStatusCode.BadRequest, HttpStatusCode.NotFound]);
     }
 
@@ -297,19 +302,22 @@ public class Project : NotifyPropertyChanged
     {
         serverItem = VerifyFilePath(serverItem);
         var requestString = $"git/{Name}/repositories/{Name}/items?scopePath={serverItem}";
-        string resp = await Collection.GetRequestResultAsync(requestString, true,
+
+        var resp = await Collection.GetRequestResultAsync(requestString,
+            true,
             [HttpStatusCode.BadRequest, HttpStatusCode.NotFound]);
+
         return resp.IsNullOrEmptyString()
-            ? new JObject()
+            ? new()
             : JObject.Parse(resp);
     }
 
     /// <summary>
-    ///     Updates file at specified path with provided content.
+    /// Updates file at specified path with provided content.
     /// </summary>
     /// <param name="serverItem">
-    ///     Absolute path to desired file from the root of the project. I.e.:
-    ///     CatalogA\CatalogB\File.example
+    /// Absolute path to desired file from the root of the project. I.e.:
+    /// CatalogA\CatalogB\File.example
     /// </param>
     /// <param name="fileContent">Content used to overwrite current file content.</param>
     /// <param name="comment">Comment attached to this update.</param>
@@ -341,7 +349,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Updates the name of the project.
+    /// Updates the name of the project.
     /// </summary>
     /// <param name="newName">The new name.</param>
     /// <returns></returns>
@@ -350,7 +358,12 @@ public class Project : NotifyPropertyChanged
         if (newName != null)
         {
             var requestString = $"projects/{Name}";
-            string patchContent = JsonConvert.SerializeObject(new { name = newName });
+
+            var patchContent = JsonConvert.SerializeObject(new
+            {
+                name = newName
+            });
+
             return (await Collection.PatchRequestResultAsync(requestString, patchContent)).IsSuccess;
         }
 
@@ -358,18 +371,23 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Updates the project description.
+    /// Updates the project description.
     /// </summary>
     /// <param name="newDescription">The new description.</param>
     /// <returns>
-    ///     System.Boolean
+    /// System.Boolean
     /// </returns>
     public async Task<bool> UpdateProjectDescriptionAsync(string newDescription)
     {
         if (newDescription != null)
         {
             var requestString = $"projects/{Name}";
-            string patchContent = JsonConvert.SerializeObject(new { description = newDescription });
+
+            var patchContent = JsonConvert.SerializeObject(new
+            {
+                description = newDescription
+            });
+
             return (await Collection.PatchRequestResultAsync(requestString, patchContent)).IsSuccess;
         }
 
@@ -377,7 +395,7 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Returns URL of project code explorer site.
+    /// Returns URL of project code explorer site.
     /// </summary>
     /// <returns><see cref="Uri" /> of code explorer site.</returns>
     private Uri GetProjectCodeSiteUrl()
@@ -387,9 +405,10 @@ public class Project : NotifyPropertyChanged
             case SourceControlTypes.Git:
                 var x = WebUrl.Segments.ToList();
                 x.Insert(x.Count - 1, "_git");
-                return new Uri(string.Join("/", x));
+
+                return new(string.Join("/", x));
             case SourceControlTypes.Tfvc:
-                return new Uri(WebUrl.AbsoluteUri + "/_versionControl");
+                return new(WebUrl.AbsoluteUri + "/_versionControl");
             default:
                 throw new ArgumentException("Unsupported source control type", SourceControlType.ToString());
         }
@@ -402,19 +421,18 @@ public class Project : NotifyPropertyChanged
             case SourceControlTypes.Git:
                 return $"/{serverItem.Replace($"$\\{Name}", string.Empty).Replace("\\", "/")}".Replace("//", "/");
             case SourceControlTypes.Tfvc:
-                return serverItem.Replace("\\", "/")
-                    .Replace("//", "/");
+                return serverItem.Replace("\\", "/").Replace("//", "/");
             default:
                 throw new ArgumentException("Unsupported source control type", SourceControlType.ToString());
         }
     }
 
     /// <summary>
-    ///     Updates file at specified path with provided content.
+    /// Updates file at specified path with provided content.
     /// </summary>
     /// <param name="serverItem">
-    ///     Absolute path to desired file from the root of the project. I.e.:
-    ///     CatalogA\CatalogB\File.example
+    /// Absolute path to desired file from the root of the project. I.e.:
+    /// CatalogA\CatalogB\File.example
     /// </param>
     /// <param name="fileContent">Content used to overwrite current file content.</param>
     /// <param name="commitComment">Comment attached to this commit.</param>
@@ -422,18 +440,17 @@ public class Project : NotifyPropertyChanged
     private async Task<bool> GitSaveFileContentAsync(string serverItem, string fileContent, string commitComment = "")
     {
         var requestString = $"git/repositories/{IdOfRepo}/pushes";
-        string pushId = await GitGetLatestPushId_ByRepoIdAsync();
-        JObject info = await GitGetFileInfoAsync(serverItem);
-        string fileChangeType = (info?["count"]
-                                     ?.Value<int>()
-                                 ?? 0)
-                                == 1
+        var pushId = await GitGetLatestPushId_ByRepoIdAsync();
+        var info = await GitGetFileInfoAsync(serverItem);
+
+        var fileChangeType = (info?["count"]?.Value<int>() ?? 0) == 1
             ? "edit"
             : "add";
+
         if (commitComment.IsNullOrEmptyString())
             commitComment = $"{fileChangeType} {serverItem}";
 
-        string patchContent = JsonConvert.SerializeObject(new
+        var patchContent = JsonConvert.SerializeObject(new
         {
             refUpdates = new List<object>
             {
@@ -467,26 +484,27 @@ public class Project : NotifyPropertyChanged
                 }
             }
         });
+
         return await Collection.PostRequestResultAsync(requestString, patchContent);
     }
 
     /// <summary>
-    ///     Gets ID of project repository for specified project ID or name in specified TFS collection.
+    /// Gets ID of project repository for specified project ID or name in specified TFS collection.
     /// </summary>
     /// <returns><see cref="string" /> with requested information.</returns>
     private async Task<string> GitGetRepoIdAsync()
     {
         string res = null;
+
         if (SourceControlType == SourceControlTypes.Git)
         {
             const string requestString = "git/repositories";
-            string resp = await Collection.GetRequestResultAsync(requestString, true, null, $"{Name}/");
+            var resp = await Collection.GetRequestResultAsync(requestString, true, null, $"{Name}/");
+
             if (resp.IsNotNullOrEmptyString())
             {
                 var json = JObject.Parse(resp);
-                res = json?["value"]?[0]?["id"]
-                          .Value<string>()
-                      ?? string.Empty;
+                res = json?["value"]?[0]?["id"].Value<string>() ?? string.Empty;
             }
         }
 
@@ -494,73 +512,69 @@ public class Project : NotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Gets id of latest push to master branch of provided repository operation.
+    /// Gets id of latest push to master branch of provided repository operation.
     /// </summary>
     /// <returns><see cref="string" /> with requested information.</returns>
     private async Task<string> GitGetLatestPushId_ByRepoIdAsync()
     {
-        string res = string.Empty;
-        string resp = await GitGetRawPushesInfoAsync();
+        var res = string.Empty;
+        var resp = await GitGetRawPushesInfoAsync();
+
         if (resp.IsNotNullOrEmptyString())
         {
             var json = JObject.Parse(resp);
-            res = json?["value"]?[0]?["refUpdates"]?[0]?["newObjectId"]
-                      ?.Value<string>()
-                  ?? string.Empty;
+            res = json?["value"]?[0]?["refUpdates"]?[0]?["newObjectId"]?.Value<string>() ?? string.Empty;
         }
 
         return res;
     }
 
     /// <summary>
-    ///     Gets raw JSON string with information about all push to master branch of provided repository operations.
-    ///     https://www.visualstudio.com/en-us/docs/integrate/api/git/pushes
+    /// Gets raw JSON string with information about all push to master branch of provided repository operations.
+    /// https://www.visualstudio.com/en-us/docs/integrate/api/git/pushes
     /// </summary>
     /// <returns>JSON <see cref="string" /> with requested information.</returns>
     private Task<string> GitGetRawPushesInfoAsync()
     {
-        var requestString = $"git/repositories/{IdOfRepo}/pushes?refName=refs/heads/master&includeRefUpdates=true&$top={int.MaxValue}";
+        var requestString =
+            $"git/repositories/{IdOfRepo}/pushes?refName=refs/heads/master&includeRefUpdates=true&$top={int.MaxValue}";
+
         return Collection.GetRequestResultAsync(requestString);
     }
 
     private async Task<TfsChangeset> GitGetLastCheckinAsync()
     {
-        string resp = await GitGetRawPushesInfoAsync();
+        var resp = await GitGetRawPushesInfoAsync();
+
         if (resp.IsNotNullOrEmptyString())
         {
             var json = JObject.Parse(resp);
-            if (json == null
-                || json["count"]
-                    .Value<int>()
-                <= 0)
-                return new TfsChangeset();
 
-            string displayName = json["value"]?[0]?["pushedBy"]?["displayName"]
-                                     ?.Value<string>()
-                                 ?? string.Empty;
-            string uniqueName = json["value"]?[0]?["pushedBy"]?["uniqueName"]
-                                    ?.Value<string>()
-                                ?? string.Empty;
-            string createdDate = json["value"]?[0]?["date"]
-                                     ?.Value<string>()
-                                 ?? string.Empty;
-            string changesetId = json["value"]?[0]?["pushId"]
-                                     ?.Value<string>()
-                                 ?? string.Empty;
-            string url = (json["value"]?[0]?["repository"]?["remoteUrl"]
-                              ?.Value<string>()
-                          ?? string.Empty)
-                         + "/commit/"
-                         + (json["value"]?[0]?["refUpdates"]?[0]?["newObjectId"]
-                                ?.Value<string>()
-                            ?? string.Empty);
+            if (json == null
+                || json["count"].Value<int>() <= 0)
+                return new();
+
+            var displayName = json["value"]?[0]?["pushedBy"]?["displayName"]?.Value<string>() ?? string.Empty;
+            var uniqueName = json["value"]?[0]?["pushedBy"]?["uniqueName"]?.Value<string>() ?? string.Empty;
+            var createdDate = json["value"]?[0]?["date"]?.Value<string>() ?? string.Empty;
+            var changesetId = json["value"]?[0]?["pushId"]?.Value<string>() ?? string.Empty;
+
+            var url = (json["value"]?[0]?["repository"]?["remoteUrl"]?.Value<string>() ?? string.Empty)
+                      + "/commit/"
+                      + (json["value"]?[0]?["refUpdates"]?[0]?["newObjectId"]?.Value<string>() ?? string.Empty);
+
             Uri uri = null;
+
             if (url.IsNotNullOrEmptyString()
                 && url.Trim() != "/commit/")
-                uri = new Uri(url);
+                uri = new(url);
 
-            var date = DateTime.ParseExact(createdDate, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
-            return new TfsChangeset
+            var date = DateTime.ParseExact(createdDate,
+                "MM/dd/yyyy HH:mm:ss",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal);
+
+            return new()
             {
                 Committer = uniqueName.Replace("VCN\\", string.Empty),
                 CommitterDisplayName = displayName,
@@ -570,46 +584,44 @@ public class Project : NotifyPropertyChanged
             };
         }
 
-        return new TfsChangeset();
+        return new();
     }
 
     private async Task<TfsChangeset> Tfvc_GetLastCheckinAsync()
     {
-        string resp = await Collection.GetRequestResultAsync($"tfvc/changesets?searchCriteria.itemPath=$/{Name}&$top=1", true,
+        var resp = await Collection.GetRequestResultAsync($"tfvc/changesets?searchCriteria.itemPath=$/{Name}&$top=1",
+            true,
             [HttpStatusCode.NotFound]);
+
         if (resp.IsNullOrEmptyString())
-            return new TfsChangeset();
+            return new();
 
         var json = JObject.Parse(resp);
-        if (json["count"]
-                .Value<int>()
-            <= 0)
-            return new TfsChangeset();
 
-        string displayName = json["value"]?[0]?["checkedInBy"]?["displayName"]
-                                 ?.Value<string>()
-                             ?? string.Empty;
-        string uniqueName = json["value"]?[0]?["checkedInBy"]?["uniqueName"]
-                                ?.Value<string>()
-                            ?? string.Empty;
-        string createdDate = json["value"]?[0]?["createdDate"]
-                                 ?.Value<string>()
-                             ?? string.Empty;
-        string changesetId = json["value"]?[0]?["changesetId"]
-                                 ?.Value<string>()
-                             ?? string.Empty;
-        string chResp = await Collection.GetRequestResultAsync($"tfvc/changesets/{changesetId}", true,
-            [HttpStatusCode.NotFound]);
+        if (json["count"].Value<int>() <= 0)
+            return new();
+
+        var displayName = json["value"]?[0]?["checkedInBy"]?["displayName"]?.Value<string>() ?? string.Empty;
+        var uniqueName = json["value"]?[0]?["checkedInBy"]?["uniqueName"]?.Value<string>() ?? string.Empty;
+        var createdDate = json["value"]?[0]?["createdDate"]?.Value<string>() ?? string.Empty;
+        var changesetId = json["value"]?[0]?["changesetId"]?.Value<string>() ?? string.Empty;
+
+        var chResp =
+            await Collection.GetRequestResultAsync($"tfvc/changesets/{changesetId}", true, [HttpStatusCode.NotFound]);
+
         var chJson = JObject.Parse(chResp);
-        string url = chJson["_links"]?["web"]?["href"]
-                         ?.Value<string>()
-                     ?? string.Empty;
+        var url = chJson["_links"]?["web"]?["href"]?.Value<string>() ?? string.Empty;
         Uri uri = null;
-        if (url.IsNotNullOrEmptyString())
-            uri = new Uri(url);
 
-        var date = DateTime.ParseExact(createdDate, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
-        return new TfsChangeset
+        if (url.IsNotNullOrEmptyString())
+            uri = new(url);
+
+        var date = DateTime.ParseExact(createdDate,
+            "MM/dd/yyyy HH:mm:ss",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal);
+
+        return new()
         {
             Committer = uniqueName.Replace("VCN\\", string.Empty),
             CommitterDisplayName = displayName,

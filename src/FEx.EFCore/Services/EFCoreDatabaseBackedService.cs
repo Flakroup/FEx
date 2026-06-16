@@ -5,6 +5,7 @@ using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.EFCore.Configuration;
 using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
+using FEx.Sqlx.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 

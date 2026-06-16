@@ -8,7 +8,7 @@ public enum GitWorktreeKind
 {
     None,
     Worktree,
-    Submodule,
+    Submodule
 }
 
 public static class GitWorktreeExtensions
@@ -41,7 +41,8 @@ public static class GitWorktreeExtensions
             return GitWorktreeKind.None;
         }
 
-        if (string.IsNullOrEmpty(firstLine) || !firstLine.StartsWith(GitDirPrefix, StringComparison.Ordinal))
+        if (string.IsNullOrEmpty(firstLine)
+            || !firstLine.StartsWith(GitDirPrefix, StringComparison.Ordinal))
             return GitWorktreeKind.None;
 
         var target = firstLine.Substring(GitDirPrefix.Length).Trim().Replace('\\', '/');
@@ -52,7 +53,8 @@ public static class GitWorktreeExtensions
         var worktreesIdx = target.LastIndexOf(WorktreesSegment, StringComparison.Ordinal);
         var modulesIdx = target.LastIndexOf(ModulesSegment, StringComparison.Ordinal);
 
-        if (worktreesIdx < 0 && modulesIdx < 0)
+        if (worktreesIdx < 0
+            && modulesIdx < 0)
             return GitWorktreeKind.None;
 
         return modulesIdx > worktreesIdx
@@ -60,6 +62,5 @@ public static class GitWorktreeExtensions
             : GitWorktreeKind.Worktree;
     }
 
-    public static bool IsGitWorktree(this DirectoryInfo dir) =>
-        dir.GetGitWorktreeKind() == GitWorktreeKind.Worktree;
+    public static bool IsGitWorktree(this DirectoryInfo dir) => dir.GetGitWorktreeKind() == GitWorktreeKind.Worktree;
 }

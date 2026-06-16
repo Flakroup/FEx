@@ -40,7 +40,7 @@ public static class StringUtilities
         ret = SpecialWords(ret, "H.R.H."); // His/Her Royal Highness
         ret = SpecialWords(ret, "H.R.M."); // His/Her Royal Majesty
 
-        ret = DealWithRomanNumerals(ret); // William Gates, III
+        ret = ret.DealWithRomanNumerals(); // William Gates, III
 
         return ret;
     }

@@ -9,8 +9,8 @@ namespace FEx.MSBuildx;
 
 public sealed class MSProjectNuGetInstallation : NuGetPackageInstallation, IDisposable
 {
-    private string _projects;
     private readonly IDisposable _subscription;
+    private string _projects;
 
     public ConcurrentObservableList<MSProject> MSProjects { get; }
 
@@ -35,8 +35,10 @@ public sealed class MSProjectNuGetInstallation : NuGetPackageInstallation, IDisp
             MSProjects.Add(project);
     }
 
+    #region IDisposable
     public void Dispose()
     {
         _subscription?.Dispose();
     }
+    #endregion
 }

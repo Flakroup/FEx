@@ -12,24 +12,38 @@ public sealed class DriveItemMapperTests
     public void MapFile_PopulatesAllFields_WhenFileMetadataPresent()
     {
         var modified = DateTimeOffset.UtcNow;
+
         var item = new DriveItem
         {
             Id = "file-123",
             Name = "photo.jpg",
             Size = 4096,
             LastModifiedDateTime = modified,
-            File = new FileObject
+            File = new()
             {
                 MimeType = "image/jpeg",
-                Hashes = new Hashes
+                Hashes = new()
                 {
                     QuickXorHash = "qxh-abc",
                     Sha256Hash = "sha-def"
                 }
             },
-            ParentReference = new ItemReference { Path = "/drive/root:/Pictures" },
-            CreatedBy = new IdentitySet { User = new Identity { DisplayName = "Jan Kowalski" } },
-            Image = new Image { Width = 1920, Height = 1080 }
+            ParentReference = new()
+            {
+                Path = "/drive/root:/Pictures"
+            },
+            CreatedBy = new()
+            {
+                User = new()
+                {
+                    DisplayName = "Jan Kowalski"
+                }
+            },
+            Image = new()
+            {
+                Width = 1920,
+                Height = 1080
+            }
         };
 
         var mapped = DriveItemMapper.MapFile(item);
@@ -55,7 +69,7 @@ public sealed class DriveItemMapperTests
             Id = "file-1",
             Name = "doc.txt",
             Size = 100,
-            File = new FileObject()
+            File = new()
         };
 
         var mapped = DriveItemMapper.MapFile(item);
@@ -75,8 +89,11 @@ public sealed class DriveItemMapperTests
         {
             Id = "vid-1",
             Name = "movie.mp4",
-            File = new FileObject(),
-            Video = new Video { Duration = 12345L }
+            File = new(),
+            Video = new()
+            {
+                Duration = 12345L
+            }
         };
 
         var mapped = DriveItemMapper.MapFile(item);
@@ -91,8 +108,14 @@ public sealed class DriveItemMapperTests
         {
             Id = "folder-9",
             Name = "Documents",
-            Folder = new Folder { ChildCount = 42 },
-            ParentReference = new ItemReference { Path = "/drive/root:" }
+            Folder = new()
+            {
+                ChildCount = 42
+            },
+            ParentReference = new()
+            {
+                Path = "/drive/root:"
+            }
         };
 
         var mapped = DriveItemMapper.MapFolder(item);
@@ -110,7 +133,7 @@ public sealed class DriveItemMapperTests
         {
             Id = "folder-empty",
             Name = "Empty",
-            Folder = new Folder()
+            Folder = new()
         };
 
         var mapped = DriveItemMapper.MapFolder(item);

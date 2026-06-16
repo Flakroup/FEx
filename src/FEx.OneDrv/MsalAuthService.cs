@@ -32,21 +32,19 @@ public sealed class MsalAuthService : IOneDriveAuthService
         var firstAccount = accounts.FirstOrDefault();
 
         if (firstAccount != null)
-        {
             try
             {
-                var result = await app.AcquireTokenSilent(scopes, firstAccount)
-                                      .ExecuteAsync(cancellationToken);
+                var result = await app.AcquireTokenSilent(scopes, firstAccount).ExecuteAsync(cancellationToken);
+
                 return result.AccessToken;
             }
             catch (MsalUiRequiredException)
             {
                 _logger.Information("Silent token acquisition failed - falling back to interactive");
             }
-        }
 
-        var interactiveResult = await app.AcquireTokenInteractive(scopes)
-                                         .ExecuteAsync(cancellationToken);
+        var interactiveResult = await app.AcquireTokenInteractive(scopes).ExecuteAsync(cancellationToken);
+
         return interactiveResult.AccessToken;
     }
 
@@ -54,6 +52,7 @@ public sealed class MsalAuthService : IOneDriveAuthService
     {
         var app = await GetOrBuildAppAsync(cancellationToken);
         var accounts = (await app.GetAccountsAsync()).ToList();
+
         foreach (var account in accounts)
             await app.RemoveAsync(account);
 
@@ -66,6 +65,7 @@ public sealed class MsalAuthService : IOneDriveAuthService
             return _app;
 
         await _appLock.WaitAsync(cancellationToken);
+
         try
         {
             if (_app != null)
@@ -81,6 +81,7 @@ public sealed class MsalAuthService : IOneDriveAuthService
                 await RegisterTokenCacheAsync(app.UserTokenCache);
 
             _app = app;
+
             return _app;
         }
         finally
@@ -94,8 +95,7 @@ public sealed class MsalAuthService : IOneDriveAuthService
         var cacheDir = Path.GetDirectoryName(_options.TokenCachePath) ?? string.Empty;
         var cacheFileName = Path.GetFileName(_options.TokenCachePath);
 
-        var storageProperties = new StorageCreationPropertiesBuilder(cacheFileName, cacheDir)
-            .Build();
+        var storageProperties = new StorageCreationPropertiesBuilder(cacheFileName, cacheDir).Build();
 
         var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties);
         cacheHelper.RegisterCache(tokenCache);

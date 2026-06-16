@@ -1,4 +1,3 @@
-using FEx.Legacy.Asyncx.Enums;
 using FEx.Legacy.Mvvm.Abstractions.Interfaces;
 using System;
 using System.Threading.Tasks;
@@ -7,8 +6,7 @@ namespace FEx.Legacy.Mvvm.Extensions;
 
 public static class RunAsyncViewExtensions
 {
-    public static Task RunAsync(this IRunAsyncView runner, Action action) =>
-        runner.RunAsync(action, null, null);
+    public static Task RunAsync(this IRunAsyncView runner, Action action) => runner.RunAsync(action, null, null);
 
     public static Task<TResult> RunFuncAsync<TResult>(this IRunAsyncView runner, Func<TResult> function) =>
         runner.RunFuncAsync(function, null, null);

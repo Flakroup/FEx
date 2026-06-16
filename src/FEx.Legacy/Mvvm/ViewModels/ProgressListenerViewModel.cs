@@ -5,8 +5,8 @@ using FEx.Core.Abstractions.Interfaces;
 using FEx.Legacy.Mvvm.Abstractions.Interfaces;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Interfaces;
-using FEx.MVVM.Interfaces;
 using FEx.MVVM.Extensions;
+using FEx.MVVM.Interfaces;
 using FEx.MVVM.Models;
 using FEx.MVVM.Services;
 using System;
@@ -98,13 +98,12 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
         Watch.Restart();
     }
 
-    public void PrgSet(ProgressSnapshot snapshot) => Progress.PrgSet(snapshot.Value, snapshot.Maximum, ProgressChangeMode.Set);
+    public void PrgSet(ProgressSnapshot snapshot) =>
+        Progress.PrgSet(snapshot.Value, snapshot.Maximum, ProgressChangeMode.Set);
 
-    public void PrgSet(double? val) =>
-        Progress.PrgSet(val, null, ProgressChangeMode.Set);
+    public void PrgSet(double? val) => Progress.PrgSet(val, null, ProgressChangeMode.Set);
 
-    public void PrgSet(double? val, double? max, ProgressChangeMode mode) =>
-        Progress.PrgSet(val, max, mode);
+    public void PrgSet(double? val, double? max, ProgressChangeMode mode) => Progress.PrgSet(val, max, mode);
 
     public void Busy() => Progress.Busy();
 

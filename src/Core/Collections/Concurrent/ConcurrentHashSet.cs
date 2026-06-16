@@ -18,26 +18,6 @@ public class ConcurrentHashSet<T> : ISet<T>, IReadOnlyCollection<T>, IDisposable
     private readonly HashSet<T> _set;
     private readonly ReaderWriterLockSlim _lock = new();
 
-    public ConcurrentHashSet()
-    {
-        _set = new HashSet<T>();
-    }
-
-    public ConcurrentHashSet(IEnumerable<T> collection)
-    {
-        _set = new HashSet<T>(collection);
-    }
-
-    public ConcurrentHashSet(IEqualityComparer<T> comparer)
-    {
-        _set = new HashSet<T>(comparer);
-    }
-
-    public ConcurrentHashSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
-    {
-        _set = new HashSet<T>(collection, comparer);
-    }
-
     public int Count
     {
         get
@@ -57,18 +37,24 @@ public class ConcurrentHashSet<T> : ISet<T>, IReadOnlyCollection<T>, IDisposable
 
     public bool IsReadOnly => false;
 
-    public bool Add(T item)
+    public ConcurrentHashSet()
     {
-        _lock.EnterWriteLock();
+        _set = new();
+    }
 
-        try
-        {
-            return _set.Add(item);
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
-        }
+    public ConcurrentHashSet(IEnumerable<T> collection)
+    {
+        _set = new(collection);
+    }
+
+    public ConcurrentHashSet(IEqualityComparer<T> comparer)
+    {
+        _set = new(comparer);
+    }
+
+    public ConcurrentHashSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
+    {
+        _set = new(collection, comparer);
     }
 
     void ICollection<T>.Add(T item) => Add(item);
@@ -126,6 +112,24 @@ public class ConcurrentHashSet<T> : ISet<T>, IReadOnlyCollection<T>, IDisposable
         finally
         {
             _lock.ExitReadLock();
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public IEnumerator<T> GetEnumerator() => GetSnapshot().GetEnumerator();
+
+    public bool Add(T item)
+    {
+        _lock.EnterWriteLock();
+
+        try
+        {
+            return _set.Add(item);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
         }
     }
 
@@ -347,12 +351,10 @@ public class ConcurrentHashSet<T> : ISet<T>, IReadOnlyCollection<T>, IDisposable
         }
     }
 
-    public IEnumerator<T> GetEnumerator() => GetSnapshot().GetEnumerator();
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
+    #region IDisposable
     public void Dispose()
     {
         _lock.Dispose();
     }
+    #endregion
 }

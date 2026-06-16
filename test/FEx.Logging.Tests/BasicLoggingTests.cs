@@ -3,7 +3,6 @@ using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Logging.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using System;
 using System.Linq;
 using Xunit;
 
@@ -34,7 +33,7 @@ public sealed class BasicLoggingTests
         // This test validates that the static Configure method exists
 
         // Act & Assert  
-        var configureMethod = typeof(FExLoggingModule).GetMethod("Configure", new Type[0]);
+        var configureMethod = typeof(FExLoggingModule).GetMethod(nameof(FExLoggingModule.Configure), []);
         configureMethod.ShouldNotBeNull();
         configureMethod.IsStatic.ShouldBeTrue();
     }

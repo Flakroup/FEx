@@ -9,7 +9,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -19,7 +18,7 @@ namespace FEx.AzureDevOpsx;
 
 public sealed class FuncProcessor : IDisposable
 {
-    public static ConcurrentDictionary<string, SemaphoreSlim> RateLimits { get; } = new ConcurrentDictionary<string, SemaphoreSlim>();
+    public static ConcurrentDictionary<string, SemaphoreSlim> RateLimits { get; } = new();
     public static string ExpectedContentType { get; } = "application/json";
 
     public RequestMethod Method { get; }
@@ -29,22 +28,38 @@ public sealed class FuncProcessor : IDisposable
     private CancellationToken CancellationToken { get; }
     private ICredentials Credentials { get; }
 
-    public FuncProcessor(string serverUrl, string scriptPath, ICredentials credentials, string environmentId, IDictionary<string, object> args = null, RequestMethod method = RequestMethod.GET)
+    public FuncProcessor(string serverUrl,
+                         string scriptPath,
+                         ICredentials credentials,
+                         string environmentId,
+                         IDictionary<string, object> args = null,
+                         RequestMethod method = RequestMethod.GET)
         : this(serverUrl + scriptPath, credentials, environmentId, args, method)
     {
     }
 
-    public FuncProcessor(string serverUrl, string scriptPath, ICredentials credentials, IDictionary<string, object> args = null, RequestMethod method = RequestMethod.GET)
+    public FuncProcessor(string serverUrl,
+                         string scriptPath,
+                         ICredentials credentials,
+                         IDictionary<string, object> args = null,
+                         RequestMethod method = RequestMethod.GET)
         : this(serverUrl + scriptPath, credentials, TfsService.GetEnvironmentId(serverUrl, credentials), args, method)
     {
     }
 
-    public FuncProcessor(string requestUrl, ICredentials credentials, IDictionary<string, object> args = null, RequestMethod method = RequestMethod.GET)
+    public FuncProcessor(string requestUrl,
+                         ICredentials credentials,
+                         IDictionary<string, object> args = null,
+                         RequestMethod method = RequestMethod.GET)
         : this(requestUrl, credentials, TfsService.GetEnvironmentId(requestUrl, credentials), args, method)
     {
     }
 
-    public FuncProcessor(string requestUrl, ICredentials credentials, string environmentId, IDictionary<string, object> args = null, RequestMethod method = RequestMethod.GET)
+    public FuncProcessor(string requestUrl,
+                         ICredentials credentials,
+                         string environmentId,
+                         IDictionary<string, object> args = null,
+                         RequestMethod method = RequestMethod.GET)
     {
         if (requestUrl.IsNullOrWhiteSpace()
             || environmentId.IsNullOrWhiteSpace())
@@ -55,19 +70,21 @@ public sealed class FuncProcessor : IDisposable
         RequestUrl = requestUrl;
         Args = args;
         Method = method;
-        CancellationTokenSource = new CancellationTokenSource();
+        CancellationTokenSource = new();
         CancellationToken = CancellationTokenSource.Token;
         Credentials = credentials;
     }
 
-    public static TResponse ProcessResponse<TResponse>(string response, JsonSerializerSettings settings = null) where TResponse : BaseTfsResponse, new()
-    {
-        return response.FromJson<TResponse>(settings);
-    }
+    public static TResponse ProcessResponse<TResponse>(string response, JsonSerializerSettings settings = null)
+        where TResponse : BaseTfsResponse, new() =>
+        response.FromJson<TResponse>(settings);
 
-    public async Task<TResponse> RunAsync<TResponse>(JsonSerializerSettings settings = null, IList<HttpStatusCode> ommitCodes = null) where TResponse : BaseTfsResponse, new()
+    public async Task<TResponse> RunAsync<TResponse>(JsonSerializerSettings settings = null,
+                                                     IList<HttpStatusCode> ommitCodes = null)
+        where TResponse : BaseTfsResponse, new()
     {
-        string res = await RunRawAsync(ommitCodes);
+        var res = await RunRawAsync(ommitCodes);
+
         return res != null
             ? ProcessResponse<TResponse>(res, settings)
             : default;
@@ -75,7 +92,11 @@ public sealed class FuncProcessor : IDisposable
 
     public async Task<string> RunRawAsync(IList<HttpStatusCode> ommitCodes = null)
     {
-        using var handler = new HttpClientHandler { Credentials = Credentials };
+        using var handler = new HttpClientHandler
+        {
+            Credentials = Credentials
+        };
+
         using var httpClient = new HttpClient(handler);
         using var flurlClient = new FlurlClient(httpClient);
 
@@ -85,30 +106,35 @@ public sealed class FuncProcessor : IDisposable
             foreach (var arg in Args)
                 request = request.SetQueryParam(arg.Key, arg.Value);
 
-        request = request
-            .WithHeader("User-Agent", "VSTSAuthSample-AuthenticateADALNonInteractive")
+        request = request.WithHeader("User-Agent", "VSTSAuthSample-AuthenticateADALNonInteractive")
             .WithHeader("X-TFS-FedAuthRedirect", "Suppress");
 
         try
         {
 #pragma warning disable IDISP003 // switch-case, only one branch executes
             IFlurlResponse response;
+
             switch (Method)
             {
                 case RequestMethod.POST:
                     response = await request.PostAsync(cancellationToken: CancellationToken);
+
                     break;
                 case RequestMethod.PUT:
                     response = await request.PutAsync(cancellationToken: CancellationToken);
+
                     break;
                 case RequestMethod.DELETE:
                     response = await request.DeleteAsync(cancellationToken: CancellationToken);
+
                     break;
                 case RequestMethod.PATCH:
                     response = await request.PatchAsync(cancellationToken: CancellationToken);
+
                     break;
                 default:
                     response = await request.GetAsync(cancellationToken: CancellationToken);
+
                     break;
             }
 #pragma warning restore IDISP003
@@ -116,31 +142,40 @@ public sealed class FuncProcessor : IDisposable
             using (response)
             {
                 var statusCode = (HttpStatusCode)response.StatusCode;
-                if (ommitCodes.IsNullOrEmptyList() || !ommitCodes.Contains(statusCode))
-                {
-                    string content = await response.GetStringAsync();
-                    string contentType = response.Headers.FirstOrDefault("Content-Type");
 
-                    if (contentType == null || contentType.Split(';')[0].Trim() == ExpectedContentType)
+                if (ommitCodes.IsNullOrEmptyList()
+                    || !ommitCodes.Contains(statusCode))
+                {
+                    var content = await response.GetStringAsync();
+                    var contentType = response.Headers.FirstOrDefault("Content-Type");
+
+                    if (contentType == null
+                        || contentType.Split(';')[0].Trim() == ExpectedContentType)
                         return content;
 
-                    throw new ArgumentException($"Unexpected response type. {contentType} instead of {ExpectedContentType}. Response was of {statusCode} status.");
+                    throw new ArgumentException(
+                        $"Unexpected response type. {contentType} instead of {ExpectedContentType}. Response was of {statusCode} status.");
                 }
             }
         }
         catch (FlurlHttpException ex)
         {
             var statusCode = (HttpStatusCode)(ex.StatusCode ?? 0);
-            if (ommitCodes != null && ommitCodes.Contains(statusCode))
+
+            if (ommitCodes != null
+                && ommitCodes.Contains(statusCode))
                 return null;
+
             throw;
         }
 
         return null;
     }
 
+    #region IDisposable
     public void Dispose()
     {
         CancellationTokenSource?.Dispose();
     }
+    #endregion
 }

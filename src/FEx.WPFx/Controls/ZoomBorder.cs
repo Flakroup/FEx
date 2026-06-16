@@ -115,7 +115,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
     {
         if (_child is not null)
         {
-            double newScale = _st.ScaleX + zoom;
+            var newScale = _st.ScaleX + zoom;
 
             if (newScale < DefaultScale)
                 zoom = DefaultScale - _st.ScaleX;
@@ -128,7 +128,8 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         }
     }
 
-    public async Task WaitForAnimationToCompleteAsync() => await Task.WhenAll(AnimationSXTcs?.Task ?? Task.CompletedTask,
+    public async Task WaitForAnimationToCompleteAsync() =>
+        await Task.WhenAll(AnimationSXTcs?.Task ?? Task.CompletedTask,
             AnimationSYTcs?.Task ?? Task.CompletedTask,
             AnimationAXTcs?.Task ?? Task.CompletedTask,
             AnimationAYTcs?.Task ?? Task.CompletedTask);
@@ -141,7 +142,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         }
         else
         {
-            double zoom = GetZoom();
+            var zoom = GetZoom();
 
             if (zoom != Math.Round(Scale - 1, 2))
             {
@@ -153,8 +154,8 @@ public class ZoomBorder : Border, INotifyPropertyChanged
 
                 if (zoom != Math.Round(Scale - 1, 2))
                 {
-                    double x = _child.RenderSize.Width / 2 - 2;
-                    double y = _child.RenderSize.Height / 2 - 2;
+                    var x = _child.RenderSize.Width / 2 - 2;
+                    var y = _child.RenderSize.Height / 2 - 2;
                     ApplyTransform(zoom, new(x, y), false);
                 }
             }
@@ -211,7 +212,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
                 SetCoordinates();
                 _start = TranslatePoint(new(0.0, 0.0), null);
 
-                Point currentPosition = e.Key == Key.Down
+                var currentPosition = e.Key == Key.Down
                     ? new(_start.X,
                         new[]
                         {
@@ -314,19 +315,19 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         if (_child?.IsMouseCaptured == true
             && e.LeftButton == MouseButtonState.Pressed)
         {
-            Point currentPosition = e.GetPosition(this);
+            var currentPosition = e.GetPosition(this);
             MoveChild(currentPosition);
         }
     }
 
     private void MoveChild(Point currentPosition)
     {
-        Vector v = _start - currentPosition;
+        var v = _start - currentPosition;
 
-        double newXLeft = _originTopLeft.X - v.X;
-        double newXRight = _originBottomRight.X - v.X;
-        double newYTop = _originTopLeft.Y - v.Y;
-        double newYBottom = _originBottomRight.Y - v.Y;
+        var newXLeft = _originTopLeft.X - v.X;
+        var newXRight = _originBottomRight.X - v.X;
+        var newYTop = _originTopLeft.Y - v.Y;
+        var newYBottom = _originBottomRight.Y - v.Y;
         bool shiftX = true, shiftY = true;
 
         if (v.X < 0)
@@ -370,7 +371,8 @@ public class ZoomBorder : Border, INotifyPropertyChanged
             OnAutoFitChanged(IsAutoFitEnabled);
     }
 
-    private void Zoom(double zoom, MouseEventArgs e, bool animate) => Zoom(zoom,
+    private void Zoom(double zoom, MouseEventArgs e, bool animate) =>
+        Zoom(zoom,
             _child is not null
                 ? e.GetPosition(_child)
                 : default,
@@ -378,8 +380,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
 
     private void ApplyTransform(double zoom, Point position, bool animate = true)
     {
-        (double absoluteX, double absoluteY, double newScaleX, double newScaleY, double diffX, double diffY) =
-            GetNewCoordinates(zoom, position);
+        var (absoluteX, absoluteY, newScaleX, newScaleY, diffX, diffY) = GetNewCoordinates(zoom, position);
 
         ApplyTransform(zoom, animate, absoluteX, absoluteY, newScaleX, newScaleY, diffX, diffY);
     }
@@ -393,16 +394,16 @@ public class ZoomBorder : Border, INotifyPropertyChanged
                                 double diffX,
                                 double diffY)
     {
-        double newX = absoluteX - diffX;
-        double newY = absoluteY - diffY;
+        var newX = absoluteX - diffX;
+        var newY = absoluteY - diffY;
 
         if (zoom <= 0)
         {
             var bottomRight = new Point(absoluteX + _child.RenderSize.Width * newScaleX,
                 absoluteY + _child.RenderSize.Height * newScaleY);
 
-            double newXRight = bottomRight.X - diffX;
-            double newYBottom = bottomRight.Y - diffY;
+            var newXRight = bottomRight.X - diffX;
+            var newYBottom = bottomRight.Y - diffY;
 
             if (newXRight < _child.RenderSize.Width)
                 newX += _child.RenderSize.Width - newXRight;
@@ -439,22 +440,22 @@ public class ZoomBorder : Border, INotifyPropertyChanged
     private (double absoluteX, double absoluteY, double newScaleX, double newScaleY, double diffX, double diffY)
         GetNewCoordinates(double zoom, Point position)
     {
-        double absoluteX = position.X * _st.ScaleX + _tt.X;
-        double absoluteY = position.Y * _st.ScaleY + _tt.Y;
-        double newScaleX = _st.ScaleX + zoom;
-        double newScaleY = _st.ScaleY + zoom;
-        double diffX = position.X * newScaleX;
-        double diffY = position.Y * newScaleY;
+        var absoluteX = position.X * _st.ScaleX + _tt.X;
+        var absoluteY = position.Y * _st.ScaleY + _tt.Y;
+        var newScaleX = _st.ScaleX + zoom;
+        var newScaleY = _st.ScaleY + zoom;
+        var diffX = position.X * newScaleX;
+        var diffY = position.Y * newScaleY;
 
         return (absoluteX, absoluteY, newScaleX, newScaleY, diffX, diffY);
     }
 
     private void Animate(double newScaleX, double newScaleY, double newX, double newY)
     {
-        DoubleAnimation scaleXAnimation = SetAnimation(_st.ScaleX, newScaleX, nameof(AnimationSXTcs));
-        DoubleAnimation scaleYAnimation = SetAnimation(_st.ScaleY, newScaleY, nameof(AnimationSYTcs));
-        DoubleAnimation aX = SetAnimation(_tt.X, newX, nameof(AnimationAXTcs));
-        DoubleAnimation aY = SetAnimation(_tt.Y, newY, nameof(AnimationAYTcs));
+        var scaleXAnimation = SetAnimation(_st.ScaleX, newScaleX, nameof(AnimationSXTcs));
+        var scaleYAnimation = SetAnimation(_st.ScaleY, newScaleY, nameof(AnimationSYTcs));
+        var aX = SetAnimation(_tt.X, newX, nameof(AnimationAXTcs));
+        var aY = SetAnimation(_tt.Y, newY, nameof(AnimationAYTcs));
 
         _isAnimationCancelled = false;
         _st.BeginAnimation(ScaleTransform.ScaleXProperty, scaleXAnimation);
@@ -553,13 +554,13 @@ public class ZoomBorder : Border, INotifyPropertyChanged
 
     private double GetZoom()
     {
-        Point relativePoint = TranslatePoint(new(0.0, 0.0), null);
+        var relativePoint = TranslatePoint(new(0.0, 0.0), null);
         var originTopLeft = new Point(relativePoint.X, relativePoint.Y);
         var originBottomRight = new Point(relativePoint.X + RenderSize.Width, relativePoint.Y + RenderSize.Height);
 
-        double zoom = Math.Round(Math.Min((originBottomRight.X - originTopLeft.X) / _child.RenderSize.Width,
-                                     (originBottomRight.Y - originTopLeft.Y) / _child.RenderSize.Height)
-                                 - 1,
+        var zoom = Math.Round(Math.Min((originBottomRight.X - originTopLeft.X) / _child.RenderSize.Width,
+                                  (originBottomRight.Y - originTopLeft.Y) / _child.RenderSize.Height)
+                              - 1,
             2);
 
         if (zoom > MaxScaleToZoomIn)

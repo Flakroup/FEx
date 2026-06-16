@@ -38,7 +38,7 @@ public class FExUserControl : UserControl, IFExNotifyPropertyChanged
         if (propertyNames.IsNullOrEmptyList())
             return;
 
-        foreach (string propertyName in propertyNames)
+        foreach (var propertyName in propertyNames)
             OnPropertyChanged(propertyName);
     }
 
@@ -63,7 +63,7 @@ public class FExUserControl : UserControl, IFExNotifyPropertyChanged
         if (EqualityHelper.IsEqual(ref backingField, newValue))
             return false;
 
-        TRet oldValue = backingField;
+        var oldValue = backingField;
         backingField = newValue;
         OnPropertySet(oldValue, newValue, propertyName);
         OnPropertyChanged(propertyName);
@@ -109,8 +109,8 @@ public class FExUserControl : UserControl, IFExNotifyPropertyChanged
             () => PreAction(sender),
             isSuccess => PostAction(sender, isSuccess));
 
-    protected virtual void PreAction(object sender) =>
-        DisableUIElement(sender);
+    protected virtual void PreAction(object sender) => DisableUIElement(sender);
+
     protected virtual void PostAction(object sender, bool isSuccess) => EnableUIElement(sender);
 
     private static void EnableUIElement(object sender)

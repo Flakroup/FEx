@@ -88,8 +88,7 @@ public class FExWindow<TViewModel> : Window, IViewFor<TViewModel>, IRunAsyncView
         this.PlaceToPrimaryMonitor();
     }
 
-    protected virtual void PreAction(object sender) =>
-        DisableUIElement(sender);
+    protected virtual void PreAction(object sender) => DisableUIElement(sender);
 
     protected virtual void PostAction(object sender, bool isSuccess) => EnableUIElement(sender);
 
@@ -97,9 +96,9 @@ public class FExWindow<TViewModel> : Window, IViewFor<TViewModel>, IRunAsyncView
     {
         try
         {
-            double height = DisplayScreen.WorkingArea.Height / (double)DisplayScreen.WorkingArea.Width * FixedWidth;
-            double w = ActualWidth / FixedWidth;
-            double h = ActualHeight / height;
+            var height = DisplayScreen.WorkingArea.Height / (double)DisplayScreen.WorkingArea.Width * FixedWidth;
+            var w = ActualWidth / FixedWidth;
+            var h = ActualHeight / height;
 
             if (MainGrid.LayoutTransform is not ScaleTransform scaler)
             {
@@ -129,8 +128,7 @@ public class FExWindow<TViewModel> : Window, IViewFor<TViewModel>, IRunAsyncView
         if (DataContext is not TViewModel)
             throw new($"{nameof(DataContext)} must inherit {nameof(TViewModel)}");
 
-        if (ViewModel is not null)
-            ViewModel.View = null;
+        ViewModel?.View = null;
 
         if (ViewModel is null || refresh)
             ViewModel = this.GetViewModel<TViewModel>();
@@ -149,7 +147,7 @@ public class FExWindow<TViewModel> : Window, IViewFor<TViewModel>, IRunAsyncView
                 .FromEventPattern<SizeChangedEventHandler,
                     SizeChangedEventArgs>(h => SizeChanged += h, h => SizeChanged -= h)
                 .Throttle(FExMvvm.DefaultUIRefreshInterval)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(_ => ReScale()));
     }
 

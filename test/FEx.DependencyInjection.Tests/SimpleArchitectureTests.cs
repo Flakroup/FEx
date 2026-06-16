@@ -1,3 +1,4 @@
+using System;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,19 +34,16 @@ public sealed class SimpleArchitectureTests
     public void FExServiceProviderEntryPoints_ShouldExist()
     {
         // Verify the main entry points exist with correct signatures
-        var initializeAsyncMethod = typeof(FExServiceProvider)
-            .GetMethods()
+        var initializeAsyncMethod = typeof(FExServiceProvider).GetMethods()
             .FirstOrDefault(m => m.Name == "InitializeAsync" && m.IsGenericMethodDefinition);
 
         initializeAsyncMethod.ShouldNotBeNull("InitializeAsync should be available");
 
         // Verify static methods exist
-        var getMethod = typeof(FExServiceProvider)
-            .GetMethods()
+        var getMethod = typeof(FExServiceProvider).GetMethods()
             .FirstOrDefault(m => m.Name == "Get" && m.IsGenericMethodDefinition);
 
-        var getAsyncMethod = typeof(FExServiceProvider)
-            .GetMethods()
+        var getAsyncMethod = typeof(FExServiceProvider).GetMethods()
             .FirstOrDefault(m => m.Name == "GetAsync" && m.IsGenericMethodDefinition);
 
         getMethod.ShouldNotBeNull("Static service resolution should be available");
@@ -56,10 +54,9 @@ public sealed class SimpleArchitectureTests
     public void ProviderInterface_ShouldIncludeConfigureServiceProviderAsync()
     {
         // Verify the new ConfigureServiceProviderAsync method is available
-        var configureMethod = typeof(IFExServiceProvider).GetMethod("ConfigureServiceProviderAsync");
+        var configureMethod = typeof(IFExServiceProvider).GetMethod(nameof(IFExServiceProvider.ConfigureServiceProviderAsync), Type.EmptyTypes);
 
         configureMethod.ShouldNotBeNull("ConfigureServiceProviderAsync should be available on provider interface");
         configureMethod.ReturnType.ShouldBe(typeof(ValueTask), "Should return ValueTask for async configuration");
     }
-
 }

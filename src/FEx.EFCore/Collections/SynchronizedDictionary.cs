@@ -207,6 +207,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 _observables.Aggregate(cacheObservable, (current, o) => current.AutoRefreshOnObservable(o));
 
         _cacheSubscription?.Dispose();
+
         _cacheSubscription = cacheObservable.Buffer(TimeSpan.FromMilliseconds(100))
             .Where(x => x.Count > 0 && x.Any(c => c.Count > 0))
             .Select(x =>
@@ -274,7 +275,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     {
         var iParam = Expression.Parameter(typeof(TValue));
         var prop = Expression.Property(iParam, KeyPropertyName);
-        var method = keys.GetType().GetMethod("Contains");
+        var method = keys.GetType().GetMethod(nameof(HashSet<>.Contains), [typeof(TKey)]);
         var call = Expression.Call(Expression.Constant(keys), method, prop);
 
         return Expression.Lambda<Func<TValue, bool>>(call, iParam);

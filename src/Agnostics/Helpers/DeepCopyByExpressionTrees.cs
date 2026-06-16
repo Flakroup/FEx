@@ -4,6 +4,7 @@
 // limitations for both personal and commercial purposes.
 //
 // Third-party code - suppress reflection analyzer warnings
+
 #pragma warning disable REFL008, REFL016, REFL029
 
 using System;

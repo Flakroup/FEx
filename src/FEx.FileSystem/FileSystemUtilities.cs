@@ -549,13 +549,13 @@ public class FileSystemUtilities
 #if !NETSTANDARD2_0
                 await
 #endif
-                    using var fs = fileInfo.OpenWrite();
+                using var fs = fileInfo.OpenWrite();
 
                 fs.SetLength(0);
 #if !NETSTANDARD2_0
                 await
 #endif
-                    using var sw = new StreamWriter(fs);
+                using var sw = new StreamWriter(fs);
 
                 await sw.WriteAsync(s.ToString());
                 await sw.FlushAsync();

@@ -15,8 +15,7 @@ public static class SQLConnectionHelper
     public static Task<bool> CheckDbConnectionAsync(string connectionString) =>
         CheckDbConnectionAsync(connectionString, default);
 
-    public static async Task<bool> CheckDbConnectionAsync(string connectionString,
-                                                          CancellationToken cancellationToken)
+    public static async Task<bool> CheckDbConnectionAsync(string connectionString, CancellationToken cancellationToken)
     {
         try
         {

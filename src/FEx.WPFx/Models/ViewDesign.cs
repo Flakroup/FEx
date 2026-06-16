@@ -104,7 +104,13 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
                       Func<Brush> foregroundFactory,
                       Func<Brush> headerBackgroundFactory,
                       Func<Brush> borderBackgroundFactory)
-        : this(backgroundFactory, controlBackgroundFactory, foregroundFactory, headerBackgroundFactory, borderBackgroundFactory, null, 13)
+        : this(backgroundFactory,
+            controlBackgroundFactory,
+            foregroundFactory,
+            headerBackgroundFactory,
+            borderBackgroundFactory,
+            null,
+            13)
     {
     }
 

@@ -14,7 +14,8 @@ public class TextBoxBehavior
 
     public static bool GetSelectAllTextOnFocus(TextBox textBox) => (bool)textBox.GetValue(SelectAllTextOnFocusProperty);
 
-    public static void SetSelectAllTextOnFocus(TextBox textBox, bool value) => textBox.SetValue(SelectAllTextOnFocusProperty, value);
+    public static void SetSelectAllTextOnFocus(TextBox textBox, bool value) =>
+        textBox.SetValue(SelectAllTextOnFocusProperty, value);
 
     private static void OnSelectAllTextOnFocusChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {

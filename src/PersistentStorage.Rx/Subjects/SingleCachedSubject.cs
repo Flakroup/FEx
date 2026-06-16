@@ -8,15 +8,12 @@ namespace FEx.PersistentStorage.Rx.Subjects;
 public abstract class SingleCachedSubject<T, TCacheable> : CachedSubjectBase<T, T, TCacheable>
     where TCacheable : class, ICacheableItem
 {
-    protected SingleCachedSubject(ICacheService cacheService,
-                                  ClearCacheReason clearCacheReason)
+    protected SingleCachedSubject(ICacheService cacheService, ClearCacheReason clearCacheReason)
         : this(cacheService, clearCacheReason, default)
     {
     }
 
-    protected SingleCachedSubject(ICacheService cacheService,
-                                  ClearCacheReason clearCacheReason,
-                                  T defaultValue)
+    protected SingleCachedSubject(ICacheService cacheService, ClearCacheReason clearCacheReason, T defaultValue)
         : base(cacheService, clearCacheReason, defaultValue)
     {
     }

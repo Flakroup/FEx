@@ -38,10 +38,10 @@ public class AsyncFileSinkConfigurator : SinkConfiguratorBase, IFileSinkConfigur
         LogFileName = $"{_appInfoProvider.Name}_.log";
 
         var loggingDirectory = AbsolutePath.Create(Environment.GetFolderPath(PlatformInfoProvider.IsWindows
-                             ? Environment.SpecialFolder.ApplicationData
-                             : Environment.SpecialFolder.Personal))
-                         / appInfoProvider.Company
-                         / appInfoProvider.Name;
+                                   ? Environment.SpecialFolder.ApplicationData
+                                   : Environment.SpecialFolder.Personal))
+                               / appInfoProvider.Company
+                               / appInfoProvider.Name;
 
         _logsDirectory = new(loggingDirectory);
 

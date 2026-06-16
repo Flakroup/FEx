@@ -105,9 +105,7 @@ public interface IConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppre
     /// </exception>
     void Sort(Comparison<T> comparison);
 
-    void SortBy<TKey>(Func<T, TKey> selector,
-                      ListSortDirection order,
-                      IComparer<TKey> comparer);
+    void SortBy<TKey>(Func<T, TKey> selector, ListSortDirection order, IComparer<TKey> comparer);
 
     /// <summary>
     /// Suppresses all events regarding this collection while executing the specified action.

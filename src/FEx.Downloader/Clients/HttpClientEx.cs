@@ -133,9 +133,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     {
     }
 
-    public HttpClientEx(WebRequestParams pars,
-                        bool disposeHandler,
-                        CancellationTokenSource cancellationTokenSource)
+    public HttpClientEx(WebRequestParams pars, bool disposeHandler, CancellationTokenSource cancellationTokenSource)
         : this(pars.GetHttpClientHandler(), disposeHandler, cancellationTokenSource)
     {
     }
@@ -162,9 +160,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     {
     }
 
-    public HttpClientEx(HttpClientHandler handler,
-                        bool disposeHandler,
-                        CancellationTokenSource cancellationTokenSource)
+    public HttpClientEx(HttpClientHandler handler, bool disposeHandler, CancellationTokenSource cancellationTokenSource)
         : base(handler, disposeHandler)
     {
         Buffer = new byte[BufferSize];
@@ -206,14 +202,14 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         }
     }
 #else
-        => HashCode.Combine(FilePath, Url?.AbsoluteUri);
+        =>
+            HashCode.Combine(FilePath, Url?.AbsoluteUri);
 #endif
 
     public override bool Equals(object obj) =>
         ReferenceEquals(this, obj) || obj is FlakHttpClient other && Equals(other);
 
-    public Task DownloadFileAsync(Uri url, string filePath) =>
-        DownloadFileAsync(url, filePath, true);
+    public Task DownloadFileAsync(Uri url, string filePath) => DownloadFileAsync(url, filePath, true);
 
     public async Task DownloadFileAsync(Uri url, string filePath, bool lockOnFilePath)
     {

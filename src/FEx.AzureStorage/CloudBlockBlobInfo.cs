@@ -28,7 +28,10 @@ public class CloudBlockBlobInfo
         set => Blob.Properties.ContentType = value;
     }
 
-    public CloudBlockBlobInfo(CloudBlockBlob blob) : this(blob, null) { }
+    public CloudBlockBlobInfo(CloudBlockBlob blob)
+        : this(blob, null)
+    {
+    }
 
     public CloudBlockBlobInfo(CloudBlockBlob blob, bool? exists)
     {

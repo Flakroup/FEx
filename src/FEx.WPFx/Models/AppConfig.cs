@@ -26,8 +26,7 @@ public class AppConfig : IAppConfig
     {
     }
 
-    public AppConfig(IViewDesign mainDesign,
-                     IViewDesign splashDesign)
+    public AppConfig(IViewDesign mainDesign, IViewDesign splashDesign)
         : this(mainDesign, splashDesign, null, null, null, null, null)
     {
     }

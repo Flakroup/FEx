@@ -54,9 +54,7 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     {
     }
 
-    public FlakHttpClient(WebRequestParams pars,
-                          bool disposeHandler,
-                          CancellationTokenSource cancellationTokenSource)
+    public FlakHttpClient(WebRequestParams pars, bool disposeHandler, CancellationTokenSource cancellationTokenSource)
         : this(pars.GetHttpClientHandler(), disposeHandler, cancellationTokenSource)
     {
     }

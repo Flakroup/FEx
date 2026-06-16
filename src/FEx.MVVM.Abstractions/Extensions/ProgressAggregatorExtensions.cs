@@ -11,6 +11,5 @@ public static class ProgressAggregatorExtensions
     public static void PrgSet(this IProgressAggregator aggregator, double? value, double? maximum) =>
         aggregator.PrgSet(value, maximum, ProgressChangeMode.Set);
 
-    public static void PrgAdd(this IProgressAggregator aggregator) =>
-        aggregator.PrgAdd(1);
+    public static void PrgAdd(this IProgressAggregator aggregator) => aggregator.PrgAdd(1);
 }

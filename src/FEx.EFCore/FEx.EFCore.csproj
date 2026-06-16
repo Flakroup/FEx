@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-        <TargetFramework>$(TargetFrameworkId)</TargetFramework>
+        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
 		<Description>Entity Framework Core helpers for DbContext configuration, bulk operations, and resilient transactions</Description>
 	</PropertyGroup>
 

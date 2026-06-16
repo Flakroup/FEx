@@ -20,5 +20,6 @@
         <ProjectReference Include="..\FEx.Flurlx\FEx.Flurlx.csproj" />
         <ProjectReference Include="..\FEx.Legacy\FEx.Legacy.csproj" />
         <ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
+        <ProjectReference Include="..\Imaging.Windows\FEx.Imaging.Windows.csproj" />
     </ItemGroup>
 </Project>

@@ -98,7 +98,10 @@ public partial class GridDetailsView : GridView
         return container;
     }
 
+    // VSTHRD100: WPF event handler - async void is required by the event delegate signature.
+#pragma warning disable VSTHRD100
     private async void Container_PreviewMouseDown(object sender, MouseButtonEventArgs args)
+#pragma warning restore VSTHRD100
     {
         if (args.LeftButton == MouseButtonState.Pressed)
         {
@@ -136,7 +139,10 @@ public partial class GridDetailsView : GridView
         }
     }
 
+    // VSTHRD100: WPF event handler - async void is required by the event delegate signature.
+#pragma warning disable VSTHRD100
     private async void ExpandedItemContainerRoot_Loaded(object sender, RoutedEventArgs args)
+#pragma warning restore VSTHRD100
     {
         _animateCloseExpansion = false;
 

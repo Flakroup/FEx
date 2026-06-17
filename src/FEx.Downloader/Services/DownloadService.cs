@@ -173,6 +173,10 @@ public class DownloadService : ProgressAggregator
     private void StartDownload(DownloadIndex idx) =>
         Downloads[idx].DownloadFileTask = Queue.EnqueueAsync(() => Downloads[idx].DownloadFileAsync());
 
+    // VSTHRD003: These DownloadFileTask instances are started within this service (StartDownload
+    // enqueues them); collecting and returning them is intentional task tracking, not a foreign-task await.
+#pragma warning disable VSTHRD003
     private Task[] GetUnfinishedDownloadsTasks() =>
         Downloads.Select(x => x.Value.DownloadFileTask).Where(x => x?.IsFinished() == false).ToArray();
+#pragma warning restore VSTHRD003
 }

@@ -705,9 +705,14 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             {
                 var (length, _) = FileLengthConverter.ConvertFileLength(speed, LengthType.Bytes, LengthType.Megabytes);
 
+                // SYSLIB0014: ServicePointManager.DefaultConnectionLimit is obsolete on net5+
+                // (no-op for HttpClient); the value is still read here to cap parallel ranges and
+                // remains meaningful on legacy TFMs.
+#pragma warning disable SYSLIB0014
                 ParallelRanges = Convert.ToInt32(Math.Max(Math.Min(Math.Ceiling(ParallelRanges * length),
                         ServicePointManager.DefaultConnectionLimit / 2D),
                     1));
+#pragma warning restore SYSLIB0014
             }
             else
             {

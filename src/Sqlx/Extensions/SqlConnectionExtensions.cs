@@ -12,6 +12,11 @@ using MsSqlConnection = Microsoft.Data.SqlClient.SqlConnection;
 
 namespace FEx.Sqlx.Extensions;
 
+// CS0618: System.Data.SqlClient.SqlConnection is obsolete in favour of Microsoft.Data.SqlClient.
+// These overloads are intentionally retained for backward compatibility (the modern type is
+// exposed via the MsSqlConnection overloads). Full migration tracked as tech debt.
+#pragma warning disable CS0618
+
 public static class SqlConnectionExtensions
 {
     public static IMap<string, ServerProp> ServerProps { get; } = EnumExtensions.GetEnumMap<ServerProp>(true);

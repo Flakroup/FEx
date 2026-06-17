@@ -30,8 +30,13 @@ public static class BitmapExtensions
                                                              int decodePixelHeight,
                                                              int decodePixelWidth)
     {
+        // IDISP001: ownership of the created MemoryStream transfers to the BitmapImage returned
+        // below; when forceLoad is false the image reads lazily from it, so disposing here would
+        // break image loading.
         if (forceMemoryStream && stream is not MemoryStream)
+#pragma warning disable IDISP001
             stream = await stream.CopyToMemoryStreamAsync(true);
+#pragma warning restore IDISP001
 
         return stream.ToBitmapImage(forceLoad, decodePixelHeight, decodePixelWidth);
     }

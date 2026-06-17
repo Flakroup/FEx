@@ -233,7 +233,11 @@ public static class WebServices
                                                                     List<HttpStatusCode> omitCodes = null,
                                                                     List<Cookie> cookies = null)
     {
+        // SYSLIB0013: Uri.EscapeUriString escapes a complete URI string; switching to
+        // Uri.EscapeDataString here would corrupt the scheme/host/slashes. Behavior retained.
+#pragma warning disable SYSLIB0013
         requestUrl = Uri.EscapeUriString(BaseRequestUrl + requestUrl);
+#pragma warning restore SYSLIB0013
         using var client = PrepareHttpClient(requestUrl, credentials, false, cookies);
 
         using HttpContent post = new StringContent(postContent,

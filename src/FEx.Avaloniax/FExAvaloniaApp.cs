@@ -19,7 +19,11 @@ public abstract class FExAvaloniaApp<TContainer> : Application
     {
         try
         {
+            // VSTHRD002: synchronous wait is required in this constructor bootstrap entry point;
+            // exceptions are handled by the catch below.
+#pragma warning disable VSTHRD002
             FExServiceProvider.InitializeAsync<TContainer>().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
             OnActivation();
         }
         catch (Exception ex)

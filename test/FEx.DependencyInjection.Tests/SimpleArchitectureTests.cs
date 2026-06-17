@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,7 +55,10 @@ public sealed class SimpleArchitectureTests
     public void ProviderInterface_ShouldIncludeConfigureServiceProviderAsync()
     {
         // Verify the new ConfigureServiceProviderAsync method is available
-        var configureMethod = typeof(IFExServiceProvider).GetMethod(nameof(IFExServiceProvider.ConfigureServiceProviderAsync), Type.EmptyTypes);
+        var configureMethod = typeof(IFExServiceProvider).GetMethod(
+            nameof(IFExServiceProvider.ConfigureServiceProviderAsync),
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly,
+            null, Type.EmptyTypes, null);
 
         configureMethod.ShouldNotBeNull("ConfigureServiceProviderAsync should be available on provider interface");
         configureMethod.ReturnType.ShouldBe(typeof(ValueTask), "Should return ValueTask for async configuration");

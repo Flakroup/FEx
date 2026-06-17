@@ -261,11 +261,6 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     protected CancellationToken CancellationToken => CancellationTokenSource.Token;
     private static ISynchronizedAccessService LockSrv => FExCoreStatics.SynchronizedAccessService;
 
-    private DownloadItem(Uri url, string filePath, bool reportProgress)
-        : this(url, filePath, reportProgress, null, 50, -1, null, default)
-    {
-    }
-
     private DownloadItem(Uri url,
                          string filePath,
                          bool reportProgress,

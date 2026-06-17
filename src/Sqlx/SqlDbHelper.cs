@@ -82,6 +82,9 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
     private static bool HasValidLoginMode(SQLInstanceInfo sqlInstanceInfo) =>
         sqlInstanceInfo?.LoginMode is ServerLoginMode.Integrated or ServerLoginMode.Mixed;
 
+    // Used by GetSqlInstancesAsync in the non-NETFRAMEWORK build (#else branch). R# analyzes the net48
+    // TFM, where that single call site is preprocessed out, so it incorrectly reports this as unused.
+    // ReSharper disable once UnusedMember.Local
     private static async Task<IList<SQLInstanceInfo>> GetLocalSqlInstancesAsync()
     {
         try
@@ -137,6 +140,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
                 using var results = searcher.Get();
 
                 foreach (var service in results.OfType<ManagementObject>())
+                {
                     using (service)
                     {
                         var instanceName =
@@ -144,6 +148,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
                         if (instanceName.IsNotNullOrEmptyString())
                             instanceNames.Add(instanceName);
                     }
+                }
             }
             catch (Exception ex)
             {
@@ -166,12 +171,14 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
             using var results = searcher.Get();
 
             foreach (var managementNamespace in results.OfType<ManagementObject>())
+            {
                 using (managementNamespace)
                 {
                     var name = Convert.ToString(managementNamespace["Name"]);
                     if (name?.StartsWith("ComputerManagement", StringComparison.OrdinalIgnoreCase) == true)
                         namespaces.Add($@"{sqlServerRoot}\{name}");
                 }
+            }
         }
         catch (Exception ex)
         {

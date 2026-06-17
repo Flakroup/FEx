@@ -61,7 +61,8 @@ public class ZoomBorder : Border, INotifyPropertyChanged
     public double Scale
     {
         get => _scale;
-        set => this.SetObjectProperty(ref _scale, value, (z, _, _) => Task.Run(() => ScaleChanged?.Invoke(z, Scale)));
+        set => this.SetObjectProperty(ref _scale, value,
+            (z, _, _) => { _ = Task.Run(() => ScaleChanged?.Invoke(z, Scale)); });
     }
 
     public bool IsAutoFitEnabled

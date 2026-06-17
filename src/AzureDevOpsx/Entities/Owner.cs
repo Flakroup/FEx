@@ -93,7 +93,11 @@ public class Owner : NotifyPropertyChanged
         }
     }
 
+    // VSTHRD100: Intentional fire-and-forget UI refresh; exceptions are handled by the internal
+    // try/catch below, so the async-void crash risk does not apply.
+#pragma warning disable VSTHRD100
     public async void RefreshImage()
+#pragma warning restore VSTHRD100
     {
         try
         {

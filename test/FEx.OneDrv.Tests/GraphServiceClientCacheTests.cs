@@ -11,6 +11,10 @@ using Xunit;
 
 namespace FEx.OneDrv.Tests;
 
+// IDISP005: test helpers create dummy disposable GraphServiceClient instances whose lifetime is
+// managed within the tests; no production disposal contract is affected.
+#pragma warning disable IDISP005
+
 public sealed class GraphServiceClientCacheTests
 {
     [Fact]

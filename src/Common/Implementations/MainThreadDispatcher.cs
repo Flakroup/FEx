@@ -8,6 +8,11 @@ using System.Threading.Tasks;
 
 namespace FEx.Common.Implementations;
 
+// VSTHRD001: This type IS the main-thread dispatcher primitive - it switches to the UI thread via
+// SynchronizationContext.Post/Send (overriding FExDispatcher). JoinableTaskFactory is not FEx's
+// concurrency model, so the legacy thread-switching APIs are intentional here.
+#pragma warning disable VSTHRD001
+
 public class MainThreadDispatcher : FExDispatcher
 {
     public MainThreadDispatcher(IMainThreadContextProvider mainThreadContextProvider,

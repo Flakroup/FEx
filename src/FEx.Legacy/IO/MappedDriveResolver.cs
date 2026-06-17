@@ -7,6 +7,12 @@ using System.Management;
 
 namespace FEx.Legacy.IO;
 
+// CA1416: This type is Windows-only by design - it resolves mapped network drives via WMI
+// (System.Management). CA1416 fires only on the net10.0 target (cross-platform); netstandard
+// targets do not run the platform analyzer. Suppressed rather than annotated because
+// SupportedOSPlatformAttribute is unavailable on the netstandard2.0 BCL.
+#pragma warning disable CA1416
+
 /// <summary>
 /// A static class to help with resolving a mapped drive path to a UNC network path.
 /// If a local drive path or a UNC network path are passed in, they will just be returned.

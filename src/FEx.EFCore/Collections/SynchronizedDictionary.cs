@@ -169,7 +169,13 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     }
 
     protected abstract Expression<Func<TValue, TKey>> RetriveKey();
+
+    // VSTHRD200: DbSetAccessor returns a DbSet<T> (which implements IAsyncEnumerable) but is a
+    // synchronous accessor, not an async method - an "Async" suffix would be misleading.
+#pragma warning disable VSTHRD200
     protected abstract DbSet<TValue> DbSetAccessor(TDbCtx ctx);
+#pragma warning restore VSTHRD200
+
     protected abstract TValue GetNew(TKey key, IDictionary<string, object> param = null);
 
     protected virtual async Task OnChangesDetectedAsync(ICollection<ChangeInfo<TKey, TValue>> changes) =>

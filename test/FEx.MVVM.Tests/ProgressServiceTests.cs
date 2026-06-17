@@ -59,18 +59,18 @@ public sealed class ProgressServiceTests
     }
 
     [Fact]
-    public void Instance_ShouldReturnSameInstance()
+    public async Task Instance_ShouldReturnSameInstance()
     {
         var tasks = new Task<ProgressService>[10];
 
         for (var i = 0; i < tasks.Length; i++)
             tasks[i] = Task.Run(() => ProgressService.Instance);
 
-        Task.WaitAll(tasks);
+        var instances = await Task.WhenAll(tasks);
 
-        var first = tasks[0].Result;
+        var first = instances[0];
 
-        for (var i = 1; i < tasks.Length; i++)
-            tasks[i].Result.ShouldBeSameAs(first);
+        for (var i = 1; i < instances.Length; i++)
+            instances[i].ShouldBeSameAs(first);
     }
 }

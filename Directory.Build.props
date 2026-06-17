@@ -5,6 +5,10 @@
 	<PropertyGroup>
 		<NoWarn>$(NoWarn);NU1701</NoWarn>
 		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+		<!-- Zero-warning policy: every build warning is promoted to an error so warnings cannot
+		     accumulate. Genuine analyzer/platform false positives are suppressed at the call site
+		     with a justification comment (or via a documented per-project NoWarn). -->
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
 
 </Project>

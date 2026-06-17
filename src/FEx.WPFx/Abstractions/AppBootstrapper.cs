@@ -14,7 +14,9 @@ using Serilog;
 using System;
 using System.Diagnostics;
 using System.IO;
+#if !NET5_0_OR_GREATER
 using System.Net;
+#endif
 using System.Windows;
 using System.Windows.Threading;
 
@@ -43,7 +45,11 @@ public abstract class AppBootstrapper<TContainer> : Application
 
             SetNetwork();
 
+            // VSTHRD002: synchronous wait is required at this WPF bootstrap entry point; exceptions
+            // are handled by the surrounding try/catch.
+#pragma warning disable VSTHRD002
             _container = FExServiceProvider.InitializeAsync<TContainer>().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
             _appInfoProvider = FExServiceProvider.Get<IAppInfoProvider>();
             _appConfig = FExServiceProvider.Get<IAppConfig>();
             _exceptionHandler = FExServiceProvider.Get<IExceptionHandler>();
@@ -66,12 +72,17 @@ public abstract class AppBootstrapper<TContainer> : Application
 
     protected virtual void SetNetwork()
     {
+        // SYSLIB0014: ServicePointManager settings are obsolete no-ops on net5+ (they do not
+        // affect HttpClient); they still tune TLS and Nagle on .NET Framework / netstandard, so
+        // they are compiled only there (the using System.Net is guarded by the same condition).
+#if !NET5_0_OR_GREATER
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
                                                | SecurityProtocolType.Tls11
                                                | SecurityProtocolType.Tls12
                                                | SecurityProtocolType.Tls13;
 
         ServicePointManager.UseNagleAlgorithm = false;
+#endif
     }
 
     protected virtual void HandleException(Exception exception) => exception.HandleException(true, true);

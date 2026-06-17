@@ -168,15 +168,14 @@ public static class SynchronizationContextExtensions
             {
                 timer.Change(Timeout.Infinite, Timeout.Infinite);
 
-#if NET
+                // VSTHRD103: Timer.Dispose() is the intended synchronous cleanup here; the
+                // analyzer's DisposeAsync suggestion fires on TFMs where the async overload exists
+                // (net10/netstandard2.1). Suppressed unconditionally (a no-op where it does not fire).
 #pragma warning disable VSTHRD103
-#endif
                 // ReSharper disable MethodHasAsyncOverload
                 timer.Dispose();
                 // ReSharper restore MethodHasAsyncOverload
-#if NET
 #pragma warning restore VSTHRD103
-#endif
             }
         }
         catch (Exception ex)

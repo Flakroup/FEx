@@ -157,6 +157,9 @@
   <Project Path="src/FEx.Flurlx/FEx.Flurlx.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
+  <Project Path="src/FEx.Flurlx.Newtonsoft/FEx.Flurlx.Newtonsoft.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
   <Project Path="src/Imaging.Windows/FEx.Imaging.Windows.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>

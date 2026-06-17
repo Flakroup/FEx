@@ -1,10 +1,8 @@
 using FEx.Agnostics.Abstractions;
 using FEx.Flurlx.Abstractions.Interfaces;
 using FEx.Flurlx.Services;
-using FEx.Json.Extensions;
 using Flurl.Http;
 using Flurl.Http.Configuration;
-using Flurl.Http.Newtonsoft;
 using Polly;
 
 namespace FEx.Flurlx;
@@ -13,14 +11,17 @@ public class FlurlConfigurator : FExInitializable, IFlurlConfigurator
 {
     private readonly IApiConfiguration _apiConfiguration;
     private readonly IFlurlClientCache _flurlClientCache;
+    private readonly ISerializer _jsonSerializer;
     private readonly IAsyncPolicy<IFlurlResponse> _resiliencePolicy;
 
     public FlurlConfigurator(IApiConfiguration apiConfiguration,
                              IFlurlClientCache flurlClientCache,
-                             IFExPollyPolicyBuilder policyBuilder)
+                             IFExPollyPolicyBuilder policyBuilder,
+                             ISerializer jsonSerializer)
     {
         _apiConfiguration = apiConfiguration;
         _flurlClientCache = flurlClientCache;
+        _jsonSerializer = jsonSerializer;
 
         // Build Polly policy from configuration
         _resiliencePolicy = policyBuilder.BuildFullSuitePolicy(_apiConfiguration.PollyConfig);
@@ -35,7 +36,7 @@ public class FlurlConfigurator : FExInitializable, IFlurlConfigurator
 
     private void DefaultClientConfiguration(IFlurlClientBuilder builder)
     {
-        builder.Settings.JsonSerializer = new NewtonsoftJsonSerializer(JsonExtensions.DefaultSettings);
+        builder.Settings.JsonSerializer = _jsonSerializer;
         builder.Settings.Timeout = _apiConfiguration.PollyConfig.RequestTimeout;
 
         if (_apiConfiguration.IgnoreSSLErrors)

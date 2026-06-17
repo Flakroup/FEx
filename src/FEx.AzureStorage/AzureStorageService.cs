@@ -13,7 +13,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+#if !NET5_0_OR_GREATER
 using System.Net;
+#endif
 using System.Threading;
 using System.Threading.Tasks;
 using DeleteSnapshotsOption = Microsoft.Azure.Storage.Blob.DeleteSnapshotsOption;
@@ -49,8 +51,13 @@ public class AzureStorageService : IAzureStorageService
         var parallelOperationsCount = Environment.ProcessorCount * parallelOperationsPerProcessorCount;
         ConnStr = connStr;
 
+        // SYSLIB0014: ServicePointManager is obsolete on net5+ (no-op for HttpClient); it still
+        // tunes the connection pool on .NET Framework / netstandard, so it is compiled only there
+        // (the using System.Net is guarded by the same condition).
+#if !NET5_0_OR_GREATER
         ServicePointManager.Expect100Continue = false;
         ServicePointManager.DefaultConnectionLimit = parallelOperationsCount;
+#endif
         TransferManager.Configurations.ParallelOperations = parallelOperationsCount;
         EnsureDefaultServiceVersion(ConnStr);
     }

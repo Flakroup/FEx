@@ -22,9 +22,12 @@ public static class WpfCommon
         {
             var frame = new DispatcherFrame();
 
+            // VSTHRD001: WPF message-pump marshaling via Dispatcher.Invoke (DoEvents helper).
+#pragma warning disable VSTHRD001
             Dispatcher.CurrentDispatcher.Invoke(DispatcherPriority.Background,
                 new DispatcherOperationCallback(ExitFrame),
                 frame);
+#pragma warning restore VSTHRD001
 
             Dispatcher.PushFrame(frame);
         }

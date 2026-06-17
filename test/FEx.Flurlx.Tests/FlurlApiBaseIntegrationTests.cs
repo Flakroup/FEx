@@ -74,7 +74,7 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
                 .WithBody("{\"id\":123,\"name\":\"Test\"}"));
 
         // Act
-        var result = await _testApi.GetDataAsync();
+        var result = await _testApi.GetDataAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.ShouldNotBeNull();
@@ -93,7 +93,7 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
                 .WithBody("{\"id\":456,\"name\":\"Retry Success\"}"));
 
         // Act
-        var result = await _testApi.GetRetryTestDataAsync();
+        var result = await _testApi.GetRetryTestDataAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.ShouldNotBeNull();
@@ -112,7 +112,7 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
         // After retries exhausted, fallback returns ServiceUnavailable (503)
         // FlurlApiBase tries to deserialize fallback response which may throw JsonReaderException
         // OR throws HttpRequestException for 503 status code - both are acceptable failure scenarios
-        await Should.ThrowAsync<Exception>(async () => { await _testApi.GetDataAsync(); });
+        await Should.ThrowAsync<Exception>(async () => { await _testApi.GetDataAsync(TestContext.Current.CancellationToken); });
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
                 .WithBody("{\"id\":789,\"name\":\"Created\"}"));
 
         // Act
-        var result = await _testApi.CreateDataAsync(requestBody);
+        var result = await _testApi.CreateDataAsync(requestBody, TestContext.Current.CancellationToken);
 
         // Assert
         result.ShouldNotBeNull();
@@ -156,7 +156,7 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
                 .WithBody("{\"id\":7,\"bookedOn\":\"2026-06-16\"}"));
 
         // Act
-        var result = await _testApi.GetDatedAsync();
+        var result = await _testApi.GetDatedAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.ShouldNotBeNull();
@@ -180,7 +180,7 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
                 .WithBody("{\"id\":999,\"name\":\"Filtered\"}"));
 
         // Act
-        var result = await _testApi.SearchDataAsync("active", 10);
+        var result = await _testApi.SearchDataAsync("active", 10, TestContext.Current.CancellationToken);
 
         // Assert
         result.ShouldNotBeNull();

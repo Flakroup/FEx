@@ -19,7 +19,10 @@ public sealed partial class App : Application
         try
         {
             // Initialize FEx with StrongInject container (no Microsoft DI needed for simple WPF)
+            // VSTHRD002: synchronous wait is required in this WPF OnStartup bootstrap entry point.
+#pragma warning disable VSTHRD002
             using var container = FExServiceProvider.InitializeAsync<AppContainer>().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
 
             // Create and show main window
             var mainWindow = new MainWindow();

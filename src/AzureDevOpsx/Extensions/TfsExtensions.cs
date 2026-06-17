@@ -23,15 +23,15 @@ public static class TfsExtensions
 {
     public static Dictionary<ChangeType, string> ChangeTypes { get; } = Enum.GetValues(typeof(ChangeType))
         .Cast<ChangeType>()
-        .ToDictionary(x => x, x => Enum.GetName(x.GetType(), x));
+        .ToDictionary(x => x, x => Enum.GetName(typeof(ChangeType), x));
 
     public static Dictionary<SourceControlTypes, string> SourceControlTypes { get; } = Enum.GetValues(typeof(SourceControlTypes))
         .Cast<SourceControlTypes>()
-        .ToDictionary(x => x, x => Enum.GetName(x.GetType(), x));
+        .ToDictionary(x => x, x => Enum.GetName(typeof(SourceControlTypes), x));
 
     public static Dictionary<ProjectState, string> ProjectStates { get; } = Enum.GetValues(typeof(ProjectState))
         .Cast<ProjectState>()
-        .ToDictionary(x => x, x => Enum.GetName(x.GetType(), x));
+        .ToDictionary(x => x, x => Enum.GetName(typeof(ProjectState), x));
 
     public static TfsBuildServerVersion GetBuildServerVersion(this IBuildServer buildServer)
     {

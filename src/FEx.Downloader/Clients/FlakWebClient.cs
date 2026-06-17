@@ -14,6 +14,10 @@ using System.Threading.Tasks;
 
 namespace FEx.Downloader.Clients;
 
+// SYSLIB0014: This type is an extended WebClient by design; migrating the downloader to
+// HttpClient is out of scope. Behavior retained for legacy download/cookie-persistence support.
+#pragma warning disable SYSLIB0014
+
 /// <summary>
 /// An extended WebClient that i.e. will store authentication cookie information and persist it through subsequent
 /// requests.

@@ -17,10 +17,10 @@ namespace FEx.Sample.WebAPI;
 [Register(typeof(FExStrongInjectServiceProvider), Scope.SingleInstance, typeof(IFExServiceProvider))]
 [Register(typeof(FExMicrosoftDIServiceProvider), Scope.SingleInstance)]
 [Register(typeof(SampleApiModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
-#pragma warning disable IDISP025 // StrongInject generated container
+#pragma warning disable IDISP025, SI1105 // IDISP025: StrongInject generated container; SI1105: benign module-resolution warning
 public partial class AppContainer : TestBase, IFExDependencyInjectionContainer, IContainer<IFExServiceProvider>,
     IContainer<FExMicrosoftDIServiceProvider>, IContainer<IInitializeModule<IServiceCollection>[]>
-#pragma warning restore IDISP025
+#pragma warning restore IDISP025, SI1105
 {
     [Factory]
     public static ILogger CreateLogger() => NullLogger.Instance;

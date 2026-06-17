@@ -34,8 +34,8 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     public Orientation Orientation { get; set; } = Orientation.Horizontal;
 
     public Size FixedItemSize { get; set; } = Size.Empty;
-    public IItemSizeProvider ItemSizeProvider { get; set; } = null;
-    public bool AllowDifferentSizedItems { get; set; } = false;
+    public IItemSizeProvider ItemSizeProvider { get; set; }
+    public bool AllowDifferentSizedItems { get; set; }
 
     public bool StretchItems { get; set; }
     public SpacingMode SpacingMode { get; set; }

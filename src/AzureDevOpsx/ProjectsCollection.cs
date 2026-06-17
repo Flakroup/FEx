@@ -25,7 +25,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -364,43 +363,6 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
             File.Delete(localPath);
 
         await fwc.DownloadFileTaskAsync(url, localPath);
-    }
-
-    /// <summary>
-    /// Gets the myself information.
-    /// </summary>
-    private async Task GetMyselfInfoAsync()
-    {
-        var requestString = $"projectCollections/{Identifier.ToString().ToLower(CultureInfo.InvariantCulture)}";
-
-        var json = await GetRequestResultAsync(requestString,
-            true,
-            [HttpStatusCode.NotFound, HttpStatusCode.ServiceUnavailable, HttpStatusCode.Forbidden]);
-
-        if (json.IsNotNullOrEmptyString())
-        {
-            var res = JToken.Parse(json);
-        }
-    }
-
-    /// <summary>
-    /// Lists the shelveset changes.
-    /// </summary>
-    /// <param name="shelveset">The shelveset.</param>
-    /// <param name="viewModel">The view model.</param>
-    /// <returns>
-    /// List{Change}
-    /// </returns>
-    private async Task LoadShelvesetChangesAsync(ShelvesetContent shelveset, IProgressAggregator viewModel)
-    {
-        await shelveset.LoadChangesAsync();
-        viewModel?.PrgAdd();
-    }
-
-    private async Task RefreshOwnerImageAsync(ShelvesetContent shelvesetContent, IProgressAggregator viewModel = null)
-    {
-        await shelvesetContent.Owner.RefreshImageAsync(TfsEnvironment);
-        viewModel?.PrgAdd();
     }
 
     /// <summary>

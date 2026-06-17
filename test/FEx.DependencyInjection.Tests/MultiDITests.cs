@@ -18,7 +18,11 @@ public sealed class MultiDITests : IDisposable
         FExServiceProvider.Release();
 
         // Act
+        // The container is owned by FExServiceProvider's static state (_containerInstance) and disposed
+        // deterministically by Release() in this test's Dispose(); the test does not own the instance.
+#pragma warning disable IDISP001 // Dispose created
         var container = await FExServiceProvider.InitializeAsync<TestContainer>();
+#pragma warning restore IDISP001 // Dispose created
 
         // Assert
         FExServiceProvider.ServiceContainer.ShouldNotBeNull();

@@ -124,10 +124,6 @@ public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposabl
         return MessageResult.None;
     }
 
-    private void Log(string txt) => Log(txt, LogLevel.Information);
-
-    private void Log(string txt, LogLevel level) => Log(txt, level, null);
-
     private void Log(string txt, LogLevel level, Exception exception) => _logger.Log(level, exception, txt);
 
     #region IDisposable

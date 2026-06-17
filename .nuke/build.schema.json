@@ -229,7 +229,7 @@
         },
         "NuGetSource": {
           "type": "string",
-          "description": "NuGet source URL for pushing packages"
+          "description": "NuGet source URL for pushing packages (default: nuget.org)"
         },
         "Solution": {
           "type": "string",

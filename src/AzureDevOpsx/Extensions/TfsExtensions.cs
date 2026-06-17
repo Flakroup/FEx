@@ -106,17 +106,17 @@ public static class TfsExtensions
     {
         try
         {
-            List<Workspace> localWorkspaces = project.GetProjectWorkspaces();
+            var localWorkspaces = project.GetProjectWorkspaces();
             if (localWorkspaces.Count <= 0)
                 return false;
 
-            Workspace workspace = project.ProjectWorkspaces.Find(x => x.MappingsAvailable);
+            var workspace = project.ProjectWorkspaces.Find(x => x.MappingsAvailable);
             if (workspace != null)
             {
-                WorkingFolder folder = workspace.Folders.FindInEnumerable(t => (t.ServerItem == "$/" || t.ServerItem == $"$/{project.Name}") && !t.IsCloaked && Directory.Exists(t.LocalItem));
+                var folder = workspace.Folders.FindInEnumerable(t => (t.ServerItem == "$/" || t.ServerItem == $"$/{project.Name}") && !t.IsCloaked && Directory.Exists(t.LocalItem));
                 if (folder != null)
                 {
-                    string filePath = folder.LocalItem;
+                    var filePath = folder.LocalItem;
                     if (folder.ServerItem == "$/")
                         filePath = Path.Combine(filePath, project.Name);
 
@@ -130,7 +130,7 @@ public static class TfsExtensions
                         checkinComment = $"Updated {serverItem}";
 
                     File.WriteAllText(filePath, fileContent);
-                    PendingChange[] pendingChanges = workspace.GetPendingChanges();
+                    var pendingChanges = workspace.GetPendingChanges();
                     workspace.CheckIn([pendingChanges.First(x => x.ServerItem == $"$/{project.Name}/{serverItem}")], checkinComment);
                     return true;
                 }

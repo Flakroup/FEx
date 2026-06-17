@@ -254,11 +254,11 @@ public static class PlatformInfoProvider
 
     // ReSharper disable UnusedMember.Local
     [DllImport("kernel32.dll")]
-    private static extern void GetSystemInfo([MarshalAs(UnmanagedType.Struct)] ref SystemInfo lpSystemInfo);
+    private static extern void GetSystemInfo(ref SystemInfo lpSystemInfo);
     // ReSharper restore UnusedMember.Local
 
     [DllImport("kernel32.dll")]
-    private static extern void GetNativeSystemInfo([MarshalAs(UnmanagedType.Struct)] ref SystemInfo lpSystemInfo);
+    private static extern void GetNativeSystemInfo(ref SystemInfo lpSystemInfo);
 #if NET
 #pragma warning restore SYSLIB1054
 #endif

@@ -14,6 +14,10 @@ using Microsoft.SqlServer.Management.Smo.Wmi;
 
 namespace FEx.Sqlx;
 
+// CS0618: System.Data.SqlClient.SqlConnection is obsolete in favour of Microsoft.Data.SqlClient.
+// Retained for backward compatibility; full migration tracked as tech debt.
+#pragma warning disable CS0618
+
 public class SQLInstanceInfo
 {
     public string SQLInstance { get; }

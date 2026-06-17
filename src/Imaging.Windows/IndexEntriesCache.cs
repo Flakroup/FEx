@@ -122,10 +122,14 @@ public class IndexEntriesCache : SynchronizedDictionary<string, IndexEntry, File
         return await RemoveIndexEntriesAsync(ctx, ids);
     }
 
+    // CS0618: BatchDeleteAsync (third-party EF batch extension) is obsolete in favour of the
+    // EF7+ native ExecuteDelete. Migration tracked as tech debt; behavior retained for now.
+#pragma warning disable CS0618
     private async Task<int> RemoveIndexEntriesAsync(FilesCacheContext ctx, ICollection<string> ids) =>
         ids.IsNotNullOrEmptyCollection()
             ? await DbSetAccessor(ctx).Where(x => ids.Contains(x.AbsoluteUri)).BatchDeleteAsync()
             : 0;
+#pragma warning restore CS0618
 
     private Result<FileInfo, ExceptionError> SafeDeleteFile(FileInfo file)
     {

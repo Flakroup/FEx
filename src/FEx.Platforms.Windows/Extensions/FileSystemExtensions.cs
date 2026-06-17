@@ -12,6 +12,12 @@ using System.Security.Principal;
 
 namespace FEx.Platforms.Windows.Extensions;
 
+// CA1416: This type is Windows-only by design - it manipulates NTFS ACLs via WindowsIdentity,
+// NTAccount/SecurityIdentifier and icacls. CA1416 fires only on the net10.0 target
+// (cross-platform); netstandard targets do not run the platform analyzer. Suppressed rather
+// than annotated because SupportedOSPlatformAttribute is unavailable on the netstandard2.0 BCL.
+#pragma warning disable CA1416
+
 public static class FileSystemExtensions
 {
     public static bool SetEverybodyFullControl(this DirectoryInfo dInfo, params string[] excludes)

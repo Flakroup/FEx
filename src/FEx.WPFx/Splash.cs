@@ -36,8 +36,12 @@ public class Splash : FExInitializable, IFExPriorityInitialize
 
     public void WaitForSplashAndClose()
     {
+        // VSTHRD003: AwaitWithoutDeadlock is the intended mechanism for safely observing this
+        // externally-started splash task.
+#pragma warning disable VSTHRD003
         if (SplashTask?.IsFinished() == false)
             JoinableAsyncHelper.AwaitWithoutDeadlock(() => SplashTask);
+#pragma warning restore VSTHRD003
 
         Close();
     }
@@ -49,8 +53,11 @@ public class Splash : FExInitializable, IFExPriorityInitialize
 
         var tcs = DispatcherService.ShowView(ShowSplashInternal, true);
 
+        // VSTHRD003: AwaitWithoutDeadlock safely observes these externally-started splash tasks.
+#pragma warning disable VSTHRD003
         JoinableAsyncHelper.AwaitWithoutDeadlock(() => tcs.Task);
         JoinableAsyncHelper.AwaitWithoutDeadlock(() => SplashScreenWindow.InitializationTask);
+#pragma warning restore VSTHRD003
     }
 
     /// <inheritdoc />

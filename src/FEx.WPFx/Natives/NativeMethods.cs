@@ -28,11 +28,15 @@ public static class NativeMethods
             while (!result
                    && retries > 0)
             {
+                // VSTHRD001: WPF UI-thread marshaling via Dispatcher.Invoke; JoinableTaskFactory is
+                // not used in this legacy WPF layer.
+#pragma warning disable VSTHRD001
                 window.Dispatcher.Invoke(() =>
                 {
                     result = SetForegroundWindow(windowHandle) != 0;
                     retries--;
                 });
+#pragma warning restore VSTHRD001
             }
         }
         catch
@@ -225,8 +229,11 @@ public static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
+    // VSTHRD001: WPF UI-thread marshaling via Dispatcher.Invoke.
+#pragma warning disable VSTHRD001
     private static IntPtr GetWindowHandle(Window window) =>
         window.Dispatcher.Invoke(() => new WindowInteropHelper(window).Handle);
+#pragma warning restore VSTHRD001
 
     /// <summary>
     /// Gets the child windows.

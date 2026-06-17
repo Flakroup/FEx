@@ -21,7 +21,7 @@ public sealed class OneDrvServiceCollectionExtensionsTests
         };
 
         services.AddOneDrv(options);
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
 
         provider.GetService<IOneDriveAuthService>().ShouldNotBeNull();
         provider.GetService<IGraphServiceClientCache>().ShouldNotBeNull();
@@ -42,7 +42,7 @@ public sealed class OneDrvServiceCollectionExtensionsTests
             ClientId = "x"
         });
 
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
 
         var client1 = provider.GetService<IOneDriveClient>();
         var client2 = provider.GetService<IOneDriveClient>();

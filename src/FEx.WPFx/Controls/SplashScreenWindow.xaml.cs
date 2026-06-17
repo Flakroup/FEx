@@ -227,12 +227,18 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
         DesiredTextWidth = DesiredWidth - progressCircle.ActualWidth - 5;
     }
 
+    // VSTHRD001: WPF UI-thread marshaling via Dispatcher.Invoke.
+#pragma warning disable VSTHRD001
     private void CloseSplash(object sender, EventArgs e) => Dispatcher?.Invoke(Close);
+#pragma warning restore VSTHRD001
 
+    // VSTHRD001: WPF UI-thread marshaling via Dispatcher.InvokeAsync.
+#pragma warning disable VSTHRD001
     [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods")]
     private async void OnStatusChange() =>
         await Dispatcher.InvokeAsync(() => Status = StatusHub.GetStatusString(Environment.NewLine)?.ToUpper(),
             DispatcherPriority.Send);
+#pragma warning restore VSTHRD001
 
     private void CloseButton_OnClick(object sender, RoutedEventArgs e) => Environment.Exit(0);
 }

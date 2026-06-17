@@ -8,6 +8,9 @@ using StrongInject.Modules;
 
 namespace FEx.DependencyInjection.Tests;
 
+// SI1105: StrongInject emits a benign resolution warning for this test container's module graph;
+// the container is test-only and resolves correctly at runtime.
+#pragma warning disable SI1105
 [RegisterModule(typeof(CollectionsModule))]
 [RegisterModule(typeof(FExDependencyInjectionModule))]
 [Register(typeof(FExStrongInjectServiceProvider), Scope.SingleInstance, typeof(IFExServiceProvider))]

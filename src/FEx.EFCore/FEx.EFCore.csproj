@@ -11,6 +11,12 @@
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EFCoreVersion)" />
+		<!-- Security pin (GHSA-2m69-gcr7-jv3q): EntityFrameworkCore.Sqlite transitively pulls the bundled
+		     native SQLitePCLRaw.lib.e_sqlite3 2.1.11, which the advisory flags (vulnerable range <= 2.1.11,
+		     no managed-side patched version). 3.50.3 versions the native engine by SQLite version (3.50.3),
+		     is outside the vulnerable range, and carries no managed dependencies (ABI-stable, independent of
+		     SQLitePCLRaw.core/provider). Remove once EntityFrameworkCore.Sqlite ships a non-vulnerable bundle. -->
+		<PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(EFCoreVersion)" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="$(EFCoreVersion)">
 			<PrivateAssets>all</PrivateAssets>

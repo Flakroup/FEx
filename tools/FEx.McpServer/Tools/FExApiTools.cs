@@ -1,6 +1,6 @@
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using FEx.McpServer.Services;
@@ -131,29 +131,74 @@ public sealed class FExApiTools
         var tomlCommit = reader.GitCommit;
         var generated = reader.Generated;
 
+        var headCommit = TryReadGitHeadShort(config.RepoPath);
+        if (string.IsNullOrEmpty(headCommit))
+            return $"Cannot check git HEAD: failed to read .git/HEAD. TOML commit: {tomlCommit}, generated: {generated}";
+
+        var isFresh = string.Equals(tomlCommit, headCommit, StringComparison.OrdinalIgnoreCase);
+
+        return isFresh
+            ? $"API surface is UP TO DATE. Commit: {tomlCommit}, generated: {generated}"
+            : $"API surface is OUTDATED. TOML: {tomlCommit}, HEAD: {headCommit}. Run Generate-ApiSurface.ps1 to update.";
+    }
+
+    // Reads the short (7-char) SHA for HEAD directly from .git files, avoiding a git subprocess
+    // that can hang when the process has inherited pipe handles (e.g. under an MCP stdio host).
+    private static string TryReadGitHeadShort(string repoPath)
+    {
         try
         {
-            var psi = new ProcessStartInfo("git", "rev-parse --short HEAD")
+            var gitDir = Path.Combine(repoPath, ".git");
+            var headContent = File.ReadAllText(Path.Combine(gitDir, "HEAD")).Trim();
+
+            string fullSha;
+
+            if (headContent.StartsWith("ref: ", StringComparison.Ordinal))
             {
-                WorkingDirectory = config.RepoPath,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+                var refPath = headContent[5..]; // e.g. "refs/heads/develop"
+                var refFile = Path.Combine(gitDir, refPath.Replace('/', Path.DirectorySeparatorChar));
 
-            using var proc = Process.Start(psi);
-            var headCommit = proc?.StandardOutput.ReadToEnd().Trim() ?? "unknown";
-            proc?.WaitForExit();
+                if (File.Exists(refFile))
+                {
+                    fullSha = File.ReadAllText(refFile).Trim();
+                }
+                else
+                {
+                    // Ref has been packed — search packed-refs
+                    var packedRefs = Path.Combine(gitDir, "packed-refs");
+                    if (!File.Exists(packedRefs))
+                        return "";
 
-            var isFresh = string.Equals(tomlCommit, headCommit, StringComparison.OrdinalIgnoreCase);
+                    string foundSha = "";
+                    foreach (var line in File.ReadLines(packedRefs))
+                    {
+                        if (line.Length == 0 || line[0] == '#' || line[0] == '^')
+                            continue;
+                        var space = line.IndexOf(' ');
+                        if (space > 0 && line[(space + 1)..] == refPath)
+                        {
+                            foundSha = line[..space];
+                            break;
+                        }
+                    }
 
-            return isFresh
-                ? $"API surface is UP TO DATE. Commit: {tomlCommit}, generated: {generated}"
-                : $"API surface is OUTDATED. TOML: {tomlCommit}, HEAD: {headCommit}. Run Generate-ApiSurface.ps1 to update.";
+                    if (string.IsNullOrEmpty(foundSha))
+                        return "";
+
+                    fullSha = foundSha;
+                }
+            }
+            else
+            {
+                // Detached HEAD — content is already the full SHA
+                fullSha = headContent;
+            }
+
+            return fullSha.Length >= 7 ? fullSha[..7] : fullSha;
         }
-        catch (Exception ex)
+        catch
         {
-            return $"Cannot check git HEAD: {ex.Message}. TOML commit: {tomlCommit}, generated: {generated}";
+            return "";
         }
     }
 }

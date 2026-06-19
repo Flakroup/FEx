@@ -3,6 +3,7 @@ using System.IO;
 using FEx.McpServer.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 
 var repoPath = Environment.GetEnvironmentVariable("FEX_REPO_PATH")
@@ -18,6 +19,10 @@ if (!Directory.Exists(apiSurfacePath))
 }
 
 var builder = Host.CreateApplicationBuilder(args);
+
+// Redirect all Console logging to stderr so stdout stays clean for JSON-RPC (stdio transport).
+// Without this, info-level log lines corrupt the newline-delimited JSON stream.
+builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
 
 builder.Services.AddSingleton(new ApiSurfaceConfig(apiSurfacePath, repoPath));
 builder.Services.AddSingleton<TomlApiSurfaceReader>();

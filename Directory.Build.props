@@ -11,10 +11,4 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
 
-	<!-- Security pin: SQLitePCLRaw.lib.e_sqlite3 2.x has known high-severity vulnerabilities
-	     (GHSA-2m69-gcr7-jv3q). Pin globally to 3.50.3 (bundles SQLite 3.50.3) across all projects. -->
-	<ItemGroup>
-		<PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
-	</ItemGroup>
-
 </Project>

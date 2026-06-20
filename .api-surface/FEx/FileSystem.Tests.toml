@@ -7,8 +7,162 @@ name = "DirectoryWalkerSafeDeleteTests"
 ns = "FEx.FileSystem.Tests"
 file = "DirectoryWalkerSafeDeleteTests.cs"
 
+[[methods]]
+parent = "DirectoryWalkerSafeDeleteTests"
+name = "SafeDelete_NonExistentDirectory_ReturnsTrue"
+sig = "void SafeDelete_NonExistentDirectory_ReturnsTrue()"
+returns = "void"
+file = "DirectoryWalkerSafeDeleteTests.cs"
+
+[[methods]]
+parent = "DirectoryWalkerSafeDeleteTests"
+name = "SafeDelete_EmptyDirectory_NonRecursive_DeletesAndReturnsTrue"
+sig = "void SafeDelete_EmptyDirectory_NonRecursive_DeletesAndReturnsTrue()"
+returns = "void"
+file = "DirectoryWalkerSafeDeleteTests.cs"
+
+[[methods]]
+parent = "DirectoryWalkerSafeDeleteTests"
+name = "SafeDelete_DirectoryWithFiles_NonRecursive_ReturnsFalse"
+sig = "void SafeDelete_DirectoryWithFiles_NonRecursive_ReturnsFalse()"
+returns = "void"
+file = "DirectoryWalkerSafeDeleteTests.cs"
+
+[[methods]]
+parent = "DirectoryWalkerSafeDeleteTests"
+name = "SafeDelete_DirectoryWithFiles_Recursive_DeletesAllAndReturnsTrue"
+sig = "void SafeDelete_DirectoryWithFiles_Recursive_DeletesAllAndReturnsTrue()"
+returns = "void"
+file = "DirectoryWalkerSafeDeleteTests.cs"
+
+[[methods]]
+parent = "DirectoryWalkerSafeDeleteTests"
+name = "SafeDelete_DirectoryWithNestedStructure_Recursive_DeletesAllAndReturnsTrue"
+sig = "void SafeDelete_DirectoryWithNestedStructure_Recursive_DeletesAllAndReturnsTrue()"
+returns = "void"
+file = "DirectoryWalkerSafeDeleteTests.cs"
+
+[[methods]]
+parent = "DirectoryWalkerSafeDeleteTests"
+name = "SafeDelete_DirectoryWithLockedFile_Recursive_ReturnsFalseAndLeavesLockedFile"
+sig = "void SafeDelete_DirectoryWithLockedFile_Recursive_ReturnsFalseAndLeavesLockedFile()"
+returns = "void"
+file = "DirectoryWalkerSafeDeleteTests.cs"
+
+[[methods]]
+parent = "DirectoryWalkerSafeDeleteTests"
+name = "SafeDelete_NonExistentFile_ReturnsTrue"
+sig = "void SafeDelete_NonExistentFile_ReturnsTrue()"
+returns = "void"
+file = "DirectoryWalkerSafeDeleteTests.cs"
+
+[[methods]]
+parent = "DirectoryWalkerSafeDeleteTests"
+name = "SafeDelete_ExistingFile_DeletesAndReturnsTrue"
+sig = "void SafeDelete_ExistingFile_DeletesAndReturnsTrue()"
+returns = "void"
+file = "DirectoryWalkerSafeDeleteTests.cs"
+
+[[methods]]
+parent = "DirectoryWalkerSafeDeleteTests"
+name = "SafeDelete_LockedFile_ReturnsFalse"
+sig = "void SafeDelete_LockedFile_ReturnsFalse()"
+returns = "void"
+file = "DirectoryWalkerSafeDeleteTests.cs"
+
 [[classes]]
 name = "GitWorktreeExtensionsTests"
 ns = "FEx.FileSystem.Tests"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "GetGitWorktreeKind_NullDirectory_ReturnsNone"
+sig = "void GetGitWorktreeKind_NullDirectory_ReturnsNone()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "GetGitWorktreeKind_PlainDirectory_NoGitMarker_ReturnsNone"
+sig = "void GetGitWorktreeKind_PlainDirectory_NoGitMarker_ReturnsNone()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "GetGitWorktreeKind_MainRepo_GitAsFolder_ReturnsNone"
+sig = "void GetGitWorktreeKind_MainRepo_GitAsFolder_ReturnsNone()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "GetGitWorktreeKind_LinkedWorktree_RelativeGitdir_ReturnsWorktree"
+sig = "void GetGitWorktreeKind_LinkedWorktree_RelativeGitdir_ReturnsWorktree()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "GetGitWorktreeKind_LinkedWorktree_AbsoluteGitdir_ReturnsWorktree"
+sig = "void GetGitWorktreeKind_LinkedWorktree_AbsoluteGitdir_ReturnsWorktree()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "GetGitWorktreeKind_LinkedWorktree_WindowsBackslashes_ReturnsWorktree"
+sig = "void GetGitWorktreeKind_LinkedWorktree_WindowsBackslashes_ReturnsWorktree()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "GetGitWorktreeKind_Submodule_ReturnsSubmodule"
+sig = "void GetGitWorktreeKind_Submodule_ReturnsSubmodule()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "GetGitWorktreeKind_SubmoduleInsideWorktree_ReturnsSubmodule"
+sig = "void GetGitWorktreeKind_SubmoduleInsideWorktree_ReturnsSubmodule()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "GetGitWorktreeKind_MalformedGitFile_NoPrefix_ReturnsNone"
+sig = "void GetGitWorktreeKind_MalformedGitFile_NoPrefix_ReturnsNone()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "GetGitWorktreeKind_MultilineGitFile_FirstLineDetermines"
+sig = "void GetGitWorktreeKind_MultilineGitFile_FirstLineDetermines()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "GetGitWorktreeKind_GitdirWithoutWorktreesOrModules_ReturnsNone"
+sig = "void GetGitWorktreeKind_GitdirWithoutWorktreesOrModules_ReturnsNone()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "IsGitWorktree_OnLinkedWorktree_ReturnsTrue"
+sig = "void IsGitWorktree_OnLinkedWorktree_ReturnsTrue()"
+returns = "void"
+file = "GitWorktreeExtensionsTests.cs"
+
+[[methods]]
+parent = "GitWorktreeExtensionsTests"
+name = "IsGitWorktree_OnSubmodule_ReturnsFalse"
+sig = "void IsGitWorktree_OnSubmodule_ReturnsFalse()"
+returns = "void"
 file = "GitWorktreeExtensionsTests.cs"
 

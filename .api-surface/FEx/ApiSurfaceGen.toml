@@ -1,0 +1,10 @@
+[project]
+name = "FEx.ApiSurfaceGen"
+path = "tools\\FEx.ApiSurfaceGen"
+
+[[classes]]
+name = "Program"
+ns = "FEx.ApiSurfaceGen"
+file = "Program.cs"
+static = true
+

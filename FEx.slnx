@@ -50,6 +50,9 @@
     <Project Path="src/Logging/FEx.Logging.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="src/FEx.Logging.Web/FEx.Logging.Web.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/NFEx/PS/">
     <Project Path="src/PersistentStorage.Abstractions/FEx.PersistentStorage.Abstractions.csproj">
@@ -112,6 +115,14 @@
       <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="test/FEx.OneDrv.Tests/FEx.OneDrv.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/FEx.ApiSurfaceGen/FEx.ApiSurfaceGen.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="tools/FEx.McpServer/FEx.McpServer.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
@@ -208,6 +219,12 @@
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Telemetry/FEx.Telemetry.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Telemetry.Sentry/FEx.Telemetry.Sentry.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Telemetry.Sentry.Web/FEx.Telemetry.Sentry.Web.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.WebScraping/FEx.WebScraping.csproj">

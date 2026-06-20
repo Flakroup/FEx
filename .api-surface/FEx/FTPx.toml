@@ -7,9 +7,150 @@ name = "FtpClientFactory"
 ns = "FEx.FTPx"
 file = "FtpClientFactory.cs"
 
+[[properties]]
+parent = "FtpClientFactory"
+name = "HostUri"
+sig = "Uri HostUri { get; }"
+returns = "Uri"
+file = "FtpClientFactory.cs"
+
+[[properties]]
+parent = "FtpClientFactory"
+name = "ProxyCredentials"
+sig = "ICredentials ProxyCredentials { get; set; }"
+returns = "ICredentials"
+file = "FtpClientFactory.cs"
+
+[[properties]]
+parent = "FtpClientFactory"
+name = "ProxyHost"
+sig = "string ProxyHost { get; set; }"
+returns = "string"
+file = "FtpClientFactory.cs"
+
+[[properties]]
+parent = "FtpClientFactory"
+name = "ProxyPort"
+sig = "int ProxyPort { get; set; }"
+returns = "int"
+file = "FtpClientFactory.cs"
+
+[[methods]]
+parent = "FtpClientFactory"
+name = "CreateAsync"
+sig = "Task<FtpClient> CreateAsync(string user = null, string pass = null, bool useProxy = false, int port = 0)"
+returns = "Task<FtpClient>"
+file = "FtpClientFactory.cs"
+
+[[methods]]
+parent = "FtpClientFactory"
+name = "CreateAsync"
+sig = "Task<FtpClient> CreateAsync(string user = null, string pass = null, ProxyInfo proxy = null, int port = 0)"
+returns = "Task<FtpClient>"
+file = "FtpClientFactory.cs"
+
+[[methods]]
+parent = "FtpClientFactory"
+name = "CreateAsync"
+sig = "Task<FtpClient> CreateAsync(NetworkCredential credentials = null, bool useProxy = false, int port = 0)"
+returns = "Task<FtpClient>"
+file = "FtpClientFactory.cs"
+
+[[methods]]
+parent = "FtpClientFactory"
+name = "CreateAsync"
+sig = "Task<FtpClient> CreateAsync(NetworkCredential credentials = null, ProxyInfo proxy = null, int port = 0)"
+returns = "Task<FtpClient>"
+file = "FtpClientFactory.cs"
+
+[[methods]]
+parent = "FtpClientFactory"
+name = "ReleaseClientAsync"
+sig = "Task ReleaseClientAsync(FtpClient client)"
+returns = "Task"
+file = "FtpClientFactory.cs"
+
+[[methods]]
+parent = "FtpClientFactory"
+name = "OnValidateCertificate"
+sig = "void OnValidateCertificate(FtpSslValidationEventArgs e)"
+returns = "void"
+file = "FtpClientFactory.cs"
+
+[[methods]]
+parent = "FtpClientFactory"
+name = "GetProxy"
+sig = "ProxyInfo GetProxy(bool useProxy)"
+returns = "ProxyInfo"
+file = "FtpClientFactory.cs"
+
+[[methods]]
+parent = "FtpClientFactory"
+name = "GetInstanceAsync"
+sig = "static Task<FtpClientFactory> GetInstanceAsync(string hostUri, int maxParallel = 5)"
+returns = "Task<FtpClientFactory>"
+file = "FtpClientFactory.cs"
+static = true
+
 [[classes]]
 name = "FtpCommon"
 ns = "FEx.FTPx"
+file = "FtpCommon.cs"
+static = true
+
+[[methods]]
+parent = "FtpCommon"
+name = "GetFtpFileInfoAsync"
+sig = "static Task<FtpListItem> GetFtpFileInfoAsync(string ftpfilepath, Uri ftphost, string username, string password, bool useProxy = false, int port = 0)"
+returns = "Task<FtpListItem>"
+file = "FtpCommon.cs"
+static = true
+
+[[methods]]
+parent = "FtpCommon"
+name = "CreateAsync"
+sig = "static Task<FtpClient> CreateAsync(Uri ftphost, string username, string password, bool useProxy = false, int port = 0)"
+returns = "Task<FtpClient>"
+file = "FtpCommon.cs"
+static = true
+
+[[methods]]
+parent = "FtpCommon"
+name = "ReleaseAsync"
+sig = "static Task ReleaseAsync(FtpClient client)"
+returns = "Task"
+file = "FtpCommon.cs"
+static = true
+
+[[methods]]
+parent = "FtpCommon"
+name = "DownloadFileFtpAsync"
+sig = "static Task<string> DownloadFileFtpAsync(string inputdirpath, Uri ftphost, string ftpfilepath, string username, string password, IProgressAggregator viewModel = null, bool useProxy = false)"
+returns = "Task<string>"
+file = "FtpCommon.cs"
+static = true
+
+[[methods]]
+parent = "FtpCommon"
+name = "UploadFileFtpAsync"
+sig = "static Task<FtpStatus?> UploadFileFtpAsync(string inputfilepath, Uri ftphost, string ftpdirpath, string username, string password, Func<string, bool> onTargetExists, IProgressAggregator viewModel = null, bool useProxy = false)"
+returns = "Task<FtpStatus?>"
+file = "FtpCommon.cs"
+static = true
+
+[[methods]]
+parent = "FtpCommon"
+name = "GetListingAsync"
+sig = "static Task<FtpListItem[]> GetListingAsync(string ftpdirpath, Uri ftphost, string username, string password, bool useProxy = false)"
+returns = "Task<FtpListItem[]>"
+file = "FtpCommon.cs"
+static = true
+
+[[methods]]
+parent = "FtpCommon"
+name = "RunFtpAction"
+sig = "static void RunFtpAction(Uri targetUrl, Action<FtpClient> action, NetworkCredential credentials = null)"
+returns = "void"
 file = "FtpCommon.cs"
 static = true
 
@@ -17,6 +158,40 @@ static = true
 name = "FtpDownloader"
 ns = "FEx.FTPx"
 summary = "FTP download utilities with resume support."
+file = "FtpDownloader.cs"
+static = true
+
+[[properties]]
+parent = "FtpDownloader"
+name = "StatusDescription"
+sig = "static string StatusDescription { get; set; }"
+returns = "string"
+file = "FtpDownloader.cs"
+static = true
+
+[[methods]]
+parent = "FtpDownloader"
+name = "DownloadFileAsync"
+sig = "static Task<bool> DownloadFileAsync(string fileName, Uri serverUri, IProgressAggregator viewModel, string username = \"\", string password = \"\")"
+returns = "Task<bool>"
+file = "FtpDownloader.cs"
+static = true
+
+[[methods]]
+parent = "FtpDownloader"
+name = "RestartDownloadFromServerAsync"
+sig = "static Task<bool> RestartDownloadFromServerAsync(string fileName, Uri serverUri, IProgressAggregator viewModel, long offset = 0, string username = \"\", string password = \"\")"
+returns = "Task<bool>"
+summary = "Restarts the download from server."
+file = "FtpDownloader.cs"
+static = true
+
+[[methods]]
+parent = "FtpDownloader"
+name = "CalculateSizeAsync"
+sig = "static Task<double> CalculateSizeAsync(Uri serverUri, bool promptOnError = true, LengthType unit = LengthType.Megabytes, string username = \"\", string password = \"\")"
+returns = "Task<double>"
+summary = "Calculates the size."
 file = "FtpDownloader.cs"
 static = true
 

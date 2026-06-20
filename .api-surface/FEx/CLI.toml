@@ -8,8 +8,170 @@ ns = "FEx.CLI"
 file = "CommandLineParserHelper.cs"
 static = true
 
+[[methods]]
+parent = "CommandLineParserHelper"
+name = "GetConfiguration"
+sig = "static T GetConfiguration<T>(string[] args)"
+returns = "T"
+file = "CommandLineParserHelper.cs"
+static = true
+
 [[classes]]
 name = "ErrorData"
 ns = "FEx.CLI"
+file = "ErrorData.cs"
+
+[[properties]]
+parent = "ErrorData"
+name = "Tag"
+sig = "ErrorType Tag { get; }"
+returns = "ErrorType"
+file = "ErrorData.cs"
+
+[[properties]]
+parent = "ErrorData"
+name = "NameInfoString"
+sig = "string NameInfoString { get; }"
+returns = "string"
+file = "ErrorData.cs"
+
+[[properties]]
+parent = "ErrorData"
+name = "Token"
+sig = "string Token { get; }"
+returns = "string"
+file = "ErrorData.cs"
+
+[[properties]]
+parent = "ErrorData"
+name = "SetName"
+sig = "string SetName { get; }"
+returns = "string"
+file = "ErrorData.cs"
+
+[[properties]]
+parent = "ErrorData"
+name = "Verb"
+sig = "string Verb { get; }"
+returns = "string"
+file = "ErrorData.cs"
+
+[[properties]]
+parent = "ErrorData"
+name = "Exception"
+sig = "Exception Exception { get; }"
+returns = "Exception"
+file = "ErrorData.cs"
+
+[[properties]]
+parent = "ErrorData"
+name = "NameInfo"
+sig = "NameInfo NameInfo { get; }"
+returns = "NameInfo"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(ErrorType tag, NameInfo nameInfo, string token, string setName, string verb, Exception exception)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(ErrorType tag)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(ErrorType tag, NameInfo nameInfo)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(BadFormatTokenError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(MissingValueOptionError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(UnknownOptionError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(MissingRequiredOptionError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(MutuallyExclusiveSetError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(BadFormatConversionError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(SequenceOutOfRangeError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(RepeatedOptionError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(NoVerbSelectedError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(BadVerbSelectedError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(HelpRequestedError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(HelpVerbRequestedError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(VersionRequestedError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(SetValueExceptionError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(InvalidAttributeConfigurationError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(MissingGroupOptionError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(GroupOptionAmbiguityError e)"
+file = "ErrorData.cs"
+
+[[ctors]]
+parent = "ErrorData"
+sig = "ErrorData(MultipleDefaultVerbsError e)"
 file = "ErrorData.cs"
 

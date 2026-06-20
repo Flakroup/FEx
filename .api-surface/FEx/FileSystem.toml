@@ -3,108 +3,96 @@ name = "FEx.FileSystem"
 path = "src\\FEx.FileSystem"
 
 [[classes]]
-name = "DirectoryInfoEnumerationExtensions"
-ns = "FEx.FileSystem"
-summary = "Shim extension methods that allow the rest of the codebase (which expects ) to compile and work on older frameworks where that type does not exist (e.g. netstandard2.0/2.1). The implementation maps the subset of functionality that is possible to emulate via the existing overloads. Properties that have no equivalent are ignored."
-file = "DirectoryInfoEnumerationExtensions.cs"
-static = true
-
-[[extensions]]
-name = "EnumerateFiles"
-sig = "IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo dir,
-                                                       string searchPattern,
-                                                       FExEnumerationOptions options)"
-returns = "IEnumerable<FileInfo>"
-summary = "Shim extension methods that allow the rest of the codebase (which expects ) to compile and work on older frameworks where that type does not exist (e.g. netstandard2.0/2.1). The implementation maps the subset of functionality that is possible to emulate via the existing overloads. Properties that have no equivalent are ignored."
-file = "DirectoryInfoEnumerationExtensions.cs"
-
-[[extensions]]
-name = "EnumerateDirectories"
-sig = "IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo dir,
-                                                                  string searchPattern,
-                                                                  FExEnumerationOptions options)"
-returns = "IEnumerable<DirectoryInfo>"
-summary = "Shim extension methods that allow the rest of the codebase (which expects ) to compile and work on older frameworks where that type does not exist (e.g. netstandard2.0/2.1). The implementation maps the subset of functionality that is possible to emulate via the existing overloads. Properties that have no equivalent are ignored."
-file = "DirectoryInfoEnumerationExtensions.cs"
-
-[[extensions]]
-name = "EnumerateFileSystemInfos"
-sig = "IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo dir,
-                                                                       string searchPattern,
-                                                                       FExEnumerationOptions options)"
-returns = "IEnumerable<FileSystemInfo>"
-summary = "Shim extension methods that allow the rest of the codebase (which expects ) to compile and work on older frameworks where that type does not exist (e.g. netstandard2.0/2.1). The implementation maps the subset of functionality that is possible to emulate via the existing overloads. Properties that have no equivalent are ignored."
-file = "DirectoryInfoEnumerationExtensions.cs"
-
-[[extensions]]
-name = "GetDirectories"
-sig = "DirectoryInfo[] GetDirectories(this DirectoryInfo dir,
-                                                 string searchPattern,
-                                                 FExEnumerationOptions options)"
-returns = "DirectoryInfo[]"
-summary = "Shim extension methods that allow the rest of the codebase (which expects ) to compile and work on older frameworks where that type does not exist (e.g. netstandard2.0/2.1). The implementation maps the subset of functionality that is possible to emulate via the existing overloads. Properties that have no equivalent are ignored."
-file = "DirectoryInfoEnumerationExtensions.cs"
-
-[[classes]]
 name = "DirectoryWalker"
 ns = "FEx.FileSystem"
 file = "DirectoryWalker.cs"
 static = true
 
+[[properties]]
+parent = "DirectoryWalker"
+name = "Limit"
+sig = "static uint Limit { get; set; }"
+returns = "uint"
+file = "DirectoryWalker.cs"
+static = true
+
+[[methods]]
+parent = "DirectoryWalker"
+name = "SafeGetAllDirectoriesAsync"
+sig = "static Task<List<DirectoryInfo>> SafeGetAllDirectoriesAsync(string rootPath, DirectoryFilterDelegate predicate = null, string searchPattern = \"*\", FExEnumerationOptions options = null, DirectoryFilterDelegate skipRecursionPredicate = null)"
+returns = "Task<List<DirectoryInfo>>"
+summary = "Recursively gets all subdirectories from a root directory, ignoring any directories that throw an or other IO exceptions."
+file = "DirectoryWalker.cs"
+static = true
+
 [[extensions]]
-name = "SafeGetAllFiles"
-sig = "List<FileInfo> SafeGetAllFiles(this DirectoryInfo root,
-                                                 FileFilterDelegate predicate = null,
-                                                 string searchPattern = \"*\",
-                                                 FExEnumerationOptions options = null,
-                                                 DirectoryFilterDelegate skipDirectoryPredicate = null)"
-returns = "List<FileInfo>"
+name = "SafeGetAllDirectoriesAsync"
+returns = "Task<List<DirectoryInfo>>"
+sig = "Task<List<DirectoryInfo>> SafeGetAllDirectoriesAsync(this DirectoryInfo root, DirectoryFilterDelegate predicate = null, string searchPattern = \"*\", FExEnumerationOptions options = null, DirectoryFilterDelegate skipRecursionPredicate = null)"
 summary = "Recursively gets all subdirectories from a root directory, ignoring any directories that throw an UnauthorizedAccessException or other IO exceptions."
 file = "DirectoryWalker.cs"
 
 [[extensions]]
+name = "SafeGetAllFiles"
+returns = "List<FileInfo>"
+sig = "List<FileInfo> SafeGetAllFiles(this DirectoryInfo root, FileFilterDelegate predicate = null, string searchPattern = \"*\", FExEnumerationOptions options = null, DirectoryFilterDelegate skipDirectoryPredicate = null)"
+file = "DirectoryWalker.cs"
+
+[[extensions]]
 name = "AddToErrorPaths"
-sig = "void AddToErrorPaths(this DirectoryInfo folder)"
 returns = "void"
+sig = "void AddToErrorPaths(this DirectoryInfo folder)"
 file = "DirectoryWalker.cs"
 
 [[extensions]]
 name = "IsErrorPath"
-sig = "bool IsErrorPath(this DirectoryInfo folder)"
 returns = "bool"
+sig = "bool IsErrorPath(this DirectoryInfo folder)"
+file = "DirectoryWalker.cs"
+
+[[methods]]
+parent = "DirectoryWalker"
+name = "ClearErrorPaths"
+sig = "static void ClearErrorPaths()"
+returns = "void"
+file = "DirectoryWalker.cs"
+static = true
+
+[[extensions]]
+name = "SafeGetLeafDirectoriesAsync"
+returns = "Task<List<DirectoryInfo>>"
+sig = "Task<List<DirectoryInfo>> SafeGetLeafDirectoriesAsync(this DirectoryInfo root, DirectoryFilterDelegate predicate = null, string searchPattern = \"*\", FExEnumerationOptions options = null, DirectoryFilterDelegate skipRecursionPredicate = null)"
 file = "DirectoryWalker.cs"
 
 [[extensions]]
 name = "GetTopLevelFolders"
-sig = "List<DirectoryInfo> GetTopLevelFolders(this IList<DirectoryInfo> folders, bool logFindings = false)"
 returns = "List<DirectoryInfo>"
+sig = "List<DirectoryInfo> GetTopLevelFolders(this IList<DirectoryInfo> folders, bool logFindings = false)"
 summary = "Given a list of folders, returns only those which are not subfolders of another folder in the list (\"top-level\" relative to each other)."
 file = "DirectoryWalker.cs"
 
 [[extensions]]
 name = "IsEmpty"
-sig = "bool IsEmpty(this DirectoryInfo directory,
-                               Func<IReadOnlyCollection<FileSystemInfo>, bool> predicate = null)"
 returns = "bool"
-summary = "Given a list of folders, returns only those which are not subfolders of another folder in the list (\"top-level\" relative to each other)."
+sig = "bool IsEmpty(this DirectoryInfo directory, Func<IReadOnlyCollection<FileSystemInfo>, bool> predicate = null)"
 file = "DirectoryWalker.cs"
 
 [[extensions]]
 name = "IsLeaf"
+returns = "bool"
 sig = "bool IsLeaf(this DirectoryInfo directory)"
-returns = "bool"
 file = "DirectoryWalker.cs"
 
 [[extensions]]
 name = "SafeDelete"
+returns = "bool"
 sig = "bool SafeDelete(this DirectoryInfo folder, bool recursive = false, bool logDeletions = false)"
-returns = "bool"
 file = "DirectoryWalker.cs"
 
 [[extensions]]
 name = "SafeDelete"
-sig = "bool SafeDelete(this FileInfo file, bool logDeletions = false)"
 returns = "bool"
+sig = "bool SafeDelete(this FileInfo file, bool logDeletions = false)"
 file = "DirectoryWalker.cs"
 
 [[classes]]
@@ -113,15 +101,267 @@ ns = "FEx.FileSystem"
 summary = "Provides file and directory enumeration options."
 file = "FExEnumerationOptions.cs"
 
+[[properties]]
+parent = "FExEnumerationOptions"
+name = "Compatible"
+sig = "static FExEnumerationOptions Compatible { get; }"
+returns = "FExEnumerationOptions"
+summary = "For internal use. These are the options we want to use if calling the existing Directory/File APIs where you don't explicitly specify EnumerationOptions."
+file = "FExEnumerationOptions.cs"
+static = true
+
+[[properties]]
+parent = "FExEnumerationOptions"
+name = "CompatibleRecursive"
+sig = "static FExEnumerationOptions CompatibleRecursive { get; }"
+returns = "FExEnumerationOptions"
+file = "FExEnumerationOptions.cs"
+static = true
+
+[[ctors]]
+parent = "FExEnumerationOptions"
+sig = "FExEnumerationOptions()"
+summary = "Initializes a new instance of the class with the recommended default options."
+file = "FExEnumerationOptions.cs"
+
+[[properties]]
+parent = "FExEnumerationOptions"
+name = "RecurseSubdirectories"
+sig = "bool RecurseSubdirectories { get; set; }"
+returns = "bool"
+summary = "Gets or sets a value that indicates whether to recurse into subdirectories while enumerating. The default is ."
+file = "FExEnumerationOptions.cs"
+
+[[properties]]
+parent = "FExEnumerationOptions"
+name = "IgnoreInaccessible"
+sig = "bool IgnoreInaccessible { get; set; }"
+returns = "bool"
+summary = "Gets or sets a value that indicates whether to skip files or directories when access is denied (for example, or ). The default is ."
+file = "FExEnumerationOptions.cs"
+
+[[properties]]
+parent = "FExEnumerationOptions"
+name = "BufferSize"
+sig = "int BufferSize { get; set; }"
+returns = "int"
+summary = "Gets or sets the suggested buffer size, in bytes. The default is 0 (no suggestion)."
+file = "FExEnumerationOptions.cs"
+
+[[properties]]
+parent = "FExEnumerationOptions"
+name = "AttributesToSkip"
+sig = "FileAttributes AttributesToSkip { get; set; }"
+returns = "FileAttributes"
+summary = "Gets or sets the attributes to skip. The default is FileAttributes.Hidden | FileAttributes.System ."
+file = "FExEnumerationOptions.cs"
+
+[[properties]]
+parent = "FExEnumerationOptions"
+name = "CaseSensitive"
+sig = "bool CaseSensitive { get; set; }"
+returns = "bool"
+summary = "Gets or sets whether to use case-sensitive matching."
+file = "FExEnumerationOptions.cs"
+
+[[properties]]
+parent = "FExEnumerationOptions"
+name = "UseSimpleMatching"
+sig = "bool UseSimpleMatching { get; set; }"
+returns = "bool"
+summary = "Gets or sets whether to use simple wildcard matching."
+file = "FExEnumerationOptions.cs"
+
+[[properties]]
+parent = "FExEnumerationOptions"
+name = "MaxRecursionDepth"
+sig = "int MaxRecursionDepth { get; set; }"
+returns = "int"
+summary = "Gets or sets a value that indicates the maximum directory depth to recurse while enumerating, when is set to ."
+file = "FExEnumerationOptions.cs"
+
+[[properties]]
+parent = "FExEnumerationOptions"
+name = "ReturnSpecialDirectories"
+sig = "bool ReturnSpecialDirectories { get; set; }"
+returns = "bool"
+summary = "Gets or sets a value that indicates whether to return the special directory entries \".\" and \"..\"."
+file = "FExEnumerationOptions.cs"
+
+[[methods]]
+parent = "FExEnumerationOptions"
+name = "ToEnumerationOptions"
+sig = "EnumerationOptions ToEnumerationOptions()"
+returns = "EnumerationOptions"
+summary = "Converts current instance to the runtime which is supported on net6.0+ and therefore on net9.0 that this solution targets."
+file = "FExEnumerationOptions.cs"
+
 [[classes]]
 name = "FileSystemUtilities"
 ns = "FEx.FileSystem"
 file = "FileSystemUtilities.cs"
 
-[[classes]]
-name = "GitWorktreeExtensions"
-ns = "FEx.FileSystem"
-file = "GitWorktreeExtensions.cs"
+[[properties]]
+parent = "FileSystemUtilities"
+name = "Logger"
+sig = "static ILogger Logger { get; }"
+returns = "ILogger"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "DirectoryPathStringToDirectoryInfo"
+sig = "static Result<DirectoryInfo, ExceptionError> DirectoryPathStringToDirectoryInfo(string source)"
+returns = "Result<DirectoryInfo, ExceptionError>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "ProcessDirectory"
+sig = "static Result<AggregatedError> ProcessDirectory(string source, string dest, FileOperation fileOperation, bool printPaths = true, bool printLog = true, params string[] exclusionPaths)"
+returns = "Result<AggregatedError>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "ProcessDirectory"
+sig = "static Result<AggregatedError> ProcessDirectory(DirectoryInfo sourceInfo, DirectoryInfo dest, FileOperation fileOperation, bool printPaths = true, bool printLog = true, params string[] exclusionPaths)"
+returns = "Result<AggregatedError>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "GetSourceFiles"
+sig = "static ConcurrentList<FileInfo> GetSourceFiles( ConcurrentDictionary<DirectoryInfo, FileInfo[]> sourceDirectories)"
+returns = "ConcurrentList<FileInfo>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "CreateMissingDestinationDirectories"
+sig = "static Result<Error> CreateMissingDestinationDirectories(FileSystemInfo dest, ICollection<string> sourcePaths)"
+returns = "Result<Error>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "GetDirectoriesContents"
+sig = "static Result<ConcurrentDictionary<DirectoryInfo, FileInfo[]>, AggregatedError> GetDirectoriesContents( string source, string[] exclusionPaths)"
+returns = "Result<ConcurrentDictionary<DirectoryInfo, FileInfo[]>, AggregatedError>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "GetDirectoriesContents"
+sig = "static Result<ConcurrentDictionary<DirectoryInfo, FileInfo[]>, AggregatedError> GetDirectoriesContents( DirectoryInfo source, params string[] exclusionPaths)"
+returns = "Result<ConcurrentDictionary<DirectoryInfo, FileInfo[]>, AggregatedError>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "CopyFileAndSetAttributes"
+sig = "static Result<ExceptionError> CopyFileAndSetAttributes(FileSystemInfo destDir, FileInfo sourceFile, bool printPaths, bool copyOnlyIfDifferent = false, bool printLog = true)"
+returns = "Result<ExceptionError>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "MoveFileAndSetAttributes"
+sig = "static Result<FileInfo, ExceptionError> MoveFileAndSetAttributes(FileSystemInfo destDir, FileInfo sourceFile, bool printPaths, bool printLog = true)"
+returns = "Result<FileInfo, ExceptionError>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "SafeDeleteFile"
+sig = "static Result<ExceptionError> SafeDeleteFile(string filePath, bool removeEmptyDirectory = false)"
+returns = "Result<ExceptionError>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "SafeDeleteFile"
+sig = "static Result<ExceptionError> SafeDeleteFile(FileInfo fileInfo, bool removeEmptyDirectory = false)"
+returns = "Result<ExceptionError>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "DirectoryIsEmpty"
+sig = "static bool DirectoryIsEmpty(string directoryPath)"
+returns = "bool"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "FixFileName"
+sig = "static string FixFileName(string fileName)"
+returns = "string"
+summary = "Fixes the name of the file."
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "IsPathFile"
+sig = "static Result<bool, ExceptionError> IsPathFile(string path)"
+returns = "Result<bool, ExceptionError>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "GetEncoding"
+sig = "static Encoding GetEncoding(string path, bool omitBom = false)"
+returns = "Encoding"
+summary = "Gets file encoding with or without Byte Order Mark"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "OmitBom"
+sig = "static Encoding OmitBom(Encoding enc)"
+returns = "Encoding"
+summary = "Omits the bom."
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "ReplaceStringInFileAsync"
+sig = "static Task<Result<Error>> ReplaceStringInFileAsync(FileInfo fileInfo, string oldValue, string newValue)"
+returns = "Task<Result<Error>>"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "FileExistsSafe"
+sig = "static bool FileExistsSafe(string path)"
+returns = "bool"
+file = "FileSystemUtilities.cs"
+static = true
+
+[[methods]]
+parent = "FileSystemUtilities"
+name = "SafeDeleteDirectory"
+sig = "static Result<AggregatedError> SafeDeleteDirectory(string source, bool printPaths = true, bool printLog = true, params string[] exclusionPaths)"
+returns = "Result<AggregatedError>"
+file = "FileSystemUtilities.cs"
 static = true
 
 [[enums]]
@@ -129,16 +369,22 @@ name = "GitWorktreeKind"
 ns = "FEx.FileSystem"
 file = "GitWorktreeExtensions.cs"
 
+[[classes]]
+name = "GitWorktreeExtensions"
+ns = "FEx.FileSystem"
+file = "GitWorktreeExtensions.cs"
+static = true
+
 [[extensions]]
 name = "GetGitWorktreeKind"
-sig = "GitWorktreeKind GetGitWorktreeKind(this DirectoryInfo dir)"
 returns = "GitWorktreeKind"
+sig = "GitWorktreeKind GetGitWorktreeKind(this DirectoryInfo dir)"
 file = "GitWorktreeExtensions.cs"
 
 [[extensions]]
 name = "IsGitWorktree"
-sig = "bool IsGitWorktree(this DirectoryInfo dir)"
 returns = "bool"
+sig = "bool IsGitWorktree(this DirectoryInfo dir)"
 file = "GitWorktreeExtensions.cs"
 
 [[classes]]
@@ -148,8 +394,30 @@ file = "Helpers\\CompressionHelper.cs"
 static = true
 
 [[extensions]]
-name = "VerifyGZip"
-sig = "bool VerifyGZip(this FileInfo fileToDecompress)"
-returns = "bool"
+name = "DecompressGZipAsync"
+returns = "Task<FileInfo>"
+sig = "Task<FileInfo> DecompressGZipAsync(this FileInfo fileToDecompress, string targetDirectory, string targetFileName)"
 file = "Helpers\\CompressionHelper.cs"
+
+[[extensions]]
+name = "VerifyGZip"
+returns = "bool"
+sig = "bool VerifyGZip(this FileInfo fileToDecompress)"
+file = "Helpers\\CompressionHelper.cs"
+
+[[methods]]
+parent = "CompressionHelper"
+name = "DecompressZip"
+sig = "static void DecompressZip(string fileToDecompress, string targetDirectory, bool overwrite = false)"
+returns = "void"
+file = "Helpers\\CompressionHelper.cs"
+static = true
+
+[[methods]]
+parent = "CompressionHelper"
+name = "ListZipEntries"
+sig = "static ZipArchiveEntry[] ListZipEntries(string zipPath)"
+returns = "ZipArchiveEntry[]"
+file = "Helpers\\CompressionHelper.cs"
+static = true
 

@@ -7,10 +7,29 @@ name = "LinkedPropertiesTests"
 ns = "FEx.MVVM.Tests"
 file = "LinkedPropertiesTests.cs"
 
+[[methods]]
+parent = "LinkedPropertiesTests"
+name = "LinkMemberPropertyTest"
+sig = "void LinkMemberPropertyTest()"
+returns = "void"
+file = "LinkedPropertiesTests.cs"
+
 [[classes]]
 name = "Child"
 ns = "FEx.MVVM.Tests"
 base = "LinkableNotifyPropertyChanged"
+file = "LinkedPropertiesTests.cs"
+
+[[properties]]
+parent = "Child"
+name = "Info"
+sig = "ChildInfo Info { get; set; }"
+returns = "ChildInfo"
+file = "LinkedPropertiesTests.cs"
+
+[[ctors]]
+parent = "Child"
+sig = "Child()"
 file = "LinkedPropertiesTests.cs"
 
 [[classes]]
@@ -19,11 +38,59 @@ ns = "FEx.MVVM.Tests"
 base = "LinkableNotifyPropertyChanged"
 file = "LinkedPropertiesTests.cs"
 
+[[properties]]
+parent = "ChildInfo"
+name = "Name"
+sig = "string Name { get; set; }"
+returns = "string"
+file = "LinkedPropertiesTests.cs"
+
+[[properties]]
+parent = "ChildInfo"
+name = "Age"
+sig = "int Age { get; set; }"
+returns = "int"
+file = "LinkedPropertiesTests.cs"
+
 [[classes]]
 name = "SingleParent"
 ns = "FEx.MVVM.Tests"
 base = "LinkableNotifyPropertyChanged"
 file = "LinkedPropertiesTests.cs"
+
+[[properties]]
+parent = "SingleParent"
+name = "Child"
+sig = "Child Child { get; set; }"
+returns = "Child"
+file = "LinkedPropertiesTests.cs"
+
+[[properties]]
+parent = "SingleParent"
+name = "ChildAge"
+sig = "int ChildAge { get; }"
+returns = "int"
+file = "LinkedPropertiesTests.cs"
+
+[[properties]]
+parent = "SingleParent"
+name = "ChildName"
+sig = "string ChildName { get; }"
+returns = "string"
+file = "LinkedPropertiesTests.cs"
+
+[[ctors]]
+parent = "SingleParent"
+sig = "SingleParent(bool link)"
+file = "LinkedPropertiesTests.cs"
+
+[[methods]]
+parent = "SingleParent"
+name = "Link"
+sig = "static void Link(SingleParent p)"
+returns = "void"
+file = "LinkedPropertiesTests.cs"
+static = true
 
 [[classes]]
 name = "TestableProgressAggregator"
@@ -31,13 +98,111 @@ ns = "FEx.MVVM.Tests"
 base = "ProgressAggregator"
 file = "ProgressAggregatorTests.cs"
 
+[[properties]]
+parent = "TestableProgressAggregator"
+name = "LoggedErrors"
+sig = "List<string> LoggedErrors { get; }"
+returns = "List<string>"
+file = "ProgressAggregatorTests.cs"
+
+[[methods]]
+parent = "TestableProgressAggregator"
+name = "InvokeUpdateProgressInfo"
+sig = "void InvokeUpdateProgressInfo()"
+returns = "void"
+file = "ProgressAggregatorTests.cs"
+
+[[methods]]
+parent = "TestableProgressAggregator"
+name = "LogError"
+sig = "void LogError(string message)"
+returns = "void"
+file = "ProgressAggregatorTests.cs"
+
 [[classes]]
 name = "ProgressAggregatorTests"
 ns = "FEx.MVVM.Tests"
 file = "ProgressAggregatorTests.cs"
 
+[[methods]]
+parent = "ProgressAggregatorTests"
+name = "ProcessSetPrg_NullValue_WithMaximum_ShouldNotLogError"
+sig = "void ProcessSetPrg_NullValue_WithMaximum_ShouldNotLogError()"
+returns = "void"
+file = "ProgressAggregatorTests.cs"
+
+[[methods]]
+parent = "ProgressAggregatorTests"
+name = "ProcessAddPrg_NullValue_WithMaximum_ShouldNotLogError"
+sig = "void ProcessAddPrg_NullValue_WithMaximum_ShouldNotLogError()"
+returns = "void"
+file = "ProgressAggregatorTests.cs"
+
+[[methods]]
+parent = "ProgressAggregatorTests"
+name = "ProcessSetPrg_ValueExceedsMaximum_ShouldLogError"
+sig = "void ProcessSetPrg_ValueExceedsMaximum_ShouldLogError()"
+returns = "void"
+file = "ProgressAggregatorTests.cs"
+
+[[methods]]
+parent = "ProgressAggregatorTests"
+name = "ProcessAddPrg_ValueExceedsMaximum_ShouldLogError"
+sig = "void ProcessAddPrg_ValueExceedsMaximum_ShouldLogError()"
+returns = "void"
+file = "ProgressAggregatorTests.cs"
+
+[[methods]]
+parent = "ProgressAggregatorTests"
+name = "Dispose_ShouldStopTimer"
+sig = "void Dispose_ShouldStopTimer()"
+returns = "void"
+file = "ProgressAggregatorTests.cs"
+
+[[methods]]
+parent = "ProgressAggregatorTests"
+name = "Dispose_ShouldStopStopwatch"
+sig = "void Dispose_ShouldStopStopwatch()"
+returns = "void"
+file = "ProgressAggregatorTests.cs"
+
+[[methods]]
+parent = "ProgressAggregatorTests"
+name = "UpdateProgressInfo_ValueIsZero_ShouldNotThrow"
+sig = "void UpdateProgressInfo_ValueIsZero_ShouldNotThrow()"
+returns = "void"
+file = "ProgressAggregatorTests.cs"
+
 [[classes]]
 name = "ProgressServiceTests"
 ns = "FEx.MVVM.Tests"
+file = "ProgressServiceTests.cs"
+
+[[methods]]
+parent = "ProgressServiceTests"
+name = "UnsubscribeFromProgress_NonExistentContainer_ShouldReturnFalse"
+sig = "void UnsubscribeFromProgress_NonExistentContainer_ShouldReturnFalse()"
+returns = "void"
+file = "ProgressServiceTests.cs"
+
+[[methods]]
+parent = "ProgressServiceTests"
+name = "UnsubscribeFromProgress_NonExistentListener_ShouldReturnFalse"
+sig = "void UnsubscribeFromProgress_NonExistentListener_ShouldReturnFalse()"
+returns = "void"
+file = "ProgressServiceTests.cs"
+
+[[methods]]
+parent = "ProgressServiceTests"
+name = "UnsubscribeFromProgress_ShouldNotReattachListener"
+sig = "void UnsubscribeFromProgress_ShouldNotReattachListener()"
+returns = "void"
+file = "ProgressServiceTests.cs"
+
+[[methods]]
+parent = "ProgressServiceTests"
+name = "Instance_ShouldReturnSameInstance"
+sig = "Task Instance_ShouldReturnSameInstance()"
+returns = "Task"
 file = "ProgressServiceTests.cs"
 

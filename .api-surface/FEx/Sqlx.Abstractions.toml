@@ -5,5 +5,13 @@ path = "src\\Sqlx.Abstractions"
 [[interfaces]]
 name = "ISqlDbHelper"
 ns = "FEx.Sqlx.Abstractions"
+base = "IAsyncInitializable"
+file = "ISqlDbHelper.cs"
+
+[[properties]]
+parent = "ISqlDbHelper"
+name = "SQLInstance"
+sig = "string SQLInstance { get; }"
+returns = "string"
 file = "ISqlDbHelper.cs"
 

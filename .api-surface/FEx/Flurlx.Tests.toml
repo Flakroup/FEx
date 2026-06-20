@@ -7,9 +7,159 @@ name = "FExPollyPolicyBuilderTests"
 ns = "FEx.Flurlx.Tests"
 file = "FExPollyPolicyBuilderTests.cs"
 
+[[ctors]]
+parent = "FExPollyPolicyBuilderTests"
+sig = "FExPollyPolicyBuilderTests()"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilderTests"
+name = "BuildFullSuitePolicy_WithDefaultConfig_CreatesPolicy"
+sig = "void BuildFullSuitePolicy_WithDefaultConfig_CreatesPolicy()"
+returns = "void"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilderTests"
+name = "RetryPolicy_RetriesOnHttpRequestException"
+sig = "Task RetryPolicy_RetriesOnHttpRequestException()"
+returns = "Task"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilderTests"
+name = "RetryPolicy_RetriesOn5xxStatusCodes"
+sig = "Task RetryPolicy_RetriesOn5xxStatusCodes()"
+returns = "Task"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilderTests"
+name = "RetryPolicy_DoesNotRetryOn4xxStatusCodes"
+sig = "Task RetryPolicy_DoesNotRetryOn4xxStatusCodes()"
+returns = "Task"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilderTests"
+name = "CircuitBreaker_OpensAfterConsecutiveFailures"
+sig = "Task CircuitBreaker_OpensAfterConsecutiveFailures()"
+returns = "Task"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilderTests"
+name = "Timeout_CancelsLongRunningRequest"
+sig = "Task Timeout_CancelsLongRunningRequest()"
+returns = "Task"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilderTests"
+name = "Bulkhead_LimitsConcurrentRequests"
+sig = "Task Bulkhead_LimitsConcurrentRequests()"
+returns = "Task"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilderTests"
+name = "Fallback_ReturnsServiceUnavailableOnFailure"
+sig = "Task Fallback_ReturnsServiceUnavailableOnFailure()"
+returns = "Task"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilderTests"
+name = "SlowApiDefaults_CreatesCorrectConfiguration"
+sig = "void SlowApiDefaults_CreatesCorrectConfiguration()"
+returns = "void"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilderTests"
+name = "FastApiDefaults_CreatesCorrectConfiguration"
+sig = "void FastApiDefaults_CreatesCorrectConfiguration()"
+returns = "void"
+file = "FExPollyPolicyBuilderTests.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilderTests"
+name = "Logger_LogsRetryAttempts"
+sig = "Task Logger_LogsRetryAttempts()"
+returns = "Task"
+file = "FExPollyPolicyBuilderTests.cs"
+
 [[classes]]
 name = "FlurlApiBaseIntegrationTests"
 ns = "FEx.Flurlx.Tests"
 base = "IDisposable"
+file = "FlurlApiBaseIntegrationTests.cs"
+
+[[ctors]]
+parent = "FlurlApiBaseIntegrationTests"
+sig = "FlurlApiBaseIntegrationTests()"
+file = "FlurlApiBaseIntegrationTests.cs"
+
+[[methods]]
+parent = "FlurlApiBaseIntegrationTests"
+name = "GetResponseAsync_SuccessfulRequest_ReturnsData"
+sig = "Task GetResponseAsync_SuccessfulRequest_ReturnsData()"
+returns = "Task"
+file = "FlurlApiBaseIntegrationTests.cs"
+
+[[methods]]
+parent = "FlurlApiBaseIntegrationTests"
+name = "GetResponseAsync_ServerError_RetriesAndSucceeds"
+sig = "Task GetResponseAsync_ServerError_RetriesAndSucceeds()"
+returns = "Task"
+file = "FlurlApiBaseIntegrationTests.cs"
+
+[[methods]]
+parent = "FlurlApiBaseIntegrationTests"
+name = "GetResponseAsync_PersistentFailure_ThrowsException"
+sig = "Task GetResponseAsync_PersistentFailure_ThrowsException()"
+returns = "Task"
+file = "FlurlApiBaseIntegrationTests.cs"
+
+[[methods]]
+parent = "FlurlApiBaseIntegrationTests"
+name = "PostResponseAsync_WithRequestBody_SendsCorrectData"
+sig = "Task PostResponseAsync_WithRequestBody_SendsCorrectData()"
+returns = "Task"
+file = "FlurlApiBaseIntegrationTests.cs"
+
+[[methods]]
+parent = "FlurlApiBaseIntegrationTests"
+name = "GetResponseAsync_DtoWithDateOnly_DeserializesViaSystemTextJson"
+sig = "Task GetResponseAsync_DtoWithDateOnly_DeserializesViaSystemTextJson()"
+returns = "Task"
+file = "FlurlApiBaseIntegrationTests.cs"
+
+[[methods]]
+parent = "FlurlApiBaseIntegrationTests"
+name = "GetResponseAsync_WithQueryParameters_AppendsCorrectly"
+sig = "Task GetResponseAsync_WithQueryParameters_AppendsCorrectly()"
+returns = "Task"
+file = "FlurlApiBaseIntegrationTests.cs"
+
+[[methods]]
+parent = "FlurlApiBaseIntegrationTests"
+name = "GetResponseAsync_Timeout_ThrowsTimeoutException"
+sig = "Task GetResponseAsync_Timeout_ThrowsTimeoutException()"
+returns = "Task"
+file = "FlurlApiBaseIntegrationTests.cs"
+
+[[methods]]
+parent = "FlurlApiBaseIntegrationTests"
+name = "GetResponseAsync_MultipleRequests_RespectsBulkhead"
+sig = "Task GetResponseAsync_MultipleRequests_RespectsBulkhead()"
+returns = "Task"
+file = "FlurlApiBaseIntegrationTests.cs"
+
+[[methods]]
+parent = "FlurlApiBaseIntegrationTests"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
 file = "FlurlApiBaseIntegrationTests.cs"
 

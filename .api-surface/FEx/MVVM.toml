@@ -8,22 +8,145 @@ ns = "FEx.MVVM"
 base = "FExInitializable"
 file = "FExMvvm.cs"
 
+[[properties]]
+parent = "FExMvvm"
+name = "DefaultUIRefreshInterval"
+sig = "static TimeSpan DefaultUIRefreshInterval { get; set; }"
+returns = "TimeSpan"
+file = "FExMvvm.cs"
+static = true
+
+[[properties]]
+parent = "FExMvvm"
+name = "MessagePopupService"
+sig = "static IMessagePopupService MessagePopupService { get; }"
+returns = "IMessagePopupService"
+file = "FExMvvm.cs"
+static = true
+
+[[ctors]]
+parent = "FExMvvm"
+sig = "FExMvvm(IMessagePopupService messagePopupService, IExceptionHandler exceptionHandler)"
+file = "FExMvvm.cs"
+
+[[methods]]
+parent = "FExMvvm"
+name = "OnInitialize"
+sig = "void OnInitialize()"
+returns = "void"
+file = "FExMvvm.cs"
+
 [[classes]]
 name = "FExMvvmModule"
 ns = "FEx.MVVM"
 base = "InitializeModule<IFExMvvmContainer, IServiceCollection>"
 file = "FExMvvmModule.cs"
 
-[[classes]]
-name = "IsExternalInit"
-ns = "System.Runtime.CompilerServices"
-file = "IsExternalInit.cs"
-static = true
+[[methods]]
+parent = "FExMvvmModule"
+name = "RegisterServices"
+sig = "void RegisterServices(IFExMvvmContainer container, IServiceCollection services)"
+returns = "void"
+file = "FExMvvmModule.cs"
 
 [[classes]]
 name = "Link"
 ns = "FEx.MVVM"
 base = "ILink"
+file = "Link.cs"
+
+[[properties]]
+parent = "Link"
+name = "PropertyType"
+sig = "Type PropertyType { get; }"
+returns = "Type"
+file = "Link.cs"
+
+[[properties]]
+parent = "Link"
+name = "PropertyName"
+sig = "string PropertyName { get; }"
+returns = "string"
+file = "Link.cs"
+
+[[properties]]
+parent = "Link"
+name = "Id"
+sig = "Guid Id { get; }"
+returns = "Guid"
+file = "Link.cs"
+
+[[properties]]
+parent = "Link"
+name = "DefaultValue"
+sig = "object DefaultValue { get; }"
+returns = "object"
+file = "Link.cs"
+
+[[ctors]]
+parent = "Link"
+sig = "Link(Type propertyType, ILinkableNotifyPropertyChanged sender, string propertyName, Func<ILinkableNotifyPropertyChanged, object> getPropertyValue, Action<ILink, object, object> onPropertyChange, object defaultValue)"
+file = "Link.cs"
+
+[[ctors]]
+parent = "Link"
+sig = "Link(Type propertyType, ILinkableNotifyPropertyChanged sender, string propertyName, Func<ILinkableNotifyPropertyChanged, object> getPropertyValue, Action<ILink, object, object> onPropertyChange, object defaultValue, ILink parentLink)"
+file = "Link.cs"
+
+[[methods]]
+parent = "Link"
+name = "UnlinkChildren"
+sig = "void UnlinkChildren(bool resetPropertyValue)"
+returns = "void"
+file = "Link.cs"
+
+[[methods]]
+parent = "Link"
+name = "Unlink"
+sig = "void Unlink(bool resetPropertyValue)"
+returns = "void"
+file = "Link.cs"
+
+[[methods]]
+parent = "Link"
+name = "ResetProperty"
+sig = "void ResetProperty()"
+returns = "void"
+file = "Link.cs"
+
+[[methods]]
+parent = "Link"
+name = "GetPropertyValue"
+sig = "object GetPropertyValue()"
+returns = "object"
+file = "Link.cs"
+
+[[methods]]
+parent = "Link"
+name = "OnPropertyChange"
+sig = "void OnPropertyChange(object oldValue, object newValue)"
+returns = "void"
+file = "Link.cs"
+
+[[methods]]
+parent = "Link"
+name = "Initialize"
+sig = "void Initialize()"
+returns = "void"
+file = "Link.cs"
+
+[[methods]]
+parent = "Link"
+name = "AddChild"
+sig = "void AddChild(ILink link)"
+returns = "void"
+file = "Link.cs"
+
+[[methods]]
+parent = "Link"
+name = "RelinkChildren"
+sig = "void RelinkChildren<T>(T newSender, Action onNewSender) where T : ILinkableNotifyPropertyChanged"
+returns = "void"
 file = "Link.cs"
 
 [[classes]]
@@ -32,10 +155,74 @@ ns = "FEx.MVVM.BaseObjects"
 base = "IDisposable"
 file = "BaseObjects\\SubscriberBase.cs"
 
+[[properties]]
+parent = "SubscriberBase"
+name = "Subscriptions"
+sig = "ConcurrentDictionary<string, IDisposable> Subscriptions { get; }"
+returns = "ConcurrentDictionary<string, IDisposable>"
+file = "BaseObjects\\SubscriberBase.cs"
+
+[[ctors]]
+parent = "SubscriberBase"
+sig = "SubscriberBase()"
+file = "BaseObjects\\SubscriberBase.cs"
+
+[[methods]]
+parent = "SubscriberBase"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+file = "BaseObjects\\SubscriberBase.cs"
+
+[[methods]]
+parent = "SubscriberBase"
+name = "Dispose"
+sig = "void Dispose(bool disposing)"
+returns = "void"
+file = "BaseObjects\\SubscriberBase.cs"
+
 [[classes]]
 name = "CheckedListItem"
 ns = "FEx.MVVM.Controls"
 base = "NotifyPropertyChanged"
+file = "Controls\\CheckedListItem.cs"
+
+[[properties]]
+parent = "CheckedListItem"
+name = "Name"
+sig = "string Name { get; set; }"
+returns = "string"
+file = "Controls\\CheckedListItem.cs"
+
+[[properties]]
+parent = "CheckedListItem"
+name = "IsChecked"
+sig = "bool IsChecked { get; set; }"
+returns = "bool"
+file = "Controls\\CheckedListItem.cs"
+
+[[properties]]
+parent = "CheckedListItem"
+name = "IsEnabled"
+sig = "bool IsEnabled { get; set; }"
+returns = "bool"
+file = "Controls\\CheckedListItem.cs"
+
+[[properties]]
+parent = "CheckedListItem"
+name = "ToolTip"
+sig = "object ToolTip { get; set; }"
+returns = "object"
+file = "Controls\\CheckedListItem.cs"
+
+[[ctors]]
+parent = "CheckedListItem"
+sig = "CheckedListItem()"
+file = "Controls\\CheckedListItem.cs"
+
+[[ctors]]
+parent = "CheckedListItem"
+sig = "CheckedListItem(string name, bool isEnabled = true, bool isChecked = false, object toolTip = null)"
 file = "Controls\\CheckedListItem.cs"
 
 [[classes]]
@@ -44,43 +231,82 @@ ns = "FEx.MVVM.Controls"
 base = "NotifyPropertyChanged"
 file = "Controls\\ViewField.cs"
 
+[[properties]]
+parent = "ViewField"
+name = "Header"
+sig = "string Header { get; set; }"
+returns = "string"
+file = "Controls\\ViewField.cs"
+
+[[properties]]
+parent = "ViewField"
+name = "ToolTip"
+sig = "string ToolTip { get; set; }"
+returns = "string"
+file = "Controls\\ViewField.cs"
+
+[[properties]]
+parent = "ViewField"
+name = "IsVisible"
+sig = "bool IsVisible { get; set; }"
+returns = "bool"
+file = "Controls\\ViewField.cs"
+
+[[properties]]
+parent = "ViewField"
+name = "IsVisiblePersistence"
+sig = "Action<bool> IsVisiblePersistence { get; set; }"
+returns = "Action<bool>"
+file = "Controls\\ViewField.cs"
+
+[[ctors]]
+parent = "ViewField"
+sig = "ViewField()"
+file = "Controls\\ViewField.cs"
+
+[[ctors]]
+parent = "ViewField"
+sig = "ViewField(string header, string toolTip, bool isVisible, Action<bool> isVisiblePersistence)"
+summary = "Initializes a new instance of the class."
+file = "Controls\\ViewField.cs"
+
 [[classes]]
 name = "ProgressAggregatorExtensions"
 ns = "FEx.MVVM.Extensions"
 file = "Extensions\\ProgressAggregatorExtensions.cs"
 static = true
 
+[[properties]]
+parent = "ProgressAggregatorExtensions"
+name = "ListenerPropertyNames"
+sig = "static IList<string> ListenerPropertyNames { get; }"
+returns = "IList<string>"
+file = "Extensions\\ProgressAggregatorExtensions.cs"
+static = true
+
 [[extensions]]
 name = "SetCurrentDownloadState"
+returns = "void"
 sig = "void SetCurrentDownloadState(this IProgressAggregator viewModel, DownloadProgressChangedEventArgs e)"
-returns = "void"
 summary = "Sets the state of the current download."
 file = "Extensions\\ProgressAggregatorExtensions.cs"
 
 [[extensions]]
 name = "SetCurrentDownloadState"
+returns = "void"
 sig = "void SetCurrentDownloadState(this IProgressAggregator viewModel, double? bytesReceived)"
-returns = "void"
-summary = "Sets the state of the current download."
 file = "Extensions\\ProgressAggregatorExtensions.cs"
 
 [[extensions]]
 name = "SetCurrentDownloadState"
-sig = "void SetCurrentDownloadState(this IProgressAggregator viewModel,
-                                               double? bytesReceived,
-                                               double? totalBytesToReceive)"
 returns = "void"
-summary = "Sets the state of the current download."
+sig = "void SetCurrentDownloadState(this IProgressAggregator viewModel, double? bytesReceived, double? totalBytesToReceive)"
 file = "Extensions\\ProgressAggregatorExtensions.cs"
 
 [[extensions]]
 name = "SetCurrentDownloadState"
-sig = "void SetCurrentDownloadState(this IProgressAggregator viewModel,
-                                               double? bytesReceived,
-                                               double? totalBytesToReceive,
-                                               object userState)"
 returns = "void"
-summary = "Sets the state of the current download."
+sig = "void SetCurrentDownloadState(this IProgressAggregator viewModel, double? bytesReceived, double? totalBytesToReceive, object userState)"
 file = "Extensions\\ProgressAggregatorExtensions.cs"
 
 [[classes]]
@@ -89,25 +315,203 @@ ns = "FEx.MVVM.Extensions"
 file = "Extensions\\PropertiesExtensions.cs"
 static = true
 
+[[extensions]]
+name = "SetPropertyFromExpression"
+returns = "bool"
+sig = "bool SetPropertyFromExpression<T>(this object target, Expression<Func<T>> expression, T value)"
+file = "Extensions\\PropertiesExtensions.cs"
+
+[[extensions]]
+name = "SetPropertyFromExpression"
+returns = "bool"
+sig = "bool SetPropertyFromExpression<T>(this object target, Expression<Func<T>> expression, T value, Action<string> onSet)"
+file = "Extensions\\PropertiesExtensions.cs"
+
+[[methods]]
+parent = "PropertiesExtensions"
+name = "FindMemberExpression"
+sig = "static MemberExpression FindMemberExpression<T>(Expression<Func<T>> expression)"
+returns = "MemberExpression"
+file = "Extensions\\PropertiesExtensions.cs"
+static = true
+
+[[methods]]
+parent = "PropertiesExtensions"
+name = "FindMemberExpression"
+sig = "static MemberExpression FindMemberExpression<TSender, T>(Expression<Func<TSender, T>> expression)"
+returns = "MemberExpression"
+file = "Extensions\\PropertiesExtensions.cs"
+static = true
+
+[[extensions]]
+name = "LinkChild"
+returns = "void"
+sig = "void LinkChild<T, TProp>(this T sender, Expression<Func<T, TProp>> property, Action<TProp> onPropertyChange, ILink parentLink)"
+file = "Extensions\\PropertiesExtensions.cs"
+
+[[extensions]]
+name = "LinkChild"
+returns = "void"
+sig = "void LinkChild<T, TProp>(this T sender, Expression<Func<T, TProp>> property, Action<ILink, TProp> onPropertyChange, ILink parentLink)"
+file = "Extensions\\PropertiesExtensions.cs"
+
+[[extensions]]
+name = "LinkChild"
+returns = "void"
+sig = "void LinkChild<T, TProp>(this T sender, Expression<Func<T, TProp>> property, Action<ILink, TProp, TProp> onPropertyChange, ILink parentLink)"
+file = "Extensions\\PropertiesExtensions.cs"
+
+[[extensions]]
+name = "Link"
+returns = "void"
+sig = "void Link<T, TProp>(this T sender, Expression<Func<T, TProp>> property, Action<TProp> onPropertyChange)"
+file = "Extensions\\PropertiesExtensions.cs"
+
+[[extensions]]
+name = "Link"
+returns = "void"
+sig = "void Link<T, TProp>(this T sender, Expression<Func<T, TProp>> property, Action<ILink, TProp> onPropertyChange)"
+file = "Extensions\\PropertiesExtensions.cs"
+
+[[extensions]]
+name = "Link"
+returns = "void"
+sig = "void Link<T, TProp>(this T sender, Expression<Func<T, TProp>> property, Action<ILink, TProp, TProp> onPropertyChange)"
+file = "Extensions\\PropertiesExtensions.cs"
+
 [[interfaces]]
 name = "IAttachToContainerReceiver"
 ns = "FEx.MVVM.Interfaces"
 file = "Interfaces\\IAttachToContainerReceiver.cs"
 
+[[methods]]
+parent = "IAttachToContainerReceiver"
+name = "SubscribeToProgress"
+sig = "bool SubscribeToProgress<TCon>(IProgressReceiver<TCon> progressReceiver, params string[] iProgressReceiverProperties) where TCon : IProgressAggregator"
+returns = "bool"
+file = "Interfaces\\IAttachToContainerReceiver.cs"
+
+[[methods]]
+parent = "IAttachToContainerReceiver"
+name = "SubscribeToProgress"
+sig = "bool SubscribeToProgress(string containerId, params string[] iProgressReceiverProperties)"
+returns = "bool"
+file = "Interfaces\\IAttachToContainerReceiver.cs"
+
+[[methods]]
+parent = "IAttachToContainerReceiver"
+name = "SubscribeToProgress"
+sig = "bool SubscribeToProgress(IProgressAggregator container, params string[] iProgressReceiverProperties)"
+returns = "bool"
+file = "Interfaces\\IAttachToContainerReceiver.cs"
+
+[[methods]]
+parent = "IAttachToContainerReceiver"
+name = "UnsubscribeFromProgress"
+sig = "bool UnsubscribeFromProgress<TCon>(IProgressReceiver<TCon> progressReceiver) where TCon : IProgressAggregator"
+returns = "bool"
+file = "Interfaces\\IAttachToContainerReceiver.cs"
+
+[[methods]]
+parent = "IAttachToContainerReceiver"
+name = "UnsubscribeFromProgress"
+sig = "bool UnsubscribeFromProgress(string containerId)"
+returns = "bool"
+file = "Interfaces\\IAttachToContainerReceiver.cs"
+
+[[methods]]
+parent = "IAttachToContainerReceiver"
+name = "UnsubscribeFromProgress"
+sig = "bool UnsubscribeFromProgress(IProgressAggregator container)"
+returns = "bool"
+file = "Interfaces\\IAttachToContainerReceiver.cs"
+
 [[interfaces]]
 name = "IFExMvvmContainer"
 ns = "FEx.MVVM.Interfaces"
+base = "IContainer<FExMvvm>, IContainer<IMessagePopupService>"
 file = "Interfaces\\IFExMvvmContainer.cs"
 
 [[interfaces]]
 name = "IProgressReceiver"
 ns = "FEx.MVVM.Interfaces"
+base = "IAttachToContainerReceiver"
 summary = "Has progress status container instance"
+file = "Interfaces\\IProgressReceiver.cs"
+
+[[properties]]
+parent = "IProgressReceiver"
+name = "Progress"
+sig = "T Progress { get; }"
+returns = "T"
+file = "Interfaces\\IProgressReceiver.cs"
+
+[[properties]]
+parent = "IProgressReceiver"
+name = "Subscriptions"
+sig = "ConcurrentDictionary<string, IDisposable> Subscriptions { get; }"
+returns = "ConcurrentDictionary<string, IDisposable>"
 file = "Interfaces\\IProgressReceiver.cs"
 
 [[interfaces]]
 name = "IProgressService"
 ns = "FEx.MVVM.Interfaces"
+file = "Interfaces\\IProgressService.cs"
+
+[[methods]]
+parent = "IProgressService"
+name = "SubscribeToProgress"
+sig = "bool SubscribeToProgress<T, TCon>(IProgressReceiver<T> receiver, IProgressReceiver<TCon> producer, params string[] iProgressReceiverProperties) where T : IProgressAggregator where TCon : IProgressAggregator"
+returns = "bool"
+file = "Interfaces\\IProgressService.cs"
+
+[[methods]]
+parent = "IProgressService"
+name = "SubscribeToProgress"
+sig = "bool SubscribeToProgress<TCon>(IProgressReceiver<TCon> receiver, IProgressAggregator container, params string[] iProgressReceiverProperties) where TCon : IProgressAggregator"
+returns = "bool"
+file = "Interfaces\\IProgressService.cs"
+
+[[methods]]
+parent = "IProgressService"
+name = "SubscribeToProgress"
+sig = "bool SubscribeToProgress(IProgressAggregator receiver, string containerId, params string[] iProgressReceiverProperties)"
+returns = "bool"
+file = "Interfaces\\IProgressService.cs"
+
+[[methods]]
+parent = "IProgressService"
+name = "UnsubscribeFromProgress"
+sig = "bool UnsubscribeFromProgress<T, TCon>(IProgressReceiver<T> receiver, IProgressReceiver<TCon> producer) where T : IProgressAggregator where TCon : IProgressAggregator"
+returns = "bool"
+file = "Interfaces\\IProgressService.cs"
+
+[[methods]]
+parent = "IProgressService"
+name = "UnsubscribeFromProgress"
+sig = "bool UnsubscribeFromProgress<TCon>(IProgressReceiver<TCon> receiver, IProgressAggregator container) where TCon : IProgressAggregator"
+returns = "bool"
+file = "Interfaces\\IProgressService.cs"
+
+[[methods]]
+parent = "IProgressService"
+name = "UnsubscribeFromProgress"
+sig = "bool UnsubscribeFromProgress(IProgressAggregator receiver, string containerId)"
+returns = "bool"
+file = "Interfaces\\IProgressService.cs"
+
+[[methods]]
+parent = "IProgressService"
+name = "GetOrAddContainer"
+sig = "TCon GetOrAddContainer<TCon>(bool isMain) where TCon : class, IProgressAggregator, new()"
+returns = "TCon"
+file = "Interfaces\\IProgressService.cs"
+
+[[methods]]
+parent = "IProgressService"
+name = "RemoveContainer"
+sig = "void RemoveContainer(string id)"
+returns = "void"
 file = "Interfaces\\IProgressService.cs"
 
 [[classes]]
@@ -116,9 +520,44 @@ ns = "FEx.MVVM.Models"
 base = "NotifyPropertyChanged"
 file = "Models\\NotifyProgressInfoChanged.cs"
 
+[[properties]]
+parent = "NotifyProgressInfoChanged"
+name = "Value"
+sig = "double? Value { get; set; }"
+returns = "double?"
+file = "Models\\NotifyProgressInfoChanged.cs"
+
+[[properties]]
+parent = "NotifyProgressInfoChanged"
+name = "Maximum"
+sig = "double? Maximum { get; set; }"
+returns = "double?"
+file = "Models\\NotifyProgressInfoChanged.cs"
+
+[[properties]]
+parent = "NotifyProgressInfoChanged"
+name = "ChangeMode"
+sig = "ProgressChangeMode ChangeMode { get; set; }"
+returns = "ProgressChangeMode"
+file = "Models\\NotifyProgressInfoChanged.cs"
+
 [[classes]]
 name = "ProgressSnapshot"
 ns = "FEx.MVVM.Models"
+file = "Models\\ProgressSnapshot.cs"
+
+[[properties]]
+parent = "ProgressSnapshot"
+name = "Maximum"
+sig = "double Maximum { get; set; }"
+returns = "double"
+file = "Models\\ProgressSnapshot.cs"
+
+[[properties]]
+parent = "ProgressSnapshot"
+name = "Value"
+sig = "double Value { get; set; }"
+returns = "double"
 file = "Models\\ProgressSnapshot.cs"
 
 [[classes]]
@@ -127,10 +566,136 @@ ns = "FEx.MVVM.Services"
 base = "IMessagePopupService"
 file = "Services\\MessagePopupService.cs"
 
+[[properties]]
+parent = "MessagePopupServiceBase"
+name = "AppIsClosing"
+sig = "bool AppIsClosing { get; set; }"
+returns = "bool"
+file = "Services\\MessagePopupService.cs"
+
+[[ctors]]
+parent = "MessagePopupServiceBase"
+sig = "MessagePopupServiceBase(ILogger<MessagePopupServiceBase> logger)"
+file = "Services\\MessagePopupService.cs"
+
+[[methods]]
+parent = "MessagePopupServiceBase"
+name = "ShowMessageAsync"
+sig = "Task<MessageResult> ShowMessageAsync(string txt, string caption, MessageIcon messageBoxImage, FExMessageButton button, ISupportInitialize ownerWindow, bool informUser, bool wait, Stopwatch sw, LogLevel level, Exception exception)"
+returns = "Task<MessageResult>"
+file = "Services\\MessagePopupService.cs"
+
+[[methods]]
+parent = "MessagePopupServiceBase"
+name = "ShowMessage"
+sig = "MessageResult ShowMessage(string txt, string caption, MessageIcon messageBoxImage, FExMessageButton button, ISupportInitialize ownerWindow, bool informUser, bool wait, Stopwatch sw, LogLevel level, Exception exception)"
+returns = "MessageResult"
+file = "Services\\MessagePopupService.cs"
+
+[[methods]]
+parent = "MessagePopupServiceBase"
+name = "InternalShowMessageAsync"
+sig = "Task<MessageResult> InternalShowMessageAsync(string txt, string caption, MessageIcon messageBoxImage, FExMessageButton button, ISupportInitialize ownerWindow, bool informUser, bool wait, Stopwatch sw, LogLevel level, Exception exception)"
+returns = "Task<MessageResult>"
+file = "Services\\MessagePopupService.cs"
+
 [[classes]]
 name = "ProgressService"
 ns = "FEx.MVVM.Services"
 base = "SubscriberBase, IProgressService"
+file = "Services\\ProgressService.cs"
+
+[[properties]]
+parent = "ProgressService"
+name = "MainContainerId"
+sig = "static string MainContainerId { get; }"
+returns = "string"
+file = "Services\\ProgressService.cs"
+static = true
+
+[[properties]]
+parent = "ProgressService"
+name = "Instance"
+sig = "static ProgressService Instance { get; }"
+returns = "ProgressService"
+file = "Services\\ProgressService.cs"
+static = true
+
+[[properties]]
+parent = "ProgressService"
+name = "Containers"
+sig = "ConcurrentDictionary<string, IProgressAggregator> Containers { get; }"
+returns = "ConcurrentDictionary<string, IProgressAggregator>"
+file = "Services\\ProgressService.cs"
+
+[[properties]]
+parent = "ProgressService"
+name = "Listeners"
+sig = "ConcurrentDictionary<string, ISet<ReceiverDefinition>> Listeners { get; }"
+returns = "ConcurrentDictionary<string, ISet<ReceiverDefinition>>"
+file = "Services\\ProgressService.cs"
+
+[[methods]]
+parent = "ProgressService"
+name = "SubscribeToProgress"
+sig = "bool SubscribeToProgress<T, TCon>(IProgressReceiver<T> receiver, IProgressReceiver<TCon> producer, params string[] iProgressReceiverProperties) where T : IProgressAggregator where TCon : IProgressAggregator"
+returns = "bool"
+file = "Services\\ProgressService.cs"
+
+[[methods]]
+parent = "ProgressService"
+name = "SubscribeToProgress"
+sig = "bool SubscribeToProgress<TCon>(IProgressReceiver<TCon> receiver, IProgressAggregator container, params string[] iProgressReceiverProperties) where TCon : IProgressAggregator"
+returns = "bool"
+file = "Services\\ProgressService.cs"
+
+[[methods]]
+parent = "ProgressService"
+name = "SubscribeToProgress"
+sig = "bool SubscribeToProgress(IProgressAggregator receiver, string containerId, params string[] iProgressReceiverProperties)"
+returns = "bool"
+file = "Services\\ProgressService.cs"
+
+[[methods]]
+parent = "ProgressService"
+name = "UnsubscribeFromProgress"
+sig = "bool UnsubscribeFromProgress<T, TCon>(IProgressReceiver<T> receiver, IProgressReceiver<TCon> producer) where T : IProgressAggregator where TCon : IProgressAggregator"
+returns = "bool"
+file = "Services\\ProgressService.cs"
+
+[[methods]]
+parent = "ProgressService"
+name = "UnsubscribeFromProgress"
+sig = "bool UnsubscribeFromProgress<TCon>(IProgressReceiver<TCon> receiver, IProgressAggregator container) where TCon : IProgressAggregator"
+returns = "bool"
+file = "Services\\ProgressService.cs"
+
+[[methods]]
+parent = "ProgressService"
+name = "UnsubscribeFromProgress"
+sig = "bool UnsubscribeFromProgress(IProgressAggregator receiver, string containerId)"
+returns = "bool"
+file = "Services\\ProgressService.cs"
+
+[[methods]]
+parent = "ProgressService"
+name = "GetOrAddContainer"
+sig = "TCon GetOrAddContainer<TCon>(bool isMain) where TCon : class, IProgressAggregator, new()"
+returns = "TCon"
+file = "Services\\ProgressService.cs"
+
+[[methods]]
+parent = "ProgressService"
+name = "RemoveContainer"
+sig = "void RemoveContainer(string id)"
+returns = "void"
+file = "Services\\ProgressService.cs"
+
+[[methods]]
+parent = "ProgressService"
+name = "GetOrAddContainer"
+sig = "TCon GetOrAddContainer<TCon>() where TCon : class, IProgressAggregator, new()"
+returns = "TCon"
 file = "Services\\ProgressService.cs"
 
 [[classes]]
@@ -139,10 +704,98 @@ ns = "FEx.MVVM.Services"
 base = "IEquatable<ReceiverDefinition>"
 file = "Services\\ReceiverDefinition.cs"
 
+[[properties]]
+parent = "ReceiverDefinition"
+name = "Container"
+sig = "IProgressAggregator Container { get; }"
+returns = "IProgressAggregator"
+file = "Services\\ReceiverDefinition.cs"
+
+[[properties]]
+parent = "ReceiverDefinition"
+name = "PropertyNames"
+sig = "IList<string> PropertyNames { get; }"
+returns = "IList<string>"
+file = "Services\\ReceiverDefinition.cs"
+
+[[ctors]]
+parent = "ReceiverDefinition"
+sig = "ReceiverDefinition(IProgressAggregator container, params string[] propertyNames)"
+file = "Services\\ReceiverDefinition.cs"
+
+[[methods]]
+parent = "ReceiverDefinition"
+name = "Equals"
+sig = "bool Equals(ReceiverDefinition other)"
+returns = "bool"
+file = "Services\\ReceiverDefinition.cs"
+
+[[methods]]
+parent = "ReceiverDefinition"
+name = "Equals"
+sig = "bool Equals(object obj)"
+returns = "bool"
+file = "Services\\ReceiverDefinition.cs"
+
+[[methods]]
+parent = "ReceiverDefinition"
+name = "GetHashCode"
+sig = "int GetHashCode()"
+returns = "int"
+file = "Services\\ReceiverDefinition.cs"
+
+[[methods]]
+parent = "ReceiverDefinition"
+name = "IsReceivingThisProperty"
+sig = "bool IsReceivingThisProperty(string propertyName)"
+returns = "bool"
+file = "Services\\ReceiverDefinition.cs"
+
 [[interfaces]]
 name = "IProgressChange"
 ns = "FEx.MVVM.Subjects"
 file = "Subjects\\IProgressChange.cs"
+
+[[properties]]
+parent = "IProgressChange"
+name = "PropertyName"
+sig = "string PropertyName { get; }"
+returns = "string"
+file = "Subjects\\IProgressChange.cs"
+
+[[properties]]
+parent = "IProgressChange"
+name = "ChangeMode"
+sig = "ProgressChangeMode ChangeMode { get; }"
+returns = "ProgressChangeMode"
+file = "Subjects\\IProgressChange.cs"
+
+[[classes]]
+name = "ProgressChange"
+ns = "FEx.MVVM.Subjects"
+base = "IProgressChange"
+file = "Subjects\\ProgressChange.cs"
+
+[[properties]]
+parent = "ProgressChange"
+name = "PropertyName"
+sig = "string PropertyName { get; init; }"
+returns = "string"
+file = "Subjects\\ProgressChange.cs"
+
+[[properties]]
+parent = "ProgressChange"
+name = "Value"
+sig = "T Value { get; init; }"
+returns = "T"
+file = "Subjects\\ProgressChange.cs"
+
+[[properties]]
+parent = "ProgressChange"
+name = "ChangeMode"
+sig = "ProgressChangeMode ChangeMode { get; init; }"
+returns = "ProgressChangeMode"
+file = "Subjects\\ProgressChange.cs"
 
 [[classes]]
 name = "ProgressChangeSubject"
@@ -156,10 +809,358 @@ ns = "FEx.MVVM.Subjects"
 base = "LinkableNotifyPropertyChanged, IProgressStatus"
 file = "Subjects\\ProgressStatus.cs"
 
+[[properties]]
+parent = "ProgressStatus"
+name = "Value"
+sig = "double Value { get; set; }"
+returns = "double"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "Maximum"
+sig = "double Maximum { get; set; }"
+returns = "double"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "IsIndeterminate"
+sig = "bool IsIndeterminate { get; set; }"
+returns = "bool"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "Percentage"
+sig = "double Percentage { get; }"
+returns = "double"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "PrecisePercentage"
+sig = "double PrecisePercentage { get; set; }"
+returns = "double"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "Info"
+sig = "string Info { get; set; }"
+returns = "string"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "Unit"
+sig = "string Unit { get; set; }"
+returns = "string"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "Mode"
+sig = "ProgressOperationMode Mode { get; set; }"
+returns = "ProgressOperationMode"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "State"
+sig = "ProgressState State { get; set; }"
+returns = "ProgressState"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "IsBusy"
+sig = "bool IsBusy { get; }"
+returns = "bool"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "IsInfoVisible"
+sig = "bool? IsInfoVisible { get; set; }"
+returns = "bool?"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "StatusInfo"
+sig = "string StatusInfo { get; set; }"
+returns = "string"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "CurrItemInfo"
+sig = "string CurrItemInfo { get; set; }"
+returns = "string"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "ThreadsInfo"
+sig = "string ThreadsInfo { get; set; }"
+returns = "string"
+file = "Subjects\\ProgressStatus.cs"
+
+[[properties]]
+parent = "ProgressStatus"
+name = "ExcludedProperties"
+sig = "ConcurrentHashSet<string> ExcludedProperties { get; }"
+returns = "ConcurrentHashSet<string>"
+file = "Subjects\\ProgressStatus.cs"
+
+[[ctors]]
+parent = "ProgressStatus"
+sig = "ProgressStatus()"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "OnPropertyChanged"
+sig = "void OnPropertyChanged(string propertyName = null)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "InvokePropertyChanged"
+sig = "void InvokePropertyChanged(string propertyName)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "OnStateChanged"
+sig = "void OnStateChanged(ProgressState state)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "OnValueChanged"
+sig = "void OnValueChanged(double value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "OnMaximumChanged"
+sig = "void OnMaximumChanged(double value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "OnIsIndeterminateChanged"
+sig = "void OnIsIndeterminateChanged(bool value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "OnExcludedPropertyChanged"
+sig = "void OnExcludedPropertyChanged(string propertyName)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "RefreshIsPrgInfoVisible"
+sig = "void RefreshIsPrgInfoVisible()"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "CalculateProgressPercentage"
+sig = "void CalculateProgressPercentage()"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "OnStatusInfoChanged"
+sig = "void OnStatusInfoChanged(string value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetValue"
+sig = "void SetValue(double value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetMaximum"
+sig = "void SetMaximum(double value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetIsIndeterminate"
+sig = "void SetIsIndeterminate(bool value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetPrecisePercentage"
+sig = "void SetPrecisePercentage(double value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetInfo"
+sig = "void SetInfo(string value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetUnit"
+sig = "void SetUnit(string value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetMode"
+sig = "void SetMode(ProgressOperationMode value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetIsFileOperation"
+sig = "void SetIsFileOperation(bool value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetState"
+sig = "void SetState(ProgressState value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetIsBusy"
+sig = "void SetIsBusy(bool value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "Busy"
+sig = "void Busy()"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "Idle"
+sig = "void Idle()"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetIsInfoVisible"
+sig = "void SetIsInfoVisible(bool? value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetStatusInfo"
+sig = "void SetStatusInfo(string value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetCurrItemInfo"
+sig = "void SetCurrItemInfo(string value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
+[[methods]]
+parent = "ProgressStatus"
+name = "SetThreadsInfo"
+sig = "void SetThreadsInfo(string value)"
+returns = "void"
+file = "Subjects\\ProgressStatus.cs"
+
 [[classes]]
 name = "BufferedProgressAggregator"
 ns = "FEx.MVVM.Utilities"
 base = "ProgressAggregator"
+file = "Utilities\\BufferedProgressAggregator.cs"
+
+[[properties]]
+parent = "BufferedProgressAggregator"
+name = "ChangesBufferingDelay"
+sig = "static TimeSpan ChangesBufferingDelay { get; set; }"
+returns = "TimeSpan"
+file = "Utilities\\BufferedProgressAggregator.cs"
+static = true
+
+[[ctors]]
+parent = "BufferedProgressAggregator"
+sig = "BufferedProgressAggregator()"
+file = "Utilities\\BufferedProgressAggregator.cs"
+
+[[methods]]
+parent = "BufferedProgressAggregator"
+name = "PrgSet"
+sig = "void PrgSet(double? value, double? maximum, ProgressChangeMode mode)"
+returns = "void"
+summary = "Sets current progress value and maximal allowed value of the ProgressBar"
+file = "Utilities\\BufferedProgressAggregator.cs"
+
+[[methods]]
+parent = "BufferedProgressAggregator"
+name = "ProcessChange"
+sig = "void ProcessChange(IProgressChange progressChange)"
+returns = "void"
+file = "Utilities\\BufferedProgressAggregator.cs"
+
+[[methods]]
+parent = "BufferedProgressAggregator"
+name = "ChangeDoubleValues"
+sig = "void ChangeDoubleValues(ProgressChange<double> progressChange)"
+returns = "void"
+file = "Utilities\\BufferedProgressAggregator.cs"
+
+[[methods]]
+parent = "BufferedProgressAggregator"
+name = "ChangeDoubleValue"
+sig = "void ChangeDoubleValue(ProgressChange<double> progressChange, Func<double> get, Action<double> set)"
+returns = "void"
+file = "Utilities\\BufferedProgressAggregator.cs"
+
+[[methods]]
+parent = "BufferedProgressAggregator"
+name = "ProcessProgressChange"
+sig = "void ProcessProgressChange(ProgressChange<double> progressChange)"
+returns = "void"
+file = "Utilities\\BufferedProgressAggregator.cs"
+
+[[methods]]
+parent = "BufferedProgressAggregator"
+name = "Dispose"
+sig = "void Dispose(bool disposing)"
+returns = "void"
 file = "Utilities\\BufferedProgressAggregator.cs"
 
 [[classes]]
@@ -168,15 +1169,302 @@ ns = "FEx.MVVM.Utilities"
 base = "NotifyPropertyChanged, IFExTimer"
 file = "Utilities\\FExTimer.cs"
 
+[[properties]]
+parent = "FExTimer"
+name = "Interval"
+sig = "TimeSpan Interval { get; set; }"
+returns = "TimeSpan"
+summary = "The timer interval"
+file = "Utilities\\FExTimer.cs"
+
+[[properties]]
+parent = "FExTimer"
+name = "IsRunning"
+sig = "bool IsRunning { get; set; }"
+returns = "bool"
+summary = "Indicates whether this timer is running."
+file = "Utilities\\FExTimer.cs"
+
+[[properties]]
+parent = "FExTimer"
+name = "IntervalObservable"
+sig = "IObservable<long> IntervalObservable { get; }"
+returns = "IObservable<long>"
+file = "Utilities\\FExTimer.cs"
+
+[[ctors]]
+parent = "FExTimer"
+sig = "FExTimer()"
+file = "Utilities\\FExTimer.cs"
+
+[[methods]]
+parent = "FExTimer"
+name = "WithCallback"
+sig = "IFExTimer WithCallback(Action callback)"
+returns = "IFExTimer"
+summary = "Sets the timer callback. Subscribes to using the current . Important: Call before this method. Calling WithInterval after WithCallback does not update the existing subscription."
+file = "Utilities\\FExTimer.cs"
+
+[[methods]]
+parent = "FExTimer"
+name = "WithAsyncCallback"
+sig = "IFExTimer WithAsyncCallback(Func<Task> asyncCallback, CancellationToken cancellationToken)"
+returns = "IFExTimer"
+summary = "Sets the async timer callback. Subscribes to using the current . Important: Call before this method. Calling WithInterval after WithAsyncCallback does not update the existing subscription."
+file = "Utilities\\FExTimer.cs"
+
+[[methods]]
+parent = "FExTimer"
+name = "WithInterval"
+sig = "IFExTimer WithInterval(double milliseconds)"
+returns = "IFExTimer"
+file = "Utilities\\FExTimer.cs"
+
+[[methods]]
+parent = "FExTimer"
+name = "WithInterval"
+sig = "IFExTimer WithInterval(TimeSpan interval)"
+returns = "IFExTimer"
+file = "Utilities\\FExTimer.cs"
+
+[[methods]]
+parent = "FExTimer"
+name = "Start"
+sig = "void Start()"
+returns = "void"
+summary = "Starts the timer."
+file = "Utilities\\FExTimer.cs"
+
+[[methods]]
+parent = "FExTimer"
+name = "Stop"
+sig = "void Stop()"
+returns = "void"
+summary = "Stops the timer."
+file = "Utilities\\FExTimer.cs"
+
+[[methods]]
+parent = "FExTimer"
+name = "Dispose"
+sig = "void Dispose(bool disposing)"
+returns = "void"
+file = "Utilities\\FExTimer.cs"
+
+[[methods]]
+parent = "FExTimer"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+file = "Utilities\\FExTimer.cs"
+
 [[classes]]
 name = "ProgressAggregator"
 ns = "FEx.MVVM.Utilities"
 base = "ProgressStatus, IProgressAggregator"
 file = "Utilities\\ProgressAggregator.cs"
 
+[[properties]]
+parent = "ProgressAggregator"
+name = "Stopwatch"
+sig = "Stopwatch Stopwatch { get; }"
+returns = "Stopwatch"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[properties]]
+parent = "ProgressAggregator"
+name = "Timer"
+sig = "IFExTimer Timer { get; }"
+returns = "IFExTimer"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[properties]]
+parent = "ProgressAggregator"
+name = "Id"
+sig = "string Id { get; }"
+returns = "string"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[ctors]]
+parent = "ProgressAggregator"
+sig = "ProgressAggregator()"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "SetProperty"
+sig = "bool SetProperty<TRet>(ref TRet backingField, TRet newValue, Action<TRet> onPropertyChanged = null, [CallerMemberName] string propertyName = null)"
+returns = "bool"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "Start"
+sig = "void Start()"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "Stop"
+sig = "void Stop()"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "Report"
+sig = "void Report(string propertyName, object value)"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "GetProperties"
+sig = "List<string> GetProperties()"
+returns = "List<string>"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "SetProperty"
+sig = "bool SetProperty<TRet>(ref TRet backingField, TRet newValue, [CallerMemberName] string propertyName = null)"
+returns = "bool"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "LogError"
+sig = "void LogError(string message)"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "ProcessEndPrg"
+sig = "void ProcessEndPrg()"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "ProcessSetPrg"
+sig = "void ProcessSetPrg(double? value, double? maximum)"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "ProcessAddPrg"
+sig = "void ProcessAddPrg(double? value, double? maximum)"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "TimerCallback"
+sig = "void TimerCallback()"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "UpdateProgressInfo"
+sig = "void UpdateProgressInfo()"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "OnExcludedPropertyChanged"
+sig = "void OnExcludedPropertyChanged(string propertyName)"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "InvokeProgressPropertyChanged"
+sig = "void InvokeProgressPropertyChanged<TRet>(TRet newValue, string propertyName)"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "Dispose"
+sig = "void Dispose(bool disposing)"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "PrgSet"
+sig = "void PrgSet(double? value)"
+returns = "void"
+summary = "Sets current progress value and maximal allowed value of the ProgressBar"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "PrgSet"
+sig = "void PrgSet(double? value, double? maximum)"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "PrgSet"
+sig = "void PrgSet(double? value, double? maximum, ProgressChangeMode mode)"
+returns = "void"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "PrgSetEnd"
+sig = "void PrgSetEnd()"
+returns = "void"
+summary = "Sets progress value of the ProgressBar to the maximal value"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "PrgAdd"
+sig = "void PrgAdd(double addedValue)"
+returns = "void"
+summary = "Increments current progress value of the ProgressBar"
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "PrgMaxAdd"
+sig = "void PrgMaxAdd(double addedValue)"
+returns = "void"
+summary = "Adds value to the maximum of progress value."
+file = "Utilities\\ProgressAggregator.cs"
+
+[[methods]]
+parent = "ProgressAggregator"
+name = "PrgSetMax"
+sig = "void PrgSetMax(double max)"
+returns = "void"
+summary = "Sets maximal allowed value of the ProgressBar and resets current progress"
+file = "Utilities\\ProgressAggregator.cs"
+
 [[classes]]
 name = "ProgressChangesBuffer"
 ns = "FEx.MVVM.Utilities"
 base = "AsyncBuffer<Timestamped<IProgressChange>>"
+file = "Utilities\\ProgressChangesBuffer.cs"
+
+[[methods]]
+parent = "ProgressChangesBuffer"
+name = "RetrieveFromBuffer"
+sig = "IList<Timestamped<IProgressChange>> RetrieveFromBuffer( IList<Timestamped<IProgressChange>> buffer)"
+returns = "IList<Timestamped<IProgressChange>>"
 file = "Utilities\\ProgressChangesBuffer.cs"
 

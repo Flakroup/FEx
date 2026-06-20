@@ -28,8 +28,8 @@ Reference .NET library - shared framework used as a git submodule across several
 
 ## API Surface
 
-- Generate per-project TOML maps: `.\Generate-ApiSurface.ps1 -RepoPath .` -> `.api-surface/FEx/` (one TOML per project)
-- **Regenerate after any public API change.** Consumer projects read these to discover FEx APIs
+- Served by the external **ApiSurfaceMcp** server (`github.com/Flakroup/ApiSurfaceMcp`), an MCP tool that scans this repo's source with Roslyn on demand. There is **no in-repo generator and no committed `.api-surface` artifact** - point the server at the repo path and query it.
+- Discover FEx APIs via its tools: `search_api`, `get_project_api`, `list_projects` (filter by `repo`). The server picks up source changes automatically (cache keyed on git HEAD); use `refresh` to force a re-scan.
 
 ## Testing
 
@@ -46,4 +46,3 @@ Reference .NET library - shared framework used as a git submodule across several
 - `pwsh build.ps1 Compile` - build
 - `pwsh build.ps1 Test` - tests
 - `pwsh build.ps1 Publish` - pack + publish to nuget.org
-- `pwsh .\Generate-ApiSurface.ps1` - generate API surface TOML

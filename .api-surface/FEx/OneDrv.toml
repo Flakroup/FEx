@@ -8,16 +8,30 @@ ns = "FEx.OneDrv"
 base = "InitializeOnlyModule"
 file = "FExOneDrvModule.cs"
 
+[[ctors]]
+parent = "FExOneDrvModule"
+sig = "FExOneDrvModule(OneDriveOptions options)"
+file = "FExOneDrvModule.cs"
+
+[[methods]]
+parent = "FExOneDrvModule"
+name = "RegisterServices"
+sig = "void RegisterServices(object container, IServiceCollection services)"
+returns = "void"
+file = "FExOneDrvModule.cs"
+
 [[classes]]
 name = "GraphResiliencePipeline"
 ns = "FEx.OneDrv"
 file = "GraphResiliencePipeline.cs"
 static = true
 
-[[classes]]
-name = "IsExternalInit"
-ns = "System.Runtime.CompilerServices"
-file = "IsExternalInit.cs"
+[[methods]]
+parent = "GraphResiliencePipeline"
+name = "Create"
+sig = "static ResiliencePipeline Create(IFExLogger logger)"
+returns = "ResiliencePipeline"
+file = "GraphResiliencePipeline.cs"
 static = true
 
 [[classes]]
@@ -26,10 +40,55 @@ ns = "FEx.OneDrv"
 base = "IOneDriveAuthService"
 file = "MsalAuthService.cs"
 
+[[ctors]]
+parent = "MsalAuthService"
+sig = "MsalAuthService(OneDriveOptions options, IFExLogger logger)"
+file = "MsalAuthService.cs"
+
+[[methods]]
+parent = "MsalAuthService"
+name = "GetAccessTokenAsync"
+sig = "Task<string> GetAccessTokenAsync(CancellationToken cancellationToken)"
+returns = "Task<string>"
+file = "MsalAuthService.cs"
+
+[[methods]]
+parent = "MsalAuthService"
+name = "SignOutAsync"
+sig = "Task SignOutAsync(CancellationToken cancellationToken)"
+returns = "Task"
+file = "MsalAuthService.cs"
+
 [[classes]]
 name = "OneDriveClient"
 ns = "FEx.OneDrv"
 base = "IOneDriveClient"
+file = "OneDriveClient.cs"
+
+[[ctors]]
+parent = "OneDriveClient"
+sig = "OneDriveClient(IGraphServiceClientCache graphCache, IFExLogger logger)"
+file = "OneDriveClient.cs"
+
+[[methods]]
+parent = "OneDriveClient"
+name = "ListFilesAsync"
+sig = "Task<IList<IOneDriveFile>> ListFilesAsync(string folderId, CancellationToken cancellationToken)"
+returns = "Task<IList<IOneDriveFile>>"
+file = "OneDriveClient.cs"
+
+[[methods]]
+parent = "OneDriveClient"
+name = "GetFileAsync"
+sig = "Task<IOneDriveFile> GetFileAsync(string itemId, CancellationToken cancellationToken)"
+returns = "Task<IOneDriveFile>"
+file = "OneDriveClient.cs"
+
+[[methods]]
+parent = "OneDriveClient"
+name = "ListFoldersAsync"
+sig = "Task<IList<IOneDriveFolder>> ListFoldersAsync(string folderId, CancellationToken cancellationToken)"
+returns = "Task<IList<IOneDriveFolder>>"
 file = "OneDriveClient.cs"
 
 [[classes]]
@@ -38,10 +97,34 @@ ns = "FEx.OneDrv"
 base = "IOneDriveItemEnumerator"
 file = "OneDriveItemEnumerator.cs"
 
+[[ctors]]
+parent = "OneDriveItemEnumerator"
+sig = "OneDriveItemEnumerator(IGraphServiceClientCache graphCache, IFExLogger logger)"
+file = "OneDriveItemEnumerator.cs"
+
+[[methods]]
+parent = "OneDriveItemEnumerator"
+name = "EnumerateFilesAsync"
+sig = "IAsyncEnumerable<IOneDriveFile> EnumerateFilesAsync(string folderId, [EnumeratorCancellation] CancellationToken cancellationToken)"
+returns = "IAsyncEnumerable<IOneDriveFile>"
+file = "OneDriveItemEnumerator.cs"
+
 [[classes]]
 name = "OneDriveThumbnailService"
 ns = "FEx.OneDrv"
 base = "IOneDriveThumbnailService"
+file = "OneDriveThumbnailService.cs"
+
+[[ctors]]
+parent = "OneDriveThumbnailService"
+sig = "OneDriveThumbnailService(IGraphServiceClientCache graphCache, OneDriveOptions options, IFExLogger logger)"
+file = "OneDriveThumbnailService.cs"
+
+[[methods]]
+parent = "OneDriveThumbnailService"
+name = "GetThumbnailAsync"
+sig = "Task<byte[]> GetThumbnailAsync(string itemId, CancellationToken cancellationToken)"
+returns = "Task<byte[]>"
 file = "OneDriveThumbnailService.cs"
 
 [[classes]]
@@ -52,8 +135,8 @@ static = true
 
 [[extensions]]
 name = "AddOneDrv"
-sig = "IServiceCollection AddOneDrv(this IServiceCollection services, OneDriveOptions options)"
 returns = "IServiceCollection"
+sig = "IServiceCollection AddOneDrv(this IServiceCollection services, OneDriveOptions options)"
 file = "OneDrvServiceCollectionExtensions.cs"
 
 [[classes]]
@@ -62,15 +145,81 @@ ns = "FEx.OneDrv.Auth"
 base = "IAccessTokenProvider"
 file = "Auth\\DelegatingAccessTokenProvider.cs"
 
+[[properties]]
+parent = "DelegatingAccessTokenProvider"
+name = "AllowedHostsValidator"
+sig = "AllowedHostsValidator AllowedHostsValidator { get; }"
+returns = "AllowedHostsValidator"
+file = "Auth\\DelegatingAccessTokenProvider.cs"
+
+[[ctors]]
+parent = "DelegatingAccessTokenProvider"
+sig = "DelegatingAccessTokenProvider(Func<CancellationToken, Task<string>> tokenFactory)"
+file = "Auth\\DelegatingAccessTokenProvider.cs"
+
+[[methods]]
+parent = "DelegatingAccessTokenProvider"
+name = "GetAuthorizationTokenAsync"
+sig = "Task<string> GetAuthorizationTokenAsync(Uri uri, Dictionary<string, object> additionalAuthenticationContext, CancellationToken cancellationToken)"
+returns = "Task<string>"
+file = "Auth\\DelegatingAccessTokenProvider.cs"
+
 [[classes]]
 name = "GraphServiceClientCache"
 ns = "FEx.OneDrv.Auth"
 base = "IGraphServiceClientCache, IDisposable"
 file = "Auth\\GraphServiceClientCache.cs"
 
+[[ctors]]
+parent = "GraphServiceClientCache"
+sig = "GraphServiceClientCache(IOneDriveAuthService auth)"
+file = "Auth\\GraphServiceClientCache.cs"
+
+[[ctors]]
+parent = "GraphServiceClientCache"
+sig = "GraphServiceClientCache(IOneDriveAuthService auth, Func<IAccessTokenProvider, GraphServiceClient> clientFactory, Func<GraphServiceClient, CancellationToken, Task<string>> driveIdFactory)"
+file = "Auth\\GraphServiceClientCache.cs"
+
+[[methods]]
+parent = "GraphServiceClientCache"
+name = "GetAsync"
+sig = "Task<(GraphServiceClient Client, string DriveId)> GetAsync(CancellationToken cancellationToken)"
+returns = "Task<(GraphServiceClient Client, string DriveId)>"
+file = "Auth\\GraphServiceClientCache.cs"
+
+[[methods]]
+parent = "GraphServiceClientCache"
+name = "Invalidate"
+sig = "void Invalidate()"
+returns = "void"
+file = "Auth\\GraphServiceClientCache.cs"
+
+[[methods]]
+parent = "GraphServiceClientCache"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+file = "Auth\\GraphServiceClientCache.cs"
+
 [[classes]]
 name = "DriveItemMapper"
 ns = "FEx.OneDrv.Models"
+file = "Models\\DriveItemMapper.cs"
+static = true
+
+[[methods]]
+parent = "DriveItemMapper"
+name = "MapFile"
+sig = "static IOneDriveFile MapFile(DriveItem item)"
+returns = "IOneDriveFile"
+file = "Models\\DriveItemMapper.cs"
+static = true
+
+[[methods]]
+parent = "DriveItemMapper"
+name = "MapFolder"
+sig = "static IOneDriveFolder MapFolder(DriveItem item)"
+returns = "IOneDriveFolder"
 file = "Models\\DriveItemMapper.cs"
 static = true
 
@@ -80,9 +229,121 @@ ns = "FEx.OneDrv.Models"
 base = "IOneDriveFile"
 file = "Models\\OneDriveFile.cs"
 
+[[properties]]
+parent = "OneDriveFile"
+name = "Id"
+sig = "string Id { get; init; }"
+returns = "string"
+file = "Models\\OneDriveFile.cs"
+
+[[properties]]
+parent = "OneDriveFile"
+name = "Name"
+sig = "string Name { get; init; }"
+returns = "string"
+file = "Models\\OneDriveFile.cs"
+
+[[properties]]
+parent = "OneDriveFile"
+name = "Path"
+sig = "string Path { get; init; }"
+returns = "string"
+file = "Models\\OneDriveFile.cs"
+
+[[properties]]
+parent = "OneDriveFile"
+name = "Size"
+sig = "long? Size { get; init; }"
+returns = "long?"
+file = "Models\\OneDriveFile.cs"
+
+[[properties]]
+parent = "OneDriveFile"
+name = "MimeType"
+sig = "string MimeType { get; init; }"
+returns = "string"
+file = "Models\\OneDriveFile.cs"
+
+[[properties]]
+parent = "OneDriveFile"
+name = "QuickXorHash"
+sig = "string QuickXorHash { get; init; }"
+returns = "string"
+file = "Models\\OneDriveFile.cs"
+
+[[properties]]
+parent = "OneDriveFile"
+name = "Sha256Hash"
+sig = "string Sha256Hash { get; init; }"
+returns = "string"
+file = "Models\\OneDriveFile.cs"
+
+[[properties]]
+parent = "OneDriveFile"
+name = "LastModified"
+sig = "DateTimeOffset? LastModified { get; init; }"
+returns = "DateTimeOffset?"
+file = "Models\\OneDriveFile.cs"
+
+[[properties]]
+parent = "OneDriveFile"
+name = "CreatedBy"
+sig = "string CreatedBy { get; init; }"
+returns = "string"
+file = "Models\\OneDriveFile.cs"
+
+[[properties]]
+parent = "OneDriveFile"
+name = "ImageWidth"
+sig = "int? ImageWidth { get; init; }"
+returns = "int?"
+file = "Models\\OneDriveFile.cs"
+
+[[properties]]
+parent = "OneDriveFile"
+name = "ImageHeight"
+sig = "int? ImageHeight { get; init; }"
+returns = "int?"
+file = "Models\\OneDriveFile.cs"
+
+[[properties]]
+parent = "OneDriveFile"
+name = "VideoDurationMs"
+sig = "int? VideoDurationMs { get; init; }"
+returns = "int?"
+file = "Models\\OneDriveFile.cs"
+
 [[classes]]
 name = "OneDriveFolder"
 ns = "FEx.OneDrv.Models"
 base = "IOneDriveFolder"
+file = "Models\\OneDriveFolder.cs"
+
+[[properties]]
+parent = "OneDriveFolder"
+name = "Id"
+sig = "string Id { get; init; }"
+returns = "string"
+file = "Models\\OneDriveFolder.cs"
+
+[[properties]]
+parent = "OneDriveFolder"
+name = "Name"
+sig = "string Name { get; init; }"
+returns = "string"
+file = "Models\\OneDriveFolder.cs"
+
+[[properties]]
+parent = "OneDriveFolder"
+name = "Path"
+sig = "string Path { get; init; }"
+returns = "string"
+file = "Models\\OneDriveFolder.cs"
+
+[[properties]]
+parent = "OneDriveFolder"
+name = "ChildCount"
+sig = "int? ChildCount { get; init; }"
+returns = "int?"
 file = "Models\\OneDriveFolder.cs"
 

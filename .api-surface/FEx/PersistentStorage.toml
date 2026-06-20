@@ -8,10 +8,160 @@ ns = "FEx.PersistentStorage"
 base = "ICacheService"
 file = "CacheService.cs"
 
+[[ctors]]
+parent = "CacheService"
+sig = "CacheService(ILocalStorageService localStorageService, IFExLogger logger)"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "Add"
+sig = "BsonValue Add<T>(T item) where T : ICacheableItem"
+returns = "BsonValue"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "Add"
+sig = "void Add<T>(IEnumerable<T> items) where T : ICacheableItem"
+returns = "void"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "Update"
+sig = "bool Update<T>(T item) where T : ICacheableItem"
+returns = "bool"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "Upsert"
+sig = "bool Upsert<T>(T item, Expression<Func<T, bool>> predicate) where T : ICacheableItem"
+returns = "bool"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "Upsert"
+sig = "void Upsert<T>(IEnumerable<T> items, Expression<Func<T, bool>> predicate) where T : ICacheableItem"
+returns = "void"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "Delete"
+sig = "bool Delete<T>(ObjectId id) where T : ICacheableItem"
+returns = "bool"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "Delete"
+sig = "bool Delete<T>(IEnumerable<T> items) where T : ICacheableItem"
+returns = "bool"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "Delete"
+sig = "bool Delete<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem"
+returns = "bool"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "FirstOrDefault"
+sig = "T FirstOrDefault<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem"
+returns = "T"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "Get"
+sig = "IReadOnlyCollection<T> Get<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem"
+returns = "IReadOnlyCollection<T>"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "ReplaceWith"
+sig = "void ReplaceWith<T>(IEnumerable<T> items) where T : ICacheableItem"
+returns = "void"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "ReplaceWith"
+sig = "BsonValue ReplaceWith<T>(T item) where T : ICacheableItem"
+returns = "BsonValue"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "ClearCache"
+sig = "void ClearCache(ClearCacheReason clearCacheReason)"
+returns = "void"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "CacheFile"
+sig = "IFExCachedFile CacheFile(IFExDownloadResult downloadResult)"
+returns = "IFExCachedFile"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "GetCachedFile"
+sig = "IFExCachedFile GetCachedFile(Uri fileUrl)"
+returns = "IFExCachedFile"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "UpdateFile"
+sig = "void UpdateFile(IFExCachedFile cachedFile)"
+returns = "void"
+file = "CacheService.cs"
+
+[[methods]]
+parent = "CacheService"
+name = "DeleteExpiredFiles"
+sig = "void DeleteExpiredFiles()"
+returns = "void"
+file = "CacheService.cs"
+
 [[classes]]
 name = "DatabaseProvider"
 ns = "FEx.PersistentStorage"
 base = "IDatabaseProvider, IDisposable"
+file = "DatabaseProvider.cs"
+
+[[properties]]
+parent = "DatabaseProvider"
+name = "Repository"
+sig = "ILiteRepository Repository { get; }"
+returns = "ILiteRepository"
+file = "DatabaseProvider.cs"
+
+[[properties]]
+parent = "DatabaseProvider"
+name = "DbLock"
+sig = "ExtendedReaderWriterLockSlim DbLock { get; }"
+returns = "ExtendedReaderWriterLockSlim"
+file = "DatabaseProvider.cs"
+
+[[ctors]]
+parent = "DatabaseProvider"
+sig = "DatabaseProvider(IDatabaseFilePathResolver filePathResolver)"
+file = "DatabaseProvider.cs"
+
+[[methods]]
+parent = "DatabaseProvider"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
 file = "DatabaseProvider.cs"
 
 [[classes]]
@@ -20,10 +170,29 @@ ns = "FEx.PersistentStorage"
 base = "IDatabaseFilePathResolver"
 file = "DefaultDatabaseFilePathResolver.cs"
 
+[[ctors]]
+parent = "DefaultDatabaseFilePathResolver"
+sig = "DefaultDatabaseFilePathResolver(string appName)"
+file = "DefaultDatabaseFilePathResolver.cs"
+
+[[methods]]
+parent = "DefaultDatabaseFilePathResolver"
+name = "GetDatabasesFolderPath"
+sig = "string GetDatabasesFolderPath()"
+returns = "string"
+file = "DefaultDatabaseFilePathResolver.cs"
+
 [[classes]]
 name = "FExPersistentStorageModule"
 ns = "FEx.PersistentStorage"
 base = "InitializeModule<IFExPersistentStorageContainer, IServiceCollection>"
+file = "FExPersistentStorageModule.cs"
+
+[[methods]]
+parent = "FExPersistentStorageModule"
+name = "RegisterServices"
+sig = "void RegisterServices(IFExPersistentStorageContainer container, IServiceCollection services)"
+returns = "void"
 file = "FExPersistentStorageModule.cs"
 
 [[classes]]
@@ -32,10 +201,79 @@ ns = "FEx.PersistentStorage"
 base = "IFileLocalStorageService"
 file = "FileLocalStorageService.cs"
 
+[[methods]]
+parent = "FileLocalStorageService"
+name = "CacheFile"
+sig = "IFExCachedFile CacheFile(IFExDownloadResult downloadResult)"
+returns = "IFExCachedFile"
+file = "FileLocalStorageService.cs"
+
+[[methods]]
+parent = "FileLocalStorageService"
+name = "GetCachedFile"
+sig = "IFExCachedFile GetCachedFile(Uri fileUrl)"
+returns = "IFExCachedFile"
+file = "FileLocalStorageService.cs"
+
+[[methods]]
+parent = "FileLocalStorageService"
+name = "UpdateFile"
+sig = "void UpdateFile(IFExCachedFile cachedFile)"
+returns = "void"
+file = "FileLocalStorageService.cs"
+
+[[methods]]
+parent = "FileLocalStorageService"
+name = "DeleteExpiredFiles"
+sig = "void DeleteExpiredFiles()"
+returns = "void"
+file = "FileLocalStorageService.cs"
+
+[[methods]]
+parent = "FileLocalStorageService"
+name = "GetFileId"
+sig = "static string GetFileId(Uri fileUrl)"
+returns = "string"
+file = "FileLocalStorageService.cs"
+static = true
+
 [[classes]]
 name = "LiteDbFileLocalStorageService"
 ns = "FEx.PersistentStorage"
 base = "FileLocalStorageService"
+file = "LiteDbFileLocalStorageService.cs"
+
+[[ctors]]
+parent = "LiteDbFileLocalStorageService"
+sig = "LiteDbFileLocalStorageService(IDatabaseProvider databaseProvider)"
+file = "LiteDbFileLocalStorageService.cs"
+
+[[methods]]
+parent = "LiteDbFileLocalStorageService"
+name = "CacheFile"
+sig = "IFExCachedFile CacheFile(IFExDownloadResult downloadResult)"
+returns = "IFExCachedFile"
+file = "LiteDbFileLocalStorageService.cs"
+
+[[methods]]
+parent = "LiteDbFileLocalStorageService"
+name = "GetCachedFile"
+sig = "IFExCachedFile GetCachedFile(Uri fileUrl)"
+returns = "IFExCachedFile"
+file = "LiteDbFileLocalStorageService.cs"
+
+[[methods]]
+parent = "LiteDbFileLocalStorageService"
+name = "UpdateFile"
+sig = "void UpdateFile(IFExCachedFile cachedFile)"
+returns = "void"
+file = "LiteDbFileLocalStorageService.cs"
+
+[[methods]]
+parent = "LiteDbFileLocalStorageService"
+name = "DeleteExpiredFiles"
+sig = "void DeleteExpiredFiles()"
+returns = "void"
 file = "LiteDbFileLocalStorageService.cs"
 
 [[classes]]
@@ -44,14 +282,186 @@ ns = "FEx.PersistentStorage"
 base = "ILocalStorageService"
 file = "LocalStorageService.cs"
 
+[[properties]]
+parent = "LocalStorageService"
+name = "Context"
+sig = "ILiteRepository Context { get; }"
+returns = "ILiteRepository"
+file = "LocalStorageService.cs"
+
+[[properties]]
+parent = "LocalStorageService"
+name = "DbLock"
+sig = "ExtendedReaderWriterLockSlim DbLock { get; }"
+returns = "ExtendedReaderWriterLockSlim"
+file = "LocalStorageService.cs"
+
+[[ctors]]
+parent = "LocalStorageService"
+sig = "LocalStorageService(IDatabaseProvider databaseProvider, IFileLocalStorageService fileLocalStorageService, IFExLogger logger)"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "CacheFile"
+sig = "IFExCachedFile CacheFile(IFExDownloadResult downloadResult)"
+returns = "IFExCachedFile"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "GetCachedFile"
+sig = "IFExCachedFile GetCachedFile(Uri fileUrl)"
+returns = "IFExCachedFile"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "UpdateFile"
+sig = "void UpdateFile(IFExCachedFile cachedFile)"
+returns = "void"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "DeleteExpiredFiles"
+sig = "void DeleteExpiredFiles()"
+returns = "void"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "GetAll"
+sig = "IReadOnlyList<T> GetAll<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem"
+returns = "IReadOnlyList<T>"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "FirstOrDefault"
+sig = "T FirstOrDefault<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem"
+returns = "T"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "Insert"
+sig = "BsonValue Insert<T>(T item) where T : ICacheableItem"
+returns = "BsonValue"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "Insert"
+sig = "void Insert<T>(IEnumerable<T> items) where T : ICacheableItem"
+returns = "void"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "Update"
+sig = "bool Update<T>(T item) where T : ICacheableItem"
+returns = "bool"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "Upsert"
+sig = "bool Upsert<T>(T item, Expression<Func<T, bool>> predicate) where T : ICacheableItem"
+returns = "bool"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "Upsert"
+sig = "void Upsert<T>(IEnumerable<T> items, Expression<Func<T, bool>> predicate) where T : ICacheableItem"
+returns = "void"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "Delete"
+sig = "bool Delete<T>(ObjectId id) where T : ICacheableItem"
+returns = "bool"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "Delete"
+sig = "bool Delete<T>(IEnumerable<T> items) where T : ICacheableItem"
+returns = "bool"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "DeleteAll"
+sig = "bool DeleteAll<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem"
+returns = "bool"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "ReplaceWith"
+sig = "void ReplaceWith<T>(IEnumerable<T> items) where T : ICacheableItem"
+returns = "void"
+file = "LocalStorageService.cs"
+
+[[methods]]
+parent = "LocalStorageService"
+name = "ReplaceWith"
+sig = "BsonValue ReplaceWith<T>(T item) where T : ICacheableItem"
+returns = "BsonValue"
+file = "LocalStorageService.cs"
+
 [[classes]]
 name = "PlainFileLocalStorageService"
 ns = "FEx.PersistentStorage"
 base = "FileLocalStorageService"
 file = "PlainFileLocalStorageService.cs"
 
+[[ctors]]
+parent = "PlainFileLocalStorageService"
+sig = "PlainFileLocalStorageService(IDatabaseFilePathResolver databaseFilePathResolver)"
+file = "PlainFileLocalStorageService.cs"
+
+[[methods]]
+parent = "PlainFileLocalStorageService"
+name = "CacheFile"
+sig = "IFExCachedFile CacheFile(IFExDownloadResult downloadResult)"
+returns = "IFExCachedFile"
+file = "PlainFileLocalStorageService.cs"
+
+[[methods]]
+parent = "PlainFileLocalStorageService"
+name = "GetCachedFile"
+sig = "IFExCachedFile GetCachedFile(Uri fileUrl)"
+returns = "IFExCachedFile"
+file = "PlainFileLocalStorageService.cs"
+
+[[methods]]
+parent = "PlainFileLocalStorageService"
+name = "UpdateFile"
+sig = "void UpdateFile(IFExCachedFile cachedFile)"
+returns = "void"
+file = "PlainFileLocalStorageService.cs"
+
+[[methods]]
+parent = "PlainFileLocalStorageService"
+name = "DeleteExpiredFiles"
+sig = "void DeleteExpiredFiles()"
+returns = "void"
+file = "PlainFileLocalStorageService.cs"
+
 [[classes]]
 name = "LiteRepositoryExtensions"
 ns = "FEx.PersistentStorage.Extensions"
 file = "Extensions\\LiteRepositoryExtensions.cs"
+
+[[methods]]
+parent = "LiteRepositoryExtensions"
+name = "GetRepository"
+sig = "static LiteRepository GetRepository(string dbFilePath)"
+returns = "LiteRepository"
+file = "Extensions\\LiteRepositoryExtensions.cs"
+static = true
 

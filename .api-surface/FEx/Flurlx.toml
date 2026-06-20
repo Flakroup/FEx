@@ -9,6 +9,67 @@ base = "IReadOnlyCollection<FlurlCookie>"
 summary = "A collection of FlurlCookies that can be attached to one or more FlurlRequests, either explicitly via WithCookies or implicitly via a CookieSession. Stores cookies received via Set-Cookie response headers."
 file = "FExCookieJar.cs"
 
+[[properties]]
+parent = "FExCookieJar"
+name = "Count"
+sig = "int Count { get; }"
+returns = "int"
+file = "FExCookieJar.cs"
+
+[[methods]]
+parent = "FExCookieJar"
+name = "GetEnumerator"
+sig = "IEnumerator<FlurlCookie> GetEnumerator()"
+returns = "IEnumerator<FlurlCookie>"
+file = "FExCookieJar.cs"
+
+[[methods]]
+parent = "FExCookieJar"
+name = "AddOrReplace"
+sig = "FExCookieJar AddOrReplace(string name, object value, string originUrl, DateTimeOffset? dateReceived)"
+returns = "FExCookieJar"
+summary = "Adds a cookie to the jar or replaces one with the same Name/Domain/Path. Throws FExInvalidCookieException if cookie is invalid."
+file = "FExCookieJar.cs"
+
+[[methods]]
+parent = "FExCookieJar"
+name = "AddOrReplace"
+sig = "FExCookieJar AddOrReplace(string name, object value, string originUrl)"
+returns = "FExCookieJar"
+file = "FExCookieJar.cs"
+
+[[methods]]
+parent = "FExCookieJar"
+name = "AddOrReplace"
+sig = "FExCookieJar AddOrReplace(FlurlCookie cookie)"
+returns = "FExCookieJar"
+summary = "Adds a cookie to the jar or replaces one with the same Name/Domain/Path. Throws FExInvalidCookieException if cookie is invalid."
+file = "FExCookieJar.cs"
+
+[[methods]]
+parent = "FExCookieJar"
+name = "TryAddOrReplace"
+sig = "bool TryAddOrReplace(FlurlCookie cookie, out string reason)"
+returns = "bool"
+summary = "Adds a cookie to the jar or updates if one with the same Name/Domain/Path already exists, but only if it is valid and not expired."
+file = "FExCookieJar.cs"
+
+[[methods]]
+parent = "FExCookieJar"
+name = "Remove"
+sig = "FExCookieJar Remove(Func<FlurlCookie, bool> predicate)"
+returns = "FExCookieJar"
+summary = "Removes all cookies matching the given predicate."
+file = "FExCookieJar.cs"
+
+[[methods]]
+parent = "FExCookieJar"
+name = "Clear"
+sig = "FExCookieJar Clear()"
+returns = "FExCookieJar"
+summary = "Removes all cookies from this CookieJar"
+file = "FExCookieJar.cs"
+
 [[classes]]
 name = "FExInvalidCookieException"
 ns = "FEx.Flurlx"
@@ -16,10 +77,28 @@ base = "Exception"
 summary = "Exception thrown when attempting to add or update an invalid FlurlCookie to a CookieJar."
 file = "FExCookieJar.cs"
 
+[[ctors]]
+parent = "FExInvalidCookieException"
+sig = "FExInvalidCookieException(string reason)"
+summary = "Creates a new FExInvalidCookieException."
+file = "FExCookieJar.cs"
+
 [[classes]]
 name = "FExFlurlx"
 ns = "FEx.Flurlx"
 base = "FExInitializable"
+file = "FExFlurlx.cs"
+
+[[ctors]]
+parent = "FExFlurlx"
+sig = "FExFlurlx(IFlurlConfigurator configurator)"
+file = "FExFlurlx.cs"
+
+[[methods]]
+parent = "FExFlurlx"
+name = "OnInitialize"
+sig = "void OnInitialize()"
+returns = "void"
 file = "FExFlurlx.cs"
 
 [[classes]]
@@ -29,11 +108,26 @@ base = "InitializeModule<IFExFlurlxContainer, IServiceCollection>"
 summary = "Serializer-agnostic FEx.Flurlx registrations (client, cache, resilience, configurator). Pick a serializer by registering a serializer module on top: the core (System.Text.Json, default) or the opt-in FEx.Flurlx.Newtonsoft module. Both supply an via factory."
 file = "FExFlurlxBaseModule.cs"
 
+[[methods]]
+parent = "FExFlurlxBaseModule"
+name = "RegisterServices"
+sig = "void RegisterServices(IFExFlurlxContainer container, IServiceCollection services)"
+returns = "void"
+file = "FExFlurlxBaseModule.cs"
+
 [[classes]]
 name = "FExFlurlxModule"
 ns = "FEx.Flurlx"
 summary = "Default FEx.Flurlx module: serializer-agnostic core registrations plus a System.Text.Json serializer ( with ). Zero Newtonsoft dependency. For Newtonsoft, register the FEx.Flurlx.Newtonsoft module instead of this one."
 file = "FExFlurlxModule.cs"
+
+[[methods]]
+parent = "FExFlurlxModule"
+name = "JsonSerializerFactory"
+sig = "static ISerializer JsonSerializerFactory()"
+returns = "ISerializer"
+file = "FExFlurlxModule.cs"
+static = true
 
 [[classes]]
 name = "FlurlConfigurator"
@@ -41,32 +135,112 @@ ns = "FEx.Flurlx"
 base = "FExInitializable, IFlurlConfigurator"
 file = "FlurlConfigurator.cs"
 
-[[classes]]
-name = "IsExternalInit"
-ns = "System.Runtime.CompilerServices"
-file = "IsExternalInit.cs"
-static = true
+[[ctors]]
+parent = "FlurlConfigurator"
+sig = "FlurlConfigurator(IApiConfiguration apiConfiguration, IFlurlClientCache flurlClientCache, IFExPollyPolicyBuilder policyBuilder, ISerializer jsonSerializer)"
+file = "FlurlConfigurator.cs"
 
-[[interfaces]]
-name = "IApiConfiguration"
-ns = "FEx.Flurlx.Abstractions.Interfaces"
-file = "Abstractions\\Interfaces\\IApiConfiguration.cs"
+[[methods]]
+parent = "FlurlConfigurator"
+name = "GetClient"
+sig = "IFlurlClient GetClient()"
+returns = "IFlurlClient"
+file = "FlurlConfigurator.cs"
 
-[[interfaces]]
-name = "IFExFlurlxContainer"
-ns = "FEx.Flurlx.Abstractions.Interfaces"
-file = "Abstractions\\Interfaces\\IFExFlurlxContainer.cs"
-
-[[interfaces]]
-name = "IFlurlConfigurator"
-ns = "FEx.Flurlx.Abstractions.Interfaces"
-file = "Abstractions\\Interfaces\\IFlurlConfigurator.cs"
+[[methods]]
+parent = "FlurlConfigurator"
+name = "GetResiliencePolicy"
+sig = "IAsyncPolicy<IFlurlResponse> GetResiliencePolicy()"
+returns = "IAsyncPolicy<IFlurlResponse>"
+file = "FlurlConfigurator.cs"
 
 [[classes]]
 name = "PollyPolicyConfiguration"
 ns = "FEx.Flurlx.Configuration"
 summary = "Configuration for Polly resilience policies."
 file = "Configuration\\PollyPolicyConfiguration.cs"
+
+[[properties]]
+parent = "PollyPolicyConfiguration"
+name = "MaxRetryAttempts"
+sig = "int MaxRetryAttempts { get; set; }"
+returns = "int"
+summary = "Maximum number of retry attempts before giving up. Default: 3 attempts"
+file = "Configuration\\PollyPolicyConfiguration.cs"
+
+[[properties]]
+parent = "PollyPolicyConfiguration"
+name = "InitialRetryDelay"
+sig = "TimeSpan InitialRetryDelay { get; set; }"
+returns = "TimeSpan"
+summary = "Initial delay before first retry. Subsequent retries use exponential backoff. Default: 1 second"
+file = "Configuration\\PollyPolicyConfiguration.cs"
+
+[[properties]]
+parent = "PollyPolicyConfiguration"
+name = "RequestTimeout"
+sig = "TimeSpan RequestTimeout { get; set; }"
+returns = "TimeSpan"
+summary = "Maximum timeout for a single HTTP request. Default: 30 seconds"
+file = "Configuration\\PollyPolicyConfiguration.cs"
+
+[[properties]]
+parent = "PollyPolicyConfiguration"
+name = "CircuitBreakerFailureThreshold"
+sig = "int CircuitBreakerFailureThreshold { get; set; }"
+returns = "int"
+summary = "Number of consecutive failures before opening the circuit breaker. Default: 5 failures"
+file = "Configuration\\PollyPolicyConfiguration.cs"
+
+[[properties]]
+parent = "PollyPolicyConfiguration"
+name = "CircuitBreakerDuration"
+sig = "TimeSpan CircuitBreakerDuration { get; set; }"
+returns = "TimeSpan"
+summary = "Duration the circuit breaker stays open before allowing test requests. Default: 1 minute"
+file = "Configuration\\PollyPolicyConfiguration.cs"
+
+[[properties]]
+parent = "PollyPolicyConfiguration"
+name = "MaxParallelization"
+sig = "int MaxParallelization { get; set; }"
+returns = "int"
+summary = "Maximum number of parallel requests allowed (Bulkhead limit). Essential for slow APIs to prevent overwhelming the endpoint. Default: 10 concurrent requests"
+file = "Configuration\\PollyPolicyConfiguration.cs"
+
+[[properties]]
+parent = "PollyPolicyConfiguration"
+name = "MaxQueuingActions"
+sig = "int MaxQueuingActions { get; set; }"
+returns = "int"
+summary = "Maximum number of requests that can be queued when Bulkhead limit is reached. Default: 20 queued actions"
+file = "Configuration\\PollyPolicyConfiguration.cs"
+
+[[properties]]
+parent = "PollyPolicyConfiguration"
+name = "EnableFallback"
+sig = "bool EnableFallback { get; set; }"
+returns = "bool"
+summary = "Enable fallback policy for graceful degradation (e.g., returning cached data). Default: true"
+file = "Configuration\\PollyPolicyConfiguration.cs"
+
+[[methods]]
+parent = "PollyPolicyConfiguration"
+name = "SlowApiDefaults"
+sig = "static PollyPolicyConfiguration SlowApiDefaults()"
+returns = "PollyPolicyConfiguration"
+summary = "Creates a default configuration optimized for slow APIs (e.g., Synology DSM)."
+file = "Configuration\\PollyPolicyConfiguration.cs"
+static = true
+
+[[methods]]
+parent = "PollyPolicyConfiguration"
+name = "FastApiDefaults"
+sig = "static PollyPolicyConfiguration FastApiDefaults()"
+returns = "PollyPolicyConfiguration"
+summary = "Creates a default configuration optimized for fast, reliable APIs."
+file = "Configuration\\PollyPolicyConfiguration.cs"
+static = true
 
 [[classes]]
 name = "FlurlExtensions"
@@ -76,20 +250,20 @@ static = true
 
 [[extensions]]
 name = "FixBooleanQueryParameters"
-sig = "IFlurlRequest FixBooleanQueryParameters(this IFlurlRequest req)"
 returns = "IFlurlRequest"
+sig = "IFlurlRequest FixBooleanQueryParameters(this IFlurlRequest req)"
 file = "Extensions\\FlurlExtensions.cs"
 
 [[extensions]]
 name = "FixBooleanQueryParameters"
-sig = "Url FixBooleanQueryParameters(this Url url)"
 returns = "Url"
+sig = "Url FixBooleanQueryParameters(this Url url)"
 file = "Extensions\\FlurlExtensions.cs"
 
 [[extensions]]
 name = "StripCharsetQuotes"
-sig = "HttpContent StripCharsetQuotes(this HttpContent content)"
 returns = "HttpContent"
+sig = "HttpContent StripCharsetQuotes(this HttpContent content)"
 file = "Extensions\\FlurlExtensions.cs"
 
 [[classes]]
@@ -100,8 +274,8 @@ static = true
 
 [[extensions]]
 name = "IsSuccessStatusCode"
-sig = "bool IsSuccessStatusCode(this IFlurlResponse response)"
 returns = "bool"
+sig = "bool IsSuccessStatusCode(this IFlurlResponse response)"
 summary = "Gets a value that indicates if the HTTP response was successful."
 file = "Extensions\\FlurlResponseExtensions.cs"
 
@@ -113,38 +287,50 @@ static = true
 
 [[extensions]]
 name = "CalculateSizeAsync"
-sig = "Task<double> CalculateSizeAsync(this Url url)"
 returns = "Task<double>"
+sig = "Task<double> CalculateSizeAsync(this Url url)"
 file = "Extensions\\UrlExtensions.cs"
 
 [[extensions]]
 name = "CalculateSizeAsync"
-sig = "Task<double> CalculateSizeAsync(this Url url, LengthType unit)"
 returns = "Task<double>"
+sig = "Task<double> CalculateSizeAsync(this Url url, LengthType unit)"
+file = "Extensions\\UrlExtensions.cs"
+
+[[extensions]]
+name = "CalculateSizeAsync"
+returns = "Task<double>"
+sig = "Task<double> CalculateSizeAsync(this Url url, LengthType unit, IFlurlClient client)"
 file = "Extensions\\UrlExtensions.cs"
 
 [[extensions]]
 name = "GetBytesAsync"
+returns = "Task<MemoryStream>"
 sig = "Task<MemoryStream> GetBytesAsync(this Url url)"
-returns = "Task<MemoryStream>"
 file = "Extensions\\UrlExtensions.cs"
 
 [[extensions]]
 name = "GetBytesAsync"
+returns = "Task<MemoryStream>"
 sig = "Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client)"
-returns = "Task<MemoryStream>"
 file = "Extensions\\UrlExtensions.cs"
 
 [[extensions]]
 name = "GetBytesAsync"
+returns = "Task<MemoryStream>"
 sig = "Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client, SeekOrigin origin)"
-returns = "Task<MemoryStream>"
 file = "Extensions\\UrlExtensions.cs"
 
 [[extensions]]
 name = "GetBytesAsync"
-sig = "Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client, SeekOrigin origin, long offset)"
 returns = "Task<MemoryStream>"
+sig = "Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client, SeekOrigin origin, long offset)"
+file = "Extensions\\UrlExtensions.cs"
+
+[[extensions]]
+name = "GetBytesAsync"
+returns = "Task<MemoryStream>"
+sig = "Task<MemoryStream> GetBytesAsync(this Url url, IFlurlClient client, SeekOrigin origin, long offset, long? length)"
 file = "Extensions\\UrlExtensions.cs"
 
 [[enums]]
@@ -160,6 +346,19 @@ base = "IFExPollyPolicyBuilder"
 summary = "FEx Polly Policy Builder - Creates comprehensive resilience policies for HTTP requests."
 file = "Services\\FExPollyPolicyBuilder.cs"
 
+[[ctors]]
+parent = "FExPollyPolicyBuilder"
+sig = "FExPollyPolicyBuilder(IFExLogger logger)"
+file = "Services\\FExPollyPolicyBuilder.cs"
+
+[[methods]]
+parent = "FExPollyPolicyBuilder"
+name = "BuildFullSuitePolicy"
+sig = "IAsyncPolicy<IFlurlResponse> BuildFullSuitePolicy(PollyPolicyConfiguration config)"
+returns = "IAsyncPolicy<IFlurlResponse>"
+summary = "Builds a comprehensive resilience policy with all Polly features."
+file = "Services\\FExPollyPolicyBuilder.cs"
+
 [[classes]]
 name = "FlurlApiBase"
 ns = "FEx.Flurlx.Services"
@@ -167,8 +366,130 @@ base = "AsyncInitializable"
 summary = "Abstract base class for building typed API clients with Polly resilience."
 file = "Services\\FlurlApiBase.cs"
 
+[[properties]]
+parent = "FlurlApiBase"
+name = "FlurlClient"
+sig = "IFlurlClient FlurlClient { get; }"
+returns = "IFlurlClient"
+file = "Services\\FlurlApiBase.cs"
+
+[[properties]]
+parent = "FlurlApiBase"
+name = "ResiliencePolicy"
+sig = "IAsyncPolicy<IFlurlResponse> ResiliencePolicy { get; }"
+returns = "IAsyncPolicy<IFlurlResponse>"
+file = "Services\\FlurlApiBase.cs"
+
+[[ctors]]
+parent = "FlurlApiBase"
+sig = "FlurlApiBase(IFlurlConfigurator flurlConfigurator)"
+file = "Services\\FlurlApiBase.cs"
+
+[[methods]]
+parent = "FlurlApiBase"
+name = "GetStatusMessage"
+sig = "static string GetStatusMessage(HttpStatusCode statusCode)"
+returns = "string"
+file = "Services\\FlurlApiBase.cs"
+static = true
+
+[[methods]]
+parent = "FlurlApiBase"
+name = "IsSuccess"
+sig = "static bool IsSuccess(IFlurlResponse response)"
+returns = "bool"
+file = "Services\\FlurlApiBase.cs"
+static = true
+
+[[methods]]
+parent = "FlurlApiBase"
+name = "GetResponseAsync"
+sig = "Task<T> GetResponseAsync<T, TReq>(string apiPath, Func<IFlurlRequest, IFlurlRequest> func = null, RequestMethod method = RequestMethod.GET, TReq requestContent = default, CancellationToken cancellationToken = default)"
+returns = "Task<T>"
+file = "Services\\FlurlApiBase.cs"
+
+[[methods]]
+parent = "FlurlApiBase"
+name = "AddConstantsToRequest"
+sig = "IFlurlRequest AddConstantsToRequest(IFlurlRequest req)"
+returns = "IFlurlRequest"
+file = "Services\\FlurlApiBase.cs"
+
+[[methods]]
+parent = "FlurlApiBase"
+name = "GetResponseAsync"
+sig = "Task<T> GetResponseAsync<T>(string apiPath, Func<IFlurlRequest, IFlurlRequest> func = null, RequestMethod method = RequestMethod.GET, CancellationToken cancellationToken = default)"
+returns = "Task<T>"
+file = "Services\\FlurlApiBase.cs"
+
 [[interfaces]]
 name = "IFExPollyPolicyBuilder"
 ns = "FEx.Flurlx.Services"
 file = "Services\\IFExPollyPolicyBuilder.cs"
+
+[[methods]]
+parent = "IFExPollyPolicyBuilder"
+name = "BuildFullSuitePolicy"
+sig = "IAsyncPolicy<IFlurlResponse> BuildFullSuitePolicy(PollyPolicyConfiguration config)"
+returns = "IAsyncPolicy<IFlurlResponse>"
+file = "Services\\IFExPollyPolicyBuilder.cs"
+
+[[interfaces]]
+name = "IApiConfiguration"
+ns = "FEx.Flurlx.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IApiConfiguration.cs"
+
+[[properties]]
+parent = "IApiConfiguration"
+name = "BaseUrl"
+sig = "Url BaseUrl { get; }"
+returns = "Url"
+file = "Abstractions\\Interfaces\\IApiConfiguration.cs"
+
+[[properties]]
+parent = "IApiConfiguration"
+name = "ClientName"
+sig = "string ClientName { get; }"
+returns = "string"
+file = "Abstractions\\Interfaces\\IApiConfiguration.cs"
+
+[[properties]]
+parent = "IApiConfiguration"
+name = "IgnoreSSLErrors"
+sig = "bool IgnoreSSLErrors { get; }"
+returns = "bool"
+file = "Abstractions\\Interfaces\\IApiConfiguration.cs"
+
+[[properties]]
+parent = "IApiConfiguration"
+name = "PollyConfig"
+sig = "PollyPolicyConfiguration PollyConfig { get; }"
+returns = "PollyPolicyConfiguration"
+file = "Abstractions\\Interfaces\\IApiConfiguration.cs"
+
+[[interfaces]]
+name = "IFExFlurlxContainer"
+ns = "FEx.Flurlx.Abstractions.Interfaces"
+base = "IContainer<FExFlurlx>, IContainer<IFlurlConfigurator>, IContainer<IFlurlClientCache>, IContainer<IApiConfiguration>, IContainer<IFExPollyPolicyBuilder>"
+file = "Abstractions\\Interfaces\\IFExFlurlxContainer.cs"
+
+[[interfaces]]
+name = "IFlurlConfigurator"
+ns = "FEx.Flurlx.Abstractions.Interfaces"
+base = "IFExInitializable"
+file = "Abstractions\\Interfaces\\IFlurlConfigurator.cs"
+
+[[methods]]
+parent = "IFlurlConfigurator"
+name = "GetClient"
+sig = "IFlurlClient GetClient()"
+returns = "IFlurlClient"
+file = "Abstractions\\Interfaces\\IFlurlConfigurator.cs"
+
+[[methods]]
+parent = "IFlurlConfigurator"
+name = "GetResiliencePolicy"
+sig = "IAsyncPolicy<IFlurlResponse> GetResiliencePolicy()"
+returns = "IAsyncPolicy<IFlurlResponse>"
+file = "Abstractions\\Interfaces\\IFlurlConfigurator.cs"
 

@@ -10,8 +10,7 @@ static = true
 
 [[extensions]]
 name = "AddFExSentry"
-sig = "WebApplicationBuilder AddFExSentry(this WebApplicationBuilder builder,
-                                                     string envVarOverride = \"SENTRY_DSN\")"
 returns = "WebApplicationBuilder"
+sig = "WebApplicationBuilder AddFExSentry(this WebApplicationBuilder builder, string envVarOverride = \"SENTRY_DSN\")"
 file = "FExSentryWebExtensions.cs"
 

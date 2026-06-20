@@ -6,27 +6,38 @@ path = "src\\FEx.SecureStorage"
 name = "FileSecureStorageService"
 ns = "FEx.SecureStorage"
 base = "ISecureStorageService"
-summary = "Cross-platform fallback storage that persists values as encrypted files under ~/.fexStorage/. Uses a per-user/per-machine cipher derived from {UserName}@{MachineName}. Not OS-level secure - prefer WindowsDpapiSecureStorageService, MacOsKeychainSecureStorageService or LinuxLibsecretSecureStorageService when available."
+summary = "Cross-platform fallback storage that persists values as encrypted files under ~/.fexStorage/ . Uses a per-user/per-machine cipher derived from {UserName}@{MachineName} . Not OS-level secure - prefer WindowsDpapiSecureStorageService , MacOsKeychainSecureStorageService or LinuxLibsecretSecureStorageService when available."
+file = "FileSecureStorageService.cs"
+
+[[ctors]]
+parent = "FileSecureStorageService"
+sig = "FileSecureStorageService()"
+file = "FileSecureStorageService.cs"
+
+[[ctors]]
+parent = "FileSecureStorageService"
+sig = "FileSecureStorageService(string cipher, DirectoryInfo storage)"
+file = "FileSecureStorageService.cs"
+
+[[methods]]
+parent = "FileSecureStorageService"
+name = "Get"
+sig = "T Get<T>(string key)"
+returns = "T"
+file = "FileSecureStorageService.cs"
+
+[[methods]]
+parent = "FileSecureStorageService"
+name = "Set"
+sig = "void Set(string key, object content)"
+returns = "void"
 file = "FileSecureStorageService.cs"
 
 [[interfaces]]
 name = "ISecureStorageContainer"
 ns = "FEx.SecureStorage"
+base = "IContainer<ISecureStorageService>"
 file = "ISecureStorageContainer.cs"
-
-[[classes]]
-name = "LinuxLibsecretSecureStorageService"
-ns = "FEx.SecureStorage"
-base = "ISecureStorageService"
-summary = "Linux-only secure storage backed by libsecret (the freedesktop Secret Service API, used by GNOME Keyring and KWallet via secret-service). Items are tagged with the configured service name (default com.flakroup.fex.securestorage) and the supplied key as the key attribute. Requires libsecret-1.so.0 to be installed on the target machine - the constructor throws if the library cannot be loaded."
-file = "LinuxLibsecretSecureStorageService.cs"
-
-[[classes]]
-name = "MacOsKeychainSecureStorageService"
-ns = "FEx.SecureStorage"
-base = "ISecureStorageService"
-summary = "macOS-only secure storage backed by the Security framework Keychain Services (generic password items). Items are tagged with the configured service name (default com.flakroup.fex.securestorage) and the supplied key as the account name. Values are JSON-serialized before being stored as UTF-8 bytes."
-file = "MacOsKeychainSecureStorageService.cs"
 
 [[classes]]
 name = "SecureStorageModule"
@@ -34,10 +45,19 @@ ns = "FEx.SecureStorage"
 base = "InitializeModule<ISecureStorageContainer, IServiceCollection>"
 file = "SecureStorageModule.cs"
 
-[[classes]]
-name = "WindowsDpapiSecureStorageService"
-ns = "FEx.SecureStorage"
-base = "ISecureStorageService"
-summary = "Windows-only secure storage backed by DPAPI (Data Protection API). Encryption is per-user (DataProtectionScope.CurrentUser), so payloads can only be decrypted by the same Windows user account that wrote them. Files are stored under ~/.fexStorage-dpapi/ with extension .dpapi."
-file = "WindowsDpapiSecureStorageService.cs"
+[[methods]]
+parent = "SecureStorageModule"
+name = "CreateSecureStorageService"
+sig = "static ISecureStorageService CreateSecureStorageService()"
+returns = "ISecureStorageService"
+summary = "Picks the most secure available on the current OS. Order: Windows DPAPI &gt; macOS Keychain &gt; Linux libsecret &gt; cross-platform file fallback. If libsecret is missing on Linux the factory silently falls back to the file implementation."
+file = "SecureStorageModule.cs"
+static = true
+
+[[methods]]
+parent = "SecureStorageModule"
+name = "RegisterServices"
+sig = "void RegisterServices(ISecureStorageContainer container, IServiceCollection services)"
+returns = "void"
+file = "SecureStorageModule.cs"
 

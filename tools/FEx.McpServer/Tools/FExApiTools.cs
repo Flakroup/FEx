@@ -30,7 +30,12 @@ public sealed class FExApiTools
 
         foreach (var entry in results.Take(30))
         {
-            sb.AppendLine($"**{entry.Type}**: `{entry.Name}`");
+            var label = entry.Type == ApiEntryType.Constructor && string.IsNullOrEmpty(entry.Name)
+                ? entry.Parent
+                : entry.Name;
+            sb.AppendLine($"**{entry.Type}**: `{label}`");
+            if (!string.IsNullOrEmpty(entry.Parent))
+                sb.AppendLine($"  Member of: {entry.Parent}");
             if (!string.IsNullOrEmpty(entry.Namespace))
                 sb.AppendLine($"  Namespace: {entry.Namespace}");
             sb.AppendLine($"  Project: {entry.Project}");
@@ -96,7 +101,27 @@ public sealed class FExApiTools
 
         foreach (var group in entries.GroupBy(e => e.Type).OrderBy(g => g.Key))
         {
-            sb.AppendLine($"## {group.Key}s ({group.Count()})");
+            sb.AppendLine($"## {Plural(group.Key)} ({group.Count()})");
+
+            // Member entries are grouped under their declaring type for readability.
+            if (group.First().IsMember)
+            {
+                foreach (var byType in group.GroupBy(e => e.Parent).OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
+                {
+                    sb.AppendLine($"  {byType.Key}");
+                    foreach (var entry in byType.OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase))
+                    {
+                        var sig = string.IsNullOrEmpty(entry.Signature) ? entry.Name : entry.Signature;
+                        sb.Append($"    - `{sig}`");
+                        if (!string.IsNullOrEmpty(entry.Summary))
+                            sb.Append($" - {entry.Summary}");
+                        sb.AppendLine();
+                    }
+                }
+                sb.AppendLine();
+                continue;
+            }
+
             foreach (var entry in group.OrderBy(e => e.Name))
             {
                 if (entry.Type == ApiEntryType.Extension)
@@ -121,6 +146,18 @@ public sealed class FExApiTools
 
         return sb.ToString();
     }
+
+    private static string Plural(ApiEntryType type) => type switch
+    {
+        ApiEntryType.Class => "Classes",
+        ApiEntryType.Interface => "Interfaces",
+        ApiEntryType.Enum => "Enums",
+        ApiEntryType.Extension => "Extensions",
+        ApiEntryType.Constructor => "Constructors",
+        ApiEntryType.Method => "Methods",
+        ApiEntryType.Property => "Properties",
+        _ => type + "s"
+    };
 
     [McpServerTool(Name = "check_fex_freshness")]
     [Description("Check if the FEx API surface TOML files are up to date with the current git HEAD.")]

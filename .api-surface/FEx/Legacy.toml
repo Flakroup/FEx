@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Legacy"
-path = "rc\\FEx.Legacy"
+path = "src\\FEx.Legacy"
 
 [[classes]]
 name = "FExLegacy"

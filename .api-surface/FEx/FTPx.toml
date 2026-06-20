@@ -1,6 +1,6 @@
 [project]
 name = "FEx.FTPx"
-path = "rc\\FEx.FTPx"
+path = "src\\FEx.FTPx"
 
 [[classes]]
 name = "FtpClientFactory"

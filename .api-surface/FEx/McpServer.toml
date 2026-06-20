@@ -1,6 +1,6 @@
 [project]
 name = "FEx.McpServer"
-path = "ools\\FEx.McpServer"
+path = "tools\\FEx.McpServer"
 
 [[classes]]
 name = "ApiEntry"

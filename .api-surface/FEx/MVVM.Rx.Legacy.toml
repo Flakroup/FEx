@@ -1,6 +1,6 @@
 [project]
 name = "FEx.MVVM.Rx.Legacy"
-path = "rc\\FEx.MVVM.Rx.Legacy"
+path = "src\\FEx.MVVM.Rx.Legacy"
 
 [[classes]]
 name = "FExMvvmRx"

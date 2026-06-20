@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Json"
-path = "rc\\FEx.Json"
+path = "src\\FEx.Json"
 
 [[classes]]
 name = "FExJson"
@@ -45,9 +45,7 @@ static = true
 
 [[extensions]]
 name = "ToJson"
-sig = "string ToJson(this object self,
-                                JsonSerializerSettings settings,
-                                Formatting formatting)"
+sig = "string ToJson(this object self, JsonSerializerSettings settings, Formatting formatting)"
 returns = "string"
 file = "Extensions\\JsonExtensions.cs"
 

@@ -1,6 +1,6 @@
 [project]
 name = "FEx.AzureStorage"
-path = "rc\\FEx.AzureStorage"
+path = "src\\FEx.AzureStorage"
 
 [[classes]]
 name = "AzureStorageConfiguration"
@@ -53,7 +53,10 @@ file = "Extensions\\AzureStorageServiceExtensions.cs"
 [[extensions]]
 name = "CopyBlobAsync"
 sig = "Task<(CloudBlockBlob blob, bool isSuccess)> CopyBlobAsync(
-        this IAzureStorageService service, string containerName, string srcBlob, string destBlob)"
+        this IAzureStorageService service,
+        string containerName,
+        string srcBlob,
+        string destBlob)"
 returns = "Task<(CloudBlockBlob blob, bool isSuccess)>"
 file = "Extensions\\AzureStorageServiceExtensions.cs"
 
@@ -65,8 +68,10 @@ file = "Extensions\\AzureStorageServiceExtensions.cs"
 
 [[extensions]]
 name = "DownloadLatestBlobsAsync"
-sig = "Task<bool> DownloadLatestBlobsAsync(
-        this IAzureStorageService service, string downloadDir, string containerName, params string[] paths)"
+sig = "Task<bool> DownloadLatestBlobsAsync(this IAzureStorageService service,
+                                                      string downloadDir,
+                                                      string containerName,
+                                                      params string[] paths)"
 returns = "Task<bool>"
 file = "Extensions\\AzureStorageServiceExtensions.cs"
 
@@ -78,8 +83,10 @@ file = "Extensions\\AzureStorageServiceExtensions.cs"
 
 [[extensions]]
 name = "ExistsAsync"
-sig = "Task<bool> ExistsAsync(
-        this IAzureStorageService service, string containerName, string path, string fileName)"
+sig = "Task<bool> ExistsAsync(this IAzureStorageService service,
+                                         string containerName,
+                                         string path,
+                                         string fileName)"
 returns = "Task<bool>"
 file = "Extensions\\AzureStorageServiceExtensions.cs"
 
@@ -92,14 +99,21 @@ file = "Extensions\\AzureStorageServiceExtensions.cs"
 [[extensions]]
 name = "UploadFileAsync"
 sig = "Task<(FileInfo file, CloudBlockBlobInfo blob)> UploadFileAsync(
-        this IAzureStorageService service, string path, bool overwrite, FileInfo file)"
+        this IAzureStorageService service,
+        string path,
+        bool overwrite,
+        FileInfo file)"
 returns = "Task<(FileInfo file, CloudBlockBlobInfo blob)>"
 file = "Extensions\\AzureStorageServiceExtensions.cs"
 
 [[extensions]]
 name = "UploadStreamAsync"
 sig = "Task<(string file, CloudBlockBlob blob)> UploadStreamAsync(
-        this IAzureStorageService service, string path, bool overwrite, string fileName, Stream stream)"
+        this IAzureStorageService service,
+        string path,
+        bool overwrite,
+        string fileName,
+        Stream stream)"
 returns = "Task<(string file, CloudBlockBlob blob)>"
 file = "Extensions\\AzureStorageServiceExtensions.cs"
 

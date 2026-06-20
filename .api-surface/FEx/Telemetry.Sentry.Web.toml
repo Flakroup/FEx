@@ -1,0 +1,17 @@
+[project]
+name = "FEx.Telemetry.Sentry.Web"
+path = "src\\FEx.Telemetry.Sentry.Web"
+
+[[classes]]
+name = "FExSentryWebExtensions"
+ns = "FEx.Telemetry.Sentry.Web"
+file = "FExSentryWebExtensions.cs"
+static = true
+
+[[extensions]]
+name = "AddFExSentry"
+sig = "WebApplicationBuilder AddFExSentry(this WebApplicationBuilder builder,
+                                                     string envVarOverride = \"SENTRY_DSN\")"
+returns = "WebApplicationBuilder"
+file = "FExSentryWebExtensions.cs"
+

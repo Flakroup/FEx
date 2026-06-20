@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Logging.Tests"
-path = "est\\FEx.Logging.Tests"
+path = "test\\FEx.Logging.Tests"
 
 [[classes]]
 name = "BasicLoggingTests"

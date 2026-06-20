@@ -85,6 +85,11 @@ public sealed class TomlApiSurfaceReader
         int enumCount = LoadEntries(sections, "enums", ApiEntryType.Enum, projectName);
         int extCount = LoadEntries(sections, "extensions", ApiEntryType.Extension, projectName);
 
+        // Member entries (declared per type) - not counted in ProjectInfo, surfaced via search/get_project.
+        LoadEntries(sections, "ctors", ApiEntryType.Constructor, projectName);
+        LoadEntries(sections, "methods", ApiEntryType.Method, projectName);
+        LoadEntries(sections, "properties", ApiEntryType.Property, projectName);
+
         _projects.Add(new ProjectInfo
         {
             Name = projectName,
@@ -118,7 +123,8 @@ public sealed class TomlApiSurfaceReader
                 Signature = GetValue(item, "sig"),
                 Returns = GetValue(item, "returns"),
                 Base = GetValue(item, "base"),
-                IsStatic = GetValue(item, "static") == "true"
+                IsStatic = GetValue(item, "static") == "true",
+                Parent = GetValue(item, "parent")
             });
         }
 
@@ -140,7 +146,8 @@ public sealed class TomlApiSurfaceReader
                 e.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 e.Namespace.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 e.Summary.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                e.Signature.Contains(query, StringComparison.OrdinalIgnoreCase))
+                e.Signature.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                e.Parent.Contains(query, StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(e => e.Name.Equals(query, StringComparison.OrdinalIgnoreCase))
             .ThenByDescending(e => e.Name.StartsWith(query, StringComparison.OrdinalIgnoreCase))
             .ThenBy(e => e.Name)

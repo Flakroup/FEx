@@ -5,7 +5,10 @@ public enum ApiEntryType
     Class,
     Interface,
     Enum,
-    Extension
+    Extension,
+    Constructor,
+    Method,
+    Property
 }
 
 public sealed class ApiEntry
@@ -20,6 +23,11 @@ public sealed class ApiEntry
     public string Returns { get; init; } = "";
     public string Base { get; init; } = "";
     public bool IsStatic { get; init; }
+
+    // Declaring type for member entries (Constructor/Method/Property); empty for top-level types.
+    public string Parent { get; init; } = "";
+
+    public bool IsMember => Type is ApiEntryType.Constructor or ApiEntryType.Method or ApiEntryType.Property;
 }
 
 public sealed class ProjectInfo

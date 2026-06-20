@@ -8,10 +8,37 @@ ns = "FEx.Platforms"
 base = "FExInitializable"
 file = "FExPlatforms.cs"
 
+[[properties]]
+parent = "FExPlatforms"
+name = "RegistryService"
+sig = "static IRegistryService RegistryService { get; }"
+returns = "IRegistryService"
+file = "FExPlatforms.cs"
+static = true
+
+[[ctors]]
+parent = "FExPlatforms"
+sig = "FExPlatforms(IRegistryService registryService)"
+file = "FExPlatforms.cs"
+
+[[methods]]
+parent = "FExPlatforms"
+name = "OnInitialize"
+sig = "void OnInitialize()"
+returns = "void"
+file = "FExPlatforms.cs"
+
 [[classes]]
 name = "FExPlatformsModule"
 ns = "FEx.Platforms"
 base = "InitializeModule<IFExPlatformsContainer, IServiceCollection>"
+file = "FExPlatformsModule.cs"
+
+[[methods]]
+parent = "FExPlatformsModule"
+name = "RegisterServices"
+sig = "void RegisterServices(IFExPlatformsContainer container, IServiceCollection services)"
+returns = "void"
 file = "FExPlatformsModule.cs"
 
 [[classes]]
@@ -20,21 +47,136 @@ ns = "FEx.Platforms"
 base = "IRegistryService"
 file = "RegistryService.cs"
 
-[[interfaces]]
-name = "IFExPlatformsContainer"
-ns = "FEx.Platforms.Abstractions.Interfaces"
-file = "Abstractions\\Interfaces\\IFExPlatformsContainer.cs"
+[[properties]]
+parent = "RegistryService"
+name = "Instance"
+sig = "static RegistryService Instance { get; }"
+returns = "RegistryService"
+file = "RegistryService.cs"
+static = true
 
-[[interfaces]]
-name = "IRegistryService"
-ns = "FEx.Platforms.Abstractions.Interfaces"
-file = "Abstractions\\Interfaces\\IRegistryService.cs"
+[[methods]]
+parent = "RegistryService"
+name = "GetInstalledApplications"
+sig = "List<RegistryKey> GetInstalledApplications()"
+returns = "List<RegistryKey>"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetVersionFromRegistry"
+sig = "List<Version> GetVersionFromRegistry()"
+returns = "List<Version>"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "Get45PlusFromRegistry"
+sig = "List<Version> Get45PlusFromRegistry()"
+returns = "List<Version>"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetClassesRootSubKey"
+sig = "RegistryKey GetClassesRootSubKey(string subKey, bool writable)"
+returns = "RegistryKey"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetLocalMachineSubKey"
+sig = "RegistryKey GetLocalMachineSubKey(string subKey, bool writable)"
+returns = "RegistryKey"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetCurrentUserSubKey"
+sig = "RegistryKey GetCurrentUserSubKey(string subKey, bool writable)"
+returns = "RegistryKey"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetSubKey"
+sig = "RegistryKey GetSubKey(RegistryKey registry, string subKey, bool writable)"
+returns = "RegistryKey"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetOrAddCurrentUserSubKey"
+sig = "RegistryKey GetOrAddCurrentUserSubKey(string subKey, bool writable)"
+returns = "RegistryKey"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetOrAddLocalMachineSubKey"
+sig = "RegistryKey GetOrAddLocalMachineSubKey(string subKey, bool writable)"
+returns = "RegistryKey"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "SetStartup"
+sig = "void SetStartup(string appName, string executablePath, bool enable, bool global)"
+returns = "void"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetStandardBrowserPath"
+sig = "string GetStandardBrowserPath()"
+returns = "string"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetDefaultExtension"
+sig = "string GetDefaultExtension(string mimeType)"
+returns = "string"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetDefaultMimeType"
+sig = "string GetDefaultMimeType(string extension)"
+returns = "string"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetDefaultExtension"
+sig = "string GetDefaultExtension(MediaTypes mediaType)"
+returns = "string"
+file = "RegistryService.cs"
+
+[[methods]]
+parent = "RegistryService"
+name = "GetOrAddRegistryKeyStringValue"
+sig = "string GetOrAddRegistryKeyStringValue(string path, string keyName, Func<string> getNewValue)"
+returns = "string"
+file = "RegistryService.cs"
 
 [[classes]]
 name = "RegistryKeyExtensions"
 ns = "FEx.Platforms.Extensions"
 file = "Extensions\\RegistryKeyExtensions.cs"
 static = true
+
+[[extensions]]
+name = "GetKeyValue"
+returns = "T"
+sig = "T GetKeyValue<T>(this RegistryKey reg, string keyName, T fallback)"
+file = "Extensions\\RegistryKeyExtensions.cs"
+
+[[extensions]]
+name = "GetKeyValue"
+returns = "T"
+sig = "T GetKeyValue<T>(this RegistryKey reg, string keyName)"
+file = "Extensions\\RegistryKeyExtensions.cs"
 
 [[classes]]
 name = "RegistryServiceExtensions"
@@ -44,43 +186,159 @@ static = true
 
 [[extensions]]
 name = "GetClassesRootSubKey"
-sig = "RegistryKey GetClassesRootSubKey(this IRegistryService service, string subKey)"
 returns = "RegistryKey"
+sig = "RegistryKey GetClassesRootSubKey(this IRegistryService service, string subKey)"
 file = "Extensions\\RegistryServiceExtensions.cs"
 
 [[extensions]]
 name = "GetLocalMachineSubKey"
-sig = "RegistryKey GetLocalMachineSubKey(this IRegistryService service, string subKey)"
 returns = "RegistryKey"
+sig = "RegistryKey GetLocalMachineSubKey(this IRegistryService service, string subKey)"
 file = "Extensions\\RegistryServiceExtensions.cs"
 
 [[extensions]]
 name = "GetCurrentUserSubKey"
-sig = "RegistryKey GetCurrentUserSubKey(this IRegistryService service, string subKey)"
 returns = "RegistryKey"
+sig = "RegistryKey GetCurrentUserSubKey(this IRegistryService service, string subKey)"
 file = "Extensions\\RegistryServiceExtensions.cs"
 
 [[extensions]]
 name = "GetSubKey"
-sig = "RegistryKey GetSubKey(this IRegistryService service, RegistryKey registry, string subKey)"
 returns = "RegistryKey"
+sig = "RegistryKey GetSubKey(this IRegistryService service, RegistryKey registry, string subKey)"
 file = "Extensions\\RegistryServiceExtensions.cs"
 
 [[extensions]]
 name = "GetOrAddCurrentUserSubKey"
-sig = "RegistryKey GetOrAddCurrentUserSubKey(this IRegistryService service, string subKey)"
 returns = "RegistryKey"
+sig = "RegistryKey GetOrAddCurrentUserSubKey(this IRegistryService service, string subKey)"
 file = "Extensions\\RegistryServiceExtensions.cs"
 
 [[extensions]]
 name = "GetOrAddLocalMachineSubKey"
-sig = "RegistryKey GetOrAddLocalMachineSubKey(this IRegistryService service, string subKey)"
 returns = "RegistryKey"
+sig = "RegistryKey GetOrAddLocalMachineSubKey(this IRegistryService service, string subKey)"
 file = "Extensions\\RegistryServiceExtensions.cs"
 
 [[extensions]]
 name = "SetStartup"
-sig = "void SetStartup(this IRegistryService service, string appName, string executablePath, bool enable)"
 returns = "void"
+sig = "void SetStartup(this IRegistryService service, string appName, string executablePath, bool enable)"
 file = "Extensions\\RegistryServiceExtensions.cs"
+
+[[interfaces]]
+name = "IFExPlatformsContainer"
+ns = "FEx.Platforms.Abstractions.Interfaces"
+base = "IContainer<IRegistryService>, IContainer<FExPlatforms>"
+file = "Abstractions\\Interfaces\\IFExPlatformsContainer.cs"
+
+[[interfaces]]
+name = "IRegistryService"
+ns = "FEx.Platforms.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetInstalledApplications"
+sig = "List<RegistryKey> GetInstalledApplications()"
+returns = "List<RegistryKey>"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetVersionFromRegistry"
+sig = "List<Version> GetVersionFromRegistry()"
+returns = "List<Version>"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "Get45PlusFromRegistry"
+sig = "List<Version> Get45PlusFromRegistry()"
+returns = "List<Version>"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetClassesRootSubKey"
+sig = "RegistryKey GetClassesRootSubKey(string subKey, bool writable)"
+returns = "RegistryKey"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetLocalMachineSubKey"
+sig = "RegistryKey GetLocalMachineSubKey(string subKey, bool writable)"
+returns = "RegistryKey"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetCurrentUserSubKey"
+sig = "RegistryKey GetCurrentUserSubKey(string subKey, bool writable)"
+returns = "RegistryKey"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetSubKey"
+sig = "RegistryKey GetSubKey(RegistryKey registry, string subKey, bool writable)"
+returns = "RegistryKey"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetOrAddCurrentUserSubKey"
+sig = "RegistryKey GetOrAddCurrentUserSubKey(string subKey, bool writable)"
+returns = "RegistryKey"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetOrAddLocalMachineSubKey"
+sig = "RegistryKey GetOrAddLocalMachineSubKey(string subKey, bool writable)"
+returns = "RegistryKey"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "SetStartup"
+sig = "void SetStartup(string appName, string executablePath, bool enable, bool global)"
+returns = "void"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetStandardBrowserPath"
+sig = "string GetStandardBrowserPath()"
+returns = "string"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetDefaultExtension"
+sig = "string GetDefaultExtension(string mimeType)"
+returns = "string"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetDefaultExtension"
+sig = "string GetDefaultExtension(MediaTypes mediaType)"
+returns = "string"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetDefaultMimeType"
+sig = "string GetDefaultMimeType(string extension)"
+returns = "string"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
+
+[[methods]]
+parent = "IRegistryService"
+name = "GetOrAddRegistryKeyStringValue"
+sig = "string GetOrAddRegistryKeyStringValue(string path, string keyName, Func<string> getNewValue)"
+returns = "string"
+file = "Abstractions\\Interfaces\\IRegistryService.cs"
 

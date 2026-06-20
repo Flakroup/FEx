@@ -8,10 +8,85 @@ ns = "FEx.Logging"
 base = "IPlatformLogger"
 file = "DefaultPlatformLogger.cs"
 
+[[methods]]
+parent = "DefaultPlatformLogger"
+name = "Log"
+sig = "void Log(string message, LogEvent logEvent)"
+returns = "void"
+file = "DefaultPlatformLogger.cs"
+
 [[classes]]
 name = "FExLoggingConfigurator"
 ns = "FEx.Logging"
 base = "IFExLoggingConfigurator"
+file = "FExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "FExLoggingConfigurator"
+name = "IsLoggingEnabled"
+sig = "bool IsLoggingEnabled { get; }"
+returns = "bool"
+file = "FExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "FExLoggingConfigurator"
+name = "Priority"
+sig = "ConfigurationPriority Priority { get; }"
+returns = "ConfigurationPriority"
+file = "FExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "FExLoggingConfigurator"
+name = "Overrides"
+sig = "IList<string> Overrides { get; set; }"
+returns = "IList<string>"
+file = "FExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "FExLoggingConfigurator"
+name = "ExternalLoggingLevel"
+sig = "LogEventLevel ExternalLoggingLevel { get; set; }"
+returns = "LogEventLevel"
+file = "FExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "FExLoggingConfigurator"
+name = "ExternalDebugLoggingLevel"
+sig = "LogEventLevel ExternalDebugLoggingLevel { get; set; }"
+returns = "LogEventLevel"
+file = "FExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "FExLoggingConfigurator"
+name = "CfgFunc"
+sig = "Func<LoggerConfiguration, LoggerConfiguration> CfgFunc { get; set; }"
+returns = "Func<LoggerConfiguration, LoggerConfiguration>"
+file = "FExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "FExLoggingConfigurator"
+name = "Configuration"
+sig = "LoggerConfiguration Configuration { get; }"
+returns = "LoggerConfiguration"
+file = "FExLoggingConfigurator.cs"
+
+[[ctors]]
+parent = "FExLoggingConfigurator"
+sig = "FExLoggingConfigurator(ILoggingConfiguration loggingConfiguration, ISinkConfigurator[] sinkConfigurators)"
+file = "FExLoggingConfigurator.cs"
+
+[[methods]]
+parent = "FExLoggingConfigurator"
+name = "Configure"
+sig = "void Configure()"
+returns = "void"
+file = "FExLoggingConfigurator.cs"
+
+[[methods]]
+parent = "FExLoggingConfigurator"
+name = "GetLogFiles"
+sig = "IEnumerable<FileInfo> GetLogFiles()"
+returns = "IEnumerable<FileInfo>"
 file = "FExLoggingConfigurator.cs"
 
 [[classes]]
@@ -20,18 +95,412 @@ ns = "FEx.Logging"
 base = "InitializeModule<IFExLoggingContainer, IServiceCollection>"
 file = "FExLoggingModule.cs"
 
+[[properties]]
+parent = "FExLoggingModule"
+name = "LoggerProviders"
+sig = "static ILoggerProvider[] LoggerProviders { get; set; }"
+returns = "ILoggerProvider[]"
+file = "FExLoggingModule.cs"
+static = true
+
+[[properties]]
+parent = "FExLoggingModule"
+name = "LoggingSrv"
+sig = "static IFExLoggingService LoggingSrv { get; }"
+returns = "IFExLoggingService"
+file = "FExLoggingModule.cs"
+static = true
+
+[[properties]]
+parent = "FExLoggingModule"
+name = "Configurator"
+sig = "static IFExLoggingConfigurator Configurator { get; }"
+returns = "IFExLoggingConfigurator"
+file = "FExLoggingModule.cs"
+static = true
+
+[[ctors]]
+parent = "FExLoggingModule"
+sig = "FExLoggingModule(IFExLoggingService loggingService, IFExLoggingConfigurator configurator)"
+file = "FExLoggingModule.cs"
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "GetSerilogLoggerFactory"
+sig = "static ILoggerFactory GetSerilogLoggerFactory(LoggerProviderCollection providerCollection)"
+returns = "ILoggerFactory"
+file = "FExLoggingModule.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "GetLoggerProviderCollection"
+sig = "static LoggerProviderCollection GetLoggerProviderCollection(ILoggerProvider[] loggerProviders)"
+returns = "LoggerProviderCollection"
+summary = "Creating a `LoggerProviderCollection` lets Serilog optionally write events through other dynamically-added MEL ILoggerProviders."
+file = "FExLoggingModule.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "CreateLogger"
+sig = "static ILogger<T> CreateLogger<T>(ILoggerFactory factory)"
+returns = "ILogger<T>"
+file = "FExLoggingModule.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "CreateLogger"
+sig = "static ILogger CreateLogger(ILoggerFactory factory)"
+returns = "ILogger"
+file = "FExLoggingModule.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "CreateLogger"
+sig = "static ILogger<T> CreateLogger<T>()"
+returns = "ILogger<T>"
+file = "FExLoggingModule.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "CreateLogger"
+sig = "static ILogger CreateLogger(Type senderType)"
+returns = "ILogger"
+file = "FExLoggingModule.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "Log"
+sig = "static void Log(string message, Type callerType, LogLevel level = LogLevel.Information, Exception exception = null)"
+returns = "void"
+file = "FExLoggingModule.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "Log"
+sig = "static void Log<T>(string message, LogLevel level = LogLevel.Information, Exception exception = null)"
+returns = "void"
+file = "FExLoggingModule.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "Configure"
+sig = "static LoggerConfiguration Configure()"
+returns = "LoggerConfiguration"
+file = "FExLoggingModule.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "OpenLogFile"
+sig = "static void OpenLogFile()"
+returns = "void"
+file = "FExLoggingModule.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "OnInitialize"
+sig = "void OnInitialize()"
+returns = "void"
+file = "FExLoggingModule.cs"
+
+[[methods]]
+parent = "FExLoggingModule"
+name = "RegisterServices"
+sig = "void RegisterServices(IFExLoggingContainer container, IServiceCollection services)"
+returns = "void"
+file = "FExLoggingModule.cs"
+
 [[classes]]
 name = "FExLoggingService"
 ns = "FEx.Logging"
 base = "IFExLoggingService"
 file = "FExLoggingService.cs"
 
+[[properties]]
+parent = "FExLoggingService"
+name = "DefaultLogger"
+sig = "ILogger DefaultLogger { get; }"
+returns = "ILogger"
+file = "FExLoggingService.cs"
+
+[[properties]]
+parent = "FExLoggingService"
+name = "Logger"
+sig = "IFExLogger Logger { get; }"
+returns = "IFExLogger"
+file = "FExLoggingService.cs"
+
+[[ctors]]
+parent = "FExLoggingService"
+sig = "FExLoggingService(ILogger<FExLoggingService> defaultLogger, IFExLogger logger)"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "GetLogger"
+sig = "IFExLogger GetLogger<T>()"
+returns = "IFExLogger"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "GetLogger"
+sig = "IFExLogger GetLogger(object sender)"
+returns = "IFExLogger"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogCritical"
+sig = "void LogCritical<T>(string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogDebug"
+sig = "void LogDebug<T>(string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogError"
+sig = "void LogError<T>(string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogInformation"
+sig = "void LogInformation<T>(string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogTrace"
+sig = "void LogTrace<T>(string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogWarning"
+sig = "void LogWarning<T>(string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "Log"
+sig = "void Log<T>(LogLevel logLevel, string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogCritical"
+sig = "void LogCritical(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogDebug"
+sig = "void LogDebug(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogError"
+sig = "void LogError(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogInformation"
+sig = "void LogInformation(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogTrace"
+sig = "void LogTrace(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "LogWarning"
+sig = "void LogWarning(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
+[[methods]]
+parent = "FExLoggingService"
+name = "Log"
+sig = "void Log(object sender, LogLevel logLevel, string message, Exception exception = null)"
+returns = "void"
+file = "FExLoggingService.cs"
+
 [[classes]]
 name = "FExSerilogLogger"
 ns = "FEx.Logging"
-base = "IFExLogger, IDisposable
-#pragma warning restore IDISP025"
+base = "IFExLogger, IDisposable"
 summary = "Serilog-backed implementation of IFExLogger. Maps Critical → Serilog.Fatal, implements structured logging via LogContext."
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Trace"
+sig = "void Trace(string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Trace"
+sig = "void Trace(Exception exception, string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Debug"
+sig = "void Debug(string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Debug"
+sig = "void Debug(Exception exception, string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Information"
+sig = "void Information(string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Information"
+sig = "void Information(Exception exception, string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Warning"
+sig = "void Warning(string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Warning"
+sig = "void Warning(Exception exception, string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Error"
+sig = "void Error(string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Error"
+sig = "void Error(Exception exception, string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Critical"
+sig = "void Critical(string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Critical"
+sig = "void Critical(Exception exception, string message)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "BeginScope"
+sig = "IDisposable BeginScope<TState>(TState state)"
+returns = "IDisposable"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "BeginLabeledScope"
+sig = "IDisposable BeginLabeledScope(params (string, object)[] state)"
+returns = "IDisposable"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "BeginLabeledScope"
+sig = "IDisposable BeginLabeledScope(IDictionary<string, object> argsCustom)"
+returns = "IDisposable"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "BeginLabeledScope"
+sig = "IDisposable BeginLabeledScope(ILoggerState state)"
+returns = "IDisposable"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "EndScope"
+sig = "void EndScope()"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "AddOrUpdateLabel"
+sig = "void AddOrUpdateLabel(string key, object value)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "RemoveLabel"
+sig = "void RemoveLabel(string key)"
+returns = "void"
+file = "FExSerilogLogger.cs"
+
+[[methods]]
+parent = "FExSerilogLogger"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
 file = "FExSerilogLogger.cs"
 
 [[classes]]
@@ -40,10 +509,69 @@ ns = "FEx.Logging"
 base = "ILoggingConfiguration"
 file = "LoggingConfiguration.cs"
 
+[[properties]]
+parent = "LoggingConfiguration"
+name = "IsLoggingEnabled"
+sig = "bool IsLoggingEnabled { get; }"
+returns = "bool"
+file = "LoggingConfiguration.cs"
+
+[[properties]]
+parent = "LoggingConfiguration"
+name = "Options"
+sig = "LoggingOptions Options { get; }"
+returns = "LoggingOptions"
+file = "LoggingConfiguration.cs"
+
+[[ctors]]
+parent = "LoggingConfiguration"
+sig = "LoggingConfiguration()"
+file = "LoggingConfiguration.cs"
+
+[[methods]]
+parent = "LoggingConfiguration"
+name = "EnableLogOption"
+sig = "void EnableLogOption(LoggingOptions option)"
+returns = "void"
+file = "LoggingConfiguration.cs"
+
+[[methods]]
+parent = "LoggingConfiguration"
+name = "DisableLogOption"
+sig = "void DisableLogOption(LoggingOptions option)"
+returns = "void"
+file = "LoggingConfiguration.cs"
+
+[[methods]]
+parent = "LoggingConfiguration"
+name = "HasOption"
+sig = "bool HasOption(LoggingOptions option)"
+returns = "bool"
+file = "LoggingConfiguration.cs"
+
+[[methods]]
+parent = "LoggingConfiguration"
+name = "Configure"
+sig = "void Configure(Func<LoggingOptions, LoggingOptions> configurator)"
+returns = "void"
+file = "LoggingConfiguration.cs"
+
 [[classes]]
 name = "PlatformSink"
 ns = "FEx.Logging.Sinks"
 base = "ILogEventSink"
+file = "Sinks\\PlatformSink.cs"
+
+[[ctors]]
+parent = "PlatformSink"
+sig = "PlatformSink(ITextFormatter formatter, IPlatformLogger platformLogger)"
+file = "Sinks\\PlatformSink.cs"
+
+[[methods]]
+parent = "PlatformSink"
+name = "Emit"
+sig = "void Emit(LogEvent logEvent)"
+returns = "void"
 file = "Sinks\\PlatformSink.cs"
 
 [[classes]]
@@ -52,10 +580,118 @@ ns = "FEx.Logging.Sinks.Configurations"
 base = "SinkConfiguratorBase, IFileSinkConfigurator"
 file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
 
+[[properties]]
+parent = "AsyncFileSinkConfigurator"
+name = "OutputTemplate"
+sig = "string OutputTemplate { get; set; }"
+returns = "string"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
+[[properties]]
+parent = "AsyncFileSinkConfigurator"
+name = "FileSizeLimitBytes"
+sig = "int FileSizeLimitBytes { get; set; }"
+returns = "int"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
+[[properties]]
+parent = "AsyncFileSinkConfigurator"
+name = "RollingInterval"
+sig = "RollingInterval RollingInterval { get; set; }"
+returns = "RollingInterval"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
+[[properties]]
+parent = "AsyncFileSinkConfigurator"
+name = "RetainedFileCountLimit"
+sig = "int RetainedFileCountLimit { get; set; }"
+returns = "int"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
+[[properties]]
+parent = "AsyncFileSinkConfigurator"
+name = "RetainedFileTimeLimit"
+sig = "TimeSpan RetainedFileTimeLimit { get; set; }"
+returns = "TimeSpan"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
+[[properties]]
+parent = "AsyncFileSinkConfigurator"
+name = "MinimumLevel"
+sig = "LogEventLevel MinimumLevel { get; set; }"
+returns = "LogEventLevel"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
+[[properties]]
+parent = "AsyncFileSinkConfigurator"
+name = "LogFileName"
+sig = "string LogFileName { get; set; }"
+returns = "string"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
+[[properties]]
+parent = "AsyncFileSinkConfigurator"
+name = "CustomLogFilePath"
+sig = "string CustomLogFilePath { get; set; }"
+returns = "string"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
+[[ctors]]
+parent = "AsyncFileSinkConfigurator"
+sig = "AsyncFileSinkConfigurator(ILoggingConfiguration loggingConfiguration, IAppInfoProvider appInfoProvider)"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
+[[methods]]
+parent = "AsyncFileSinkConfigurator"
+name = "GetLogFiles"
+sig = "IEnumerable<FileInfo> GetLogFiles()"
+returns = "IEnumerable<FileInfo>"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
+[[methods]]
+parent = "AsyncFileSinkConfigurator"
+name = "ConfigureSink"
+sig = "LoggerConfiguration ConfigureSink(LoggerSinkConfiguration writeTo)"
+returns = "LoggerConfiguration"
+file = "Sinks\\Configurations\\AsyncFileSinkConfigurator.cs"
+
 [[classes]]
 name = "ConsoleSinkConfigurator"
 ns = "FEx.Logging.Sinks.Configurations"
 base = "SinkConfiguratorBase"
+file = "Sinks\\Configurations\\ConsoleSinkConfigurator.cs"
+
+[[properties]]
+parent = "ConsoleSinkConfigurator"
+name = "OutputTemplate"
+sig = "string OutputTemplate { get; set; }"
+returns = "string"
+file = "Sinks\\Configurations\\ConsoleSinkConfigurator.cs"
+
+[[properties]]
+parent = "ConsoleSinkConfigurator"
+name = "MinimumLevel"
+sig = "LogEventLevel MinimumLevel { get; set; }"
+returns = "LogEventLevel"
+file = "Sinks\\Configurations\\ConsoleSinkConfigurator.cs"
+
+[[properties]]
+parent = "ConsoleSinkConfigurator"
+name = "Theme"
+sig = "ConsoleTheme Theme { get; set; }"
+returns = "ConsoleTheme"
+file = "Sinks\\Configurations\\ConsoleSinkConfigurator.cs"
+
+[[ctors]]
+parent = "ConsoleSinkConfigurator"
+sig = "ConsoleSinkConfigurator(ILoggingConfiguration loggingConfiguration)"
+file = "Sinks\\Configurations\\ConsoleSinkConfigurator.cs"
+
+[[methods]]
+parent = "ConsoleSinkConfigurator"
+name = "ConfigureSink"
+sig = "LoggerConfiguration ConfigureSink(LoggerSinkConfiguration writeTo)"
+returns = "LoggerConfiguration"
 file = "Sinks\\Configurations\\ConsoleSinkConfigurator.cs"
 
 [[classes]]
@@ -64,9 +700,47 @@ ns = "FEx.Logging.Sinks.Configurations"
 base = "SinkConfiguratorBase"
 file = "Sinks\\Configurations\\DebugSinkConfigurator.cs"
 
+[[properties]]
+parent = "DebugSinkConfigurator"
+name = "OutputTemplate"
+sig = "string OutputTemplate { get; set; }"
+returns = "string"
+file = "Sinks\\Configurations\\DebugSinkConfigurator.cs"
+
+[[properties]]
+parent = "DebugSinkConfigurator"
+name = "MinimumLevel"
+sig = "LogEventLevel MinimumLevel { get; set; }"
+returns = "LogEventLevel"
+file = "Sinks\\Configurations\\DebugSinkConfigurator.cs"
+
+[[ctors]]
+parent = "DebugSinkConfigurator"
+sig = "DebugSinkConfigurator(ILoggingConfiguration loggingConfiguration)"
+file = "Sinks\\Configurations\\DebugSinkConfigurator.cs"
+
+[[methods]]
+parent = "DebugSinkConfigurator"
+name = "ConfigureSink"
+sig = "LoggerConfiguration ConfigureSink(LoggerSinkConfiguration writeTo)"
+returns = "LoggerConfiguration"
+file = "Sinks\\Configurations\\DebugSinkConfigurator.cs"
+
 [[classes]]
 name = "PlatformSinkConfigurator"
 ns = "FEx.Logging.Sinks.Configurations"
 base = "SinkConfiguratorBase"
+file = "Sinks\\Configurations\\PlatformSinkConfigurator.cs"
+
+[[ctors]]
+parent = "PlatformSinkConfigurator"
+sig = "PlatformSinkConfigurator(IPlatformLogger platformLogger, ILoggingConfiguration loggingConfiguration)"
+file = "Sinks\\Configurations\\PlatformSinkConfigurator.cs"
+
+[[methods]]
+parent = "PlatformSinkConfigurator"
+name = "ConfigureSink"
+sig = "LoggerConfiguration ConfigureSink(LoggerSinkConfiguration writeTo)"
+returns = "LoggerConfiguration"
 file = "Sinks\\Configurations\\PlatformSinkConfigurator.cs"
 

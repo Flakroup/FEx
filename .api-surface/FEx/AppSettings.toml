@@ -8,10 +8,52 @@ ns = "FEx.AppSettings"
 base = "IConfigurationService"
 file = "ConfigurationService.cs"
 
+[[properties]]
+parent = "ConfigurationService"
+name = "Configuration"
+sig = "IConfigurationRoot Configuration { get; }"
+returns = "IConfigurationRoot"
+file = "ConfigurationService.cs"
+
+[[properties]]
+parent = "ConfigurationService"
+name = "AppSettings"
+sig = "Dictionary<string, string> AppSettings { get; }"
+returns = "Dictionary<string, string>"
+file = "ConfigurationService.cs"
+
+[[methods]]
+parent = "ConfigurationService"
+name = "Build"
+sig = "void Build(IEnumerable<IConfigurationSource> sources)"
+returns = "void"
+file = "ConfigurationService.cs"
+
+[[methods]]
+parent = "ConfigurationService"
+name = "GetSetting"
+sig = "T GetSetting<T>(string key, Func<string, T> func)"
+returns = "T"
+file = "ConfigurationService.cs"
+
+[[methods]]
+parent = "ConfigurationService"
+name = "GetBoolSetting"
+sig = "bool? GetBoolSetting(string key, bool? defaultValue)"
+returns = "bool?"
+file = "ConfigurationService.cs"
+
 [[classes]]
 name = "FExAppSettings"
 ns = "FEx.AppSettings"
 base = "FExInitializable"
+file = "FExAppSettings.cs"
+
+[[methods]]
+parent = "FExAppSettings"
+name = "OnInitialize"
+sig = "void OnInitialize()"
+returns = "void"
 file = "FExAppSettings.cs"
 
 [[classes]]
@@ -20,9 +62,17 @@ ns = "FEx.AppSettings"
 base = "InitializeModule<IFExAppSettingsModule, IServiceCollection>"
 file = "FExAppSettingsModule.cs"
 
+[[methods]]
+parent = "FExAppSettingsModule"
+name = "RegisterServices"
+sig = "void RegisterServices(IFExAppSettingsModule container, IServiceCollection services)"
+returns = "void"
+file = "FExAppSettingsModule.cs"
+
 [[interfaces]]
 name = "IFExAppSettingsModule"
 ns = "FEx.AppSettings"
+base = "IContainer<FExAppSettings>, IContainer<IConfigurationService>"
 file = "IFExAppSettingsModule.cs"
 
 [[enums]]
@@ -36,21 +86,91 @@ ns = "FEx.AppSettings.Abstractions"
 base = "SecureNotifyPropertyChanged, IBaseUserSettings"
 file = "Abstractions\\BaseUserSettings.cs"
 
+[[properties]]
+parent = "BaseUserSettings"
+name = "PersistencePath"
+sig = "string PersistencePath { get; }"
+returns = "string"
+file = "Abstractions\\BaseUserSettings.cs"
+
+[[properties]]
+parent = "BaseUserSettings"
+name = "IsAsync"
+sig = "bool IsAsync { get; }"
+returns = "bool"
+file = "Abstractions\\BaseUserSettings.cs"
+
+[[methods]]
+parent = "BaseUserSettings"
+name = "Initialize"
+sig = "void Initialize(string persistencePath, (bool hasBeenReadFromFile, bool isAsync) tuple)"
+returns = "void"
+file = "Abstractions\\BaseUserSettings.cs"
+
+[[methods]]
+parent = "BaseUserSettings"
+name = "SetProperty"
+sig = "bool SetProperty<TRet>(ref TRet backingField, TRet newValue, Action<TRet> onPropertyChanged = null, [CallerMemberName] string propertyName = null)"
+returns = "bool"
+file = "Abstractions\\BaseUserSettings.cs"
+
+[[methods]]
+parent = "BaseUserSettings"
+name = "SaveSettings"
+sig = "void SaveSettings()"
+returns = "void"
+file = "Abstractions\\BaseUserSettings.cs"
+
+[[methods]]
+parent = "BaseUserSettings"
+name = "SaveSettingsAsync"
+sig = "Task SaveSettingsAsync()"
+returns = "Task"
+file = "Abstractions\\BaseUserSettings.cs"
+
+[[methods]]
+parent = "BaseUserSettings"
+name = "SerializedInstance"
+sig = "string SerializedInstance()"
+returns = "string"
+file = "Abstractions\\BaseUserSettings.cs"
+
+[[methods]]
+parent = "BaseUserSettings"
+name = "OnCreated"
+sig = "void OnCreated()"
+returns = "void"
+file = "Abstractions\\BaseUserSettings.cs"
+
 [[classes]]
 name = "BaseUserSettings"
 ns = "FEx.AppSettings.Abstractions"
-base = "BaseUserSettings where T : BaseUserSettings, new()"
+base = "BaseUserSettings"
 file = "Abstractions\\BaseUserSettings.cs"
 
-[[interfaces]]
-name = "IBaseUserSettings"
-ns = "FEx.AppSettings.Abstractions.Interfaces"
-file = "Abstractions\\Interfaces\\IBaseUserSettings.cs"
+[[methods]]
+parent = "BaseUserSettings"
+name = "GetSettings"
+sig = "static T GetSettings(string persistencePath, bool isAsync)"
+returns = "T"
+file = "Abstractions\\BaseUserSettings.cs"
+static = true
 
-[[interfaces]]
-name = "IConfigurationService"
-ns = "FEx.AppSettings.Abstractions.Interfaces"
-file = "Abstractions\\Interfaces\\IConfigurationService.cs"
+[[methods]]
+parent = "BaseUserSettings"
+name = "GetSettings"
+sig = "static T GetSettings()"
+returns = "T"
+file = "Abstractions\\BaseUserSettings.cs"
+static = true
+
+[[methods]]
+parent = "BaseUserSettings"
+name = "GetSettings"
+sig = "static T GetSettings(string persistencePath)"
+returns = "T"
+file = "Abstractions\\BaseUserSettings.cs"
+static = true
 
 [[classes]]
 name = "LegacyConfigurationProvider"
@@ -58,9 +178,31 @@ ns = "FEx.AppSettings.ConfigurationEx"
 base = "ConfigurationProvider, IConfigurationSource"
 file = "ConfigurationEx\\LegacyConfigurationProvider.cs"
 
+[[methods]]
+parent = "LegacyConfigurationProvider"
+name = "Build"
+sig = "IConfigurationProvider Build(IConfigurationBuilder builder)"
+returns = "IConfigurationProvider"
+file = "ConfigurationEx\\LegacyConfigurationProvider.cs"
+
+[[methods]]
+parent = "LegacyConfigurationProvider"
+name = "Load"
+sig = "void Load()"
+returns = "void"
+file = "ConfigurationEx\\LegacyConfigurationProvider.cs"
+
 [[classes]]
 name = "ConfigurationManagerExtensions"
 ns = "FEx.AppSettings.Extensions"
+file = "Extensions\\ConfigurationManagerExtensions.cs"
+static = true
+
+[[methods]]
+parent = "ConfigurationManagerExtensions"
+name = "MergeAppSettings"
+sig = "static void MergeAppSettings()"
+returns = "void"
 file = "Extensions\\ConfigurationManagerExtensions.cs"
 static = true
 
@@ -72,8 +214,14 @@ static = true
 
 [[extensions]]
 name = "Build"
-sig = "void Build(this IConfigurationService service)"
 returns = "void"
+sig = "void Build(this IConfigurationService service)"
+file = "Extensions\\ConfigurationServiceExtensions.cs"
+
+[[extensions]]
+name = "GetBoolSetting"
+returns = "bool?"
+sig = "bool? GetBoolSetting(this IConfigurationService service, string key)"
 file = "Extensions\\ConfigurationServiceExtensions.cs"
 
 [[classes]]
@@ -83,16 +231,119 @@ file = "Extensions\\FExConfigurationExtensions.cs"
 static = true
 
 [[extensions]]
+name = "VerifyAppSettings"
+returns = "T"
+sig = "T VerifyAppSettings<T>(this T appSettings, params Expression<Func<T, object>>[] keys)"
+file = "Extensions\\FExConfigurationExtensions.cs"
+
+[[methods]]
+parent = "FExConfigurationExtensions"
+name = "GetBindedConfiguration"
+sig = "static TConf GetBindedConfiguration<TConf>(string sectionKey, string basePath, string settingsFilePath)"
+returns = "TConf"
+file = "Extensions\\FExConfigurationExtensions.cs"
+static = true
+
+[[methods]]
+parent = "FExConfigurationExtensions"
+name = "GetBindedConfiguration"
+sig = "static TConf GetBindedConfiguration<TConf>()"
+returns = "TConf"
+file = "Extensions\\FExConfigurationExtensions.cs"
+static = true
+
+[[methods]]
+parent = "FExConfigurationExtensions"
+name = "GetBindedConfiguration"
+sig = "static TConf GetBindedConfiguration<TConf>(string sectionKey)"
+returns = "TConf"
+file = "Extensions\\FExConfigurationExtensions.cs"
+static = true
+
+[[methods]]
+parent = "FExConfigurationExtensions"
+name = "GetBindedConfiguration"
+sig = "static TConf GetBindedConfiguration<TConf>(string sectionKey, string basePath)"
+returns = "TConf"
+file = "Extensions\\FExConfigurationExtensions.cs"
+static = true
+
+[[extensions]]
 name = "BindJsonNet"
-sig = "void BindJsonNet(this IConfigurationSection config, object instance, Func<string, string> jsonFunc)"
 returns = "void"
+sig = "void BindJsonNet(this IConfigurationSection config, object instance, Func<string, string> jsonFunc)"
 file = "Extensions\\FExConfigurationExtensions.cs"
 
 [[extensions]]
 name = "BindJsonNet"
-sig = "void BindJsonNet(this IConfigurationSection config, object instance)"
 returns = "void"
+sig = "void BindJsonNet(this IConfigurationSection config, object instance)"
 file = "Extensions\\FExConfigurationExtensions.cs"
+
+[[extensions]]
+name = "BindJsonNet"
+returns = "T"
+sig = "T BindJsonNet<T>(this IConfigurationSection config, Func<string, string> jsonFunc)"
+file = "Extensions\\FExConfigurationExtensions.cs"
+
+[[extensions]]
+name = "BindJsonNet"
+returns = "T"
+sig = "T BindJsonNet<T>(this IConfigurationSection config)"
+file = "Extensions\\FExConfigurationExtensions.cs"
+
+[[interfaces]]
+name = "IBaseUserSettings"
+ns = "FEx.AppSettings.Abstractions.Interfaces"
+base = "INotifyPropertyChanged"
+file = "Abstractions\\Interfaces\\IBaseUserSettings.cs"
+
+[[properties]]
+parent = "IBaseUserSettings"
+name = "PersistencePath"
+sig = "string PersistencePath { get; }"
+returns = "string"
+file = "Abstractions\\Interfaces\\IBaseUserSettings.cs"
+
+[[interfaces]]
+name = "IConfigurationService"
+ns = "FEx.AppSettings.Abstractions.Interfaces"
+file = "Abstractions\\Interfaces\\IConfigurationService.cs"
+
+[[properties]]
+parent = "IConfigurationService"
+name = "AppSettings"
+sig = "Dictionary<string, string> AppSettings { get; }"
+returns = "Dictionary<string, string>"
+file = "Abstractions\\Interfaces\\IConfigurationService.cs"
+
+[[properties]]
+parent = "IConfigurationService"
+name = "Configuration"
+sig = "IConfigurationRoot Configuration { get; }"
+returns = "IConfigurationRoot"
+file = "Abstractions\\Interfaces\\IConfigurationService.cs"
+
+[[methods]]
+parent = "IConfigurationService"
+name = "Build"
+sig = "void Build(IEnumerable<IConfigurationSource> sources)"
+returns = "void"
+file = "Abstractions\\Interfaces\\IConfigurationService.cs"
+
+[[methods]]
+parent = "IConfigurationService"
+name = "GetBoolSetting"
+sig = "bool? GetBoolSetting(string key, bool? defaultValue)"
+returns = "bool?"
+file = "Abstractions\\Interfaces\\IConfigurationService.cs"
+
+[[methods]]
+parent = "IConfigurationService"
+name = "GetSetting"
+sig = "T GetSetting<T>(string key, Func<string, T> func)"
+returns = "T"
+file = "Abstractions\\Interfaces\\IConfigurationService.cs"
 
 [[classes]]
 name = "SettingsExtensions"
@@ -102,8 +353,8 @@ static = true
 
 [[extensions]]
 name = "SaveAndReloadSettings"
-sig = "void SaveAndReloadSettings(this ApplicationSettingsBase settings)"
 returns = "void"
+sig = "void SaveAndReloadSettings(this ApplicationSettingsBase settings)"
 summary = "Saves the and reload settings."
 file = "Extensions\\Settings\\SettingsExtensions.cs"
 

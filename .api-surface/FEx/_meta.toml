@@ -1,8 +1,11 @@
 [meta]
 repo = "FEx"
-generated = "2026-06-19 23:22:53"
-git_commit = "3ee69e3"
-classes = 686
+generated = "2026-06-20 12:27:14"
+git_commit = "33c578a"
+classes = 692
 interfaces = 188
 enums = 44
-extensions = 485
+extensions = 833
+ctors = 431
+methods = 2643
+properties = 1643

@@ -7,9 +7,36 @@ name = "FExWebx"
 ns = "FEx.Webx"
 file = "FExWebx.cs"
 
+[[properties]]
+parent = "FExWebx"
+name = "DefaultConnectionLimit"
+sig = "static int DefaultConnectionLimit { get; set; }"
+returns = "int"
+file = "FExWebx.cs"
+static = true
+
 [[classes]]
 name = "HasInternetConnectionGate"
 ns = "FEx.Webx"
+file = "HasInternetConnectionGate.cs"
+
+[[ctors]]
+parent = "HasInternetConnectionGate"
+sig = "HasInternetConnectionGate(IExceptionHandler exceptionHandler)"
+file = "HasInternetConnectionGate.cs"
+
+[[methods]]
+parent = "HasInternetConnectionGate"
+name = "CheckAsync"
+sig = "Task<bool> CheckAsync()"
+returns = "Task<bool>"
+file = "HasInternetConnectionGate.cs"
+
+[[methods]]
+parent = "HasInternetConnectionGate"
+name = "CheckAsync"
+sig = "Task<bool> CheckAsync(Uri url)"
+returns = "Task<bool>"
 file = "HasInternetConnectionGate.cs"
 
 [[classes]]
@@ -20,14 +47,14 @@ static = true
 
 [[extensions]]
 name = "GetDefaultExtension"
-sig = "string GetDefaultExtension(this HttpResponseMessage response)"
 returns = "string"
+sig = "string GetDefaultExtension(this HttpResponseMessage response)"
 file = "Extensions\\HttpResponseExtensions.cs"
 
 [[extensions]]
 name = "GetDefaultExtension"
-sig = "string GetDefaultExtension(this HttpWebResponse response)"
 returns = "string"
+sig = "string GetDefaultExtension(this HttpWebResponse response)"
 file = "Extensions\\HttpResponseExtensions.cs"
 
 [[classes]]
@@ -35,6 +62,30 @@ name = "JsonExtensions"
 ns = "FEx.Webx.Extensions"
 file = "Extensions\\JsonExtensions.cs"
 static = true
+
+[[extensions]]
+name = "DeserializeRemoteJsonAsync"
+returns = "Task<T>"
+sig = "Task<T> DeserializeRemoteJsonAsync<T>(this Uri url)"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "DeserializeRemoteJsonAsync"
+returns = "Task<T>"
+sig = "Task<T> DeserializeRemoteJsonAsync<T>(this Uri url, JsonSerializerSettings settings)"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "DeserializeRemoteJsonAsync"
+returns = "Task<T>"
+sig = "Task<T> DeserializeRemoteJsonAsync<T>(this Uri url, JsonSerializerSettings settings, bool checkNetAvailability)"
+file = "Extensions\\JsonExtensions.cs"
+
+[[extensions]]
+name = "DeserializeRemoteJsonAsync"
+returns = "Task<T>"
+sig = "Task<T> DeserializeRemoteJsonAsync<T>(this Uri url, JsonSerializerSettings settings, bool checkNetAvailability, CancellationToken cancellationToken)"
+file = "Extensions\\JsonExtensions.cs"
 
 [[classes]]
 name = "UriExtensions"
@@ -44,25 +95,59 @@ static = true
 
 [[extensions]]
 name = "GetFileNameAsync"
-sig = "Task<string> GetFileNameAsync(this Uri url)"
 returns = "Task<string>"
+sig = "Task<string> GetFileNameAsync(this Uri url)"
+file = "Extensions\\UriExtensions.cs"
+
+[[extensions]]
+name = "GetFileNameAsync"
+returns = "Task<string>"
+sig = "Task<string> GetFileNameAsync(this Uri url, WebRequestParams pars)"
 file = "Extensions\\UriExtensions.cs"
 
 [[extensions]]
 name = "GetFileName"
+returns = "string"
 sig = "string GetFileName(this HttpWebResponse response)"
-returns = "string"
 file = "Extensions\\UriExtensions.cs"
 
 [[extensions]]
 name = "GetFileName"
-sig = "string GetFileName(this HttpResponseMessage response)"
 returns = "string"
+sig = "string GetFileName(this HttpResponseMessage response)"
+file = "Extensions\\UriExtensions.cs"
+
+[[extensions]]
+name = "DownloadStringAsync"
+returns = "Task<string>"
+sig = "Task<string> DownloadStringAsync(this Uri url)"
 file = "Extensions\\UriExtensions.cs"
 
 [[classes]]
 name = "ResponseResult"
 ns = "FEx.Webx.Models"
+file = "Models\\ResponseResult.cs"
+
+[[properties]]
+parent = "ResponseResult"
+name = "IsSuccess"
+sig = "bool IsSuccess { get; }"
+returns = "bool"
+summary = "Gets a value indicating whether this instance is success."
+file = "Models\\ResponseResult.cs"
+
+[[properties]]
+parent = "ResponseResult"
+name = "ResponseBody"
+sig = "string ResponseBody { get; }"
+returns = "string"
+summary = "Gets the response body."
+file = "Models\\ResponseResult.cs"
+
+[[ctors]]
+parent = "ResponseResult"
+sig = "ResponseResult(bool isSuccess, string responseBody)"
+summary = "Initializes a new instance of the class."
 file = "Models\\ResponseResult.cs"
 
 [[classes]]
@@ -71,22 +156,96 @@ ns = "FEx.Webx.Utilities"
 file = "Utilities\\MimeTypesUtility.cs"
 static = true
 
+[[properties]]
+parent = "MimeTypesUtility"
+name = "RegistryService"
+sig = "static IRegistryService RegistryService { get; }"
+returns = "IRegistryService"
+file = "Utilities\\MimeTypesUtility.cs"
+static = true
+
+[[properties]]
+parent = "MimeTypesUtility"
+name = "TypeMap"
+sig = "static ConcurrentDictionary<string, string> TypeMap { get; }"
+returns = "ConcurrentDictionary<string, string>"
+file = "Utilities\\MimeTypesUtility.cs"
+static = true
+
+[[properties]]
+parent = "MimeTypesUtility"
+name = "Mappings"
+sig = "static IReadOnlyDictionary<string, string> Mappings { get; }"
+returns = "IReadOnlyDictionary<string, string>"
+file = "Utilities\\MimeTypesUtility.cs"
+static = true
+
 [[extensions]]
 name = "GetDefaultExtensions"
+returns = "IReadOnlyCollection<string>"
 sig = "IReadOnlyCollection<string> GetDefaultExtensions(this MediaTypeHeaderValue contentType)"
+file = "Utilities\\MimeTypesUtility.cs"
+
+[[methods]]
+parent = "MimeTypesUtility"
+name = "GetDefaultExtensions"
+sig = "static IReadOnlyCollection<string> GetDefaultExtensions(MediaTypes mediaType)"
 returns = "IReadOnlyCollection<string>"
 file = "Utilities\\MimeTypesUtility.cs"
+static = true
+
+[[methods]]
+parent = "MimeTypesUtility"
+name = "GetDefaultExtensions"
+sig = "static IReadOnlyCollection<string> GetDefaultExtensions(string mimeType)"
+returns = "IReadOnlyCollection<string>"
+file = "Utilities\\MimeTypesUtility.cs"
+static = true
+
+[[methods]]
+parent = "MimeTypesUtility"
+name = "GetDefaultMimeType"
+sig = "static string GetDefaultMimeType(string extension)"
+returns = "string"
+file = "Utilities\\MimeTypesUtility.cs"
+static = true
 
 [[extensions]]
 name = "GetDefaultExtension"
+returns = "string"
 sig = "string GetDefaultExtension(this MediaTypeHeaderValue contentType)"
+file = "Utilities\\MimeTypesUtility.cs"
+
+[[methods]]
+parent = "MimeTypesUtility"
+name = "GetDefaultExtension"
+sig = "static string GetDefaultExtension(string contentType, string fileName)"
 returns = "string"
 file = "Utilities\\MimeTypesUtility.cs"
+static = true
 
 [[classes]]
 name = "NetworkUtilities"
 ns = "FEx.Webx.Utilities"
 summary = "Network-related utilities."
+file = "Utilities\\NetworkUtilities.cs"
+static = true
+
+[[methods]]
+parent = "NetworkUtilities"
+name = "GetAllLocalIPv4"
+sig = "static Dictionary<NetworkInterfaceType, HashSet<string>> GetAllLocalIPv4(bool omitLoopbacks = true)"
+returns = "Dictionary<NetworkInterfaceType, HashSet<string>>"
+summary = "Gets the local ip addresses."
+file = "Utilities\\NetworkUtilities.cs"
+static = true
+
+[[methods]]
+parent = "NetworkUtilities"
+name = "GetCredentials"
+sig = "static ICredentials GetCredentials(string username = \"\", string password = \"\")"
+returns = "ICredentials"
+summary = "Creates network credentials from username and password, or returns default credentials if not provided."
 file = "Utilities\\NetworkUtilities.cs"
 static = true
 

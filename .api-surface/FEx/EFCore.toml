@@ -8,28 +8,396 @@ ns = "FEx.EFCore"
 base = "FExInitializable"
 file = "FExEFCore.cs"
 
+[[ctors]]
+parent = "FExEFCore"
+sig = "FExEFCore(ISqlDbHelper sqlDbHelper)"
+file = "FExEFCore.cs"
+
+[[methods]]
+parent = "FExEFCore"
+name = "CompleteInitializationAsync"
+sig = "Task CompleteInitializationAsync()"
+returns = "Task"
+file = "FExEFCore.cs"
+
+[[methods]]
+parent = "FExEFCore"
+name = "OnInitialize"
+sig = "void OnInitialize()"
+returns = "void"
+file = "FExEFCore.cs"
+
 [[classes]]
 name = "FExEFCoreModule"
 ns = "FEx.EFCore"
 base = "InitializeModule<IFExEFCoreModule, IServiceCollection>"
 file = "FExEFCoreModule.cs"
 
+[[methods]]
+parent = "FExEFCoreModule"
+name = "RegisterServices"
+sig = "void RegisterServices(IFExEFCoreModule container, IServiceCollection services)"
+returns = "void"
+file = "FExEFCoreModule.cs"
+
 [[interfaces]]
 name = "IFExEFCoreModule"
 ns = "FEx.EFCore"
+base = "IContainer<ResilientTransaction>, IContainer<ISqlDbHelper>"
 file = "IFExEFCoreModule.cs"
-
-[[classes]]
-name = "IsExternalInit"
-ns = "System.Runtime.CompilerServices"
-file = "IsExternalInit.cs"
-static = true
 
 [[classes]]
 name = "SynchronizedDictionary"
 ns = "FEx.EFCore.Collections"
-base = "AsyncInitializable, IReadOnlyCollection<TValue>
-    where TKey : IEquatable<TKey> where TValue : class, INotifyPropertyChanged where TDbCtx : DbContext"
+base = "AsyncInitializable, IReadOnlyCollection<TValue>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[properties]]
+parent = "SynchronizedDictionary"
+name = "Index"
+sig = "ConcurrentHashSet<TKey> Index { get; }"
+returns = "ConcurrentHashSet<TKey>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[properties]]
+parent = "SynchronizedDictionary"
+name = "UseIndex"
+sig = "bool UseIndex { get; set; }"
+returns = "bool"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[properties]]
+parent = "SynchronizedDictionary"
+name = "Count"
+sig = "int Count { get; }"
+returns = "int"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[properties]]
+parent = "SynchronizedDictionary"
+name = "HasCachedAll"
+sig = "bool HasCachedAll { get; set; }"
+returns = "bool"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[properties]]
+parent = "SynchronizedDictionary"
+name = "KeyPropertyName"
+sig = "string KeyPropertyName { get; }"
+returns = "string"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[properties]]
+parent = "SynchronizedDictionary"
+name = "Cache"
+sig = "SourceCache<TValue, TKey> Cache { get; }"
+returns = "SourceCache<TValue, TKey>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[properties]]
+parent = "SynchronizedDictionary"
+name = "CacheTasks"
+sig = "ConcurrentDictionary<string, Task<bool>> CacheTasks { get; }"
+returns = "ConcurrentDictionary<string, Task<bool>>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[properties]]
+parent = "SynchronizedDictionary"
+name = "CacheHandlerSemaphore"
+sig = "SemaphoreSlim CacheHandlerSemaphore { get; }"
+returns = "SemaphoreSlim"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[ctors]]
+parent = "SynchronizedDictionary"
+sig = "SynchronizedDictionary(IEFCoreDatabaseBackedService<TDbCtx> dbService, // ReSharper disable UnusedParameter.Local AsyncHelper asyncHelper, // ReSharper restore UnusedParameter.Local string keyPropertyName, Func<TValue, IObservable<object>>[] observables = null, params string[] observedProperties)"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "GetEnumerator"
+sig = "IEnumerator<TValue> GetEnumerator()"
+returns = "IEnumerator<TValue>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "GetOrAddValueAsync"
+sig = "Task<TValue> GetOrAddValueAsync(TKey key, bool addNew = true, IDictionary<string, object> param = null)"
+returns = "Task<TValue>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "CacheAllAsync"
+sig = "Task<TimeSpan> CacheAllAsync(HashSet<TKey> keys = null)"
+returns = "Task<TimeSpan>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "Remove"
+sig = "bool Remove(TValue value)"
+returns = "bool"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "Remove"
+sig = "bool Remove(TKey key)"
+returns = "bool"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "RemoveWhereAsync"
+sig = "Task RemoveWhereAsync(Func<TKey, TValue, bool> func)"
+returns = "Task"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "ForAllTaskAsync"
+sig = "Task ForAllTaskAsync(Func<TKey, TValue, Task> func)"
+returns = "Task"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "ForAllTaskAsync"
+sig = "Task<T[]> ForAllTaskAsync<T>(Func<TKey, TValue, Task<T>> func)"
+returns = "Task<T[]>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "ForAllFuncAsync"
+sig = "Task<T[]> ForAllFuncAsync<T>(Func<TKey, TValue, T> func)"
+returns = "Task<T[]>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "ForAllAsync"
+sig = "Task ForAllAsync(Action<TKey, TValue> func)"
+returns = "Task"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "ForAllAsync"
+sig = "Task<T[]> ForAllAsync<T>(Func<TKey, TValue, T> func)"
+returns = "Task<T[]>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "ContainsKeyAsync"
+sig = "Task<bool> ContainsKeyAsync(TKey key)"
+returns = "Task<bool>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "CacheIsEmptyAsync"
+sig = "Task<bool> CacheIsEmptyAsync()"
+returns = "Task<bool>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "AddOrUpdateValue"
+sig = "void AddOrUpdateValue(TValue value)"
+returns = "void"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "EnsureKeysIndexAsync"
+sig = "Task EnsureKeysIndexAsync()"
+returns = "Task"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "WaitForCacheTasksAsync"
+sig = "Task WaitForCacheTasksAsync()"
+returns = "Task"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "RetriveKey"
+sig = "Expression<Func<TValue, TKey>> RetriveKey()"
+returns = "Expression<Func<TValue, TKey>>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "DbSetAccessor"
+sig = "DbSet<TValue> DbSetAccessor(TDbCtx ctx)"
+returns = "DbSet<TValue>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "GetNew"
+sig = "TValue GetNew(TKey key, IDictionary<string, object> param = null)"
+returns = "TValue"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "OnChangesDetectedAsync"
+sig = "Task OnChangesDetectedAsync(ICollection<ChangeInfo<TKey, TValue>> changes)"
+returns = "Task"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "IncludeInEntity"
+sig = "IQueryable<TValue> IncludeInEntity(IQueryable<TValue> query)"
+returns = "IQueryable<TValue>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "LoadEntityAsync"
+sig = "Task<TValue> LoadEntityAsync(TDbCtx ctx, TValue entity)"
+returns = "Task<TValue>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "OnRemovedFromCache"
+sig = "void OnRemovedFromCache(TValue removedValue)"
+returns = "void"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "OnRetrievedNew"
+sig = "void OnRetrievedNew(TValue value)"
+returns = "void"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "OnInitializeAsync"
+sig = "Task OnInitializeAsync()"
+returns = "Task"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "KeyRetriver"
+sig = "TKey KeyRetriver(TValue value)"
+returns = "TKey"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "GetParam"
+sig = "T GetParam<T>(IDictionary<string, object> param, string key)"
+returns = "T"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "SaveCacheChangesAsync"
+sig = "Task SaveCacheChangesAsync(TDbCtx dbContext, ICollection<ChangeInfo<TKey, TValue>> changes)"
+returns = "Task"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "HasKey"
+sig = "Expression<Func<TValue, bool>> HasKey(TKey key)"
+returns = "Expression<Func<TValue, bool>>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "TryFindEntityAsync"
+sig = "Task<(TValue entity, bool existsInDb)> TryFindEntityAsync(TDbCtx dbContext, TValue e)"
+returns = "Task<(TValue entity, bool existsInDb)>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "TryFindEntityAsync"
+sig = "Task<(TKey key, bool existsInDb)> TryFindEntityAsync(TDbCtx dbContext, TKey key)"
+returns = "Task<(TKey key, bool existsInDb)>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "ExistsInDbAsync"
+sig = "Task<bool> ExistsInDbAsync(TDbCtx dbContext, TKey key)"
+returns = "Task<bool>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "IndexContains"
+sig = "bool IndexContains(TKey key)"
+returns = "bool"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "KeyIsIn"
+sig = "Expression<Func<TValue, bool>> KeyIsIn(HashSet<TKey> keys)"
+returns = "Expression<Func<TValue, bool>>"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "AddToIndex"
+sig = "void AddToIndex(TValue v)"
+returns = "void"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "AddKeyToIndex"
+sig = "void AddKeyToIndex(TKey e)"
+returns = "void"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "AddKeysToIndex"
+sig = "void AddKeysToIndex(IEnumerable<TKey> keys)"
+returns = "void"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "RemoveFromIndex"
+sig = "void RemoveFromIndex(TValue v)"
+returns = "void"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "RemoveKeyFromIndex"
+sig = "void RemoveKeyFromIndex(TKey e)"
+returns = "void"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "RemoveKeysWhereFromIndex"
+sig = "void RemoveKeysWhereFromIndex(Predicate<TKey> match)"
+returns = "void"
+file = "Collections\\SynchronizedDictionary.cs"
+
+[[methods]]
+parent = "SynchronizedDictionary"
+name = "Dispose"
+sig = "void Dispose(bool disposing)"
+returns = "void"
 file = "Collections\\SynchronizedDictionary.cs"
 
 [[classes]]
@@ -38,20 +406,212 @@ ns = "FEx.EFCore.Configuration"
 base = "IBulkDbConfig"
 file = "Configuration\\BulkDbConfig.cs"
 
+[[properties]]
+parent = "BulkDbConfig"
+name = "Config"
+sig = "Func<BulkConfig> Config { get; }"
+returns = "Func<BulkConfig>"
+file = "Configuration\\BulkDbConfig.cs"
+
+[[properties]]
+parent = "BulkDbConfig"
+name = "ParallelBulkOperations"
+sig = "int ParallelBulkOperations { get; }"
+returns = "int"
+file = "Configuration\\BulkDbConfig.cs"
+
+[[ctors]]
+parent = "BulkDbConfig"
+sig = "BulkDbConfig(Func<BulkConfig> config, int parallelBulkOperations)"
+file = "Configuration\\BulkDbConfig.cs"
+
 [[classes]]
 name = "DbServiceConfig"
 ns = "FEx.EFCore.Configuration"
 base = "IDbServiceConfig"
 file = "Configuration\\DbServiceConfig.cs"
 
+[[properties]]
+parent = "DbServiceConfig"
+name = "BulkDbConfig"
+sig = "IBulkDbConfig BulkDbConfig { get; }"
+returns = "IBulkDbConfig"
+file = "Configuration\\DbServiceConfig.cs"
+
+[[properties]]
+parent = "DbServiceConfig"
+name = "DbConfig"
+sig = "IFExDbConfig DbConfig { get; }"
+returns = "IFExDbConfig"
+file = "Configuration\\DbServiceConfig.cs"
+
+[[ctors]]
+parent = "DbServiceConfig"
+sig = "DbServiceConfig(IFExDbConfig dbConfig, IBulkDbConfig bulkDbConfig = null)"
+file = "Configuration\\DbServiceConfig.cs"
+
+[[classes]]
+name = "FExDbConfig"
+ns = "FEx.EFCore.Configuration"
+base = "IFExDbConfig"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "SqlInstance"
+sig = "string SqlInstance { get; set; }"
+returns = "string"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "SqlDbName"
+sig = "string SqlDbName { get; init; }"
+returns = "string"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "Username"
+sig = "string Username { get; init; }"
+returns = "string"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "Password"
+sig = "string Password { get; init; }"
+returns = "string"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "RunMigrations"
+sig = "bool RunMigrations { get; set; }"
+returns = "bool"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "GetMappings"
+sig = "bool GetMappings { get; set; }"
+returns = "bool"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "DropIfMigrationFailed"
+sig = "bool DropIfMigrationFailed { get; init; }"
+returns = "bool"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "DelayOnTimeout"
+sig = "int DelayOnTimeout { get; init; }"
+returns = "int"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "PoolSize"
+sig = "int PoolSize { get; init; }"
+returns = "int"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "SqliteDbFile"
+sig = "FileInfo SqliteDbFile { get; init; }"
+returns = "FileInfo"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "UseSqlite"
+sig = "bool UseSqlite { get; init; }"
+returns = "bool"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "MaxRetryCount"
+sig = "int MaxRetryCount { get; init; }"
+returns = "int"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "MaxRetryDelay"
+sig = "TimeSpan MaxRetryDelay { get; init; }"
+returns = "TimeSpan"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "TrustCertificate"
+sig = "bool TrustCertificate { get; init; }"
+returns = "bool"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "EnableSensitiveDataLogging"
+sig = "bool EnableSensitiveDataLogging { get; init; }"
+returns = "bool"
+file = "Configuration\\FExDbConfig.cs"
+
+[[properties]]
+parent = "FExDbConfig"
+name = "CommandTimeout"
+sig = "int? CommandTimeout { get; init; }"
+returns = "int?"
+file = "Configuration\\FExDbConfig.cs"
+
+[[methods]]
+parent = "FExDbConfig"
+name = "ParseSqlConnectionString"
+sig = "static FExDbConfig ParseSqlConnectionString(string originalConnectionString)"
+returns = "FExDbConfig"
+file = "Configuration\\FExDbConfig.cs"
+static = true
+
 [[interfaces]]
 name = "IBulkDbConfig"
 ns = "FEx.EFCore.Configuration"
 file = "Configuration\\IBulkDbConfig.cs"
 
+[[properties]]
+parent = "IBulkDbConfig"
+name = "Config"
+sig = "Func<BulkConfig> Config { get; }"
+returns = "Func<BulkConfig>"
+file = "Configuration\\IBulkDbConfig.cs"
+
+[[properties]]
+parent = "IBulkDbConfig"
+name = "ParallelBulkOperations"
+sig = "int ParallelBulkOperations { get; }"
+returns = "int"
+file = "Configuration\\IBulkDbConfig.cs"
+
 [[interfaces]]
 name = "IDbServiceConfig"
 ns = "FEx.EFCore.Configuration"
+file = "Configuration\\IDbServiceConfig.cs"
+
+[[properties]]
+parent = "IDbServiceConfig"
+name = "BulkDbConfig"
+sig = "IBulkDbConfig BulkDbConfig { get; }"
+returns = "IBulkDbConfig"
+file = "Configuration\\IDbServiceConfig.cs"
+
+[[properties]]
+parent = "IDbServiceConfig"
+name = "DbConfig"
+sig = "IFExDbConfig DbConfig { get; }"
+returns = "IFExDbConfig"
 file = "Configuration\\IDbServiceConfig.cs"
 
 [[enums]]
@@ -65,11 +625,139 @@ ns = "FEx.EFCore.Extensions"
 file = "Extensions\\BulkOperationsExtensions.cs"
 static = true
 
+[[properties]]
+parent = "BulkOperationsExtensions"
+name = "DefaultBulkConfig"
+sig = "static Func<BulkConfig> DefaultBulkConfig { get; }"
+returns = "Func<BulkConfig>"
+file = "Extensions\\BulkOperationsExtensions.cs"
+static = true
+
+[[extensions]]
+name = "BulkInsertAsync"
+returns = "Task"
+sig = "Task BulkInsertAsync<TDbContext, T>(this IBulkDbServiceBase<TDbContext> service, IList<T> entities, string errorMessage = null, CancellationToken cancellationToken = default)"
+file = "Extensions\\BulkOperationsExtensions.cs"
+
+[[extensions]]
+name = "BulkDeleteAsync"
+returns = "Task"
+sig = "Task BulkDeleteAsync<TDbContext, T>(this IBulkDbServiceBase<TDbContext> service, IList<T> entities, string errorMessage = null, CancellationToken cancellationToken = default)"
+file = "Extensions\\BulkOperationsExtensions.cs"
+
+[[extensions]]
+name = "BulkInsertOrUpdateAsync"
+returns = "Task"
+sig = "Task BulkInsertOrUpdateAsync<TDbContext, T>(this IBulkDbServiceBase<TDbContext> service, IList<T> entities, string errorMessage = null, CancellationToken cancellationToken = default)"
+file = "Extensions\\BulkOperationsExtensions.cs"
+
+[[extensions]]
+name = "BulkInsertOrUpdateOrDeleteAsync"
+returns = "Task"
+sig = "Task BulkInsertOrUpdateOrDeleteAsync<TDbContext, T>( this IBulkDbServiceBase<TDbContext> service, IList<T> entities, string errorMessage = null, CancellationToken cancellationToken = default)"
+file = "Extensions\\BulkOperationsExtensions.cs"
+
+[[extensions]]
+name = "BulkReadAsync"
+returns = "Task"
+sig = "Task BulkReadAsync<TDbContext, T>(this IBulkDbServiceBase<TDbContext> service, IList<T> entities, string errorMessage = null, CancellationToken cancellationToken = default)"
+file = "Extensions\\BulkOperationsExtensions.cs"
+
+[[extensions]]
+name = "BulkUpdateAsync"
+returns = "Task"
+sig = "Task BulkUpdateAsync<TDbContext, T>(this IBulkDbServiceBase<TDbContext> service, IList<T> entities, string errorMessage = null, CancellationToken cancellationToken = default)"
+file = "Extensions\\BulkOperationsExtensions.cs"
+
 [[classes]]
 name = "DbContextExtensions"
 ns = "FEx.EFCore.Extensions"
 file = "Extensions\\DbContextExtensions.cs"
 static = true
+
+[[extensions]]
+name = "ValidateAndSaveChangesAsync"
+returns = "Task"
+sig = "Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "ValidateAndSaveChangesAsync"
+returns = "Task"
+sig = "Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext, string id, bool validateAllProperties, bool acceptAllChangesOnSuccess, Action<string, IReadOnlyCollection<EntityEntry>> onValidationStart, Action<string, EntityValidationFail> onFaultyEntity, Action<string, IReadOnlyCollection< EntityValidationFail>> onValidationFail, Action<string, IReadOnlyCollection<EntityEntry>> onValidationSuccess)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "ValidateChangedEntities"
+returns = "Result<Error>"
+sig = "Result<Error> ValidateChangedEntities<TDbContext>(this TDbContext dbContext)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "ValidateChangedEntities"
+returns = "Result<Error>"
+sig = "Result<Error> ValidateChangedEntities<TDbContext>(this TDbContext dbContext, string id, bool validateAllProperties, Action<string, IReadOnlyCollection<EntityEntry>> onValidationStart, Action<string, EntityValidationFail> onFaultyEntity, Action<string, IReadOnlyCollection< EntityValidationFail>> onValidationFail, Action<string, IReadOnlyCollection<EntityEntry>> onValidationSuccess)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "AddOrUpdateAsync"
+returns = "Task"
+sig = "Task AddOrUpdateAsync<T>(this DbSet<T> dbSet, T data, Expression<Func<T, bool>> existenceFunc)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "GetChangedEntities"
+returns = "IList<EntityEntry>"
+sig = "IList<EntityEntry> GetChangedEntities<TDbContext>(this TDbContext dbContext)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "IsSqlite"
+returns = "bool"
+sig = "bool IsSqlite<TDbContext>(this TDbContext context)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "IsMySql"
+returns = "bool"
+sig = "bool IsMySql<TDbContext>(this TDbContext context)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "IsPostrgeSql"
+returns = "bool"
+sig = "bool IsPostrgeSql<TDbContext>(this TDbContext context)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "IsSqlServer"
+returns = "bool"
+sig = "bool IsSqlServer<TDbContext>(this TDbContext context)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "GetProvider"
+returns = "SqlDialect?"
+sig = "SqlDialect? GetProvider<TDbContext>(this TDbContext context)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "ExecuteReader"
+returns = "string"
+sig = "string ExecuteReader<TDbContext>(this TDbContext db, string commandText, params DbParameter[] parameters)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "GetJsonCommand"
+returns = "string"
+sig = "string GetJsonCommand<TDbContext, T>(this TDbContext context)"
+file = "Extensions\\DbContextExtensions.cs"
+
+[[extensions]]
+name = "EnsureCreatingMissingTables"
+returns = "void"
+sig = "void EnsureCreatingMissingTables<TDbContext>(this TDbContext dbContext)"
+file = "Extensions\\DbContextExtensions.cs"
 
 [[classes]]
 name = "DbContextOptionsBuilderExtensions"
@@ -79,30 +767,26 @@ static = true
 
 [[extensions]]
 name = "ConfigureDbContext"
-sig = "bool ConfigureDbContext(this DbContextOptionsBuilder options,
-                                          IFExDbConfig config,
-                                          ISqlDbHelper sqlDbHelper)"
 returns = "bool"
+sig = "bool ConfigureDbContext(this DbContextOptionsBuilder options, IFExDbConfig config, ISqlDbHelper sqlDbHelper)"
 file = "Extensions\\DbContextOptionsBuilderExtensions.cs"
 
 [[extensions]]
 name = "UseSqlite"
-sig = "void UseSqlite(this DbContextOptionsBuilder options, IFExDbConfig config)"
 returns = "void"
+sig = "void UseSqlite(this DbContextOptionsBuilder options, IFExDbConfig config)"
 file = "Extensions\\DbContextOptionsBuilderExtensions.cs"
 
 [[extensions]]
 name = "UseSqlServer"
+returns = "bool"
 sig = "bool UseSqlServer(this DbContextOptionsBuilder options, IFExDbConfig config)"
-returns = "bool"
 file = "Extensions\\DbContextOptionsBuilderExtensions.cs"
 
 [[extensions]]
 name = "UseSqlServer"
-sig = "bool UseSqlServer(this DbContextOptionsBuilder options,
-                                    IFExDbConfig config,
-                                    Action<SqlServerDbContextOptionsBuilder> configure)"
 returns = "bool"
+sig = "bool UseSqlServer(this DbContextOptionsBuilder options, IFExDbConfig config, Action<SqlServerDbContextOptionsBuilder> configure)"
 file = "Extensions\\DbContextOptionsBuilderExtensions.cs"
 
 [[classes]]
@@ -113,8 +797,8 @@ static = true
 
 [[extensions]]
 name = "GetMappedProperties"
-sig = "IReadOnlyCollection<string> GetMappedProperties(this IEntityType entityType)"
 returns = "IReadOnlyCollection<string>"
+sig = "IReadOnlyCollection<string> GetMappedProperties(this IEntityType entityType)"
 file = "Extensions\\EntityTypeExtensions.cs"
 
 [[classes]]
@@ -123,9 +807,47 @@ ns = "FEx.EFCore.Extensions"
 file = "Extensions\\PooledDbServiceExtensions.cs"
 static = true
 
+[[extensions]]
+name = "RunActionInDbContextAsync"
+returns = "Task"
+sig = "Task RunActionInDbContextAsync<TDbContext>(this IPooledDbService<TDbContext> service, Action<TDbContext> func)"
+file = "Extensions\\PooledDbServiceExtensions.cs"
+
+[[extensions]]
+name = "RunFuncInDbContextAsync"
+returns = "Task<T>"
+sig = "Task<T> RunFuncInDbContextAsync<TDbContext, T>(this IPooledDbService<TDbContext> service, Func<TDbContext, T> func)"
+file = "Extensions\\PooledDbServiceExtensions.cs"
+
+[[extensions]]
+name = "RunTaskInDbContextAsync"
+returns = "Task"
+sig = "Task RunTaskInDbContextAsync<TDbContext>(this IPooledDbService<TDbContext> service, Func<TDbContext, Task> func)"
+file = "Extensions\\PooledDbServiceExtensions.cs"
+
+[[extensions]]
+name = "RunTaskInDbContextAsync"
+returns = "Task<T>"
+sig = "Task<T> RunTaskInDbContextAsync<TDbContext, T>(this IPooledDbService<TDbContext> service, Func<TDbContext, Task<T>> func)"
+file = "Extensions\\PooledDbServiceExtensions.cs"
+
+[[extensions]]
+name = "RunTaskInDbContextAsync"
+returns = "Task<T>"
+sig = "Task<T> RunTaskInDbContextAsync<TDbContext, T>(this IPooledDbService<TDbContext> service, Func<TDbContext, Func<Task<T>>> func)"
+file = "Extensions\\PooledDbServiceExtensions.cs"
+
 [[classes]]
 name = "EFCoreHelper"
 ns = "FEx.EFCore.Helpers"
+file = "Helpers\\EFCoreHelper.cs"
+static = true
+
+[[methods]]
+parent = "EFCoreHelper"
+name = "HasKey"
+sig = "static Expression<Func<TValue, bool>> HasKey<TKey, TValue>(TKey key, string keyPropertyName)"
+returns = "Expression<Func<TValue, bool>>"
 file = "Helpers\\EFCoreHelper.cs"
 static = true
 
@@ -135,25 +857,179 @@ ns = "FEx.EFCore.Helpers"
 summary = "Use of an EF Core resiliency strategy when using multiple DbContexts within an explicit BeginTransaction(): See: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency"
 file = "Helpers\\ResilientTransaction.cs"
 
+[[ctors]]
+parent = "ResilientTransaction"
+sig = "ResilientTransaction(IFExLogger logger)"
+file = "Helpers\\ResilientTransaction.cs"
+
+[[methods]]
+parent = "ResilientTransaction"
+name = "ExecuteAsync"
+sig = "Task<T> ExecuteAsync<T>(DbContext context, Func<Task<T>> action, string id)"
+returns = "Task<T>"
+file = "Helpers\\ResilientTransaction.cs"
+
+[[methods]]
+parent = "ResilientTransaction"
+name = "ExecuteAsync"
+sig = "Task<T> ExecuteAsync<T>(DbContext context, Func<Task<T>> action, string id, IsolationLevel isolationLevel, int? delayOnTimeout)"
+returns = "Task<T>"
+file = "Helpers\\ResilientTransaction.cs"
+
+[[methods]]
+parent = "ResilientTransaction"
+name = "ExecuteAsync"
+sig = "Task<T> ExecuteAsync<T>(DbContext context, Func<T> action, string id)"
+returns = "Task<T>"
+file = "Helpers\\ResilientTransaction.cs"
+
+[[methods]]
+parent = "ResilientTransaction"
+name = "ExecuteAsync"
+sig = "Task<T> ExecuteAsync<T>(DbContext context, Func<T> action, string id, IsolationLevel isolationLevel, int? delayOnTimeout)"
+returns = "Task<T>"
+file = "Helpers\\ResilientTransaction.cs"
+
+[[methods]]
+parent = "ResilientTransaction"
+name = "Execute"
+sig = "T Execute<T>(DbContext context, Func<T> action, string id, IsolationLevel isolationLevel = IsolationLevel.Unspecified, int? delayOnTimeout = null)"
+returns = "T"
+file = "Helpers\\ResilientTransaction.cs"
+
 [[classes]]
 name = "SQLConnectionHelper"
 ns = "FEx.EFCore.Helpers"
 file = "Helpers\\SQLConnectionHelper.cs"
 static = true
 
+[[methods]]
+parent = "SQLConnectionHelper"
+name = "CheckDbConnectionAsync"
+sig = "static Task<bool> CheckDbConnectionAsync(string connectionString)"
+returns = "Task<bool>"
+file = "Helpers\\SQLConnectionHelper.cs"
+static = true
+
+[[methods]]
+parent = "SQLConnectionHelper"
+name = "CheckDbConnectionAsync"
+sig = "static Task<bool> CheckDbConnectionAsync(string connectionString, CancellationToken cancellationToken)"
+returns = "Task<bool>"
+file = "Helpers\\SQLConnectionHelper.cs"
+static = true
+
+[[methods]]
+parent = "SQLConnectionHelper"
+name = "CheckDbConnection"
+sig = "static bool CheckDbConnection(string connectionString)"
+returns = "bool"
+file = "Helpers\\SQLConnectionHelper.cs"
+static = true
+
+[[methods]]
+parent = "SQLConnectionHelper"
+name = "CheckMasterDbConnectionAsync"
+sig = "static Task<bool> CheckMasterDbConnectionAsync(IFExDbConfig config, CancellationToken cancellationToken = default)"
+returns = "Task<bool>"
+file = "Helpers\\SQLConnectionHelper.cs"
+static = true
+
+[[methods]]
+parent = "SQLConnectionHelper"
+name = "CheckMasterDbConnection"
+sig = "static bool CheckMasterDbConnection(IFExDbConfig config)"
+returns = "bool"
+file = "Helpers\\SQLConnectionHelper.cs"
+static = true
+
+[[methods]]
+parent = "SQLConnectionHelper"
+name = "GetConnectionString"
+sig = "static string GetConnectionString(IFExDbConfig config)"
+returns = "string"
+file = "Helpers\\SQLConnectionHelper.cs"
+static = true
+
 [[interfaces]]
 name = "IBulkDbServiceBase"
 ns = "FEx.EFCore.Interfaces"
+base = "IDbServiceBase<TDbContext>"
+file = "Interfaces\\IBulkDbServiceBase.cs"
+
+[[properties]]
+parent = "IBulkDbServiceBase"
+name = "BulkConfig"
+sig = "Func<BulkConfig> BulkConfig { get; }"
+returns = "Func<BulkConfig>"
+file = "Interfaces\\IBulkDbServiceBase.cs"
+
+[[properties]]
+parent = "IBulkDbServiceBase"
+name = "BulkOperationsSemaphore"
+sig = "SemaphoreSlim BulkOperationsSemaphore { get; }"
+returns = "SemaphoreSlim"
+file = "Interfaces\\IBulkDbServiceBase.cs"
+
+[[methods]]
+parent = "IBulkDbServiceBase"
+name = "ProgressAction"
+sig = "void ProgressAction(decimal progress, string operationId, OperationType type, string tableName)"
+returns = "void"
 file = "Interfaces\\IBulkDbServiceBase.cs"
 
 [[interfaces]]
 name = "IDbServiceBase"
 ns = "FEx.EFCore.Interfaces"
+base = "IPooledDbService<TDbContext>"
+file = "Interfaces\\IDbServiceBase.cs"
+
+[[methods]]
+parent = "IDbServiceBase"
+name = "AddAsync"
+sig = "Task<EntityEntry<T>> AddAsync<T>(T entity, string errorMessage = null, bool saveChanges = true, bool useTransaction = true) where T : class"
+returns = "Task<EntityEntry<T>>"
+file = "Interfaces\\IDbServiceBase.cs"
+
+[[methods]]
+parent = "IDbServiceBase"
+name = "AddRangeAsync"
+sig = "Task AddRangeAsync<T>(IEnumerable<T> entities, string errorMessage = null, bool saveChanges = true, bool useTransaction = true) where T : class"
+returns = "Task"
+file = "Interfaces\\IDbServiceBase.cs"
+
+[[methods]]
+parent = "IDbServiceBase"
+name = "GetEntitiesAsync"
+sig = "Task<IQueryable<T>> GetEntitiesAsync<T>(Expression<Func<TDbContext, IQueryable<T>>> query) where T : class"
+returns = "Task<IQueryable<T>>"
+file = "Interfaces\\IDbServiceBase.cs"
+
+[[methods]]
+parent = "IDbServiceBase"
+name = "RemoveAsync"
+sig = "Task<EntityEntry<T>> RemoveAsync<T>(T entity, string errorMessage = null, bool saveChanges = true, bool useTransaction = true) where T : class"
+returns = "Task<EntityEntry<T>>"
+file = "Interfaces\\IDbServiceBase.cs"
+
+[[methods]]
+parent = "IDbServiceBase"
+name = "UpdateAsync"
+sig = "Task<EntityEntry<T>> UpdateAsync<T>(T entity, string errorMessage = null, bool saveChanges = true, bool useTransaction = true) where T : class"
+returns = "Task<EntityEntry<T>>"
 file = "Interfaces\\IDbServiceBase.cs"
 
 [[interfaces]]
 name = "IEFCoreDatabaseBackedService"
 ns = "FEx.EFCore.Interfaces"
+base = "IDbServiceBase<TDbContext>"
+file = "Interfaces\\IEFCoreDatabaseBackedService.cs"
+
+[[properties]]
+parent = "IEFCoreDatabaseBackedService"
+name = "DbKey"
+sig = "string DbKey { get; }"
+returns = "string"
 file = "Interfaces\\IEFCoreDatabaseBackedService.cs"
 
 [[interfaces]]
@@ -161,9 +1037,186 @@ name = "IFExDbConfig"
 ns = "FEx.EFCore.Interfaces"
 file = "Interfaces\\IFExDbConfig.cs"
 
+[[properties]]
+parent = "IFExDbConfig"
+name = "SqlInstance"
+sig = "string SqlInstance { get; set; }"
+returns = "string"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "SqlDbName"
+sig = "string SqlDbName { get; }"
+returns = "string"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "Username"
+sig = "string Username { get; }"
+returns = "string"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "Password"
+sig = "string Password { get; }"
+returns = "string"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "SqliteDbFile"
+sig = "FileInfo SqliteDbFile { get; }"
+returns = "FileInfo"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "CommandTimeout"
+sig = "int? CommandTimeout { get; }"
+returns = "int?"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "MaxRetryCount"
+sig = "int MaxRetryCount { get; }"
+returns = "int"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "MaxRetryDelay"
+sig = "TimeSpan MaxRetryDelay { get; }"
+returns = "TimeSpan"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "PoolSize"
+sig = "int PoolSize { get; }"
+returns = "int"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "DelayOnTimeout"
+sig = "int DelayOnTimeout { get; }"
+returns = "int"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "RunMigrations"
+sig = "bool RunMigrations { get; set; }"
+returns = "bool"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "GetMappings"
+sig = "bool GetMappings { get; set; }"
+returns = "bool"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "DropIfMigrationFailed"
+sig = "bool DropIfMigrationFailed { get; }"
+returns = "bool"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "UseSqlite"
+sig = "bool UseSqlite { get; }"
+returns = "bool"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "TrustCertificate"
+sig = "bool TrustCertificate { get; }"
+returns = "bool"
+file = "Interfaces\\IFExDbConfig.cs"
+
+[[properties]]
+parent = "IFExDbConfig"
+name = "EnableSensitiveDataLogging"
+sig = "bool EnableSensitiveDataLogging { get; }"
+returns = "bool"
+file = "Interfaces\\IFExDbConfig.cs"
+
 [[interfaces]]
 name = "IPooledDbService"
 ns = "FEx.EFCore.Interfaces"
+base = "IAsyncInitializable"
+file = "Interfaces\\IPooledDbService.cs"
+
+[[properties]]
+parent = "IPooledDbService"
+name = "TableMappings"
+sig = "Map<string, string> TableMappings { get; }"
+returns = "Map<string, string>"
+summary = "Map of model to DB mappings. ForwardIndex contains model entities names to table names in DB mapping. ReverseIndex contains table names in DB to model entities names mapping."
+file = "Interfaces\\IPooledDbService.cs"
+
+[[properties]]
+parent = "IPooledDbService"
+name = "Mappings"
+sig = "IReadOnlyDictionary<string, Mapping> Mappings { get; }"
+returns = "IReadOnlyDictionary<string, Mapping>"
+file = "Interfaces\\IPooledDbService.cs"
+
+[[methods]]
+parent = "IPooledDbService"
+name = "RunMigrationsAsync"
+sig = "Task<bool> RunMigrationsAsync()"
+returns = "Task<bool>"
+file = "Interfaces\\IPooledDbService.cs"
+
+[[methods]]
+parent = "IPooledDbService"
+name = "MigrateAsync"
+sig = "Task MigrateAsync()"
+returns = "Task"
+file = "Interfaces\\IPooledDbService.cs"
+
+[[methods]]
+parent = "IPooledDbService"
+name = "RunActionInDbContextAsync"
+sig = "Task RunActionInDbContextAsync(Action<TDbContext> func, string errorMessage, bool saveChanges, bool useTransaction)"
+returns = "Task"
+file = "Interfaces\\IPooledDbService.cs"
+
+[[methods]]
+parent = "IPooledDbService"
+name = "RunFuncInDbContextAsync"
+sig = "Task<T> RunFuncInDbContextAsync<T>(Func<TDbContext, T> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)"
+returns = "Task<T>"
+file = "Interfaces\\IPooledDbService.cs"
+
+[[methods]]
+parent = "IPooledDbService"
+name = "RunTaskInDbContextAsync"
+sig = "Task RunTaskInDbContextAsync(Func<TDbContext, Task> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)"
+returns = "Task"
+file = "Interfaces\\IPooledDbService.cs"
+
+[[methods]]
+parent = "IPooledDbService"
+name = "RunTaskInDbContextAsync"
+sig = "Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Task<T>> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)"
+returns = "Task<T>"
+file = "Interfaces\\IPooledDbService.cs"
+
+[[methods]]
+parent = "IPooledDbService"
+name = "RunTaskInDbContextAsync"
+sig = "Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Func<Task<T>>> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)"
+returns = "Task<T>"
 file = "Interfaces\\IPooledDbService.cs"
 
 [[classes]]
@@ -171,36 +1224,418 @@ name = "ChangeInfo"
 ns = "FEx.EFCore.Models"
 file = "Models\\ChangeInfo.cs"
 
+[[properties]]
+parent = "ChangeInfo"
+name = "Change"
+sig = "Change<TValue, TKey> Change { get; }"
+returns = "Change<TValue, TKey>"
+file = "Models\\ChangeInfo.cs"
+
+[[properties]]
+parent = "ChangeInfo"
+name = "Key"
+sig = "TKey Key { get; }"
+returns = "TKey"
+file = "Models\\ChangeInfo.cs"
+
+[[properties]]
+parent = "ChangeInfo"
+name = "Value"
+sig = "TValue Value { get; }"
+returns = "TValue"
+file = "Models\\ChangeInfo.cs"
+
+[[properties]]
+parent = "ChangeInfo"
+name = "Reason"
+sig = "ChangeReason Reason { get; }"
+returns = "ChangeReason"
+file = "Models\\ChangeInfo.cs"
+
+[[properties]]
+parent = "ChangeInfo"
+name = "ToDelete"
+sig = "bool ToDelete { get; }"
+returns = "bool"
+file = "Models\\ChangeInfo.cs"
+
+[[properties]]
+parent = "ChangeInfo"
+name = "ExistsInDb"
+sig = "bool ExistsInDb { get; set; }"
+returns = "bool"
+file = "Models\\ChangeInfo.cs"
+
+[[ctors]]
+parent = "ChangeInfo"
+sig = "ChangeInfo(Change<TValue, TKey> change)"
+file = "Models\\ChangeInfo.cs"
+
 [[classes]]
 name = "EntityValidationFail"
 ns = "FEx.EFCore.Models"
 file = "Models\\EntityValidationFail.cs"
 
+[[properties]]
+parent = "EntityValidationFail"
+name = "Entry"
+sig = "EntityEntry Entry { get; }"
+returns = "EntityEntry"
+file = "Models\\EntityValidationFail.cs"
+
+[[properties]]
+parent = "EntityValidationFail"
+name = "FailedValidations"
+sig = "IReadOnlyCollection<ValidationResult> FailedValidations { get; }"
+returns = "IReadOnlyCollection<ValidationResult>"
+file = "Models\\EntityValidationFail.cs"
+
+[[properties]]
+parent = "EntityValidationFail"
+name = "Index"
+sig = "int Index { get; }"
+returns = "int"
+file = "Models\\EntityValidationFail.cs"
+
+[[ctors]]
+parent = "EntityValidationFail"
+sig = "EntityValidationFail(EntityEntry entry, IReadOnlyCollection<ValidationResult> failedValidations, int index)"
+file = "Models\\EntityValidationFail.cs"
+
+[[classes]]
+name = "Mapping"
+ns = "FEx.EFCore.Models"
+file = "Models\\Mapping.cs"
+
+[[properties]]
+parent = "Mapping"
+name = "ClrTypeName"
+sig = "string ClrTypeName { get; init; }"
+returns = "string"
+file = "Models\\Mapping.cs"
+
+[[properties]]
+parent = "Mapping"
+name = "TableName"
+sig = "string TableName { get; init; }"
+returns = "string"
+file = "Models\\Mapping.cs"
+
+[[properties]]
+parent = "Mapping"
+name = "Properties"
+sig = "IReadOnlyCollection<string> Properties { get; init; }"
+returns = "IReadOnlyCollection<string>"
+file = "Models\\Mapping.cs"
+
+[[methods]]
+parent = "Mapping"
+name = "ToString"
+sig = "string ToString()"
+returns = "string"
+file = "Models\\Mapping.cs"
+
 [[classes]]
 name = "BulkDbServiceBase"
 ns = "FEx.EFCore.Services"
-base = "DbServiceBase<TDbContext>, IBulkDbServiceBase<TDbContext>
-    where TDbContext : DbContext"
+base = "DbServiceBase<TDbContext>, IBulkDbServiceBase<TDbContext>"
+file = "Services\\BulkDbServiceBase.cs"
+
+[[properties]]
+parent = "BulkDbServiceBase"
+name = "BulkConfig"
+sig = "Func<BulkConfig> BulkConfig { get; }"
+returns = "Func<BulkConfig>"
+file = "Services\\BulkDbServiceBase.cs"
+
+[[properties]]
+parent = "BulkDbServiceBase"
+name = "BulkOperationsSemaphore"
+sig = "SemaphoreSlim BulkOperationsSemaphore { get; }"
+returns = "SemaphoreSlim"
+file = "Services\\BulkDbServiceBase.cs"
+
+[[ctors]]
+parent = "BulkDbServiceBase"
+sig = "BulkDbServiceBase(IScopeProvider scopeProvider, IBulkDbConfig bulkDbConfig, ResilientTransaction resilientTransaction, IFExDbConfig dbConfig, IAsyncInitializable[] dependencies)"
+file = "Services\\BulkDbServiceBase.cs"
+
+[[methods]]
+parent = "BulkDbServiceBase"
+name = "ProgressAction"
+sig = "void ProgressAction(decimal progress, string operationId, OperationType type, string tableName)"
+returns = "void"
+file = "Services\\BulkDbServiceBase.cs"
+
+[[methods]]
+parent = "BulkDbServiceBase"
+name = "Dispose"
+sig = "void Dispose(bool disposing)"
+returns = "void"
 file = "Services\\BulkDbServiceBase.cs"
 
 [[classes]]
 name = "DbServiceBase"
 ns = "FEx.EFCore.Services"
-base = "PooledDbService<TDbContext>, IDbServiceBase<TDbContext>
-    where TDbContext : DbContext"
+base = "PooledDbService<TDbContext>, IDbServiceBase<TDbContext>"
+file = "Services\\DbServiceBase.cs"
+
+[[ctors]]
+parent = "DbServiceBase"
+sig = "DbServiceBase(IScopeProvider scopeProvider, ResilientTransaction resilientTransaction, IFExDbConfig dbConfig, IAsyncInitializable[] dependencies)"
+file = "Services\\DbServiceBase.cs"
+
+[[methods]]
+parent = "DbServiceBase"
+name = "GetEntitiesAsync"
+sig = "Task<IQueryable<T>> GetEntitiesAsync<T>(Expression<Func<TDbContext, IQueryable<T>>> query) where T : class"
+returns = "Task<IQueryable<T>>"
+file = "Services\\DbServiceBase.cs"
+
+[[methods]]
+parent = "DbServiceBase"
+name = "AddAsync"
+sig = "Task<EntityEntry<T>> AddAsync<T>(T entity, string errorMessage = null, bool saveChanges = true, bool useTransaction = true) where T : class"
+returns = "Task<EntityEntry<T>>"
+file = "Services\\DbServiceBase.cs"
+
+[[methods]]
+parent = "DbServiceBase"
+name = "UpdateAsync"
+sig = "Task<EntityEntry<T>> UpdateAsync<T>(T entity, string errorMessage = null, bool saveChanges = true, bool useTransaction = true) where T : class"
+returns = "Task<EntityEntry<T>>"
+file = "Services\\DbServiceBase.cs"
+
+[[methods]]
+parent = "DbServiceBase"
+name = "RemoveAsync"
+sig = "Task<EntityEntry<T>> RemoveAsync<T>(T entity, string errorMessage = null, bool saveChanges = true, bool useTransaction = true) where T : class"
+returns = "Task<EntityEntry<T>>"
+file = "Services\\DbServiceBase.cs"
+
+[[methods]]
+parent = "DbServiceBase"
+name = "AddRangeAsync"
+sig = "Task AddRangeAsync<T>(IEnumerable<T> entities, string errorMessage = null, bool saveChanges = true, bool useTransaction = true) where T : class"
+returns = "Task"
+file = "Services\\DbServiceBase.cs"
+
+[[methods]]
+parent = "DbServiceBase"
+name = "InternalGetEntities"
+sig = "IQueryable<T> InternalGetEntities<T>(TDbContext dbContext, Expression<Func<TDbContext, IQueryable<T>>> query) where T : class"
+returns = "IQueryable<T>"
 file = "Services\\DbServiceBase.cs"
 
 [[classes]]
 name = "EFCoreDatabaseBackedService"
 ns = "FEx.EFCore.Services"
-base = "BulkDbServiceBase<TDbContext>,
-    IEFCoreDatabaseBackedService<TDbContext> where TDbContext : DbContext"
+base = "BulkDbServiceBase<TDbContext>, IEFCoreDatabaseBackedService<TDbContext>"
+file = "Services\\EFCoreDatabaseBackedService.cs"
+
+[[properties]]
+parent = "EFCoreDatabaseBackedService"
+name = "DbKey"
+sig = "string DbKey { get; set; }"
+returns = "string"
+file = "Services\\EFCoreDatabaseBackedService.cs"
+
+[[ctors]]
+parent = "EFCoreDatabaseBackedService"
+sig = "EFCoreDatabaseBackedService(IScopeProvider scopeProvider, IDbServiceConfig config, ResilientTransaction resilientTransaction, ISqlDbHelper dbHelper, IAsyncInitializable[] dependencies)"
+file = "Services\\EFCoreDatabaseBackedService.cs"
+
+[[methods]]
+parent = "EFCoreDatabaseBackedService"
+name = "EnsureIsInitializedAsync"
+sig = "Task EnsureIsInitializedAsync()"
+returns = "Task"
+file = "Services\\EFCoreDatabaseBackedService.cs"
+
+[[methods]]
+parent = "EFCoreDatabaseBackedService"
+name = "OnInitializeAsync"
+sig = "Task OnInitializeAsync()"
+returns = "Task"
 file = "Services\\EFCoreDatabaseBackedService.cs"
 
 [[classes]]
 name = "PooledDbService"
 ns = "FEx.EFCore.Services"
-base = "AsyncInitializable, IPooledDbService<TDbContext>
-    where TDbContext : DbContext"
+base = "AsyncInitializable, IPooledDbService<TDbContext>"
+file = "Services\\PooledDbService.cs"
+
+[[properties]]
+parent = "PooledDbService"
+name = "DelayOnTimeout"
+sig = "int? DelayOnTimeout { get; }"
+returns = "int?"
+file = "Services\\PooledDbService.cs"
+
+[[properties]]
+parent = "PooledDbService"
+name = "Mappings"
+sig = "IReadOnlyDictionary<string, Mapping> Mappings { get; }"
+returns = "IReadOnlyDictionary<string, Mapping>"
+file = "Services\\PooledDbService.cs"
+
+[[properties]]
+parent = "PooledDbService"
+name = "TableMappings"
+sig = "Map<string, string> TableMappings { get; }"
+returns = "Map<string, string>"
+file = "Services\\PooledDbService.cs"
+
+[[ctors]]
+parent = "PooledDbService"
+sig = "PooledDbService(IScopeProvider scopeProvider, ResilientTransaction transaction, IFExDbConfig dbConfig, params IAsyncInitializable[] dependencies)"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "RunTaskInDbContextAsync"
+sig = "Task RunTaskInDbContextAsync(Func<TDbContext, Task> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)"
+returns = "Task"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "RunTaskInDbContextAsync"
+sig = "Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Task<T>> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)"
+returns = "Task<T>"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "RunTaskInDbContextAsync"
+sig = "Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Func<Task<T>>> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)"
+returns = "Task<T>"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "RunMigrationsAsync"
+sig = "Task<bool> RunMigrationsAsync()"
+returns = "Task<bool>"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "MigrateAsync"
+sig = "Task MigrateAsync()"
+returns = "Task"
+summary = "Migrate does the same job that EnsureCreated, but also adds table with migrations history"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "RunActionInDbContextAsync"
+sig = "Task RunActionInDbContextAsync(Action<TDbContext> func, string errorMessage, bool saveChanges, bool useTransaction)"
+returns = "Task"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "RunFuncInDbContextAsync"
+sig = "Task<T> RunFuncInDbContextAsync<T>(Func<TDbContext, T> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true)"
+returns = "Task<T>"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "RunWithinTransaction"
+sig = "T RunWithinTransaction<T>(Func<TDbContext, T> func, string errorMessage, bool saveChanges, bool useTransaction, IsolationLevel isolationLevel)"
+returns = "T"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "RunWithinTransactionAsync"
+sig = "Task<T> RunWithinTransactionAsync<T>(Func<TDbContext, T> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true, IsolationLevel isolationLevel = IsolationLevel.Unspecified)"
+returns = "Task<T>"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "RunWithinTransactionAsync"
+sig = "Task<T> RunWithinTransactionAsync<T>(Func<TDbContext, Task<T>> func, string errorMessage = null, bool saveChanges = true, bool useTransaction = true, IsolationLevel isolationLevel = IsolationLevel.Unspecified)"
+returns = "Task<T>"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "AfterAppliedMigrationAsync"
+sig = "Task AfterAppliedMigrationAsync()"
+returns = "Task"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "OnValidationSuccess"
+sig = "void OnValidationSuccess(string id, IReadOnlyCollection<EntityEntry> entities)"
+returns = "void"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "OnValidationFail"
+sig = "void OnValidationFail(string id, IReadOnlyCollection<EntityValidationFail> failedValidations)"
+returns = "void"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "OnFaultyEntity"
+sig = "void OnFaultyEntity(string id, EntityValidationFail failedValidation)"
+returns = "void"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "OnValidationStart"
+sig = "void OnValidationStart(string id, IReadOnlyCollection<EntityEntry> entities)"
+returns = "void"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "OnInitializeAsync"
+sig = "Task OnInitializeAsync()"
+returns = "Task"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "EnsureMappingSnapshotAsync"
+sig = "Task EnsureMappingSnapshotAsync()"
+returns = "Task"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "ValidateAndSaveChanges"
+sig = "Result<Error> ValidateAndSaveChanges(TDbContext dbContext, string id)"
+returns = "Result<Error>"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "ValidateAndSaveChanges"
+sig = "Result<Error> ValidateAndSaveChanges(TDbContext dbContext, string id, bool validateAllProperties, bool acceptAllChangesOnSuccess)"
+returns = "Result<Error>"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "ValidateAndSaveChangesAsync"
+sig = "Task<Result<Error>> ValidateAndSaveChangesAsync(TDbContext dbContext, string id, bool validateAllProperties = true, bool acceptAllChangesOnSuccess = true)"
+returns = "Task<Result<Error>>"
+file = "Services\\PooledDbService.cs"
+
+[[methods]]
+parent = "PooledDbService"
+name = "ShrinkDbAsync"
+sig = "Task ShrinkDbAsync()"
+returns = "Task"
 file = "Services\\PooledDbService.cs"
 

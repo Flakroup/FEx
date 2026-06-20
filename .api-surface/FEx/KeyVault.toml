@@ -7,14 +7,51 @@ name = "IKeyVaultCredentials"
 ns = "FEx.KeyVault"
 file = "IKeyVaultCredentials.cs"
 
+[[properties]]
+parent = "IKeyVaultCredentials"
+name = "AzureADTenantId"
+sig = "string AzureADTenantId { get; }"
+returns = "string"
+file = "IKeyVaultCredentials.cs"
+
+[[properties]]
+parent = "IKeyVaultCredentials"
+name = "AzureADClientId"
+sig = "string AzureADClientId { get; }"
+returns = "string"
+file = "IKeyVaultCredentials.cs"
+
+[[properties]]
+parent = "IKeyVaultCredentials"
+name = "KeyVaultName"
+sig = "string KeyVaultName { get; }"
+returns = "string"
+file = "IKeyVaultCredentials.cs"
+
 [[interfaces]]
 name = "IKeyVaultByCertCredentials"
 ns = "FEx.KeyVault"
+base = "IKeyVaultCredentials"
+file = "IKeyVaultCredentials.cs"
+
+[[properties]]
+parent = "IKeyVaultByCertCredentials"
+name = "AzureADCertThumbprint"
+sig = "string AzureADCertThumbprint { get; }"
+returns = "string"
 file = "IKeyVaultCredentials.cs"
 
 [[interfaces]]
 name = "IKeyVaultByClientSecretCredentials"
 ns = "FEx.KeyVault"
+base = "IKeyVaultCredentials"
+file = "IKeyVaultCredentials.cs"
+
+[[properties]]
+parent = "IKeyVaultByClientSecretCredentials"
+name = "AzureADClientSecret"
+sig = "string AzureADClientSecret { get; }"
+returns = "string"
 file = "IKeyVaultCredentials.cs"
 
 [[classes]]
@@ -25,21 +62,56 @@ static = true
 
 [[extensions]]
 name = "AddAzureKeyVaultWithCertificate"
-sig = "void AddAzureKeyVaultWithCertificate(this IConfigurationBuilder config,
-                                                       IKeyVaultByCertCredentials credentials)"
 returns = "void"
+sig = "void AddAzureKeyVaultWithCertificate(this IConfigurationBuilder config, IKeyVaultByCertCredentials credentials)"
 file = "KeyVaultConfigurator.cs"
 
 [[extensions]]
 name = "AddAzureKeyVaultWithClientSecret"
-sig = "void AddAzureKeyVaultWithClientSecret(this IConfigurationBuilder config,
-                                                        IKeyVaultByClientSecretCredentials credentials)"
 returns = "void"
+sig = "void AddAzureKeyVaultWithClientSecret(this IConfigurationBuilder config, IKeyVaultByClientSecretCredentials credentials)"
 file = "KeyVaultConfigurator.cs"
 
 [[classes]]
 name = "KeyVaultCredentials"
 ns = "FEx.KeyVault"
 base = "IKeyVaultByCertCredentials, IKeyVaultByClientSecretCredentials"
+file = "KeyVaultCredentials.cs"
+
+[[properties]]
+parent = "KeyVaultCredentials"
+name = "KeyVaultName"
+sig = "string KeyVaultName { get; set; }"
+returns = "string"
+file = "KeyVaultCredentials.cs"
+
+[[properties]]
+parent = "KeyVaultCredentials"
+name = "AzureADTenantId"
+sig = "string AzureADTenantId { get; set; }"
+returns = "string"
+summary = "Gets or sets the Directory (tenant) ID"
+file = "KeyVaultCredentials.cs"
+
+[[properties]]
+parent = "KeyVaultCredentials"
+name = "AzureADClientId"
+sig = "string AzureADClientId { get; set; }"
+returns = "string"
+summary = "Gets or sets the Application (client) ID"
+file = "KeyVaultCredentials.cs"
+
+[[properties]]
+parent = "KeyVaultCredentials"
+name = "AzureADCertThumbprint"
+sig = "string AzureADCertThumbprint { get; set; }"
+returns = "string"
+file = "KeyVaultCredentials.cs"
+
+[[properties]]
+parent = "KeyVaultCredentials"
+name = "AzureADClientSecret"
+sig = "string AzureADClientSecret { get; set; }"
+returns = "string"
 file = "KeyVaultCredentials.cs"
 

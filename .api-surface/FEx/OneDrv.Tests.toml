@@ -1,6 +1,6 @@
 [project]
 name = "FEx.OneDrv.Tests"
-path = "est\\FEx.OneDrv.Tests"
+path = "test\\FEx.OneDrv.Tests"
 
 [[classes]]
 name = "DriveItemMapperTests"

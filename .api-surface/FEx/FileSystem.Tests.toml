@@ -1,6 +1,6 @@
 [project]
 name = "FEx.FileSystem.Tests"
-path = "est\\FEx.FileSystem.Tests"
+path = "test\\FEx.FileSystem.Tests"
 
 [[classes]]
 name = "DirectoryWalkerSafeDeleteTests"

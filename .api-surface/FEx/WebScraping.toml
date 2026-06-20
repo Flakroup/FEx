@@ -1,6 +1,6 @@
 [project]
 name = "FEx.WebScraping"
-path = "rc\\FEx.WebScraping"
+path = "src\\FEx.WebScraping"
 
 [[classes]]
 name = "HtmlWebHelper"
@@ -157,21 +157,24 @@ file = "Extensions\\WebBrowserScraperExtensions.cs"
 
 [[extensions]]
 name = "LoadHtmlDocumentAsync"
-sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebBrowserScraper scraper, Uri pageLink,
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebBrowserScraper scraper,
+                                                           Uri pageLink,
                                                            Action<HtmlWeb> configWeb)"
 returns = "Task<HtmlDocument>"
 file = "Extensions\\WebBrowserScraperExtensions.cs"
 
 [[extensions]]
 name = "LoadAsync"
-sig = "Task LoadAsync(this IWebBrowserScraper scraper, Uri pageLink,
+sig = "Task LoadAsync(this IWebBrowserScraper scraper,
+                                 Uri pageLink,
                                  Action<Uri, HtmlWeb, HtmlDocument> action)"
 returns = "Task"
 file = "Extensions\\WebBrowserScraperExtensions.cs"
 
 [[extensions]]
 name = "LoadAsync"
-sig = "Task LoadAsync(this IWebBrowserScraper scraper, Uri pageLink,
+sig = "Task LoadAsync(this IWebBrowserScraper scraper,
+                                 Uri pageLink,
                                  Action<Uri, HtmlWeb, HtmlDocument> action,
                                  Action<HtmlWeb> configWeb)"
 returns = "Task"
@@ -191,14 +194,16 @@ file = "Extensions\\WebScraperExtensions.cs"
 
 [[extensions]]
 name = "LoadHtmlDocumentAsync"
-sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, Uri pageLink,
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper,
+                                                           Uri pageLink,
                                                            Action<HtmlWeb> configWeb)"
 returns = "Task<HtmlDocument>"
 file = "Extensions\\WebScraperExtensions.cs"
 
 [[extensions]]
 name = "LoadHtmlDocumentAsync"
-sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, Uri pageLink,
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper,
+                                                           Uri pageLink,
                                                            Action<HtmlWeb> configWeb,
                                                            Encoding encoding)"
 returns = "Task<HtmlDocument>"
@@ -206,7 +211,8 @@ file = "Extensions\\WebScraperExtensions.cs"
 
 [[extensions]]
 name = "LoadHtmlDocumentAsync"
-sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, Uri pageLink,
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper,
+                                                           Uri pageLink,
                                                            Action<HtmlWeb> configWeb,
                                                            Encoding encoding,
                                                            NetworkCredential credential)"
@@ -221,14 +227,18 @@ file = "Extensions\\WebScraperExtensions.cs"
 
 [[extensions]]
 name = "LoadHtmlDocumentAsync"
-sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, HtmlWeb web, Uri pageLink,
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper,
+                                                           HtmlWeb web,
+                                                           Uri pageLink,
                                                            Encoding encoding)"
 returns = "Task<HtmlDocument>"
 file = "Extensions\\WebScraperExtensions.cs"
 
 [[extensions]]
 name = "LoadHtmlDocumentAsync"
-sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, HtmlWeb web, Uri pageLink,
+sig = "Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper,
+                                                           HtmlWeb web,
+                                                           Uri pageLink,
                                                            Encoding encoding,
                                                            NetworkCredential credential)"
 returns = "Task<HtmlDocument>"

@@ -1,6 +1,6 @@
 [project]
 name = "FEx.AppSettings"
-path = "rc\\FEx.AppSettings"
+path = "src\\FEx.AppSettings"
 
 [[classes]]
 name = "ConfigurationService"
@@ -84,9 +84,7 @@ static = true
 
 [[extensions]]
 name = "BindJsonNet"
-sig = "void BindJsonNet(this IConfigurationSection config,
-                                   object instance,
-                                   Func<string, string> jsonFunc)"
+sig = "void BindJsonNet(this IConfigurationSection config, object instance, Func<string, string> jsonFunc)"
 returns = "void"
 file = "Extensions\\FExConfigurationExtensions.cs"
 

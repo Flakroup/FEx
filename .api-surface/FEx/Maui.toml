@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Maui"
-path = "rc\\FEx.Maui"
+path = "src\\FEx.Maui"
 
 [[classes]]
 name = "FExMauiDispatcher"

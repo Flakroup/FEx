@@ -1,6 +1,6 @@
 [project]
 name = "FEx.WPFx"
-path = "rc\\FEx.WPFx"
+path = "src\\FEx.WPFx"
 
 [[classes]]
 name = "FExModule"
@@ -73,6 +73,20 @@ name = "HotkeyActionAttribute"
 ns = "FEx.WPFx.Attributes"
 base = "Attribute"
 file = "Attributes\\HotkeyActionAttribute.cs"
+
+[[classes]]
+name = "IconAttribute"
+ns = "FEx.WPFx.Attributes"
+base = "Attribute"
+summary = "Base icon attribute."
+file = "Attributes\\IconAttribute.cs"
+
+[[classes]]
+name = "IconDescriptorAttribute"
+ns = "FEx.WPFx.Attributes"
+base = "Attribute"
+summary = "Icon character attribute."
+file = "Attributes\\IconDescriptorAttribute.cs"
 
 [[classes]]
 name = "DataGridBehavior"
@@ -192,6 +206,13 @@ ns = "FEx.WPFx.Controls"
 base = "Window, IViewFor<TViewModel>, IRunAsyncView
     where TViewModel : WpfProgressListenerViewModel"
 file = "Controls\\FExWindow.cs"
+
+[[classes]]
+name = "IconDisplayer"
+ns = "FEx.WPFx.Controls"
+base = "TextBlock"
+summary = "Icon displayer control."
+file = "Controls\\IconDisplayer.cs"
 
 [[classes]]
 name = "OutlinedTextBlock"
@@ -645,6 +666,27 @@ file = "Extensions\\DependencyPropertyExtensions.cs"
 static = true
 
 [[classes]]
+name = "IconExtensions"
+ns = "FEx.WPFx.Extensions"
+summary = "Icon extensions class."
+file = "Extensions\\IconExtensions.cs"
+static = true
+
+[[extensions]]
+name = "GetIconCharacter"
+sig = "char GetIconCharacter(this Enum value)"
+returns = "char"
+summary = "Gets the icon character."
+file = "Extensions\\IconExtensions.cs"
+
+[[extensions]]
+name = "GetAltText"
+sig = "string GetAltText(this Enum value)"
+returns = "string"
+summary = "Gets the alt text."
+file = "Extensions\\IconExtensions.cs"
+
+[[classes]]
 name = "TreeViewBuilderExtensions"
 ns = "FEx.WPFx.Extensions"
 file = "Extensions\\TreeViewBuilderExtensions.cs"
@@ -652,9 +694,7 @@ static = true
 
 [[extensions]]
 name = "AddChildNode"
-sig = "void AddChildNode(this ITreeViewBuilder builder,
-                                    string rootNodeName,
-                                    List<string> nodePath)"
+sig = "void AddChildNode(this ITreeViewBuilder builder, string rootNodeName, List<string> nodePath)"
 returns = "void"
 file = "Extensions\\TreeViewBuilderExtensions.cs"
 
@@ -702,18 +742,13 @@ file = "Extensions\\TreeViewBuilderExtensions.cs"
 
 [[extensions]]
 name = "AddChildNode"
-sig = "void AddChildNode(this ITreeViewBuilder builder,
-                                    string rootNodeName,
-                                    string nodePath)"
+sig = "void AddChildNode(this ITreeViewBuilder builder, string rootNodeName, string nodePath)"
 returns = "void"
 file = "Extensions\\TreeViewBuilderExtensions.cs"
 
 [[extensions]]
 name = "AddChildNode"
-sig = "void AddChildNode(this ITreeViewBuilder builder,
-                                    string rootNodeName,
-                                    string nodePath,
-                                    string name)"
+sig = "void AddChildNode(this ITreeViewBuilder builder, string rootNodeName, string nodePath, string name)"
 returns = "void"
 file = "Extensions\\TreeViewBuilderExtensions.cs"
 

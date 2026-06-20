@@ -1,6 +1,6 @@
 [project]
 name = "FEx.DependencyInjection"
-path = "rc\\DependencyInjection"
+path = "src\\DependencyInjection"
 
 [[classes]]
 name = "FExDependencyInjectionModule"

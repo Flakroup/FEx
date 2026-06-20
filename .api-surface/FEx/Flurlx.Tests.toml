@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Flurlx.Tests"
-path = "est\\FEx.Flurlx.Tests"
+path = "test\\FEx.Flurlx.Tests"
 
 [[classes]]
 name = "FExPollyPolicyBuilderTests"

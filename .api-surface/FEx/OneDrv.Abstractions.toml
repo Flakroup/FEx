@@ -1,6 +1,6 @@
 [project]
 name = "FEx.OneDrv.Abstractions"
-path = "rc\\FEx.OneDrv.Abstractions"
+path = "src\\FEx.OneDrv.Abstractions"
 
 [[interfaces]]
 name = "IGraphServiceClientCache"

@@ -93,13 +93,6 @@
       <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
-  <Folder Name="/src/Agnostics.Abstractions/" />
-  <Folder Name="/src/Agnostics/" />
-  <Folder Name="/src/Core.Abstractions/" />
-  <Folder Name="/src/Core/" />
-  <Folder Name="/src/DependencyInjection.Abstractions/" />
-  <Folder Name="/src/Logging.Abstractions/" />
-  <Folder Name="/src/Logging/" />
   <Folder Name="/test/">
     <File Path="test/Directory.Build.props" />
     <File Path="test/Directory.Build.targets" />

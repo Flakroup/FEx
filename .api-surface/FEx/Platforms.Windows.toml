@@ -10,8 +10,8 @@ static = true
 
 [[extensions]]
 name = "SetEverybodyFullControl"
-sig = "bool SetEverybodyFullControl(this DirectoryInfo dInfo, params string[] excludes)"
 returns = "bool"
+sig = "bool SetEverybodyFullControl(this DirectoryInfo dInfo, params string[] excludes)"
 file = "Extensions\\FileSystemExtensions.cs"
 
 [[classes]]
@@ -23,22 +23,22 @@ static = true
 
 [[extensions]]
 name = "SamAccountName"
-sig = "string SamAccountName(this IIdentity user)"
 returns = "string"
+sig = "string SamAccountName(this IIdentity user)"
 summary = "Extracts the SAMAccountName part of the full identity name"
 file = "Extensions\\IdentityExtensions.cs"
 
 [[extensions]]
 name = "Domain"
-sig = "string Domain(this IIdentity user)"
 returns = "string"
+sig = "string Domain(this IIdentity user)"
 summary = "Extracts the domain name part of the full identity name"
 file = "Extensions\\IdentityExtensions.cs"
 
 [[extensions]]
 name = "LogFormattedName"
-sig = "string LogFormattedName(this IIdentity user)"
 returns = "string"
+sig = "string LogFormattedName(this IIdentity user)"
 summary = "Extracts the SAMAccountName part of the full identity name and formats it the way the activity log wants it."
 file = "Extensions\\IdentityExtensions.cs"
 
@@ -47,9 +47,87 @@ name = "ACL"
 ns = "FEx.Platforms.Windows.Models"
 file = "Models\\ACL.cs"
 
+[[properties]]
+parent = "ACL"
+name = "Path"
+sig = "string Path { get; }"
+returns = "string"
+file = "Models\\ACL.cs"
+
+[[properties]]
+parent = "ACL"
+name = "HasEveryoneAccess"
+sig = "bool HasEveryoneAccess { get; }"
+returns = "bool"
+file = "Models\\ACL.cs"
+
+[[properties]]
+parent = "ACL"
+name = "HasEveryoneOwner"
+sig = "bool HasEveryoneOwner { get; }"
+returns = "bool"
+file = "Models\\ACL.cs"
+
+[[ctors]]
+parent = "ACL"
+sig = "ACL(IReadOnlyList<string> splitted)"
+file = "Models\\ACL.cs"
+
+[[ctors]]
+parent = "ACL"
+sig = "ACL(string v1, bool v2, bool v3)"
+file = "Models\\ACL.cs"
+
+[[methods]]
+parent = "ACL"
+name = "ToString"
+sig = "string ToString()"
+returns = "string"
+file = "Models\\ACL.cs"
+
 [[classes]]
 name = "ElevatedCmd"
 ns = "FEx.Platforms.Windows.Utilities"
 base = "Cmd"
+file = "Utilities\\ElevatedCmd.cs"
+
+[[properties]]
+parent = "ElevatedCmd"
+name = "OutFile"
+sig = "string OutFile { get; set; }"
+returns = "string"
+file = "Utilities\\ElevatedCmd.cs"
+
+[[properties]]
+parent = "ElevatedCmd"
+name = "OutTask"
+sig = "Task OutTask { get; set; }"
+returns = "Task"
+file = "Utilities\\ElevatedCmd.cs"
+
+[[ctors]]
+parent = "ElevatedCmd"
+sig = "ElevatedCmd(string procName = \"cmd\")"
+file = "Utilities\\ElevatedCmd.cs"
+
+[[methods]]
+parent = "ElevatedCmd"
+name = "StartProc"
+sig = "void StartProc()"
+returns = "void"
+file = "Utilities\\ElevatedCmd.cs"
+
+[[methods]]
+parent = "ElevatedCmd"
+name = "OnStarted"
+sig = "void OnStarted(bool waitForExit, Action<ICmd> onStarted)"
+returns = "void"
+file = "Utilities\\ElevatedCmd.cs"
+
+[[methods]]
+parent = "ElevatedCmd"
+name = "AttachToOutput"
+sig = "void AttachToOutput()"
+returns = "void"
 file = "Utilities\\ElevatedCmd.cs"
 

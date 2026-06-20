@@ -7,14 +7,51 @@ name = "TestBase"
 ns = "FEx.Agnostics.TestMocks"
 file = "TestBase.cs"
 
+[[ctors]]
+parent = "TestBase"
+sig = "TestBase()"
+file = "TestBase.cs"
+
+[[methods]]
+parent = "TestBase"
+name = "FormatMessage"
+sig = "string FormatMessage(string format, params object[] args)"
+returns = "string"
+file = "TestBase.cs"
+
 [[classes]]
 name = "UniqueRandomGenerator"
 ns = "FEx.Agnostics.TestMocks.Helpers"
 file = "Helpers\\UniqueRandomGenerator.cs"
 
+[[ctors]]
+parent = "UniqueRandomGenerator"
+sig = "UniqueRandomGenerator()"
+file = "Helpers\\UniqueRandomGenerator.cs"
+
+[[ctors]]
+parent = "UniqueRandomGenerator"
+sig = "UniqueRandomGenerator(int minValue, int maxValue)"
+file = "Helpers\\UniqueRandomGenerator.cs"
+
+[[methods]]
+parent = "UniqueRandomGenerator"
+name = "GenerateUniqueRandomInteger"
+sig = "int GenerateUniqueRandomInteger()"
+returns = "int"
+file = "Helpers\\UniqueRandomGenerator.cs"
+
 [[classes]]
 name = "XUnitFExLoggerHelper"
 ns = "FEx.Agnostics.TestMocks.Logging"
+file = "Logging\\XUnitFExLoggerHelper.cs"
+static = true
+
+[[methods]]
+parent = "XUnitFExLoggerHelper"
+name = "CreateMockLogger"
+sig = "static IFExLogger CreateMockLogger(ITestOutputHelper output)"
+returns = "IFExLogger"
 file = "Logging\\XUnitFExLoggerHelper.cs"
 static = true
 
@@ -24,9 +61,54 @@ ns = "FEx.Agnostics.TestMocks.Logging"
 base = "ILogger"
 file = "Logging\\XUnitLogger.cs"
 
+[[ctors]]
+parent = "XUnitLogger"
+sig = "XUnitLogger(ITestOutputHelper output, string categoryName)"
+file = "Logging\\XUnitLogger.cs"
+
+[[methods]]
+parent = "XUnitLogger"
+name = "BeginScope"
+sig = "IDisposable BeginScope<TState>(TState state)"
+returns = "IDisposable"
+file = "Logging\\XUnitLogger.cs"
+
+[[methods]]
+parent = "XUnitLogger"
+name = "IsEnabled"
+sig = "bool IsEnabled(LogLevel logLevel)"
+returns = "bool"
+file = "Logging\\XUnitLogger.cs"
+
+[[methods]]
+parent = "XUnitLogger"
+name = "Log"
+sig = "void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)"
+returns = "void"
+file = "Logging\\XUnitLogger.cs"
+
 [[classes]]
 name = "XUnitLoggerProvider"
 ns = "FEx.Agnostics.TestMocks.Logging"
 base = "ILoggerProvider"
+file = "Logging\\XUnitLoggerProvider.cs"
+
+[[ctors]]
+parent = "XUnitLoggerProvider"
+sig = "XUnitLoggerProvider(ITestOutputHelper output)"
+file = "Logging\\XUnitLoggerProvider.cs"
+
+[[methods]]
+parent = "XUnitLoggerProvider"
+name = "CreateLogger"
+sig = "ILogger CreateLogger(string categoryName)"
+returns = "ILogger"
+file = "Logging\\XUnitLoggerProvider.cs"
+
+[[methods]]
+parent = "XUnitLoggerProvider"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
 file = "Logging\\XUnitLoggerProvider.cs"
 

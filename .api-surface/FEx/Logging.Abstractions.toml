@@ -8,16 +8,94 @@ ns = "FEx.Logging.Abstractions"
 base = "StaticsBase"
 file = "FExLoggingStatics.cs"
 
+[[properties]]
+parent = "FExLoggingStatics"
+name = "LoggerFactory"
+sig = "static ILoggerFactory LoggerFactory { get; }"
+returns = "ILoggerFactory"
+summary = "Retrieves the instance. ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable."
+file = "FExLoggingStatics.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingStatics"
+name = "SetDefaults"
+sig = "static void SetDefaults()"
+returns = "void"
+file = "FExLoggingStatics.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingStatics"
+name = "Configure"
+sig = "static void Configure(Func<ILoggerFactory> loggerFactoryFactory = null)"
+returns = "void"
+file = "FExLoggingStatics.cs"
+static = true
+
+[[methods]]
+parent = "FExLoggingStatics"
+name = "Initialize"
+sig = "static void Initialize(ILoggerFactory loggerFactory, ILogger logger = null)"
+returns = "void"
+file = "FExLoggingStatics.cs"
+static = true
+
 [[classes]]
 name = "SentrySinkConfiguratorBase"
 ns = "FEx.Logging.Abstractions"
 base = "SinkConfiguratorBase"
 file = "SentrySinkConfiguratorBase.cs"
 
+[[ctors]]
+parent = "SentrySinkConfiguratorBase"
+sig = "SentrySinkConfiguratorBase(ISentryConfig sentryConfig, ILoggingConfiguration loggingConfiguration, IAppVersionProvider appVersionProvider)"
+file = "SentrySinkConfiguratorBase.cs"
+
+[[methods]]
+parent = "SentrySinkConfiguratorBase"
+name = "ConfigureSentrySerilogLogging"
+sig = "void ConfigureSentrySerilogLogging(SentrySerilogOptions options)"
+returns = "void"
+file = "SentrySinkConfiguratorBase.cs"
+
+[[methods]]
+parent = "SentrySinkConfiguratorBase"
+name = "ConfigureSentryLogging"
+sig = "void ConfigureSentryLogging(SentryOptions options)"
+returns = "void"
+file = "SentrySinkConfiguratorBase.cs"
+
 [[classes]]
 name = "SinkConfiguratorBase"
 ns = "FEx.Logging.Abstractions"
 base = "ISinkConfigurator"
+file = "SinkConfiguratorBase.cs"
+
+[[properties]]
+parent = "SinkConfiguratorBase"
+name = "IsEnabled"
+sig = "bool IsEnabled { get; }"
+returns = "bool"
+file = "SinkConfiguratorBase.cs"
+
+[[properties]]
+parent = "SinkConfiguratorBase"
+name = "SinkType"
+sig = "LoggingOptions SinkType { get; }"
+returns = "LoggingOptions"
+file = "SinkConfiguratorBase.cs"
+
+[[ctors]]
+parent = "SinkConfiguratorBase"
+sig = "SinkConfiguratorBase(ILoggingConfiguration loggingConfiguration, LoggingOptions sinkType)"
+file = "SinkConfiguratorBase.cs"
+
+[[methods]]
+parent = "SinkConfiguratorBase"
+name = "ConfigureSink"
+sig = "LoggerConfiguration ConfigureSink(LoggerSinkConfiguration writeTo)"
+returns = "LoggerConfiguration"
 file = "SinkConfiguratorBase.cs"
 
 [[enums]]
@@ -33,22 +111,32 @@ static = true
 
 [[extensions]]
 name = "AddOverrides"
-sig = "LoggerConfiguration AddOverrides(this LoggerConfiguration cfg,
-                                                   IList<string> overrides,
-                                                   LogEventLevel level)"
 returns = "LoggerConfiguration"
+sig = "LoggerConfiguration AddOverrides(this LoggerConfiguration cfg, IList<string> overrides, LogEventLevel level)"
 file = "Extensions\\LoggerExtensions.cs"
 
 [[extensions]]
 name = "Log"
-sig = "void Log(this ILogger logger, LogLevel logLevel, string message, Exception exception = null)"
 returns = "void"
+sig = "void Log(this ILogger logger, LogLevel logLevel, string message, Exception exception = null)"
+file = "Extensions\\LoggerExtensions.cs"
+
+[[extensions]]
+name = "LogError"
+returns = "void"
+sig = "void LogError<T>(this ILogger logger, T exception)"
 file = "Extensions\\LoggerExtensions.cs"
 
 [[extensions]]
 name = "GetMicrosoftLogger"
-sig = "ILogger GetMicrosoftLogger(this object sender)"
 returns = "ILogger"
+sig = "ILogger GetMicrosoftLogger(this object sender)"
+file = "Extensions\\LoggerExtensions.cs"
+
+[[extensions]]
+name = "GetSerilogLogger"
+returns = "Serilog.ILogger"
+sig = "Serilog.ILogger GetSerilogLogger(this object sender)"
 file = "Extensions\\LoggerExtensions.cs"
 
 [[classes]]
@@ -59,18 +147,69 @@ static = true
 
 [[extensions]]
 name = "HasFlagFast"
-sig = "bool HasFlagFast(this LoggingOptions value, LoggingOptions flag)"
 returns = "bool"
+sig = "bool HasFlagFast(this LoggingOptions value, LoggingOptions flag)"
 file = "Extensions\\LoggingOptionsExtensions.cs"
 
 [[interfaces]]
 name = "IFExLoggingConfigurator"
 ns = "FEx.Logging.Abstractions.Interfaces"
+base = "IConfigurator"
+file = "Interfaces\\IFExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "IFExLoggingConfigurator"
+name = "IsLoggingEnabled"
+sig = "bool IsLoggingEnabled { get; }"
+returns = "bool"
+file = "Interfaces\\IFExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "IFExLoggingConfigurator"
+name = "Overrides"
+sig = "IList<string> Overrides { get; set; }"
+returns = "IList<string>"
+file = "Interfaces\\IFExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "IFExLoggingConfigurator"
+name = "ExternalLoggingLevel"
+sig = "LogEventLevel ExternalLoggingLevel { get; set; }"
+returns = "LogEventLevel"
+file = "Interfaces\\IFExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "IFExLoggingConfigurator"
+name = "ExternalDebugLoggingLevel"
+sig = "LogEventLevel ExternalDebugLoggingLevel { get; set; }"
+returns = "LogEventLevel"
+file = "Interfaces\\IFExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "IFExLoggingConfigurator"
+name = "CfgFunc"
+sig = "Func<LoggerConfiguration, LoggerConfiguration> CfgFunc { get; set; }"
+returns = "Func<LoggerConfiguration, LoggerConfiguration>"
+file = "Interfaces\\IFExLoggingConfigurator.cs"
+
+[[properties]]
+parent = "IFExLoggingConfigurator"
+name = "Configuration"
+sig = "LoggerConfiguration Configuration { get; }"
+returns = "LoggerConfiguration"
+file = "Interfaces\\IFExLoggingConfigurator.cs"
+
+[[methods]]
+parent = "IFExLoggingConfigurator"
+name = "GetLogFiles"
+sig = "IEnumerable<FileInfo> GetLogFiles()"
+returns = "IEnumerable<FileInfo>"
 file = "Interfaces\\IFExLoggingConfigurator.cs"
 
 [[interfaces]]
 name = "IFExLoggingContainer"
 ns = "FEx.Logging.Abstractions.Interfaces"
+base = "IContainer<IFExLogger>, IContainer<ILoggingConfiguration>, IContainer<IPlatformLogger>, IContainer<IFExLoggingConfigurator>, IContainer<ISinkConfigurator[]>, IContainer<ILogger>, IContainer<ILoggerFactory>, IContainer<LoggerProviderCollection>, IContainer<IFExLoggingService>"
 file = "Interfaces\\IFExLoggingContainer.cs"
 
 [[interfaces]]
@@ -78,9 +217,129 @@ name = "IFExLoggingService"
 ns = "FEx.Logging.Abstractions.Interfaces"
 file = "Interfaces\\IFExLoggingService.cs"
 
+[[methods]]
+parent = "IFExLoggingService"
+name = "GetLogger"
+sig = "IFExLogger GetLogger<T>()"
+returns = "IFExLogger"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "GetLogger"
+sig = "IFExLogger GetLogger(object sender)"
+returns = "IFExLogger"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogCritical"
+sig = "void LogCritical<T>(string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogDebug"
+sig = "void LogDebug<T>(string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogError"
+sig = "void LogError<T>(string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogInformation"
+sig = "void LogInformation<T>(string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogTrace"
+sig = "void LogTrace<T>(string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogWarning"
+sig = "void LogWarning<T>(string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "Log"
+sig = "void Log<T>(LogLevel logLevel, string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogCritical"
+sig = "void LogCritical(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogDebug"
+sig = "void LogDebug(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogError"
+sig = "void LogError(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogInformation"
+sig = "void LogInformation(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogTrace"
+sig = "void LogTrace(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "LogWarning"
+sig = "void LogWarning(object sender, string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
+[[methods]]
+parent = "IFExLoggingService"
+name = "Log"
+sig = "void Log(object sender, LogLevel logLevel, string message, Exception exception = null)"
+returns = "void"
+file = "Interfaces\\IFExLoggingService.cs"
+
 [[interfaces]]
 name = "IFileSinkConfigurator"
 ns = "FEx.Logging.Abstractions.Interfaces"
+base = "ISinkConfigurator"
+file = "Interfaces\\IFileSinkConfigurator.cs"
+
+[[methods]]
+parent = "IFileSinkConfigurator"
+name = "GetLogFiles"
+sig = "IEnumerable<FileInfo> GetLogFiles()"
+returns = "IEnumerable<FileInfo>"
 file = "Interfaces\\IFileSinkConfigurator.cs"
 
 [[interfaces]]
@@ -88,9 +347,51 @@ name = "ILoggingConfiguration"
 ns = "FEx.Logging.Abstractions.Interfaces"
 file = "Interfaces\\ILoggingConfiguration.cs"
 
+[[properties]]
+parent = "ILoggingConfiguration"
+name = "IsLoggingEnabled"
+sig = "bool IsLoggingEnabled { get; }"
+returns = "bool"
+file = "Interfaces\\ILoggingConfiguration.cs"
+
+[[methods]]
+parent = "ILoggingConfiguration"
+name = "Configure"
+sig = "void Configure(Func<LoggingOptions, LoggingOptions> configurator)"
+returns = "void"
+file = "Interfaces\\ILoggingConfiguration.cs"
+
+[[methods]]
+parent = "ILoggingConfiguration"
+name = "EnableLogOption"
+sig = "void EnableLogOption(LoggingOptions option)"
+returns = "void"
+file = "Interfaces\\ILoggingConfiguration.cs"
+
+[[methods]]
+parent = "ILoggingConfiguration"
+name = "DisableLogOption"
+sig = "void DisableLogOption(LoggingOptions option)"
+returns = "void"
+file = "Interfaces\\ILoggingConfiguration.cs"
+
+[[methods]]
+parent = "ILoggingConfiguration"
+name = "HasOption"
+sig = "bool HasOption(LoggingOptions option)"
+returns = "bool"
+file = "Interfaces\\ILoggingConfiguration.cs"
+
 [[interfaces]]
 name = "IPlatformLogger"
 ns = "FEx.Logging.Abstractions.Interfaces"
+file = "Interfaces\\IPlatformLogger.cs"
+
+[[methods]]
+parent = "IPlatformLogger"
+name = "Log"
+sig = "void Log(string message, LogEvent logEvent)"
+returns = "void"
 file = "Interfaces\\IPlatformLogger.cs"
 
 [[interfaces]]
@@ -98,8 +399,50 @@ name = "ISentryConfig"
 ns = "FEx.Logging.Abstractions.Interfaces"
 file = "Interfaces\\ISentryConfig.cs"
 
+[[properties]]
+parent = "ISentryConfig"
+name = "SentryDsn"
+sig = "string SentryDsn { get; }"
+returns = "string"
+file = "Interfaces\\ISentryConfig.cs"
+
+[[properties]]
+parent = "ISentryConfig"
+name = "AttachScreenshot"
+sig = "bool AttachScreenshot { get; }"
+returns = "bool"
+file = "Interfaces\\ISentryConfig.cs"
+
+[[properties]]
+parent = "ISentryConfig"
+name = "EnvironmentId"
+sig = "string EnvironmentId { get; }"
+returns = "string"
+file = "Interfaces\\ISentryConfig.cs"
+
 [[interfaces]]
 name = "ISinkConfigurator"
 ns = "FEx.Logging.Abstractions.Interfaces"
+file = "Interfaces\\ISinkConfigurator.cs"
+
+[[properties]]
+parent = "ISinkConfigurator"
+name = "IsEnabled"
+sig = "bool IsEnabled { get; }"
+returns = "bool"
+file = "Interfaces\\ISinkConfigurator.cs"
+
+[[properties]]
+parent = "ISinkConfigurator"
+name = "SinkType"
+sig = "LoggingOptions SinkType { get; }"
+returns = "LoggingOptions"
+file = "Interfaces\\ISinkConfigurator.cs"
+
+[[methods]]
+parent = "ISinkConfigurator"
+name = "ConfigureSink"
+sig = "LoggerConfiguration ConfigureSink(LoggerSinkConfiguration writeTo)"
+returns = "LoggerConfiguration"
 file = "Interfaces\\ISinkConfigurator.cs"
 

@@ -8,6 +8,60 @@ ns = "FEx.Telemetry"
 base = "NotifyPropertyChanged, IFExTelemetryConfig"
 file = "FExTelemetryConfigBase.cs"
 
+[[properties]]
+parent = "FExTelemetryConfigBase"
+name = "AccessToken"
+sig = "string AccessToken { get; set; }"
+returns = "string"
+file = "FExTelemetryConfigBase.cs"
+
+[[properties]]
+parent = "FExTelemetryConfigBase"
+name = "AppEnvironment"
+sig = "string AppEnvironment { get; }"
+returns = "string"
+file = "FExTelemetryConfigBase.cs"
+
+[[properties]]
+parent = "FExTelemetryConfigBase"
+name = "PersonEmail"
+sig = "Func<string> PersonEmail { get; set; }"
+returns = "Func<string>"
+file = "FExTelemetryConfigBase.cs"
+
+[[properties]]
+parent = "FExTelemetryConfigBase"
+name = "PersonUserName"
+sig = "Func<string> PersonUserName { get; set; }"
+returns = "Func<string>"
+file = "FExTelemetryConfigBase.cs"
+
+[[properties]]
+parent = "FExTelemetryConfigBase"
+name = "AddPersonToEnvironment"
+sig = "bool AddPersonToEnvironment { get; set; }"
+returns = "bool"
+file = "FExTelemetryConfigBase.cs"
+
+[[properties]]
+parent = "FExTelemetryConfigBase"
+name = "EnvironmentParam"
+sig = "string EnvironmentParam { get; }"
+returns = "string"
+file = "FExTelemetryConfigBase.cs"
+
+[[ctors]]
+parent = "FExTelemetryConfigBase"
+sig = "FExTelemetryConfigBase()"
+file = "FExTelemetryConfigBase.cs"
+
+[[methods]]
+parent = "FExTelemetryConfigBase"
+name = "OnAccessTokenChanged"
+sig = "void OnAccessTokenChanged(string accessToken)"
+returns = "void"
+file = "FExTelemetryConfigBase.cs"
+
 [[classes]]
 name = "FExTelemetryModule"
 ns = "FEx.Telemetry"
@@ -18,9 +72,45 @@ name = "IFExTelemetryConfig"
 ns = "FEx.Telemetry"
 file = "IFExTelemetryConfig.cs"
 
+[[properties]]
+parent = "IFExTelemetryConfig"
+name = "AccessToken"
+sig = "string AccessToken { get; set; }"
+returns = "string"
+file = "IFExTelemetryConfig.cs"
+
+[[properties]]
+parent = "IFExTelemetryConfig"
+name = "AppEnvironment"
+sig = "string AppEnvironment { get; }"
+returns = "string"
+file = "IFExTelemetryConfig.cs"
+
+[[properties]]
+parent = "IFExTelemetryConfig"
+name = "PersonEmail"
+sig = "Func<string> PersonEmail { get; set; }"
+returns = "Func<string>"
+file = "IFExTelemetryConfig.cs"
+
+[[properties]]
+parent = "IFExTelemetryConfig"
+name = "PersonUserName"
+sig = "Func<string> PersonUserName { get; set; }"
+returns = "Func<string>"
+file = "IFExTelemetryConfig.cs"
+
+[[properties]]
+parent = "IFExTelemetryConfig"
+name = "AddPersonToEnvironment"
+sig = "bool AddPersonToEnvironment { get; set; }"
+returns = "bool"
+file = "IFExTelemetryConfig.cs"
+
 [[interfaces]]
 name = "IFExTelemetryModule"
 ns = "FEx.Telemetry"
+base = "IContainer<TelemetryAccessTokenSubject>, IContainer<IFExTelemetryConfig>"
 file = "IFExTelemetryModule.cs"
 
 [[classes]]

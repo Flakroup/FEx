@@ -8,14 +8,104 @@ ns = "FEx.Agnostics.BaseObjects"
 base = "PropertyChangeAware, IFExNotifyPropertyChanged"
 file = "BaseObjects\\NotifyPropertyChanged.cs"
 
+[[methods]]
+parent = "NotifyPropertyChanged"
+name = "OnPropertyChanged"
+sig = "void OnPropertyChanged([CallerMemberName] string propertyName = null)"
+returns = "void"
+file = "BaseObjects\\NotifyPropertyChanged.cs"
+
 [[classes]]
 name = "PropertyChangeAware"
 ns = "FEx.Agnostics.BaseObjects"
 file = "BaseObjects\\PropertyChangeAware.cs"
 
+[[methods]]
+parent = "PropertyChangeAware"
+name = "OnPropertiesChanged"
+sig = "void OnPropertiesChanged(params string[] propertyNames)"
+returns = "void"
+file = "BaseObjects\\PropertyChangeAware.cs"
+
+[[methods]]
+parent = "PropertyChangeAware"
+name = "SetProperty"
+sig = "bool SetProperty<TRet>(ref TRet backingField, TRet newValue, Action<TRet> onPropertyChanged = null, [CallerMemberName] string propertyName = null)"
+returns = "bool"
+file = "BaseObjects\\PropertyChangeAware.cs"
+
+[[methods]]
+parent = "PropertyChangeAware"
+name = "OnPropertySet"
+sig = "void OnPropertySet<T>(T oldValue, T newValue, string propertyName)"
+returns = "void"
+file = "BaseObjects\\PropertyChangeAware.cs"
+
+[[methods]]
+parent = "PropertyChangeAware"
+name = "OnPropertyChanged"
+sig = "void OnPropertyChanged([CallerMemberName] string propertyName = null)"
+returns = "void"
+file = "BaseObjects\\PropertyChangeAware.cs"
+
 [[classes]]
 name = "PaginatedList"
 ns = "FEx.Agnostics.Collections"
+file = "Collections\\PaginatedList.cs"
+
+[[properties]]
+parent = "PaginatedList"
+name = "Empty"
+sig = "static PaginatedList<T> Empty { get; }"
+returns = "PaginatedList<T>"
+file = "Collections\\PaginatedList.cs"
+static = true
+
+[[properties]]
+parent = "PaginatedList"
+name = "Items"
+sig = "IList<T> Items { get; }"
+returns = "IList<T>"
+file = "Collections\\PaginatedList.cs"
+
+[[properties]]
+parent = "PaginatedList"
+name = "PageIndex"
+sig = "int PageIndex { get; }"
+returns = "int"
+file = "Collections\\PaginatedList.cs"
+
+[[properties]]
+parent = "PaginatedList"
+name = "TotalPages"
+sig = "int TotalPages { get; }"
+returns = "int"
+file = "Collections\\PaginatedList.cs"
+
+[[properties]]
+parent = "PaginatedList"
+name = "TotalItemsCount"
+sig = "int TotalItemsCount { get; }"
+returns = "int"
+file = "Collections\\PaginatedList.cs"
+
+[[properties]]
+parent = "PaginatedList"
+name = "HasPreviousPage"
+sig = "bool HasPreviousPage { get; }"
+returns = "bool"
+file = "Collections\\PaginatedList.cs"
+
+[[properties]]
+parent = "PaginatedList"
+name = "HasNextPage"
+sig = "bool HasNextPage { get; }"
+returns = "bool"
+file = "Collections\\PaginatedList.cs"
+
+[[ctors]]
+parent = "PaginatedList"
+sig = "PaginatedList(IList<T> items, int totalItemsCount, int pageIndex, int totalPages)"
 file = "Collections\\PaginatedList.cs"
 
 [[classes]]
@@ -24,38 +114,25 @@ ns = "FEx.Agnostics.Collections"
 base = "PaginatedList<T>"
 file = "Collections\\SummarizedPaginatedList.cs"
 
-[[classes]]
-name = "CollectionDebugView"
-ns = "FEx.Agnostics.Collections.Concurrent"
-file = "Collections\\Concurrent\\CollectionDebugView.cs"
+[[properties]]
+parent = "SummarizedPaginatedList"
+name = "Empty"
+sig = "static SummarizedPaginatedList<T, TSum> Empty { get; }"
+returns = "SummarizedPaginatedList<T, TSum>"
+file = "Collections\\SummarizedPaginatedList.cs"
+static = true
 
-[[classes]]
-name = "ConcurrentList"
-ns = "FEx.Agnostics.Collections.Concurrent"
-base = "BaseConcurrentList<T>, IConcurrentList<T>"
-file = "Collections\\Concurrent\\ConcurrentList.cs"
+[[properties]]
+parent = "SummarizedPaginatedList"
+name = "Summary"
+sig = "TSum Summary { get; }"
+returns = "TSum"
+file = "Collections\\SummarizedPaginatedList.cs"
 
-[[classes]]
-name = "ConcurrentList"
-ns = "FEx.Agnostics.Collections.Concurrent"
-file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
-
-[[classes]]
-name = "ConcurrentSortableList"
-ns = "FEx.Agnostics.Collections.Concurrent"
-base = "ConcurrentList<T> where T : IComparable<T>"
-file = "Collections\\Concurrent\\ConcurrentSortableList.cs"
-
-[[classes]]
-name = "FExMemoryCache"
-ns = "FEx.Agnostics.Collections.Concurrent"
-base = "IFExMemoryCache<TKey, TValue>, IDictionary<TKey, TValue>, IDictionary"
-file = "Collections\\Concurrent\\FExMemoryCache.cs"
-
-[[classes]]
-name = "ListDebugView"
-ns = "FEx.Agnostics.Collections.Concurrent"
-file = "Collections\\Concurrent\\ListDebugView.cs"
+[[ctors]]
+parent = "SummarizedPaginatedList"
+sig = "SummarizedPaginatedList(IList<T> items, int totalItemsCount, int pageIndex, int totalPages, Func<IList<T>, TSum> sumFunc)"
+file = "Collections\\SummarizedPaginatedList.cs"
 
 [[classes]]
 name = "AlphanumComparatorFast"
@@ -63,16 +140,74 @@ ns = "FEx.Agnostics.Comparers"
 base = "IComparer<string>, IEqualityComparer<string>"
 file = "Comparers\\AlphanumComparatorFast.cs"
 
+[[methods]]
+parent = "AlphanumComparatorFast"
+name = "Compare"
+sig = "int Compare(string s1, string s2)"
+returns = "int"
+file = "Comparers\\AlphanumComparatorFast.cs"
+
+[[methods]]
+parent = "AlphanumComparatorFast"
+name = "Equals"
+sig = "bool Equals(string x, string y)"
+returns = "bool"
+file = "Comparers\\AlphanumComparatorFast.cs"
+
+[[methods]]
+parent = "AlphanumComparatorFast"
+name = "GetHashCode"
+sig = "int GetHashCode(string obj)"
+returns = "int"
+file = "Comparers\\AlphanumComparatorFast.cs"
+
+[[methods]]
+parent = "AlphanumComparatorFast"
+name = "Compare"
+sig = "static int Compare(string s1, string s2, StringComparison comparisonType)"
+returns = "int"
+file = "Comparers\\AlphanumComparatorFast.cs"
+static = true
+
 [[classes]]
 name = "NonSpaceIgnoringStringComparer"
 ns = "FEx.Agnostics.Comparers"
 base = "IEqualityComparer<string>"
 file = "Comparers\\NonSpaceIgnoringStringComparer.cs"
 
+[[methods]]
+parent = "NonSpaceIgnoringStringComparer"
+name = "Equals"
+sig = "bool Equals(string x, string y)"
+returns = "bool"
+file = "Comparers\\NonSpaceIgnoringStringComparer.cs"
+
+[[methods]]
+parent = "NonSpaceIgnoringStringComparer"
+name = "GetHashCode"
+sig = "int GetHashCode(string obj)"
+returns = "int"
+file = "Comparers\\NonSpaceIgnoringStringComparer.cs"
+
 [[classes]]
 name = "FExException"
 ns = "FEx.Agnostics.Exceptions"
 base = "Exception"
+file = "Exceptions\\FExException.cs"
+
+[[ctors]]
+parent = "FExException"
+sig = "FExException()"
+file = "Exceptions\\FExException.cs"
+
+[[ctors]]
+parent = "FExException"
+sig = "FExException(string message)"
+file = "Exceptions\\FExException.cs"
+
+[[ctors]]
+parent = "FExException"
+sig = "FExException(string message, Exception innerException)"
 file = "Exceptions\\FExException.cs"
 
 [[classes]]
@@ -82,52 +217,73 @@ summary = "Contains extension methods for ."
 file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
 static = true
 
-[[interfaces]]
-name = "IDisposableLock"
-ns = "FEx.Agnostics.Extensions"
-summary = "Downgrades the lock from write mode to read mode."
-file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
-
 [[extensions]]
 name = "GetReadLock"
-sig = "IDisposableLock GetReadLock(this AsyncReaderWriterLockSlim lockInstance,
-                                              CancellationToken cancellationToken = default)"
 returns = "IDisposableLock"
+sig = "IDisposableLock GetReadLock(this AsyncReaderWriterLockSlim lockInstance, CancellationToken cancellationToken = default)"
 summary = "Enters the lock in read mode."
 file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
 
 [[extensions]]
+name = "GetReadLockAsync"
+returns = "Task<IDisposableLock>"
+sig = "Task<IDisposableLock> GetReadLockAsync(this AsyncReaderWriterLockSlim lockInstance, CancellationToken cancellationToken = default)"
+summary = "Asynchronously enters the lock in read mode and returns a that will release the lock when disposed."
+file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
+
+[[extensions]]
 name = "TryGetReadLock"
-sig = "IDisposableLock TryGetReadLock(this AsyncReaderWriterLockSlim lockInstance,
-                                                 int millisecondsTimeout,
-                                                 CancellationToken cancellationToken = default)"
 returns = "IDisposableLock"
+sig = "IDisposableLock TryGetReadLock(this AsyncReaderWriterLockSlim lockInstance, int millisecondsTimeout, CancellationToken cancellationToken = default)"
 summary = "Tries to enter the lock in read mode, with an optional integer time-out."
 file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
 
 [[extensions]]
+name = "TryGetReadLockAsync"
+returns = "Task<IDisposableLock>"
+sig = "Task<IDisposableLock> TryGetReadLockAsync(this AsyncReaderWriterLockSlim lockInstance, int millisecondsTimeout, CancellationToken cancellationToken = default)"
+summary = "Tries to asynchronously enter the lock in read mode, with an optional integer time-out."
+file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
+
+[[extensions]]
 name = "GetWriteLock"
-sig = "IDisposableLock GetWriteLock(this AsyncReaderWriterLockSlim lockInstance,
-                                               CancellationToken cancellationToken = default)"
 returns = "IDisposableLock"
+sig = "IDisposableLock GetWriteLock(this AsyncReaderWriterLockSlim lockInstance, CancellationToken cancellationToken = default)"
 summary = "Enters the lock in write mode."
 file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
 
 [[extensions]]
+name = "GetWriteLockAsync"
+returns = "Task<IDisposableLock>"
+sig = "Task<IDisposableLock> GetWriteLockAsync(this AsyncReaderWriterLockSlim lockInstance, CancellationToken cancellationToken = default)"
+summary = "Asynchronously enters the lock in write mode."
+file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
+
+[[extensions]]
 name = "TryGetWriteLock"
-sig = "IDisposableLock TryGetWriteLock(this AsyncReaderWriterLockSlim lockInstance,
-                                                  int millisecondsTimeout,
-                                                  CancellationToken cancellationToken = default)"
 returns = "IDisposableLock"
+sig = "IDisposableLock TryGetWriteLock(this AsyncReaderWriterLockSlim lockInstance, int millisecondsTimeout, CancellationToken cancellationToken = default)"
 summary = "Tries to enter the lock in write mode, with an optional integer time-out."
 file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
 
 [[extensions]]
+name = "TryGetWriteLockAsync"
+returns = "Task<IDisposableLock>"
+sig = "Task<IDisposableLock> TryGetWriteLockAsync(this AsyncReaderWriterLockSlim lockInstance, int millisecondsTimeout, CancellationToken cancellationToken = default)"
+summary = "Tries to asynchronously enter the lock in write mode, with an optional integer time-out."
+file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
+
+[[extensions]]
 name = "DowngradeWriteLockToReadLock"
-sig = "void DowngradeWriteLockToReadLock(this AsyncReaderWriterLockSlim lockInstance,
-                                                    IDisposableLock readLock)"
 returns = "void"
+sig = "void DowngradeWriteLockToReadLock(this AsyncReaderWriterLockSlim lockInstance, IDisposableLock readLock)"
 summary = "Downgrades the lock from write mode to read mode."
+file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
+
+[[interfaces]]
+name = "IDisposableLock"
+ns = "FEx.Agnostics.Extensions"
+base = "IDisposable"
 file = "Extensions\\AsyncReaderWriterLockSlimExtension.cs"
 
 [[classes]]
@@ -138,14 +294,38 @@ static = true
 
 [[extensions]]
 name = "OrderAlphanumBy"
-sig = "IOrderedEnumerable<string> OrderAlphanumBy(this IEnumerable<string> source)"
 returns = "IOrderedEnumerable<string>"
+sig = "IOrderedEnumerable<string> OrderAlphanumBy(this IEnumerable<string> source)"
+file = "Extensions\\EnumerableExtensions.cs"
+
+[[extensions]]
+name = "OrderAlphanumBy"
+returns = "IOrderedEnumerable<TSource>"
+sig = "IOrderedEnumerable<TSource> OrderAlphanumBy<TSource>(this IEnumerable<TSource> source, Func<TSource, string> keySelector)"
 file = "Extensions\\EnumerableExtensions.cs"
 
 [[extensions]]
 name = "OrderAlphanumByDescending"
-sig = "IOrderedEnumerable<string> OrderAlphanumByDescending(this IEnumerable<string> source)"
 returns = "IOrderedEnumerable<string>"
+sig = "IOrderedEnumerable<string> OrderAlphanumByDescending(this IEnumerable<string> source)"
+file = "Extensions\\EnumerableExtensions.cs"
+
+[[extensions]]
+name = "OrderAlphanumByDescending"
+returns = "IOrderedEnumerable<TSource>"
+sig = "IOrderedEnumerable<TSource> OrderAlphanumByDescending<TSource>( this IEnumerable<TSource> source, Func<TSource, string> keySelector)"
+file = "Extensions\\EnumerableExtensions.cs"
+
+[[extensions]]
+name = "ToConcurrentList"
+returns = "ConcurrentList<T>"
+sig = "ConcurrentList<T> ToConcurrentList<T>(this IEnumerable<T> source)"
+file = "Extensions\\EnumerableExtensions.cs"
+
+[[extensions]]
+name = "ToConcurrentSortableList"
+returns = "ConcurrentSortableList<T>"
+sig = "ConcurrentSortableList<T> ToConcurrentSortableList<T>(this IEnumerable<T> source)"
 file = "Extensions\\EnumerableExtensions.cs"
 
 [[classes]]
@@ -154,9 +334,33 @@ ns = "FEx.Agnostics.Extensions"
 file = "Extensions\\ListExtensions.cs"
 static = true
 
+[[extensions]]
+name = "MakePaginatedList"
+returns = "PaginatedList<T>"
+sig = "PaginatedList<T> MakePaginatedList<T>(this IList<T> items, int itemsPerPage, int page)"
+file = "Extensions\\ListExtensions.cs"
+
 [[classes]]
 name = "ColorHelper"
 ns = "FEx.Agnostics.Helpers"
+file = "Helpers\\ColorHelper.cs"
+static = true
+
+[[methods]]
+parent = "ColorHelper"
+name = "FromArgbString"
+sig = "static Color FromArgbString(string colorcode)"
+returns = "Color"
+summary = "Gets from ARGB string."
+file = "Helpers\\ColorHelper.cs"
+static = true
+
+[[methods]]
+parent = "ColorHelper"
+name = "FromRgbString"
+sig = "static Color FromRgbString(string colorcode)"
+returns = "Color"
+summary = "Froms the RGB string."
 file = "Helpers\\ColorHelper.cs"
 static = true
 
@@ -167,16 +371,44 @@ summary = "Superfast deep copier class, which uses Expression trees."
 file = "Helpers\\DeepCopyByExpressionTrees.cs"
 static = true
 
+[[extensions]]
+name = "DeepCopyByExpressionTree"
+returns = "T"
+sig = "T DeepCopyByExpressionTree<T>(this T original, Dictionary<object, object> copiedReferencesDict = null)"
+summary = "Creates a deep copy of an object."
+file = "Helpers\\DeepCopyByExpressionTrees.cs"
+
 [[classes]]
 name = "ReferenceEqualityComparer"
 ns = "FEx.Agnostics.Helpers"
 base = "EqualityComparer<object>"
 file = "Helpers\\DeepCopyByExpressionTrees.cs"
 
+[[methods]]
+parent = "ReferenceEqualityComparer"
+name = "Equals"
+sig = "bool Equals(object x, object y)"
+returns = "bool"
+file = "Helpers\\DeepCopyByExpressionTrees.cs"
+
+[[methods]]
+parent = "ReferenceEqualityComparer"
+name = "GetHashCode"
+sig = "int GetHashCode(object obj)"
+returns = "int"
+file = "Helpers\\DeepCopyByExpressionTrees.cs"
+
 [[classes]]
 name = "DefaultAppVersionProvider"
 ns = "FEx.Agnostics.Helpers"
 base = "IAppVersionProvider"
+file = "Helpers\\DefaultAppVersionProvider.cs"
+
+[[methods]]
+parent = "DefaultAppVersionProvider"
+name = "GetAppVersion"
+sig = "string GetAppVersion()"
+returns = "string"
 file = "Helpers\\DefaultAppVersionProvider.cs"
 
 [[classes]]
@@ -187,37 +419,61 @@ static = true
 
 [[extensions]]
 name = "FindFileEmulator"
-sig = "string FindFileEmulator(this string pattern, string name)"
 returns = "string"
+sig = "string FindFileEmulator(this string pattern, string name)"
 file = "Helpers\\FindFilesPatternToRegex.cs"
 
 [[extensions]]
 name = "FindFilesEmulator"
-sig = "IEnumerable<string> FindFilesEmulator(this string pattern, params string[] names)"
 returns = "IEnumerable<string>"
+sig = "IEnumerable<string> FindFilesEmulator(this string pattern, params string[] names)"
 file = "Helpers\\FindFilesPatternToRegex.cs"
 
 [[extensions]]
 name = "FindFileEmulator"
-sig = "FileInfo FindFileEmulator(this FileInfo file, params string[] patterns)"
 returns = "FileInfo"
+sig = "FileInfo FindFileEmulator(this FileInfo file, params string[] patterns)"
 file = "Helpers\\FindFilesPatternToRegex.cs"
 
 [[extensions]]
 name = "FindFilesEmulator"
-sig = "IEnumerable<FileInfo> FindFilesEmulator(this IEnumerable<FileInfo> files, params string[] patterns)"
 returns = "IEnumerable<FileInfo>"
+sig = "IEnumerable<FileInfo> FindFilesEmulator(this IEnumerable<FileInfo> files, params string[] patterns)"
 file = "Helpers\\FindFilesPatternToRegex.cs"
+
+[[methods]]
+parent = "FindFilesPatternToRegex"
+name = "FindFilesEmulator"
+sig = "static IEnumerable<T> FindFilesEmulator<T>(IEnumerable<T> items, Func<T, string> selector = null, params string[] patterns)"
+returns = "IEnumerable<T>"
+file = "Helpers\\FindFilesPatternToRegex.cs"
+static = true
+
+[[methods]]
+parent = "FindFilesPatternToRegex"
+name = "Convert"
+sig = "static Regex Convert(string pattern)"
+returns = "Regex"
+file = "Helpers\\FindFilesPatternToRegex.cs"
+static = true
 
 [[extensions]]
 name = "PathHasIllegalCharacters"
-sig = "bool PathHasIllegalCharacters(this string pattern)"
 returns = "bool"
+sig = "bool PathHasIllegalCharacters(this string pattern)"
 file = "Helpers\\FindFilesPatternToRegex.cs"
 
 [[classes]]
 name = "StringHelpers"
 ns = "FEx.Agnostics.Helpers"
+file = "Helpers\\StringHelpers.cs"
+static = true
+
+[[methods]]
+parent = "StringHelpers"
+name = "CountLinesMaybe"
+sig = "static long CountLinesMaybe(Stream stream)"
+returns = "long"
 file = "Helpers\\StringHelpers.cs"
 static = true
 
@@ -228,10 +484,152 @@ base = "Dictionary<string, object>, ILoggerState"
 summary = "Default implementation of ILoggerState for structured logging scopes."
 file = "Models\\LoggerState.cs"
 
+[[ctors]]
+parent = "LoggerState"
+sig = "LoggerState(params (string, object)[] state)"
+file = "Models\\LoggerState.cs"
+
+[[ctors]]
+parent = "LoggerState"
+sig = "LoggerState(IDictionary<string, object> dictionary)"
+file = "Models\\LoggerState.cs"
+
+[[methods]]
+parent = "LoggerState"
+name = "AddOrUpdateLabel"
+sig = "void AddOrUpdateLabel(string key, object value)"
+returns = "void"
+file = "Models\\LoggerState.cs"
+
+[[methods]]
+parent = "LoggerState"
+name = "RemoveLabel"
+sig = "void RemoveLabel(string key)"
+returns = "void"
+file = "Models\\LoggerState.cs"
+
+[[methods]]
+parent = "LoggerState"
+name = "ToString"
+sig = "string ToString()"
+returns = "string"
+file = "Models\\LoggerState.cs"
+
 [[classes]]
 name = "AsyncReaderWriterLockSlim"
 ns = "FEx.Agnostics.Utilities"
 base = "IDisposable"
+summary = "An alternative to which can be used in async methods."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[ctors]]
+parent = "AsyncReaderWriterLockSlim"
+sig = "AsyncReaderWriterLockSlim()"
+summary = "Initializes a new instance of the class."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "EnterReadLock"
+sig = "void EnterReadLock(CancellationToken cancellationToken = default)"
+returns = "void"
+summary = "Enters the lock in read mode."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "EnterReadLockAsync"
+sig = "Task EnterReadLockAsync(CancellationToken cancellationToken = default)"
+returns = "Task"
+summary = "Asynchronously enters the lock in read mode."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "TryEnterReadLock"
+sig = "bool TryEnterReadLock(int millisecondsTimeout = 0, CancellationToken cancellationToken = default)"
+returns = "bool"
+summary = "Tries to enter the lock in read mode, with an optional integer time-out."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "TryEnterReadLockAsync"
+sig = "Task<bool> TryEnterReadLockAsync(int millisecondsTimeout = 0, CancellationToken cancellationToken = default)"
+returns = "Task<bool>"
+summary = "Tries to asynchronously enter the lock in read mode, with an optional integer time-out."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "EnterWriteLock"
+sig = "void EnterWriteLock(CancellationToken cancellationToken = default)"
+returns = "void"
+summary = "Enters the lock in write mode."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "EnterWriteLockAsync"
+sig = "Task EnterWriteLockAsync(CancellationToken cancellationToken = default)"
+returns = "Task"
+summary = "Asynchronously enters the lock in write mode."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "TryEnterWriteLock"
+sig = "bool TryEnterWriteLock(int millisecondsTimeout = 0, CancellationToken cancellationToken = default)"
+returns = "bool"
+summary = "Tries to enter the lock in write mode, with an optional integer time-out."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "TryEnterWriteLockAsync"
+sig = "Task<bool> TryEnterWriteLockAsync(int millisecondsTimeout = 0, CancellationToken cancellationToken = default)"
+returns = "Task<bool>"
+summary = "Tries to asynchronously enter the lock in write mode, with an optional integer time-out."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "DowngradeWriteLockToReadLock"
+sig = "void DowngradeWriteLockToReadLock()"
+returns = "void"
+summary = "Downgrades the lock from write mode to read mode."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "ExitReadLock"
+sig = "void ExitReadLock()"
+returns = "void"
+summary = "Exits read mode."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "ExitWriteLock"
+sig = "void ExitWriteLock()"
+returns = "void"
+summary = "Exits write mode."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+summary = "Releases all resources used by the ."
+file = "Utilities\\AsyncReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "AsyncReaderWriterLockSlim"
+name = "Dispose"
+sig = "void Dispose(bool disposing)"
+returns = "void"
+summary = "Releases the unmanaged resources used by the and optionally releases the managed resources."
 file = "Utilities\\AsyncReaderWriterLockSlim.cs"
 
 [[classes]]
@@ -240,10 +638,177 @@ ns = "FEx.Agnostics.Utilities"
 base = "ICmd"
 file = "Utilities\\Cmd.cs"
 
+[[properties]]
+parent = "Cmd"
+name = "StartInfo"
+sig = "ProcessStartInfo StartInfo { get; set; }"
+returns = "ProcessStartInfo"
+file = "Utilities\\Cmd.cs"
+
+[[properties]]
+parent = "Cmd"
+name = "Proc"
+sig = "Process Proc { get; set; }"
+returns = "Process"
+file = "Utilities\\Cmd.cs"
+
+[[properties]]
+parent = "Cmd"
+name = "Code"
+sig = "int? Code { get; set; }"
+returns = "int?"
+file = "Utilities\\Cmd.cs"
+
+[[properties]]
+parent = "Cmd"
+name = "Output"
+sig = "StringBuilder Output { get; }"
+returns = "StringBuilder"
+file = "Utilities\\Cmd.cs"
+
+[[properties]]
+parent = "Cmd"
+name = "ErrOut"
+sig = "StringBuilder ErrOut { get; }"
+returns = "StringBuilder"
+file = "Utilities\\Cmd.cs"
+
+[[properties]]
+parent = "Cmd"
+name = "Stopwatch"
+sig = "Stopwatch Stopwatch { get; }"
+returns = "Stopwatch"
+file = "Utilities\\Cmd.cs"
+
+[[ctors]]
+parent = "Cmd"
+sig = "Cmd(string procName = \"cmd\", ProcessWindowStyle windowStyle = ProcessWindowStyle.Hidden, Action<ProcessStartInfo> cfg = null)"
+file = "Utilities\\Cmd.cs"
+
+[[ctors]]
+parent = "Cmd"
+sig = "Cmd()"
+file = "Utilities\\Cmd.cs"
+
+[[methods]]
+parent = "Cmd"
+name = "RunAsync"
+sig = "Task RunAsync(string args, string verb = null, bool waitForExit = true, Func<ICmd, Task> onStarted = null)"
+returns = "Task"
+file = "Utilities\\Cmd.cs"
+
+[[methods]]
+parent = "Cmd"
+name = "Run"
+sig = "void Run(string args, string verb = null, bool waitForExit = true, Action<ICmd> onStarted = null)"
+returns = "void"
+file = "Utilities\\Cmd.cs"
+
+[[methods]]
+parent = "Cmd"
+name = "OnStarted"
+sig = "void OnStarted(bool waitForExit, Action<ICmd> onStarted)"
+returns = "void"
+file = "Utilities\\Cmd.cs"
+
+[[methods]]
+parent = "Cmd"
+name = "OnStartedAsync"
+sig = "Task OnStartedAsync(bool waitForExit, Func<ICmd, Task> onStarted)"
+returns = "Task"
+file = "Utilities\\Cmd.cs"
+
+[[methods]]
+parent = "Cmd"
+name = "AttachToOutput"
+sig = "void AttachToOutput()"
+returns = "void"
+file = "Utilities\\Cmd.cs"
+
+[[methods]]
+parent = "Cmd"
+name = "StartProc"
+sig = "void StartProc()"
+returns = "void"
+file = "Utilities\\Cmd.cs"
+
+[[methods]]
+parent = "Cmd"
+name = "SetProc"
+sig = "void SetProc(string args, string verb)"
+returns = "void"
+file = "Utilities\\Cmd.cs"
+
+[[methods]]
+parent = "Cmd"
+name = "ErrOutHandler"
+sig = "void ErrOutHandler(object sender, DataReceivedEventArgs outLine)"
+returns = "void"
+file = "Utilities\\Cmd.cs"
+
+[[methods]]
+parent = "Cmd"
+name = "OutputHandler"
+sig = "void OutputHandler(object sender, DataReceivedEventArgs outLine)"
+returns = "void"
+file = "Utilities\\Cmd.cs"
+
+[[methods]]
+parent = "Cmd"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+file = "Utilities\\Cmd.cs"
+
+[[methods]]
+parent = "Cmd"
+name = "Dispose"
+sig = "void Dispose(bool disposing)"
+returns = "void"
+file = "Utilities\\Cmd.cs"
+
 [[classes]]
 name = "ExtendedReaderWriterLockSlim"
 ns = "FEx.Agnostics.Utilities"
 base = "ReaderWriterLockSlim"
+file = "Utilities\\ExtendedReaderWriterLockSlim.cs"
+
+[[ctors]]
+parent = "ExtendedReaderWriterLockSlim"
+sig = "ExtendedReaderWriterLockSlim(object owner)"
+file = "Utilities\\ExtendedReaderWriterLockSlim.cs"
+
+[[ctors]]
+parent = "ExtendedReaderWriterLockSlim"
+sig = "ExtendedReaderWriterLockSlim(object owner, LockRecursionPolicy recursionPolicy)"
+file = "Utilities\\ExtendedReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "ExtendedReaderWriterLockSlim"
+name = "Read"
+sig = "void Read(Action action)"
+returns = "void"
+file = "Utilities\\ExtendedReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "ExtendedReaderWriterLockSlim"
+name = "ReadWithResult"
+sig = "TResult ReadWithResult<TResult>(Func<TResult> action)"
+returns = "TResult"
+file = "Utilities\\ExtendedReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "ExtendedReaderWriterLockSlim"
+name = "Write"
+sig = "void Write(Action action)"
+returns = "void"
+file = "Utilities\\ExtendedReaderWriterLockSlim.cs"
+
+[[methods]]
+parent = "ExtendedReaderWriterLockSlim"
+name = "WriteWithResult"
+sig = "TResult WriteWithResult<TResult>(Func<TResult> action)"
+returns = "TResult"
 file = "Utilities\\ExtendedReaderWriterLockSlim.cs"
 
 [[classes]]
@@ -252,16 +817,112 @@ ns = "FEx.Agnostics.Utilities"
 base = "StringWriter"
 file = "Utilities\\ExtendedStringWriter.cs"
 
+[[properties]]
+parent = "ExtendedStringWriter"
+name = "Encoding"
+sig = "Encoding Encoding { get; }"
+returns = "Encoding"
+file = "Utilities\\ExtendedStringWriter.cs"
+
+[[properties]]
+parent = "ExtendedStringWriter"
+name = "AutoFlush"
+sig = "bool AutoFlush { get; set; }"
+returns = "bool"
+file = "Utilities\\ExtendedStringWriter.cs"
+
+[[ctors]]
+parent = "ExtendedStringWriter"
+sig = "ExtendedStringWriter(StringBuilder builder, bool autoFlush, Encoding desiredEncoding)"
+file = "Utilities\\ExtendedStringWriter.cs"
+
+[[methods]]
+parent = "ExtendedStringWriter"
+name = "Flush"
+sig = "void Flush()"
+returns = "void"
+file = "Utilities\\ExtendedStringWriter.cs"
+
+[[methods]]
+parent = "ExtendedStringWriter"
+name = "Write"
+sig = "void Write(char value)"
+returns = "void"
+file = "Utilities\\ExtendedStringWriter.cs"
+
+[[methods]]
+parent = "ExtendedStringWriter"
+name = "Write"
+sig = "void Write(string value)"
+returns = "void"
+file = "Utilities\\ExtendedStringWriter.cs"
+
+[[methods]]
+parent = "ExtendedStringWriter"
+name = "Write"
+sig = "void Write(char[] buffer, int index, int count)"
+returns = "void"
+file = "Utilities\\ExtendedStringWriter.cs"
+
+[[methods]]
+parent = "ExtendedStringWriter"
+name = "OnFlush"
+sig = "void OnFlush()"
+returns = "void"
+file = "Utilities\\ExtendedStringWriter.cs"
+
 [[classes]]
 name = "FExSingleton"
 ns = "FEx.Agnostics.Utilities"
 base = "IDisposable"
 file = "Utilities\\FExSingleton.cs"
 
+[[ctors]]
+parent = "FExSingleton"
+sig = "FExSingleton()"
+file = "Utilities\\FExSingleton.cs"
+
+[[methods]]
+parent = "FExSingleton"
+name = "ClearAllSingletons"
+sig = "static void ClearAllSingletons()"
+returns = "void"
+file = "Utilities\\FExSingleton.cs"
+static = true
+
+[[methods]]
+parent = "FExSingleton"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+file = "Utilities\\FExSingleton.cs"
+
+[[methods]]
+parent = "FExSingleton"
+name = "Dispose"
+sig = "void Dispose(bool isDisposing)"
+returns = "void"
+file = "Utilities\\FExSingleton.cs"
+
 [[classes]]
 name = "FExSingleton"
 ns = "FEx.Agnostics.Utilities"
-base = "FExSingleton where T : class, new()"
+base = "FExSingleton"
+file = "Utilities\\FExSingleton.cs"
+
+[[properties]]
+parent = "FExSingleton"
+name = "Instance"
+sig = "static T Instance { get; }"
+returns = "T"
+file = "Utilities\\FExSingleton.cs"
+static = true
+
+[[methods]]
+parent = "FExSingleton"
+name = "Dispose"
+sig = "void Dispose(bool isDisposing)"
+returns = "void"
 file = "Utilities\\FExSingleton.cs"
 
 [[classes]]
@@ -270,13 +931,683 @@ ns = "FEx.Agnostics.Utilities"
 base = "DynamicObject, INotifyPropertyChanged"
 file = "Utilities\\FlakDynamicObject.cs"
 
+[[ctors]]
+parent = "FlakDynamicObject"
+sig = "FlakDynamicObject()"
+summary = "Initializes a new instance of the class."
+file = "Utilities\\FlakDynamicObject.cs"
+
+[[ctors]]
+parent = "FlakDynamicObject"
+sig = "FlakDynamicObject(IDictionary<string, object> source)"
+summary = "Initializes a new instance of the class."
+file = "Utilities\\FlakDynamicObject.cs"
+
+[[methods]]
+parent = "FlakDynamicObject"
+name = "GetDynamicMemberNames"
+sig = "IEnumerable<string> GetDynamicMemberNames()"
+returns = "IEnumerable<string>"
+summary = "Returns the enumeration of all dynamic member names."
+file = "Utilities\\FlakDynamicObject.cs"
+
+[[methods]]
+parent = "FlakDynamicObject"
+name = "TryGetMember"
+sig = "bool TryGetMember(GetMemberBinder binder, out object result)"
+returns = "bool"
+summary = "Provides the implementation for operations that get member values. Classes derived from the class can override this method to specify dynamic behavior for operations such as getting a value for a property."
+file = "Utilities\\FlakDynamicObject.cs"
+
+[[methods]]
+parent = "FlakDynamicObject"
+name = "TrySetMember"
+sig = "bool TrySetMember(SetMemberBinder binder, object value)"
+returns = "bool"
+summary = "Provides the implementation for operations that set member values. Classes derived from the class can override this method to specify dynamic behavior for operations such as setting a value for a property."
+file = "Utilities\\FlakDynamicObject.cs"
+
 [[interfaces]]
 name = "ICmd"
 ns = "FEx.Agnostics.Utilities"
+base = "IDisposable"
+file = "Utilities\\ICmd.cs"
+
+[[properties]]
+parent = "ICmd"
+name = "Code"
+sig = "int? Code { get; }"
+returns = "int?"
+file = "Utilities\\ICmd.cs"
+
+[[properties]]
+parent = "ICmd"
+name = "ErrOut"
+sig = "StringBuilder ErrOut { get; }"
+returns = "StringBuilder"
+file = "Utilities\\ICmd.cs"
+
+[[properties]]
+parent = "ICmd"
+name = "Output"
+sig = "StringBuilder Output { get; }"
+returns = "StringBuilder"
+file = "Utilities\\ICmd.cs"
+
+[[properties]]
+parent = "ICmd"
+name = "Proc"
+sig = "Process Proc { get; }"
+returns = "Process"
+file = "Utilities\\ICmd.cs"
+
+[[properties]]
+parent = "ICmd"
+name = "StartInfo"
+sig = "ProcessStartInfo StartInfo { get; }"
+returns = "ProcessStartInfo"
+file = "Utilities\\ICmd.cs"
+
+[[properties]]
+parent = "ICmd"
+name = "Stopwatch"
+sig = "Stopwatch Stopwatch { get; }"
+returns = "Stopwatch"
+file = "Utilities\\ICmd.cs"
+
+[[methods]]
+parent = "ICmd"
+name = "RunAsync"
+sig = "Task RunAsync(string args, string verb = null, bool waitForExit = true, Func<ICmd, Task> onStarted = null)"
+returns = "Task"
 file = "Utilities\\ICmd.cs"
 
 [[classes]]
 name = "InterlockedBool"
 ns = "FEx.Agnostics.Utilities"
 file = "Utilities\\InterlockedBool.cs"
+
+[[properties]]
+parent = "InterlockedBool"
+name = "Value"
+sig = "bool Value { get; set; }"
+returns = "bool"
+file = "Utilities\\InterlockedBool.cs"
+
+[[ctors]]
+parent = "InterlockedBool"
+sig = "InterlockedBool(bool value = false)"
+file = "Utilities\\InterlockedBool.cs"
+
+[[methods]]
+parent = "InterlockedBool"
+name = "Equals"
+sig = "bool Equals(object obj)"
+returns = "bool"
+file = "Utilities\\InterlockedBool.cs"
+
+[[methods]]
+parent = "InterlockedBool"
+name = "GetHashCode"
+sig = "int GetHashCode()"
+returns = "int"
+file = "Utilities\\InterlockedBool.cs"
+
+[[classes]]
+name = "CollectionDebugView"
+ns = "FEx.Agnostics.Collections.Concurrent"
+file = "Collections\\Concurrent\\CollectionDebugView.cs"
+
+[[properties]]
+parent = "CollectionDebugView"
+name = "Items"
+sig = "T[] Items { get; }"
+returns = "T[]"
+file = "Collections\\Concurrent\\CollectionDebugView.cs"
+
+[[ctors]]
+parent = "CollectionDebugView"
+sig = "CollectionDebugView(ICollection<T> collection)"
+file = "Collections\\Concurrent\\CollectionDebugView.cs"
+
+[[classes]]
+name = "ConcurrentList"
+ns = "FEx.Agnostics.Collections.Concurrent"
+base = "BaseConcurrentList<T>, IConcurrentList<T>"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[properties]]
+parent = "ConcurrentList"
+name = "Count"
+sig = "int Count { get; }"
+returns = "int"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[properties]]
+parent = "ConcurrentList"
+name = "IsEmpty"
+sig = "bool IsEmpty { get; }"
+returns = "bool"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[properties]]
+parent = "ConcurrentList"
+name = "Items"
+sig = "List<T> Items { get; }"
+returns = "List<T>"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[ctors]]
+parent = "ConcurrentList"
+sig = "ConcurrentList()"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[ctors]]
+parent = "ConcurrentList"
+sig = "ConcurrentList(IEnumerable<T> collection)"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Add"
+sig = "void Add(T item)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Clear"
+sig = "void Clear()"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Contains"
+sig = "bool Contains(T item)"
+returns = "bool"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "CopyTo"
+sig = "void CopyTo(T[] array, int arrayIndex)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Remove"
+sig = "bool Remove(T item)"
+returns = "bool"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "AddRange"
+sig = "void AddRange(IEnumerable<T> collection)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "AsReadOnly"
+sig = "ReadOnlyCollection<T> AsReadOnly()"
+returns = "ReadOnlyCollection<T>"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "AddUnique"
+sig = "bool AddUnique(T item)"
+returns = "bool"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "AddUniqueRange"
+sig = "void AddUniqueRange(IEnumerable<T> range)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "AddUniqueRange"
+sig = "void AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector, IEqualityComparer<TKey> comparer)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "RemoveWhere"
+sig = "bool RemoveWhere(Func<T, bool> predicate, out List<T> removedItems)"
+returns = "bool"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Replace"
+sig = "void Replace(int index, T item)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "ReplaceWith"
+sig = "void ReplaceWith(IEnumerable<T> collection)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Sort"
+sig = "void Sort()"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Sort"
+sig = "void Sort(IComparer<T> comparer)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Sort"
+sig = "void Sort(int index, int count, IComparer<T> comparer)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Sort"
+sig = "void Sort(Comparison<T> comparison)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "SortBy"
+sig = "void SortBy<TKey>(Func<T, TKey> selector, ListSortDirection order, IComparer<TKey> comparer)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Combo"
+sig = "void Combo(Action<IConcurrentList<T>> action, bool shouldTriggerCollectionReset)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Combo"
+sig = "bool Combo(Func<IConcurrentList<T>, bool> shouldTriggerCollectionReset)"
+returns = "bool"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Move"
+sig = "void Move(int oldIndex, int newIndex)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "GetEnumerator"
+sig = "IEnumerator<T> GetEnumerator()"
+returns = "IEnumerator<T>"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Add"
+sig = "int Add(object value)"
+returns = "int"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "IndexOf"
+sig = "int IndexOf(T item)"
+returns = "int"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Insert"
+sig = "void Insert(int index, T item)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "RemoveAt"
+sig = "void RemoveAt(int index)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "AddUniqueRange"
+sig = "void AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "SortBy"
+sig = "void SortBy<TKey>(Func<T, TKey> selector)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "SortBy"
+sig = "void SortBy<TKey>(Func<T, TKey> selector, ListSortDirection order)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Combo"
+sig = "void Combo(Action<IConcurrentList<T>> action)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "MoveItem"
+sig = "void MoveItem(int oldIndex, int newIndex)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "SetItem"
+sig = "T SetItem(int index, T item)"
+returns = "T"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "WhenCollectionHasBeenReordered"
+sig = "void WhenCollectionHasBeenReordered()"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.cs"
+
+[[classes]]
+name = "ConcurrentList"
+ns = "FEx.Agnostics.Collections.Concurrent"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[properties]]
+parent = "ConcurrentList"
+name = "IsSynchronized"
+sig = "bool IsSynchronized { get; }"
+returns = "bool"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[properties]]
+parent = "ConcurrentList"
+name = "IsFixedSize"
+sig = "bool IsFixedSize { get; }"
+returns = "bool"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[properties]]
+parent = "ConcurrentList"
+name = "SyncRoot"
+sig = "object SyncRoot { get; }"
+returns = "object"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[properties]]
+parent = "ConcurrentList"
+name = "IsReadOnly"
+sig = "bool IsReadOnly { get; }"
+returns = "bool"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "CopyTo"
+sig = "void CopyTo(Array array, int index)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Contains"
+sig = "bool Contains(object value)"
+returns = "bool"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "IndexOf"
+sig = "int IndexOf(object value)"
+returns = "int"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Insert"
+sig = "void Insert(int index, object value)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Remove"
+sig = "void Remove(object value)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Read"
+sig = "void Read(Action action)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Read"
+sig = "TResult Read<TResult>(Func<TResult> action)"
+returns = "TResult"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Write"
+sig = "void Write(Action action)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[methods]]
+parent = "ConcurrentList"
+name = "Write"
+sig = "TResult Write<TResult>(Func<TResult> action)"
+returns = "TResult"
+file = "Collections\\Concurrent\\ConcurrentList.Impl.cs"
+
+[[classes]]
+name = "ConcurrentSortableList"
+ns = "FEx.Agnostics.Collections.Concurrent"
+base = "ConcurrentList<T>"
+file = "Collections\\Concurrent\\ConcurrentSortableList.cs"
+
+[[ctors]]
+parent = "ConcurrentSortableList"
+sig = "ConcurrentSortableList()"
+file = "Collections\\Concurrent\\ConcurrentSortableList.cs"
+
+[[ctors]]
+parent = "ConcurrentSortableList"
+sig = "ConcurrentSortableList(IEnumerable<T> collection)"
+file = "Collections\\Concurrent\\ConcurrentSortableList.cs"
+
+[[methods]]
+parent = "ConcurrentSortableList"
+name = "Sort"
+sig = "void Sort(ListSortDirection order)"
+returns = "void"
+file = "Collections\\Concurrent\\ConcurrentSortableList.cs"
+
+[[classes]]
+name = "FExMemoryCache"
+ns = "FEx.Agnostics.Collections.Concurrent"
+base = "IFExMemoryCache<TKey, TValue>, IDictionary<TKey, TValue>, IDictionary"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[ctors]]
+parent = "FExMemoryCache"
+sig = "FExMemoryCache()"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "AddOrUpdate"
+sig = "TValue AddOrUpdate(TKey key, TValue addValue, Func<TKey, TValue, TValue> updateValueFactory)"
+returns = "TValue"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[properties]]
+parent = "FExMemoryCache"
+name = "IsFixedSize"
+sig = "bool IsFixedSize { get; }"
+returns = "bool"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[properties]]
+parent = "FExMemoryCache"
+name = "IsSynchronized"
+sig = "bool IsSynchronized { get; }"
+returns = "bool"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[properties]]
+parent = "FExMemoryCache"
+name = "SyncRoot"
+sig = "object SyncRoot { get; }"
+returns = "object"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[properties]]
+parent = "FExMemoryCache"
+name = "Keys"
+sig = "ICollection<TKey> Keys { get; }"
+returns = "ICollection<TKey>"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[properties]]
+parent = "FExMemoryCache"
+name = "Values"
+sig = "ICollection<TValue> Values { get; }"
+returns = "ICollection<TValue>"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "CopyTo"
+sig = "void CopyTo(Array array, int index)"
+returns = "void"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "Add"
+sig = "void Add(KeyValuePair<TKey, TValue> item)"
+returns = "void"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "Contains"
+sig = "bool Contains(KeyValuePair<TKey, TValue> item)"
+returns = "bool"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "CopyTo"
+sig = "void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)"
+returns = "void"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "Remove"
+sig = "bool Remove(KeyValuePair<TKey, TValue> item)"
+returns = "bool"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "Contains"
+sig = "bool Contains(object key)"
+returns = "bool"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "Remove"
+sig = "void Remove(object key)"
+returns = "void"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "Add"
+sig = "void Add(object key, object value)"
+returns = "void"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "Add"
+sig = "void Add(TKey key, TValue value)"
+returns = "void"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "ContainsKey"
+sig = "bool ContainsKey(TKey key)"
+returns = "bool"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "Remove"
+sig = "bool Remove(TKey key)"
+returns = "bool"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[methods]]
+parent = "FExMemoryCache"
+name = "TryGetValue"
+sig = "bool TryGetValue(TKey key, out TValue value)"
+returns = "bool"
+file = "Collections\\Concurrent\\FExMemoryCache.cs"
+
+[[classes]]
+name = "ListDebugView"
+ns = "FEx.Agnostics.Collections.Concurrent"
+file = "Collections\\Concurrent\\ListDebugView.cs"
+
+[[properties]]
+parent = "ListDebugView"
+name = "Items"
+sig = "T[] Items { get; }"
+returns = "T[]"
+file = "Collections\\Concurrent\\ListDebugView.cs"
+
+[[ctors]]
+parent = "ListDebugView"
+sig = "ListDebugView(IList<T> collection)"
+file = "Collections\\Concurrent\\ListDebugView.cs"
 

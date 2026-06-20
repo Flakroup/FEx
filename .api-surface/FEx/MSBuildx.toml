@@ -7,14 +7,418 @@ name = "DiffResult"
 ns = "FEx.MSBuildx"
 file = "DiffResult.cs"
 
+[[properties]]
+parent = "DiffResult"
+name = "Info"
+sig = "FileInfo Info { get; }"
+returns = "FileInfo"
+file = "DiffResult.cs"
+
+[[properties]]
+parent = "DiffResult"
+name = "RelativePath"
+sig = "string RelativePath { get; }"
+returns = "string"
+file = "DiffResult.cs"
+
+[[properties]]
+parent = "DiffResult"
+name = "FullPath"
+sig = "string FullPath { get; }"
+returns = "string"
+file = "DiffResult.cs"
+
+[[properties]]
+parent = "DiffResult"
+name = "Project"
+sig = "MSProject Project { get; }"
+returns = "MSProject"
+file = "DiffResult.cs"
+
+[[properties]]
+parent = "DiffResult"
+name = "ItemType"
+sig = "string ItemType { get; }"
+returns = "string"
+file = "DiffResult.cs"
+
+[[properties]]
+parent = "DiffResult"
+name = "Exists"
+sig = "bool Exists { get; }"
+returns = "bool"
+file = "DiffResult.cs"
+
+[[properties]]
+parent = "DiffResult"
+name = "Length"
+sig = "long Length { get; }"
+returns = "long"
+file = "DiffResult.cs"
+
+[[properties]]
+parent = "DiffResult"
+name = "Extension"
+sig = "string Extension { get; }"
+returns = "string"
+file = "DiffResult.cs"
+
+[[ctors]]
+parent = "DiffResult"
+sig = "DiffResult(MSProject project, string relativePath = null, MSProjectItem item = null)"
+file = "DiffResult.cs"
+
 [[classes]]
 name = "MSProject"
 ns = "FEx.MSBuildx"
 file = "MSProject.cs"
 
+[[properties]]
+parent = "MSProject"
+name = "PackageRefStr"
+sig = "static string PackageRefStr { get; }"
+returns = "string"
+file = "MSProject.cs"
+static = true
+
+[[properties]]
+parent = "MSProject"
+name = "IgnoredItemsNames"
+sig = "static ImmutableHashSet<string> IgnoredItemsNames { get; }"
+returns = "ImmutableHashSet<string>"
+file = "MSProject.cs"
+static = true
+
+[[properties]]
+parent = "MSProject"
+name = "AcceptedItemsNames"
+sig = "static ConcurrentList<string> AcceptedItemsNames { get; }"
+returns = "ConcurrentList<string>"
+file = "MSProject.cs"
+static = true
+
+[[properties]]
+parent = "MSProject"
+name = "Project"
+sig = "Project Project { get; }"
+returns = "Project"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "ProjectType"
+sig = "SolutionProjectType ProjectType { get; }"
+returns = "SolutionProjectType"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "IncludedFiles"
+sig = "IList<MSProjectItem> IncludedFiles { get; }"
+returns = "IList<MSProjectItem>"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "PropertiesDictionary"
+sig = "Dictionary<string, string> PropertiesDictionary { get; }"
+returns = "Dictionary<string, string>"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "Files"
+sig = "ConcurrentList<string> Files { get; }"
+returns = "ConcurrentList<string>"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "IgnoredDirectories"
+sig = "IList<string> IgnoredDirectories { get; }"
+returns = "IList<string>"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "IgnoredFiles"
+sig = "IList<DiffResult> IgnoredFiles { get; }"
+returns = "IList<DiffResult>"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "Name"
+sig = "string Name { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "AssemblyName"
+sig = "string AssemblyName { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "ProjectDir"
+sig = "string ProjectDir { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "ProjectFile"
+sig = "string ProjectFile { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "OutDir"
+sig = "string OutDir { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "OutDirPath"
+sig = "string OutDirPath { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "NuGetPackageRoot"
+sig = "string NuGetPackageRoot { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "MSBuildAllProjects"
+sig = "IList<string> MSBuildAllProjects { get; }"
+returns = "IList<string>"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "TargetFramework"
+sig = "string TargetFramework { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "IsNetCore3"
+sig = "bool IsNetCore3 { get; }"
+returns = "bool"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "InitialMSBuildProjectExtensionsPath"
+sig = "string InitialMSBuildProjectExtensionsPath { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "FullPath"
+sig = "string FullPath { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "MissingFiles"
+sig = "ConcurrentList<DiffResult> MissingFiles { get; }"
+returns = "ConcurrentList<DiffResult>"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "BinDir"
+sig = "string BinDir { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "PublishDirName"
+sig = "string PublishDirName { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "RuntimeIdentifier"
+sig = "string RuntimeIdentifier { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "Configurations"
+sig = "IList<string> Configurations { get; }"
+returns = "IList<string>"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "PublishDirs"
+sig = "IDictionary<string, string> PublishDirs { get; }"
+returns = "IDictionary<string, string>"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "NuGetPackages"
+sig = "HashSet<PackageIdentity> NuGetPackages { get; }"
+returns = "HashSet<PackageIdentity>"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "IsAspNetCore"
+sig = "bool IsAspNetCore { get; }"
+returns = "bool"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "IsNetCore"
+sig = "bool IsNetCore { get; }"
+returns = "bool"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "Company"
+sig = "string Company { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "PackageId"
+sig = "string PackageId { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "IsPackable"
+sig = "bool IsPackable { get; }"
+returns = "bool"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "Version"
+sig = "string Version { get; }"
+returns = "string"
+file = "MSProject.cs"
+
+[[properties]]
+parent = "MSProject"
+name = "AllEvaluatedItems"
+sig = "ICollection<ProjectItem> AllEvaluatedItems { get; }"
+returns = "ICollection<ProjectItem>"
+file = "MSProject.cs"
+
+[[ctors]]
+parent = "MSProject"
+sig = "MSProject(Project project, SolutionProjectType projectType, string solutionPackagesDir = null, bool is64Bit = false)"
+file = "MSProject.cs"
+
+[[methods]]
+parent = "MSProject"
+name = "GetProjectOutputPath"
+sig = "string GetProjectOutputPath(string buildConfiguration)"
+returns = "string"
+file = "MSProject.cs"
+
+[[methods]]
+parent = "MSProject"
+name = "SetPackageVersion"
+sig = "void SetPackageVersion(string version)"
+returns = "void"
+file = "MSProject.cs"
+
 [[classes]]
 name = "MSProjectItem"
 ns = "FEx.MSBuildx"
+file = "MSProjectItem.cs"
+
+[[properties]]
+parent = "MSProjectItem"
+name = "ProjectItemTypes"
+sig = "static IMap<string, ProjectItemType> ProjectItemTypes { get; }"
+returns = "IMap<string, ProjectItemType>"
+file = "MSProjectItem.cs"
+static = true
+
+[[properties]]
+parent = "MSProjectItem"
+name = "ProjectItem"
+sig = "ProjectItem ProjectItem { get; }"
+returns = "ProjectItem"
+file = "MSProjectItem.cs"
+
+[[properties]]
+parent = "MSProjectItem"
+name = "FullPath"
+sig = "string FullPath { get; }"
+returns = "string"
+file = "MSProjectItem.cs"
+
+[[properties]]
+parent = "MSProjectItem"
+name = "Extension"
+sig = "string Extension { get; }"
+returns = "string"
+file = "MSProjectItem.cs"
+
+[[properties]]
+parent = "MSProjectItem"
+name = "ProjectItemType"
+sig = "ProjectItemType? ProjectItemType { get; }"
+returns = "ProjectItemType?"
+file = "MSProjectItem.cs"
+
+[[properties]]
+parent = "MSProjectItem"
+name = "ItemType"
+sig = "string ItemType { get; }"
+returns = "string"
+file = "MSProjectItem.cs"
+
+[[properties]]
+parent = "MSProjectItem"
+name = "EvaluatedInclude"
+sig = "string EvaluatedInclude { get; }"
+returns = "string"
+file = "MSProjectItem.cs"
+
+[[properties]]
+parent = "MSProjectItem"
+name = "UnevaluatedInclude"
+sig = "string UnevaluatedInclude { get; }"
+returns = "string"
+file = "MSProjectItem.cs"
+
+[[properties]]
+parent = "MSProjectItem"
+name = "DirectMetadataCount"
+sig = "int DirectMetadataCount { get; }"
+returns = "int"
+file = "MSProjectItem.cs"
+
+[[ctors]]
+parent = "MSProjectItem"
+sig = "MSProjectItem(ProjectItem projectItem, MSProject project)"
 file = "MSProjectItem.cs"
 
 [[classes]]
@@ -23,10 +427,118 @@ ns = "FEx.MSBuildx"
 base = "NuGetPackageInstallation, IDisposable"
 file = "MSProjectNuGetInstallation.cs"
 
+[[properties]]
+parent = "MSProjectNuGetInstallation"
+name = "MSProjects"
+sig = "ConcurrentObservableList<MSProject> MSProjects { get; }"
+returns = "ConcurrentObservableList<MSProject>"
+file = "MSProjectNuGetInstallation.cs"
+
+[[properties]]
+parent = "MSProjectNuGetInstallation"
+name = "Projects"
+sig = "string Projects { get; }"
+returns = "string"
+file = "MSProjectNuGetInstallation.cs"
+
+[[ctors]]
+parent = "MSProjectNuGetInstallation"
+sig = "MSProjectNuGetInstallation(PackageIdentity package)"
+file = "MSProjectNuGetInstallation.cs"
+
+[[methods]]
+parent = "MSProjectNuGetInstallation"
+name = "AddProject"
+sig = "void AddProject(MSProject project)"
+returns = "void"
+file = "MSProjectNuGetInstallation.cs"
+
+[[methods]]
+parent = "MSProjectNuGetInstallation"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+file = "MSProjectNuGetInstallation.cs"
+
 [[classes]]
 name = "MSSolution"
 ns = "FEx.MSBuildx"
 base = "AsyncInitializable"
+file = "MSSolution.cs"
+
+[[properties]]
+parent = "MSSolution"
+name = "SolutionDir"
+sig = "string SolutionDir { get; }"
+returns = "string"
+file = "MSSolution.cs"
+
+[[properties]]
+parent = "MSSolution"
+name = "Projects"
+sig = "IReadOnlyList<MSProject> Projects { get; }"
+returns = "IReadOnlyList<MSProject>"
+file = "MSSolution.cs"
+
+[[properties]]
+parent = "MSSolution"
+name = "Solution"
+sig = "SolutionFile Solution { get; }"
+returns = "SolutionFile"
+file = "MSSolution.cs"
+
+[[properties]]
+parent = "MSSolution"
+name = "SolutionFilePath"
+sig = "string SolutionFilePath { get; }"
+returns = "string"
+file = "MSSolution.cs"
+
+[[properties]]
+parent = "MSSolution"
+name = "Name"
+sig = "string Name { get; }"
+returns = "string"
+file = "MSSolution.cs"
+
+[[properties]]
+parent = "MSSolution"
+name = "SolutionPackagesDir"
+sig = "string SolutionPackagesDir { get; }"
+returns = "string"
+file = "MSSolution.cs"
+
+[[properties]]
+parent = "MSSolution"
+name = "NuGetPackages"
+sig = "ConcurrentDictionary<PackageIdentity, HashSet<string>> NuGetPackages { get; }"
+returns = "ConcurrentDictionary<PackageIdentity, HashSet<string>>"
+file = "MSSolution.cs"
+
+[[properties]]
+parent = "MSSolution"
+name = "InstalledNuGetPackages"
+sig = "ConcurrentObservableList<MSProjectNuGetInstallation> InstalledNuGetPackages { get; }"
+returns = "ConcurrentObservableList<MSProjectNuGetInstallation>"
+file = "MSSolution.cs"
+
+[[properties]]
+parent = "MSSolution"
+name = "ProjectsList"
+sig = "ConcurrentList<MSProject> ProjectsList { get; }"
+returns = "ConcurrentList<MSProject>"
+file = "MSSolution.cs"
+
+[[ctors]]
+parent = "MSSolution"
+sig = "MSSolution(string solutionFile)"
+file = "MSSolution.cs"
+
+[[methods]]
+parent = "MSSolution"
+name = "OnInitializeAsync"
+sig = "Task OnInitializeAsync()"
+returns = "Task"
 file = "MSSolution.cs"
 
 [[enums]]
@@ -42,7 +554,15 @@ static = true
 
 [[extensions]]
 name = "FromFile"
+returns = "MSProject"
 sig = "MSProject FromFile(this ProjectInSolution projectInSolution, string solutionPackagesDir = null)"
+file = "Extensions\\MSBuildExtensions.cs"
+
+[[methods]]
+parent = "MSBuildExtensions"
+name = "FromFile"
+sig = "static MSProject FromFile(string projectFilePath, SolutionProjectType projectType, string solutionPackagesDir = null)"
 returns = "MSProject"
 file = "Extensions\\MSBuildExtensions.cs"
+static = true
 

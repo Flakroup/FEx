@@ -8,10 +8,126 @@ ns = "FEx.Avaloniax"
 base = "FExDispatcher"
 file = "AvaloniaDispatcher.cs"
 
+[[properties]]
+parent = "AvaloniaDispatcher"
+name = "Dispatcher"
+sig = "static Dispatcher Dispatcher { get; }"
+returns = "Dispatcher"
+file = "AvaloniaDispatcher.cs"
+static = true
+
+[[ctors]]
+parent = "AvaloniaDispatcher"
+sig = "AvaloniaDispatcher(ILogger logger, IMainThreadContextProvider mainThreadContextProvider, IDeadlockMonitor deadlockMonitor, IStackTraceProvider stackTraceProvider)"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "CheckAccess"
+sig = "bool CheckAccess(object sender)"
+returns = "bool"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "InvokeOnIdleMainThread"
+sig = "void InvokeOnIdleMainThread(Action action, object sender)"
+returns = "void"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "InvokeOnIdleMainThread"
+sig = "T InvokeOnIdleMainThread<T>(Func<T> action, object sender)"
+returns = "T"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "InvokeOnMainThread"
+sig = "void InvokeOnMainThread(Action action, object sender)"
+returns = "void"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "InvokeOnMainThread"
+sig = "T InvokeOnMainThread<T>(Func<T> action, object sender)"
+returns = "T"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "InvokeOnIdleMainThreadAsync"
+sig = "Task InvokeOnIdleMainThreadAsync(Action action, object sender)"
+returns = "Task"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "InvokeOnIdleMainThreadAsync"
+sig = "Task<T> InvokeOnIdleMainThreadAsync<T>(Func<T> action, object sender)"
+returns = "Task<T>"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "InvokeOnMainThreadAsync"
+sig = "Task InvokeOnMainThreadAsync(Action action, object sender)"
+returns = "Task"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "InvokeOnMainThreadAsync"
+sig = "Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object sender)"
+returns = "Task<T>"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "BeginInvokeOnMainThread"
+sig = "void BeginInvokeOnMainThread(Action action, object sender)"
+returns = "void"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "InvokeOnMainThreadAsync"
+sig = "Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object sender)"
+returns = "Task<T>"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "InvokeOnMainThreadAsync"
+sig = "Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender)"
+returns = "Task"
+file = "AvaloniaDispatcher.cs"
+
+[[methods]]
+parent = "AvaloniaDispatcher"
+name = "SendInContext"
+sig = "void SendInContext(Action action, object sender, uint? timeout)"
+returns = "void"
+file = "AvaloniaDispatcher.cs"
+
 [[classes]]
 name = "AvaloniaMessagePopupService"
 ns = "FEx.Avaloniax"
 base = "MessagePopupServiceBase"
+file = "AvaloniaMessagePopupService.cs"
+
+[[ctors]]
+parent = "AvaloniaMessagePopupService"
+sig = "AvaloniaMessagePopupService(ILogger<AvaloniaMessagePopupService> logger)"
+file = "AvaloniaMessagePopupService.cs"
+
+[[methods]]
+parent = "AvaloniaMessagePopupService"
+name = "InternalShowMessageAsync"
+sig = "Task<MessageResult> InternalShowMessageAsync(string txt, string caption, MessageIcon messageBoxImage, FExMessageButton button, ISupportInitialize ownerWindow, bool informUser, bool wait, Stopwatch sw, LogLevel level, Exception exception)"
+returns = "Task<MessageResult>"
 file = "AvaloniaMessagePopupService.cs"
 
 [[classes]]
@@ -21,11 +137,67 @@ base = "LocalScheduler"
 summary = "Scheduler for ReactiveUI that marshals work to Avalonia's UI thread."
 file = "AvaloniaScheduler.cs"
 
+[[properties]]
+parent = "AvaloniaScheduler"
+name = "Instance"
+sig = "static AvaloniaScheduler Instance { get; }"
+returns = "AvaloniaScheduler"
+summary = "Gets the singleton instance of the Avalonia scheduler."
+file = "AvaloniaScheduler.cs"
+static = true
+
+[[methods]]
+parent = "AvaloniaScheduler"
+name = "Schedule"
+sig = "IDisposable Schedule<TState>(TState state, TimeSpan dueTime, Func<IScheduler, TState, IDisposable> action)"
+returns = "IDisposable"
+file = "AvaloniaScheduler.cs"
+
 [[classes]]
 name = "FExAvaloniaApp"
 ns = "FEx.Avaloniax"
-base = "Application
-    where TContainer : class, IFExContainer, IDisposable, new()"
+base = "Application"
+file = "FExAvaloniaApp.cs"
+
+[[properties]]
+parent = "FExAvaloniaApp"
+name = "Container"
+sig = "TContainer Container { get; }"
+returns = "TContainer"
+file = "FExAvaloniaApp.cs"
+
+[[ctors]]
+parent = "FExAvaloniaApp"
+sig = "FExAvaloniaApp()"
+summary = "Initializes a new instance of the class."
+file = "FExAvaloniaApp.cs"
+
+[[methods]]
+parent = "FExAvaloniaApp"
+name = "OnActivation"
+sig = "void OnActivation()"
+returns = "void"
+file = "FExAvaloniaApp.cs"
+
+[[methods]]
+parent = "FExAvaloniaApp"
+name = "HandleCriticalException"
+sig = "void HandleCriticalException(Exception ex)"
+returns = "void"
+file = "FExAvaloniaApp.cs"
+
+[[methods]]
+parent = "FExAvaloniaApp"
+name = "AppDomainUnhandledException"
+sig = "void AppDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)"
+returns = "void"
+file = "FExAvaloniaApp.cs"
+
+[[methods]]
+parent = "FExAvaloniaApp"
+name = "HandleAppException"
+sig = "void HandleAppException(Exception exception)"
+returns = "void"
 file = "FExAvaloniaApp.cs"
 
 [[classes]]
@@ -33,6 +205,13 @@ name = "FExAvaloniax"
 ns = "FEx.Avaloniax"
 base = "FExInitializable"
 summary = "Initializer for FEx.Avaloniax that configures ReactiveUI with Avalonia's UI scheduler."
+file = "FExAvaloniax.cs"
+
+[[methods]]
+parent = "FExAvaloniax"
+name = "OnInitialize"
+sig = "void OnInitialize()"
+returns = "void"
 file = "FExAvaloniax.cs"
 
 [[classes]]
@@ -46,9 +225,137 @@ ns = "FEx.Avaloniax"
 base = "InitializeModule<IFExContainer, IServiceCollection>"
 file = "FExModule.cs"
 
+[[methods]]
+parent = "FExModule"
+name = "RegisterServices"
+sig = "void RegisterServices(IFExContainer container, IServiceCollection context)"
+returns = "void"
+file = "FExModule.cs"
+
 [[classes]]
 name = "AsyncInitializableViewModelBase"
 ns = "FEx.Avaloniax.Abstractions"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[properties]]
+parent = "AsyncInitializableViewModelBase"
+name = "IsInitialized"
+sig = "bool IsInitialized { get; set; }"
+returns = "bool"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[properties]]
+parent = "AsyncInitializableViewModelBase"
+name = "HasFinishedInitialization"
+sig = "bool HasFinishedInitialization { get; }"
+returns = "bool"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[properties]]
+parent = "AsyncInitializableViewModelBase"
+name = "IsInitializing"
+sig = "bool IsInitializing { get; }"
+returns = "bool"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[properties]]
+parent = "AsyncInitializableViewModelBase"
+name = "TypeName"
+sig = "string TypeName { get; set; }"
+returns = "string"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[properties]]
+parent = "AsyncInitializableViewModelBase"
+name = "TypeFullName"
+sig = "string TypeFullName { get; set; }"
+returns = "string"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[properties]]
+parent = "AsyncInitializableViewModelBase"
+name = "SkipDependenciesInitialization"
+sig = "bool SkipDependenciesInitialization { get; set; }"
+returns = "bool"
+summary = "If true doesn't wait for dependencies initialization"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[methods]]
+parent = "AsyncInitializableViewModelBase"
+name = "InitializeAsync"
+sig = "Task InitializeAsync()"
+returns = "Task"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[methods]]
+parent = "AsyncInitializableViewModelBase"
+name = "Reset"
+sig = "void Reset()"
+returns = "void"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[methods]]
+parent = "AsyncInitializableViewModelBase"
+name = "BeginInitialization"
+sig = "void BeginInitialization(bool waitSynchronouslyForInitialization)"
+returns = "void"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[methods]]
+parent = "AsyncInitializableViewModelBase"
+name = "BeginInitialization"
+sig = "void BeginInitialization()"
+returns = "void"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[methods]]
+parent = "AsyncInitializableViewModelBase"
+name = "SafeInitializeAsync"
+sig = "static Task<Result<ExceptionError>> SafeInitializeAsync(IAsyncInitializable dependency)"
+returns = "Task<Result<ExceptionError>>"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+static = true
+
+[[methods]]
+parent = "AsyncInitializableViewModelBase"
+name = "OnInitializeAsync"
+sig = "Task OnInitializeAsync()"
+returns = "Task"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[methods]]
+parent = "AsyncInitializableViewModelBase"
+name = "InitializeDependenciesAsync"
+sig = "Task InitializeDependenciesAsync()"
+returns = "Task"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[methods]]
+parent = "AsyncInitializableViewModelBase"
+name = "InitializeCoreAsync"
+sig = "Task InitializeCoreAsync()"
+returns = "Task"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[methods]]
+parent = "AsyncInitializableViewModelBase"
+name = "ThrowIfNotInitialized"
+sig = "void ThrowIfNotInitialized()"
+returns = "void"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[methods]]
+parent = "AsyncInitializableViewModelBase"
+name = "AddDependency"
+sig = "void AddDependency(IAsyncInitializable dependency)"
+returns = "void"
+file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
+
+[[methods]]
+parent = "AsyncInitializableViewModelBase"
+name = "Dispose"
+sig = "void Dispose(bool disposing)"
+returns = "void"
 file = "Abstractions\\AsyncInitializableViewModelBase.AsyncInitializable.cs"
 
 [[classes]]
@@ -57,34 +364,130 @@ ns = "FEx.Avaloniax.Abstractions"
 base = "FExAvaloniaViewModelBase, IAsyncInitializable"
 file = "Abstractions\\AsyncInitializableViewModelBase.cs"
 
+[[ctors]]
+parent = "AsyncInitializableViewModelBase"
+sig = "AsyncInitializableViewModelBase(INavigationService navigationService, params IAsyncInitializable[] dependencies)"
+file = "Abstractions\\AsyncInitializableViewModelBase.cs"
+
 [[classes]]
 name = "FExAvaloniaReactiveUserControl"
 ns = "FEx.Avaloniax.Abstractions"
-base = "ReactiveUserControl<T>, IDisposable
-    where T : class, IActivatableViewModel"
+base = "ReactiveUserControl<T>, IDisposable"
+file = "Abstractions\\FExAvaloniaReactiveUserControl.cs"
+
+[[ctors]]
+parent = "FExAvaloniaReactiveUserControl"
+sig = "FExAvaloniaReactiveUserControl()"
+file = "Abstractions\\FExAvaloniaReactiveUserControl.cs"
+
+[[methods]]
+parent = "FExAvaloniaReactiveUserControl"
+name = "OnActivated"
+sig = "void OnActivated()"
+returns = "void"
+file = "Abstractions\\FExAvaloniaReactiveUserControl.cs"
+
+[[methods]]
+parent = "FExAvaloniaReactiveUserControl"
+name = "OnDeactivated"
+sig = "void OnDeactivated()"
+returns = "void"
+file = "Abstractions\\FExAvaloniaReactiveUserControl.cs"
+
+[[methods]]
+parent = "FExAvaloniaReactiveUserControl"
+name = "SubscribeToWhenActivated"
+sig = "void SubscribeToWhenActivated()"
+returns = "void"
+file = "Abstractions\\FExAvaloniaReactiveUserControl.cs"
+
+[[methods]]
+parent = "FExAvaloniaReactiveUserControl"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+file = "Abstractions\\FExAvaloniaReactiveUserControl.cs"
+
+[[methods]]
+parent = "FExAvaloniaReactiveUserControl"
+name = "ThrowIfDisposed"
+sig = "void ThrowIfDisposed()"
+returns = "void"
 file = "Abstractions\\FExAvaloniaReactiveUserControl.cs"
 
 [[classes]]
 name = "FExAvaloniaViewModelBase"
 ns = "FEx.Avaloniax.Abstractions"
-base = "ReactiveNotifyPropertyChanged, IRoutableViewModel,
-    IActivatableViewModel, IDisposable"
+base = "ReactiveNotifyPropertyChanged, IRoutableViewModel, IActivatableViewModel, IDisposable"
 file = "Abstractions\\FExAvaloniaViewModelBase.cs"
 
-[[interfaces]]
-name = "IFExAvaloniaContainer"
-ns = "FEx.Avaloniax.Abstractions.Interfaces"
-file = "Abstractions\\Interfaces\\IFExAvaloniaContainer.cs"
+[[properties]]
+parent = "FExAvaloniaViewModelBase"
+name = "UrlPathSegment"
+sig = "string UrlPathSegment { get; }"
+returns = "string"
+file = "Abstractions\\FExAvaloniaViewModelBase.cs"
 
-[[interfaces]]
-name = "IFExContainer"
-ns = "FEx.Avaloniax.Abstractions.Interfaces"
-file = "Abstractions\\Interfaces\\IFExContainer.cs"
+[[properties]]
+parent = "FExAvaloniaViewModelBase"
+name = "HostScreen"
+sig = "IScreen HostScreen { get; }"
+returns = "IScreen"
+file = "Abstractions\\FExAvaloniaViewModelBase.cs"
 
-[[interfaces]]
-name = "INavigationService"
-ns = "FEx.Avaloniax.Abstractions.Interfaces"
-file = "Abstractions\\Interfaces\\INavigationService.cs"
+[[properties]]
+parent = "FExAvaloniaViewModelBase"
+name = "NavigationService"
+sig = "INavigationService NavigationService { get; set; }"
+returns = "INavigationService"
+file = "Abstractions\\FExAvaloniaViewModelBase.cs"
+
+[[properties]]
+parent = "FExAvaloniaViewModelBase"
+name = "Activator"
+sig = "ViewModelActivator Activator { get; }"
+returns = "ViewModelActivator"
+file = "Abstractions\\FExAvaloniaViewModelBase.cs"
+
+[[ctors]]
+parent = "FExAvaloniaViewModelBase"
+sig = "FExAvaloniaViewModelBase(INavigationService navigationService)"
+file = "Abstractions\\FExAvaloniaViewModelBase.cs"
+
+[[methods]]
+parent = "FExAvaloniaViewModelBase"
+name = "OnDeactivated"
+sig = "void OnDeactivated()"
+returns = "void"
+file = "Abstractions\\FExAvaloniaViewModelBase.cs"
+
+[[methods]]
+parent = "FExAvaloniaViewModelBase"
+name = "OnActivatedAsync"
+sig = "Task OnActivatedAsync()"
+returns = "Task"
+file = "Abstractions\\FExAvaloniaViewModelBase.cs"
+
+[[methods]]
+parent = "FExAvaloniaViewModelBase"
+name = "ThrowIfDisposed"
+sig = "void ThrowIfDisposed()"
+returns = "void"
+file = "Abstractions\\FExAvaloniaViewModelBase.cs"
+
+[[methods]]
+parent = "FExAvaloniaViewModelBase"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+file = "Abstractions\\FExAvaloniaViewModelBase.cs"
+
+[[methods]]
+parent = "FExAvaloniaViewModelBase"
+name = "Dispose"
+sig = "void Dispose(bool disposing)"
+returns = "void"
+file = "Abstractions\\FExAvaloniaViewModelBase.cs"
 
 [[classes]]
 name = "FExDesktopWindow"
@@ -92,9 +495,64 @@ ns = "FEx.Avaloniax.Desktop"
 base = "Window"
 file = "Desktop\\FExDesktopWindow.cs"
 
+[[properties]]
+parent = "FExDesktopWindow"
+name = "TrayIcon"
+sig = "FExTrayIcon TrayIcon { get; set; }"
+returns = "FExTrayIcon"
+file = "Desktop\\FExDesktopWindow.cs"
+
+[[methods]]
+parent = "FExDesktopWindow"
+name = "OnClosing"
+sig = "void OnClosing(WindowClosingEventArgs e)"
+returns = "void"
+file = "Desktop\\FExDesktopWindow.cs"
+
 [[classes]]
 name = "FExTrayIcon"
 ns = "FEx.Avaloniax.Desktop"
+file = "Desktop\\FExTrayIcon.cs"
+
+[[ctors]]
+parent = "FExTrayIcon"
+sig = "FExTrayIcon(string toolTipText)"
+file = "Desktop\\FExTrayIcon.cs"
+
+[[methods]]
+parent = "FExTrayIcon"
+name = "ExitApplication"
+sig = "static void ExitApplication()"
+returns = "void"
+file = "Desktop\\FExTrayIcon.cs"
+static = true
+
+[[methods]]
+parent = "FExTrayIcon"
+name = "Initialize"
+sig = "void Initialize(WindowIcon icon)"
+returns = "void"
+file = "Desktop\\FExTrayIcon.cs"
+
+[[methods]]
+parent = "FExTrayIcon"
+name = "Show"
+sig = "void Show()"
+returns = "void"
+file = "Desktop\\FExTrayIcon.cs"
+
+[[methods]]
+parent = "FExTrayIcon"
+name = "Hide"
+sig = "void Hide()"
+returns = "void"
+file = "Desktop\\FExTrayIcon.cs"
+
+[[methods]]
+parent = "FExTrayIcon"
+name = "ShowMainWindow"
+sig = "void ShowMainWindow()"
+returns = "void"
 file = "Desktop\\FExTrayIcon.cs"
 
 [[classes]]
@@ -103,9 +561,103 @@ ns = "FEx.Avaloniax.Services"
 base = "IViewLocator"
 file = "Services\\AppViewLocator.cs"
 
+[[properties]]
+parent = "AppViewLocator"
+name = "SupportsRecycling"
+sig = "static bool SupportsRecycling { get; }"
+returns = "bool"
+file = "Services\\AppViewLocator.cs"
+static = true
+
+[[methods]]
+parent = "AppViewLocator"
+name = "ResolveView"
+sig = "IViewFor<TViewModel> ResolveView<TViewModel>(string contract = null) where TViewModel : class"
+returns = "IViewFor<TViewModel>"
+file = "Services\\AppViewLocator.cs"
+
+[[methods]]
+parent = "AppViewLocator"
+name = "ResolveView"
+sig = "IViewFor ResolveView(object viewModel, string contract = null)"
+returns = "IViewFor"
+file = "Services\\AppViewLocator.cs"
+
 [[classes]]
 name = "NavigationService"
 ns = "FEx.Avaloniax.Services"
 base = "INavigationService"
 file = "Services\\NavigationService.cs"
+
+[[properties]]
+parent = "NavigationService"
+name = "Router"
+sig = "RoutingState Router { get; }"
+returns = "RoutingState"
+file = "Services\\NavigationService.cs"
+
+[[ctors]]
+parent = "NavigationService"
+sig = "NavigationService(IFExServiceProvider serviceProvider, IFExDispatcher dispatcher)"
+file = "Services\\NavigationService.cs"
+
+[[methods]]
+parent = "NavigationService"
+name = "GoBackAsync"
+sig = "Task GoBackAsync()"
+returns = "Task"
+file = "Services\\NavigationService.cs"
+
+[[methods]]
+parent = "NavigationService"
+name = "NavigateAsync"
+sig = "Task NavigateAsync<T>() where T : IRoutableViewModel"
+returns = "Task"
+file = "Services\\NavigationService.cs"
+
+[[methods]]
+parent = "NavigationService"
+name = "NavigateAndResetAsync"
+sig = "Task NavigateAndResetAsync<T>() where T : IRoutableViewModel"
+returns = "Task"
+file = "Services\\NavigationService.cs"
+
+[[interfaces]]
+name = "IFExAvaloniaContainer"
+ns = "FEx.Avaloniax.Abstractions.Interfaces"
+base = "IContainer<INavigationService>"
+file = "Abstractions\\Interfaces\\IFExAvaloniaContainer.cs"
+
+[[interfaces]]
+name = "IFExContainer"
+ns = "FEx.Avaloniax.Abstractions.Interfaces"
+base = "IFExBaseContainer, IFExMvvmContainer, IFExJsonContainer, IFExMvvmRxContainer, IFExPlatformsContainer, IFExAvaloniaContainer"
+file = "Abstractions\\Interfaces\\IFExContainer.cs"
+
+[[interfaces]]
+name = "INavigationService"
+ns = "FEx.Avaloniax.Abstractions.Interfaces"
+base = "IScreen"
+file = "Abstractions\\Interfaces\\INavigationService.cs"
+
+[[methods]]
+parent = "INavigationService"
+name = "NavigateAsync"
+sig = "Task NavigateAsync<T>() where T : IRoutableViewModel"
+returns = "Task"
+file = "Abstractions\\Interfaces\\INavigationService.cs"
+
+[[methods]]
+parent = "INavigationService"
+name = "NavigateAndResetAsync"
+sig = "Task NavigateAndResetAsync<T>() where T : IRoutableViewModel"
+returns = "Task"
+file = "Abstractions\\Interfaces\\INavigationService.cs"
+
+[[methods]]
+parent = "INavigationService"
+name = "GoBackAsync"
+sig = "Task GoBackAsync()"
+returns = "Task"
+file = "Abstractions\\Interfaces\\INavigationService.cs"
 

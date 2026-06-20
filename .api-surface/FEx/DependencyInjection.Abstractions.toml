@@ -8,11 +8,274 @@ ns = "FEx.DependencyInjection.Abstractions"
 base = "IFExServiceProvider"
 file = "FExServiceProvider.cs"
 
+[[properties]]
+parent = "FExServiceProvider"
+name = "Instance"
+sig = "static FExServiceProvider Instance { get; }"
+returns = "FExServiceProvider"
+file = "FExServiceProvider.cs"
+static = true
+
+[[properties]]
+parent = "FExServiceProvider"
+name = "ServiceContainer"
+sig = "static IFExServiceContainer ServiceContainer { get; }"
+returns = "IFExServiceContainer"
+summary = "Retrieves the instance. ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable."
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetInstance"
+sig = "T GetInstance<T>()"
+returns = "T"
+summary = "Retrieves the instance. ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable."
+file = "FExServiceProvider.cs"
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetInstance"
+sig = "object GetInstance(Type serviceType)"
+returns = "object"
+summary = "Retrieves the instance of the specified type."
+file = "FExServiceProvider.cs"
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetRequiredService"
+sig = "T GetRequiredService<T>()"
+returns = "T"
+summary = "Gets the required service object of the specified type."
+file = "FExServiceProvider.cs"
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetRequiredService"
+sig = "T GetRequiredService<T>(Type serviceType)"
+returns = "T"
+summary = "Gets the required service object of the specified type."
+file = "FExServiceProvider.cs"
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetRequiredService"
+sig = "object GetRequiredService(Type serviceType)"
+returns = "object"
+summary = "Gets the required service object of the specified type."
+file = "FExServiceProvider.cs"
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "TryResolveService"
+sig = "T TryResolveService<T>()"
+returns = "T"
+summary = "Tries to resolve service of the specified type."
+file = "FExServiceProvider.cs"
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetContainer"
+sig = "TContainer GetContainer<TContainer>() where TContainer : class"
+returns = "TContainer"
+summary = "Gets the container of the specified type."
+file = "FExServiceProvider.cs"
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "CreateScope"
+sig = "IScopeProvider CreateScope()"
+returns = "IScopeProvider"
+summary = "Creates a scope for scoped services - not supported by StrongInject containers."
+file = "FExServiceProvider.cs"
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "ConfigureServiceProviderAsync"
+sig = "ValueTask ConfigureServiceProviderAsync()"
+returns = "ValueTask"
+summary = "No-op implementation for the static provider as it delegates to the actual providers."
+file = "FExServiceProvider.cs"
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetService"
+sig = "object GetService(Type serviceType)"
+returns = "object"
+summary = "Gets the service object of the specified type."
+file = "FExServiceProvider.cs"
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "Get"
+sig = "static T Get<T>()"
+returns = "T"
+summary = "Retrieves the instance. ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable."
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetAsync"
+sig = "static Task<T> GetAsync<T>()"
+returns = "Task<T>"
+summary = "Retrieves the instance asynchronously. ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable."
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetAll"
+sig = "static IEnumerable<T> GetAll<T>()"
+returns = "IEnumerable<T>"
+summary = "Retrieves the instances. ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable."
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "TryGetAll"
+sig = "static IEnumerable<T> TryGetAll<T>()"
+returns = "IEnumerable<T>"
+summary = "Retrieves the instances or returns empty enumerable if none found. ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable."
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetAllAsync"
+sig = "static Task<IEnumerable<T>> GetAllAsync<T>()"
+returns = "Task<IEnumerable<T>>"
+summary = "Retrieves the instances asynchronously. ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable."
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetOrDefault"
+sig = "static T GetOrDefault<T>()"
+returns = "T"
+summary = "Retrieves the instance or returns default value. ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable."
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetOrDefault"
+sig = "static T GetOrDefault<T>(T fallback)"
+returns = "T"
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "Release"
+sig = "static void Release()"
+returns = "void"
+summary = "Disposes the container."
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "InitializeAsync"
+sig = "static ValueTask<TContainer> InitializeAsync<TContainer>() where TContainer : class, IDisposable, new()"
+returns = "ValueTask<TContainer>"
+summary = "Default startup point of application. Creates DI container instance and wraps into service, that allows to distribute its registrations around the app."
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "InitializeAsync"
+sig = "static ValueTask<TContainer> InitializeAsync<TContainer>(IServiceCollection services) where TContainer : class, IDisposable, new()"
+returns = "ValueTask<TContainer>"
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "InitializeAsync"
+sig = "static ValueTask<TContainer> InitializeAsync<TContainer>(IServiceCollection services, Action<TContainer> configureContainer) where TContainer : class, IDisposable, new()"
+returns = "ValueTask<TContainer>"
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "GetDefaultContainer"
+sig = "static TModule GetDefaultContainer<TModule>() where TModule : class"
+returns = "TModule"
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "RegisterDependenciesAsync"
+sig = "static Task<IFExServiceProvider> RegisterDependenciesAsync( Func<IFExServiceProvider, Task> serviceProviderConfiguration)"
+returns = "Task<IFExServiceProvider>"
+file = "FExServiceProvider.cs"
+static = true
+
+[[methods]]
+parent = "FExServiceProvider"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+summary = "Disposes the service provider."
+file = "FExServiceProvider.cs"
+
 [[classes]]
 name = "InitializeModule"
 ns = "FEx.DependencyInjection.Abstractions"
-base = "FExInitializable, IInitializeModule<TEngineContext>
-    where TContainer : class"
+base = "FExInitializable, IInitializeModule<TEngineContext>"
+file = "InitializeModule.cs"
+
+[[properties]]
+parent = "InitializeModule"
+name = "HasBeenCompleted"
+sig = "bool HasBeenCompleted { get; }"
+returns = "bool"
+file = "InitializeModule.cs"
+
+[[ctors]]
+parent = "InitializeModule"
+sig = "InitializeModule(params IFExInitializable[] dependencies)"
+file = "InitializeModule.cs"
+
+[[methods]]
+parent = "InitializeModule"
+name = "RegisterServices"
+sig = "void RegisterServices(TEngineContext context)"
+returns = "void"
+file = "InitializeModule.cs"
+
+[[methods]]
+parent = "InitializeModule"
+name = "CompleteInitializationAsync"
+sig = "ValueTask CompleteInitializationAsync(TEngineContext context)"
+returns = "ValueTask"
+file = "InitializeModule.cs"
+
+[[methods]]
+parent = "InitializeModule"
+name = "OnCompleteInitializationAsync"
+sig = "ValueTask OnCompleteInitializationAsync(TEngineContext context)"
+returns = "ValueTask"
+file = "InitializeModule.cs"
+
+[[methods]]
+parent = "InitializeModule"
+name = "RegisterServices"
+sig = "void RegisterServices(TContainer container, TEngineContext context)"
+returns = "void"
+file = "InitializeModule.cs"
+
+[[methods]]
+parent = "InitializeModule"
+name = "GetModule"
+sig = "TContainer GetModule()"
+returns = "TContainer"
 file = "InitializeModule.cs"
 
 [[classes]]
@@ -21,11 +284,41 @@ ns = "FEx.DependencyInjection.Abstractions"
 base = "InitializeModule<object, IServiceCollection>"
 file = "InitializeOnlyModule.cs"
 
+[[methods]]
+parent = "InitializeOnlyModule"
+name = "RegisterServices"
+sig = "void RegisterServices(object container, IServiceCollection services)"
+returns = "void"
+file = "InitializeOnlyModule.cs"
+
+[[methods]]
+parent = "InitializeOnlyModule"
+name = "GetModule"
+sig = "object GetModule()"
+returns = "object"
+file = "InitializeOnlyModule.cs"
+
 [[classes]]
 name = "StaticsBase"
 ns = "FEx.DependencyInjection.Abstractions.Basics"
 base = "FExInitializable"
 file = "Basics\\StaticsBase.cs"
+
+[[properties]]
+parent = "StaticsBase"
+name = "ServiceProvider"
+sig = "static IFExServiceProvider ServiceProvider { get; set; }"
+returns = "IFExServiceProvider"
+file = "Basics\\StaticsBase.cs"
+static = true
+
+[[methods]]
+parent = "StaticsBase"
+name = "Get"
+sig = "static T Get<T>(Func<T> localFactory, Func<T> fallback = null, [CallerMemberName] string paramName = null) where T : class"
+returns = "T"
+file = "Basics\\StaticsBase.cs"
+static = true
 
 [[enums]]
 name = "ConfigurationPriority"
@@ -38,58 +331,269 @@ ns = "FEx.DependencyInjection.Abstractions.Extensions"
 file = "Extensions\\FExServiceContainerExtensions.cs"
 static = true
 
+[[extensions]]
+name = "RegisterServices"
+returns = "void"
+sig = "void RegisterServices<TContainer>(this IFExServiceContainer container, TContainer diContainer)"
+file = "Extensions\\FExServiceContainerExtensions.cs"
+
+[[extensions]]
+name = "ResolveOrDefault"
+returns = "T"
+sig = "T ResolveOrDefault<T>(this IFExServiceContainer container)"
+file = "Extensions\\FExServiceContainerExtensions.cs"
+
 [[interfaces]]
 name = "IAnyConfigurator"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"
 file = "Interfaces\\IAnyConfigurator.cs"
 
+[[properties]]
+parent = "IAnyConfigurator"
+name = "Priority"
+sig = "ConfigurationPriority Priority { get; }"
+returns = "ConfigurationPriority"
+file = "Interfaces\\IAnyConfigurator.cs"
+
 [[interfaces]]
 name = "IAsyncConfigurator"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+base = "IAnyConfigurator"
+file = "Interfaces\\IAsyncConfigurator.cs"
+
+[[methods]]
+parent = "IAsyncConfigurator"
+name = "ConfigureAsync"
+sig = "Task ConfigureAsync()"
+returns = "Task"
 file = "Interfaces\\IAsyncConfigurator.cs"
 
 [[interfaces]]
 name = "IConfigurator"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+base = "IAnyConfigurator"
+file = "Interfaces\\IConfigurator.cs"
+
+[[methods]]
+parent = "IConfigurator"
+name = "Configure"
+sig = "void Configure()"
+returns = "void"
 file = "Interfaces\\IConfigurator.cs"
 
 [[interfaces]]
 name = "IFExDependencyInjectionContainer"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+base = "IContainer<IFExServiceContainer>, IContainer<IFExInitializable[]>, IContainer<IMicrosoftDIConfigurator[]>, IContainer<IConfigurator[]>, IContainer<IAsyncConfigurator[]>, IContainer<IFExStrongInjectServiceProvider>"
 file = "Interfaces\\IFExDependencyInjectionContainer.cs"
 
 [[interfaces]]
 name = "IFExServiceContainer"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+base = "IDisposable"
+file = "Interfaces\\IFExServiceContainer.cs"
+
+[[methods]]
+parent = "IFExServiceContainer"
+name = "RegisterServices"
+sig = "void RegisterServices<TContainer>(TContainer container, IServiceCollection services) where TContainer : class, IDisposable"
+returns = "void"
+file = "Interfaces\\IFExServiceContainer.cs"
+
+[[methods]]
+parent = "IFExServiceContainer"
+name = "ResolveService"
+sig = "T ResolveService<T>()"
+returns = "T"
+file = "Interfaces\\IFExServiceContainer.cs"
+
+[[methods]]
+parent = "IFExServiceContainer"
+name = "ResolveServiceAsync"
+sig = "Task<T> ResolveServiceAsync<T>()"
+returns = "Task<T>"
+file = "Interfaces\\IFExServiceContainer.cs"
+
+[[methods]]
+parent = "IFExServiceContainer"
+name = "ResolveServicesAsync"
+sig = "Task<IEnumerable<T>> ResolveServicesAsync<T>()"
+returns = "Task<IEnumerable<T>>"
+file = "Interfaces\\IFExServiceContainer.cs"
+
+[[methods]]
+parent = "IFExServiceContainer"
+name = "ResolveServices"
+sig = "IEnumerable<T> ResolveServices<T>()"
+returns = "IEnumerable<T>"
+file = "Interfaces\\IFExServiceContainer.cs"
+
+[[methods]]
+parent = "IFExServiceContainer"
+name = "TryResolveServices"
+sig = "IEnumerable<T> TryResolveServices<T>()"
+returns = "IEnumerable<T>"
+file = "Interfaces\\IFExServiceContainer.cs"
+
+[[methods]]
+parent = "IFExServiceContainer"
+name = "ResolveOrDefault"
+sig = "T ResolveOrDefault<T>(T fallback)"
+returns = "T"
+file = "Interfaces\\IFExServiceContainer.cs"
+
+[[methods]]
+parent = "IFExServiceContainer"
+name = "Release"
+sig = "void Release()"
+returns = "void"
 file = "Interfaces\\IFExServiceContainer.cs"
 
 [[interfaces]]
 name = "IFExServiceProvider"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+base = "IServiceProvider, IDisposable"
+file = "Interfaces\\IFExServiceProvider.cs"
+
+[[methods]]
+parent = "IFExServiceProvider"
+name = "GetRequiredService"
+sig = "T GetRequiredService<T>()"
+returns = "T"
+file = "Interfaces\\IFExServiceProvider.cs"
+
+[[methods]]
+parent = "IFExServiceProvider"
+name = "TryResolveService"
+sig = "T TryResolveService<T>()"
+returns = "T"
+file = "Interfaces\\IFExServiceProvider.cs"
+
+[[methods]]
+parent = "IFExServiceProvider"
+name = "GetRequiredService"
+sig = "T GetRequiredService<T>(Type serviceType)"
+returns = "T"
+file = "Interfaces\\IFExServiceProvider.cs"
+
+[[methods]]
+parent = "IFExServiceProvider"
+name = "GetRequiredService"
+sig = "object GetRequiredService(Type serviceType)"
+returns = "object"
+file = "Interfaces\\IFExServiceProvider.cs"
+
+[[methods]]
+parent = "IFExServiceProvider"
+name = "GetContainer"
+sig = "TContainer GetContainer<TContainer>() where TContainer : class"
+returns = "TContainer"
+file = "Interfaces\\IFExServiceProvider.cs"
+
+[[methods]]
+parent = "IFExServiceProvider"
+name = "CreateScope"
+sig = "IScopeProvider CreateScope()"
+returns = "IScopeProvider"
+file = "Interfaces\\IFExServiceProvider.cs"
+
+[[methods]]
+parent = "IFExServiceProvider"
+name = "GetInstance"
+sig = "T GetInstance<T>()"
+returns = "T"
+file = "Interfaces\\IFExServiceProvider.cs"
+
+[[methods]]
+parent = "IFExServiceProvider"
+name = "GetInstance"
+sig = "object GetInstance(Type serviceType)"
+returns = "object"
+file = "Interfaces\\IFExServiceProvider.cs"
+
+[[methods]]
+parent = "IFExServiceProvider"
+name = "ConfigureServiceProviderAsync"
+sig = "ValueTask ConfigureServiceProviderAsync()"
+returns = "ValueTask"
+summary = "Configure the service provider for external DI engine integration. Only called when external DI is opt-in enabled."
 file = "Interfaces\\IFExServiceProvider.cs"
 
 [[interfaces]]
 name = "IFExStrongInjectServiceProvider"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+base = "IFExServiceProvider"
+file = "Interfaces\\IFExStrongInjectServiceProvider.cs"
+
+[[methods]]
+parent = "IFExStrongInjectServiceProvider"
+name = "SetServiceProvider"
+sig = "void SetServiceProvider<TContainer>(TContainer container) where TContainer : class, IDisposable"
+returns = "void"
 file = "Interfaces\\IFExStrongInjectServiceProvider.cs"
 
 [[interfaces]]
 name = "IInitializeModule"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+base = "IFExInitializable"
+file = "Interfaces\\IInitializeModule.cs"
+
+[[properties]]
+parent = "IInitializeModule"
+name = "HasBeenCompleted"
+sig = "bool HasBeenCompleted { get; }"
+returns = "bool"
+file = "Interfaces\\IInitializeModule.cs"
+
+[[methods]]
+parent = "IInitializeModule"
+name = "RegisterServices"
+sig = "void RegisterServices(TEngineContext context)"
+returns = "void"
+file = "Interfaces\\IInitializeModule.cs"
+
+[[methods]]
+parent = "IInitializeModule"
+name = "CompleteInitializationAsync"
+sig = "ValueTask CompleteInitializationAsync(TEngineContext context)"
+returns = "ValueTask"
 file = "Interfaces\\IInitializeModule.cs"
 
 [[interfaces]]
 name = "IMicrosoftDIConfigurator"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+base = "IMicrosoftDIConfigurator"
+file = "Interfaces\\IMicrosoftDIConfigurator.cs"
+
+[[methods]]
+parent = "IMicrosoftDIConfigurator"
+name = "RegisterServices"
+sig = "void RegisterServices(IServiceCollection services, TContainer container)"
+returns = "void"
 file = "Interfaces\\IMicrosoftDIConfigurator.cs"
 
 [[interfaces]]
 name = "IMicrosoftDIConfigurator"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+base = "IAnyConfigurator"
+file = "Interfaces\\IMicrosoftDIConfigurator.cs"
+
+[[methods]]
+parent = "IMicrosoftDIConfigurator"
+name = "RegisterServicesUsingContainer"
+sig = "void RegisterServicesUsingContainer(IServiceCollection services, object container)"
+returns = "void"
 file = "Interfaces\\IMicrosoftDIConfigurator.cs"
 
 [[interfaces]]
 name = "IScopeProvider"
 ns = "FEx.DependencyInjection.Abstractions.Interfaces"
+file = "Interfaces\\IScopeProvider.cs"
+
+[[methods]]
+parent = "IScopeProvider"
+name = "CreateScope"
+sig = "IServiceScope CreateScope()"
+returns = "IServiceScope"
 file = "Interfaces\\IScopeProvider.cs"
 

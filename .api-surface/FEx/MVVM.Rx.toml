@@ -8,34 +8,76 @@ ns = "FEx.MVVM.Rx"
 base = "FExInitializable"
 file = "FExMVVMRx.cs"
 
+[[properties]]
+parent = "FExMvvmRx"
+name = "StatusService"
+sig = "static IStatusService StatusService { get; }"
+returns = "IStatusService"
+file = "FExMVVMRx.cs"
+static = true
+
+[[ctors]]
+parent = "FExMvvmRx"
+sig = "FExMvvmRx(IStatusService statusService)"
+file = "FExMVVMRx.cs"
+
+[[methods]]
+parent = "FExMvvmRx"
+name = "OnInitialize"
+sig = "void OnInitialize()"
+returns = "void"
+file = "FExMVVMRx.cs"
+
 [[classes]]
 name = "FExMvvmRxModule"
 ns = "FEx.MVVM.Rx"
 base = "InitializeModule<IFExMvvmRxContainer, IServiceCollection>"
 file = "FExMVVMRxModule.cs"
 
-[[interfaces]]
-name = "IDisposableProgress"
-ns = "FEx.MVVM.Rx.Abstractions.Interfaces"
-summary = "An that is disposable."
-file = "Abstractions\\Interfaces\\IDisposableProgress.cs"
-
-[[interfaces]]
-name = "IDisposableProgress"
-ns = "FEx.MVVM.Rx.Abstractions.Interfaces"
-summary = "An that is disposable."
-file = "Abstractions\\Interfaces\\IDisposableProgress.cs"
-
-[[interfaces]]
-name = "IFExMvvmRxContainer"
-ns = "FEx.MVVM.Rx.Abstractions.Interfaces"
-file = "Abstractions\\Interfaces\\IFExMVVMRxContainer.cs"
+[[methods]]
+parent = "FExMvvmRxModule"
+name = "RegisterServices"
+sig = "void RegisterServices(IFExMvvmRxContainer container, IServiceCollection services)"
+returns = "void"
+file = "FExMVVMRxModule.cs"
 
 [[classes]]
 name = "LinkableReactiveNotifyPropertyChanged"
 ns = "FEx.MVVM.Rx.BaseObjects"
-base = "ReactiveNotifyPropertyChanged,
-    ILinkableNotifyPropertyChanged"
+base = "ReactiveNotifyPropertyChanged, ILinkableNotifyPropertyChanged"
+file = "BaseObjects\\LinkableReactiveNotifyPropertyChanged.cs"
+
+[[ctors]]
+parent = "LinkableReactiveNotifyPropertyChanged"
+sig = "LinkableReactiveNotifyPropertyChanged()"
+file = "BaseObjects\\LinkableReactiveNotifyPropertyChanged.cs"
+
+[[methods]]
+parent = "LinkableReactiveNotifyPropertyChanged"
+name = "OnPropertySet"
+sig = "void OnPropertySet<T>(T oldValue, T newValue, string propertyName)"
+returns = "void"
+file = "BaseObjects\\LinkableReactiveNotifyPropertyChanged.cs"
+
+[[methods]]
+parent = "LinkableReactiveNotifyPropertyChanged"
+name = "AddLink"
+sig = "void AddLink(ILink link)"
+returns = "void"
+file = "BaseObjects\\LinkableReactiveNotifyPropertyChanged.cs"
+
+[[methods]]
+parent = "LinkableReactiveNotifyPropertyChanged"
+name = "Unlink"
+sig = "void Unlink(ILink link, bool resetProperty)"
+returns = "void"
+file = "BaseObjects\\LinkableReactiveNotifyPropertyChanged.cs"
+
+[[methods]]
+parent = "LinkableReactiveNotifyPropertyChanged"
+name = "Unlink"
+sig = "void Unlink(Guid linkId, string propertyName, Type propertyType, bool resetProperty)"
+returns = "void"
 file = "BaseObjects\\LinkableReactiveNotifyPropertyChanged.cs"
 
 [[classes]]
@@ -44,10 +86,108 @@ ns = "FEx.MVVM.Rx.BaseObjects"
 base = "ReactiveObject, IFExNotifyPropertyChanged"
 file = "BaseObjects\\ReactiveNotifyPropertyChanged.cs"
 
+[[methods]]
+parent = "ReactiveNotifyPropertyChanged"
+name = "OnPropertiesChanged"
+sig = "void OnPropertiesChanged(params string[] propertyNames)"
+returns = "void"
+summary = "Use this method in your ReactiveObject classes when creating custom properties where raiseAndSetIfChanged doesn't suffice."
+file = "BaseObjects\\ReactiveNotifyPropertyChanged.cs"
+
+[[methods]]
+parent = "ReactiveNotifyPropertyChanged"
+name = "OnPropertyChanged"
+sig = "void OnPropertyChanged([CallerMemberName] string propertyName = null)"
+returns = "void"
+summary = "Use this method in your ReactiveObject classes when creating custom properties where raiseAndSetIfChanged doesn't suffice."
+file = "BaseObjects\\ReactiveNotifyPropertyChanged.cs"
+
+[[methods]]
+parent = "ReactiveNotifyPropertyChanged"
+name = "SetProperty"
+sig = "bool SetProperty<TRet>(ref TRet backingField, TRet newValue, Action<TRet> onPropertyChanged, [CallerMemberName] string propertyName = null)"
+returns = "bool"
+file = "BaseObjects\\ReactiveNotifyPropertyChanged.cs"
+
+[[methods]]
+parent = "ReactiveNotifyPropertyChanged"
+name = "OnPropertySet"
+sig = "void OnPropertySet<T>(T oldValue, T newValue, string propertyName)"
+returns = "void"
+file = "BaseObjects\\ReactiveNotifyPropertyChanged.cs"
+
+[[methods]]
+parent = "ReactiveNotifyPropertyChanged"
+name = "SetProperty"
+sig = "bool SetProperty<TRet>(ref TRet backingField, TRet newValue, [CallerMemberName] string propertyName = null)"
+returns = "bool"
+file = "BaseObjects\\ReactiveNotifyPropertyChanged.cs"
+
 [[classes]]
 name = "ViewModelBase"
 ns = "FEx.MVVM.Rx.BaseObjects"
 base = "LinkableReactiveNotifyPropertyChanged, IViewModelBase, IEquatable<ViewModelBase>"
+file = "BaseObjects\\ViewModelBase.cs"
+
+[[properties]]
+parent = "ViewModelBase"
+name = "Id"
+sig = "string Id { get; }"
+returns = "string"
+file = "BaseObjects\\ViewModelBase.cs"
+
+[[properties]]
+parent = "ViewModelBase"
+name = "IsInDesignMode"
+sig = "bool IsInDesignMode { get; set; }"
+returns = "bool"
+file = "BaseObjects\\ViewModelBase.cs"
+
+[[properties]]
+parent = "ViewModelBase"
+name = "Title"
+sig = "string Title { get; set; }"
+returns = "string"
+file = "BaseObjects\\ViewModelBase.cs"
+
+[[ctors]]
+parent = "ViewModelBase"
+sig = "ViewModelBase()"
+file = "BaseObjects\\ViewModelBase.cs"
+
+[[methods]]
+parent = "ViewModelBase"
+name = "Equals"
+sig = "bool Equals(IViewModelBase other)"
+returns = "bool"
+file = "BaseObjects\\ViewModelBase.cs"
+
+[[methods]]
+parent = "ViewModelBase"
+name = "Equals"
+sig = "bool Equals(ViewModelBase other)"
+returns = "bool"
+file = "BaseObjects\\ViewModelBase.cs"
+
+[[methods]]
+parent = "ViewModelBase"
+name = "Equals"
+sig = "bool Equals(object obj)"
+returns = "bool"
+file = "BaseObjects\\ViewModelBase.cs"
+
+[[methods]]
+parent = "ViewModelBase"
+name = "GetHashCode"
+sig = "int GetHashCode()"
+returns = "int"
+file = "BaseObjects\\ViewModelBase.cs"
+
+[[methods]]
+parent = "ViewModelBase"
+name = "GetIsInDesignMode"
+sig = "bool GetIsInDesignMode()"
+returns = "bool"
 file = "BaseObjects\\ViewModelBase.cs"
 
 [[classes]]
@@ -56,11 +196,147 @@ ns = "FEx.MVVM.Rx.Extensions"
 file = "Extensions\\ReactiveObjectExtensions.cs"
 static = true
 
+[[extensions]]
+name = "SetProperty"
+returns = "bool"
+sig = "bool SetProperty<TObj, TRet>(this TObj sender, ref TRet backingField, TRet newValue, [CallerMemberName] string propertyName = null)"
+file = "Extensions\\ReactiveObjectExtensions.cs"
+
 [[classes]]
 name = "ObservableProgress"
 ns = "FEx.MVVM.Rx.Utilities"
 base = "IObservable<T>, IDisposableProgress<T>"
 summary = "A progress reporter that exposes progress updates as an observable stream. This is a hot observable."
+file = "Utilities\\ObservableProgress.cs"
+
+[[properties]]
+parent = "ObservableProgress"
+name = "IsDisposed"
+sig = "bool IsDisposed { get; }"
+returns = "bool"
+file = "Utilities\\ObservableProgress.cs"
+
+[[ctors]]
+parent = "ObservableProgress"
+sig = "ObservableProgress()"
+summary = "Creates an observable progress that uses a replay subject with a single-element buffer, ensuring all new subscriptions immediately receive the last progress update."
+file = "Utilities\\ObservableProgress.cs"
+
+[[ctors]]
+parent = "ObservableProgress"
+sig = "ObservableProgress(IScheduler scheduler)"
+summary = "Creates an observable progress that uses a replay subject with a single-element buffer, ensuring all new subscriptions immediately receive the last progress update."
+file = "Utilities\\ObservableProgress.cs"
+
+[[ctors]]
+parent = "ObservableProgress"
+sig = "ObservableProgress(ISubject<T> subject)"
+summary = "Creates an observable progress that uses the specified subject."
+file = "Utilities\\ObservableProgress.cs"
+
+[[methods]]
+parent = "ObservableProgress"
+name = "CreateForUiWithBuffer"
+sig = "static IDisposableProgress<T> CreateForUiWithBuffer(TimeSpan sampleTimeSpan, Action<IList<T>> handler)"
+returns = "IDisposableProgress<T>"
+summary = "Creates a progress handler with common UI options: updates are buffered in intervals, and the is executed on the UI thread. This method must be called from the UI thread. The UI should already be initialized with the default state; is not invoked with an initial value."
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "CreateForUiWithBuffer"
+sig = "static IDisposableProgress<T> CreateForUiWithBuffer(TimeSpan sampleTimeSpan, Action<IList<T>> handler, Func<IList<T>, bool> predicate)"
+returns = "IDisposableProgress<T>"
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "CreateForUiWithBuffer"
+sig = "static IDisposableProgress<T> CreateForUiWithBuffer(TimeSpan sampleTimeSpan, Action<IList<T>> handler, Func<IList<T>, bool> predicate, bool limitToCurrentThread)"
+returns = "IDisposableProgress<T>"
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "Create"
+sig = "static IDisposableProgress<T> Create<TRet>(Action<TRet> handler, Func<ObservableProgress<T>, IObservable<TRet>> subFunc)"
+returns = "IDisposableProgress<T>"
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "Create"
+sig = "static IDisposableProgress<T> Create<TRet>(Action<TRet> handler, Func<ObservableProgress<T>, IObservable<TRet>> subFunc, bool limitToCurrentThread)"
+returns = "IDisposableProgress<T>"
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "CreateForUiWithSample"
+sig = "static IDisposableProgress<T> CreateForUiWithSample(TimeSpan sampleTimeSpan, Action<T> handler)"
+returns = "IDisposableProgress<T>"
+summary = "Creates a progress handler with common UI options: updates are sampled on intervals, and the is executed on the UI thread. This method must be called from the UI thread. The UI should already be initialized with the default state; is not invoked with an initial value."
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "CreateForUiWithSample"
+sig = "static IDisposableProgress<T> CreateForUiWithSample(TimeSpan sampleTimeSpan, Action<T> handler, IScheduler scheduler)"
+returns = "IDisposableProgress<T>"
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "CreateForUiWithSample"
+sig = "static IDisposableProgress<T> CreateForUiWithSample(TimeSpan sampleTimeSpan, Action<T> handler, IScheduler scheduler, bool limitToCurrentThread)"
+returns = "IDisposableProgress<T>"
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "CreateForUiWithSample"
+sig = "static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler)"
+returns = "IDisposableProgress<T>"
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "CreateForUiWithSample"
+sig = "static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler, bool limitToCurrentThread)"
+returns = "IDisposableProgress<T>"
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "CreateForUiWithSample"
+sig = "static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler, IScheduler scheduler)"
+returns = "IDisposableProgress<T>"
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "CreateForUiWithSample"
+sig = "static IDisposableProgress<T> CreateForUiWithSample(Action<T> handler, IScheduler scheduler, bool limitToCurrentThread)"
+returns = "IDisposableProgress<T>"
+file = "Utilities\\ObservableProgress.cs"
+static = true
+
+[[methods]]
+parent = "ObservableProgress"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
 file = "Utilities\\ObservableProgress.cs"
 
 [[classes]]
@@ -69,9 +345,204 @@ ns = "FEx.MVVM.Rx.Utilities"
 base = "IDisposable, IStatusHub"
 file = "Utilities\\StatusHub.cs"
 
+[[properties]]
+parent = "StatusHub"
+name = "Key"
+sig = "Guid Key { get; }"
+returns = "Guid"
+file = "Utilities\\StatusHub.cs"
+
+[[ctors]]
+parent = "StatusHub"
+sig = "StatusHub(Guid key)"
+file = "Utilities\\StatusHub.cs"
+
+[[ctors]]
+parent = "StatusHub"
+sig = "StatusHub(Guid key, Action<Guid, string> onStatusAdded, Action<Guid, string> onStatusRemoved, Action onStatusesReset)"
+file = "Utilities\\StatusHub.cs"
+
+[[methods]]
+parent = "StatusHub"
+name = "AttachToStatusChanges"
+sig = "void AttachToStatusChanges(Action<Guid, string> onStatusAdded, Action<Guid, string> onStatusRemoved, Action onStatusesReset)"
+returns = "void"
+file = "Utilities\\StatusHub.cs"
+
+[[methods]]
+parent = "StatusHub"
+name = "AddStatus"
+sig = "Guid AddStatus(string status, bool unique)"
+returns = "Guid"
+file = "Utilities\\StatusHub.cs"
+
+[[methods]]
+parent = "StatusHub"
+name = "RemoveStatus"
+sig = "void RemoveStatus(Guid key)"
+returns = "void"
+file = "Utilities\\StatusHub.cs"
+
+[[methods]]
+parent = "StatusHub"
+name = "CleanStatuses"
+sig = "void CleanStatuses()"
+returns = "void"
+file = "Utilities\\StatusHub.cs"
+
+[[methods]]
+parent = "StatusHub"
+name = "GetStatuses"
+sig = "IList<string> GetStatuses()"
+returns = "IList<string>"
+file = "Utilities\\StatusHub.cs"
+
+[[methods]]
+parent = "StatusHub"
+name = "GetStatusString"
+sig = "string GetStatusString(string separator)"
+returns = "string"
+file = "Utilities\\StatusHub.cs"
+
+[[methods]]
+parent = "StatusHub"
+name = "Log"
+sig = "DisposableAction Log(string status, bool unique)"
+returns = "DisposableAction"
+file = "Utilities\\StatusHub.cs"
+
+[[methods]]
+parent = "StatusHub"
+name = "AddStatus"
+sig = "Guid AddStatus(string status)"
+returns = "Guid"
+file = "Utilities\\StatusHub.cs"
+
+[[methods]]
+parent = "StatusHub"
+name = "GetStatusString"
+sig = "string GetStatusString()"
+returns = "string"
+file = "Utilities\\StatusHub.cs"
+
+[[methods]]
+parent = "StatusHub"
+name = "Log"
+sig = "DisposableAction Log(string status)"
+returns = "DisposableAction"
+file = "Utilities\\StatusHub.cs"
+
+[[methods]]
+parent = "StatusHub"
+name = "Dispose"
+sig = "void Dispose()"
+returns = "void"
+file = "Utilities\\StatusHub.cs"
+
 [[classes]]
 name = "StatusService"
 ns = "FEx.MVVM.Rx.Utilities"
 base = "IStatusService"
 file = "Utilities\\StatusService.cs"
+
+[[properties]]
+parent = "StatusService"
+name = "MainHub"
+sig = "IStatusHub MainHub { get; }"
+returns = "IStatusHub"
+file = "Utilities\\StatusService.cs"
+
+[[properties]]
+parent = "StatusService"
+name = "MainHubKey"
+sig = "Guid? MainHubKey { get; }"
+returns = "Guid?"
+file = "Utilities\\StatusService.cs"
+
+[[ctors]]
+parent = "StatusService"
+sig = "StatusService()"
+file = "Utilities\\StatusService.cs"
+
+[[methods]]
+parent = "StatusService"
+name = "GetOrAdd"
+sig = "IStatusHub GetOrAdd(Guid? key, Action<Guid, string> onStatusAdded, Action<Guid, string> onStatusRemoved, Action onStatusesReset, bool markAsMain)"
+returns = "IStatusHub"
+file = "Utilities\\StatusService.cs"
+
+[[methods]]
+parent = "StatusService"
+name = "LogToMainHub"
+sig = "Guid LogToMainHub(string status, bool unique)"
+returns = "Guid"
+file = "Utilities\\StatusService.cs"
+
+[[methods]]
+parent = "StatusService"
+name = "RemoveMainLog"
+sig = "void RemoveMainLog(Guid statusKey)"
+returns = "void"
+file = "Utilities\\StatusService.cs"
+
+[[methods]]
+parent = "StatusService"
+name = "Log"
+sig = "DisposableAction Log(string status, IStatusHub hub, bool unique)"
+returns = "DisposableAction"
+file = "Utilities\\StatusService.cs"
+
+[[methods]]
+parent = "StatusService"
+name = "GetOrAdd"
+sig = "IStatusHub GetOrAdd()"
+returns = "IStatusHub"
+file = "Utilities\\StatusService.cs"
+
+[[methods]]
+parent = "StatusService"
+name = "LogToMainHub"
+sig = "Guid LogToMainHub(string status)"
+returns = "Guid"
+file = "Utilities\\StatusService.cs"
+
+[[methods]]
+parent = "StatusService"
+name = "Log"
+sig = "DisposableAction Log(string status)"
+returns = "DisposableAction"
+file = "Utilities\\StatusService.cs"
+
+[[methods]]
+parent = "StatusService"
+name = "Log"
+sig = "DisposableAction Log(string status, IStatusHub hub)"
+returns = "DisposableAction"
+file = "Utilities\\StatusService.cs"
+
+[[interfaces]]
+name = "IDisposableProgress"
+ns = "FEx.MVVM.Rx.Abstractions.Interfaces"
+base = "IProgress<T>, IDisposableProgress"
+summary = "An that is disposable."
+file = "Abstractions\\Interfaces\\IDisposableProgress.cs"
+
+[[interfaces]]
+name = "IDisposableProgress"
+ns = "FEx.MVVM.Rx.Abstractions.Interfaces"
+base = "IDisposable"
+file = "Abstractions\\Interfaces\\IDisposableProgress.cs"
+
+[[properties]]
+parent = "IDisposableProgress"
+name = "IsDisposed"
+sig = "bool IsDisposed { get; }"
+returns = "bool"
+file = "Abstractions\\Interfaces\\IDisposableProgress.cs"
+
+[[interfaces]]
+name = "IFExMvvmRxContainer"
+ns = "FEx.MVVM.Rx.Abstractions.Interfaces"
+base = "IContainer<FExMvvmRx>, IContainer<IStatusService>"
+file = "Abstractions\\Interfaces\\IFExMVVMRxContainer.cs"
 

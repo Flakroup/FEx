@@ -1,6 +1,6 @@
 [project]
 name = "FEx.MVVM.Abstractions"
-path = "rc\\FEx.MVVM.Abstractions"
+path = "src\\FEx.MVVM.Abstractions"
 
 [[classes]]
 name = "DummyPopupService"
@@ -124,7 +124,10 @@ file = "Extensions\\LinkableNotifyPropertyChangedExtensions.cs"
 
 [[extensions]]
 name = "Unlink"
-sig = "void Unlink(this ILinkableNotifyPropertyChanged source, Guid linkId, string propertyName, Type propertyType)"
+sig = "void Unlink(this ILinkableNotifyPropertyChanged source,
+                              Guid linkId,
+                              string propertyName,
+                              Type propertyType)"
 returns = "void"
 file = "Extensions\\LinkableNotifyPropertyChangedExtensions.cs"
 
@@ -148,13 +151,20 @@ file = "Extensions\\MessagePopupServiceExtensions.cs"
 
 [[extensions]]
 name = "ShowMessageAsync"
-sig = "Task<MessageResult> ShowMessageAsync(this IMessagePopupService service, string txt, string caption, MessageIcon messageBoxImage)"
+sig = "Task<MessageResult> ShowMessageAsync(this IMessagePopupService service,
+                                                       string txt,
+                                                       string caption,
+                                                       MessageIcon messageBoxImage)"
 returns = "Task<MessageResult>"
 file = "Extensions\\MessagePopupServiceExtensions.cs"
 
 [[extensions]]
 name = "ShowMessageAsync"
-sig = "Task<MessageResult> ShowMessageAsync(this IMessagePopupService service, string txt, string caption, MessageIcon messageBoxImage, FExMessageButton button)"
+sig = "Task<MessageResult> ShowMessageAsync(this IMessagePopupService service,
+                                                       string txt,
+                                                       string caption,
+                                                       MessageIcon messageBoxImage,
+                                                       FExMessageButton button)"
 returns = "Task<MessageResult>"
 file = "Extensions\\MessagePopupServiceExtensions.cs"
 
@@ -172,13 +182,20 @@ file = "Extensions\\MessagePopupServiceExtensions.cs"
 
 [[extensions]]
 name = "ShowMessage"
-sig = "MessageResult ShowMessage(this IMessagePopupService service, string txt, string caption, MessageIcon messageBoxImage)"
+sig = "MessageResult ShowMessage(this IMessagePopupService service,
+                                            string txt,
+                                            string caption,
+                                            MessageIcon messageBoxImage)"
 returns = "MessageResult"
 file = "Extensions\\MessagePopupServiceExtensions.cs"
 
 [[extensions]]
 name = "ShowMessage"
-sig = "MessageResult ShowMessage(this IMessagePopupService service, string txt, string caption, MessageIcon messageBoxImage, FExMessageButton button)"
+sig = "MessageResult ShowMessage(this IMessagePopupService service,
+                                            string txt,
+                                            string caption,
+                                            MessageIcon messageBoxImage,
+                                            FExMessageButton button)"
 returns = "MessageResult"
 file = "Extensions\\MessagePopupServiceExtensions.cs"
 

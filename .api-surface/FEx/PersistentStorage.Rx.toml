@@ -1,6 +1,6 @@
 [project]
 name = "FEx.PersistentStorage.Rx"
-path = "rc\\PersistentStorage.Rx"
+path = "src\\PersistentStorage.Rx"
 
 [[classes]]
 name = "AggregatedCollectionCachedSubject"

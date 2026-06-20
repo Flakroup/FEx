@@ -1,0 +1,10 @@
+[project]
+name = "FEx.Flurlx.Newtonsoft"
+path = "src\\FEx.Flurlx.Newtonsoft"
+
+[[classes]]
+name = "FExFlurlxNewtonsoftModule"
+ns = "FEx.Flurlx.Newtonsoft"
+summary = "Opt-in FEx.Flurlx module that swaps the default System.Text.Json serializer for Newtonsoft.Json (with , matching the legacy FEx.Flurlx behavior). Register this instead of ."
+file = "FExFlurlxNewtonsoftModule.cs"
+

@@ -1,6 +1,6 @@
 [project]
 name = "FEx.NuGetx"
-path = "rc\\FEx.NuGetx"
+path = "src\\FEx.NuGetx"
 
 [[interfaces]]
 name = "INuGetExModule"

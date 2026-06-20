@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Common.Abstractions"
-path = "rc\\Common.Abstractions"
+path = "src\\Common.Abstractions"
 
 [[enums]]
 name = "FExNetworkAccess"

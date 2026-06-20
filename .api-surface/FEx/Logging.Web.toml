@@ -1,0 +1,16 @@
+[project]
+name = "FEx.Logging.Web"
+path = "src\\FEx.Logging.Web"
+
+[[classes]]
+name = "FExSerilogWebExtensions"
+ns = "FEx.Logging.Web"
+file = "FExSerilogWebExtensions.cs"
+static = true
+
+[[extensions]]
+name = "AddFExSerilog"
+sig = "WebApplicationBuilder AddFExSerilog(this WebApplicationBuilder builder)"
+returns = "WebApplicationBuilder"
+file = "FExSerilogWebExtensions.cs"
+

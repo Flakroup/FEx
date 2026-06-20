@@ -1,6 +1,6 @@
 [project]
 name = "FEx.Telemetry.Sentry"
-path = "rc\\FEx.Telemetry.Sentry"
+path = "src\\FEx.Telemetry.Sentry"
 
 [[classes]]
 name = "FExSentryConfig"
@@ -57,6 +57,6 @@ file = "Extensions\\SentryServiceExtensions.cs"
 [[classes]]
 name = "SentryService"
 ns = "FEx.Telemetry.Sentry.Services"
-base = "ISentryService"
+base = "ISentryService, IDisposable"
 file = "Services\\SentryService.cs"
 

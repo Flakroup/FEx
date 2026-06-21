@@ -55,7 +55,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     public bool ReportProgress { get; }
     public Stopwatch DownloadStopwatch { get; }
     public WebRequestParams Pars { get; }
+    // Borrowed from the shared ISynchronizedAccessService (keyed by file path); its lifetime is owned by LockSrv,
+    // so this item must NOT dispose it (doing so corrupted the cached lock - see Dispose). Hence IDISP002 suppressed.
+#pragma warning disable IDISP002
     public SemaphoreSlim Semaphore { get; private set; }
+#pragma warning restore IDISP002
     public SemaphoreSlim TotalSemaphore { get; }
     public CancellationTokenSource CancellationTokenSource { get; }
     public Task DownloadFileTask { get; set; }
@@ -894,7 +898,10 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     {
         if (disposing)
         {
-            Semaphore?.Dispose();
+            // Semaphore is borrowed from the shared ISynchronizedAccessService (LockSrv.EnsureLock, keyed by file
+            // path) and is NOT owned by this DownloadItem - its lifetime is managed by LockSrv. Disposing it here
+            // left a disposed SemaphoreSlim cached in LockSrv, so the next EnsureLock(samePath) (e.g. the retry
+            // loop in ImdbwsDatasetsService) returned it and threw ObjectDisposedException. Do not dispose it.
             TotalSemaphore?.Dispose();
             CancellationTokenSource?.Dispose();
             DownloadFileTask?.Dispose();

@@ -55,11 +55,6 @@ public class FExWpfx : FExInitializable
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
     }
 
-    protected override void OnInitialize()
-    {
-        // WPFx-specific initialization if needed
-    }
-
     private static void WindowInitialized(object sender, RoutedEventArgs e)
     {
         if (IsMainWindowInitialized)

@@ -93,9 +93,11 @@ public abstract class FExDispatcher : IFExDispatcher
     }
 
     /// <inheritdoc />
-    public virtual void SendInContext(Action action, object sender, uint? timeout)
+    public virtual void SendInContext(Action action, object sender, bool useMain, uint? timeout = 3000)
     {
-        var isInCtorOrMainContext = IsInCreationContext() || IsInMainContext();
+        var isInCtorOrMainContext = !useMain
+            ? IsInCreationContext() || IsInMainContext()
+            : IsInMainContext();
 
         if (isInCtorOrMainContext)
         {
@@ -109,12 +111,12 @@ public abstract class FExDispatcher : IFExDispatcher
         if (!_isDeadlockMonitoringEnabled
             || !timeout.HasValue)
         {
-            SendInThisOrMainThreadContextCore(action, sender, stackTrace);
+            SendInThisOrMainThreadContextCore(action, sender, stackTrace, useMain);
 
             return;
         }
 
-        _deadlockMonitor.Execute(() => SendInThisOrMainThreadContextCore(action, sender, stackTrace),
+        _deadlockMonitor.Execute(() => SendInThisOrMainThreadContextCore(action, sender, stackTrace, useMain),
             stackTrace,
             timeout.Value);
     }
@@ -131,9 +133,11 @@ public abstract class FExDispatcher : IFExDispatcher
         && SynchronizationContext.Current is not null
         && MainThreadSynchronizationContext.Equals(SynchronizationContext.Current);
 
-    private void SendInThisOrMainThreadContextCore(Action action, object sender, StackTrace stackTrace)
+    private void SendInThisOrMainThreadContextCore(Action action, object sender, StackTrace stackTrace, bool useMain)
     {
-        var context = _ctorSynchronizationContext ?? MainThreadSynchronizationContext;
+        var context = !useMain
+            ? _ctorSynchronizationContext ?? MainThreadSynchronizationContext
+            : MainThreadSynchronizationContext;
 
         try
         {

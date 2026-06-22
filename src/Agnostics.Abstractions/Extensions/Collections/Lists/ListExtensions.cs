@@ -208,11 +208,20 @@ public static class ListExtensions
                                    Func<T, T, bool> equalityComparator,
                                    Action<T, T> syncAction = null)
     {
-        var t = sourceList as IConcurrentList<T>;
+        if (sourceList is IConcurrentList<T> t)
+            return t.Combo(items => SyncWithCore(items, syncedList, equalityComparator, syncAction));
 
-        if (t is not null)
-            return t.Combo(items => items.SyncWith(syncedList, equalityComparator, syncAction));
+        return SyncWithCore(sourceList, syncedList, equalityComparator, syncAction);
+    }
 
+    // Non-concurrent core: must NOT re-check IConcurrentList. The concurrent overload above runs this inside
+    // ConcurrentList.Combo (which passes 'this' to the callback); calling the public SyncWith there would re-enter
+    // the concurrent branch and recurse forever (StackOverflowException).
+    private static bool SyncWithCore<T>(IList<T> sourceList,
+                                        IList<T> syncedList,
+                                        Func<T, T, bool> equalityComparator,
+                                        Action<T, T> syncAction)
+    {
         var hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !equalityComparator(x, y)));
 
         if (syncAction is not null)
@@ -247,11 +256,16 @@ public static class ListExtensions
     public static bool SyncWith<T>(this IList<T> sourceList, IList<T> syncedList, Action<T, T> syncAction = null)
         where T : IEquatable<T>
     {
-        var t = sourceList as IConcurrentList<T>;
+        if (sourceList is IConcurrentList<T> t)
+            return t.Combo(items => SyncWithCore(items, syncedList, syncAction));
 
-        if (t is not null)
-            return t.Combo(items => items.SyncWith(syncedList, syncAction));
+        return SyncWithCore(sourceList, syncedList, syncAction);
+    }
 
+    // Non-concurrent core: must NOT re-check IConcurrentList (see the equalityComparator overload above for why).
+    private static bool SyncWithCore<T>(IList<T> sourceList, IList<T> syncedList, Action<T, T> syncAction)
+        where T : IEquatable<T>
+    {
         var hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !x.Equals(y)));
 
         if (syncAction is not null)

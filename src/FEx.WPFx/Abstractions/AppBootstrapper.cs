@@ -1,6 +1,7 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Common.Abstractions.Interfaces;
+using FEx.Core.Abstractions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Core.Abstractions.Interfaces;
 using FEx.Core.Abstractions.Utilities;
@@ -175,6 +176,7 @@ public abstract class AppBootstrapper<TContainer> : Application
     {
         try
         {
+            FExCoreStatics.MainThreadContextProvider.SetMainThread();
             EnsureSingleInstance();
 
 #pragma warning disable IDISP004 // intentional using(_=LogToHub) pattern for scoped status logging

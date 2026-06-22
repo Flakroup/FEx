@@ -166,7 +166,7 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
                 res[res.Count - 1][1] = t;
         }
 
-        return res.Select(x => (start: x[0], end: x[1])).ToArray();
+        return [.. res.Select(x => (start: x[0], end: x[1]))];
     }
 
     private void HandleChunks()

@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FEx.Telemetry.Sentry;
 
-public class FExSentryx : InitializeModule<ISentryModule, IServiceCollection>
+public class FExSentryx : InitializeModule<IFExSentryModule, IServiceCollection>
 {
     private static ISentryService _sentrySrv;
 
@@ -20,6 +20,6 @@ public class FExSentryx : InitializeModule<ISentryModule, IServiceCollection>
         SentrySrv = sentrySrv;
     }
 
-    protected override void RegisterServices(ISentryModule container, IServiceCollection services) =>
+    protected override void RegisterServices(IFExSentryModule container, IServiceCollection services) =>
         FExSentryModule.AddServices(container, services);
 }

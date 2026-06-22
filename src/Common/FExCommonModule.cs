@@ -21,8 +21,8 @@ public class FExCommonModule : InitializeModule<IFExCommonContainer, IServiceCol
     protected override void RegisterServices(IFExCommonContainer container, IServiceCollection services)
     {
         services.AddSingletonServiceUsingContainer<IConnectivityChangedSubject>(container);
+        services.AddSingletonServiceUsingContainer<IMainThreadContextProvider>(container);
 
-        services.AddTransientServiceUsingContainer<IMainThreadContextProvider>(container);
         services.AddTransientServiceUsingContainer<IFExInternetConnectionHelper>(container);
         services.AddTransientServiceUsingContainer<IDeviceHelper>(container);
     }

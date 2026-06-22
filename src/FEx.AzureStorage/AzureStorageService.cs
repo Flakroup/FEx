@@ -102,7 +102,7 @@ public class AzureStorageService : IAzureStorageService
             await paths.WithWhenAllTasksAsync(path => ProcessBlobAsync(containerName, downloadDir, path));
 
         if (deleteOldFiles)
-            DeleteOldFiles(downloadDir, deleteFilesMask, blobsInfo.Select(x => x.localFile.FullName).ToArray());
+            DeleteOldFiles(downloadDir, deleteFilesMask, [.. blobsInfo.Select(x => x.localFile.FullName)]);
 
         var preparedBlobs = await blobsInfo.WithWhenAllTasksAsync(x =>
             PrepareBlobDownloadAsync(containerName, x.fileName, x.localFile, noDownload));

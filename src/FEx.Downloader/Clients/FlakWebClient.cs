@@ -79,14 +79,13 @@ public sealed class FlakWebClient : WebClient
                 Pars.Cookies,
                 []);
 
-        return table.Keys.Cast<object>()
+        return [.. table.Keys.Cast<object>()
             .SelectMany(key => Pars.Cookies.GetCookies(new($"http://{key}/"))
 #if NETSTANDARD
                     .Cast<Cookie>()
 #endif
                 ,
-                (_, cookie) => cookie)
-            .ToList();
+                (_, cookie) => cookie)];
     }
 
     public async Task DownloadFileWithProgressAsync(Uri address, string filePath)

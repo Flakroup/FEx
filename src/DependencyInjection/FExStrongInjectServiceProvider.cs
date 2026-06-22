@@ -2,6 +2,7 @@ using FEx.Agnostics.Abstractions.Helpers;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using StrongInject;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -74,6 +75,19 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
     /// No-op for StrongInject provider as it doesn't need external engine configuration.
     /// </summary>
     public ValueTask ConfigureServiceProviderAsync() => FExValueTaskHelper.CompletedTask;
+
+    /// <inheritdoc />
+    public IEnumerable<T> TryResolveServices<T>()
+    {
+        if (_provider is IContainer<T[]> container)
+        {
+#pragma warning disable IDISP004
+            return container.Resolve<T[]>().Value;
+#pragma warning restore IDISP004
+        }
+
+        return [];
+    }
 
     public void SetServiceProvider<TContainer>(TContainer container) where TContainer : class, IDisposable
     {

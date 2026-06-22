@@ -307,9 +307,8 @@ public static class DirectoryWalker
             var results = await directoriesToRecurse.WithWhenAllTasksAsync(dir =>
                 GetDirectoriesAsync(dir, hasFilter, predicate, searchPattern, options, skipRecursionPredicate));
 
-            return results.SelectMany(x => x)
-                .Concat(directories.Where(subDir => !hasFilter || predicate(subDir)))
-                .ToList();
+            return [.. results.SelectMany(x => x)
+, .. directories.Where(subDir => !hasFilter || predicate(subDir))];
         }
         catch
         {

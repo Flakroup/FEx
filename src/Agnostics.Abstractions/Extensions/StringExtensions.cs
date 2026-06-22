@@ -76,7 +76,7 @@ public static class StringExtensions
     public static string ToNiceString(this string text)
     {
         if (!string.IsNullOrWhiteSpace(text))
-            return new(text.Where(static c => char.IsLetter(c) || c == '\'' || char.IsWhiteSpace(c)).ToArray());
+            return new([.. text.Where(static c => char.IsLetter(c) || c == '\'' || char.IsWhiteSpace(c))]);
 
         return null;
     }

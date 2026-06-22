@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,8 +23,7 @@ public class FExServiceContainer : IFExServiceContainer
 
         _container = container;
 
-        foreach (var initializable in TryResolveServices<IFExInitializable>())
-            initializable.Initialize();
+        Initialize();
 
         if (services is not null)
             foreach (var configurator in TryResolveServices<IMicrosoftDIConfigurator>()
@@ -86,6 +86,20 @@ public class FExServiceContainer : IFExServiceContainer
         _container?.Dispose();
 #pragma warning restore IDISP007 // Don't dispose injected
         _container = null;
+    }
+
+    private void Initialize()
+    {
+        ICollection<IFExPriorityInitialize> priorityInitializers =
+            [.. TryResolveServices<IFExPriorityInitialize>().OrderBy(static initializer => initializer.Priority)];
+        priorityInitializers.InitializeAll();
+
+        ICollection<IFExInitializable> initializers = [.. TryResolveServices<IFExInitializable>()];
+        initializers.InitializeAll();
+
+        // Note: Engine-specific modules (IInitializeModule<TEngineContext>) are handled by 
+        // their respective providers during ConfigureServiceProviderAsync, not here.
+        _ = TryResolveServices<IInitializeModule<IServiceCollection>>().ToArray();
     }
 
     #region IDisposable

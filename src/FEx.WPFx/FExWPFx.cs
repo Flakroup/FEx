@@ -40,6 +40,8 @@ public class FExWpfx : FExInitializable
         WindowLoaded += WindowInitialized;
     }
 
+    public static void OverrideFormattingOnUI() => OverrideFormattingOnUI(CultureInfo.CurrentCulture);
+
     /// <summary>
     /// Overrides formatting on UI.
     /// </summary>
@@ -47,17 +49,10 @@ public class FExWpfx : FExInitializable
     /// The culture to use. If <c>null</c>,
     /// <see cref="CultureInfo.CurrentCulture" /> is used.
     /// </param>
-    public static void OverrideFormattingOnUI() => OverrideFormattingOnUI(CultureInfo.CurrentCulture);
-
     public static void OverrideFormattingOnUI(CultureInfo culture)
     {
         FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement),
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
-    }
-
-    protected override void OnInitialize()
-    {
-        // WPFx-specific initialization if needed
     }
 
     private static void WindowInitialized(object sender, RoutedEventArgs e)

@@ -23,5 +23,5 @@ public interface IFExDispatcher
                                          object context,
                                          Action<IEnumerable, object, Action, bool> callback);
 
-    void SendInContext(Action action, object sender, uint? timeout);
+    void SendInContext(Action action, object sender, bool useMain, uint? timeout = 3000);
 }

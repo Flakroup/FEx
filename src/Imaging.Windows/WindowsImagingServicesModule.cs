@@ -20,9 +20,9 @@ namespace FEx.Imaging.Windows;
 [Register(typeof(FilesCacheServiceConfigurator), Scope.SingleInstance, typeof(IFilesCacheServiceConfigurator))]
 [Register(typeof(IndexEntriesCache), Scope.SingleInstance, typeof(IndexEntriesCache))]
 [Register(typeof(WindowsImagingServicesModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
-public class WindowsImagingServicesModule : InitializeModule<IWindowsImagingServicesModule, IServiceCollection>
+public class WindowsImagingServicesModule : InitializeModule<IWindowsImagingServicesContainer, IServiceCollection>
 {
-    protected override void RegisterServices(IWindowsImagingServicesModule container, IServiceCollection services)
+    protected override void RegisterServices(IWindowsImagingServicesContainer container, IServiceCollection services)
     {
 #pragma warning disable IDISP004 // DI container manages lifetime
         var config = container.Resolve<IFilesCacheServiceConfig>().Value;

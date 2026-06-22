@@ -39,7 +39,7 @@ public class ConcurrentHashSet<T> : ISet<T>, IReadOnlyCollection<T>, IDisposable
 
     public ConcurrentHashSet()
     {
-        _set = new();
+        _set = [];
     }
 
     public ConcurrentHashSet(IEnumerable<T> collection)
@@ -313,7 +313,7 @@ public class ConcurrentHashSet<T> : ISet<T>, IReadOnlyCollection<T>, IDisposable
 
         try
         {
-            return _set.ToList();
+            return [.. _set];
         }
         finally
         {

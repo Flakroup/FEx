@@ -378,7 +378,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
             FilesCacheDir.GetDescendantPath(indexDbWalFileName)
         };
 
-        return FilesCacheDir.GetFiles("*.*").Where(x => !excludedPaths.Contains(x.FullName)).ToArray();
+        return [.. FilesCacheDir.GetFiles("*.*").Where(x => !excludedPaths.Contains(x.FullName))];
     }
 
     private FileInfo GetFile(Uri imageLink) => GetFile(imageLink?.AbsoluteUri);

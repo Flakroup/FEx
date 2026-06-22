@@ -177,6 +177,6 @@ public class DownloadService : ProgressAggregator
     // enqueues them); collecting and returning them is intentional task tracking, not a foreign-task await.
 #pragma warning disable VSTHRD003
     private Task[] GetUnfinishedDownloadsTasks() =>
-        Downloads.Select(x => x.Value.DownloadFileTask).Where(x => x?.IsFinished() == false).ToArray();
+        [.. Downloads.Select(x => x.Value.DownloadFileTask).Where(x => x?.IsFinished() == false)];
 #pragma warning restore VSTHRD003
 }

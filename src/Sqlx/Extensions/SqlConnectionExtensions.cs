@@ -32,22 +32,22 @@ public static class SqlConnectionExtensions
     internal static string PropsSQL { get; } = GetPropsSQL();
 
     public static async Task<IDictionary<string, object>[]> RunSqlAsync(this MsSqlConnection connection, string sql) =>
-        (await connection.QueryAsync(sql)).Cast<IDictionary<string, object>>().ToArray();
+        [.. (await connection.QueryAsync(sql)).Cast<IDictionary<string, object>>()];
 
     public static async Task<IDictionary<string, object>[]> RunSqlAsync(this SqlConnection connection, string sql) =>
-        (await connection.QueryAsync(sql)).Cast<IDictionary<string, object>>().ToArray();
+        [.. (await connection.QueryAsync(sql)).Cast<IDictionary<string, object>>()];
 
     public static IDictionary<string, object>[] RunSql(this MsSqlConnection connection, string sql) =>
-        connection.Query(sql).Cast<IDictionary<string, object>>().ToArray();
+        [.. connection.Query(sql).Cast<IDictionary<string, object>>()];
 
     public static IDictionary<string, object>[] RunSql(this SqlConnection connection, string sql) =>
-        connection.Query(sql).Cast<IDictionary<string, object>>().ToArray();
+        [.. connection.Query(sql).Cast<IDictionary<string, object>>()];
 
     public static async Task<IList<string>> LoadDatabasesAsync(this SqlConnection connection)
     {
         const string sql = "SELECT name, database_id, create_date  FROM sys.databases";
 
-        return (await connection.RunSqlAsync(sql)).Select(x => Convert.ToString(x["name"])).ToArray();
+        return [.. (await connection.RunSqlAsync(sql)).Select(x => Convert.ToString(x["name"]))];
     }
 
     public static async Task<Dictionary<string, long>> LoadTablesAsync(this SqlConnection connection)

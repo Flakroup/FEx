@@ -142,11 +142,10 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     /// <inheritdoc />
     public void
         AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector, IEqualityComparer<TKey> comparer) =>
-        AddRange(range.DistinctBy(keySelector, comparer)
+        AddRange([.. range.DistinctBy(keySelector, comparer)
             .Where(distinctItem => Items.All(item =>
                 !comparer?.Equals(keySelector(distinctItem), keySelector(item))
-                ?? !keySelector(distinctItem).Equals(keySelector(item))))
-            .ToList());
+                ?? !keySelector(distinctItem).Equals(keySelector(item))))]);
 
     /// <inheritdoc />
     public bool RemoveWhere(Func<T, bool> predicate, out List<T> removedItems)
@@ -167,7 +166,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
         foreach (var (index, removedItem) in innerRemovedItems)
             WhenItemIsRemoved(index, removedItem);
 
-        removedItems = innerRemovedItems.Select(static tuple => tuple.removedItem).ToList();
+        removedItems = [.. innerRemovedItems.Select(static tuple => tuple.removedItem)];
 
         return !removedItems.IsNullOrEmpty();
     }

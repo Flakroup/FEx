@@ -124,7 +124,7 @@ public static class DictionaryExtensions
             if (source.TryGetValue(pair.Key, out var elements))
                 source[pair.Key] = elements.Concat(pair.Value);
             else
-                source[pair.Key] = pair.Value.ToList();
+                source[pair.Key] = [.. pair.Value];
         }
 
         return source;

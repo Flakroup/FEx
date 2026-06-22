@@ -15,8 +15,17 @@ public class WpfProgressListenerViewModel : ProgressListenerViewModel<WpfProgres
 
     private IViewDesign _design;
 
+    /// <summary>
+    /// The view
+    /// </summary>
     public ContentControl View { get; set; }
 
+    /// <summary>
+    /// Gets or sets the name of the view.
+    /// </summary>
+    /// <value>
+    /// The name of the view.
+    /// </value>
     public string ViewName
     {
         get => _viewName;

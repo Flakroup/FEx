@@ -5,6 +5,7 @@ using FEx.EFCore.Interfaces;
 using FEx.Sqlx.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Serilog;
 using System;
 
 namespace FEx.EFCore.Extensions;
@@ -19,6 +20,11 @@ public static class DbContextOptionsBuilderExtensions
             throw new InvalidOperationException();
 
         config.SqlInstance = sqlDbHelper.SQLInstance;
+
+        Log.Information("ConfigureDbContext {Db}: SqlInstance={Inst}, init={Init}",
+            config.SqlDbName,
+            config.SqlInstance,
+            sqlDbHelper.IsInitialized);
 
         var sqlInstanceFound = true;
 

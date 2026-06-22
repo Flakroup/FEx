@@ -21,7 +21,7 @@ public class TreeViewBuilder : TreeViewBuilderBase<TreeViewItem>
     /// </returns>
     public override async Task<TreeViewItem> GetTreeViewItemAsync(FExTreeViewNode nodeStub)
     {
-        var img = await GetBitmapSourceAsync(nodeStub);
+        await GetBitmapSourceAsync(nodeStub);
 
         return await _dispatcher.InvokeOnMainThreadAsync(() =>
         {

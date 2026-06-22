@@ -15,6 +15,6 @@ public interface IThreadingAwareViewModel : IRunAsync, IReactiveNotifyPropertyCh
     /// </value>
     bool IsUiUnlocked { get; set; }
 
-    void PostMainJob(bool showTimeInfo);
+    void PostMainJob(bool showTimeInfo = true);
     void PreMainJob();
 }

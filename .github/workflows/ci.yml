@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches:
+      - '**'   # all branch pushes; without this, a tags-only push filter never fires on branches
     tags-ignore:
       - '**'   # version tags are pushed by publish.yml; the commit was already built
   pull_request:

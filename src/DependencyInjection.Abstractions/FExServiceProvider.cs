@@ -101,6 +101,9 @@ public class FExServiceProvider : IFExServiceProvider
     /// </summary>
     public ValueTask ConfigureServiceProviderAsync() => FExValueTaskHelper.CompletedTask;
 
+    /// <inheritdoc />
+    public IEnumerable<T> TryResolveServices<T>() => ServiceContainer.TryResolveServices<T>();
+
     /// <summary>
     /// Gets the service object of the specified type.
     /// </summary>
@@ -322,6 +325,8 @@ public class FExServiceProvider : IFExServiceProvider
 
         // Note: Engine-specific modules (IInitializeModule<TEngineContext>) are handled by 
         // their respective providers during ConfigureServiceProviderAsync, not here.
+        _ = serviceProvider.TryResolveServices<IInitializeModule<IServiceCollection>>()
+            .ToArray();
     }
 
     #region IDisposable

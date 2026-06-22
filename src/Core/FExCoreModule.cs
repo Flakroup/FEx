@@ -25,6 +25,7 @@ namespace FEx.Core;
 [Register(typeof(NavigationFlowSubject), Scope.SingleInstance, typeof(INavigationFlowSubject))]
 [Register(typeof(AlphanumComparatorFast), Scope.SingleInstance, typeof(AlphanumComparatorFast))]
 [Register(typeof(SynchronizedAccessService), Scope.SingleInstance, typeof(ISynchronizedAccessService))]
+[Register(typeof(TasksInfoSubject), Scope.SingleInstance, typeof(ITasksInfoSubject))]
 [Register(typeof(AsyncHelper), typeof(IAsyncHelper))]
 [Register(typeof(DeadlockMonitor), typeof(IDeadlockMonitor))]
 [Register(typeof(DefaultAppVersionProvider), typeof(IAppVersionProvider))]

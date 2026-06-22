@@ -1,4 +1,5 @@
 using FEx.DependencyInjection.Abstractions;
+using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.EFCore.Extensions;
 using FEx.EFCore.Interfaces;
 using FEx.Imaging.Windows.Model;
@@ -16,10 +17,12 @@ namespace FEx.Imaging.Windows;
     typeof(IIndexEntryConfig))]
 [Register(typeof(FilesCacheService), Scope.SingleInstance, typeof(IFilesCacheService), typeof(ICachedImageStorage))]
 [Register(typeof(FilesCacheDbService), Scope.SingleInstance, typeof(IEFCoreDatabaseBackedService<FilesCacheContext>))]
+[Register(typeof(FilesCacheServiceConfigurator), Scope.SingleInstance, typeof(IFilesCacheServiceConfigurator))]
 [Register(typeof(IndexEntriesCache), Scope.SingleInstance, typeof(IndexEntriesCache))]
-public class WindowsImagingServicesModule
+[Register(typeof(WindowsImagingServicesModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
+public class WindowsImagingServicesModule : InitializeModule<IWindowsImagingServicesModule, IServiceCollection>
 {
-    public static void AddServices(IWindowsImagingServicesModule container, IServiceCollection services)
+    protected override void RegisterServices(IWindowsImagingServicesModule container, IServiceCollection services)
     {
 #pragma warning disable IDISP004 // DI container manages lifetime
         var config = container.Resolve<IFilesCacheServiceConfig>().Value;

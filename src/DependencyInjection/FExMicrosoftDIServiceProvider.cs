@@ -5,6 +5,7 @@ using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,6 +56,9 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
             throw;
         }
     }
+
+    /// <inheritdoc />
+    public IEnumerable<T> TryResolveServices<T>() => _provider.GetServices<T>();
 
     /// <summary>
     /// Get service of type <typeparamref name="T" /> from the <see cref="IServiceProvider" />.

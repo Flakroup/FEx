@@ -42,7 +42,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
                 GetLocalSqlInstancesFromWmiAsync(ProviderArchitecture.Use64bit))
             : Task.FromResult((IList<SQLInstanceInfo>)Enumerable.Empty<SQLInstanceInfo>().ToList());
 
-        return (await Task.WhenAll(instances32Task, instances64Task)).SelectMany(x => x).ToList();
+        return [.. (await Task.WhenAll(instances32Task, instances64Task)).SelectMany(x => x)];
 #else
         return await AsyncStatics.ExecuteTaskOnThreadPoolAsync(GetLocalSqlInstancesAsync);
 #endif
@@ -95,8 +95,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
                 .Select(x => new SQLInstanceInfo(x))
                 .ToList();
 
-            return (await serverInstances.WithWhenAllTasksAsync(GetSQLInstanceInfoAsync)).Where(x => x is not null)
-                .ToArray();
+            return [.. (await serverInstances.WithWhenAllTasksAsync(GetSQLInstanceInfoAsync)).Where(x => x is not null)];
         }
         catch (Exception ex)
         {
@@ -117,9 +116,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
         }
 #endif
         using var dataSources = SqlDataSourceEnumerator.Instance.GetDataSources();
-        return dataSources.Rows.OfType<DataRow>()
-            .Select(GetSqlInstanceName)
-            .ToList();
+        return [.. dataSources.Rows.OfType<DataRow>().Select(GetSqlInstanceName)];
     }
 
 #if NET
@@ -221,8 +218,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
                 .Select(serverInstance => new SQLInstanceInfo(serverInstance, comp))
                 .ToList();
 
-            return (await serverInstances.WithWhenAllTasksAsync(GetSQLInstanceInfoAsync)).Where(x => x is not null)
-                .ToArray();
+            return [.. (await serverInstances.WithWhenAllTasksAsync(GetSQLInstanceInfoAsync)).Where(x => x is not null)];
         }
         catch (Exception ex)
         {

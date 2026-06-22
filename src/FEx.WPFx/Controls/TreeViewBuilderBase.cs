@@ -153,7 +153,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
                 if (locationIndex == nodeStub.NodePath.Count - 1)
                     node = await GetTreeViewItemAsync(nodeStub);
                 else
-                    node = await GetTreeViewItemAsync(new(nodeStub.NodePath.Take(locationIndex + 1).ToList(),
+                    node = await GetTreeViewItemAsync(new([.. nodeStub.NodePath.Take(locationIndex + 1)],
                         null,
                         setDirectoriesIcons
                             ? FExTreeViewNode.DefaultDirectoryPathForIcon
@@ -187,7 +187,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
 
         if (rootNode.ChildNodes.Any())
         {
-            await Task.WhenAll(rootNode.ChildNodes.Select(x => PutNewNodeAsync(x, leafsDictionary)).ToArray());
+            await Task.WhenAll([.. rootNode.ChildNodes.Select(x => PutNewNodeAsync(x, leafsDictionary))]);
             rootNode.ChildNodes.Clear();
         }
 

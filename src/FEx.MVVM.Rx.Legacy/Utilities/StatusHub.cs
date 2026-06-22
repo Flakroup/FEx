@@ -6,7 +6,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Text;
 
 namespace FEx.MVVM.Rx.Legacy.Utilities;
@@ -95,7 +94,7 @@ public sealed class StatusHub : IDisposable, IStatusHub
         }
     }
 
-    public IList<string> GetStatuses() => Statuses.Values.ToArray();
+    public IList<string> GetStatuses() => [.. Statuses.Values];
 
     public string GetStatusString(string separator)
     {

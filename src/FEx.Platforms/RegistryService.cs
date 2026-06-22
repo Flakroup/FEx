@@ -32,7 +32,7 @@ public class RegistryService : IRegistryService
             using var key = lm.OpenSubKey(registryKey);
 
             if (key is not null)
-                keys.AddRange(key.GetSubKeyNames().Select(key.OpenSubKey).ToArray());
+                keys.AddRange([.. key.GetSubKeyNames().Select(key.OpenSubKey)]);
         }
 
         using (var lm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
@@ -40,7 +40,7 @@ public class RegistryService : IRegistryService
             using var key = lm.OpenSubKey(registry64Key);
 
             if (key is not null)
-                keys.AddRange(key.GetSubKeyNames().Select(key.OpenSubKey).ToArray());
+                keys.AddRange([.. key.GetSubKeyNames().Select(key.OpenSubKey)]);
         }
 
         return keys;

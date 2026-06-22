@@ -1,7 +1,6 @@
 #pragma warning disable IDISP003, IDISP004, IDISP007, IDISP012, IDISP025 // Intentional DI container lifecycle patterns
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Helpers;
-using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.DependencyInjection.Abstractions.Basics;
 using FEx.DependencyInjection.Abstractions.Extensions;
@@ -10,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace FEx.DependencyInjection.Abstractions;
@@ -100,6 +98,9 @@ public class FExServiceProvider : IFExServiceProvider
     /// No-op implementation for the static provider as it delegates to the actual providers.
     /// </summary>
     public ValueTask ConfigureServiceProviderAsync() => FExValueTaskHelper.CompletedTask;
+
+    /// <inheritdoc />
+    public IEnumerable<T> TryResolveServices<T>() => ServiceContainer.TryResolveServices<T>();
 
     /// <summary>
     /// Gets the service object of the specified type.
@@ -258,8 +259,6 @@ public class FExServiceProvider : IFExServiceProvider
             // Register services with the container
             ServiceContainer.RegisterServices(container, services);
 
-            InitializeInternal(serviceProvider);
-
             return container;
         }
         finally
@@ -307,21 +306,6 @@ public class FExServiceProvider : IFExServiceProvider
         await serviceProviderConfiguration(provider);
 
         return provider;
-    }
-
-    private static void InitializeInternal(IFExServiceProvider serviceProvider)
-    {
-        var priorityInitializers = (serviceProvider.TryResolveService<IFExPriorityInitialize[]>() ?? [])
-            .OrderBy(static initializer => initializer.Priority)
-            .ToList();
-
-        priorityInitializers.InitializeAll();
-
-        var initializers = serviceProvider.TryResolveService<IFExInitializable[]>() ?? [];
-        initializers.InitializeAll();
-
-        // Note: Engine-specific modules (IInitializeModule<TEngineContext>) are handled by 
-        // their respective providers during ConfigureServiceProviderAsync, not here.
     }
 
     #region IDisposable

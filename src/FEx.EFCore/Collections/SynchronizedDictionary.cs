@@ -456,7 +456,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         else
         {
             toCache = await IncludeInEntity(DbSetAccessor(db)).ToListAsync(); //todo reduce load?
-            SetIndex(toCache.Select(KeyRetriver).ToList());
+            SetIndex([.. toCache.Select(KeyRetriver)]);
         }
 
         Cache.Edit(x =>

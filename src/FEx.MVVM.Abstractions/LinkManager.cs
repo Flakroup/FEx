@@ -4,7 +4,6 @@ using FEx.MVVM.Abstractions.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FEx.MVVM.Abstractions;
 
@@ -23,7 +22,7 @@ public class LinkManager
     public void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
     {
         if (Links.TryGetValue(propertyName, out var links))
-            TriggerLinks(links.Values.ToList(), oldValue, newValue);
+            TriggerLinks([.. links.Values], oldValue, newValue);
     }
 
     public void AddLink(ILink link)

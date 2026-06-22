@@ -239,7 +239,7 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
 
     private void UpdateWithNotification(TKey key, TValue value)
     {
-        var (hasBeenReplaced, removedValue, newValue) = _dictionary.AddOrReplaceValue(key, () => value);
+        var (hasBeenReplaced, removedValue, _) = _dictionary.AddOrReplaceValue(key, () => value);
 
         if (hasBeenReplaced)
             OnReplaceInCollection(new(key, value), new(key, removedValue), -1);

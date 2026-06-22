@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace FEx.DependencyInjection.Abstractions.Interfaces;
@@ -19,4 +20,6 @@ public interface IFExServiceProvider : IServiceProvider, IDisposable
     /// Only called when external DI is opt-in enabled.
     /// </summary>
     ValueTask ConfigureServiceProviderAsync();
+
+    IEnumerable<T> TryResolveServices<T>();
 }

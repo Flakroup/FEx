@@ -3,7 +3,6 @@ using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Agnostics.Collections.Concurrent;
 using FEx.Core.Abstractions;
-using FEx.Core.Abstractions.Extensions;
 using FEx.Core.Abstractions.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -87,7 +86,7 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
         if (EventsAreSuppressed || PropertyChanged is null)
             return;
 
-        _dispatcher.SendInContext(() => PropertyChanged.HandlePropertyChanged(this, e), this);
+        _dispatcher.SendInContext(() => PropertyChanged.HandlePropertyChanged(this, e), this, true);
     }
 
     protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
@@ -95,6 +94,6 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
         if (EventsAreSuppressed || CollectionChanged is null)
             return;
 
-        _dispatcher.SendInContext(() => CollectionChanged.Invoke(this, e), this);
+        _dispatcher.SendInContext(() => CollectionChanged.Invoke(this, e), this, true);
     }
 }

@@ -90,7 +90,7 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
             AsyncMode.ThreadPool,
             default);
 
-    public virtual void PostMainJob(bool showTimeInfo)
+    public virtual void PostMainJob(bool showTimeInfo = true)
     {
     }
 

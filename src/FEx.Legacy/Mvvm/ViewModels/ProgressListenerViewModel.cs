@@ -79,7 +79,7 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
     public bool UnsubscribeFromProgress(IProgressAggregator container) =>
         ProgressSrv.UnsubscribeFromProgress(this, container);
 
-    public override void PostMainJob(bool showTimeInfo)
+    public override void PostMainJob(bool showTimeInfo = true)
     {
         base.PostMainJob(showTimeInfo);
         Watch.Stop();
@@ -125,7 +125,7 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
         var props = ProgressAggregatorExtensions.ListenerPropertyNames.ToArray();
 
         if (!iProgressReceiverProperties.IsNullOrEmpty())
-            props = props.Except(iProgressReceiverProperties).ToArray();
+            props = [.. props.Except(iProgressReceiverProperties)];
 
         SubscribeToProgress(producer, props);
     }

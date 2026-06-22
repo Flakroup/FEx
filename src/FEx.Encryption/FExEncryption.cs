@@ -1,11 +1,12 @@
 using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions;
 using FEx.Encryption.Abstractions.Interfaces;
 using System;
 
 namespace FEx.Encryption;
 
-public class FExEncryption : InitializeOnlyModule
+public class FExEncryption : InitializeOnlyModule, IFExPriorityInitialize
 {
     private readonly IFExEncryptionSettings _settings;
     private static string _passPhrase;
@@ -15,6 +16,8 @@ public class FExEncryption : InitializeOnlyModule
         get => _passPhrase.GuardProperty();
         private set => _passPhrase = value.Guard(nameof(value));
     }
+
+    public int Priority { get; }
 
     public FExEncryption(IFExEncryptionSettings settings)
     {

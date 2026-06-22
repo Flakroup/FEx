@@ -14,9 +14,4 @@ public class FExEFCore : FExInitializable
     }
 
     public async Task CompleteInitializationAsync() => await _sqlDbHelper.InitializeAsync();
-
-    protected override void OnInitialize()
-    {
-        // Synchronous initialization if needed
-    }
 }

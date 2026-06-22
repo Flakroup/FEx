@@ -18,6 +18,8 @@ public class FExMvvmRx : FExInitializable
 
     protected override void OnInitialize()
     {
+        base.OnInitialize();
+
         // ReactiveUI 23.x dropped automatic initialization: the first WhenAny/WhenAnyValue triggers
         // ReactiveNotifyPropertyChangedMixin's static ctor, which throws unless RxApp was built first. Build the
         // platform-agnostic core here - enough for WhenAnyValue across every host (WPF, headless console, Avalonia).

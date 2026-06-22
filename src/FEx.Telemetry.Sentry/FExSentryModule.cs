@@ -11,7 +11,7 @@ namespace FEx.Telemetry.Sentry;
 [Register(typeof(FExSentryx), Scope.SingleInstance, typeof(FExSentryx), typeof(IInitializeModule<IServiceCollection>))]
 public class FExSentryModule : FExTelemetryModule
 {
-    public static void AddServices(ISentryModule container, IServiceCollection services)
+    public static void AddServices(IFExSentryModule container, IServiceCollection services)
     {
         services.AddSingletonServiceUsingContainer<ISentryService>(container);
         services.AddSingletonServiceUsingContainer<FExSentryx>(container);

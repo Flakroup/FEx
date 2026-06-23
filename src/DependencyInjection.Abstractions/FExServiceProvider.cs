@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace FEx.DependencyInjection.Abstractions;
@@ -245,7 +246,6 @@ public class FExServiceProvider : IFExServiceProvider
                 .Value;
 
             serviceProvider.SetServiceProvider(container);
-            await serviceProvider.ConfigureServiceProviderAsync();
             ServiceProvider = serviceProvider;
 
             // Set ServiceContainer by resolving from the new container
@@ -258,6 +258,9 @@ public class FExServiceProvider : IFExServiceProvider
 
             // Register services with the container
             ServiceContainer.RegisterServices(container, services);
+
+            var serviceProviders = (await GetAllAsync<IFExServiceProvider>()).Except([serviceProvider]).ToArray();
+            await serviceProviders.WithWhenAllAsync(static sp => sp.ConfigureServiceProviderAsync());
 
             return container;
         }

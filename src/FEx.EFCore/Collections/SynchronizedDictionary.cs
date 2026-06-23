@@ -3,7 +3,6 @@ using DynamicData.Binding;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Asyncx.Abstractions;
 using FEx.Core.Abstractions.Extensions;
-using FEx.Core.Abstractions.Helpers;
 using FEx.Core.Collections.Concurrent;
 using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
@@ -53,9 +52,6 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     protected SemaphoreSlim CacheHandlerSemaphore { get; }
 
     protected SynchronizedDictionary(IEFCoreDatabaseBackedService<TDbCtx> dbService,
-                                     // ReSharper disable UnusedParameter.Local
-                                     AsyncHelper asyncHelper,
-                                     // ReSharper restore UnusedParameter.Local
                                      string keyPropertyName,
                                      Func<TValue, IObservable<object>>[] observables = null,
                                      params string[] observedProperties)

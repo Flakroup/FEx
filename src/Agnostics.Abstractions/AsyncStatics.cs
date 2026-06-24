@@ -17,7 +17,7 @@ public static class AsyncStatics
         ExecuteOnThreadPoolAsync(action, AsyncOptions.ImmediateStart);
 
     public static Task ExecuteOnThreadPoolAsync(Action action, AsyncOptions options) =>
-        ExecuteOnThreadPoolAsync(action, options, default);
+        ExecuteOnThreadPoolAsync(action, options, CancellationToken.None);
 
     public static async Task ExecuteOnThreadPoolAsync(Action action,
                                                       AsyncOptions options,
@@ -40,7 +40,7 @@ public static class AsyncStatics
         ExecuteOnThreadPoolAsync(func, AsyncOptions.ImmediateStart);
 
     public static Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func, AsyncOptions options) =>
-        ExecuteOnThreadPoolAsync(func, options, default);
+        ExecuteOnThreadPoolAsync(func, options, CancellationToken.None);
 
     public static async Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func,
                                                             AsyncOptions options,
@@ -111,7 +111,7 @@ public static class AsyncStatics
     /// The provided
     /// <paramref name="cancellationToken">cancellationToken</paramref> has already been disposed.
     /// </exception>
-    public static Task DelayAsync(int millisecondsDelay) => DelayAsync(millisecondsDelay, default);
+    public static Task DelayAsync(int millisecondsDelay) => DelayAsync(millisecondsDelay, CancellationToken.None);
 
     public static async Task DelayAsync(int millisecondsDelay, CancellationToken cancellationToken) =>
         await ExecuteTaskOnThreadPoolAsync(() => Task.Delay(millisecondsDelay, cancellationToken));
@@ -136,7 +136,7 @@ public static class AsyncStatics
     /// disposed.
     /// </exception>
     /// <returns>A task that represents the time delay.</returns>
-    public static Task DelayAsync(TimeSpan delay) => DelayAsync(delay, default);
+    public static Task DelayAsync(TimeSpan delay) => DelayAsync(delay, CancellationToken.None);
 
     public static async Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken) =>
         await ExecuteTaskOnThreadPoolAsync(() => SafeDelayAsync(delay, cancellationToken));

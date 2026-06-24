@@ -109,15 +109,15 @@ public class AsyncHelper : IAsyncHelper
         return deferredList.Select(x => FireTaskAndForget(x, asyncMode, options)).ToList().AsReadOnly();
     }
 
-    public ITaskWrapper FireAndForget(Action action) => FireAndForget(action, AsyncMode.Default, null, default);
+    public ITaskWrapper FireAndForget(Action action) => FireAndForget(action, AsyncMode.Default, null, CancellationToken.None);
 
     public ITaskWrapper FireAndForget(Action action, AsyncMode asyncMode) =>
-        FireAndForget(action, asyncMode, null, default);
+        FireAndForget(action, asyncMode, null, CancellationToken.None);
 
-    public ITaskWrapper<T> FireAndForget<T>(Func<T> func) => FireAndForget(func, AsyncMode.Default, null, default);
+    public ITaskWrapper<T> FireAndForget<T>(Func<T> func) => FireAndForget(func, AsyncMode.Default, null, CancellationToken.None);
 
     public ITaskWrapper<T> FireAndForget<T>(Func<T> func, AsyncMode asyncMode) =>
-        FireAndForget(func, asyncMode, null, default);
+        FireAndForget(func, asyncMode, null, CancellationToken.None);
 
     private static void SetResult<T>(T result, ITaskWrapperBase taskWrapper)
     {

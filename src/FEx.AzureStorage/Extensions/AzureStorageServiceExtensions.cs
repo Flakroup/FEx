@@ -1,6 +1,7 @@
 using Microsoft.Azure.Storage.Blob;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.AzureStorage.Extensions;
@@ -17,7 +18,7 @@ public static class AzureStorageServiceExtensions
         service.CopyBlobAsync(containerName, srcBlob, destBlob, true, null);
 
     public static Task<bool> DeleteBlobAsync(this IAzureStorageService service, CloudBlockBlob blob) =>
-        service.DeleteBlobAsync(blob, DeleteSnapshotsOption.None, null, null, null, default);
+        service.DeleteBlobAsync(blob, DeleteSnapshotsOption.None, null, null, null, CancellationToken.None);
 
     public static Task<bool> DownloadLatestBlobsAsync(this IAzureStorageService service,
                                                       string downloadDir,
@@ -26,16 +27,16 @@ public static class AzureStorageServiceExtensions
         service.DownloadLatestBlobsAsync(downloadDir, containerName, true, "*.*", false, paths);
 
     public static Task<bool> ExistsAsync(this IAzureStorageService service, CloudBlockBlob blob) =>
-        service.ExistsAsync(blob, false, null, null, default);
+        service.ExistsAsync(blob, false, null, null, CancellationToken.None);
 
     public static Task<bool> ExistsAsync(this IAzureStorageService service,
                                          string containerName,
                                          string path,
                                          string fileName) =>
-        service.ExistsAsync(containerName, path, fileName, false, null, null, default);
+        service.ExistsAsync(containerName, path, fileName, false, null, null, CancellationToken.None);
 
     public static Task<CloudBlockBlobInfo> GetBlobAsync(this IAzureStorageService service, string path) =>
-        service.GetBlobAsync(path, null, null, default);
+        service.GetBlobAsync(path, null, null, CancellationToken.None);
 
     public static Task<IList<T>> GetBlobsAsync<T>(this IAzureStorageService service, string containerName, string path)
         where T : CloudBlob =>
@@ -57,7 +58,7 @@ public static class AzureStorageServiceExtensions
         string path,
         bool overwrite,
         FileInfo file) =>
-        service.UploadFileAsync(path, overwrite, file, null, null, default);
+        service.UploadFileAsync(path, overwrite, file, null, null, CancellationToken.None);
 
     public static Task<IDictionary<FileInfo, CloudBlockBlobInfo>> UploadFilesAsync(
         this IAzureStorageService service,

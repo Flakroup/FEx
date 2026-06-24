@@ -96,7 +96,7 @@ public sealed class AsyncProcessingQueue : IDisposable
     /// Schedules a task in FIFO order.
     /// </summary>
     /// <returns>Task that completes when the scheduled task finishes</returns>
-    public Task EnqueueAsync(Func<Task> taskFunc) => EnqueueAsync(taskFunc, default);
+    public Task EnqueueAsync(Func<Task> taskFunc) => EnqueueAsync(taskFunc, CancellationToken.None);
 
     public async Task EnqueueAsync(Func<Task> taskFunc, CancellationToken cancellationToken)
     {
@@ -117,7 +117,7 @@ public sealed class AsyncProcessingQueue : IDisposable
     /// Schedules a task with result in FIFO order.
     /// </summary>
     /// <returns>Task that completes when the scheduled task finishes</returns>
-    public Task<T> EnqueueAsync<T>(Func<Task<T>> taskFunc) => EnqueueAsync(taskFunc, default);
+    public Task<T> EnqueueAsync<T>(Func<Task<T>> taskFunc) => EnqueueAsync(taskFunc, CancellationToken.None);
 
     public async Task<T> EnqueueAsync<T>(Func<Task<T>> taskFunc, CancellationToken cancellationToken)
     {

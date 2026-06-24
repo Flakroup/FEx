@@ -46,7 +46,7 @@ public class CloudBlockBlobInfo
 
     public string GetMetadata(string key) => Metadata.TryGetKeyValue(key);
 
-    public Task<bool> EnsureExistsAsync() => EnsureExistsAsync(false, null, null, default);
+    public Task<bool> EnsureExistsAsync() => EnsureExistsAsync(false, null, null, CancellationToken.None);
 
     public async Task<bool> EnsureExistsAsync(bool primaryOnly,
                                               BlobRequestOptions options,
@@ -64,7 +64,7 @@ public class CloudBlockBlobInfo
     /// <summary>
     /// Fetches the attributes asynchronous.
     /// </summary>
-    public Task FetchAttributesAsync() => FetchAttributesAsync(null, null, null, default);
+    public Task FetchAttributesAsync() => FetchAttributesAsync(null, null, null, CancellationToken.None);
 
     /// <summary>
     /// Fetches the attributes asynchronous.

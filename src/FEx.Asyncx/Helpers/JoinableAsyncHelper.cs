@@ -23,7 +23,7 @@ public static class JoinableAsyncHelper
         MainJTF = GetFactory(mainThread.Guard(nameof(mainThread)), true);
 
     public static Task DelayWithoutDeadlockAsync(int millisecondsDelay) =>
-        DelayWithoutDeadlockAsync(millisecondsDelay, default);
+        DelayWithoutDeadlockAsync(millisecondsDelay, CancellationToken.None);
 
     public static async Task DelayWithoutDeadlockAsync(int millisecondsDelay, CancellationToken cancellationToken) =>
         await AwaitWithoutDeadlockAsync(() => Task.Delay(millisecondsDelay, cancellationToken));

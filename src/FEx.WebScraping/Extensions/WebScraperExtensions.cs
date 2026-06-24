@@ -3,6 +3,7 @@ using HtmlAgilityPack;
 using System;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.WebScraping.Extensions;
@@ -10,43 +11,43 @@ namespace FEx.WebScraping.Extensions;
 public static class WebScraperExtensions
 {
     public static Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, Uri pageLink) =>
-        scraper.LoadHtmlDocumentAsync(pageLink, null, null, null, default);
+        scraper.LoadHtmlDocumentAsync(pageLink, null, null, null, CancellationToken.None);
 
     public static Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper,
                                                            Uri pageLink,
                                                            Action<HtmlWeb> configWeb) =>
-        scraper.LoadHtmlDocumentAsync(pageLink, configWeb, null, null, default);
+        scraper.LoadHtmlDocumentAsync(pageLink, configWeb, null, null, CancellationToken.None);
 
     public static Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper,
                                                            Uri pageLink,
                                                            Action<HtmlWeb> configWeb,
                                                            Encoding encoding) =>
-        scraper.LoadHtmlDocumentAsync(pageLink, configWeb, encoding, null, default);
+        scraper.LoadHtmlDocumentAsync(pageLink, configWeb, encoding, null, CancellationToken.None);
 
     public static Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper,
                                                            Uri pageLink,
                                                            Action<HtmlWeb> configWeb,
                                                            Encoding encoding,
                                                            NetworkCredential credential) =>
-        scraper.LoadHtmlDocumentAsync(pageLink, configWeb, encoding, credential, default);
+        scraper.LoadHtmlDocumentAsync(pageLink, configWeb, encoding, credential, CancellationToken.None);
 
     public static Task<T> LoadAsync<T>(this IWebScraper scraper,
                                        Uri pageLink,
                                        Func<Uri, HtmlWeb, HtmlDocument, T> action) =>
-        scraper.LoadAsync(pageLink, action, null, null, null, default);
+        scraper.LoadAsync(pageLink, action, null, null, null, CancellationToken.None);
 
     public static Task<T> LoadAsync<T>(this IWebScraper scraper,
                                        Uri pageLink,
                                        Func<Uri, HtmlWeb, HtmlDocument, T> action,
                                        Action<HtmlWeb> configWeb) =>
-        scraper.LoadAsync(pageLink, action, configWeb, null, null, default);
+        scraper.LoadAsync(pageLink, action, configWeb, null, null, CancellationToken.None);
 
     public static Task<T> LoadAsync<T>(this IWebScraper scraper,
                                        Uri pageLink,
                                        Func<Uri, HtmlWeb, HtmlDocument, T> action,
                                        Action<HtmlWeb> configWeb,
                                        Encoding encoding) =>
-        scraper.LoadAsync(pageLink, action, configWeb, encoding, null, default);
+        scraper.LoadAsync(pageLink, action, configWeb, encoding, null, CancellationToken.None);
 
     public static Task<T> LoadAsync<T>(this IWebScraper scraper,
                                        Uri pageLink,
@@ -54,42 +55,42 @@ public static class WebScraperExtensions
                                        Action<HtmlWeb> configWeb,
                                        Encoding encoding,
                                        NetworkCredential credential) =>
-        scraper.LoadAsync(pageLink, action, configWeb, encoding, credential, default);
+        scraper.LoadAsync(pageLink, action, configWeb, encoding, credential, CancellationToken.None);
 
     public static Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper, HtmlWeb web, Uri pageLink) =>
-        scraper.LoadHtmlDocumentAsync(web, pageLink, null, null, default);
+        scraper.LoadHtmlDocumentAsync(web, pageLink, null, null, CancellationToken.None);
 
     public static Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper,
                                                            HtmlWeb web,
                                                            Uri pageLink,
                                                            Encoding encoding) =>
-        scraper.LoadHtmlDocumentAsync(web, pageLink, encoding, null, default);
+        scraper.LoadHtmlDocumentAsync(web, pageLink, encoding, null, CancellationToken.None);
 
     public static Task<HtmlDocument> LoadHtmlDocumentAsync(this IWebScraper scraper,
                                                            HtmlWeb web,
                                                            Uri pageLink,
                                                            Encoding encoding,
                                                            NetworkCredential credential) =>
-        scraper.LoadHtmlDocumentAsync(web, pageLink, encoding, credential, default);
+        scraper.LoadHtmlDocumentAsync(web, pageLink, encoding, credential, CancellationToken.None);
 
     public static (HtmlWeb web, Task<HtmlDocument> docTask) Load(this IWebScraper scraper, Uri pageLink) =>
-        scraper.Load(pageLink, null, null, null, default);
+        scraper.Load(pageLink, null, null, null, CancellationToken.None);
 
     public static (HtmlWeb web, Task<HtmlDocument> docTask) Load(this IWebScraper scraper,
                                                                  Uri pageLink,
                                                                  Action<HtmlWeb> configWeb) =>
-        scraper.Load(pageLink, configWeb, null, null, default);
+        scraper.Load(pageLink, configWeb, null, null, CancellationToken.None);
 
     public static (HtmlWeb web, Task<HtmlDocument> docTask) Load(this IWebScraper scraper,
                                                                  Uri pageLink,
                                                                  Action<HtmlWeb> configWeb,
                                                                  Encoding encoding) =>
-        scraper.Load(pageLink, configWeb, encoding, null, default);
+        scraper.Load(pageLink, configWeb, encoding, null, CancellationToken.None);
 
     public static (HtmlWeb web, Task<HtmlDocument> docTask) Load(this IWebScraper scraper,
                                                                  Uri pageLink,
                                                                  Action<HtmlWeb> configWeb,
                                                                  Encoding encoding,
                                                                  NetworkCredential credential) =>
-        scraper.Load(pageLink, configWeb, encoding, credential, default);
+        scraper.Load(pageLink, configWeb, encoding, credential, CancellationToken.None);
 }

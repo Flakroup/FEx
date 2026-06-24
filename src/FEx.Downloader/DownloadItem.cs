@@ -460,7 +460,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     }
 
     public static Task<DownloadItem> CreateAsync(string url, string path, bool reportProgress) =>
-        CreateAsync(new Uri(url), path, reportProgress, null, 50, -1, null, default);
+        CreateAsync(new Uri(url), path, reportProgress, null, 50, -1, null, CancellationToken.None);
 
     public static async Task<DownloadItem> CreateAsync(string url,
                                                        string path,
@@ -480,7 +480,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             cancellationToken);
 
     public static Task<DownloadItem> CreateAsync(Uri url, string path, bool reportProgress) =>
-        CreateAsync(url, path, reportProgress, null, 50, -1, null, default);
+        CreateAsync(url, path, reportProgress, null, 50, -1, null, CancellationToken.None);
 
     public static async Task<DownloadItem> CreateAsync(Uri url,
                                                        string path,
@@ -507,7 +507,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     }
 
     public static DownloadItem CreateFromResponse(HttpWebResponse response, string filePath, bool reportProgress) =>
-        CreateFromResponse(response, filePath, reportProgress, null, 0, 50, null, default);
+        CreateFromResponse(response, filePath, reportProgress, null, 0, 50, null, CancellationToken.None);
 
     public static DownloadItem CreateFromResponse(HttpWebResponse response,
                                                   string filePath,

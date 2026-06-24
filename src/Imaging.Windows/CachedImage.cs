@@ -58,7 +58,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
         set => ParentIndexEntry.IsDownloading = value;
     }
 
-    public CachedImage(IndexEntry indexEntry, CancellationTokenSource cancellationTokenSource = default)
+    public CachedImage(IndexEntry indexEntry, CancellationTokenSource cancellationTokenSource = null)
     {
         ParentIndexEntry = indexEntry;
         CachedImages = [];
@@ -214,7 +214,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
                     var hasInvalidContentLength = response.ContentLength == -1;
 
                     using var file =
-                        DownloadItem.CreateFromResponse(response, filePath, false, pars, 0, 50, checksum, default);
+                        DownloadItem.CreateFromResponse(response, filePath, false, pars, 0, 50, checksum, CancellationToken.None);
 
                     if (await file.DownloadFileAsync())
                     {

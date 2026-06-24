@@ -60,7 +60,7 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
             s => Prefix(s, pre),
             (isSuccess, s) => Suffix(s, post, isSuccess),
             AsyncMode.ThreadPool,
-            default);
+            CancellationToken.None);
 
     public async Task RunTaskAsync(Func<Task> function, JobSpecs? specs, Action pre, Action<bool> post) =>
         await _tasksHandler.RunTaskAsync(function,
@@ -88,7 +88,7 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
             s => Prefix(s, pre),
             (isSuccess, s) => Suffix(s, post, isSuccess),
             AsyncMode.ThreadPool,
-            default);
+            CancellationToken.None);
 
     public virtual void PostMainJob(bool showTimeInfo = true)
     {

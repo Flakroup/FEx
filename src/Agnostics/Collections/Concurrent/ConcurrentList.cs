@@ -194,7 +194,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     /// <inheritdoc />
     public void Sort()
     {
-        Write(() => Items.Sort());
+        Write(Items.Sort);
         WhenCollectionHasBeenReordered();
     }
 

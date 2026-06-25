@@ -254,7 +254,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 if (entityInfo.ExistsInDb)
                     set.Update(entityInfo.Value);
                 else
-                    set.Add(entityInfo.Value);
+                    await set.AddAsync(entityInfo.Value);
             }
         }
     }

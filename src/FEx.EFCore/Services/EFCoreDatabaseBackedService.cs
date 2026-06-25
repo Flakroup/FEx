@@ -49,7 +49,7 @@ public abstract class EFCoreDatabaseBackedService<TDbContext> : BulkDbServiceBas
     protected override async Task OnInitializeAsync()
     {
         if (!_dbHelper.IsInitialized)
-            await JoinableAsyncHelper.AwaitWithoutDeadlockAsync(() => _dbHelper.InitializeAsync());
+            await JoinableAsyncHelper.AwaitWithoutDeadlockAsync(_dbHelper.InitializeAsync);
 
         _dbConfig.SqlInstance = _dbHelper.SQLInstance.Guard(nameof(_dbHelper.SQLInstance));
 

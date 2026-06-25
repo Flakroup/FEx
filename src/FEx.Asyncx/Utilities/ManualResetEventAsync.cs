@@ -59,7 +59,7 @@ public sealed class ManualResetEventAsync
     /// A task which waits for the manual reset event. Returns true if the timeout has not expired. Returns false if
     /// the timeout expired.
     /// </returns>
-    public Task<bool> WaitAsync() => WaitAsync(null, default);
+    public Task<bool> WaitAsync() => WaitAsync(null, CancellationToken.None);
 
     public async Task<bool> WaitAsync(TimeSpan? timeout, CancellationToken token) =>
         await AwaitCompletionAsync(timeout.HasValue

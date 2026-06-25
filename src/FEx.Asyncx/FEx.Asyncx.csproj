@@ -1,20 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
-		<Description>Async and parallel programming related FEx utilities</Description>
-		<Configurations>Debug;Release;Build</Configurations>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+        <Description>Async and parallel programming related FEx utilities</Description>
+        <Configurations>Debug;Release;Build</Configurations>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.14.15" />
-		<PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.13.22" />
-		<PackageReference Include="StrongInject" Version="1.4.4" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.VisualStudio.Threading" Version="18.7.23" />
+        <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.13.22" />
+        <PackageReference Include="StrongInject" Version="1.4.4" />
+    </ItemGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
-	  <ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
-	</ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+        <ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+    </ItemGroup>
 
 </Project>

@@ -96,8 +96,7 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
     private static async Task InitializeMicrosoftDIModulesAsync(IServiceCollection services)
     {
         // Use TryResolveServices to gracefully handle cases where no modules are registered
-        var modules = FExServiceProvider.ServiceContainer.TryResolveServices<IInitializeModule<IServiceCollection>>()
-            .ToArray();
+        IInitializeModule<IServiceCollection>[] modules = [.. FExServiceProvider.ServiceContainer.TryResolveServices<IInitializeModule<IServiceCollection>>()];
 
         if (modules.IsNullOrEmptyList())
             return;

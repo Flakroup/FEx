@@ -195,7 +195,7 @@ public static class DbContextExtensions
         if (exists)
             dbSet.Update(data);
         else
-            dbSet.Add(data);
+            await dbSet.AddAsync(data);
     }
 
     public static IList<EntityEntry> GetChangedEntities<TDbContext>(this TDbContext dbContext)

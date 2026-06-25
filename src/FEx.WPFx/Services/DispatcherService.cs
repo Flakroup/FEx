@@ -91,15 +91,15 @@ public static class DispatcherService
     /// <param name="sender">The sender object in context of which action should be executed.</param>
     /// <param name="priority">The priority.</param>
     public static Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action) =>
-        InvokeOnDispatcherContextAsync(action, null, DispatcherPriority.Send, default);
+        InvokeOnDispatcherContextAsync(action, null, DispatcherPriority.Send, CancellationToken.None);
 
     public static Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action, DispatcherObject sender) =>
-        InvokeOnDispatcherContextAsync(action, sender, DispatcherPriority.Send, default);
+        InvokeOnDispatcherContextAsync(action, sender, DispatcherPriority.Send, CancellationToken.None);
 
     public static Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action,
                                                             DispatcherObject sender,
                                                             DispatcherPriority priority) =>
-        InvokeOnDispatcherContextAsync(action, sender, priority, default);
+        InvokeOnDispatcherContextAsync(action, sender, priority, CancellationToken.None);
 
     public static async Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action,
                                                                   DispatcherObject sender,

@@ -58,7 +58,7 @@ public class SizedImageCache : NotifyPropertyChanged, IDisposable
     public SizedImageCache(CachedImage cachedImage,
                            WidthAndHeight size = null,
                            BitmapImage image = null,
-                           CancellationTokenSource cancellationTokenSource = default)
+                           CancellationTokenSource cancellationTokenSource = null)
     {
         if (cancellationTokenSource is not null)
         {

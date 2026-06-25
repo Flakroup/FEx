@@ -68,7 +68,7 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
                          long maxChunkSize,
                          string filePath,
                          long dataLength)
-        : this(from, to, directory, url, pars, maxChunkSize, filePath, dataLength, null, null, default)
+        : this(from, to, directory, url, pars, maxChunkSize, filePath, dataLength, null, null, CancellationToken.None)
     {
     }
 

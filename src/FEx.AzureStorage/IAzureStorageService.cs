@@ -51,15 +51,22 @@ public interface IAzureStorageService
                                           string containerName,
                                           CancellationToken cancellationToken);
 
-    Task<IList<T>> GetBlobsAsync<T>(string containerName, string path, bool useFlatBlobListing) where T : CloudBlob;
+    Task<IList<T>> GetBlobsAsync<T>(string containerName,
+                                    string path,
+                                    bool useFlatBlobListing,
+                                    CancellationToken cancellationToken) where T : CloudBlob;
 
     CloudBlobContainer GetCloudBlobContainer(string containerName);
 
-    Task<IList<CloudBlockBlob>> GetCloudBlockBlobsAsync(string containerName, string path, bool useFlatBlobListing);
+    Task<IList<CloudBlockBlob>> GetCloudBlockBlobsAsync(string containerName,
+                                                        string path,
+                                                        bool useFlatBlobListing,
+                                                        CancellationToken cancellationToken);
 
     Task<IList<CloudBlockBlobInfo>> GetCloudBlockBlobsInfoAsync(string containerName,
                                                                 string path,
-                                                                bool useFlatBlobListing);
+                                                                bool useFlatBlobListing,
+                                                                CancellationToken cancellationToken);
 
     Task<(string fileName, FileInfo localPath)> ProcessBlobAsync(string containerName, string downloadDir, string path);
 

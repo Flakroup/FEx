@@ -40,17 +40,17 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public FlakHttpClient()
-        : this(new WebRequestParams(), true, default)
+        : this(new WebRequestParams(), true, null)
     {
     }
 
     public FlakHttpClient(WebRequestParams pars)
-        : this(pars, true, default)
+        : this(pars, true, null)
     {
     }
 
     public FlakHttpClient(WebRequestParams pars, bool disposeHandler)
-        : this(pars, disposeHandler, default)
+        : this(pars, disposeHandler, null)
     {
     }
 
@@ -72,12 +72,12 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public FlakHttpClient(HttpClientHandler handler)
-        : this(handler, true, default)
+        : this(handler, true, null)
     {
     }
 
     public FlakHttpClient(HttpClientHandler handler, bool disposeHandler)
-        : this(handler, disposeHandler, default)
+        : this(handler, disposeHandler, null)
     {
     }
 

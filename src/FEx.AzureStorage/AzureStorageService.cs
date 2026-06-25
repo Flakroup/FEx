@@ -1,3 +1,6 @@
+#if !NET5_0_OR_GREATER
+using System.Net;
+#endif
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using FEx.Agnostics.Abstractions.Extensions;
@@ -13,9 +16,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-#if !NET5_0_OR_GREATER
-using System.Net;
-#endif
 using System.Threading;
 using System.Threading.Tasks;
 using DeleteSnapshotsOption = Microsoft.Azure.Storage.Blob.DeleteSnapshotsOption;
@@ -184,26 +184,29 @@ public class AzureStorageService : IAzureStorageService
         return destBlob;
     }
 
-    public async Task<IList<CloudBlockBlobInfo>> GetCloudBlockBlobsInfoAsync(
-        string containerName,
-        string path,
-        bool useFlatBlobListing) =>
-        (await GetBlobsAsync<CloudBlockBlob>(containerName, path, useFlatBlobListing)).AsParallel()
-        .Select(x => new CloudBlockBlobInfo(x))
-        .ToArray();
-
     public async Task<IList<CloudBlockBlob>> GetCloudBlockBlobsAsync(string containerName,
                                                                      string path,
-                                                                     bool useFlatBlobListing) =>
-        await GetBlobsAsync<CloudBlockBlob>(containerName, path, useFlatBlobListing);
+                                                                     bool useFlatBlobListing,
+                                                                     CancellationToken cancellationToken) =>
+        await GetBlobsAsync<CloudBlockBlob>(containerName, path, useFlatBlobListing, cancellationToken);
 
-    public async Task<IList<T>> GetBlobsAsync<T>(string containerName, string path, bool useFlatBlobListing)
-        where T : CloudBlob
+    public async Task<IList<T>> GetBlobsAsync<T>(string containerName,
+                                                 string path,
+                                                 bool useFlatBlobListing,
+                                                 CancellationToken cancellationToken) where T : CloudBlob
     {
         var container = GetCloudBlobContainer(containerName);
-        var blobs = container.ListBlobs(path, useFlatBlobListing, BlobListingDetails.Metadata).Cast<T>().ToArray();
 
-        await blobs.WithWhenAllTasksAsync(x => x.FetchAttributesAsync());
+        var result = await container.ListBlobsAsync(path,
+            useFlatBlobListing,
+            BlobListingDetails.Metadata,
+            null,
+            null,
+            cancellationToken);
+
+        var blobs = result.Data.Cast<T>().ToArray();
+
+        await blobs.WithWhenAllTasksAsync(x => x.FetchAttributesAsync(cancellationToken));
 
         return blobs;
     }
@@ -358,6 +361,15 @@ public class AzureStorageService : IAzureStorageService
             blobClient.SetServiceProperties(props);
         }
     }
+
+    public async Task<IList<CloudBlockBlobInfo>> GetCloudBlockBlobsInfoAsync(
+        string containerName,
+        string path,
+        bool useFlatBlobListing,
+        CancellationToken cancellationToken) =>
+        (await GetBlobsAsync<CloudBlockBlob>(containerName, path, useFlatBlobListing, cancellationToken)).AsParallel()
+        .Select(x => new CloudBlockBlobInfo(x))
+        .ToArray();
 
     private static string GetBlobName(string path, string fileName) =>
         path.IsNotNullOrEmptyString()

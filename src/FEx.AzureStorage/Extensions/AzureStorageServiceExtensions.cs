@@ -38,20 +38,25 @@ public static class AzureStorageServiceExtensions
     public static Task<CloudBlockBlobInfo> GetBlobAsync(this IAzureStorageService service, string path) =>
         service.GetBlobAsync(path, null, null, CancellationToken.None);
 
-    public static Task<IList<T>> GetBlobsAsync<T>(this IAzureStorageService service, string containerName, string path)
+    public static Task<IList<T>> GetBlobsAsync<T>(this IAzureStorageService service,
+                                                  string containerName,
+                                                  string path,
+                                                  CancellationToken cancellationToken)
         where T : CloudBlob =>
-        service.GetBlobsAsync<T>(containerName, path, false);
+        service.GetBlobsAsync<T>(containerName, path, false, cancellationToken);
 
     public static Task<IList<CloudBlockBlob>> GetCloudBlockBlobsAsync(this IAzureStorageService service,
                                                                       string containerName,
-                                                                      string path) =>
-        service.GetCloudBlockBlobsAsync(containerName, path, false);
+                                                                      string path,
+                                                                      CancellationToken cancellationToken) =>
+        service.GetCloudBlockBlobsAsync(containerName, path, false, cancellationToken);
 
     public static Task<IList<CloudBlockBlobInfo>> GetCloudBlockBlobsInfoAsync(
         this IAzureStorageService service,
         string containerName,
-        string path) =>
-        service.GetCloudBlockBlobsInfoAsync(containerName, path, false);
+        string path,
+        CancellationToken cancellationToken) =>
+        service.GetCloudBlockBlobsInfoAsync(containerName, path, false, cancellationToken);
 
     public static Task<(FileInfo file, CloudBlockBlobInfo blob)> UploadFileAsync(
         this IAzureStorageService service,

@@ -69,20 +69,14 @@ public static class BlobExtensions
         return results;
     }
 
-    public static Task<Result<IList<IListBlobItem>, StackError>> ListBlobsAsync(
-        this CloudBlobContainer client,
-        string prefix,
-        CancellationToken cancellationToken) =>
-        client.ListBlobsAsync(prefix, false, BlobListingDetails.None, null, null, cancellationToken);
-
     public static async Task<Result<IList<IListBlobItem>, StackError>> ListBlobsAsync(
         this CloudBlobContainer client,
-        string prefix,
-        bool useFlatBlobListing,
-        BlobListingDetails blobListingDetails,
-        BlobRequestOptions options,
-        OperationContext operationContext,
-        CancellationToken cancellationToken)
+        string prefix = null,
+        bool useFlatBlobListing = false,
+        BlobListingDetails blobListingDetails = BlobListingDetails.None,
+        BlobRequestOptions options = null,
+        OperationContext operationContext = null,
+        CancellationToken cancellationToken = default)
     {
         if (prefix.IsNotNullOrEmptyString())
         {

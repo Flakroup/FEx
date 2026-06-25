@@ -13,6 +13,9 @@ namespace FEx.DependencyInjection;
 public class FExServiceContainer : IFExServiceContainer
 {
     private IDisposable _container;
+
+    private IDisposable Container => _container.GuardProperty();
+
     private bool _isDisposed;
 
     public void RegisterServices<TContainer>(TContainer container, IServiceCollection services)
@@ -33,7 +36,7 @@ public class FExServiceContainer : IFExServiceContainer
 
     public T ResolveService<T>()
     {
-        if (_container is IContainer<T> container)
+        if (Container is IContainer<T> container)
 #pragma warning disable IDISP004
             return container.Resolve<T>().Value;
 #pragma warning restore IDISP004
@@ -42,13 +45,13 @@ public class FExServiceContainer : IFExServiceContainer
     }
 
     public T ResolveOrDefault<T>(T fallback) =>
-        _container is IContainer<T>
+        Container is IContainer<T>
             ? ResolveService<T>()
             : fallback;
 
     public IEnumerable<T> ResolveServices<T>()
     {
-        if (_container is IContainer<T[]> container)
+        if (Container is IContainer<T[]> container)
 #pragma warning disable IDISP004
             return container.Resolve<T[]>().Value;
 #pragma warning restore IDISP004
@@ -58,7 +61,7 @@ public class FExServiceContainer : IFExServiceContainer
 
     public IEnumerable<T> TryResolveServices<T>()
     {
-        if (_container is IContainer<T[]> container)
+        if (Container is IContainer<T[]> container)
         {
 #pragma warning disable IDISP004
             return container.Resolve<T[]>().Value;
@@ -70,13 +73,13 @@ public class FExServiceContainer : IFExServiceContainer
 
     public async Task<T> ResolveServiceAsync<T>() =>
         // ReSharper disable once SuspiciousTypeConversion.Global
-        _container is IAsyncContainer<T> container
+        Container is IAsyncContainer<T> container
             ? (await container.ResolveAsync<T>()).Value
             : ResolveService<T>();
 
     public async Task<IEnumerable<T>> ResolveServicesAsync<T>() =>
         // ReSharper disable once SuspiciousTypeConversion.Global
-        _container is IAsyncContainer<T[]> container
+        Container is IAsyncContainer<T[]> container
             ? (await container.ResolveAsync<T[]>()).Value
             : ResolveServices<T>();
 

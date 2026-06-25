@@ -119,17 +119,17 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public HttpClientEx()
-        : this(new WebRequestParams(), true, default)
+        : this(new WebRequestParams(), true, null)
     {
     }
 
     public HttpClientEx(WebRequestParams pars)
-        : this(pars, true, default)
+        : this(pars, true, null)
     {
     }
 
     public HttpClientEx(WebRequestParams pars, bool disposeHandler)
-        : this(pars, disposeHandler, default)
+        : this(pars, disposeHandler, null)
     {
     }
 
@@ -151,12 +151,12 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public HttpClientEx(HttpClientHandler handler)
-        : this(handler, true, default)
+        : this(handler, true, null)
     {
     }
 
     public HttpClientEx(HttpClientHandler handler, bool disposeHandler)
-        : this(handler, disposeHandler, default)
+        : this(handler, disposeHandler, null)
     {
     }
 

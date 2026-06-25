@@ -2,7 +2,6 @@ using DynamicData;
 using EFCore.BulkExtensions;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Flow;
-using FEx.Core.Abstractions.Helpers;
 using FEx.EFCore.Collections;
 using FEx.EFCore.Interfaces;
 using FEx.FileSystem;
@@ -22,10 +21,8 @@ public class IndexEntriesCache : SynchronizedDictionary<string, IndexEntry, File
     private const string FileName = "fileName";
     public IIndexEntryConfig Config { get; }
 
-    public IndexEntriesCache(IEFCoreDatabaseBackedService<FilesCacheContext> dbService,
-                             IIndexEntryConfig config,
-                             AsyncHelper asyncHelper)
-        : base(dbService, asyncHelper, nameof(IndexEntry.AbsoluteUri))
+    public IndexEntriesCache(IEFCoreDatabaseBackedService<FilesCacheContext> dbService, IIndexEntryConfig config)
+        : base(dbService, nameof(IndexEntry.AbsoluteUri))
     {
         Config = config;
         BeginInitialization();

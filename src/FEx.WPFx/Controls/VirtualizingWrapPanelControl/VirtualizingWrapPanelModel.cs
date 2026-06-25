@@ -88,8 +88,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         var rowChilds = new List<IItemContainerInfo>();
         var childSizes = new List<Size>();
 
-        foreach (var child in _itemContainerManager.RealizedContainers.OrderBy(container =>
-                     _itemContainerManager.FindItemIndexOfContainer(container)))
+        foreach (var child in _itemContainerManager.RealizedContainers.OrderBy(_itemContainerManager.FindItemIndexOfContainer))
         {
             var upfrontKnownItemSize = GetUpfrontKnownItemSize(child.Item);
 

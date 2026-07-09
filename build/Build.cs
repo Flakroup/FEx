@@ -21,6 +21,17 @@ class Build : FExBuild, ITagTarget, ITestTarget
             {
             });
 
+    // Gates Publish on Test passing - one `Publish` invocation runs
+    // Restore -> Compile -> Test -> Pack -> Publish -> Tag in a single process,
+    // instead of CI needing separate test/publish jobs with their own checkout+restore.
+    // A new pass-through target (not an override of Test/Publish - overriding either
+    // would replace its Executes body wholesale and silently drop it from the plan).
+    [UsedImplicitly] // NUKE Target invoked by the build runner via reflection; R# cannot track it.
+    Target Verify =>
+        _ => _
+            .DependsOn(((ITestTarget)this).Test)
+            .DependentFor(((INuGetPublishTarget)this).Publish);
+
     public static int Main()
     {
         Bootstrap();

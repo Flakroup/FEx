@@ -45,9 +45,11 @@ jobs:
       - name: Compile
         run: pwsh ./build.ps1 Compile
 
-  # PR or push to main/develop: full test (NUKE Test depends on Compile).
+  # PR only: full test (NUKE Test depends on Compile). Push to main/develop
+  # runs Test as part of the publish job below instead (Publish now depends
+  # on Test via Build.cs), so it isn't duplicated across two jobs/checkouts.
   test:
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    if: github.event_name == 'pull_request'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
@@ -70,12 +72,13 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-  # Push to main/develop, after test succeeds: publish to nuget.org.
+  # Push to main/develop: Publish (NUKE chain: Restore -> Compile -> Test ->
+  # Pack -> Publish -> Tag, single process/job - Test gates Publish via
+  # Build.cs's DependentFor, no separate test job needed here).
   # Mirrors the old .gitlab-ci.yml publish job (push -> develop/main/master).
   # Own concurrency group so a running publish is queued, never cancelled by
   # ci's cancel-in-progress on a fast follow-up push.
   publish:
-    needs: test
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     runs-on: windows-latest
     environment: production
@@ -100,3 +103,11 @@ jobs:
           NuGetApiKey: ${{ secrets.NUGET_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}   # for the Tag target to push the git version tag
         run: pwsh ./build.ps1 Publish --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: artifacts/test-results/*.trx
+          if-no-files-found: ignore
+          retention-days: 30

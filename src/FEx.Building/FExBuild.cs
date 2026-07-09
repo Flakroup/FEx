@@ -8,6 +8,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 namespace FEx.Building;
 
@@ -51,6 +52,16 @@ public abstract class FExBuild : NukeBuild, ICompileTarget
         settings.SetProjectFile(solution)
             .SetProperty("NuGetAudit", !IsServerBuild)
             .When(_ => configuration is not null, s => s.SetProperty("Configuration", configuration!.ToString()));
+
+    // Overrides ICompileTarget's defaults: restores in the SAME Configuration Compile builds with
+    // (via GetRestoreSettings above), then Compile skips its own implicit restore (SetNoRestore in
+    // GetBuildSettings) - one restore instead of two, and the NuGetAudit override actually sticks.
+    Target ICompileTarget.Restore =>
+        _ => _.Executes(() => DotNetRestore(s => GetRestoreSettings(s, Solution, Configuration)));
+
+    Target ICompileTarget.Compile =>
+        _ => _.DependsOn(((ICompileTarget)this).Restore)
+            .Executes(() => DotNetBuild(s => GetBuildSettings(s, Solution)));
 
     public string GetBuildPlan() =>
         string.Join(" => ",

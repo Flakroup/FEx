@@ -8,6 +8,7 @@
 	<ItemGroup>
 		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.2" />
 		<PackageReference Include="WireMock.Net" Version="2.11.0" />
+		<PackageReference Include="Scriban.Signed" Version="7.2.5" /> <!-- security pin: NU1902 GHSA-6q7j-xr26-3h2c / GHSA-q6rr-fm2g-g5x8, transitive via WireMock.Net -->
 	</ItemGroup>
 
 	<ItemGroup>

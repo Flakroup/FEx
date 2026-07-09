@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="$(DotNetNugetsVersion)" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.10.0" /> <!-- security pin: NU1903 GHSA-v5pm-xwqc-g5wc, transitive via Microsoft.AspNetCore.OpenApi -->
     <PackageReference Include="StrongInject" Version="1.4.4" />
   </ItemGroup>
 

@@ -85,17 +85,6 @@
     <File Path="DevConfigs/Directory.Build.props" />
     <File Path="DevConfigs/Directory.Build.targets" />
   </Folder>
-  <Folder Name="/src/">
-    <Project Path="src/FEx.FTPx/FEx.FTPx.csproj">
-      <Build Solution="Build|*" Project="false" />
-    </Project>
-    <Project Path="src/FEx.NuGetx/FEx.NuGetx.csproj">
-      <Build Solution="Build|*" Project="false" />
-    </Project>
-    <Project Path="src/FEx.Platforms.Windows/FEx.Platforms.Windows.csproj">
-      <Build Solution="Build|*" Project="false" />
-    </Project>
-  </Folder>
   <Folder Name="/test/">
     <File Path="test/Directory.Build.props" />
     <File Path="test/Directory.Build.targets" />
@@ -159,6 +148,9 @@
   <Project Path="src/Imaging.Windows/FEx.Imaging.Windows.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
+  <Project Path="src/FEx.FTPx/FEx.FTPx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
   <Project Path="src/FEx.Json/FEx.Json.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
@@ -186,10 +178,16 @@
   <Project Path="src/FEx.MVVM/FEx.MVVM.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
+  <Project Path="src/FEx.NuGetx/FEx.NuGetx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
   <Project Path="src/FEx.OneDrv.Abstractions/FEx.OneDrv.Abstractions.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.OneDrv/FEx.OneDrv.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Platforms.Windows/FEx.Platforms.Windows.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Platforms/FEx.Platforms.csproj">

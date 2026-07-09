@@ -7,23 +7,23 @@ namespace FEx.Agnostics.Abstractions.Models;
 
 public class WebRequestParams
 {
-    public ICredentials Credentials { get; set; }
-    public string UserAgent { get; set; }
-    public IDictionary<string, string> Headers { get; set; }
-    public CookieContainer Cookies { get; set; }
-    public string Method { get; set; }
+    public ICredentials? Credentials { get; set; }
+    public string? UserAgent { get; set; }
+    public IDictionary<string, string>? Headers { get; set; }
+    public CookieContainer? Cookies { get; set; }
+    public string? Method { get; set; }
     public int? Timeout { get; set; }
     public bool? Pipelined { get; set; }
     public bool? KeepAlive { get; set; }
     public int? ReadWriteTimeout { get; set; }
 
     [CanBeNull]
-    public IWebProxy Proxy { get; set; }
+    public IWebProxy? Proxy { get; set; }
 
     public bool IsProxyNull { get; set; }
-    public RemoteCertificateValidationCallback ServerCertificateValidationCallback { get; set; }
+    public RemoteCertificateValidationCallback? ServerCertificateValidationCallback { get; set; }
 
-    public WebRequestParams(IEnumerable<Cookie> cookies = null)
+    public WebRequestParams(IEnumerable<Cookie>? cookies = null)
     {
         IsProxyNull = false;
         Proxy = null;

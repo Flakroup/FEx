@@ -14,7 +14,7 @@ public static class EnumExtensions
     /// </summary>
     /// <param name="enumValue">The enum value.</param>
     /// <returns>Description</returns>
-    public static string GetEnumValueDescription(this Enum enumValue) =>
+    public static string? GetEnumValueDescription(this Enum enumValue) =>
         enumValue.GetEnumValueAttribute<DescriptionAttribute>()?.Description;
 
     /// <summary>
@@ -23,9 +23,9 @@ public static class EnumExtensions
     /// <typeparam name="TAttributeType">Attribute type.</typeparam>
     /// <param name="enumValue">Enumerator type.</param>
     /// <returns>Attribute object.</returns>
-    public static TAttributeType GetEnumValueAttribute<TAttributeType>(this Enum enumValue)
+    public static TAttributeType? GetEnumValueAttribute<TAttributeType>(this Enum enumValue)
         where TAttributeType : Attribute =>
-        enumValue.GetEnumValueAttributes<TAttributeType>().FirstOrDefault();
+        enumValue.GetEnumValueAttributes<TAttributeType>()?.FirstOrDefault();
 
     /// <summary>
     /// Generic method getting attribute objects of the given type from enumerated value.
@@ -33,11 +33,12 @@ public static class EnumExtensions
     /// <typeparam name="TAttributeType">Attribute type.</typeparam>
     /// <param name="enumValue">Enumerator value.</param>
     /// <returns>Attribute object.</returns>
-    public static TAttributeType[] GetEnumValueAttributes<TAttributeType>(this Enum enumValue)
+    public static TAttributeType[]? GetEnumValueAttributes<TAttributeType>(this Enum enumValue)
         where TAttributeType : Attribute =>
         Enum.IsDefined(enumValue.GetType(), enumValue)
+            // IsDefined guarantees the backing field exists for this value.
             ? (TAttributeType[])enumValue.GetType()
-                .GetField(enumValue.ToString())
+                .GetField(enumValue.ToString())!
                 .GetCustomAttributes(typeof(TAttributeType), true)
             : null;
 
@@ -66,12 +67,14 @@ public static class EnumExtensions
 
     public static IMap<string, TEnum> GetEnumMap<TEnum>(bool useValueDescription = false) where TEnum : struct, Enum =>
         GetEnumCustomMap<TEnum, string, TEnum>(enumValue => useValueDescription
-                ? enumValue.GetEnumValueDescription()
+                ? enumValue.GetEnumValueDescription()!
                 : enumValue.ToString(),
             enumValue => enumValue);
 
     public static IMap<TKey, TValue>
         GetEnumCustomMap<TEnum, TKey, TValue>(Func<TEnum, TKey> keyGetter, Func<TEnum, TValue> valueGetter)
-        where TEnum : struct, Enum =>
+        where TEnum : struct, Enum
+        where TKey : notnull
+        where TValue : notnull =>
         new Map<TKey, TValue>(GetEnumValues<TEnum>().ToDictionary(keyGetter, valueGetter), true);
 }

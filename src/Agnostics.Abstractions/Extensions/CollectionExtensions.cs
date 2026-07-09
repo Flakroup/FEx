@@ -94,7 +94,7 @@ public static class CollectionExtensions
     /// <param name="item">The item.</param>
     /// <param name="count">The count.</param>
     /// <param name="creator">The creator.</param>
-    public static void Add<T>(this ICollection<T> items, T item, int count = 1, Func<T, T> creator = null)
+    public static void Add<T>(this ICollection<T> items, T item, int count = 1, Func<T, T>? creator = null)
         where T : class
     {
         for (var i = 0; i < count; i++)
@@ -123,9 +123,9 @@ public static class CollectionExtensions
     public static IReadOnlyList<T> ToReadOnlyList<T>(this IEnumerable<T> collection) =>
         collection.ToList().AsReadOnly();
 
-    public static IReadOnlyCollection<TOut> ToReadOnlyCollectionOrDefault<T, TOut>(this IEnumerable<T> items,
+    public static IReadOnlyCollection<TOut>? ToReadOnlyCollectionOrDefault<T, TOut>(this IEnumerable<T> items,
         Func<T, TOut> converter,
-        IReadOnlyCollection<TOut> defaultValue = null) =>
+        IReadOnlyCollection<TOut>? defaultValue = null) =>
         items?.Select(converter).ToReadOnlyList() ?? defaultValue;
 
     public static void Move<T>(this IList<T> list, T item, int newIndex)

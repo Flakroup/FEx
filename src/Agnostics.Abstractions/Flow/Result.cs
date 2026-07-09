@@ -23,7 +23,8 @@ public class Result<TError> : ResultBase<TError> where TError : class, IError, n
 
 public class Result<TData, TError> : ResultBase<TError>, IResult<TData, TError> where TError : class, IError, new()
 {
-    private readonly TData _data;
+    // Only read via Data/TryGetData, both guarded by IsSuccess; unset in the failure state (throw-guarded invariant).
+    private readonly TData _data = default!;
     public static Result<TData, TError> Failure => new(new TError());
 
     public TData Data =>

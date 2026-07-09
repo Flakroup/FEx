@@ -6,12 +6,12 @@ namespace FEx.Agnostics.Abstractions.Flow;
 
 public class ExceptionError : Error, IExceptionError
 {
-    public Exception Exception { get; }
+    public Exception? Exception { get; }
 
-    public string StackTrace { get; }
+    public string? StackTrace { get; }
 
-    public string RootErrorStackTrace =>
-        InnerError.TryGetError(out IStackError innerStackError)
+    public string? RootErrorStackTrace =>
+        InnerError is not null && InnerError.TryGetError<IStackError>(out var innerStackError)
             ? innerStackError.StackTrace
             : StackTrace;
 
@@ -19,7 +19,7 @@ public class ExceptionError : Error, IExceptionError
     {
     }
 
-    public ExceptionError(Exception exception, string message = null)
+    public ExceptionError(Exception exception, string? message = null)
         : base(message ?? exception.Message)
     {
         Exception = exception;

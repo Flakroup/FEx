@@ -8,7 +8,7 @@ public interface IResult
 
 public interface IResult<out TError> : IResult where TError : class, IError, new()
 {
-    TError Error { get; }
+    TError? Error { get; }
 }
 
 public interface IResult<TData, out TError> : IResult<TError> where TError : class, IError, new()

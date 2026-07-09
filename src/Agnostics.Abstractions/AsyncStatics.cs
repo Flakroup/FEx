@@ -152,7 +152,7 @@ public static class AsyncStatics
     /// Task
     /// </returns>
     public static async Task DelayUntilAsync(Func<bool> predicate,
-                                             Action action = null,
+                                             Action? action = null,
                                              double milliseconds = 0,
                                              CancellationToken cancellationToken = default)
     {
@@ -165,14 +165,14 @@ public static class AsyncStatics
     }
 
     public static async Task DelayUntilAsync(Func<Task<bool>> predicate,
-                                             Action action = null,
+                                             Action? action = null,
                                              double milliseconds = 0,
                                              CancellationToken cancellationToken = default) =>
         await ExecuteTaskOnThreadPoolAsync(() =>
             DelayUntilCoreAsync(predicate, action, GetDelayTimeSpan(milliseconds), cancellationToken));
 
     public static async Task DelayWithTimespanUntilAsync(Func<bool> predicate,
-                                                         Action action = null,
+                                                         Action? action = null,
                                                          TimeSpan? timeSpan = null,
                                                          CancellationToken cancellationToken = default)
     {
@@ -185,7 +185,7 @@ public static class AsyncStatics
     }
 
     public static async Task DelayWithTimespanUntilAsync(Func<Task<bool>> predicate,
-                                                         Action action = null,
+                                                         Action? action = null,
                                                          TimeSpan? timeSpan = null,
                                                          CancellationToken cancellationToken = default) =>
         await ExecuteTaskOnThreadPoolAsync(() =>
@@ -199,7 +199,7 @@ public static class AsyncStatics
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     public static async Task WaitAndInvokeActionAsync(double delayMilliseconds = 0,
-                                                      Action action = null,
+                                                      Action? action = null,
                                                       CancellationToken cancellationToken = default)
     {
         var delayTimeSpan = GetDelayTimeSpan(delayMilliseconds);
@@ -217,7 +217,7 @@ public static class AsyncStatics
     }
 
     public static async Task WaitAndInvokeActionAsync(TimeSpan? delayTimeSpan = null,
-                                                      Action action = null,
+                                                      Action? action = null,
                                                       CancellationToken cancellationToken = default)
     {
         delayTimeSpan = GetDelayTimeSpan(delayTimeSpan);
@@ -270,8 +270,8 @@ public static class AsyncStatics
         return delayTimeSpan.Value;
     }
 
-    private static async Task DelayUntilCoreAsync(Func<bool> predicate,
-                                                  Action action,
+    private static async Task DelayUntilCoreAsync(Func<bool>? predicate,
+                                                  Action? action,
                                                   TimeSpan delayTimeSpan,
                                                   CancellationToken cancellationToken = default)
     {
@@ -283,12 +283,12 @@ public static class AsyncStatics
         while (result && !cancellationToken.IsCancellationRequested)
         {
             await WaitAndInvokeActionAsync(delayTimeSpan, action, cancellationToken);
-            result = predicate();
+            result = predicate is not null && predicate();
         }
     }
 
-    private static async Task DelayUntilCoreAsync(Func<Task<bool>> predicate,
-                                                  Action action,
+    private static async Task DelayUntilCoreAsync(Func<Task<bool>>? predicate,
+                                                  Action? action,
                                                   TimeSpan delayTimeSpan,
                                                   CancellationToken cancellationToken = default)
     {
@@ -300,7 +300,7 @@ public static class AsyncStatics
         while (result && !cancellationToken.IsCancellationRequested)
         {
             await WaitAndInvokeActionAsync(delayTimeSpan, action, cancellationToken);
-            result = await predicate();
+            result = predicate is not null && await predicate();
         }
     }
 }

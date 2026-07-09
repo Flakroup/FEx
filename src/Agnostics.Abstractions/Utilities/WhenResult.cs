@@ -2,7 +2,8 @@ namespace FEx.Agnostics.Abstractions.Utilities;
 
 public class WhenResult<T, TResult>
 {
-    private TResult _result;
+    // Set via the Result setter once a branch matches; IsResultSet guards reads before assignment.
+    private TResult _result = default!;
 
     public TResult Result
     {

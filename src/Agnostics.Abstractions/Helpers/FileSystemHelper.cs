@@ -10,8 +10,8 @@ namespace FEx.Agnostics.Abstractions.Helpers;
 public static class FileSystemHelper
 {
     private const string Ntfs = "NTFS";
-    private static char[] _invalidPathChars;
-    private static char[] _invalidFileOrDirNameChars;
+    private static char[]? _invalidPathChars;
+    private static char[]? _invalidFileOrDirNameChars;
     public static char[] InvalidPathChars => _invalidPathChars ??= Path.GetInvalidPathChars();
 
     public static char[] InvalidFileOrDirNameChars => _invalidFileOrDirNameChars ??= Path.GetInvalidFileNameChars();
@@ -49,7 +49,7 @@ public static class FileSystemHelper
     /// </summary>
     /// <param name="filePath">The file path.</param>
     /// <returns></returns>
-    public static string GenerateMd5OfFile(string filePath) => new FileInfo(filePath).GenerateMd5OfFile();
+    public static string? GenerateMd5OfFile(string filePath) => new FileInfo(filePath).GenerateMd5OfFile();
 
     public static string GetParentFolderFromPath(string path, char pathSeparator, bool includeSeparatorAtEnd)
     {

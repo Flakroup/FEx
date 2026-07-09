@@ -6,9 +6,10 @@ namespace FEx.Agnostics.Abstractions.Logging;
 
 public class FExStaticLogger : FExInitializable
 {
-    private static IFExLogger _logger;
+    // Always assigned by the static constructor (and each instance ctor) before any read via Logger.
+    private static IFExLogger _logger = null!;
 
-    public static event EventHandler<FExErrorEventArgs> ErrorLogged;
+    public static event EventHandler<FExErrorEventArgs>? ErrorLogged;
 
     public static IFExLogger Instance => Logger;
 
@@ -41,44 +42,44 @@ public class FExStaticLogger : FExInitializable
 
     public static void Debug(Exception exception) => Debug(exception, null);
 
-    public static void Debug(Exception exception, string message) =>
+    public static void Debug(Exception exception, string? message) =>
         Logger.Debug(exception, message ?? exception.Message);
 
     public static void Information(string message) => Logger.Information(message);
 
     public static void Information(Exception exception) => Information(exception, null);
 
-    public static void Information(Exception exception, string message) =>
+    public static void Information(Exception exception, string? message) =>
         Logger.Information(exception, message ?? exception.Message);
 
     public static void Warning(string message) => Logger.Warning(message);
 
     public static void Warning(Exception exception) => Warning(exception, null);
 
-    public static void Warning(Exception exception, string message) =>
+    public static void Warning(Exception exception, string? message) =>
         Logger.Warning(exception, message ?? exception.Message);
 
     public static void Error(string message) => Logger.Error(message);
 
     public static void Error(Exception exception) => Error(exception, null);
 
-    public static void Error(Exception exception, string message) =>
+    public static void Error(Exception exception, string? message) =>
         Logger.Error(exception, message ?? exception.Message);
 
     public static void Critical(string message) => Logger.Critical(message);
 
     public static void Critical(Exception exception) => Critical(exception, null);
 
-    public static void Critical(Exception exception, string message) =>
+    public static void Critical(Exception exception, string? message) =>
         Logger.Critical(exception, message ?? exception.Message);
 
     public static void Configure() => Configure(null);
 
-    public static void Configure(Func<IFExLogger> loggerFactory)
+    public static void Configure(Func<IFExLogger>? loggerFactory)
     {
         if (loggerFactory is not null)
             Logger = loggerFactory();
     }
 
-    private static void OnErrorLogged(object sender, FExErrorEventArgs e) => ErrorLogged?.Invoke(sender, e);
+    private static void OnErrorLogged(object? sender, FExErrorEventArgs e) => ErrorLogged?.Invoke(sender, e);
 }

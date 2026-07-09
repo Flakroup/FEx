@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -63,6 +64,7 @@ public static class ObjectExtensions
     /// <param name="value">Reference to be tested</param>
     /// <param name="fn">Func to execute if value Not null.</param>
     /// <returns>If value not null, return the result of the Func; Otherwise return Default(TOut).</returns>
+    [return: MaybeNull]
     public static TOut IfNotNull<T, TOut>(this T value, Func<T, TOut> fn) =>
         value is not null
             ? fn(value)
@@ -89,7 +91,8 @@ public static class ObjectExtensions
     public static void IfNull<T>(this T value, Action<T> action)
     {
         if (value is null)
-            action(default);
+            // value is null here, so the callback is intentionally invoked with default(T).
+            action(default!);
     }
 
     /// <summary>
@@ -121,7 +124,7 @@ public static class ObjectExtensions
     /// <param name="value">The actual instance.</param>
     /// <param name="actions">Actions to execute.</param>
     /// <returns>TInput If TInput is not null; otherwise default(TInput).</returns>
-    public static TInput With<TInput>(this TInput value, params Action<TInput>[] actions) where TInput : class
+    public static TInput? With<TInput>(this TInput value, params Action<TInput>[] actions) where TInput : class
     {
         if (value is null)
             return null;
@@ -143,15 +146,18 @@ public static class ObjectExtensions
     /// This value should be null for non-indexed properties.
     /// </param>
     /// <returns>Property</returns>
-    public static T GetPropertyValueByName<T>(this object obj, string name, object[] index = null) =>
-        (T)obj.GetType().GetProperty(name)?.GetValue(obj, index);
+    [return: MaybeNull]
+    public static T GetPropertyValueByName<T>(this object obj, string name, object[]? index = null) =>
+        // Reflection boundary: the retrieved property value is cast back to T (null when the property is absent/null).
+        (T)obj.GetType().GetProperty(name)?.GetValue(obj, index)!;
 
+    [return: MaybeNull]
     public static T GetObject<T>(this object value) =>
         value is not null
             ? (T)value
             : default;
 
-    public static string GetTypeInstanceDescription(this object value) =>
+    public static string? GetTypeInstanceDescription(this object value) =>
         value.GetType().GetTypeCustomAttribute<DescriptionAttribute>()?.FindInEnumerable()?.Description;
 
     public static bool IsBetween<T>(this T item, T start, T end, bool inclusive = false) =>
@@ -201,8 +207,8 @@ public static class ObjectExtensions
     public static bool SetObjectProperty<TSender, T>(this TSender sender,
                                                      ref T backingField,
                                                      T newValue,
-                                                     Action<TSender, string, T> onPropertyChanged,
-                                                     [CallerMemberName] string propertyName = null)
+                                                     Action<TSender, string?, T> onPropertyChanged,
+                                                     [CallerMemberName] string? propertyName = null)
     {
         if (!EqualityHelper.SetFieldIfChanged(ref backingField, newValue))
             return false;
@@ -215,8 +221,8 @@ public static class ObjectExtensions
     public static bool SetProperty<TSender, TRet>(this TSender _,
                                                   ref TRet backingField,
                                                   TRet newValue,
-                                                  Action<string, TRet> onPropertyChanged = null,
-                                                  [CallerMemberName] string propertyName = null)
+                                                  Action<string, TRet>? onPropertyChanged = null,
+                                                  [CallerMemberName] string? propertyName = null)
         where TSender : INotifyPropertyChanged
     {
         if (propertyName is null

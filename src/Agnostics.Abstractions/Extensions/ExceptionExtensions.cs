@@ -19,7 +19,8 @@ public static class ExceptionExtensions
             var toString = typeof(StackTrace).GetMethod("ToString",
                 BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
-                [traceFormatType],
+                // Reflection into StackTrace internals: the nested TraceFormat type is expected to exist.
+                [traceFormatType!],
                 null);
 
             var normalTraceFormat =
@@ -29,7 +30,7 @@ public static class ExceptionExtensions
                 Enum.GetValues(traceFormatType!).GetValue(0);
 #endif
             var stackTraceString =
-                Expression.Call(stack, toString!, Expression.Constant(normalTraceFormat, traceFormatType));
+                Expression.Call(stack, toString!, Expression.Constant(normalTraceFormat, traceFormatType!));
 
             var stackTraceStringField =
                 typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);

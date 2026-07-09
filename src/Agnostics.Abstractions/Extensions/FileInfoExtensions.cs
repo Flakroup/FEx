@@ -39,7 +39,7 @@ public static class FileInfoExtensions
     /// <param name="overwrite">if set to <c>true</c> [overwrite].</param>
     /// <returns></returns>
     public static async Task<FileInfo> ZipAsync(this FileInfo file,
-                                                string zipFilePath = null,
+                                                string? zipFilePath = null,
                                                 bool deleteTempDirectory = false,
                                                 bool overwrite = false) =>
         await file.ZipAsync(zipFilePath is not null
@@ -49,16 +49,16 @@ public static class FileInfoExtensions
             overwrite);
 
     public static async Task<FileInfo> ZipAsync(this FileInfo file,
-                                                FileInfo zipFile = null,
+                                                FileInfo? zipFile = null,
                                                 bool deleteTempDirectory = false,
                                                 bool overwrite = false)
     {
-        var parentDirectory = zipFile is null
+        var parentDirectory = (zipFile is null
             ? file.Directory
-            : zipFile.Directory;
+            : zipFile.Directory).Guard("parentDirectory");
 
         var tempDirectory =
-            new DirectoryInfo(Path.Combine(parentDirectory?.FullName, Path.GetFileNameWithoutExtension(file.Name)));
+            new DirectoryInfo(Path.Combine(parentDirectory.FullName, Path.GetFileNameWithoutExtension(file.Name)));
 
         if (tempDirectory.Exists && deleteTempDirectory)
             tempDirectory.Delete(true);
@@ -77,7 +77,7 @@ public static class FileInfoExtensions
 
             await sourceStream.CopyToAsync(targetStream);
 
-        zipFile ??= new(Path.Combine(parentDirectory?.FullName, $"{file.Name}.zip"));
+        zipFile ??= new(Path.Combine(parentDirectory.FullName, $"{file.Name}.zip"));
 
         if (zipFile.Exists && overwrite)
         {
@@ -98,14 +98,14 @@ public static class FileInfoExtensions
         return zipFile;
     }
 
-    public static string GenerateMd5OfFile(this FileInfo file,
+    public static string? GenerateMd5OfFile(this FileInfo file,
                                            bool removeDashes = true,
                                            bool toLower = true,
                                            bool asBase64String = false)
     {
         file.Refresh();
 
-        byte[] hash = null;
+        byte[]? hash = null;
 
         if (file.Exists)
             using (var stream = new FileStream(file.FullName,
@@ -143,7 +143,7 @@ public static class FileInfoExtensions
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }
 
-    public static async Task<MemoryStream> ToMemoryStreamAsync(this FileInfo file)
+    public static async Task<MemoryStream?> ToMemoryStreamAsync(this FileInfo file)
     {
         file.Refresh();
 

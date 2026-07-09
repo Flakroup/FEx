@@ -9,7 +9,7 @@ namespace FEx.Agnostics.Abstractions.Utilities;
 /// <seealso cref="IDisposable" />
 public class DisposableAction : IDisposable
 {
-    private Action _action;
+    private Action? _action;
 
     private bool _disposedValue; // To detect redundant calls
 

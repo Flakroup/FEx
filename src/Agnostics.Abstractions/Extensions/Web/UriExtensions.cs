@@ -15,8 +15,8 @@ public static class UriExtensions
     private static Uri DefaultUri { get; } = new("http://clients3.google.com/generate_204");
 
     public static async Task<WebResponse> GetWebResponseAsync(this Uri url,
-                                                              WebRequestParams pars = null,
-                                                              Stopwatch stopwatch = null)
+                                                              WebRequestParams? pars = null,
+                                                              Stopwatch? stopwatch = null)
     {
         if (url.Scheme is HttpScheme or HttpsScheme)
             return await url.GetUriHttpResponseAsync(pars, stopwatch);
@@ -50,13 +50,13 @@ public static class UriExtensions
     }
 
     public static async Task<FileWebResponse> GetUriFileResponseAsync(this Uri url,
-                                                                      WebRequestParams pars = null,
-                                                                      Stopwatch stopwatch = null) =>
+                                                                      WebRequestParams? pars = null,
+                                                                      Stopwatch? stopwatch = null) =>
         (FileWebResponse)await url.GetUriResponseAsync(pars, stopwatch);
 
     public static async Task<HttpWebResponse> GetUriHttpResponseAsync(this Uri url,
-                                                                      WebRequestParams pars = null,
-                                                                      Stopwatch stopwatch = null)
+                                                                      WebRequestParams? pars = null,
+                                                                      Stopwatch? stopwatch = null)
     {
         var req = url.GetHttpRequest(pars);
         stopwatch?.Restart();
@@ -67,8 +67,8 @@ public static class UriExtensions
     }
 
     public static async Task<WebResponse> GetUriResponseAsync(this Uri url,
-                                                              WebRequestParams pars = null,
-                                                              Stopwatch stopwatch = null)
+                                                              WebRequestParams? pars = null,
+                                                              Stopwatch? stopwatch = null)
     {
         var req = url.GetWebRequest(pars);
         stopwatch?.Restart();
@@ -78,7 +78,7 @@ public static class UriExtensions
         return response;
     }
 
-    public static HttpWebRequest GetHttpRequest(this Uri url, WebRequestParams pars = null)
+    public static HttpWebRequest GetHttpRequest(this Uri url, WebRequestParams? pars = null)
     {
 #if NET
 #pragma warning disable SYSLIB0014
@@ -94,7 +94,7 @@ public static class UriExtensions
         return myWebRequest;
     }
 
-    public static WebRequest GetWebRequest(this Uri url, WebRequestParams pars = null)
+    public static WebRequest GetWebRequest(this Uri url, WebRequestParams? pars = null)
     {
 #if NET
 #pragma warning disable SYSLIB0014
@@ -113,7 +113,7 @@ public static class UriExtensions
     public static async Task<(bool, LengthType)> TryGetRangeAsync(this Uri url,
                                                                   int rangeFrom,
                                                                   int rangeTo,
-                                                                  WebRequestParams pars = null)
+                                                                  WebRequestParams? pars = null)
     {
         using var resp = await url.GetUriResponseAsync(pars);
 

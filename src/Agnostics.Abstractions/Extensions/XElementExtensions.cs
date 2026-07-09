@@ -13,7 +13,7 @@ public static class XElementExtensions
     /// </summary>
     /// <param name="el">The xelement to convert.</param>
     /// <returns>A XmlElement.</returns>
-    public static IXPathNavigable ToXmlElement(this XNode el)
+    public static IXPathNavigable? ToXmlElement(this XNode el)
     {
         var doc = new XmlDocument();
         using var reader = el.CreateReader();
@@ -35,7 +35,7 @@ public static class XElementExtensions
         XName name = attributeName;
 
         return element.Attribute(name) is not null
-            ? element.Attribute(name)?.Value
+            ? element.Attribute(name)!.Value
             : string.Empty;
     }
 
@@ -48,7 +48,8 @@ public static class XElementExtensions
     /// <returns>The attribute itself.</returns>
     public static XAttribute SetValue<T>(this XAttribute attribute, T value)
     {
-        attribute.SetValue(value);
+        // XAttribute.SetValue requires a non-null value; caller supplies one.
+        attribute.SetValue(value!);
 
         return attribute;
     }
@@ -70,7 +71,7 @@ public static class XElementExtensions
     /// <param name="value">The value to set.</param>
     /// <returns>The created attribute.</returns>
     public static XAttribute Create(this XObject attribute, string attributeName, string value) =>
-        attribute.Parent.GetOrCreateAttribute(attributeName).SetValue<string>(value);
+        attribute.Parent.Guard(nameof(attribute)).GetOrCreateAttribute(attributeName).SetValue<string>(value);
 
     /// <summary>
     /// Creates a attribute.
@@ -111,13 +112,9 @@ public static class XElementExtensions
     {
         attributeName.Guard(nameof(attributeName));
 
-        XAttribute attribute = null;
         XName name = attributeName;
 
-        (element.Attribute(name) is null).IfTrueOrFalse(() => attribute = new(name, string.Empty),
-            () => attribute = element.Attribute(name));
-
-        return attribute;
+        return element.Attribute(name) ?? new XAttribute(name, string.Empty);
     }
 
     /// <summary>
@@ -163,7 +160,7 @@ public static class XElementExtensions
     /// <param name="element">Current element.</param>
     /// <param name="childName">Name for the child.</param>
     /// <returns>The child if found; otherwise a null.</returns>
-    public static XElement GetChild(this XElement element, string childName) =>
+    public static XElement? GetChild(this XElement element, string childName) =>
         element.GetChild(childName, string.Empty);
 
     /// <summary>
@@ -173,7 +170,7 @@ public static class XElementExtensions
     /// <param name="childName">Name for the child.</param>
     /// <param name="nameSpace">The name space.</param>
     /// <returns>The child if found; otherwise a null.</returns>
-    public static XElement GetChild(this XElement element, string childName, string nameSpace)
+    public static XElement? GetChild(this XElement element, string childName, string nameSpace)
     {
         childName.Guard(nameof(childName));
 

@@ -15,7 +15,7 @@ internal class OSVersion : IEquatable<OSVersion>
         ProductType = productType;
     }
 
-    public bool Equals(OSVersion other)
+    public bool Equals(OSVersion? other)
     {
         if (other is null)
             return false;
@@ -86,7 +86,7 @@ internal class OSVersion : IEquatable<OSVersion>
             _ => "unknown"
         };
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj is null)
             return false;

@@ -23,7 +23,8 @@ public static class DictionaryExtensions
     /// </returns>
     public static TValue TryGetKeyValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary,
                                                       TKey key,
-                                                      TValue fallback = default)
+                                                      TValue fallback = default!)
+        where TKey : notnull
     {
         if (dictionary is ConcurrentDictionary<TKey, TValue> cDic)
 #if NETSTANDARD
@@ -51,7 +52,8 @@ public static class DictionaryExtensions
     {
         var res = dictionary.TryGetValue(key, out var v);
 
-        return (res, v);
+        // v is meaningful only when res is true; otherwise it is default(TV) by the Try pattern.
+        return (res, v!);
     }
 
     /// <summary>
@@ -63,6 +65,7 @@ public static class DictionaryExtensions
     /// <param name="merged">The merged.</param>
     public static void AddRangeToDictionary<TK, TV>(this IDictionary<TK, TV> dictionary,
                                                     IEnumerable<KeyValuePair<TK, TV>> merged)
+        where TK : notnull
     {
         var deferredList = merged.Guard(nameof(merged)).ToList();
 
@@ -88,17 +91,17 @@ public static class DictionaryExtensions
                                                                  Func<TKey, TOutKey> keySelector,
                                                                  Func<IEnumerable<TElement>, IEnumerable<TOutElement>>
                                                                      valuesSelector)
+        where TOutKey : notnull
     {
         var result = new Dictionary<TOutKey, IEnumerable<TOutElement>>();
 
         foreach (var item in source)
         {
-            IEnumerable<TOutElement> values;
             var valuesToMerge = valuesSelector(item.Value);
             var key = keySelector(item.Key);
 
-            values = result.TryGetValue(key, out values)
-                ? values.Concat(valuesToMerge)
+            var values = result.TryGetValue(key, out var existing)
+                ? existing.Concat(valuesToMerge)
                 : valuesToMerge;
 
             result[key] = values;
@@ -141,6 +144,7 @@ public static class DictionaryExtensions
     /// <param name="createValueToAdd">The create value to add.</param>
     /// <returns></returns>
     public static TV GetOrAddValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> createValueToAdd)
+        where TK : notnull
     {
         if (dictionary is ConcurrentDictionary<TK, TV> cDic)
             return cDic.GetOrAdd(key, _ => createValueToAdd());
@@ -165,7 +169,8 @@ public static class DictionaryExtensions
     /// <param name="key">The key to be added or whose value should be updated</param>
     /// <param name="valueToAddOrUpdate">The function used to generate a new value</param>
     /// <returns>The new value for the key.</returns>
-    public static TV AddOrUpdateValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, TV valueToAddOrUpdate) =>
+    public static TV AddOrUpdateValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, TV valueToAddOrUpdate)
+        where TK : notnull =>
         dictionary.AddOrUpdateValue(key, () => valueToAddOrUpdate);
 
     /// <summary>
@@ -178,6 +183,7 @@ public static class DictionaryExtensions
     /// <param name="valueToAddOrUpdate">The function used to generate a new value</param>
     /// <returns>The new value for the key.</returns>
     public static TV AddOrUpdateValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> valueToAddOrUpdate)
+        where TK : notnull
     {
         if (dictionary is ConcurrentDictionary<TK, TV> cDic)
             return cDic.AddOrUpdate(key, _ => valueToAddOrUpdate(), (_, _) => valueToAddOrUpdate());
@@ -203,6 +209,7 @@ public static class DictionaryExtensions
         this IDictionary<TK, TV> dictionary,
         TK key,
         Func<TV> valueToAddOrUpdate)
+        where TK : notnull
     {
         var (hadValue, oldValue) = dictionary.GetValue(key);
         var added = dictionary.AddOrUpdateValue(key, valueToAddOrUpdate);
@@ -226,8 +233,9 @@ public static class DictionaryExtensions
     public static (bool hasBeenRemoved, TV removedValue) RemoveValue<TK, TV>(
         this IDictionary<TK, TV> dictionary,
         TK key)
+        where TK : notnull
     {
-        TV v;
+        TV? v = default;
 
         bool hasBeenRemoved;
 
@@ -241,10 +249,12 @@ public static class DictionaryExtensions
             hasBeenRemoved = dictionary.Remove(key);
         }
 
-        return (hasBeenRemoved, v);
+        // v is meaningful only when hasBeenRemoved is true; otherwise it is default(TV) by the Try pattern.
+        return (hasBeenRemoved, v!);
     }
 
     public static bool ReplaceAndDisposeOldValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> func)
+        where TK : notnull
         where TV : IDisposable
     {
         var (hasBeenReplaced, removedValue, _) = dictionary.AddOrReplaceValue(key, func);
@@ -255,12 +265,13 @@ public static class DictionaryExtensions
         return hasBeenReplaced;
     }
 
-    public static (bool anyItemHasMatched, IDictionary<TK, TV> removedEntries) RemoveFromDictionaryWhere<TK, TV>(
+    public static (bool anyItemHasMatched, IDictionary<TK, TV>? removedEntries) RemoveFromDictionaryWhere<TK, TV>(
         this IDictionary<TK, TV> dictionary,
         Func<TK, TV, bool> predicate)
+        where TK : notnull
     {
         var anyItemHasMatched = false;
-        Dictionary<TK, TV> removedEntries = null;
+        Dictionary<TK, TV>? removedEntries = null;
 
         for (var i = dictionary.Keys.Count - 1; i > -1; i--)
         {
@@ -277,7 +288,8 @@ public static class DictionaryExtensions
                 var (hasBeenRemoved, removedValue) = dictionary.RemoveValue(key);
 
                 if (hasBeenRemoved)
-                    removedEntries.Add(key, removedValue);
+                    // removedEntries is assigned on the first match, before any Add.
+                    removedEntries!.Add(key, removedValue);
             }
         }
 
@@ -286,6 +298,7 @@ public static class DictionaryExtensions
 
     public static void SyncWith<TKey, TValue>(this IDictionary<TKey, TValue> sourceDictionary,
                                               IDictionary<TKey, TValue> syncedDictionary)
+        where TKey : notnull
     {
         if (sourceDictionary.Count > 0)
             sourceDictionary.RemoveFromDictionaryWhere((key, _) => !syncedDictionary.ContainsKey(key));

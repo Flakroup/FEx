@@ -33,7 +33,7 @@ public static class TypeExtensions
     /// <param name="baseType">Type of the base.</param>
     /// <param name="baseTypes">The base types.</param>
     /// <returns></returns>
-    public static List<Type> GetBaseTypes(this Type baseType, List<Type> baseTypes = null)
+    public static List<Type> GetBaseTypes(this Type baseType, List<Type>? baseTypes = null)
     {
         baseTypes ??= [];
 
@@ -46,7 +46,7 @@ public static class TypeExtensions
         return baseTypes;
     }
 
-    public static string GetTypeDescription(this Type value) =>
+    public static string? GetTypeDescription(this Type value) =>
         value.GetTypeCustomAttribute<DescriptionAttribute>()?.FindInEnumerable()?.Description;
 
     public static TAttributeType[] GetTypeCustomAttribute<TAttributeType>(this Type value)
@@ -77,9 +77,11 @@ public static class TypeExtensions
         var isMatch = t.GetTypeInfo().IsGenericType
                       && t.GetGenericTypeDefinition() == genericDefinition.GetGenericTypeDefinition();
 
+        var baseType = t.GetTypeInfo().BaseType;
+
         if (!isMatch
-            && t.GetTypeInfo().BaseType is not null)
-            isMatch = t.GetTypeInfo().BaseType.IsGenericTypeOf(genericDefinition, out genericParameters);
+            && baseType is not null)
+            isMatch = baseType.IsGenericTypeOf(genericDefinition, out genericParameters);
 
         if (!isMatch
             && genericDefinition.GetTypeInfo().IsInterface

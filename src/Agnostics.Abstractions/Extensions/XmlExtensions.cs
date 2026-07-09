@@ -10,8 +10,8 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 
 public static class XmlExtensions
 {
-    public static T Deserialize<T>(this XmlSerializer serializer, Stream stream) where T : class =>
-        (T)serializer.Deserialize(stream);
+    public static T? Deserialize<T>(this XmlSerializer serializer, Stream stream) where T : class =>
+        (T?)serializer.Deserialize(stream);
 
     public static string Serialize<T>(this XmlSerializer serializer, T value) where T : class
     {
@@ -22,12 +22,12 @@ public static class XmlExtensions
         return Convert.ToBase64String(memStr.ToArray());
     }
 
-    public static XmlSchema Add(this XmlSchemaSet xmlSchemaSet, string targetNamespace, Stream schemaStream)
+    public static XmlSchema? Add(this XmlSchemaSet xmlSchemaSet, string targetNamespace, Stream schemaStream)
     {
         using (var schemaReader = XmlReader.Create(schemaStream))
             xmlSchemaSet.Add(targetNamespace, schemaReader);
 
-        XmlSchema lastSchema = null;
+        XmlSchema? lastSchema = null;
 
         foreach (var schema in xmlSchemaSet.Schemas(targetNamespace))
             lastSchema = schema as XmlSchema;
@@ -35,17 +35,17 @@ public static class XmlExtensions
         return lastSchema;
     }
 
-    public static XmlSchema AddManifestResourceSchema(this XmlSchemaSet xmlSchemaSet,
+    public static XmlSchema? AddManifestResourceSchema(this XmlSchemaSet xmlSchemaSet,
                                                       Assembly resourceAssembly,
                                                       string targetNamespace,
                                                       string name)
     {
         using var schemaStream = resourceAssembly.GetManifestResourceStream(name);
 
-        return xmlSchemaSet.Add(targetNamespace, schemaStream);
+        return xmlSchemaSet.Add(targetNamespace, schemaStream.Guard(nameof(name)));
     }
 
-    public static T ValidateAndDeserialize<T>(this XmlSerializer serializer, string xml, Func<XmlSchemaSet> func)
+    public static T? ValidateAndDeserialize<T>(this XmlSerializer serializer, string xml, Func<XmlSchemaSet> func)
         where T : class
     {
         var data = Encoding.ASCII.GetBytes(xml);
@@ -54,7 +54,7 @@ public static class XmlExtensions
         return serializer.ValidateAndDeserialize<T>(stream, func);
     }
 
-    public static T ValidateAndDeserialize<T>(this XmlSerializer serializer, Stream stream, Func<XmlSchemaSet> func)
+    public static T? ValidateAndDeserialize<T>(this XmlSerializer serializer, Stream stream, Func<XmlSchemaSet> func)
         where T : class
     {
         Validate(stream, func);
@@ -76,7 +76,7 @@ public static class XmlExtensions
     private static void Validate(Stream stream, Func<XmlSchemaSet> func)
     {
         var xmlReaderSettings = new XmlReaderSettings();
-        xmlReaderSettings.Schemas.Add(func?.Invoke());
+        xmlReaderSettings.Schemas.Add(func());
         xmlReaderSettings.ValidationType = ValidationType.Schema;
 
         var warningAndErrorsText = string.Empty;

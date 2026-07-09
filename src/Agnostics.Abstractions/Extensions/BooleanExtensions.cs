@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
@@ -55,6 +56,7 @@ public static class BooleanExtensions
     /// <remarks>
     /// Ex: var test = (true.IfTrue(() => false));
     /// </remarks>
+    [return: MaybeNull]
     public static T IfTrue<T>(this bool value, Func<T> func) =>
         value
             ? func()
@@ -84,6 +86,7 @@ public static class BooleanExtensions
     /// <remarks>
     /// Ex: var test = (false.IfFalse(() => true));
     /// </remarks>
+    [return: MaybeNull]
     public static T IfFalse<T>(this bool value, Func<T> func) =>
         !value
             ? func()

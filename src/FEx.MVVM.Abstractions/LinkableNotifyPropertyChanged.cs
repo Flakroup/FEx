@@ -13,7 +13,7 @@ public abstract class LinkableNotifyPropertyChanged : NotifyPropertyChanged, ILi
         _linkManager = new(GetType);
     }
 
-    public override void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
+    public override void OnPropertySet<T>(T oldValue, T newValue, string? propertyName)
     {
         base.OnPropertySet(oldValue, newValue, propertyName);
         _linkManager.OnPropertySet(oldValue, newValue, propertyName);

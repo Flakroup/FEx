@@ -17,7 +17,7 @@ public static class LoggerExtensions
         return overrides.Aggregate(cfg, (current, o) => current.MinimumLevel.Override(o, level));
     }
 
-    public static void Log(this ILogger logger, LogLevel logLevel, string message, Exception exception = null)
+    public static void Log(this ILogger logger, LogLevel logLevel, string message, Exception? exception = null)
     {
         switch (logLevel)
         {

@@ -8,5 +8,6 @@ public class ExceptionHandlerOptions : IExceptionHandlerOptions
     public bool InformUser { get; set; }
     public bool Wait { get; set; }
     public bool DoNotReport { get; set; }
-    public IDictionary<string, object> Custom { get; set; }
+    // IExceptionHandlerOptions.Custom is non-null-annotated in L0 but is optional (null when unset).
+    public IDictionary<string, object> Custom { get; set; } = null!;
 }

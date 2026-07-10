@@ -7,7 +7,7 @@ public static class LocalStorageServiceExtensions
     public static IReadOnlyList<T> GetAll<T>(this ILocalStorageService service) where T : ICacheableItem =>
         service.GetAll<T>(null);
 
-    public static T FirstOrDefault<T>(this ILocalStorageService service) where T : ICacheableItem =>
+    public static T? FirstOrDefault<T>(this ILocalStorageService service) where T : ICacheableItem =>
         service.FirstOrDefault<T>(null);
 
     public static bool Upsert<T>(this ILocalStorageService service, T item) where T : ICacheableItem =>

@@ -5,5 +5,5 @@ namespace FEx.OneDrv.Abstractions;
 
 public interface IOneDriveThumbnailService
 {
-    Task<byte[]> GetThumbnailAsync(string itemId, CancellationToken cancellationToken);
+    Task<byte[]?> GetThumbnailAsync(string itemId, CancellationToken cancellationToken);
 }

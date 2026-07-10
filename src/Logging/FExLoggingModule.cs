@@ -35,10 +35,10 @@ namespace FEx.Logging;
 [Register(typeof(DefaultPlatformLogger), typeof(IPlatformLogger))]
 public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceCollection>
 {
-    private static IFExLoggingService _loggingSrv;
-    private static IFExLoggingConfigurator _configuration;
+    private static IFExLoggingService? _loggingSrv;
+    private static IFExLoggingConfigurator? _configuration;
 
-    private static ILoggerFactory _convenienceFactory;
+    private static ILoggerFactory? _convenienceFactory;
 
     [Instance]
     public static ILoggerProvider[] LoggerProviders { get; set; } = [];
@@ -97,16 +97,17 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
 
         var genericMethod = methodInfo.MakeGenericMethod(senderType);
 
-        return (ILogger)genericMethod.Invoke(factory, [factory]);
+        // CreateLogger<T> via reflection never returns null.
+        return (ILogger)genericMethod.Invoke(factory, [factory])!;
     }
 
     public static void Log(string message,
                            Type callerType,
                            LogLevel level = LogLevel.Information,
-                           Exception exception = null) =>
+                           Exception? exception = null) =>
         LoggingSrv.Log(callerType, level, message, exception);
 
-    public static void Log<T>(string message, LogLevel level = LogLevel.Information, Exception exception = null) =>
+    public static void Log<T>(string message, LogLevel level = LogLevel.Information, Exception? exception = null) =>
         LoggingSrv.Log<T>(level, message, exception);
 
     public static LoggerConfiguration Configure()
@@ -127,7 +128,8 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
 #if NETSTANDARD
             logs.OrderByDescending(static f => f.LastWriteTimeUtc).First().FullName;
 #else
-            logs.MaxBy(static f => f.LastWriteTimeUtc).FullName;
+            // logs is non-empty: guarded by the !logs.Any() early return above.
+            logs.MaxBy(static f => f.LastWriteTimeUtc)!.FullName;
 #endif
 
         using var _ = Process.Start(latestLogPath);
@@ -139,8 +141,10 @@ public class FExLoggingModule : InitializeModule<IFExLoggingContainer, IServiceC
         Configure();
     }
 
-    protected override void RegisterServices(IFExLoggingContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExLoggingContainer? container, IServiceCollection services)
     {
+        container = container.Guard(nameof(container));
+
         services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog());
 
         services.AddTransientServiceUsingContainer<IFExLoggingService>(container);

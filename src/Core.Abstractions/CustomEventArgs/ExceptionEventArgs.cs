@@ -8,7 +8,7 @@ namespace FEx.Core.Abstractions.CustomEventArgs;
 public class ExceptionEventArgs : EventArgs
 {
     public Exception Exception { get; }
-    public IDictionary<string, object> Custom { get; }
+    public IDictionary<string, object>? Custom { get; }
 
     public ExceptionEventArgs(Exception ex, params (string, object)[] custom)
         : this(ex,
@@ -18,7 +18,7 @@ public class ExceptionEventArgs : EventArgs
     {
     }
 
-    public ExceptionEventArgs(Exception ex, IDictionary<string, object> custom = null)
+    public ExceptionEventArgs(Exception ex, IDictionary<string, object>? custom = null)
     {
         Exception = ex;
         Custom = custom;

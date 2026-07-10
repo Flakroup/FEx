@@ -14,5 +14,5 @@ public interface ICmd : IDisposable
     ProcessStartInfo StartInfo { get; }
     Stopwatch Stopwatch { get; }
 
-    Task RunAsync(string args, string verb = null, bool waitForExit = true, Func<ICmd, Task> onStarted = null);
+    Task RunAsync(string args, string? verb = null, bool waitForExit = true, Func<ICmd, Task>? onStarted = null);
 }

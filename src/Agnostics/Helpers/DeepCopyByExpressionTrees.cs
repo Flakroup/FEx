@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -29,12 +30,13 @@ public static class DeepCopyByExpressionTrees
 
     private static readonly Type FieldInfoType = typeof(FieldInfo);
 
-    private static readonly MethodInfo SetValueMethod = FieldInfoType.GetMethod("SetValue", [ObjectType, ObjectType]);
+    // Well-known BCL members - GetMethod is guaranteed to resolve.
+    private static readonly MethodInfo SetValueMethod = FieldInfoType.GetMethod("SetValue", [ObjectType, ObjectType])!;
 
     private static readonly Type ThisType = typeof(DeepCopyByExpressionTrees);
 
     private static readonly MethodInfo DeepCopyByExpressionTreeObjMethod =
-        ThisType.GetMethod("DeepCopyByExpressionTreeObj", BindingFlags.NonPublic | BindingFlags.Static);
+        ThisType.GetMethod("DeepCopyByExpressionTreeObj", BindingFlags.NonPublic | BindingFlags.Static)!;
 
     private static Dictionary<Type, bool> _isStructTypeToDeepCopyDictionary = [];
 
@@ -48,15 +50,16 @@ public static class DeepCopyByExpressionTrees
     /// <param name="original">Object to copy.</param>
     /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
     /// <returns></returns>
+    [return: MaybeNull]
     public static T
-        DeepCopyByExpressionTree<T>(this T original, Dictionary<object, object> copiedReferencesDict = null) =>
+        DeepCopyByExpressionTree<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null) =>
         (T)DeepCopyByExpressionTreeObj(original,
             false,
-            copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
+            copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()))!;
 
-    private static object DeepCopyByExpressionTreeObj(object original,
-                                                      bool forceDeepCopy,
-                                                      Dictionary<object, object> copiedReferencesDict)
+    private static object? DeepCopyByExpressionTreeObj(object? original,
+                                                       bool forceDeepCopy,
+                                                       Dictionary<object, object> copiedReferencesDict)
     {
         if (original is null)
             return null;
@@ -143,7 +146,7 @@ public static class DeepCopyByExpressionTrees
         ///// COPY ELEMENTS OF ARRAY
 
         if (IsArray(type)
-            && IsTypeToDeepCopy(type.GetElementType()))
+            && IsTypeToDeepCopy(type.GetElementType()!))
             CreateArrayCopyLoopExpression(type,
                 inputParameter,
                 inputDictionary,
@@ -219,7 +222,7 @@ public static class DeepCopyByExpressionTrees
             ObjectType.GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
 
         var memberwiseCloneInputExpression = Expression.Assign(outputVariable,
-            Expression.Convert(Expression.Call(inputParameter, memberwiseCloneMethod), type));
+            Expression.Convert(Expression.Call(inputParameter, memberwiseCloneMethod!), type));
 
         expressions.Add(memberwiseCloneInputExpression);
     }
@@ -234,7 +237,7 @@ public static class DeepCopyByExpressionTrees
         ///// inputDictionary[(Object)input] = (Object)output;
 
         var storeReferencesExpression = Expression.Assign(
-            Expression.Property(inputDictionary, ObjectDictionaryType.GetProperty("Item"), inputParameter),
+            Expression.Property(inputDictionary, ObjectDictionaryType.GetProperty("Item")!, inputParameter),
             Expression.Convert(outputVariable, ObjectType));
 
         expressions.Add(storeReferencesExpression);
@@ -319,7 +322,7 @@ public static class DeepCopyByExpressionTrees
 
         variables.AddRange(indices);
 
-        var elementType = type.GetElementType();
+        var elementType = type.GetElementType()!;
 
         Expression forExpression = ArrayFieldToArrayFieldAssignExpression(inputParameter,
             inputDictionary,
@@ -436,7 +439,7 @@ public static class DeepCopyByExpressionTrees
         var dimensionConstant = Expression.Constant(i);
 
         return Expression.Assign(lengthVariable,
-            Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod, dimensionConstant));
+            Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod!, dimensionConstant));
     }
 
     private static void FieldsCopyExpressions(Type type,
@@ -643,7 +646,7 @@ public static class DeepCopyByExpressionTrees
     private static bool IsStructOtherThanBasicValueTypes(Type type) =>
         type.IsValueType && !type.IsPrimitive && !type.IsEnum && type != typeof(decimal);
 
-    private static bool HasInItsHierarchyFieldsWithClasses(Type type, HashSet<Type> alreadyCheckedTypes = null)
+    private static bool HasInItsHierarchyFieldsWithClasses(Type type, HashSet<Type>? alreadyCheckedTypes = null)
     {
         alreadyCheckedTypes = alreadyCheckedTypes ?? [];
 
@@ -672,7 +675,7 @@ public static class DeepCopyByExpressionTrees
 
 internal class ReferenceEqualityComparer : EqualityComparer<object>
 {
-    public override bool Equals(object x, object y) => ReferenceEquals(x, y);
+    public override bool Equals(object? x, object? y) => ReferenceEquals(x, y);
 
     public override int GetHashCode(object obj) =>
         obj is null

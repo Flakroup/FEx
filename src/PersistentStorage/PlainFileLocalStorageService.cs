@@ -26,7 +26,7 @@ public class PlainFileLocalStorageService : FileLocalStorageService
     }
 
     /// <inheritdoc />
-    public override IFExCachedFile GetCachedFile(Uri fileUrl)
+    public override IFExCachedFile? GetCachedFile(Uri fileUrl)
     {
         var file = GetFile(fileUrl);
 

@@ -8,9 +8,9 @@ namespace FEx.DependencyInjection.Abstractions.Basics;
 
 public abstract class StaticsBase : FExInitializable
 {
-    private static IFExServiceProvider _serviceProvider;
+    private static IFExServiceProvider? _serviceProvider;
 
-    public static IFExServiceProvider ServiceProvider
+    public static IFExServiceProvider? ServiceProvider
     {
         get => _serviceProvider;
         set
@@ -28,7 +28,7 @@ public abstract class StaticsBase : FExInitializable
     }
 
 #pragma warning disable S2360 // Optional parameters should not be used - CallerMemberName requires optional parameter
-    protected static T Get<T>(Func<T> localFactory, Func<T> fallback = null, [CallerMemberName] string paramName = null)
+    protected static T Get<T>(Func<T>? localFactory, Func<T>? fallback = null, [CallerMemberName] string? paramName = null)
 #pragma warning restore S2360
         where T : class
     {
@@ -41,7 +41,7 @@ public abstract class StaticsBase : FExInitializable
 
             return localFactory is not null
                 ? localFactory().Guard(paramName)
-                : ServiceProvider.GetInstance<T>().Guard(paramName);
+                : ServiceProvider.Guard(nameof(ServiceProvider)).GetInstance<T>().Guard(paramName);
         }
         catch when (fallback is not null)
         {

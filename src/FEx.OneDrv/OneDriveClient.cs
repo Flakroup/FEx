@@ -40,6 +40,9 @@ public sealed class OneDriveClient : IOneDriveClient
                     .Items[parentId]
                     .Children.GetAsync(cancellationToken: cancelToken);
 
+                if (response is null)
+                    throw new InvalidOperationException("Graph returned no response for the folder listing.");
+
                 var iterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(client,
                     response,
                     item =>
@@ -71,6 +74,9 @@ public sealed class OneDriveClient : IOneDriveClient
                 await client.Drives[driveId].Items[itemId].GetAsync(cancellationToken: cancelToken),
             cancellationToken);
 
+        if (item is null)
+            throw new InvalidOperationException($"Drive item '{itemId}' was not found.");
+
         return DriveItemMapper.MapFile(item);
     }
 
@@ -92,6 +98,9 @@ public sealed class OneDriveClient : IOneDriveClient
                 var response = await client.Drives[driveId]
                     .Items[parentId]
                     .Children.GetAsync(cancellationToken: cancelToken);
+
+                if (response is null)
+                    throw new InvalidOperationException("Graph returned no response for the folder listing.");
 
                 var iterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(client,
                     response,

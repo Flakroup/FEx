@@ -8,9 +8,9 @@ namespace FEx.Agnostics.BaseObjects;
 
 public abstract class NotifyPropertyChanged : PropertyChangeAware, IFExNotifyPropertyChanged
 {
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-    public override void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    public override void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         base.OnPropertyChanged(propertyName);
 
@@ -26,7 +26,7 @@ public abstract class NotifyPropertyChanged : PropertyChangeAware, IFExNotifyPro
     }
 
     [NotifyPropertyChangedInvocator]
-    private void NotifyChanged([CallerMemberName] string propertyName = null)
+    private void NotifyChanged([CallerMemberName] string? propertyName = null)
     {
         if (propertyName is null
             || PropertyChanged is null)

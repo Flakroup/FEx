@@ -37,7 +37,8 @@ public class FExCachedFile : NotifyPropertyChanged, IFExCachedFile, IAsyncDispos
         Timestamp = file.UploadDate.ToUniversalTime();
         Filename = file.Filename;
         using var liteFileStream = file.OpenRead();
-        _dataStream = liteFileStream.CopyToMemoryStream();
+        // liteFileStream is a non-null local; CopyToMemoryStream only returns null for a null source.
+        _dataStream = liteFileStream.CopyToMemoryStream()!;
     }
 
     public FExCachedFile(FileInfo file, Uri url)
@@ -47,7 +48,8 @@ public class FExCachedFile : NotifyPropertyChanged, IFExCachedFile, IAsyncDispos
         Timestamp = file.LastWriteTimeUtc;
         Filename = file.Name;
         using var fileStream = file.OpenRead();
-        _dataStream = fileStream.CopyToMemoryStream();
+        // fileStream is a non-null local; CopyToMemoryStream only returns null for a null source.
+        _dataStream = fileStream.CopyToMemoryStream()!;
     }
 
     public FExCachedFile(IFExDownloadResult downloadResult)
@@ -56,7 +58,8 @@ public class FExCachedFile : NotifyPropertyChanged, IFExCachedFile, IAsyncDispos
         Url = downloadResult.Url;
         Id = CachedFileExtensions.GetFileId(Url);
         Filename = downloadResult.FileName;
-        _dataStream = downloadResult.UseDataStream(static stream => stream.CopyToMemoryStream());
+        // stream passed by UseDataStream is a non-null source; CopyToMemoryStream only returns null for a null source.
+        _dataStream = downloadResult.UseDataStream(static stream => stream.CopyToMemoryStream())!;
     }
 
     public void UpdateData(IFExCachedFile data)
@@ -68,10 +71,12 @@ public class FExCachedFile : NotifyPropertyChanged, IFExCachedFile, IAsyncDispos
         Filename = data.Filename;
     }
 
-    public MemoryStream GetDataStream() => _dataStream.CopyToMemoryStream();
+    // _dataStream is a non-null field; CopyToMemoryStream only returns null for a null source.
+    public MemoryStream GetDataStream() => _dataStream.CopyToMemoryStream()!;
 
     public async Task<MemoryStream> GetDataStreamAsync(CancellationToken cancellationToken) =>
-        await _dataStream.CopyToMemoryStreamAsync(false, cancellationToken);
+        // _dataStream is a non-null field; a non-cancelled call never yields a null stream.
+        (await _dataStream.CopyToMemoryStreamAsync(false, cancellationToken))!;
 
     #region IDisposable
     protected virtual void Dispose(bool disposing)

@@ -5,7 +5,7 @@ namespace FEx.Core.Abstractions.Models;
 
 public record NavigationFlowChange
 {
-    public string SenderType { get; }
+    public string? SenderType { get; }
     public string SenderName { get; }
     public NavigationFlow Flow { get; }
 

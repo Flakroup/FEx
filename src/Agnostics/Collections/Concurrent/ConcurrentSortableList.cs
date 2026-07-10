@@ -15,7 +15,7 @@ public class ConcurrentSortableList<T> : ConcurrentList<T> where T : IComparable
     {
     }
 
-    public ConcurrentSortableList(IEnumerable<T> collection)
+    public ConcurrentSortableList(IEnumerable<T>? collection)
         : base(collection)
     {
     }

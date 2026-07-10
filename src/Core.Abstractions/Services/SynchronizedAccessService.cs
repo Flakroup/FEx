@@ -16,9 +16,11 @@ public sealed class SynchronizedAccessService : ISynchronizedAccessService, IDis
     }
 
     public SemaphoreSlim EnsureLock(string key, int maxParallel = 1) =>
+        // key is non-null per the interface contract; the defensive branch preserves the prior
+        // return-null behavior for a null key (callers then fail on dereference as before).
         key is not null
             ? AccessSemaphores.GetOrAdd(key, _ => new(maxParallel, maxParallel))
-            : null;
+            : null!;
 
     public void RunLocked(Action action, string key, CancellationToken cancellationToken = default)
     {

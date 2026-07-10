@@ -23,7 +23,7 @@ public static class ExceptionExtensions
             InformUser = informUser,
             Wait = wait,
             DoNotReport = doNotReport,
-            Custom = custom?.ToDictionary(x => x.Item1, x => x.Item2)
+            Custom = custom.ToDictionary(x => x.Item1, x => x.Item2)
         };
 
         ex.HandleException(options);

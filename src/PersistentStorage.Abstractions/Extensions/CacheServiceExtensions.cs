@@ -13,9 +13,9 @@ public static class CacheServiceExtensions
         service.Upsert(items, null);
 
     public static bool Delete<T>(this ICacheService service) where T : ICacheableItem =>
-        service.Delete((Expression<Func<T, bool>>)null);
+        service.Delete((Expression<Func<T, bool>>?)null);
 
-    public static T FirstOrDefault<T>(this ICacheService service) where T : ICacheableItem =>
+    public static T? FirstOrDefault<T>(this ICacheService service) where T : ICacheableItem =>
         service.FirstOrDefault<T>(null);
 
     public static IReadOnlyCollection<T> Get<T>(this ICacheService service) where T : ICacheableItem =>

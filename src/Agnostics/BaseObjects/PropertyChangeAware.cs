@@ -17,8 +17,8 @@ public class PropertyChangeAware
 
     public virtual bool SetProperty<TRet>(ref TRet backingField,
                                           TRet newValue,
-                                          Action<TRet> onPropertyChanged = null,
-                                          [CallerMemberName] string propertyName = null)
+                                          Action<TRet>? onPropertyChanged = null,
+                                          [CallerMemberName] string? propertyName = null)
     {
         if (EqualityHelper.IsEqual(ref backingField, newValue))
             return false;
@@ -32,11 +32,11 @@ public class PropertyChangeAware
         return true;
     }
 
-    public virtual void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
+    public virtual void OnPropertySet<T>(T oldValue, T newValue, string? propertyName)
     {
     }
 
-    public virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    public virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
     }
 }

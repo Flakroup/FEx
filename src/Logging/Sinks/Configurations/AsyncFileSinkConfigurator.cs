@@ -29,7 +29,7 @@ public class AsyncFileSinkConfigurator : SinkConfiguratorBase, IFileSinkConfigur
     public TimeSpan RetainedFileTimeLimit { get; set; } = TimeSpan.FromDays(2);
     public LogEventLevel MinimumLevel { get; set; } = LogEventLevel.Verbose;
     public string LogFileName { get; set; }
-    public string CustomLogFilePath { get; set; }
+    public string? CustomLogFilePath { get; set; }
 
     public AsyncFileSinkConfigurator(ILoggingConfiguration loggingConfiguration, IAppInfoProvider appInfoProvider)
         : base(loggingConfiguration, LoggingOptions.File)
@@ -53,7 +53,8 @@ public class AsyncFileSinkConfigurator : SinkConfiguratorBase, IFileSinkConfigur
     public override LoggerConfiguration ConfigureSink(LoggerSinkConfiguration writeTo)
     {
         var logFilePath = !string.IsNullOrEmpty(CustomLogFilePath)
-            ? CustomLogFilePath
+            // Non-empty verified by IsNullOrEmpty (unannotated on netstandard2.0).
+            ? CustomLogFilePath!
             : Path.Combine(_logsDirectory.FullName, LogFileName);
 
         return writeTo.Async(asyncConfiguration => asyncConfiguration.File(logFilePath,

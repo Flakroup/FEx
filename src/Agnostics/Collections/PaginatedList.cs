@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using System.Collections.Generic;
 
 namespace FEx.Agnostics.Collections;
@@ -18,8 +19,6 @@ public class PaginatedList<T>
         PageIndex = pageIndex;
         TotalItemsCount = totalItemsCount;
         TotalPages = totalPages;
-
-        if (items is not null)
-            Items = items;
+        Items = items.GuardProperty();
     }
 }

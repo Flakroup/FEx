@@ -5,13 +5,13 @@ namespace FEx.Agnostics.Comparers;
 
 public sealed class AlphanumComparatorFast : IComparer<string>, IEqualityComparer<string>
 {
-    public int Compare(string s1, string s2) => Compare(s1, s2, StringComparison.CurrentCulture);
+    public int Compare(string? s1, string? s2) => Compare(s1, s2, StringComparison.CurrentCulture);
 
-    public bool Equals(string x, string y) => Compare(x, y) == 0;
+    public bool Equals(string? x, string? y) => Compare(x, y) == 0;
 
     public int GetHashCode(string obj) => obj.GetHashCode();
 
-    public static int Compare(string s1, string s2, StringComparison comparisonType)
+    public static int Compare(string? s1, string? s2, StringComparison comparisonType)
     {
         if (s1 is null
             || s2 is null)

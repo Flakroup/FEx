@@ -10,7 +10,7 @@ public sealed class GitWorktreeExtensionsTests
     [Fact]
     public void GetGitWorktreeKind_NullDirectory_ReturnsNone()
     {
-        DirectoryInfo dir = null;
+        DirectoryInfo? dir = null;
 
         var result = dir.GetGitWorktreeKind();
 

@@ -38,7 +38,8 @@ public sealed class LinkedPropertiesTests
         Assert.Equal(aName, p.ChildName);
         Assert.Equal(aAge, p.ChildAge);
 
-        p.Child.Info.Name = bName;
+        // p.Child was just re-assigned the non-null 'c' above
+        p.Child!.Info.Name = bName;
         p.Child.Info.Age = bAge;
         Assert.Equal(bName, p.ChildName);
         Assert.Equal(bAge, p.ChildAge);
@@ -47,26 +48,21 @@ public sealed class LinkedPropertiesTests
 
 public class Child : LinkableNotifyPropertyChanged
 {
-    private ChildInfo _info;
+    private ChildInfo _info = new();
 
     public ChildInfo Info
     {
         get => _info;
         set => SetProperty(ref _info, value);
     }
-
-    public Child()
-    {
-        Info = new();
-    }
 }
 
 public class ChildInfo : LinkableNotifyPropertyChanged
 {
-    private string _name;
+    private string? _name;
     private int _age;
 
-    public string Name
+    public string? Name
     {
         get => _name;
         set => SetProperty(ref _name, value);
@@ -81,16 +77,16 @@ public class ChildInfo : LinkableNotifyPropertyChanged
 
 public class SingleParent : LinkableNotifyPropertyChanged
 {
-    private Child _child;
+    private Child? _child;
 
-    public Child Child
+    public Child? Child
     {
         get => _child;
         set => SetProperty(ref _child, value);
     }
 
     public int ChildAge { get; private set; }
-    public string ChildName { get; private set; }
+    public string? ChildName { get; private set; }
 
     public SingleParent(bool link)
     {
@@ -103,10 +99,11 @@ public class SingleParent : LinkableNotifyPropertyChanged
         p.Link(x => x.Child,
             (l, c) =>
             {
-                l.RelinkChildren(c,
+                // The link framework only invokes this callback with a non-null child.
+                l.RelinkChildren(c!,
                     () =>
                     {
-                        c.LinkChild(x => x.Info,
+                        c!.LinkChild(x => x.Info,
                             (cl, i) =>
                             {
                                 cl.RelinkChildren(i,

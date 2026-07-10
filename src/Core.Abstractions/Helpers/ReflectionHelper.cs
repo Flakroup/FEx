@@ -118,11 +118,16 @@ public static class ReflectionHelper
                                                                | BindingFlags.Instance) =>
         source.GetType()
             .GetProperties(bindingAttr)
+            // Cast required: on down-level TFMs GetValue returns oblivious 'object', which would
+            // infer Dictionary<string, object> and break the IDictionary<string, object?> contract.
+            // ReSharper disable once RedundantCast
             .ToDictionary(propInfo => propInfo.Name, propInfo => (object?)propInfo.GetValue(source, null));
 
     private static PropertyInfo? GetPropertyInfo(Type type, string propertyName)
     {
         PropertyInfo? propInfo;
+        // 'var' would infer non-null Type and break the 'currentType = currentType.BaseType' (Type?) reassignment.
+        // ReSharper disable once SuggestVarOrType_SimpleTypes
         Type? currentType = type;
 
         do
@@ -140,6 +145,8 @@ public static class ReflectionHelper
     private static FieldInfo? GetFieldInfo(Type type, string fieldName)
     {
         FieldInfo? fieldInfo;
+        // 'var' would infer non-null Type and break the 'currentType = currentType.BaseType' (Type?) reassignment.
+        // ReSharper disable once SuggestVarOrType_SimpleTypes
         Type? currentType = type;
 
         do

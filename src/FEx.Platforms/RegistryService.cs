@@ -300,7 +300,9 @@ public class RegistryService : IRegistryService
         using var _ = root.CreateSubKey(subKey);
 
         // The subkey was just created above, so re-opening it must succeed; Guard throws if it unexpectedly does not.
+#pragma warning disable IDISP004 // Guard returns the same instance; ownership passes to the caller
         return GetSubKey(root, subKey, writable).Guard(nameof(subKey));
+#pragma warning restore IDISP004
     }
 }
 #pragma warning restore CA1416

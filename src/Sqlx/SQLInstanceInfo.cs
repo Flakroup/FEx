@@ -106,6 +106,7 @@ public class SQLInstanceInfo
 
             props = result.ToDictionary(
                 x => (ServerProp)Enum.Parse(typeof(ServerProp), Convert.ToString(x["propertyname"]).Guard("propertyname")),
+                // ReSharper disable once RedundantCast - required on down-level TFMs where Convert.ToString returns oblivious 'string'
                 x => (string?)Convert.ToString(x["propertyvalue"]));
         }
         catch
@@ -143,6 +144,7 @@ public class SQLInstanceInfo
 
             props = result.ToDictionary(
                 x => (ServerProp)Enum.Parse(typeof(ServerProp), Convert.ToString(x["propertyname"]).Guard("propertyname")),
+                // ReSharper disable once RedundantCast - required on down-level TFMs where Convert.ToString returns oblivious 'string'
                 x => (string?)Convert.ToString(x["propertyvalue"]));
         }
         catch

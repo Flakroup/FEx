@@ -131,7 +131,7 @@ public sealed class StatusHub : IDisposable, IStatusHub
 
     public Guid AddStatus(string status) => AddStatus(status, true);
 
-    public string GetStatusString() => GetStatusString((string?)null);
+    public string GetStatusString() => GetStatusString(null);
 
     public DisposableAction Log(string status) => Log(status, true);
 

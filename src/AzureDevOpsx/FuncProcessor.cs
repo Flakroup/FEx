@@ -1,5 +1,3 @@
-using FEx.Agnostics.Abstractions.Extensions;
-using FEx.Agnostics.Abstractions.Extensions.Collections.Lists;
 using FEx.AzureDevOpsx.Responses;
 using FEx.AzureDevOpsx.Services;
 using FEx.Flurlx.Models;
@@ -55,6 +53,8 @@ public sealed class FuncProcessor : IDisposable
     {
     }
 
+    // environmentId is validated here but intentionally not stored (pre-existing behavior).
+    // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
     public FuncProcessor(string requestUrl,
                          ICredentials credentials,
                          string? environmentId,

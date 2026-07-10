@@ -67,7 +67,9 @@ public sealed class EngineAgnosticTests : IDisposable
         Should.NotThrow(() =>
         {
             var testModule = new TestInitializeModule();
+#pragma warning disable IDISP001 // default container is owned by FExServiceProvider (Release() in Dispose), not this test
             var testContainer = testModule.TestGetModule();
+#pragma warning restore IDISP001
             testContainer.ShouldNotBeNull();
         });
     }
@@ -112,9 +114,9 @@ public sealed class EngineAgnosticTests : IDisposable
 /// </summary>
 internal class TestInitializeModule : InitializeModule<IFExDependencyInjectionContainer, IServiceCollection>
 {
-    public IFExDependencyInjectionContainer TestGetModule() => GetModule();
+    public IFExDependencyInjectionContainer? TestGetModule() => GetModule();
 
-    protected override void RegisterServices(IFExDependencyInjectionContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExDependencyInjectionContainer? container, IServiceCollection services)
     {
         // Test implementation - no actual registrations needed
     }

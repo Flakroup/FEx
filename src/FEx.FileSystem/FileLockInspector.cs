@@ -25,8 +25,9 @@ public static class FileLockInspector
     /// <summary>
     /// Finds the process(es) locking a single file. See <see cref="WhoIsLocking(IReadOnlyCollection{string})" />.
     /// </summary>
-    public static IReadOnlyList<LockingProcessInfo> WhoIsLocking(string path) =>
-        WhoIsLocking(string.IsNullOrWhiteSpace(path) ? [] : [path]);
+    public static IReadOnlyList<LockingProcessInfo> WhoIsLocking(string? path) =>
+        // IsNullOrWhiteSpace(path) == false guarantees non-null; ns2.0 lacks the NotNullWhen annotation.
+        WhoIsLocking(string.IsNullOrWhiteSpace(path) ? [] : [path!]);
 
     /// <summary>
     /// Finds the distinct process(es) locking any of the supplied files. Returns an empty list on

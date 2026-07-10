@@ -365,7 +365,7 @@ public sealed class FExPollyPolicyBuilderTests
         _mockLogger.Received().Warning(Arg.Is<string>(s => s.Contains("Retry")));
     }
 
-    private static IFlurlResponse CreateResponse(int statusCode, string content = null)
+    private static IFlurlResponse CreateResponse(int statusCode, string? content = null)
     {
         var resp = Substitute.For<IFlurlResponse>();
         resp.StatusCode.Returns(statusCode);

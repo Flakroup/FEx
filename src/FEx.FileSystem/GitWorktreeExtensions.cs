@@ -17,7 +17,7 @@ public static class GitWorktreeExtensions
     private const string WorktreesSegment = "/worktrees/";
     private const string ModulesSegment = "/modules/";
 
-    public static GitWorktreeKind GetGitWorktreeKind(this DirectoryInfo dir)
+    public static GitWorktreeKind GetGitWorktreeKind(this DirectoryInfo? dir)
     {
         if (dir is null)
             return GitWorktreeKind.None;

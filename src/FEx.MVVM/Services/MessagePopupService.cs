@@ -25,12 +25,12 @@ public abstract class MessagePopupServiceBase : IMessagePopupService
                                                       string caption,
                                                       MessageIcon messageBoxImage,
                                                       FExMessageButton button,
-                                                      ISupportInitialize ownerWindow,
+                                                      ISupportInitialize? ownerWindow,
                                                       bool informUser,
                                                       bool wait,
-                                                      Stopwatch sw,
+                                                      Stopwatch? sw,
                                                       LogLevel level,
-                                                      Exception exception) =>
+                                                      Exception? exception) =>
         await InternalShowMessageAsync(txt,
             caption,
             messageBoxImage,
@@ -46,12 +46,12 @@ public abstract class MessagePopupServiceBase : IMessagePopupService
                                      string caption,
                                      MessageIcon messageBoxImage,
                                      FExMessageButton button,
-                                     ISupportInitialize ownerWindow,
+                                     ISupportInitialize? ownerWindow,
                                      bool informUser,
                                      bool wait,
-                                     Stopwatch sw,
+                                     Stopwatch? sw,
                                      LogLevel level,
-                                     Exception exception) =>
+                                     Exception? exception) =>
         JoinableTaskExtensions.FireOrWait(() => ShowMessageAsync(txt,
                 caption,
                 messageBoxImage,
@@ -68,10 +68,10 @@ public abstract class MessagePopupServiceBase : IMessagePopupService
                                                                     string caption,
                                                                     MessageIcon messageBoxImage,
                                                                     FExMessageButton button,
-                                                                    ISupportInitialize ownerWindow,
+                                                                    ISupportInitialize? ownerWindow,
                                                                     bool informUser,
                                                                     bool wait,
-                                                                    Stopwatch sw,
+                                                                    Stopwatch? sw,
                                                                     LogLevel level,
-                                                                    Exception exception);
+                                                                    Exception? exception);
 }

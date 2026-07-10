@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using FEx.Agnostics.Abstractions.Extensions;
+using System.Globalization;
 using System.Security.Principal;
 
 namespace FEx.Platforms.Windows.Extensions;
@@ -15,11 +16,12 @@ public static class IdentityExtensions
     /// <returns>The SAMAccountName</returns>
     public static string SamAccountName(this IIdentity user)
     {
-        var i = user.Name.IndexOf('\\');
+        var name = user.Name.Guard(nameof(user.Name));
+        var i = name.IndexOf('\\');
 
         return i > -1
-            ? user.Name.Substring(i + 1)
-            : user.Name;
+            ? name.Substring(i + 1)
+            : name;
     }
 
     /// <summary>
@@ -29,10 +31,11 @@ public static class IdentityExtensions
     /// <returns>The domain name</returns>
     public static string Domain(this IIdentity user)
     {
-        var i = user.Name.IndexOf('\\');
+        var name = user.Name.Guard(nameof(user.Name));
+        var i = name.IndexOf('\\');
 
         return i > -1
-            ? user.Name.Substring(0, i)
+            ? name.Substring(0, i)
             : string.Empty;
     }
 

@@ -4,6 +4,6 @@ namespace FEx.EFCore.Configuration;
 
 public interface IDbServiceConfig
 {
-    IBulkDbConfig BulkDbConfig { get; }
+    IBulkDbConfig? BulkDbConfig { get; }
     IFExDbConfig DbConfig { get; }
 }

@@ -28,7 +28,7 @@ public class FileSystemUtilities
 
     private static readonly bool _isReportingCapable = !Console.IsOutputRedirected;
     private static bool _isReporting;
-    private static ILogger _logger;
+    private static ILogger? _logger;
 
     protected static ILogger Logger => _logger ??= FExServiceProvider.Get<ILogger>();
 
@@ -61,7 +61,11 @@ public class FileSystemUtilities
         var sourceResult = DirectoryPathStringToDirectoryInfo(source);
         var destResult = DirectoryPathStringToDirectoryInfo(dest);
 
-        var errors = sourceResult.Error.Yield().Concat(destResult.Error.Yield()).Where(x => x is not null).ToList();
+        var errors = sourceResult.Error.Yield()
+            .Concat(destResult.Error.Yield())
+            .Where(x => x is not null)
+            .Select(static x => x!) // Where above proved non-null; re-narrow for the AggregatedError ctor.
+            .ToList();
 
         if (errors.Count > 0)
             return new AggregatedError(errors);
@@ -75,7 +79,7 @@ public class FileSystemUtilities
     }
 
     public static Result<AggregatedError> ProcessDirectory(DirectoryInfo sourceInfo,
-                                                           DirectoryInfo dest,
+                                                           DirectoryInfo? dest,
                                                            FileOperation fileOperation,
                                                            bool printPaths = true,
                                                            bool printLog = true,
@@ -88,7 +92,7 @@ public class FileSystemUtilities
             var sourceDirectoriesResult = GetDirectoriesContents(sourceInfo, exclusionPaths);
 
             if (sourceDirectoriesResult.IsFailure)
-                return sourceDirectoriesResult.Error;
+                return sourceDirectoriesResult.Error.Guard(nameof(sourceDirectoriesResult));
 
             var sourceDirectories = sourceDirectoriesResult.Data;
 
@@ -116,7 +120,7 @@ public class FileSystemUtilities
                     Log("Removing files and directories not present in source from destination directory", printLog);
 
                     result = DeleteNotPresentElements(sourceDirectories,
-                        dest,
+                        dest.Guard(nameof(dest)),
                         sourceInfo,
                         printPaths,
                         printLog,
@@ -126,11 +130,11 @@ public class FileSystemUtilities
                 if (fileOperation is FileOperation.Copy or FileOperation.Move or FileOperation.SyncSrcToDest)
                 {
                     Log("Creating destination directories structure", printLog);
-                    CreateMissingDestinationDirectories(dest, sourceInfo, sourceDirectories.Keys);
+                    CreateMissingDestinationDirectories(dest.Guard(nameof(dest)), sourceInfo, sourceDirectories.Keys);
                 }
 
                 Log(
-                    $"Proceeding with {fileOperation.GetEnumValueDescription().ToLower()} operation {sourceInfo.FullName}",
+                    $"Proceeding with {fileOperation.GetEnumValueDescription()?.ToLower()} operation {sourceInfo.FullName}",
                     printLog);
 
                 switch (fileOperation)
@@ -139,14 +143,16 @@ public class FileSystemUtilities
                     {
                         var results = new ConcurrentDictionary<DirectoryInfo, Result<ExceptionError>>();
                         PrgMax = files.Count;
+                        var destForFiles = dest.Guard(nameof(dest));
 
                         Parallel.ForEach(files,
-                            file => ProcessFile(dest, file, sourceInfo, results, fileOperation, printPaths));
+                            file => ProcessFile(destForFiles, file, sourceInfo, results, fileOperation, printPaths));
 
-                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+                        // IsFailure filter proves Error non-null; re-narrow for AggregatedError.
+                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error!).ToList();
 
                         result = errors.Count > 0
-                            ? new AggregatedError(result.Error.InnerErrors.Concat(errors).ToList().AsReadOnly())
+                            ? new AggregatedError((result.Error?.InnerErrors ?? []).Concat(errors).ToList().AsReadOnly())
                             : Result<AggregatedError>.Success;
 
                         break;
@@ -172,7 +178,8 @@ public class FileSystemUtilities
                                 results.AddOrUpdateValue(file, temp);
                             });
 
-                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+                        // IsFailure filter proves Error non-null; re-narrow for AggregatedError.
+                        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error!).ToList();
 
                         result = errors.Count > 0
                             ? new AggregatedError(errors)
@@ -242,7 +249,8 @@ public class FileSystemUtilities
 
                 var dirs = sourcePaths.Select(path => (Path: path, Result: IsPathFile(path)))
                     .Select(tuple => tuple.Result.IsSuccess && tuple.Result.Data
-                        ? new FileInfo(tuple.Path).Directory
+                        // A file path always resolves to a parent directory; fall back to treating the path as a directory.
+                        ? new FileInfo(tuple.Path).Directory ?? new DirectoryInfo(tuple.Path)
                         : new(tuple.Path))
                     .DistinctBy(x => x.FullName)
                     .ToList();
@@ -274,7 +282,7 @@ public class FileSystemUtilities
                                                              ?? throw new InvalidOperationException())))
                         sourceInfo = sourceInfo?.Parent;
 
-                    CreateMissingDestinationDirectories(dest, sourceInfo, sourceDirectories[root]);
+                    CreateMissingDestinationDirectories(dest, sourceInfo.Guard(nameof(sourceInfo)), sourceDirectories[root]);
                 }
             }
         }
@@ -293,7 +301,7 @@ public class FileSystemUtilities
         var sourceResult = DirectoryPathStringToDirectoryInfo(source);
 
         if (sourceResult.IsFailure)
-            return sourceResult.Error.ToAggregatedError();
+            return sourceResult.Error.Guard(nameof(sourceResult)).ToAggregatedError();
 
         return GetDirectoriesContents(sourceResult.Data, exclusionPaths);
     }
@@ -463,8 +471,8 @@ public class FileSystemUtilities
         }
     }
 
-    public static bool DirectoryIsEmpty(string directoryPath) =>
-        !Directory.EnumerateFileSystemEntries(directoryPath).Any();
+    public static bool DirectoryIsEmpty(string? directoryPath) =>
+        !string.IsNullOrEmpty(directoryPath) && !Directory.EnumerateFileSystemEntries(directoryPath).Any();
 
     /// <summary>
     /// Fixes the name of the file.
@@ -497,9 +505,9 @@ public class FileSystemUtilities
     /// <param name="path">The path to file.</param>
     /// <param name="omitBom">if set to <c>true</c> omits BOM.</param>
     /// <returns>Encoding.</returns>
-    public static Encoding GetEncoding(string path, bool omitBom = false)
+    public static Encoding? GetEncoding(string path, bool omitBom = false)
     {
-        Encoding enc = null;
+        Encoding? enc = null;
 
         try
         {
@@ -525,7 +533,7 @@ public class FileSystemUtilities
     /// </summary>
     /// <param name="enc">The encoding.</param>
     /// <returns><see cref="Encoding" />.</returns>
-    public static Encoding OmitBom(Encoding enc) =>
+    public static Encoding? OmitBom(Encoding? enc) =>
         Equals(enc, Encoding.GetEncoding(Convert.ToInt32(new UTF8Encoding().CodePage.ToString())))
             ? new UTF8Encoding(false)
             : enc;
@@ -581,7 +589,7 @@ public class FileSystemUtilities
         var result = DirectoryPathStringToDirectoryInfo(source);
 
         if (result.IsFailure)
-            return result.Error.ToAggregatedError();
+            return result.Error.Guard(nameof(result)).ToAggregatedError();
 
         return ProcessDirectory(result.Data, null, FileOperation.Delete, printPaths, printLog, exclusionPaths);
     }
@@ -617,7 +625,7 @@ public class FileSystemUtilities
         var destDirectoriesResult = GetDirectoriesContents(dest, exclusionPaths);
 
         if (destDirectoriesResult.IsFailure)
-            return destDirectoriesResult.Error;
+            return destDirectoriesResult.Error.Guard(nameof(destDirectoriesResult));
 
         var destDirectories = destDirectoriesResult.Data;
 
@@ -644,7 +652,7 @@ public class FileSystemUtilities
                             exclusionPaths);
 
                         if (directoryResult.IsFailure)
-                            errors.Add(directoryResult.Error);
+                            errors.Add(directoryResult.Error!); // IsFailure proves Error is non-null.
                     }
                     else
                     {
@@ -652,7 +660,7 @@ public class FileSystemUtilities
                             .Where(fileInfo => sourceDirectories[currSrcDir].All(x => x.Name != fileInfo.Name))
                             .Select(fileInfo => SafeDeleteFile(fileInfo))
                             .Where(fileDeleteResult => fileDeleteResult.IsFailure)
-                            .Select(fileDeleteResult => fileDeleteResult.Error));
+                            .Select(fileDeleteResult => fileDeleteResult.Error!)); // IsFailure proves Error is non-null.
                     }
                 }
 
@@ -696,7 +704,8 @@ public class FileSystemUtilities
                     temp = fileOperation switch
                     {
                         FileOperation.Copy => CopyFileAndSetAttributes(destDir, file, printPaths),
-                        FileOperation.Move => MoveFileAndSetAttributes(destDir, file, printPaths).Error,
+                        FileOperation.Move => MoveFileAndSetAttributes(destDir, file, printPaths)
+                            .Error.Guard(nameof(file)),
                         FileOperation.SyncSrcToDest => CopyFileAndSetAttributes(destDir, file, printPaths, true),
                         _ => temp
                     };
@@ -718,7 +727,7 @@ public class FileSystemUtilities
         {
             DirectoryInfo[] destDirectories =
             [
-                .. sourceDirectories.Select(dir => new DirectoryInfo(Path.Combine(dest.GetDirectory().FullName,
+                .. sourceDirectories.Select(dir => new DirectoryInfo(Path.Combine(dest.GetDirectory().Guard(nameof(dest)).FullName,
                         dir.FullName.Replace(sourceInfo.FullName, string.Empty).TrimStart('\\', '/'))))
                     .DistinctBy(x => x.FullName)
             ];
@@ -745,7 +754,7 @@ public class FileSystemUtilities
                 FinishProgress();
 
                 if (result.IsFailure)
-                    return result.Error;
+                    return result.Error.Guard(nameof(result));
             }
         }
         catch (Exception ex)
@@ -800,7 +809,8 @@ public class FileSystemUtilities
                         results.AddOrUpdateValue(dir, temp);
                     });
 
-                var fails = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+                // IsFailure filter proves Error non-null; re-narrow for AggregatedError.
+                var fails = results.Values.Where(x => x.IsFailure).Select(x => x.Error!).ToList();
 
                 if (fails.Count > 0)
                     return new AggregatedError(fails);
@@ -823,7 +833,7 @@ public class FileSystemUtilities
         return $"{perc}% {prgVal}/{prgMax}";
     }
 
-    private static async Task ReportProgressAsync(string msg, Func<string> msgPrefix = null, bool printLog = true)
+    private static async Task ReportProgressAsync(string msg, Func<string>? msgPrefix = null, bool printLog = true)
     {
         if (_isReportingCapable && !_isReporting)
         {
@@ -851,7 +861,7 @@ public class FileSystemUtilities
     private static void Log(string message,
                             bool printLog,
                             LogLevel level = LogLevel.Information,
-                            Exception exception = null)
+                            Exception? exception = null)
     {
         if (printLog && (message.IsNotNullOrEmptyString() || exception is not null))
             Logger.Log(level, exception, message);

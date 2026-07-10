@@ -21,22 +21,22 @@ namespace FEx.Sqlx;
 public class SQLInstanceInfo
 {
     public string SQLInstance { get; }
-    public Version BuildClrVersion { get; protected set; }
-    public string Collation { get; protected set; }
+    public Version? BuildClrVersion { get; protected set; }
+    public string? Collation { get; protected set; }
     public int? CollationID { get; protected set; }
     public int? ComparisonStyle { get; protected set; }
-    public string ComputerNamePhysicalNetBIOS { get; protected set; }
-    public string Edition { get; protected set; }
-    public string EditionID { get; protected set; }
-    public string EngineEdition { get; protected set; }
+    public string? ComputerNamePhysicalNetBIOS { get; protected set; }
+    public string? Edition { get; protected set; }
+    public string? EditionID { get; protected set; }
+    public string? EngineEdition { get; protected set; }
     public FileStreamEffectiveLevel? FilestreamConfiguredLevel { get; protected set; }
     public FileStreamEffectiveLevel? FilestreamEffectiveLevel { get; protected set; }
-    public string FilestreamShareName { get; protected set; }
+    public string? FilestreamShareName { get; protected set; }
     public HadrManagerStatus? HadrManagerStatus { get; protected set; }
-    public string InstanceDefaultBackupPath { get; protected set; }
-    public string InstanceDefaultDataPath { get; protected set; }
-    public string InstanceDefaultLogPath { get; protected set; }
-    public string InstanceName { get; protected set; }
+    public string? InstanceDefaultBackupPath { get; protected set; }
+    public string? InstanceDefaultDataPath { get; protected set; }
+    public string? InstanceDefaultLogPath { get; protected set; }
+    public string? InstanceName { get; protected set; }
     public bool? IsAdvancedAnalyticsInstalled { get; protected set; }
     public bool? IsBigDataCluster { get; protected set; }
     public bool? IsClustered { get; protected set; }
@@ -49,28 +49,28 @@ public class SQLInstanceInfo
     public bool? IsTempDbMetadataMemoryOptimized { get; protected set; }
     public bool? IsXTPSupported { get; protected set; }
     public int? LCID { get; protected set; }
-    public string LicenseType { get; protected set; }
-    public string MachineName { get; protected set; }
-    public string NumLicenses { get; protected set; }
+    public string? LicenseType { get; protected set; }
+    public string? MachineName { get; protected set; }
+    public string? NumLicenses { get; protected set; }
     public int? ProcessID { get; protected set; }
-    public string ProductBuild { get; protected set; }
-    public string ProductBuildType { get; protected set; }
-    public string ProductLevel { get; protected set; }
-    public string ProductMajorVersion { get; protected set; }
-    public string ProductMinorVersion { get; protected set; }
-    public string ProductUpdateLevel { get; protected set; }
-    public string ProductUpdateReference { get; protected set; }
-    public Version ProductVersion { get; protected set; }
+    public string? ProductBuild { get; protected set; }
+    public string? ProductBuildType { get; protected set; }
+    public string? ProductLevel { get; protected set; }
+    public string? ProductMajorVersion { get; protected set; }
+    public string? ProductMinorVersion { get; protected set; }
+    public string? ProductUpdateLevel { get; protected set; }
+    public string? ProductUpdateReference { get; protected set; }
+    public Version? ProductVersion { get; protected set; }
     public DateTime? ResourceLastUpdateDateTime { get; protected set; }
-    public Version ResourceVersion { get; protected set; }
-    public string ServerName { get; protected set; }
+    public Version? ResourceVersion { get; protected set; }
+    public string? ServerName { get; protected set; }
     public short? SqlCharSet { get; protected set; }
-    public string SqlCharSetName { get; protected set; }
+    public string? SqlCharSetName { get; protected set; }
     public short? SqlSortOrder { get; protected set; }
-    public string SqlSortOrderName { get; protected set; }
+    public string? SqlSortOrderName { get; protected set; }
     public ServerLoginMode LoginMode => Server?.LoginMode ?? ServerLoginMode.Unknown;
 
-    protected Server Server { get; set; }
+    protected Server? Server { get; set; }
 
 #if NETFRAMEWORK
     public SQLInstanceInfo(ServerInstance serverInstance, ManagedComputer comp)
@@ -90,7 +90,7 @@ public class SQLInstanceInfo
 
     public async Task<bool> LoadInfoAsync()
     {
-        Dictionary<ServerProp, string> props = null;
+        Dictionary<ServerProp, string?>? props = null;
 
         try
         {
@@ -105,8 +105,8 @@ public class SQLInstanceInfo
             var result = await conn.RunSqlAsync(SqlConnectionExtensions.PropsSQL);
 
             props = result.ToDictionary(
-                x => (ServerProp)Enum.Parse(typeof(ServerProp), Convert.ToString(x["propertyname"])),
-                x => Convert.ToString(x["propertyvalue"]));
+                x => (ServerProp)Enum.Parse(typeof(ServerProp), Convert.ToString(x["propertyname"]).Guard("propertyname")),
+                x => (string?)Convert.ToString(x["propertyvalue"]));
         }
         catch
         {
@@ -130,7 +130,7 @@ public class SQLInstanceInfo
 
     public bool LoadInfo()
     {
-        Dictionary<ServerProp, string> props = null;
+        Dictionary<ServerProp, string?>? props = null;
 
         try
         {
@@ -142,8 +142,8 @@ public class SQLInstanceInfo
             var result = conn.RunSql(SqlConnectionExtensions.PropsSQL);
 
             props = result.ToDictionary(
-                x => (ServerProp)Enum.Parse(typeof(ServerProp), Convert.ToString(x["propertyname"])),
-                x => Convert.ToString(x["propertyvalue"]));
+                x => (ServerProp)Enum.Parse(typeof(ServerProp), Convert.ToString(x["propertyname"]).Guard("propertyname")),
+                x => (string?)Convert.ToString(x["propertyvalue"]));
         }
         catch
         {
@@ -165,10 +165,11 @@ public class SQLInstanceInfo
         return true;
     }
 
-    private static void SafePropertySet<T>(Action<T> propSet, Func<T> valueGet, Func<T> serverValueGet = null)
+    private static void SafePropertySet<T>(Action<T> propSet, Func<T> valueGet, Func<T>? serverValueGet = null)
     {
         var failed = false;
-        T result = default;
+        // Unconstrained generic: default may be null for reference T; guarded by the `result is null` check below.
+        T result = default!;
 
         if (serverValueGet is not null)
             try
@@ -195,17 +196,17 @@ public class SQLInstanceInfo
             }
     }
 
-    private static string GetServerEngineEdition(int? value) =>
+    private static string? GetServerEngineEdition(int? value) =>
         value.HasValue
             ? SqlConnectionExtensions.ServerEngineEditions.ForwardIndex[value.Value]
             : null;
 
-    private static string GetServerEditionID(long? value) =>
+    private static string? GetServerEditionID(long? value) =>
         value.HasValue
             ? SqlConnectionExtensions.ServerEditionIDs.ForwardIndex[value.Value]
             : null;
 
-    private static short? GetShort(IDictionary<ServerProp, string> props, ServerProp sP)
+    private static short? GetShort(IDictionary<ServerProp, string?> props, ServerProp sP)
     {
         var stringValue = props.TryGetKeyValue(sP);
 
@@ -214,7 +215,7 @@ public class SQLInstanceInfo
             : null;
     }
 
-    private static int? GetInt(IDictionary<ServerProp, string> props, ServerProp sP)
+    private static int? GetInt(IDictionary<ServerProp, string?> props, ServerProp sP)
     {
         var stringValue = props.TryGetKeyValue(sP);
 
@@ -223,7 +224,7 @@ public class SQLInstanceInfo
             : null;
     }
 
-    private static long? GetLong(IDictionary<ServerProp, string> props, ServerProp sP)
+    private static long? GetLong(IDictionary<ServerProp, string?> props, ServerProp sP)
     {
         var stringValue = props.TryGetKeyValue(sP);
 
@@ -232,7 +233,7 @@ public class SQLInstanceInfo
             : null;
     }
 
-    private static Version GetVersion(IDictionary<ServerProp, string> props, ServerProp sP)
+    private static Version? GetVersion(IDictionary<ServerProp, string?> props, ServerProp sP)
     {
         var stringValue = props.TryGetKeyValue(sP);
 
@@ -241,7 +242,7 @@ public class SQLInstanceInfo
             : null;
     }
 
-    private static bool? GetBoolFromInt(IDictionary<ServerProp, string> props, ServerProp sP)
+    private static bool? GetBoolFromInt(IDictionary<ServerProp, string?> props, ServerProp sP)
     {
         var intValue = GetInt(props, sP);
 
@@ -250,7 +251,7 @@ public class SQLInstanceInfo
             : null;
     }
 
-    private static DateTime? GetDateTime(IDictionary<ServerProp, string> props, ServerProp sP)
+    private static DateTime? GetDateTime(IDictionary<ServerProp, string?> props, ServerProp sP)
     {
         var stringValue = props.TryGetKeyValue(sP);
 
@@ -259,12 +260,12 @@ public class SQLInstanceInfo
             : null;
     }
 
-    private void ProcessProps(IDictionary<ServerProp, string> props)
+    private void ProcessProps(IDictionary<ServerProp, string?> props)
     {
         try
         {
             SafePropertySet(x => BuildClrVersion = x,
-                () => Version.Parse(props.TryGetKeyValue(ServerProp.BuildClrVersion).TrimStart('v', '.')),
+                () => Version.Parse(props.TryGetKeyValue(ServerProp.BuildClrVersion).Guard(nameof(ServerProp.BuildClrVersion)).TrimStart('v', '.')),
                 () => Server?.BuildClrVersion);
 
             SafePropertySet(x => Collation = x,

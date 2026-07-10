@@ -9,7 +9,7 @@ public class SafeContractResolver : DefaultContractResolver
 {
     private const string BindableObjectName = "BindableObject";
 
-    private static SafeContractResolver _singleton;
+    private static SafeContractResolver? _singleton;
     public static SafeContractResolver Singleton => _singleton ??= new();
 
     private SafeContractResolver()
@@ -26,6 +26,6 @@ public class SafeContractResolver : DefaultContractResolver
         return prop;
     }
 
-    private static bool IsSubclassOfBindableObject(Type type) =>
+    private static bool IsSubclassOfBindableObject(Type? type) =>
         type is not null && (type.Name == BindableObjectName || IsSubclassOfBindableObject(type.BaseType));
 }

@@ -13,7 +13,7 @@ public class FExTimer : NotifyPropertyChanged, IFExTimer
 {
     private bool _isDisposed;
     private bool _isRunning;
-    private IDisposable _timer;
+    private IDisposable? _timer;
 
     /// <summary>
     /// The timer interval

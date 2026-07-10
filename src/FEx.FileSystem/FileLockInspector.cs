@@ -130,15 +130,15 @@ public static class FileLockInspector
                                                    uint nFiles,
                                                    string[] rgsFilenames,
                                                    uint nApplications,
-                                                   [In] RM_UNIQUE_PROCESS[] rgApplications,
+                                                   [In] RM_UNIQUE_PROCESS[]? rgApplications,
                                                    uint nServices,
-                                                   string[] rgsServiceNames);
+                                                   string[]? rgsServiceNames);
 
     [DllImport("rstrtmgr.dll")]
     private static extern int RmGetList(uint dwSessionHandle,
                                         out uint pnProcInfoNeeded,
                                         ref uint pnProcInfo,
-                                        [In] [Out] RM_PROCESS_INFO[] rgAffectedApps,
+                                        [In] [Out] RM_PROCESS_INFO[]? rgAffectedApps,
                                         ref uint lpdwRebootReasons);
 
     // ReSharper disable InconsistentNaming

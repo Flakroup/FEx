@@ -158,6 +158,6 @@ public class FExEnumerationOptions
     // .NET Standard 2.0 / 2.1 do not expose EnumerationOptions. We still provide the method
     // so that multi-targeted source can compile, but the implementation merely returns <c>null</c>.
     // Callers must branch on target framework when using the result.
-    public object ToEnumerationOptions() => null;
+    public object? ToEnumerationOptions() => null;
 #endif
 }

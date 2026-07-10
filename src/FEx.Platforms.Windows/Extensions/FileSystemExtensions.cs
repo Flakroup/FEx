@@ -26,7 +26,7 @@ public static class FileSystemExtensions
         SecurityIdentifier user;
 
         using (var current = WindowsIdentity.GetCurrent())
-            user = current.User;
+            user = current.User.Guard(nameof(WindowsIdentity.User));
 
         return EnsureAccess(dInfo, new(WellKnownSidType.WorldSid, null), user, excludes);
     }
@@ -102,13 +102,13 @@ public static class FileSystemExtensions
             return false;
 
         var wrongOutput = false;
-        ACL[] access = null;
+        ACL?[]? access = null;
 
         var raw = output.IsNotNullOrEmptyString()
             ? output.Split('\n')
-            : null;
+            : [];
 
-        HashSet<string> excluded = null;
+        HashSet<string>? excluded = null;
 
         if (excludes.IsNotNullOrEmptyList())
             try

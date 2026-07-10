@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
@@ -13,8 +14,9 @@ namespace FEx.Platforms;
 [Register(typeof(FExPlatformsModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExPlatformsModule : InitializeModule<IFExPlatformsContainer, IServiceCollection>
 {
-    protected override void RegisterServices(IFExPlatformsContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExPlatformsContainer? container, IServiceCollection services)
     {
+        container = container.Guard(nameof(container));
         services.AddSingletonServiceUsingContainer<IRegistryService>(container);
     }
 }

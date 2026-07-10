@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Common.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions;
@@ -15,8 +16,9 @@ namespace FEx.MVVM.Rx.Legacy;
 [Register(typeof(FExMvvmRxModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExMvvmRxModule : InitializeModule<IFExMvvmRxContainer, IServiceCollection>
 {
-    protected override void RegisterServices(IFExMvvmRxContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExMvvmRxContainer? container, IServiceCollection services)
     {
+        container = container.Guard(nameof(container));
         services.AddSingletonServiceUsingContainer<IStatusService>(container);
     }
 }

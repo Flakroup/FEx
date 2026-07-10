@@ -16,7 +16,7 @@ public class ConcurrentSortableObservableList<T> : ConcurrentObservableList<T> w
     {
     }
 
-    public ConcurrentSortableObservableList(IEnumerable<T> collection)
+    public ConcurrentSortableObservableList(IEnumerable<T>? collection)
         : base(collection)
     {
     }

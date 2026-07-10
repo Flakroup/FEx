@@ -10,10 +10,10 @@ namespace FEx.AppSettings;
 
 public class ConfigurationService : IConfigurationService
 {
-    public IConfigurationRoot Configuration { get; private set; }
-    public Dictionary<string, string> AppSettings { get; private set; }
+    public IConfigurationRoot? Configuration { get; private set; }
+    public Dictionary<string, string>? AppSettings { get; private set; }
 
-    public void Build(IEnumerable<IConfigurationSource> sources)
+    public void Build(IEnumerable<IConfigurationSource>? sources)
     {
         if (Configuration is null)
         {
@@ -24,7 +24,11 @@ public class ConfigurationService : IConfigurationService
                     builder.Add(source);
 
             Configuration = builder.Build();
-            AppSettings = Configuration.GetChildren().ToDictionary(x => x.Key, x => x.Value);
+
+            // Value is non-null here: the Where filters out null-valued children before the projection.
+            AppSettings = Configuration.GetChildren()
+                .Where(x => x.Value is not null)
+                .ToDictionary(x => x.Key, x => x.Value!);
         }
         else
         {
@@ -36,14 +40,18 @@ public class ConfigurationService : IConfigurationService
     {
         EnsureConfiguration();
 
-        return func(AppSettings[key]);
+        var appSettings = AppSettings.Guard(nameof(AppSettings));
+
+        return func(appSettings[key]);
     }
 
     public bool? GetBoolSetting(string key, bool? defaultValue)
     {
         EnsureConfiguration();
 
-        return AppSettings.IsNotNullOrEmptyCollection() && AppSettings.TryGetValue(key, out var setting)
+        var appSettings = AppSettings.Guard(nameof(AppSettings));
+
+        return appSettings.IsNotNullOrEmptyCollection() && appSettings.TryGetValue(key, out var setting)
             ? StringToBool(setting)
             : defaultValue;
     }

@@ -5,16 +5,16 @@ namespace FEx.Platforms.Extensions;
 
 public static class RegistryServiceExtensions
 {
-    public static RegistryKey GetClassesRootSubKey(this IRegistryService service, string subKey) =>
+    public static RegistryKey? GetClassesRootSubKey(this IRegistryService service, string subKey) =>
         service.GetClassesRootSubKey(subKey, true);
 
-    public static RegistryKey GetLocalMachineSubKey(this IRegistryService service, string subKey) =>
+    public static RegistryKey? GetLocalMachineSubKey(this IRegistryService service, string subKey) =>
         service.GetLocalMachineSubKey(subKey, true);
 
-    public static RegistryKey GetCurrentUserSubKey(this IRegistryService service, string subKey) =>
+    public static RegistryKey? GetCurrentUserSubKey(this IRegistryService service, string subKey) =>
         service.GetCurrentUserSubKey(subKey, true);
 
-    public static RegistryKey GetSubKey(this IRegistryService service, RegistryKey registry, string subKey) =>
+    public static RegistryKey? GetSubKey(this IRegistryService service, RegistryKey registry, string subKey) =>
         service.GetSubKey(registry, subKey, true);
 
     public static RegistryKey GetOrAddCurrentUserSubKey(this IRegistryService service, string subKey) =>

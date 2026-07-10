@@ -60,16 +60,16 @@ public static class DbContextExtensions
         dbContext.ValidateAndSaveChangesAsync(null, true, true, null, null, null, null);
 
     public static async Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext,
-                                                                     string id,
+                                                                     string? id,
                                                                      bool validateAllProperties,
                                                                      bool acceptAllChangesOnSuccess,
-                                                                     Action<string, IReadOnlyCollection<EntityEntry>>
+                                                                     Action<string, IReadOnlyCollection<EntityEntry>>?
                                                                          onValidationStart,
-                                                                     Action<string, EntityValidationFail>
+                                                                     Action<string, EntityValidationFail>?
                                                                          onFaultyEntity,
                                                                      Action<string, IReadOnlyCollection<
-                                                                         EntityValidationFail>> onValidationFail,
-                                                                     Action<string, IReadOnlyCollection<EntityEntry>>
+                                                                         EntityValidationFail>>? onValidationFail,
+                                                                     Action<string, IReadOnlyCollection<EntityEntry>>?
                                                                          onValidationSuccess)
         where TDbContext : DbContext
     {
@@ -95,14 +95,14 @@ public static class DbContextExtensions
         dbContext.ValidateChangedEntities(null, true, null, null, null, null);
 
     public static Result<Error> ValidateChangedEntities<TDbContext>(this TDbContext dbContext,
-                                                                    string id,
+                                                                    string? id,
                                                                     bool validateAllProperties,
-                                                                    Action<string, IReadOnlyCollection<EntityEntry>>
+                                                                    Action<string, IReadOnlyCollection<EntityEntry>>?
                                                                         onValidationStart,
-                                                                    Action<string, EntityValidationFail> onFaultyEntity,
+                                                                    Action<string, EntityValidationFail>? onFaultyEntity,
                                                                     Action<string, IReadOnlyCollection<
-                                                                        EntityValidationFail>> onValidationFail,
-                                                                    Action<string, IReadOnlyCollection<EntityEntry>>
+                                                                        EntityValidationFail>>? onValidationFail,
+                                                                    Action<string, IReadOnlyCollection<EntityEntry>>?
                                                                         onValidationSuccess)
         where TDbContext : DbContext
     {
@@ -274,7 +274,7 @@ public static class DbContextExtensions
             CheckTableExistsAndCreateIfMissing(dbContext, entityName);
     }
 
-    private static (string tableName, string properties)
+    private static (string? tableName, string properties)
         GetSerializedPropertiesString<TDbContext, T>(this TDbContext dbContext) where TDbContext : DbContext
     {
         var entityName = typeof(T).FullName;

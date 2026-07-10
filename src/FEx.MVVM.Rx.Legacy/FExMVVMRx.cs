@@ -9,7 +9,8 @@ namespace FEx.MVVM.Rx.Legacy;
 
 public class FExMvvmRx : FExInitializable
 {
-    public static IStatusService StatusService { get; private set; }
+    // Assigned in the constructor from the DI-provided service (guarded non-null); this instance is created during module init before any consumer reads it.
+    public static IStatusService StatusService { get; private set; } = null!;
 
     public FExMvvmRx(IStatusService statusService)
     {

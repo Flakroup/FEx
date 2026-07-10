@@ -11,10 +11,10 @@ namespace FEx.Encryption;
 
 public class SecureNotifyPropertyChanged : NotifyPropertyChanged
 {
-    protected virtual bool IsValid(string propertyName, string decryptedValue) =>
+    protected virtual bool IsValid(string? propertyName, string decryptedValue) =>
         decryptedValue.All(MatchesUnicodeCategory);
 
-    protected string DecryptFromSource(ref string source, [CallerMemberName] string propertyName = null)
+    protected string? DecryptFromSource(ref string? source, [CallerMemberName] string? propertyName = null)
     {
         try
         {
@@ -30,13 +30,13 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
         return null;
     }
 
-    protected T DecryptFromJsonSource<T>(ref string source, [CallerMemberName] string propertyName = null)
+    protected T? DecryptFromJsonSource<T>(ref string? source, [CallerMemberName] string? propertyName = null)
     {
         var json = DecryptFromSource(ref source, propertyName);
 
         try
         {
-            return json.FromJson<T>();
+            return json is null ? default : json.FromJson<T>();
         }
         catch
         {
@@ -77,7 +77,7 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
             _ => false
         };
 
-    private string Sanitize(ref string source, string decryptedValue, string propertyName)
+    private string? Sanitize(ref string? source, string decryptedValue, string? propertyName)
     {
         if (IsValid(propertyName, decryptedValue))
             return decryptedValue;
@@ -88,19 +88,19 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
     }
 
 #pragma warning disable S2360 // CallerMemberName requires optional parameter
-    protected bool EncryptJsonSource<T>(ref string backingField,
+    protected bool EncryptJsonSource<T>(ref string? backingField,
                                         T newValue,
-                                        Action<string> onPropertyChanged = null,
-                                        [CallerMemberName] string propertyName = null) =>
+                                        Action<string?>? onPropertyChanged = null,
+                                        [CallerMemberName] string? propertyName = null) =>
         EncryptSource(ref backingField, newValue?.ToJson(), onPropertyChanged, propertyName);
 
-    protected bool EncryptSource(ref string backingField,
-                                 string newValue,
-                                 Action<string> onPropertyChanged = null,
-                                 [CallerMemberName] string propertyName = null)
+    protected bool EncryptSource(ref string? backingField,
+                                 string? newValue,
+                                 Action<string?>? onPropertyChanged = null,
+                                 [CallerMemberName] string? propertyName = null)
 #pragma warning restore S2360
     {
-        string encrypted = null;
+        string? encrypted = null;
 
         if (newValue is not null)
         {

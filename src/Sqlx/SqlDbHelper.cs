@@ -23,9 +23,9 @@ namespace FEx.Sqlx;
 
 public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
 {
-    public SQLInstanceInfo SQLInstanceInfo { get; private set; }
+    public SQLInstanceInfo? SQLInstanceInfo { get; private set; }
 
-    public string SQLInstance => SQLInstanceInfo?.SQLInstance;
+    public string? SQLInstance => SQLInstanceInfo?.SQLInstance;
 
     public SqlDbHelper()
     {
@@ -64,7 +64,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
         }
     }
 
-    private static async Task<SQLInstanceInfo> GetSQLInstanceInfoAsync(SQLInstanceInfo instance)
+    private static async Task<SQLInstanceInfo?> GetSQLInstanceInfoAsync(SQLInstanceInfo instance)
     {
         try
         {
@@ -95,7 +95,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
                 .Select(x => new SQLInstanceInfo(x))
                 .ToList();
 
-            return [.. (await serverInstances.WithWhenAllTasksAsync(GetSQLInstanceInfoAsync)).Where(x => x is not null)];
+            return [.. (await serverInstances.WithWhenAllTasksAsync(GetSQLInstanceInfoAsync)).OfType<SQLInstanceInfo>()];
         }
         catch (Exception ex)
         {
@@ -185,7 +185,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
         return namespaces;
     }
 
-    private static string ServiceNameToInstanceName(string machineName, string serviceName)
+    private static string? ServiceNameToInstanceName(string machineName, string? serviceName)
     {
         if (!serviceName.IsNotNullOrEmptyString())
             return null;
@@ -218,7 +218,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
                 .Select(serverInstance => new SQLInstanceInfo(serverInstance, comp))
                 .ToList();
 
-            return [.. (await serverInstances.WithWhenAllTasksAsync(GetSQLInstanceInfoAsync)).Where(x => x is not null)];
+            return [.. (await serverInstances.WithWhenAllTasksAsync(GetSQLInstanceInfoAsync)).OfType<SQLInstanceInfo>()];
         }
         catch (Exception ex)
         {
@@ -232,7 +232,8 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
 
     private static string GetSqlInstanceName(DataRow row)
     {
-        var serverName = Convert.ToString(row["ServerName"]);
+        // ServerName is a non-nullable column of the SqlDataSourceEnumerator schema; Guard throws if absent.
+        var serverName = Convert.ToString(row["ServerName"]).Guard("ServerName");
         var instanceName = Convert.ToString(row["InstanceName"]);
 
         return instanceName.IsNotNullOrEmptyString()
@@ -240,10 +241,10 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
             : serverName;
     }
 
-    private static async Task<SQLInstanceInfo> GetLatestSqlInstanceAsync()
+    private static async Task<SQLInstanceInfo?> GetLatestSqlInstanceAsync()
     {
         var sqlInstances = await GetSqlInstancesAsync();
-        SQLInstanceInfo sqlInstance = null;
+        SQLInstanceInfo? sqlInstance = null;
 
         if (sqlInstances?.Count > 0)
             sqlInstance =

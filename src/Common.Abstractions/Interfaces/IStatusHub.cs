@@ -16,7 +16,7 @@ public interface IStatusHub
 
     void CleanStatuses();
     IList<string> GetStatuses();
-    string GetStatusString(string separator = null);
+    string GetStatusString(string? separator = null);
     void RemoveStatus(Guid key);
     DisposableAction Log(string status, bool unique = true);
 }

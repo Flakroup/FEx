@@ -7,7 +7,7 @@ namespace FEx.Telemetry.Sentry;
 
 public class FExSentryx : InitializeModule<IFExSentryModule, IServiceCollection>
 {
-    private static ISentryService _sentrySrv;
+    private static ISentryService? _sentrySrv;
 
     public static ISentryService SentrySrv
     {
@@ -20,6 +20,9 @@ public class FExSentryx : InitializeModule<IFExSentryModule, IServiceCollection>
         SentrySrv = sentrySrv;
     }
 
-    protected override void RegisterServices(IFExSentryModule container, IServiceCollection services) =>
+    protected override void RegisterServices(IFExSentryModule? container, IServiceCollection services)
+    {
+        container = container.Guard(nameof(container));
         FExSentryModule.AddServices(container, services);
+    }
 }

@@ -10,7 +10,8 @@ namespace FEx.Telemetry;
 
 public abstract class FExTelemetryConfigBase : NotifyPropertyChanged, IFExTelemetryConfig
 {
-    private string _accessToken;
+    // Init-before-use: AccessToken setter Guards non-null; a valid config must assign it before AccessToken is read.
+    private string _accessToken = null!;
 
     public string AccessToken
     {
@@ -19,8 +20,8 @@ public abstract class FExTelemetryConfigBase : NotifyPropertyChanged, IFExTeleme
     }
 
     public string AppEnvironment => GetAppEnvironment();
-    public Func<string> PersonEmail { get; set; }
-    public Func<string> PersonUserName { get; set; }
+    public Func<string>? PersonEmail { get; set; }
+    public Func<string>? PersonUserName { get; set; }
     public bool AddPersonToEnvironment { get; set; }
 
     protected string EnvironmentParam { get; }

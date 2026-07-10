@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.MVVM.Rx.Abstractions.Interfaces;
 using System;
@@ -89,7 +90,7 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
 
     public static IDisposableProgress<T> CreateForUiWithBuffer(TimeSpan sampleTimeSpan,
                                                                Action<IList<T>> handler,
-                                                               Func<IList<T>, bool> predicate,
+                                                               Func<IList<T>, bool>? predicate,
                                                                bool limitToCurrentThread) =>
         Create(handler, p => p.Buffer(sampleTimeSpan).Where(x => predicate?.Invoke(x) ?? true), limitToCurrentThread);
 
@@ -123,7 +124,7 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
 
     public static IDisposableProgress<T> CreateForUiWithSample(TimeSpan sampleTimeSpan,
                                                                Action<T> handler,
-                                                               IScheduler scheduler,
+                                                               IScheduler? scheduler,
                                                                bool limitToCurrentThread) =>
         Create(handler, p => p.Sample(sampleTimeSpan, scheduler ?? DefaultScheduler.Instance), limitToCurrentThread);
 
@@ -148,7 +149,7 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
         if (limitToCurrentThread)
         {
             var uiScheduler = SynchronizationContextExtensions.Get();
-            observable = observable.ObserveOn(uiScheduler);
+            observable = observable.ObserveOn(uiScheduler.Guard(nameof(uiScheduler)));
         }
 
         return observable.Subscribe(handler);

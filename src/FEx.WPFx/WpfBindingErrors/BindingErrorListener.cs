@@ -19,7 +19,7 @@ public sealed class BindingErrorListener : IDisposable
     /// <summary>
     /// Event raised each time a WPF binding error occurs
     /// </summary>
-    public event Action<TraceEventCache, string, TraceEventType, string> ErrorCatched
+    public event Action<TraceEventCache, string, TraceEventType, string?> ErrorCatched
     {
         add => _traceListener.TraceCatched += value;
         remove => _traceListener.TraceCatched -= value;

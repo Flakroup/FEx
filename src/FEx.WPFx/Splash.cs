@@ -19,7 +19,7 @@ public class Splash : FExInitializable, IFExPriorityInitialize
     private readonly IAsyncHelper _asyncHelper;
     private readonly IStatusService _statusService;
 
-    public Task SplashTask { get; private set; }
+    public Task? SplashTask { get; private set; }
 
     /// <inheritdoc />
     public int Priority { get; }

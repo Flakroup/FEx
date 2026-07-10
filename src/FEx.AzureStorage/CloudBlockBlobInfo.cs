@@ -4,6 +4,7 @@ using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,8 +14,8 @@ namespace FEx.AzureStorage;
 public class CloudBlockBlobInfo
 {
     public CloudBlockBlob Blob { get; }
-    public Uri Uri { get; protected set; }
-    public string Checksum { get; protected set; }
+    public Uri? Uri { get; protected set; }
+    public string? Checksum { get; protected set; }
     public string Name { get; protected set; }
     public string Extension { get; protected set; }
     public bool Exists { get; protected set; }
@@ -44,13 +45,13 @@ public class CloudBlockBlobInfo
 
     public static implicit operator CloudBlockBlobInfo(CloudBlockBlob blob) => new(blob);
 
-    public string GetMetadata(string key) => Metadata.TryGetKeyValue(key);
+    public string GetMetadata(string key) => Metadata.TryGetKeyValue<string, string>(key);
 
     public Task<bool> EnsureExistsAsync() => EnsureExistsAsync(false, null, null, CancellationToken.None);
 
     public async Task<bool> EnsureExistsAsync(bool primaryOnly,
-                                              BlobRequestOptions options,
-                                              OperationContext operationContext,
+                                              BlobRequestOptions? options,
+                                              OperationContext? operationContext,
                                               CancellationToken cancellationToken)
     {
         if (cancellationToken == CancellationToken.None)
@@ -73,9 +74,9 @@ public class CloudBlockBlobInfo
     /// <param name="options">The options.</param>
     /// <param name="operationContext">The operation context.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    public async Task FetchAttributesAsync(AccessCondition accessCondition,
-                                           BlobRequestOptions options,
-                                           OperationContext operationContext,
+    public async Task FetchAttributesAsync(AccessCondition? accessCondition,
+                                           BlobRequestOptions? options,
+                                           OperationContext? operationContext,
                                            CancellationToken cancellationToken)
     {
         if (cancellationToken == CancellationToken.None)
@@ -88,6 +89,7 @@ public class CloudBlockBlobInfo
         }
     }
 
+    [MemberNotNull(nameof(Name), nameof(Extension))]
     protected void EnsureMetadata()
     {
         Uri = Blob.GetBlobUri();

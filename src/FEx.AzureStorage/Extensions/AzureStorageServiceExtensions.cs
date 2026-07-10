@@ -10,7 +10,7 @@ public static class AzureStorageServiceExtensions
 {
     public static void Configure(this IAzureStorageService service, string connStr) => service.Configure(connStr, 8);
 
-    public static Task<(CloudBlockBlob blob, bool isSuccess)> CopyBlobAsync(
+    public static Task<(CloudBlockBlob? blob, bool isSuccess)> CopyBlobAsync(
         this IAzureStorageService service,
         string containerName,
         string srcBlob,

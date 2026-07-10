@@ -6,8 +6,8 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 internal abstract class VirtualizingPanelModelBase
 {
-    public event EventHandler<EventArgs> ScrollInfoInvalidated;
-    public event EventHandler<EventArgs> MeasureInvalidated;
+    public event EventHandler<EventArgs>? ScrollInfoInvalidated;
+    public event EventHandler<EventArgs>? MeasureInvalidated;
     public Size Extent { get; protected set; } = new(0, 0);
     public Size ViewportSize { get; protected set; } = new(0, 0);
     public Point ScrollOffset { get; protected set; } = new(0, 0);

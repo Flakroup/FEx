@@ -32,15 +32,15 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
     public long From { get; private set; }
     public long To { get; private set; }
     public string FilePath { get; }
-    public IProgress<bool> ConnPrg { get; }
+    public IProgress<bool>? ConnPrg { get; }
     public long DataLength { get; }
     public DirectoryInfo Dir { get; }
     public DownloadState DState { get; set; }
-    public WebRequestParams Pars { get; }
+    public WebRequestParams? Pars { get; }
     public Uri Url { get; }
     public Dictionary<int, DownloadChunk> Chunks { get; }
-    public string RangeHeader { get; private set; }
-    public ContentRangeHeaderValue RangeHeaderValue { get; private set; }
+    public string? RangeHeader { get; private set; }
+    public ContentRangeHeaderValue? RangeHeaderValue { get; private set; }
     public string DirPath => Dir.FullName;
 
     public long Size
@@ -64,7 +64,7 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
                          long to,
                          DirectoryInfo directory,
                          Uri url,
-                         WebRequestParams pars,
+                         WebRequestParams? pars,
                          long maxChunkSize,
                          string filePath,
                          long dataLength)
@@ -76,12 +76,12 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
                          long to,
                          DirectoryInfo directory,
                          Uri url,
-                         WebRequestParams pars,
+                         WebRequestParams? pars,
                          long maxChunkSize,
                          string filePath,
                          long dataLength,
-                         IProgress<double> progress,
-                         IProgress<bool> connPrg,
+                         IProgress<double>? progress,
+                         IProgress<bool>? connPrg,
                          CancellationToken token)
     {
         From = from;
@@ -327,23 +327,25 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
     private void OpenedConnection() => IsConnected = true;
 
     #region IComparable
-    public override bool Equals(object obj) => Equals(obj as IDownloadBase);
+    public override bool Equals(object? obj) => Equals(obj as IDownloadBase);
 
-    public bool Equals(IDownloadBase other) => other is not null && FilePath == other.FilePath && Url == other.Url;
+    public bool Equals(IDownloadBase? other) => other is not null && FilePath == other.FilePath && Url == other.Url;
 
     public override int GetHashCode() =>
         BitConverter.ToInt32(Encoding.UTF8.GetBytes($"{FilePath}@{Url.AbsoluteUri}"), 0);
 
     public void Dispose() => Chunks?.Values.ForEachInEnumerable(x => x?.Dispose());
 
-    public int CompareTo(object obj) =>
+    public int CompareTo(object? obj) =>
         Equals(obj)
             ? 0
-            : GetHashCode().CompareTo(obj.GetHashCode());
+            // Non-equal branch: obj is effectively non-null at all call sites (preserves prior behavior).
+            : GetHashCode().CompareTo(obj!.GetHashCode());
 
-    public int CompareTo(IDownloadBase other) =>
+    public int CompareTo(IDownloadBase? other) =>
         Equals(other)
             ? 0
-            : GetHashCode().CompareTo(other.GetHashCode());
+            // Non-equal branch: other is effectively non-null at all call sites (preserves prior behavior).
+            : GetHashCode().CompareTo(other!.GetHashCode());
     #endregion
 }

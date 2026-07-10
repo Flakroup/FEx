@@ -41,9 +41,9 @@ namespace FEx.AzureDevOpsx;
 public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
 {
     private bool _isChecked;
-    private ConcurrentObservableList<Workspace> _workspaces;
+    private ConcurrentObservableList<Workspace> _workspaces = [];
     private bool _isEnabled;
-    private ConcurrentObservableList<ShelvesetContent> _shelvesets;
+    private ConcurrentObservableList<ShelvesetContent> _shelvesets = [];
     private bool _isIdle;
 
     public bool IsChecked
@@ -151,11 +151,12 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
     /// <summary>
     /// Initializes new <see cref="ProjectsCollection" /> class instance.
     /// </summary>
-    public ProjectsCollection(CatalogNode collectionNode, TfsEnvironment environment, string collectionNameForRequests)
+    public ProjectsCollection(CatalogNode collectionNode, TfsEnvironment environment, string? collectionNameForRequests)
     {
         TfsEnvironment = environment;
         CollectionNode = collectionNode;
-        TfsTeamProjectCollection = CollectionNode.GetTeamProjectCollection(environment.Server);
+        var environmentServer = environment.Server.Guard(nameof(environment.Server));
+        TfsTeamProjectCollection = CollectionNode.GetTeamProjectCollection(environmentServer);
         Identifier = CollectionNode.Resource.Identifier;
         Description = CollectionNode.Resource.Description;
         Name = CollectionNode.Resource.DisplayName;
@@ -166,7 +167,7 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
         Workspaces = [];
         Projects = [];
         IsIdle = true;
-        Connection = new(Url, environment.Server.ClientCredentials);
+        Connection = new(Url, environmentServer.ClientCredentials);
     }
 
     /// <summary>
@@ -179,7 +180,7 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
         var raw = await GetRawTfsCollectionProjectsAsync(ProjectState.All, 1);
 
         if (raw.IsNotNullOrEmptyString()
-            && JObject.Parse(raw)["count"].Value<int>() > 0)
+            && (JObject.Parse(raw)["count"]?.Value<int>() ?? 0) > 0)
             await Task.WhenAll(RefreshTfsCollectionProjectsAsync(), Task.Run(() => GetWorkspace()));
 
         IsEnabled = Projects.IsNotNullOrEmptyList();
@@ -193,7 +194,7 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
     /// <returns>
     /// <see cref="IList{Project}" /> containing requested information.
     /// </returns>
-    public async Task RefreshTfsCollectionProjectsAsync(IProgress<string> prg = null)
+    public async Task RefreshTfsCollectionProjectsAsync(IProgress<string>? prg = null)
     {
         var unsetIdle = IsIdle;
         IsIdle = false;
@@ -202,13 +203,14 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
 
         if (jsonStr != null)
         {
-            var projects = JObject.Parse(jsonStr)["value"].DeserializeToken<List<Project>>();
+            var valueToken = JObject.Parse(jsonStr)["value"].Guard("value");
+            var projects = valueToken.DeserializeToken<List<Project>>().Guard("projects");
 
             var tasks = projects.Select((_, i) => i)
-                .Select(idx => GetTfsCollectionProjectAsync(projects[idx].Id, true, prg))
+                .Select(idx => GetTfsCollectionProjectAsync(projects[idx].Id.Guard("project id"), true, prg))
                 .ToList();
 
-            Projects.AddRange((await Task.WhenAll(tasks)).Where(x => x != null));
+            Projects.AddRange((await Task.WhenAll(tasks)).OfType<Project>());
         }
 
         if (unsetIdle)
@@ -226,17 +228,22 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
     {
         viewModel?.IfNotNull(v => v.SetStatusInfo("Downloading Shelveset"));
         var jsonStr = await GetRequestResultAsync($"tfvc/shelvesets/{id}?maxChangeCount={int.MaxValue}");
-        var slv = JsonConvert.DeserializeObject<ShelvesetContent>(jsonStr);
-        viewModel?.PrgSetMax(slv.Changes.Count);
+        var slv = JsonConvert.DeserializeObject<ShelvesetContent>(jsonStr.Guard(nameof(jsonStr))).Guard("shelveset");
+        var changes = slv.Changes.Guard(nameof(slv.Changes));
+        viewModel?.PrgSetMax(changes.Count);
         viewModel?.IfNotNull(v => v.SetUnit("Changes"));
 
-        var changesSeq = slv.Changes.Select(change =>
-            DownloadFileFromUrlAsync(rootDirectory,
-                    change.Item.Url,
-                    change.Item.Path.Replace("$/", $"{rootDirectory}/").Replace("/", "\\"),
-                    TfsTeamProjectCollection.ConfigurationServer.Credentials,
-                    viewModel)
-                .ContinueWith(_ => viewModel?.PrgAdd(), TaskScheduler.Default));
+        var changesSeq = changes.Select(change =>
+            {
+                var item = change.Item.Guard(nameof(change.Item));
+
+                return DownloadFileFromUrlAsync(rootDirectory,
+                        item.Url.Guard(nameof(item.Url)),
+                        item.Path.Guard(nameof(item.Path)).Replace("$/", $"{rootDirectory}/").Replace("/", "\\"),
+                        TfsTeamProjectCollection.ConfigurationServer.Credentials,
+                        viewModel)
+                    .ContinueWith(_ => viewModel?.PrgAdd(), TaskScheduler.Default);
+            });
 
         await Task.WhenAll(changesSeq.ToArray());
         viewModel?.IfNotNull(v => v.SetUnit(string.Empty));
@@ -259,28 +266,28 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
     /// <returns>
     /// <see cref="string" /> with requested data.
     /// </returns>
-    internal Task<string> GetRequestResultAsync(string requestUrl,
+    internal Task<string?> GetRequestResultAsync(string requestUrl,
                                                 bool resultAsJson = true,
-                                                List<HttpStatusCode> omitCodes = null,
+                                                List<HttpStatusCode>? omitCodes = null,
                                                 string afterCollectionName = "",
-                                                List<Cookie> cookies = null) =>
+                                                List<Cookie>? cookies = null) =>
         WebServices.GetRequestResultAsync($"{Url}{afterCollectionName}_apis/{requestUrl}",
             TfsTeamProjectCollection.ConfigurationServer.Credentials,
             resultAsJson,
             omitCodes,
             cookies);
 
-    internal Task<TResponse> RunProcAsync<TResponse>(string scriptPath,
-                                                     IDictionary<string, object> args = null,
-                                                     JsonSerializerSettings settings = null,
-                                                     IList<HttpStatusCode> omitCodes = null,
+    internal Task<TResponse?> RunProcAsync<TResponse>(string scriptPath,
+                                                     IDictionary<string, object>? args = null,
+                                                     JsonSerializerSettings? settings = null,
+                                                     IList<HttpStatusCode>? omitCodes = null,
                                                      RequestMethod method = RequestMethod.GET)
         where TResponse : BaseTfsResponse, new() =>
         TfsEnvironment.RunProcAsync<TResponse>(BaseApiUri + scriptPath, args, settings, omitCodes, method);
 
-    internal Task<string> RunProcAsync(string scriptPath,
-                                       IDictionary<string, object> args = null,
-                                       IList<HttpStatusCode> omitCodes = null,
+    internal Task<string?> RunProcAsync(string scriptPath,
+                                       IDictionary<string, object>? args = null,
+                                       IList<HttpStatusCode>? omitCodes = null,
                                        RequestMethod method = RequestMethod.GET) =>
         TfsEnvironment.RunRawAsync(BaseApiUri + scriptPath, args, omitCodes, method);
 
@@ -294,8 +301,8 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
     /// <returns></returns>
     internal async Task<bool> PostRequestResultAsync(string requestUrl,
                                                      string postContent,
-                                                     List<HttpStatusCode> omitCodes = null,
-                                                     List<Cookie> cookies = null) =>
+                                                     List<HttpStatusCode>? omitCodes = null,
+                                                     List<Cookie>? cookies = null) =>
         (await WebServices.PostRequestResultAsync($"{BaseApiUri}/{requestUrl}",
             postContent,
             TfsTeamProjectCollection.ConfigurationServer.Credentials,
@@ -312,8 +319,8 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
     /// <returns></returns>
     internal async Task<ResponseResult> PatchRequestResultAsync(string requestUrl,
                                                                 string patchContent,
-                                                                List<HttpStatusCode> omitCodes = null,
-                                                                List<Cookie> cookies = null)
+                                                                List<HttpStatusCode>? omitCodes = null,
+                                                                List<Cookie>? cookies = null)
     {
         requestUrl = $"{BaseApiUri}/{requestUrl}";
         requestUrl = Uri.EscapeUriString(requestUrl);
@@ -345,13 +352,13 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
                                                  Uri url,
                                                  string serverPath,
                                                  ICredentials credentials,
-                                                 IProgressAggregator viewModel)
+                                                 IProgressAggregator? viewModel)
     {
         using var fwc = new FlakWebClient(new()
         {
             Credentials = credentials
         },
-            (_, e) => viewModel.SetCurrentDownloadState(e));
+            (_, e) => viewModel?.SetCurrentDownloadState(e));
 
         var localPath = serverPath.Replace("$/", $"{rootDirectory}/").Replace("/", "\\");
         var dirPath = Path.GetDirectoryName(localPath);
@@ -368,7 +375,7 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
     /// <summary>
     /// Gets the workspace.
     /// </summary>
-    private void GetWorkspace(string workspaceName = null, string userName = null, string compName = null)
+    private void GetWorkspace(string? workspaceName = null, string? userName = null, string? compName = null)
     {
         try
         {
@@ -402,7 +409,7 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
     /// <returns>
     /// JSON <see cref="string" /> with requested information.
     /// </returns>
-    private Task<string> GetRawTfsCollectionProjectsAsync(ProjectState filter = ProjectState.All,
+    private Task<string?> GetRawTfsCollectionProjectsAsync(ProjectState filter = ProjectState.All,
                                                           int top = int.MaxValue)
     {
         var requestString = $"projects?stateFilter={filter}&$top={top}";
@@ -420,13 +427,15 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
             },
             ShelvesetResponse.Settings);
 
-        foreach (var shelveset in response.Value)
+        var value = response.Guard(nameof(response)).Value.Guard(nameof(response.Value));
+
+        foreach (var shelveset in value)
         {
             shelveset.EnvironmentId = TfsEnvironment.EnvironmentId;
-            shelveset.Owner.EnvironmentId = TfsEnvironment.EnvironmentId;
+            shelveset.Owner.Guard(nameof(shelveset.Owner)).EnvironmentId = TfsEnvironment.EnvironmentId;
         }
 
-        return response.Value;
+        return value;
     }
 
     /// <summary>
@@ -436,11 +445,11 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
     /// <param name="includeCapabilities">If true (which is default) capabilities (such as source control) will be included.</param>
     /// <param name="prg">The PRG.</param>
     /// <returns></returns>
-    private async Task<Project> GetTfsCollectionProjectAsync(string projectIdOrName,
+    private async Task<Project?> GetTfsCollectionProjectAsync(string projectIdOrName,
                                                              bool includeCapabilities = true,
-                                                             IProgress<string> prg = null)
+                                                             IProgress<string>? prg = null)
     {
-        Project project = null;
+        Project? project = null;
         var requestString = $"projects/{projectIdOrName}";
 
         if (includeCapabilities)
@@ -451,8 +460,12 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
         if (jsonStr != null)
         {
             project = JsonConvert.DeserializeObject<Project>(jsonStr);
-            project.Collection = this;
-            await project.RefreshAsync();
+
+            if (project != null)
+            {
+                project.Collection = this;
+                await project.RefreshAsync();
+            }
         }
 
         prg?.Report(projectIdOrName);

@@ -25,23 +25,25 @@ namespace FEx.AzureDevOpsx;
 public class Project : NotifyPropertyChanged
 {
     private bool _isWorkspacePresent;
-    private List<Workspace> _projectWorkspaces;
-    private Uri _defaultTeamUrl;
-    private string _defaultTeamId;
-    private string _defaultTeamName;
-    private Uri _webUrl;
-    private string _id;
-    private string _name;
-    private string _description;
-    private Uri _apiUrl;
-    private string _stateString;
+    private List<Workspace>? _projectWorkspaces;
+    private Uri? _defaultTeamUrl;
+    private string? _defaultTeamId;
+    private string? _defaultTeamName;
+    private Uri? _webUrl;
+    private string? _id;
+    private string? _name;
+    private string? _description;
+    private Uri? _apiUrl;
+    private string? _stateString;
     private ProjectState _state;
-    private string _sourceControlTypeString;
+    private string? _sourceControlTypeString;
     private SourceControlTypes _sourceControlType;
-    private string _processTemplateName;
-    private ProjectsCollection _collection;
-    private Uri _codeSite;
-    private string _idOfRepo;
+    private string? _processTemplateName;
+
+    // Assigned by the owning ProjectsCollection immediately after construction/deserialization; never read before.
+    private ProjectsCollection _collection = null!;
+    private Uri? _codeSite;
+    private string? _idOfRepo;
 
     /// <summary>
     /// Gets a value indicating whether this instance is workspace present.
@@ -55,7 +57,7 @@ public class Project : NotifyPropertyChanged
         private set => SetProperty(ref _isWorkspacePresent, value);
     }
 
-    public List<Workspace> ProjectWorkspaces
+    public List<Workspace>? ProjectWorkspaces
     {
         get => _projectWorkspaces;
         set => SetProperty(ref _projectWorkspaces, value);
@@ -64,7 +66,7 @@ public class Project : NotifyPropertyChanged
     /// <summary>
     /// URL of project default team.
     /// </summary>
-    public Uri DefaultTeamUrl
+    public Uri? DefaultTeamUrl
     {
         get => _defaultTeamUrl;
         private set => SetProperty(ref _defaultTeamUrl, value);
@@ -76,7 +78,7 @@ public class Project : NotifyPropertyChanged
     /// ID of project default team.
     /// </summary>
     [JsonProperty("defaultTeam.id")]
-    public string DefaultTeamId
+    public string? DefaultTeamId
     {
         get => _defaultTeamId;
         set => SetProperty(ref _defaultTeamId, value);
@@ -86,7 +88,7 @@ public class Project : NotifyPropertyChanged
     /// Name  of project default team.
     /// </summary>
     [JsonProperty("defaultTeam.name")]
-    public string DefaultTeamName
+    public string? DefaultTeamName
     {
         get => _defaultTeamName;
         set => SetProperty(ref _defaultTeamName, value);
@@ -96,7 +98,7 @@ public class Project : NotifyPropertyChanged
     /// URL of project dashboard site.
     /// </summary>
     [JsonProperty("_links.web.href")]
-    public Uri WebUrl
+    public Uri? WebUrl
     {
         get => _webUrl;
         set => SetProperty(ref _webUrl, value);
@@ -106,7 +108,7 @@ public class Project : NotifyPropertyChanged
     /// ID (<see cref="Guid" />) of the project.
     /// </summary>
     [JsonProperty("id")]
-    public string Id
+    public string? Id
     {
         get => _id;
         set => SetProperty(ref _id, value);
@@ -116,7 +118,7 @@ public class Project : NotifyPropertyChanged
     /// Name of the project.
     /// </summary>
     [JsonProperty("name")]
-    public string Name
+    public string? Name
     {
         get => _name;
         set => SetProperty(ref _name, value);
@@ -126,7 +128,7 @@ public class Project : NotifyPropertyChanged
     /// Description of the project.
     /// </summary>
     [JsonProperty("description")]
-    public string Description
+    public string? Description
     {
         get => _description;
         set => SetProperty(ref _description, value);
@@ -136,7 +138,7 @@ public class Project : NotifyPropertyChanged
     /// Base TFS REST API URL of the project.
     /// </summary>
     [JsonProperty("url")]
-    public Uri ApiUrl
+    public Uri? ApiUrl
     {
         get => _apiUrl;
         set => SetProperty(ref _apiUrl, value);
@@ -146,7 +148,7 @@ public class Project : NotifyPropertyChanged
     /// State of the project.
     /// </summary>
     [JsonProperty("state")]
-    public string StateString
+    public string? StateString
     {
         get => _stateString;
         set => SetProperty(ref _stateString, value);
@@ -165,7 +167,7 @@ public class Project : NotifyPropertyChanged
     /// Source control type of the project.
     /// </summary>
     [JsonProperty("capabilities.versioncontrol.sourceControlType")]
-    public string SourceControlTypeString
+    public string? SourceControlTypeString
     {
         get => _sourceControlTypeString;
         set => SetProperty(ref _sourceControlTypeString, value);
@@ -184,7 +186,7 @@ public class Project : NotifyPropertyChanged
     /// Process template name of the project.
     /// </summary>
     [JsonProperty("capabilities.processTemplate.templateName")]
-    public string ProcessTemplateName
+    public string? ProcessTemplateName
     {
         get => _processTemplateName;
         set => SetProperty(ref _processTemplateName, value);
@@ -206,12 +208,12 @@ public class Project : NotifyPropertyChanged
     /// <summary>
     /// Collection name of the project.
     /// </summary>
-    public string CollectionName => Collection.Name;
+    public string? CollectionName => Collection.Name;
 
     /// <summary>
     /// URL of project code explorer site.
     /// </summary>
-    public Uri CodeSite
+    public Uri? CodeSite
     {
         get => _codeSite;
         private set => SetProperty(ref _codeSite, value);
@@ -220,7 +222,7 @@ public class Project : NotifyPropertyChanged
     /// <summary>
     /// ID of Git project repository.
     /// </summary>
-    public string IdOfRepo
+    public string? IdOfRepo
     {
         get => _idOfRepo;
         private set => SetProperty(ref _idOfRepo, value);
@@ -236,18 +238,19 @@ public class Project : NotifyPropertyChanged
     public async Task RefreshAsync()
     {
         SourceControlType = TfsExtensions.SourceControlTypes
-            .FirstOrDefault(x => x.Value.IsEqual(SourceControlTypeString))
+            .FirstOrDefault(x => x.Value.IsEqual(SourceControlTypeString ?? string.Empty))
             .Key;
 
         DefaultTeamUrl = WebUrl != null && DefaultTeamName != null
             ? new Uri(Uri.EscapeUriString($"{WebUrl}/{DefaultTeamName}/_admin?_a=members"))
             : null;
 
-        State = TfsExtensions.ProjectStates.FirstOrDefault(x => x.Value.IsEqual(StateString)).Key;
+        State = TfsExtensions.ProjectStates.FirstOrDefault(x => x.Value.IsEqual(StateString ?? string.Empty)).Key;
         CodeSite = GetProjectCodeSiteUrl();
         IdOfRepo = await GitGetRepoIdAsync();
-        ProjectWorkspaces = this.GetProjectWorkspaces();
-        IsWorkspacePresent = ProjectWorkspaces.Count > 0;
+        var workspaces = this.GetProjectWorkspaces();
+        ProjectWorkspaces = workspaces;
+        IsWorkspacePresent = workspaces.Count > 0;
     }
 
     /// <summary>
@@ -255,12 +258,12 @@ public class Project : NotifyPropertyChanged
     /// </summary>
     /// <param name="serverItem">The server item.</param>
     /// <returns>Uri.</returns>
-    public async Task<Uri> GetFileHyperlinkAsync(string serverItem)
+    public async Task<Uri?> GetFileHyperlinkAsync(string serverItem)
     {
         var file = await GetFileContentAsync(serverItem);
 
         return file.IsNotNullOrEmptyString()
-            ? new($"{CodeSite.AbsoluteUri}?path={HttpUtility.UrlEncode(VerifyFilePath(serverItem))}&_a=contents")
+            ? new($"{CodeSite?.AbsoluteUri}?path={HttpUtility.UrlEncode(VerifyFilePath(serverItem))}&_a=contents")
             : CodeSite;
     }
 
@@ -269,7 +272,7 @@ public class Project : NotifyPropertyChanged
     /// </summary>
     /// <param name="serverItem"></param>
     /// <returns></returns>
-    public async Task<string> GetFileContentAsync(string serverItem)
+    public async Task<string?> GetFileContentAsync(string serverItem)
     {
         if (SourceControlType == SourceControlTypes.Git)
             return await GitGetFileContentAsync(serverItem);
@@ -280,7 +283,7 @@ public class Project : NotifyPropertyChanged
         throw new ArgumentException("Unsupported source control type", SourceControlType.ToString());
     }
 
-    public Task<string> TfvcGetFileContentAsync(string serverItem)
+    public Task<string?> TfvcGetFileContentAsync(string serverItem)
     {
         serverItem = VerifyFilePath(serverItem);
         var requestString = $"tfvc/items/?path={serverItem}";
@@ -288,7 +291,7 @@ public class Project : NotifyPropertyChanged
         return Collection.GetRequestResultAsync(requestString, false, [HttpStatusCode.NotFound]);
     }
 
-    public Task<string> GitGetFileContentAsync(string serverItem)
+    public Task<string?> GitGetFileContentAsync(string serverItem)
     {
         serverItem = serverItem.Replace("$\\" + Name, string.Empty).Replace("\\", "/");
         var requestString = "git/" + Name + "/repositories/" + Name + "/items?scopePath=" + serverItem;
@@ -400,15 +403,16 @@ public class Project : NotifyPropertyChanged
     /// <returns><see cref="Uri" /> of code explorer site.</returns>
     private Uri GetProjectCodeSiteUrl()
     {
+        var webUrl = WebUrl.Guard(nameof(WebUrl));
         switch (SourceControlType)
         {
             case SourceControlTypes.Git:
-                var x = WebUrl.Segments.ToList();
+                var x = webUrl.Segments.ToList();
                 x.Insert(x.Count - 1, "_git");
 
                 return new(string.Join("/", x));
             case SourceControlTypes.Tfvc:
-                return new(WebUrl.AbsoluteUri + "/_versionControl");
+                return new(webUrl.AbsoluteUri + "/_versionControl");
             default:
                 throw new ArgumentException("Unsupported source control type", SourceControlType.ToString());
         }
@@ -492,9 +496,9 @@ public class Project : NotifyPropertyChanged
     /// Gets ID of project repository for specified project ID or name in specified TFS collection.
     /// </summary>
     /// <returns><see cref="string" /> with requested information.</returns>
-    private async Task<string> GitGetRepoIdAsync()
+    private async Task<string?> GitGetRepoIdAsync()
     {
-        string res = null;
+        string? res = null;
 
         if (SourceControlType == SourceControlTypes.Git)
         {
@@ -504,7 +508,7 @@ public class Project : NotifyPropertyChanged
             if (resp.IsNotNullOrEmptyString())
             {
                 var json = JObject.Parse(resp);
-                res = json?["value"]?[0]?["id"].Value<string>() ?? string.Empty;
+                res = json?["value"]?[0]?["id"]?.Value<string>() ?? string.Empty;
             }
         }
 
@@ -534,7 +538,7 @@ public class Project : NotifyPropertyChanged
     /// https://www.visualstudio.com/en-us/docs/integrate/api/git/pushes
     /// </summary>
     /// <returns>JSON <see cref="string" /> with requested information.</returns>
-    private Task<string> GitGetRawPushesInfoAsync()
+    private Task<string?> GitGetRawPushesInfoAsync()
     {
         var requestString =
             $"git/repositories/{IdOfRepo}/pushes?refName=refs/heads/master&includeRefUpdates=true&$top={int.MaxValue}";
@@ -551,7 +555,7 @@ public class Project : NotifyPropertyChanged
             var json = JObject.Parse(resp);
 
             if (json == null
-                || json["count"].Value<int>() <= 0)
+                || (json["count"]?.Value<int>() ?? 0) <= 0)
                 return new();
 
             var displayName = json["value"]?[0]?["pushedBy"]?["displayName"]?.Value<string>() ?? string.Empty;
@@ -563,7 +567,7 @@ public class Project : NotifyPropertyChanged
                       + "/commit/"
                       + (json["value"]?[0]?["refUpdates"]?[0]?["newObjectId"]?.Value<string>() ?? string.Empty);
 
-            Uri uri = null;
+            Uri? uri = null;
 
             if (url.IsNotNullOrEmptyString()
                 && url.Trim() != "/commit/")
@@ -598,7 +602,7 @@ public class Project : NotifyPropertyChanged
 
         var json = JObject.Parse(resp);
 
-        if (json["count"].Value<int>() <= 0)
+        if ((json["count"]?.Value<int>() ?? 0) <= 0)
             return new();
 
         var displayName = json["value"]?[0]?["checkedInBy"]?["displayName"]?.Value<string>() ?? string.Empty;
@@ -609,9 +613,9 @@ public class Project : NotifyPropertyChanged
         var chResp =
             await Collection.GetRequestResultAsync($"tfvc/changesets/{changesetId}", true, [HttpStatusCode.NotFound]);
 
-        var chJson = JObject.Parse(chResp);
+        var chJson = JObject.Parse(chResp.Guard(nameof(chResp)));
         var url = chJson["_links"]?["web"]?["href"]?.Value<string>() ?? string.Empty;
-        Uri uri = null;
+        Uri? uri = null;
 
         if (url.IsNotNullOrEmptyString())
             uri = new(url);

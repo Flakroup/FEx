@@ -9,13 +9,13 @@ public class ChangeItem
     public long? Version { get; set; }
 
     [JsonProperty("hashValue")]
-    public string HashValue { get; set; }
+    public string? HashValue { get; set; }
 
     [JsonProperty("path")]
-    public string Path { get; set; }
+    public string? Path { get; set; }
 
     [JsonProperty("url")]
-    public Uri Url { get; set; }
+    public Uri? Url { get; set; }
 
     [JsonProperty("isFolder")]
     public bool? IsFolder { get; set; }

@@ -31,7 +31,7 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
         set => SetProperty(ref _isUiUnlocked, value);
     }
 
-    protected SynchronizationContext OriginSynchronizationContext { get; }
+    protected SynchronizationContext? OriginSynchronizationContext { get; }
     protected IFExDispatcher Dispatcher { get; }
 
     public ThreadingAwareViewModel(params IAsyncInitializable[] dependencies)
@@ -42,7 +42,8 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
         _taskSemaphore = new();
         var instanceType = GetType();
         TypeName = instanceType.Name;
-        TypeFullName = instanceType.FullName;
+        // FullName!: GetType() on a live instance always yields a non-null FullName (only open generic/array/pointer types return null, which a constructed ViewModel cannot be).
+        TypeFullName = instanceType.FullName!;
         _dependencies = new();
 
         foreach (var dependency in dependencies)
@@ -54,7 +55,7 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
         IsUiUnlocked = true;
     }
 
-    public async Task RunAsync(Action action, JobSpecs? specs, Action pre, Action<bool> post) =>
+    public async Task RunAsync(Action action, JobSpecs? specs, Action? pre, Action<bool>? post) =>
         await _tasksHandler.RunAsync(action,
             specs,
             s => Prefix(s, pre),
@@ -62,7 +63,7 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
             AsyncMode.ThreadPool,
             CancellationToken.None);
 
-    public async Task RunTaskAsync(Func<Task> function, JobSpecs? specs, Action pre, Action<bool> post) =>
+    public async Task RunTaskAsync(Func<Task> function, JobSpecs? specs, Action? pre, Action<bool>? post) =>
         await _tasksHandler.RunTaskAsync(function,
             specs,
             s => Prefix(s, pre),
@@ -71,8 +72,8 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
 
     public async Task<TResult> RunTaskAsync<TResult>(Func<Task<TResult>> function,
                                                      JobSpecs? specs,
-                                                     Action pre,
-                                                     Action<bool> post) =>
+                                                     Action? pre,
+                                                     Action<bool>? post) =>
         await _tasksHandler.RunTaskAsync(function,
             specs,
             s => Prefix(s, pre),
@@ -81,8 +82,8 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
 
     public async Task<TResult> RunFuncAsync<TResult>(Func<TResult> function,
                                                      JobSpecs? specs,
-                                                     Action pre,
-                                                     Action<bool> post) =>
+                                                     Action? pre,
+                                                     Action<bool>? post) =>
         await _tasksHandler.RunFuncAsync(function,
             specs,
             s => Prefix(s, pre),
@@ -98,7 +99,7 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
     {
     }
 
-    private void Suffix(JobSpecs? specs, Action<bool> post, bool isSuccess)
+    private void Suffix(JobSpecs? specs, Action<bool>? post, bool isSuccess)
     {
         if (specs.HasFlagFast(JobSpecs.RunPreAndPostMain))
             PostMainJob(specs.HasFlagFast(JobSpecs.ShowTimeInfoAfterMain));
@@ -106,7 +107,7 @@ public partial class ThreadingAwareViewModel : ViewModelBase, IThreadingAwareVie
         post?.Invoke(isSuccess);
     }
 
-    private void Prefix(JobSpecs? specs, Action pre)
+    private void Prefix(JobSpecs? specs, Action? pre)
     {
         pre?.Invoke();
 

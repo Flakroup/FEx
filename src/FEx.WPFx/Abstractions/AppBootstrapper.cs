@@ -26,11 +26,12 @@ namespace FEx.WPFx.Abstractions;
 public abstract class AppBootstrapper<TContainer> : Application
     where TContainer : class, IFExContainer, IDisposable, new()
 {
-    protected readonly IAppInfoProvider _appInfoProvider;
-    protected readonly IExceptionHandler _exceptionHandler;
-    protected readonly IStatusService _statusService;
-    protected readonly IAppConfig _appConfig;
-    protected readonly TContainer _container;
+    // Resolved from the container in the constructor's try block; non-null once construction succeeds.
+    protected readonly IAppInfoProvider _appInfoProvider = null!;
+    protected readonly IExceptionHandler _exceptionHandler = null!;
+    protected readonly IStatusService _statusService = null!;
+    protected readonly IAppConfig _appConfig = null!;
+    protected readonly TContainer _container = null!;
 
     protected DirectoryInfo AppData => _appInfoProvider.AppData;
     protected DirectoryInfo UserData => _appInfoProvider.UserData;

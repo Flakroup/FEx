@@ -10,11 +10,11 @@ namespace FEx.MSBuildx;
 public sealed class MSProjectNuGetInstallation : NuGetPackageInstallation, IDisposable
 {
     private readonly IDisposable _subscription;
-    private string _projects;
+    private string? _projects;
 
     public ConcurrentObservableList<MSProject> MSProjects { get; }
 
-    public string Projects
+    public string? Projects
     {
         get => _projects;
         private set => SetProperty(ref _projects, value);

@@ -37,26 +37,26 @@ namespace FEx.AzureDevOpsx;
 public class TfsEnvironment : NotifyPropertyChanged
 {
     private static readonly string _lockKey = $"{nameof(TfsEnvironment)}_{Guid.NewGuid()}";
-    private string _name;
-    private string _version;
-    private Uri _serverUri;
-    private string _userName;
-    private string _password;
-    private ConcurrentList<ProjectsCollection> _projectsCollections;
+    private string? _name;
+    private string? _version;
+    private Uri? _serverUri;
+    private string? _userName;
+    private string? _password;
+    private ConcurrentList<ProjectsCollection> _projectsCollections = [];
     private bool _projectsCollectionsIsDirty;
     private bool _projectsCollectionsIsBusy;
-    private TfsConfigurationServer _server;
+    private TfsConfigurationServer? _server;
     private bool _isConnecting;
-    private AuthenticatedUserInfo _userInfo;
+    private AuthenticatedUserInfo? _userInfo;
 
     public string EnvironmentId { get; }
     public IProgressAggregator ProgressViewModel { get; }
-    public string ImagesCacheDirPath { get; }
+    public string? ImagesCacheDirPath { get; }
     public string DisplayName => $"{Name} TFS ver. {Version}{Environment.NewLine}{ServerUri}";
     public bool LoadingProjectsCollections => ProjectsCollectionsIsBusy || ProjectsCollectionsIsDirty;
-    public EventHandler<EventArgs> SuccessfullyAuthenticated { get; set; }
+    public EventHandler<EventArgs>? SuccessfullyAuthenticated { get; set; }
 
-    public string Name
+    public string? Name
     {
         get => _name;
         private set
@@ -66,7 +66,7 @@ public class TfsEnvironment : NotifyPropertyChanged
         }
     }
 
-    public string Version
+    public string? Version
     {
         get => _version;
         private set
@@ -76,7 +76,7 @@ public class TfsEnvironment : NotifyPropertyChanged
         }
     }
 
-    public TfsConfigurationServer Server
+    public TfsConfigurationServer? Server
     {
         get => _server;
         private set => SetProperty(ref _server, value);
@@ -88,7 +88,7 @@ public class TfsEnvironment : NotifyPropertyChanged
     /// <value>
     /// The server URI.
     /// </value>
-    public Uri ServerUri
+    public Uri? ServerUri
     {
         get => _serverUri;
         private set
@@ -114,7 +114,7 @@ public class TfsEnvironment : NotifyPropertyChanged
     /// <value>
     /// The name of the user.
     /// </value>
-    public string UserName
+    public string? UserName
     {
         get => _userName;
         private set { LockSrv.RunLocked(() => SetProperty(ref _userName, value), _lockKey); }
@@ -126,13 +126,13 @@ public class TfsEnvironment : NotifyPropertyChanged
     /// <value>
     /// The password.
     /// </value>
-    public string Password
+    public string? Password
     {
         get => _password;
         private set { LockSrv.RunLocked(() => SetProperty(ref _password, value), _lockKey); }
     }
 
-    public AuthenticatedUserInfo UserInfo
+    public AuthenticatedUserInfo? UserInfo
     {
         get => _userInfo;
         private set => SetProperty(ref _userInfo, value);
@@ -149,7 +149,7 @@ public class TfsEnvironment : NotifyPropertyChanged
     private SemaphoreSlim EnvironmentLock { get; }
     private SemaphoreSlim CollectionsLock { get; }
     private ConcurrentHashSet<string> CollectionsNames { get; }
-    private ReadOnlyCollection<CatalogNode> CollectionNodesCache { get; set; }
+    private ReadOnlyCollection<CatalogNode>? CollectionNodesCache { get; set; }
 
     private bool ProjectsCollectionsIsDirty
     {
@@ -186,7 +186,7 @@ public class TfsEnvironment : NotifyPropertyChanged
     /// <param name="address">The address.</param>
     /// <param name="viewModel">The view model.</param>
     /// <param name="imagesCacheDirPath">The images cache dir path.</param>
-    public TfsEnvironment(string name, Uri address, IProgressAggregator viewModel, string imagesCacheDirPath)
+    public TfsEnvironment(string name, Uri address, IProgressAggregator viewModel, string? imagesCacheDirPath)
     {
         EnvironmentId = Guid.NewGuid().ToString();
         ImagesCacheDirPath = imagesCacheDirPath;
@@ -206,12 +206,12 @@ public class TfsEnvironment : NotifyPropertyChanged
     /// <param name="address">The address.</param>
     /// <param name="viewModel">The view model.</param>
     /// <param name="imagesCacheDirPath">The images cache dir path.</param>
-    public TfsEnvironment(string name, string address, IProgressAggregator viewModel, string imagesCacheDirPath)
+    public TfsEnvironment(string name, string address, IProgressAggregator viewModel, string? imagesCacheDirPath)
         : this(name, new Uri(address), viewModel, imagesCacheDirPath)
     {
     }
 
-    public async Task<bool> InitializeAsync(bool autoLogIn = true, string username = null, string password = null)
+    public async Task<bool> InitializeAsync(bool autoLogIn = true, string? username = null, string? password = null)
     {
         IsConnecting = true;
         ProjectsCollectionsIsBusy = false;
@@ -227,7 +227,7 @@ public class TfsEnvironment : NotifyPropertyChanged
     /// Gets the server.
     /// </summary>
     /// <returns>True if successfull</returns>
-    public async Task<bool> GetServerAsync(bool autoLogIn = true, string username = null, string password = null)
+    public async Task<bool> GetServerAsync(bool autoLogIn = true, string? username = null, string? password = null)
     {
         if (ServerUri != null)
         {
@@ -235,7 +235,7 @@ public class TfsEnvironment : NotifyPropertyChanged
                 && (Server == null
                     || Server.Uri != ServerUri
                     || !Server.HasAuthenticated
-                    || UserName.IsNotNullOrWhiteSpace() && GetDefaultUserName() != GetCurrentUserName()))
+                    || !string.IsNullOrWhiteSpace(UserName) && GetDefaultUserName() != GetCurrentUserName()))
                 return await LoginAsync(username, password);
 
             return true;
@@ -250,16 +250,16 @@ public class TfsEnvironment : NotifyPropertyChanged
     public ICredentials GetCredentials(bool forceDefault = false) =>
         forceDefault
             ? NetworkUtilities.GetCredentials()
-            : NetworkUtilities.GetCredentials(UserName, Password);
+            : NetworkUtilities.GetCredentials(UserName ?? string.Empty, Password ?? string.Empty);
 
     /// <summary>
     /// Gets the name of the current user.
     /// </summary>
     /// <param name="separator">The separator.</param>
     /// <returns></returns>
-    public string GetCurrentUserName(string separator = " ") => Server.GetCurrentUserName(separator);
+    public string? GetCurrentUserName(string separator = " ") => Server.GetCurrentUserName(separator);
 
-    public async Task<bool> LoginAsync(string username = null, string password = null)
+    public async Task<bool> LoginAsync(string? username = null, string? password = null)
     {
         try
         {
@@ -269,7 +269,8 @@ public class TfsEnvironment : NotifyPropertyChanged
             if (password == null)
                 password = Password;
 
-            var toAuthenitcation = Server == null || Server?.Uri != ServerUri || !Server.HasAuthenticated;
+            var currentServer = Server;
+            var toAuthenitcation = currentServer == null || currentServer.Uri != ServerUri || !currentServer.HasAuthenticated;
 
             if (username != UserName
                 || Password != password)
@@ -289,10 +290,11 @@ public class TfsEnvironment : NotifyPropertyChanged
                     Server = null;
                 }
 
-                Server = new(ServerUri, GetVssCredentials());
-                Server.Authenticate();
+                var server = new TfsConfigurationServer(ServerUri.Guard(nameof(ServerUri)), GetVssCredentials());
+                Server = server;
+                server.Authenticate();
 
-                if (Server.HasAuthenticated)
+                if (server.HasAuthenticated)
                 {
                     UserInfo = await LoadUserInfoAsync();
                     ProgressViewModel?.IfNotNull(v => v.SetStatusInfo("Getting projects collections info"));
@@ -300,8 +302,9 @@ public class TfsEnvironment : NotifyPropertyChanged
                     await GetProjectsCollectionsAsync();
                     await GetBuildServerVersionAsync();
 
-                    if (SuccessfullyAuthenticated != null)
-                        await Task.Run(() => SuccessfullyAuthenticated(null, null));
+                    var successfullyAuthenticated = SuccessfullyAuthenticated;
+                    if (successfullyAuthenticated != null)
+                        await Task.Run(() => successfullyAuthenticated(null, EventArgs.Empty));
                 }
             }
 
@@ -374,37 +377,42 @@ public class TfsEnvironment : NotifyPropertyChanged
             await AsyncStatics.DelayUntilAsync(() => LoadingProjectsCollections);
     }
 
-    public async Task<ImageSource> GetProfileImageAsync()
+    public async Task<ImageSource?> GetProfileImageAsync()
     {
         if (await GetServerAsync())
-            return await GetUserImageAsync(ServerUri, GetCredentials(), Server.AuthorizedIdentity.TeamFoundationId);
+        {
+            var server = Server.Guard(nameof(Server));
+            return await GetUserImageAsync(ServerUri.Guard(nameof(ServerUri)), GetCredentials(), server.AuthorizedIdentity.TeamFoundationId);
+        }
 
         return null;
     }
 
-    public async Task<TResponse> RunProcAsync<TResponse>(string requestUrl,
-                                                         IDictionary<string, object> args = null,
-                                                         JsonSerializerSettings settings = null,
-                                                         IList<HttpStatusCode> omitCodes = null,
+    public async Task<TResponse?> RunProcAsync<TResponse>(string requestUrl,
+                                                         IDictionary<string, object>? args = null,
+                                                         JsonSerializerSettings? settings = null,
+                                                         IList<HttpStatusCode>? omitCodes = null,
                                                          RequestMethod method = RequestMethod.GET)
         where TResponse : BaseTfsResponse, new()
     {
-        using var processor = new FuncProcessor(requestUrl, Server.Credentials, EnvironmentId, args, method);
+        var server = Server.Guard(nameof(Server));
+        using var processor = new FuncProcessor(requestUrl, server.Credentials, EnvironmentId, args, method);
 
         return await processor.RunAsync<TResponse>(settings, omitCodes);
     }
 
-    public async Task<string> RunRawAsync(string requestUrl,
-                                          IDictionary<string, object> args = null,
-                                          IList<HttpStatusCode> omitCodes = null,
+    public async Task<string?> RunRawAsync(string requestUrl,
+                                          IDictionary<string, object>? args = null,
+                                          IList<HttpStatusCode>? omitCodes = null,
                                           RequestMethod method = RequestMethod.GET)
     {
-        using var processor = new FuncProcessor(requestUrl, Server.Credentials, EnvironmentId, args, method);
+        var server = Server.Guard(nameof(Server));
+        using var processor = new FuncProcessor(requestUrl, server.Credentials, EnvironmentId, args, method);
 
         return await processor.RunRawAsync(omitCodes);
     }
 
-    private static Task<ImageSource> GetUserImageAsync(Uri serverUri, ICredentials credentials, Guid tfsUserId)
+    private static Task<ImageSource?> GetUserImageAsync(Uri serverUri, ICredentials credentials, Guid tfsUserId)
     {
         var imageUrl = new Uri($"{serverUri}_api/_common/identityImage?id={tfsUserId}");
 
@@ -415,7 +423,7 @@ public class TfsEnvironment : NotifyPropertyChanged
     /// Gets the default name of the user.
     /// </summary>
     /// <returns></returns>
-    private string GetDefaultUserName()
+    private string? GetDefaultUserName()
     {
         if (ServerUri is null)
             return null;
@@ -426,11 +434,11 @@ public class TfsEnvironment : NotifyPropertyChanged
         return server.GetCurrentUserName();
     }
 
-    private async Task<AuthenticatedUserInfo> LoadUserInfoAsync()
+    private async Task<AuthenticatedUserInfo?> LoadUserInfoAsync()
     {
         var json = await WebServices.GetRequestResultAsync($"{ServerUri}/_apis/connectiondata", GetCredentials());
 
-        return JsonConvert.DeserializeObject<AuthenticatedUserInfo>(json);
+        return JsonConvert.DeserializeObject<AuthenticatedUserInfo>(json.Guard(nameof(json)));
     }
 
     /// <summary>
@@ -441,21 +449,23 @@ public class TfsEnvironment : NotifyPropertyChanged
         ProjectsCollectionsIsBusy = true;
         ProjectsCollectionsIsDirty = false;
 
-        CollectionNodesCache = Server.CatalogNode.QueryChildren([CatalogResourceTypes.ProjectCollection],
+        var server = Server.Guard(nameof(Server));
+        var collectionNodes = server.CatalogNode.QueryChildren([CatalogResourceTypes.ProjectCollection],
             false,
             CatalogQueryOptions.None);
+        CollectionNodesCache = collectionNodes;
 
         await CollectionsLock.WaitAsync();
 
         if (!ProjectsCollectionsIsDirty)
         {
             ProgressViewModel?.IfNotNull(v => v.SetStatusInfo("Receiving projects collections info:"));
-            CollectionsNames.AddRange(CollectionNodesCache.Select(x => x.Resource.DisplayName).OrderBy(x => x));
+            CollectionsNames.AddRange(collectionNodes.Select(x => x.Resource.DisplayName).OrderBy(x => x));
             NotifyProgress();
-            ProgressViewModel?.PrgSetMax(CollectionNodesCache.Count);
+            ProgressViewModel?.PrgSetMax(collectionNodes.Count);
             using var flakTimer = new FExTimer().WithCallback(NotifyProgress);
             flakTimer.Start();
-            var tasks = CollectionNodesCache.Select(GetTfsProjectsCollectionsInfoAsync).ToList();
+            var tasks = collectionNodes.Select(GetTfsProjectsCollectionsInfoAsync).ToList();
             _projectsCollections.Clear();
             _projectsCollections.AddRange((await Task.WhenAll(tasks)).Where(x => x != null).OrderBy(c => c.Name));
             flakTimer.Stop();
@@ -494,8 +504,8 @@ public class TfsEnvironment : NotifyPropertyChanged
         ProgressViewModel?.IfNotNull(v => v.SetCurrItemInfo(string.Join(", ", CollectionsNames)));
     }
 
-    private string GetCollectionNameForRequests() =>
-        CollectionNodesCache.Count > 1
+    private string? GetCollectionNameForRequests() =>
+        CollectionNodesCache.Guard(nameof(CollectionNodesCache)).Count > 1
             ? null
             : "DefaultCollection";
 }

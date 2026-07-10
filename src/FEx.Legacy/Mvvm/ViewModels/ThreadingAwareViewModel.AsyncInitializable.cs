@@ -18,7 +18,7 @@ public partial class ThreadingAwareViewModel
     protected readonly IFExLogger _logger;
     protected readonly ConcurrentDictionary<string, IAsyncInitializable> _dependencies;
 
-    protected Task _initializationTask;
+    protected Task? _initializationTask;
 
     private readonly FExSemaphoreSlim _initializationSemaphore;
     private readonly FExSemaphoreSlim _taskSemaphore;
@@ -116,7 +116,8 @@ public partial class ThreadingAwareViewModel
         if (!failed.Any())
             return;
 
-        throw new AggregateException(failed.Select(static fail => fail.Error.Exception));
+        // Error!/Exception!: fail comes from results.Where(IsFailure) so Error is non-null, and ExceptionError is only constructed from a non-null Exception.
+        throw new AggregateException(failed.Select(static fail => fail.Error!.Exception!));
     }
 
     protected virtual async Task InitializeCoreAsync()

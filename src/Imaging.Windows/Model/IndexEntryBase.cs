@@ -10,13 +10,14 @@ namespace FEx.Imaging.Windows.Model;
 
 public class IndexEntryBase : NotifyPropertyChanged, IIndexEntryBase
 {
-    private string _absoluteUri;
+    // EF entity backing fields for IIndexEntryBase's non-nullable string/Uri contract; populated by EF/loader, transiently null before assignment
+    private string _absoluteUri = null!;
     private long _responseContentLength;
-    private string _filePath;
-    private string _checkSum;
+    private string _filePath = null!;
+    private string _checkSum = null!;
     private int _pixelHeight;
     private int _pixelWidth;
-    private Uri _localUri;
+    private Uri _localUri = null!;
 
     [Key]
     [StringLength(1024)]
@@ -84,7 +85,7 @@ public class IndexEntryBase : NotifyPropertyChanged, IIndexEntryBase
         protected set => SetProperty(ref _localUri, value);
     }
 
-    public bool Equals(IIndexEntryBase other) => IsEqual(other);
+    public bool Equals(IIndexEntryBase? other) => other is not null && IsEqual(other);
 
     public virtual bool IsEqual(IIndexEntryBase val) =>
         AbsoluteUri.IsBothNullOrEqual(val.AbsoluteUri)

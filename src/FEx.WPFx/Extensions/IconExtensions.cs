@@ -1,6 +1,7 @@
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.WPFx.Attributes;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.WPFx.Extensions;
 
@@ -31,18 +32,18 @@ public static class IconExtensions
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>Icon character.</returns>
-    public static char GetIconCharacter(this Enum value) => GetIconPropertyValue(value, x => x.Character, x => x.Character);
+    public static char GetIconCharacter(this Enum? value) => GetIconPropertyValue(value, x => x.Character, x => x.Character);
 
     /// <summary>
     ///     Gets the alt text.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>Alt text.</returns>
-    public static string GetAltText(this Enum value) => GetIconPropertyValue(value,
+    public static string? GetAltText(this Enum? value) => GetIconPropertyValue(value,
             x => x.AltText,
             x => !string.IsNullOrWhiteSpace(x.AltText)
                 ? x.AltText
-                : value.ToString());
+                : value?.ToString());
 
     /// <summary>
     ///     Gets the icon property value.
@@ -53,11 +54,12 @@ public static class IconExtensions
     /// <param name="iconDescriptorPropertySelector">The icon descriptor property selector.</param>
     /// <param name="defaultValueSelector">The default value selector.</param>
     /// <returns>Icon property value.</returns>
-    private static TResult GetIconPropertyValue<TResult>(Enum value,
+    [return: MaybeNull]
+    private static TResult GetIconPropertyValue<TResult>(Enum? value,
                                                          Func<IconAttribute, TResult> iconPropertySelector,
                                                          Func<IconDescriptorAttribute, TResult>
                                                              iconDescriptorPropertySelector,
-                                                         Func<Enum, TResult> defaultValueSelector = null)
+                                                         Func<Enum?, TResult>? defaultValueSelector = null)
     {
         if (value is not null)
         {

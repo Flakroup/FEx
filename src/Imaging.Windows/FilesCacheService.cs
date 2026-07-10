@@ -46,28 +46,30 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
         FilesCacheDir.Create();
         FilesCacheIndex = cache;
 
-        InitializationSemaphore = LockSrv.EnsureLock(GetType().FullName);
+        InitializationSemaphore = LockSrv.EnsureLock(GetType().FullName.Guard(nameof(FilesCacheService)));
         BeginInitialization();
     }
 
     public bool EntryCacheShouldBePrepared(IIndexEntryBase entry, bool refresh) =>
         EntryCacheShouldBePrepared((IndexEntry)entry, refresh);
 
-    public string GetFileChecksum(Uri imageLink) => GetFile(imageLink)?.GenerateMd5OfFile();
+    // ICachedImageStorage declares a non-nullable return; behavior preserved (null when file absent), trailing ! only satisfies that contract
+    public string GetFileChecksum(Uri imageLink) => GetFile(imageLink)?.GenerateMd5OfFile()!;
 
     public long GetFileSize(Uri imageLink) => GetFile(imageLink)?.Length ?? 0;
 
-    public string GetFileName(Uri imageLink) => GetFile(imageLink)?.Name;
+    // ICachedImageStorage declares a non-nullable return; behavior preserved (null when file absent), trailing ! only satisfies that contract
+    public string GetFileName(Uri imageLink) => GetFile(imageLink)?.Name!;
 
 #pragma warning disable IDISP005 // caller receives cached entry, does not own it
-    public async Task<IIndexEntryBase> GetEntryBaseAsync(Uri fileUrl, bool addNew = true, string fileName = null) =>
+    public async Task<IIndexEntryBase> GetEntryBaseAsync(Uri fileUrl, bool addNew = true, string? fileName = null) =>
         await GetEntryAsync(fileUrl, addNew, fileName);
 #pragma warning restore IDISP005
 
 #pragma warning disable IDISP005 // caller receives cached entry, does not own it
     public async Task<IIndexEntryBase> PrepareCacheAndGetEntryBaseAsync(
         Uri fileUrl,
-        WebRequestParams pars = null,
+        WebRequestParams? pars = null,
         bool refresh = false) =>
         await PrepareCacheAndGetEntryAsync(fileUrl, pars, refresh);
 #pragma warning restore IDISP005
@@ -76,37 +78,38 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     {
         var entries = ids.Select(x => (id: x, file: GetFile(x)))
             .Where(x => x.file is not null)
-            .ToDictionary(x => x.id, x => x.file);
+            .ToDictionary(x => x.id, x => x.file!);
 
         await FilesCacheIndex.RemoveIndexEntriesAsync(entries);
     }
 
-    public async Task CacheAllAsync(HashSet<string> keys = null) => await FilesCacheIndex.CacheAllAsync(keys);
+    public async Task CacheAllAsync(HashSet<string>? keys = null) => await FilesCacheIndex.CacheAllAsync(keys);
 
     public async Task<bool> ContainsEntryAsync(Uri fileUrl) =>
         await FilesCacheIndex.ContainsKeyAsync(fileUrl.AbsoluteUri);
 
     public async Task<bool> PrepareCacheEntryAsync(IIndexEntryBase entry,
-                                                   WebRequestParams pars = null,
+                                                   WebRequestParams? pars = null,
                                                    bool refresh = false,
-                                                   HttpWebResponse response = null,
-                                                   string checksum = null,
-                                                   Func<Uri, Uri> urlModifier = null) =>
+                                                   HttpWebResponse? response = null,
+                                                   string? checksum = null,
+                                                   Func<Uri, Uri>? urlModifier = null) =>
         await PrepareCacheEntryAsync(pars, refresh, response, (IndexEntry)entry, checksum, urlModifier);
 
-    public async Task<BitmapImage> GetImageAsync(Uri fileUrl,
-                                                 WidthAndHeight size = null,
-                                                 WebRequestParams pars = null,
+    public async Task<BitmapImage?> GetImageAsync(Uri fileUrl,
+                                                 WidthAndHeight? size = null,
+                                                 WebRequestParams? pars = null,
                                                  bool refresh = false,
                                                  bool forceLoad = true,
                                                  bool forceMemoryStream = false,
-                                                 HttpWebResponse response = null)
+                                                 HttpWebResponse? response = null)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         var entry = await GetEntryAsync(fileUrl);
 #pragma warning restore IDISP001
 
-        return await entry.CachedImage.GetImageAsync(size,
+        // CachedImage is created for every entry with a non-empty URL key (see IndexEntry.RefreshCachedImage)
+        return await entry.CachedImage!.GetImageAsync(size,
             pars,
             refresh,
             forceLoad,
@@ -116,14 +119,14 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     }
 
     public bool EntryCacheShouldBePrepared(IndexEntry entry, bool refresh) =>
-        entry.CachedImage.CacheIsInvalid(refresh) || entry.IsDownloading;
+        entry.CachedImage!.CacheIsInvalid(refresh) || entry.IsDownloading;
 
-    public async Task RemoveImageUpdateAsync(Uri fileUrl, WidthAndHeight size = null)
+    public async Task RemoveImageUpdateAsync(Uri fileUrl, WidthAndHeight? size = null)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         var entry = await GetEntryAsync(fileUrl);
 #pragma warning restore IDISP001
-        entry.CachedImage.RemoveImageUpdate(size);
+        entry.CachedImage!.RemoveImageUpdate(size);
     }
 
     public async Task<bool> SetDefaultImageAsync(Uri fileUrl,
@@ -165,10 +168,10 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
         return entry?.IsDownloading ?? false;
     }
 
-    public async Task<Uri> PrepareAndGetFileLocalUriAsync(Uri fileUrl,
-                                                          WebRequestParams pars = null,
+    public async Task<Uri?> PrepareAndGetFileLocalUriAsync(Uri fileUrl,
+                                                          WebRequestParams? pars = null,
                                                           bool refresh = false,
-                                                          HttpWebResponse response = null)
+                                                          HttpWebResponse? response = null)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         var entry = await PrepareCacheAndGetEntryAsync(fileUrl, pars, refresh, response);
@@ -188,7 +191,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
         return entry.DoesCacheExists();
     }
 
-    public async Task<IndexEntry> GetEntryAsync(Uri fileUrl, bool addNew = true, string fileName = null)
+    public async Task<IndexEntry> GetEntryAsync(Uri fileUrl, bool addNew = true, string? fileName = null)
     {
         await InitializeAsync();
 
@@ -234,7 +237,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
             }
         });
 
-        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+        var errors = results.Values.Where(x => x.IsFailure).Select(x => x.Error!).ToList();
 
         //remove not present in index files from disk
         var except = await FilesCacheIndex.ForAllFuncAsync((_, v) => v.FilePath);
@@ -246,7 +249,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                 var res = FileSystemUtilities.SafeDeleteFile(file);
 
                 if (res.IsFailure)
-                    errors.Add(res.Error);
+                    errors.Add(res.Error!);
             });
 
         //remove not existing files from index
@@ -257,7 +260,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                 return entry.Cache?.Exists != true
                     ? entry
                     : null;
-            })).Where(x => x is not null)
+            })).OfType<IndexEntry>()
             .ToArray();
 
         if (toRemove.IsNotNullOrEmptyList())
@@ -269,10 +272,10 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     }
 
     public async Task<bool> PrepareCacheAsync(Uri fileUrl,
-                                              WebRequestParams pars = null,
+                                              WebRequestParams? pars = null,
                                               bool refresh = false,
-                                              HttpWebResponse response = null,
-                                              Func<Uri, Uri> urlModifier = null)
+                                              HttpWebResponse? response = null,
+                                              Func<Uri, Uri>? urlModifier = null)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         var entry = await PrepareCacheAndGetEntryAsync(fileUrl, pars, refresh, response, urlModifier);
@@ -282,10 +285,10 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     }
 
     public async Task<IndexEntry> PrepareCacheAndGetEntryAsync(Uri fileUrl,
-                                                               WebRequestParams pars = null,
+                                                               WebRequestParams? pars = null,
                                                                bool refresh = false,
-                                                               HttpWebResponse response = null,
-                                                               Func<Uri, Uri> urlModifier = null)
+                                                               HttpWebResponse? response = null,
+                                                               Func<Uri, Uri>? urlModifier = null)
     {
         var entry = await GetEntryAsync(fileUrl);
 
@@ -294,15 +297,15 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
         return entry;
     }
 
-    public async Task<bool> PrepareCacheEntryAsync(WebRequestParams pars,
+    public async Task<bool> PrepareCacheEntryAsync(WebRequestParams? pars,
                                                    bool refresh,
-                                                   HttpWebResponse response,
+                                                   HttpWebResponse? response,
                                                    IndexEntry entry,
-                                                   string checksum = null,
-                                                   Func<Uri, Uri> urlModifier = null)
+                                                   string? checksum = null,
+                                                   Func<Uri, Uri>? urlModifier = null)
     {
         if (EntryCacheShouldBePrepared(entry, refresh))
-            _ = await entry.CachedImage.PrepareCacheAsync(pars,
+            _ = await entry.CachedImage!.PrepareCacheAsync(pars,
                 refresh,
                 UseHttpClientService,
                 response,
@@ -332,7 +335,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                         var result = await OptimizeCacheAsync();
 
                         if (!result.IsSuccess)
-                            throw result.Error.ToAggregateException();
+                            throw result.Error!.ToAggregateException();
                     }
                 }
             }
@@ -381,9 +384,9 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
         return [.. FilesCacheDir.GetFiles("*.*").Where(x => !excludedPaths.Contains(x.FullName))];
     }
 
-    private FileInfo GetFile(Uri imageLink) => GetFile(imageLink?.AbsoluteUri);
+    private FileInfo? GetFile(Uri imageLink) => GetFile(imageLink?.AbsoluteUri);
 
-    private FileInfo GetFile(string imageLink)
+    private FileInfo? GetFile(string? imageLink)
     {
         if (imageLink is null)
             return null;

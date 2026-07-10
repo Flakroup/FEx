@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.EFCore.Extensions;
@@ -22,8 +23,9 @@ namespace FEx.Imaging.Windows;
 [Register(typeof(WindowsImagingServicesModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class WindowsImagingServicesModule : InitializeModule<IWindowsImagingServicesContainer, IServiceCollection>
 {
-    protected override void RegisterServices(IWindowsImagingServicesContainer container, IServiceCollection services)
+    protected override void RegisterServices(IWindowsImagingServicesContainer? container, IServiceCollection services)
     {
+        container = container.Guard(nameof(container));
 #pragma warning disable IDISP004 // DI container manages lifetime
         var config = container.Resolve<IFilesCacheServiceConfig>().Value;
 #pragma warning restore IDISP004

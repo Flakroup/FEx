@@ -11,14 +11,15 @@ namespace FEx.WPFx.ViewModels;
 public class WpfProgressListenerViewModel : ProgressListenerViewModel<WpfProgressStatusContainer>,
     IWpfProgressListenerViewModel<WpfProgressStatusContainer>
 {
-    private string _viewName;
+    private string? _viewName;
 
-    private IViewDesign _design;
+    // Assigned in the constructor via the Design setter (SetProperty ref-assign the compiler cannot track).
+    private IViewDesign _design = null!;
 
     /// <summary>
     /// The view
     /// </summary>
-    public ContentControl View { get; set; }
+    public ContentControl? View { get; set; }
 
     /// <summary>
     /// Gets or sets the name of the view.
@@ -26,7 +27,7 @@ public class WpfProgressListenerViewModel : ProgressListenerViewModel<WpfProgres
     /// <value>
     /// The name of the view.
     /// </value>
-    public string ViewName
+    public string? ViewName
     {
         get => _viewName;
         set => SetProperty(ref _viewName, value);

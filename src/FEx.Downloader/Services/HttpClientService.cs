@@ -21,14 +21,14 @@ public class HttpClientService : IDisposable
 
     public string Host { get; }
 
-    public WebRequestParams DefaultPars { get; }
+    public WebRequestParams? DefaultPars { get; }
     private static ISynchronizedAccessService LockSrv => FExCoreStatics.SynchronizedAccessService;
 
     private static ConcurrentDictionary<string, HttpClientService> Instances { get; } = new();
 
     private ConcurrentList<FlakHttpClient> Clients { get; }
 
-    private HttpClientService(string host, WebRequestParams pars = null, int clientsCount = 2)
+    private HttpClientService(string host, WebRequestParams? pars = null, int clientsCount = 2)
     {
         Host = host;
         _clientSemaphore = new(1, 1);
@@ -38,7 +38,7 @@ public class HttpClientService : IDisposable
     }
 
     public static async Task<HttpClientService> GetInstanceAsync(string urlHost,
-                                                                 WebRequestParams pars = null,
+                                                                 WebRequestParams? pars = null,
                                                                  int clientsCount = 2) =>
         await GetInstanceAsync(new(urlHost, pars, clientsCount));
 
@@ -54,7 +54,7 @@ public class HttpClientService : IDisposable
         return res;
     }
 
-    public static async Task PrepareInstanceAsync(string urlHost, WebRequestParams pars = null, int clientsCount = 2) =>
+    public static async Task PrepareInstanceAsync(string urlHost, WebRequestParams? pars = null, int clientsCount = 2) =>
         await PrepareInstanceAsync(new(urlHost, pars, clientsCount));
 
     public static async Task PrepareInstanceAsync(HttpClientServiceStub stub)
@@ -107,7 +107,7 @@ public class HttpClientService : IDisposable
         }
     }
 
-    public async Task DoHttpClientActionAsync(Action<FlakHttpClient> action, WebRequestParams pars = null)
+    public async Task DoHttpClientActionAsync(Action<FlakHttpClient> action, WebRequestParams? pars = null)
     {
         var client = await GetClientAsync(pars);
 
@@ -122,7 +122,7 @@ public class HttpClientService : IDisposable
         }
     }
 
-    public async Task DoHttpClientActionAsync(Func<FlakHttpClient, Task> func, WebRequestParams pars = null)
+    public async Task DoHttpClientActionAsync(Func<FlakHttpClient, Task> func, WebRequestParams? pars = null)
     {
         var client = await GetClientAsync(pars);
 
@@ -137,7 +137,7 @@ public class HttpClientService : IDisposable
         }
     }
 
-    public async Task<T> DoHttpClientActionAsync<T>(Func<FlakHttpClient, Task<T>> func, WebRequestParams pars = null)
+    public async Task<T> DoHttpClientActionAsync<T>(Func<FlakHttpClient, Task<T>> func, WebRequestParams? pars = null)
     {
         var client = await GetClientAsync(pars);
 
@@ -155,10 +155,10 @@ public class HttpClientService : IDisposable
     private void PrepareClients(int clientsCount)
     {
         Clients.Clear();
-        Clients.AddRange(Enumerable.Range(0, clientsCount).Select(_ => new FlakHttpClient(DefaultPars, false)));
+        Clients.AddRange(Enumerable.Range(0, clientsCount).Select(_ => new FlakHttpClient(DefaultPars ?? new(), false)));
     }
 
-    private async Task<FlakHttpClient> GetClientAsync(WebRequestParams pars = null)
+    private async Task<FlakHttpClient> GetClientAsync(WebRequestParams? pars = null)
     {
         await _clientSemaphore.WaitAsync();
 

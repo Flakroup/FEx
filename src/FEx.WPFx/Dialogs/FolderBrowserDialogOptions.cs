@@ -20,7 +20,7 @@ public sealed class FolderBrowserDialogOptions : FolderBrowserDialogOptionsBase<
     /// top-level window that will own the modal dialog box.
     /// </param>
     /// <param name="viewModel">The view model.</param>
-    public bool ShowDialogOk(Window owner = null, IProgressAggregator viewModel = null) =>
+    public bool ShowDialogOk(Window? owner = null, IProgressAggregator? viewModel = null) =>
         ShowDialog(owner, viewModel) == DialogResult.OK;
 
     /// <summary>
@@ -31,7 +31,7 @@ public sealed class FolderBrowserDialogOptions : FolderBrowserDialogOptionsBase<
     /// top-level window that will own the modal dialog box.
     /// </param>
     /// <param name="viewModel">The view model.</param>
-    public DialogResult ShowDialog(Window owner = null, IProgressAggregator viewModel = null) =>
+    public DialogResult ShowDialog(Window? owner = null, IProgressAggregator? viewModel = null) =>
         ShowDialog(folderBrowserDialog =>
             {
                 IWin32Window win32Window = new NativeWindow();
@@ -39,7 +39,7 @@ public sealed class FolderBrowserDialogOptions : FolderBrowserDialogOptionsBase<
 
                 return folderBrowserDialog.ShowDialog(win32Window);
             },
-            viewModel);
+            viewModel!); // base ShowDialog is null-tolerant (viewModel?.Stopwatch)
 
     protected override FolderBrowserDialog MapToDialog() =>
         new()

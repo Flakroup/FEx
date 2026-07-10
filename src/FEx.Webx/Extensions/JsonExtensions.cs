@@ -11,26 +11,27 @@ namespace FEx.Webx.Extensions;
 
 public static class JsonExtensions
 {
-    public static Task<T> DeserializeRemoteJsonAsync<T>(this Uri url) =>
+    public static Task<T?> DeserializeRemoteJsonAsync<T>(this Uri url) =>
         url.DeserializeRemoteJsonAsync<T>(null, false, CancellationToken.None);
 
-    public static Task<T> DeserializeRemoteJsonAsync<T>(this Uri url, JsonSerializerSettings settings) =>
+    public static Task<T?> DeserializeRemoteJsonAsync<T>(this Uri url, JsonSerializerSettings? settings) =>
         url.DeserializeRemoteJsonAsync<T>(settings, false, CancellationToken.None);
 
-    public static Task<T> DeserializeRemoteJsonAsync<T>(this Uri url,
-                                                        JsonSerializerSettings settings,
-                                                        bool checkNetAvailability) =>
+    public static Task<T?> DeserializeRemoteJsonAsync<T>(this Uri url,
+                                                         JsonSerializerSettings? settings,
+                                                         bool checkNetAvailability) =>
         url.DeserializeRemoteJsonAsync<T>(settings, checkNetAvailability, CancellationToken.None);
 
-    public static async Task<T> DeserializeRemoteJsonAsync<T>(this Uri url,
-                                                              JsonSerializerSettings settings,
-                                                              bool checkNetAvailability,
-                                                              CancellationToken cancellationToken)
+    public static async Task<T?> DeserializeRemoteJsonAsync<T>(this Uri url,
+                                                               JsonSerializerSettings? settings,
+                                                               bool checkNetAvailability,
+                                                               CancellationToken cancellationToken)
     {
-        T res = default;
+        T? res = default;
 
         if (!checkNetAvailability
-            || await FExUriExtensions.CheckForInternetConnectionAsync(null))
+            // CheckForInternetConnectionAsync null-coalesces url to a default internally, so null is safe here.
+            || await FExUriExtensions.CheckForInternetConnectionAsync(null!))
         {
             if (url.Scheme is "http" or "https")
             {

@@ -107,7 +107,8 @@ public class MSProject
         "RuntimeReferenceOnlySDKDependencies");
 
     public static ConcurrentList<string> AcceptedItemsNames { get; } = new(
-        new[] { ProjectItemType.None, ProjectItemType.EmbeddedResource }.Select(x => x.GetEnumValueDescription()));
+        new[] { ProjectItemType.None, ProjectItemType.EmbeddedResource }
+            .Select(x => x.GetEnumValueDescription() ?? x.ToString()));
 
     public Project Project { get; }
     public SolutionProjectType ProjectType { get; }
@@ -123,7 +124,7 @@ public class MSProject
     public string ProjectFile { get; }
     public string OutDir { get; }
     public string OutDirPath { get; }
-    public string NuGetPackageRoot { get; }
+    public string? NuGetPackageRoot { get; }
     public IList<string> MSBuildAllProjects { get; }
     public string TargetFramework { get; }
     public bool IsNetCore3 { get; }
@@ -131,10 +132,10 @@ public class MSProject
     public string FullPath { get; }
     public ConcurrentList<DiffResult> MissingFiles { get; }
     public string BinDir { get; }
-    public string PublishDirName { get; }
-    public string RuntimeIdentifier { get; }
+    public string? PublishDirName { get; }
+    public string? RuntimeIdentifier { get; }
     public IList<string> Configurations { get; }
-    public IDictionary<string, string> PublishDirs { get; }
+    public IDictionary<string, string>? PublishDirs { get; }
     public HashSet<PackageIdentity> NuGetPackages { get; }
     public bool IsAspNetCore { get; }
     public bool IsNetCore { get; }
@@ -148,7 +149,7 @@ public class MSProject
 
     public MSProject(Project project,
                      SolutionProjectType projectType,
-                     string solutionPackagesDir = null,
+                     string? solutionPackagesDir = null,
                      bool is64Bit = false)
     {
         Project = project;
@@ -162,24 +163,24 @@ public class MSProject
         FullPath = Project.FullPath;
 
         Name = PropertiesDictionary["MSBuildProjectName"];
-        NuGetPackageRoot = PropertiesDictionary.TryGetKeyValue("NuGetPackageRoot");
+        NuGetPackageRoot = PropertiesDictionary.TryGetKeyValue<string, string>("NuGetPackageRoot");
         ProjectFile = PropertiesDictionary["MSBuildProjectFile"];
         AssemblyName = PropertiesDictionary["AssemblyName"];
 
-        ProjectDir = PropertiesDictionary.TryGetKeyValue("ProjectDir")
-                     ?? PropertiesDictionary.TryGetKeyValue("MSBuildProjectDirectory");
+        ProjectDir = PropertiesDictionary.TryGetKeyValue<string, string>("ProjectDir")
+                     ?? PropertiesDictionary.TryGetKeyValue<string, string>("MSBuildProjectDirectory");
 
         MSBuildAllProjects = PropertiesDictionary["MSBuildAllProjects"]
             .Split(';')
             .Select(x => x.Trim().Replace(ProjectDir, string.Empty))
             .ToArray();
 
-        TargetFramework = PropertiesDictionary.TryGetKeyValue("TargetFramework")
+        TargetFramework = PropertiesDictionary.TryGetKeyValue<string, string>("TargetFramework")
                           ?? PropertiesDictionary["TargetFrameworkVersion"];
 
         IsNetCore = TargetFramework.StartsWith("netcoreapp") || !TargetFramework.StartsWith("net4");
         IsNetCore3 = TargetFramework.StartsWith("netcoreapp3.");
-        OutDir = PropertiesDictionary.TryGetKeyValue("OutDir") ?? PropertiesDictionary.TryGetKeyValue("OutputPath");
+        OutDir = PropertiesDictionary.TryGetKeyValue<string, string>("OutDir") ?? PropertiesDictionary.TryGetKeyValue<string, string>("OutputPath");
 
         if (is64Bit && !OutDir.Contains("\\x64\\"))
         {
@@ -188,15 +189,15 @@ public class MSProject
         }
 
         var initialMSBuildProjectExtensionsPath =
-            PropertiesDictionary.TryGetKeyValue("_InitialMSBuildProjectExtensionsPath")
+            PropertiesDictionary.TryGetKeyValue<string, string>("_InitialMSBuildProjectExtensionsPath")
             ?? Path.Combine(ProjectDir, "obj");
 
         InitialMSBuildProjectExtensionsPath = Path.GetFullPath(initialMSBuildProjectExtensionsPath);
 
-        PackageId = PropertiesDictionary.TryGetKeyValue("PackageId");
-        Company = PropertiesDictionary.TryGetKeyValue("Company");
-        IsPackable = bool.Parse(PropertiesDictionary.TryGetKeyValue("IsPackable", "false"));
-        Version = PropertiesDictionary.TryGetKeyValue("Version");
+        PackageId = PropertiesDictionary.TryGetKeyValue<string, string>("PackageId");
+        Company = PropertiesDictionary.TryGetKeyValue<string, string>("Company");
+        IsPackable = bool.Parse(PropertiesDictionary.TryGetKeyValue<string, string>("IsPackable", "false"));
+        Version = PropertiesDictionary.TryGetKeyValue<string, string>("Version");
         NuGetPackages = [];
 
         Parallel.ForEach(AllEvaluatedItems.Where(x =>
@@ -228,23 +229,24 @@ public class MSProject
                 .ToArray());
         }
 
-        while (IncludedFiles.Contains(null))
-            IncludedFiles.Remove(null);
+        // Defensive removal of any null entries left by the parallel population above.
+        while (IncludedFiles.Contains(null!))
+            IncludedFiles.Remove(null!);
 
         IncludedFilesPaths = [.. IncludedFiles.Select(x => x.EvaluatedInclude)];
 
         Configurations =
-            (PropertiesDictionary.TryGetKeyValue("Configurations") ?? PropertiesDictionary["Configuration"]).Split(';');
+            (PropertiesDictionary.TryGetKeyValue<string, string>("Configurations") ?? PropertiesDictionary["Configuration"]).Split(';');
 
-        PublishDirName = PropertiesDictionary.TryGetKeyValue("PublishDirName")
-                         ?? (PropertiesDictionary.TryGetKeyValue("PublishDir") is not null
+        PublishDirName = PropertiesDictionary.TryGetKeyValue<string, string>("PublishDirName")
+                         ?? (PropertiesDictionary.TryGetKeyValue<string, string>("PublishDir") is not null
                              ? new DirectoryInfo(Path.Combine(ProjectDir,
-                                 PropertiesDictionary.TryGetKeyValue("PublishDir"))).Name
+                                 PropertiesDictionary.TryGetKeyValue<string, string>("PublishDir"))).Name
                              : null);
 
         RuntimeIdentifier = IsNetCore
-            ? PropertiesDictionary.TryGetKeyValue("NETCoreSdkRuntimeIdentifier")
-            : PropertiesDictionary.TryGetKeyValue("RuntimeIdentifier");
+            ? PropertiesDictionary.TryGetKeyValue<string, string>("NETCoreSdkRuntimeIdentifier")
+            : PropertiesDictionary.TryGetKeyValue<string, string>("RuntimeIdentifier");
 
         if (PublishDirName is not null)
             PublishDirs = Configurations.ToDictionary(x => x,
@@ -275,7 +277,7 @@ public class MSProject
     }
 
     public string GetProjectOutputPath(string buildConfiguration) =>
-        PublishDirs?.TryGetKeyValue(buildConfiguration)
+        PublishDirs?.TryGetKeyValue<string, string>(buildConfiguration)
         ?? Path.Combine(BinDir, Configurations.FirstOrDefault(x => x == buildConfiguration) ?? Configurations[0]);
 
     public void SetPackageVersion(string version)

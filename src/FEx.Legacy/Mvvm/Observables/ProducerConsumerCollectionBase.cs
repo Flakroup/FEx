@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.Legacy.Mvvm.Observables;
 
@@ -90,7 +91,12 @@ public abstract class ProducerConsumerCollectionBase<T> : IProducerConsumerColle
     /// <returns>
     /// true if an element was removed and returned from the collection; otherwise, false.
     /// </returns>
+    // netstandard's IProducerConsumerCollection<T>.TryTake declares a plain non-null out; net core adds [MaybeNullWhen(false)]. Match each per TFM.
+#if NETSTANDARD
     bool IProducerConsumerCollection<T>.TryTake(out T item) => TryTake(out item);
+#else
+    bool IProducerConsumerCollection<T>.TryTake([MaybeNullWhen(false)] out T item) => TryTake(out item);
+#endif
 
     /// <summary>
     /// Creates an array containing the contents of the collection.
@@ -126,5 +132,10 @@ public abstract class ProducerConsumerCollectionBase<T> : IProducerConsumerColle
     /// <returns>
     /// true if an element was removed and returned from the collection; otherwise, false.
     /// </returns>
+    // On netstandard ContainedCollection.TryTake has a plain non-null out; on net core it is [MaybeNullWhen(false)]. Match each per TFM.
+#if NETSTANDARD
     protected virtual bool TryTake(out T item) => ContainedCollection.TryTake(out item);
+#else
+    protected virtual bool TryTake([MaybeNullWhen(false)] out T item) => ContainedCollection.TryTake(out item);
+#endif
 }

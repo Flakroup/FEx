@@ -34,7 +34,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
     public Orientation Orientation { get; set; } = Orientation.Horizontal;
 
     public Size FixedItemSize { get; set; } = Size.Empty;
-    public IItemSizeProvider ItemSizeProvider { get; set; }
+    public IItemSizeProvider? ItemSizeProvider { get; set; }
     public bool AllowDifferentSizedItems { get; set; }
 
     public bool StretchItems { get; set; }
@@ -159,7 +159,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         return Size.Empty;
     }
 
-    private void ItemContainerManager_ItemsChanged(object sender, ItemContainerManagerItemsChangedEventArgs e)
+    private void ItemContainerManager_ItemsChanged(object? sender, ItemContainerManagerItemsChangedEventArgs e)
     {
         if (e.Action is NotifyCollectionChangedAction.Remove or NotifyCollectionChangedAction.Replace)
         {

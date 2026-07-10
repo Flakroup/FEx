@@ -8,19 +8,21 @@ namespace FEx.WPFx.Models;
 
 public class ViewDesign : NotifyPropertyChanged, IViewDesign
 {
-    private readonly Func<Brush> _backgroundFactory;
-    private readonly Func<Brush> _controlBackgroundFactory;
-    private readonly Func<Brush> _foregroundFactory;
-    private readonly Func<Brush> _headerBackgroundFactory;
-    private readonly Func<Brush> _borderBackgroundFactory;
+    private readonly Func<Brush>? _backgroundFactory;
+    private readonly Func<Brush>? _controlBackgroundFactory;
+    private readonly Func<Brush>? _foregroundFactory;
+    private readonly Func<Brush>? _headerBackgroundFactory;
+    private readonly Func<Brush>? _borderBackgroundFactory;
 
     private double _fontSize;
-    private FontFamily _fontFamily;
-    private Brush _background;
-    private Brush _controlBackground;
-    private Brush _foreground;
-    private Brush _headerBackground;
-    private Brush _borderBackground;
+
+    // Assigned in the constructor via the FontFamily setter (SetProperty ref-assign the compiler cannot track).
+    private FontFamily _fontFamily = null!;
+    private Brush? _background;
+    private Brush? _controlBackground;
+    private Brush? _foreground;
+    private Brush? _headerBackground;
+    private Brush? _borderBackground;
 
     /// <summary>
     /// Gets or sets the size of the font.
@@ -46,7 +48,7 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
     /// <value>
     /// The background.
     /// </value>
-    public Brush Background
+    public Brush? Background
     {
         get => _background;
         set => SetProperty(ref _background, value);
@@ -58,7 +60,7 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
     /// <value>
     /// The control background.
     /// </value>
-    public Brush ControlBackground
+    public Brush? ControlBackground
     {
         get => _controlBackground;
         set => SetProperty(ref _controlBackground, value);
@@ -70,7 +72,7 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
     /// <value>
     /// The foreground.
     /// </value>
-    public Brush Foreground
+    public Brush? Foreground
     {
         get => _foreground;
         set => SetProperty(ref _foreground, value);
@@ -82,13 +84,13 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
     /// <value>
     /// The header background.
     /// </value>
-    public Brush HeaderBackground
+    public Brush? HeaderBackground
     {
         get => _headerBackground;
         set => SetProperty(ref _headerBackground, value);
     }
 
-    public Brush BorderBackground
+    public Brush? BorderBackground
     {
         get => _borderBackground;
         set => SetProperty(ref _borderBackground, value);
@@ -99,11 +101,11 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
     {
     }
 
-    public ViewDesign(Func<Brush> backgroundFactory,
-                      Func<Brush> controlBackgroundFactory,
-                      Func<Brush> foregroundFactory,
-                      Func<Brush> headerBackgroundFactory,
-                      Func<Brush> borderBackgroundFactory)
+    public ViewDesign(Func<Brush>? backgroundFactory,
+                      Func<Brush>? controlBackgroundFactory,
+                      Func<Brush>? foregroundFactory,
+                      Func<Brush>? headerBackgroundFactory,
+                      Func<Brush>? borderBackgroundFactory)
         : this(backgroundFactory,
             controlBackgroundFactory,
             foregroundFactory,
@@ -114,12 +116,12 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
     {
     }
 
-    public ViewDesign(Func<Brush> backgroundFactory,
-                      Func<Brush> controlBackgroundFactory,
-                      Func<Brush> foregroundFactory,
-                      Func<Brush> headerBackgroundFactory,
-                      Func<Brush> borderBackgroundFactory,
-                      FontFamily fontFamily,
+    public ViewDesign(Func<Brush>? backgroundFactory,
+                      Func<Brush>? controlBackgroundFactory,
+                      Func<Brush>? foregroundFactory,
+                      Func<Brush>? headerBackgroundFactory,
+                      Func<Brush>? borderBackgroundFactory,
+                      FontFamily? fontFamily,
                       double fontSize)
     {
         _backgroundFactory = backgroundFactory;
@@ -128,9 +130,10 @@ public class ViewDesign : NotifyPropertyChanged, IViewDesign
         _headerBackgroundFactory = headerBackgroundFactory;
         _borderBackgroundFactory = borderBackgroundFactory;
 
-        FontFamily = fontFamily;
-        FontFamily ??= (FontFamily)new MaterialDesignFontExtension().ProvideValue(null);
-        FontFamily ??= new("Segoe UI");
+        // MaterialDesignFontExtension.ProvideValue tolerates a null service provider at construction time.
+        FontFamily = fontFamily
+                     ?? new MaterialDesignFontExtension().ProvideValue(null!) as FontFamily
+                     ?? new FontFamily("Segoe UI");
 
         FontSize = fontSize;
     }

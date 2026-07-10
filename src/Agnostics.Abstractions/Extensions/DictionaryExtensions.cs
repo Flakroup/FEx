@@ -235,7 +235,7 @@ public static class DictionaryExtensions
         TK key)
         where TK : notnull
     {
-        TV? v = default;
+        TV? v;
 
         bool hasBeenRemoved;
 

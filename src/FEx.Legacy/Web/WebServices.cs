@@ -53,7 +53,9 @@ public static class WebServices
             try
             {
                 // Guard: GetHttpResponseAsync returns null only after all retries throw; original code dereferenced it and would NRE - Guard preserves the throw-on-failure behavior.
+#pragma warning disable IDISP004 // Guard returns the same instance; it does not create a disposable
                 response = (await GetHttpResponseAsync(() => client.GetAsync(requestUrl))).Guard(nameof(response));
+#pragma warning restore IDISP004
                 responseBody = await response.Content.ReadAsStringAsync();
 
                 if (omitCodes?.Contains(response.StatusCode) != true)
@@ -268,7 +270,9 @@ public static class WebServices
         try
         {
             // Guard: GetHttpResponseAsync returns null only after all retries throw; original code dereferenced it and would NRE - Guard preserves the throw-on-failure behavior.
+#pragma warning disable IDISP004 // Guard returns the same instance; it does not create a disposable
             response = (await GetHttpResponseAsync(responseHandler)).Guard(nameof(response));
+#pragma warning restore IDISP004
 
             if (omitCodes?.Contains(response.StatusCode) != true)
             {

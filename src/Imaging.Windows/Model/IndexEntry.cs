@@ -44,7 +44,9 @@ public class IndexEntry : IndexEntryBase, IDisposable
         {
             if (SetProperty(ref _url, value))
             {
-                // AbsoluteUri (IIndexEntryBase [Key]) is non-nullable by contract but this entity stores null on reset
+                // AbsoluteUri (IIndexEntryBase [Key]) is non-nullable by contract but this entity stores null on reset.
+                // Parens are required: 'Url?.AbsoluteUri!' would move '!' onto AbsoluteUri and leave the ?. result string? (CS8601).
+                // ReSharper disable once ArrangeRedundantParentheses
                 AbsoluteUri = (Url?.AbsoluteUri)!;
 
 #pragma warning disable IDISP003 // semaphore from LockSrv, not owned
@@ -178,7 +180,9 @@ public class IndexEntry : IndexEntryBase, IDisposable
         if (Cache is not null)
             FileName = Path.GetFileNameWithoutExtension(Cache.Name);
 
-        // CheckSum/FilePath/LocalUri are non-nullable per IIndexEntryBase; this entity legitimately clears them to null, so suppress
+        // CheckSum/FilePath/LocalUri are non-nullable per IIndexEntryBase; this entity legitimately clears them to null, so suppress.
+        // Parens required: 'Cache?.GenerateMd5OfFile()!' would move '!' inside and leave the ?. result string? (CS8601).
+        // ReSharper disable once ArrangeRedundantParentheses
         CheckSum = (Cache?.GenerateMd5OfFile())!;
 
         Extension = Cache?.Exists == true

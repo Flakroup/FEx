@@ -97,7 +97,7 @@ public sealed class StatusHub : IDisposable, IStatusHub
 
     public IList<string> GetStatuses() => Statuses.Values.ToArray();
 
-    public string GetStatusString(string? separator = null)
+    public string GetStatusString(string? separator)
     {
         if (Statuses.IsEmpty)
             return string.Empty;

@@ -28,8 +28,8 @@ public abstract class FlurlApiBase : AsyncInitializable
 #pragma warning restore IDISP006 // Implement IDisposable
     protected IAsyncPolicy<IFlurlResponse> ResiliencePolicy { get; }
 
+    // No dependency on AsyncInitializable parent (empty dependency set) - implicit base ctor
     protected FlurlApiBase(IFlurlConfigurator flurlConfigurator)
-        : base() // No dependency on AsyncInitializable parent (empty dependency set)
     {
         FlurlClient = flurlConfigurator.Guard(nameof(flurlConfigurator)).GetClient();
         ResiliencePolicy = flurlConfigurator.GetResiliencePolicy();

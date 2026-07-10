@@ -18,7 +18,7 @@ public static class UriExtensions
 {
     public static Task<string> GetFileNameAsync(this Uri url) => url.GetFileNameAsync(null);
 
-    public static async Task<string> GetFileNameAsync(this Uri url, WebRequestParams pars) =>
+    public static async Task<string> GetFileNameAsync(this Uri url, WebRequestParams? pars) =>
         await url.DoHttpResponseFuncAsync((response, _) => response.GetFileName(), pars);
 
     public static string GetFileName(this HttpWebResponse response)
@@ -42,7 +42,7 @@ public static class UriExtensions
         return await client.GetStringAsync(url);
     }
 
-    private static string GetFileName(Uri responseUri, IDictionary<string, string> responseHeaders)
+    private static string GetFileName(Uri? responseUri, IDictionary<string, string> responseHeaders)
     {
         var contentDispositionHeader = responseHeaders.Keys.FindInEnumerable(x => x.IsEqual("content-disposition"));
 
@@ -53,7 +53,7 @@ public static class UriExtensions
             responseHeaders.ToDictionary(x => x.Key, x => new[] { x.Value }));
     }
 
-    private static string GetFileName(Uri responseUri, IDictionary<string, string[]> responseHeaders)
+    private static string GetFileName(Uri? responseUri, IDictionary<string, string[]> responseHeaders)
     {
         var contentDispositionHeader = responseHeaders.Keys.FindInEnumerable(x => x.IsEqual("content-disposition"));
 
@@ -64,10 +64,13 @@ public static class UriExtensions
             responseHeaders);
     }
 
-    private static string GetFileName(Uri responseUri,
-                                      string contentDispositionHeaderValue,
+    private static string GetFileName(Uri? responseUri,
+                                      string? contentDispositionHeaderValue,
                                       IDictionary<string, string[]> responseHeaders)
     {
+        // Callers may pass a null Uri (e.g. HttpResponseMessage.RequestMessage.RequestUri); a null response URI is unusable here.
+        responseUri = responseUri.Guard(nameof(responseUri));
+
         if (contentDispositionHeaderValue is not null)
         {
             var values = contentDispositionHeaderValue.Split(';')
@@ -98,12 +101,12 @@ public static class UriExtensions
             ?.FirstOrDefault()
             ?.Split(';')[0];
 
-        IReadOnlyCollection<string> exts = null;
+        IReadOnlyCollection<string>? exts = null;
 
         if (mimeType.IsNotNullOrEmptyString())
             exts = MimeTypesUtility.GetDefaultExtensions(mimeType);
 
-        if (exts.IsNotNullOrEmptyReadOnlyCollection()
+        if (exts is { Count: > 0 }
             && (ext.TrimStart('.').IsNullOrEmptyString() || !exts.Contains(ext.TrimStart('.')) && !exts.Contains(".*")))
             fName = $"{fName}.{exts.FirstOrDefault()}";
 

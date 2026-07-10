@@ -4,7 +4,7 @@ namespace FEx.Avaloniax.Desktop;
 
 public class FExDesktopWindow : Window
 {
-    public FExTrayIcon TrayIcon { get; set; }
+    public FExTrayIcon? TrayIcon { get; set; }
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {

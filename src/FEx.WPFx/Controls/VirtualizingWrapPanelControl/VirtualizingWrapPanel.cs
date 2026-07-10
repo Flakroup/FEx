@@ -53,9 +53,9 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
             new FrameworkPropertyMetadata(5d, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     private readonly VirtualizingPanelWrapper _internalChildrenWrapper;
-    private IItemContainerManager _itemContainerManager;
+    private IItemContainerManager? _itemContainerManager;
 
-    private VirtualizingWrapPanelModel _model;
+    private VirtualizingWrapPanelModel? _model;
 
     /// <summary>
     /// Gets or sets a value that specifies the orientation in which items are arranged. The default value is
@@ -224,9 +224,9 @@ public class VirtualizingWrapPanel : VirtualizingPanelBase
 
     protected override void BringIndexIntoView(int index) => Model.BringIndexIntoView(index);
 
-    private void Model_ScrollInfoInvalidated(object sender, EventArgs e) => ScrollOwner?.InvalidateScrollInfo();
+    private void Model_ScrollInfoInvalidated(object? sender, EventArgs e) => ScrollOwner?.InvalidateScrollInfo();
 
-    private void Model_MeasureInvalidated(object sender, EventArgs e) => InvalidateMeasure();
+    private void Model_MeasureInvalidated(object? sender, EventArgs e) => InvalidateMeasure();
 
     private void Orientation_Changed() =>
         MouseWheelScrollDirection = Orientation == Orientation.Horizontal

@@ -8,7 +8,7 @@ public class TfsChangeset
     public string Committer { get; set; }
     public string CommitterDisplayName { get; set; }
     public DateTime CreationDate { get; set; }
-    public Uri ChangesetUrl { get; set; }
+    public Uri? ChangesetUrl { get; set; }
 
     public TfsChangeset()
     {

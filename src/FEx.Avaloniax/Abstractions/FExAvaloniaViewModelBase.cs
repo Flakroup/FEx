@@ -19,7 +19,9 @@ public abstract class FExAvaloniaViewModelBase : ReactiveNotifyPropertyChanged, 
     public string UrlPathSegment { get; }
     public IScreen HostScreen => NavigationService;
 
-    public INavigationService NavigationService { get; protected set; }
+    // Assigned in the ctor for the normal runtime path; only stays unset during design-time preview
+    // (the ctor early-returns when Design.IsDesignMode), where the navigation service is never used.
+    public INavigationService NavigationService { get; protected set; } = null!;
 
     public ViewModelActivator Activator { get; }
 

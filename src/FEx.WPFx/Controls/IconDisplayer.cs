@@ -16,7 +16,7 @@ public class IconDisplayer : TextBlock
     /// <summary>
     ///     Internal cache of available icons
     /// </summary>
-    private static readonly ConcurrentDictionary<KeyValuePair<Type, Enum>, char> IconsCache = new();
+    private static readonly ConcurrentDictionary<KeyValuePair<Type?, Enum?>, char> IconsCache = new();
 
     /// <summary>
     ///     The label property.
@@ -77,7 +77,7 @@ public class IconDisplayer : TextBlock
     /// </summary>
     public void UpdateText()
     {
-        var key = new KeyValuePair<Type, Enum>(null, Icon);
+        var key = new KeyValuePair<Type?, Enum?>(null, Icon);
 
         if (Icon is not null)
             key = new(Icon.GetType(), Icon);

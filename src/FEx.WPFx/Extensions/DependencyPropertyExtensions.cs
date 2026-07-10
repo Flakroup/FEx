@@ -12,10 +12,10 @@ public static class DependencyPropertyExtensions
 {
     public static DependencyProperty CreateTwoWayDependencyProperty<TView, TProperty>(
         Expression<Func<TView, TProperty>> propertyExpression,
-        TProperty defaultValue = default,
-        Action<(TView view, TProperty oldValue, TProperty newValue)> propertyChanged = null,
-        Func<(TView view, TProperty currentValue), TProperty> coerceValue = null,
-        Func<TProperty, bool> validateValue = null) where TView : DependencyObject =>
+        TProperty defaultValue = default!,
+        Action<(TView view, TProperty oldValue, TProperty newValue)>? propertyChanged = null,
+        Func<(TView view, TProperty currentValue), TProperty>? coerceValue = null,
+        Func<TProperty, bool>? validateValue = null) where TView : DependencyObject =>
         CreateDependencyProperty(propertyExpression,
             defaultValue,
             FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
@@ -24,10 +24,10 @@ public static class DependencyPropertyExtensions
             validateValue);
 
     public static DependencyProperty CreateTwoWayDependencyProperty<TView, TProperty>(string propertyName,
-        TProperty defaultValue = default,
-        Action<(TView view, TProperty oldValue, TProperty newValue)> propertyChanged = null,
-        Func<(TView view, TProperty currentValue), TProperty> coerceValue = null,
-        Func<TProperty, bool> validateValue = null) where TView : DependencyObject =>
+        TProperty defaultValue = default!,
+        Action<(TView view, TProperty oldValue, TProperty newValue)>? propertyChanged = null,
+        Func<(TView view, TProperty currentValue), TProperty>? coerceValue = null,
+        Func<TProperty, bool>? validateValue = null) where TView : DependencyObject =>
         CreateDependencyProperty(propertyName,
             defaultValue,
             FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
@@ -37,11 +37,11 @@ public static class DependencyPropertyExtensions
 
     public static DependencyProperty CreateDependencyProperty<TView, TProperty>(
         Expression<Func<TView, TProperty>> propertyExpression,
-        TProperty defaultValue = default,
+        TProperty defaultValue = default!,
         FrameworkPropertyMetadataOptions flags = FrameworkPropertyMetadataOptions.None,
-        Action<(TView view, TProperty oldValue, TProperty newValue)> propertyChanged = null,
-        Func<(TView view, TProperty currentValue), TProperty> coerceValue = null,
-        Func<TProperty, bool> validateValue = null) where TView : DependencyObject
+        Action<(TView view, TProperty oldValue, TProperty newValue)>? propertyChanged = null,
+        Func<(TView view, TProperty currentValue), TProperty>? coerceValue = null,
+        Func<TProperty, bool>? validateValue = null) where TView : DependencyObject
     {
         if (propertyExpression.Body is not MemberExpression memberExpression)
             throw new ArgumentException("Expression must be a member expression", nameof(propertyExpression));
@@ -52,11 +52,11 @@ public static class DependencyPropertyExtensions
     }
 
     public static DependencyProperty CreateDependencyProperty<TView, TProperty>(string propertyName,
-        TProperty defaultValue = default,
+        TProperty defaultValue = default!,
         FrameworkPropertyMetadataOptions flags = FrameworkPropertyMetadataOptions.None,
-        Action<(TView view, TProperty oldValue, TProperty newValue)> propertyChanged = null,
-        Func<(TView view, TProperty currentValue), TProperty> coerceValue = null,
-        Func<TProperty, bool> validateValue = null) where TView : DependencyObject =>
+        Action<(TView view, TProperty oldValue, TProperty newValue)>? propertyChanged = null,
+        Func<(TView view, TProperty currentValue), TProperty>? coerceValue = null,
+        Func<TProperty, bool>? validateValue = null) where TView : DependencyObject =>
         DependencyProperty.Register(propertyName,
             typeof(TProperty),
             typeof(TView),
@@ -64,12 +64,12 @@ public static class DependencyPropertyExtensions
             GetValidateValueCallback(validateValue));
 
     public static DependencyProperty CreateCollectionDependencyProperty<TView, TProperty>(string propertyName,
-        TProperty defaultValue = default,
+        TProperty defaultValue = default!,
         FrameworkPropertyMetadataOptions flags = FrameworkPropertyMetadataOptions.None,
-        Action<(TView view, TProperty oldValue, TProperty newValue)> propertyChanged = null,
-        Action<(TView view, IList oldItems, IList newItems)> collectionChanged = null,
-        Func<(TView view, TProperty currentValue), TProperty> coerceValue = null,
-        Func<TProperty, bool> validateValue = null) where TView : DependencyObject
+        Action<(TView view, TProperty oldValue, TProperty newValue)>? propertyChanged = null,
+        Action<(TView view, IList? oldItems, IList? newItems)>? collectionChanged = null,
+        Func<(TView view, TProperty currentValue), TProperty>? coerceValue = null,
+        Func<TProperty, bool>? validateValue = null) where TView : DependencyObject
         where TProperty : INotifyCollectionChanged
     {
         TView view;
@@ -98,23 +98,23 @@ public static class DependencyPropertyExtensions
                 c1.CollectionChanged += OnCollectionChanged;
         }
 
-        void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            collectionChanged((view, e.OldItems, e.NewItems));
+            collectionChanged?.Invoke((view, e.OldItems, e.NewItems));
         }
     }
 
     public static DependencyProperty CreateAttachedProperty<TView, TProperty>(string propertyName,
-                                                                              TProperty defaultValue = default,
+                                                                              TProperty defaultValue = default!,
                                                                               FrameworkPropertyMetadataOptions flags =
                                                                                   FrameworkPropertyMetadataOptions.None,
                                                                               Action<(TView view, TProperty oldValue,
-                                                                                      TProperty newValue)>
+                                                                                      TProperty newValue)>?
                                                                                   propertyChanged =
                                                                                   null,
                                                                               Func<(TView view, TProperty currentValue),
-                                                                                  TProperty> coerceValue = null,
-                                                                              Func<TProperty, bool> validateValue =
+                                                                                  TProperty>? coerceValue = null,
+                                                                              Func<TProperty, bool>? validateValue =
                                                                                   null)
         where TView : DependencyObject =>
         DependencyProperty.RegisterAttached(propertyName,
@@ -123,15 +123,15 @@ public static class DependencyPropertyExtensions
             GetPropertyMetadata(defaultValue, flags, propertyChanged, coerceValue),
             GetValidateValueCallback(validateValue));
 
-    private static ValidateValueCallback GetValidateValueCallback<TProperty>(Func<TProperty, bool> validateValue) =>
+    private static ValidateValueCallback? GetValidateValueCallback<TProperty>(Func<TProperty, bool>? validateValue) =>
         validateValue is null
             ? null
             : v => validateValue((TProperty)v);
 
     private static FrameworkPropertyMetadata GetPropertyMetadata<TView, TProperty>(TProperty defaultValue,
             FrameworkPropertyMetadataOptions flags,
-            Action<(TView view, TProperty oldValue, TProperty newValue)> propertyChanged,
-            Func<(TView view, TProperty currentValue), TProperty> coerceValue
+            Action<(TView view, TProperty oldValue, TProperty newValue)>? propertyChanged,
+            Func<(TView view, TProperty currentValue), TProperty>? coerceValue
         //, bool isAnimationProhibited,
         //UpdateSourceTrigger defaultUpdateSourceTrigger
     ) where TView : DependencyObject =>

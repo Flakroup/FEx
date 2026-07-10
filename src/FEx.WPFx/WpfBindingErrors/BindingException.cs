@@ -17,10 +17,10 @@ namespace FEx.WPFx.WpfBindingErrors;
 [JsonObject]
 public class BindingException : Exception
 {
-    public override string StackTrace { get; }
+    public override string? StackTrace { get; }
     public DateTime OccurenceTime { get; }
 
-    public BindingException(TraceEventCache eventCache, string source, string message)
+    public BindingException(TraceEventCache eventCache, string source, string? message)
         : base(message)
     {
         OccurenceTime = eventCache.DateTime;
@@ -42,9 +42,9 @@ public class BindingException : Exception
     {
     }
 
-    public override bool Equals(object obj) => Equals(obj as BindingException);
+    public override bool Equals(object? obj) => Equals(obj as BindingException);
 
     public override int GetHashCode() => Message.GetHashCode();
 
-    protected bool Equals(BindingException other) => string.Equals(Message, other?.Message);
+    protected bool Equals(BindingException? other) => string.Equals(Message, other?.Message);
 }

@@ -7,12 +7,12 @@ namespace FEx.MSBuildx.Extensions;
 
 public static class MSBuildExtensions
 {
-    public static MSProject FromFile(this ProjectInSolution projectInSolution, string solutionPackagesDir = null) =>
+    public static MSProject FromFile(this ProjectInSolution projectInSolution, string? solutionPackagesDir = null) =>
         FromFile(projectInSolution.AbsolutePath, projectInSolution.ProjectType, solutionPackagesDir);
 
     public static MSProject FromFile(string projectFilePath,
                                      SolutionProjectType projectType,
-                                     string solutionPackagesDir = null)
+                                     string? solutionPackagesDir = null)
     {
         projectFilePath = Path.GetFullPath(projectFilePath);
 

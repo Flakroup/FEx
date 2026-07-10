@@ -27,11 +27,11 @@ public static class FtpDownloader
 {
     private static int _retryCount;
 
-    public static string StatusDescription { get; set; }
+    public static string? StatusDescription { get; set; }
 
     public static async Task<bool> DownloadFileAsync(string fileName,
                                                      Uri serverUri,
-                                                     IProgressAggregator viewModel,
+                                                     IProgressAggregator? viewModel,
                                                      string username = "",
                                                      string password = "")
     {
@@ -88,7 +88,7 @@ public static class FtpDownloader
     /// <returns></returns>
     public static async Task<bool> RestartDownloadFromServerAsync(string fileName,
                                                                   Uri serverUri,
-                                                                  IProgressAggregator viewModel,
+                                                                  IProgressAggregator? viewModel,
                                                                   long offset = 0,
                                                                   string username = "",
                                                                   string password = "")
@@ -109,6 +109,12 @@ public static class FtpDownloader
 
             var resp = await TryGetResponseAsync(serverUri, username, password, offset);
             var response = resp.Value;
+
+            // Behavior change: bail out cleanly when the FTP response could not be obtained
+            // (previously this dereferenced a null response and threw NullReferenceException).
+            if (response is null)
+                return false;
+
             using var stream = response.GetResponseStream();
             viewModel?.PrgSetMax(fileSize - offset);
             viewModel?.IfNotNull(v => v.SetIsIndeterminate(true));
@@ -173,9 +179,10 @@ public static class FtpDownloader
 
                             if (webEx is not null)
                             {
-                                var ftpResponse = (FtpWebResponse)webEx.Response;
+                                var ftpResponse = (FtpWebResponse?)webEx.Response;
 
-                                if (ftpResponse.StatusCode == FtpStatusCode.ActionAbortedLocalProcessingError)
+                                if (ftpResponse is not null
+                                    && ftpResponse.StatusCode == FtpStatusCode.ActionAbortedLocalProcessingError)
                                 {
                                     if (_retryCount >= 10)
                                     {
@@ -265,7 +272,7 @@ public static class FtpDownloader
 #pragma warning disable IDISP004 // false positive, stream unused - only reading headers
                 wc.OpenRead(serverUri);
 #pragma warning restore IDISP004
-                bytesTotal = Convert.ToInt64(wc.ResponseHeaders["Content-Length"]);
+                bytesTotal = Convert.ToInt64(wc.ResponseHeaders?["Content-Length"]);
             }
             else if (serverUri.Scheme == Uri.UriSchemeFtp)
             {
@@ -288,7 +295,7 @@ public static class FtpDownloader
             : FileLengthConverter.ConvertFileLength(bytesTotal, LengthType.Bytes, unit).length;
     }
 
-    private static async Task<KeyValuePair<bool, FtpWebResponse>> TryGetResponseAsync(
+    private static async Task<KeyValuePair<bool, FtpWebResponse?>> TryGetResponseAsync(
         Uri serverUri,
         string username,
         string password,
@@ -299,7 +306,7 @@ public static class FtpDownloader
         request.Method = WebRequestMethods.Ftp.DownloadFile;
         request.Credentials = NetworkUtilities.GetCredentials(username, password);
         request.ContentOffset = offset;
-        FtpWebResponse response = null;
+        FtpWebResponse? response = null;
 
         try
         {
@@ -321,7 +328,7 @@ public static class FtpDownloader
                                                       long offset,
                                                       string username,
                                                       string password,
-                                                      IProgressAggregator viewModel)
+                                                      IProgressAggregator? viewModel)
     {
         var newOffset = offset;
 
@@ -337,7 +344,7 @@ public static class FtpDownloader
                 var resp = await TryGetResponseAsync(serverUri, username, password, offset);
                 var response = resp.Value;
 
-                if (!resp.Key)
+                if (!resp.Key || response is null)
                     return offset;
 
                 try
@@ -353,11 +360,12 @@ public static class FtpDownloader
                         while (readCount > 0)
                         {
                             var innerResp = await TryGetResponseAsync(serverUri, username, password, offset);
+                            var innerResponse = innerResp.Value;
 
-                            if (!innerResp.Key)
+                            if (!innerResp.Key || innerResponse is null)
                                 return newOffset;
 
-                            using var innerStream = innerResp.Value.GetResponseStream();
+                            using var innerStream = innerResponse.GetResponseStream();
 
                             if (innerStream is not null)
                             {

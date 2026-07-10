@@ -7,7 +7,8 @@ namespace FEx.Imaging.Windows.Model;
 public partial class FilesCacheContext : DbContext
 // ReSharper restore PartialTypeWithSinglePart
 {
-    public virtual DbSet<IndexEntry> IndexEntries { get; set; }
+    // EF Core populates the DbSet; non-null by construction
+    public virtual DbSet<IndexEntry> IndexEntries { get; set; } = null!;
 
     public FilesCacheContext(DbContextOptions<FilesCacheContext> options)
         : base(options)

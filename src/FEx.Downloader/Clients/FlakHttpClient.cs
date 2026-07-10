@@ -14,15 +14,15 @@ namespace FEx.Downloader.Clients;
 
 public class FlakHttpClient : ProgressAggregator, IDownloadBase
 {
-    public string FilePath => Client.FilePath;
+    public string? FilePath => Client.FilePath;
 
-    public Uri Url => Client.Url;
+    public Uri? Url => Client.Url;
 
-    public string DirPath => Client.DirPath;
+    public string? DirPath => Client.DirPath;
 
     public DownloadState DState => Client.DState;
 
-    public WebRequestParams Pars
+    public WebRequestParams? Pars
     {
         get => Client.Pars;
         set => Client.Pars = value;
@@ -54,7 +54,7 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     {
     }
 
-    public FlakHttpClient(WebRequestParams pars, bool disposeHandler, CancellationTokenSource cancellationTokenSource)
+    public FlakHttpClient(WebRequestParams pars, bool disposeHandler, CancellationTokenSource? cancellationTokenSource)
         : this(pars.GetHttpClientHandler(), disposeHandler, cancellationTokenSource)
     {
     }
@@ -83,18 +83,18 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
 
     public FlakHttpClient(HttpClientHandler handler,
                           bool disposeHandler,
-                          CancellationTokenSource cancellationTokenSource)
+                          CancellationTokenSource? cancellationTokenSource)
     {
         Mode = ProgressOperationMode.Stream;
         Client = new(handler, disposeHandler, cancellationTokenSource);
         Client.PropertyChanged += Client_PropertyChanged;
     }
 
-    public int CompareTo(object obj) => Client.CompareTo(obj);
+    public int CompareTo(object? obj) => Client.CompareTo(obj);
 
-    public int CompareTo(IDownloadBase other) => Client.CompareTo(other);
+    public int CompareTo(IDownloadBase? other) => Client.CompareTo(other);
 
-    public bool Equals(IDownloadBase other) => Client.Equals(other);
+    public bool Equals(IDownloadBase? other) => Client.Equals(other);
 
     public async Task DelayAsync() => await Client.DelayAsync();
 
@@ -109,7 +109,7 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
                                                     CancellationToken cancellationToken) =>
         await Client.GetAsync(requestUri, completionOption, cancellationToken);
 
-    private void Client_PropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void Client_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
         {

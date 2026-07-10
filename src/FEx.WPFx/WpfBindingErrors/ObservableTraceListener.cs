@@ -15,14 +15,14 @@ namespace FEx.WPFx.WpfBindingErrors;
 /// </remarks>
 internal sealed class ObservableTraceListener : TraceListener
 {
-    public event Action<TraceEventCache, string, TraceEventType, string> TraceCatched;
+    public event Action<TraceEventCache, string, TraceEventType, string?>? TraceCatched;
     private StringBuilder Buffer { get; } = new();
 
     [DebuggerStepThrough]
-    public override void Write(string message) => Buffer.Append(message);
+    public override void Write(string? message) => Buffer.Append(message);
 
     [DebuggerStepThrough]
-    public override void WriteLine(string message)
+    public override void WriteLine(string? message)
     {
         Buffer.Append(message);
 
@@ -32,32 +32,38 @@ internal sealed class ObservableTraceListener : TraceListener
     }
 
     [DebuggerStepThrough]
-    public override void TraceEvent(TraceEventCache eventCache, string source, TraceEventType eventType, int id)
+    public override void TraceEvent(TraceEventCache? eventCache, string source, TraceEventType eventType, int id)
     {
         base.TraceEvent(eventCache, source, eventType, id);
-        TraceCatched?.Invoke(eventCache, source, eventType, null);
+
+        // WPF always supplies a non-null eventCache when raising trace events.
+        TraceCatched?.Invoke(eventCache!, source, eventType, null);
     }
 
     [DebuggerStepThrough]
-    public override void TraceEvent(TraceEventCache eventCache,
+    public override void TraceEvent(TraceEventCache? eventCache,
                                     string source,
                                     TraceEventType eventType,
                                     int id,
-                                    string message)
+                                    string? message)
     {
         base.TraceEvent(eventCache, source, eventType, id, message);
-        TraceCatched?.Invoke(eventCache, source, eventType, message);
+
+        // WPF always supplies a non-null eventCache when raising trace events.
+        TraceCatched?.Invoke(eventCache!, source, eventType, message);
     }
 
     [DebuggerStepThrough]
-    public override void TraceEvent(TraceEventCache eventCache,
+    public override void TraceEvent(TraceEventCache? eventCache,
                                     string source,
                                     TraceEventType eventType,
                                     int id,
-                                    string format,
-                                    params object[] args)
+                                    string? format,
+                                    params object?[]? args)
     {
         base.TraceEvent(eventCache, source, eventType, id, format, args);
-        TraceCatched?.Invoke(eventCache, source, eventType, format);
+
+        // WPF always supplies a non-null eventCache when raising trace events.
+        TraceCatched?.Invoke(eventCache!, source, eventType, format);
     }
 }

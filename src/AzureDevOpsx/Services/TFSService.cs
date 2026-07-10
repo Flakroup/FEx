@@ -16,16 +16,16 @@ namespace FEx.AzureDevOpsx.Services;
 
 public sealed class TfsService : ThreadingAwareViewModel
 {
-    private TfsEnvironment _selectedEnvironment;
+    private TfsEnvironment? _selectedEnvironment;
 
-    public static string ImagesCacheDirPath { get; set; }
+    public static string? ImagesCacheDirPath { get; set; }
 
-    public EventHandler<EventArgs> EnvironmentSet { get; set; }
-    public EventHandler<EventArgs> TfsUriChange { get; set; }
+    public EventHandler<EventArgs>? EnvironmentSet { get; set; }
+    public EventHandler<EventArgs>? TfsUriChange { get; set; }
 
     public ConcurrentObservableList<TfsEnvironment> TfsEnvironments { get; }
 
-    public TfsEnvironment SelectedEnvironment
+    public TfsEnvironment? SelectedEnvironment
     {
         get => _selectedEnvironment;
         set
@@ -53,7 +53,7 @@ public sealed class TfsService : ThreadingAwareViewModel
         }
     }
 
-    private EventHandler<EventArgs> SelectedEnvironmentHasChanged { get; }
+    private EventHandler<EventArgs>? SelectedEnvironmentHasChanged { get; }
 
     public static void SetEnvironments(IDictionary<string, Uri> environments, IProgressAggregator mainViewModel)
     {
@@ -63,18 +63,18 @@ public sealed class TfsService : ThreadingAwareViewModel
             new TfsEnvironment(x.Key, x.Value, mainViewModel, ImagesCacheDirPath)));
     }
 
-    public static string GetEnvironmentId(string requestUrl, ICredentials credentials)
+    public static string? GetEnvironmentId(string requestUrl, ICredentials credentials)
     {
         return Instance.TfsEnvironments
-            .FindInEnumerable(x => x.GetCredentials() == credentials && requestUrl.StartsWith(x.Server.Uri.AbsoluteUri))
+            .FindInEnumerable(x => x.Server != null && x.GetCredentials() == credentials && requestUrl.StartsWith(x.Server.Uri.AbsoluteUri))
             ?.EnvironmentId;
     }
 
-    public Task<TResponse> RunProcAsync<TResponse>(string requestUrl,
+    public Task<TResponse?> RunProcAsync<TResponse>(string requestUrl,
                                                    string environmentId,
-                                                   IDictionary<string, object> args = null,
-                                                   IList<HttpStatusCode> omitCodes = null,
-                                                   JsonSerializerSettings settings = null,
+                                                   IDictionary<string, object>? args = null,
+                                                   IList<HttpStatusCode>? omitCodes = null,
+                                                   JsonSerializerSettings? settings = null,
                                                    RequestMethod method = RequestMethod.GET)
         where TResponse : BaseTfsResponse, new()
     {
@@ -83,10 +83,10 @@ public sealed class TfsService : ThreadingAwareViewModel
         return env.RunProcAsync<TResponse>(requestUrl, args, settings, omitCodes, method);
     }
 
-    public Task<string> RunRawAsync(string requestUrl,
+    public Task<string?> RunRawAsync(string requestUrl,
                                     string environmentId,
-                                    IDictionary<string, object> args = null,
-                                    IList<HttpStatusCode> omitCodes = null,
+                                    IDictionary<string, object>? args = null,
+                                    IList<HttpStatusCode>? omitCodes = null,
                                     RequestMethod method = RequestMethod.GET)
     {
         var env = TfsEnvironments.First(x => x.EnvironmentId == environmentId);
@@ -94,19 +94,19 @@ public sealed class TfsService : ThreadingAwareViewModel
         return env.RunRawAsync(requestUrl, args, omitCodes, method);
     }
 
-    private void OnSelectedEnvironmentHasChanged(object sender, EventArgs eventArgs)
+    private void OnSelectedEnvironmentHasChanged(object? sender, EventArgs eventArgs)
     {
         if (SelectedEnvironment != null)
-            EnvironmentSet.Invoke(_selectedEnvironment, EventArgs.Empty);
+            EnvironmentSet?.Invoke(_selectedEnvironment, EventArgs.Empty);
     }
 
-    private void OnUriChanged(object sender, EventArgs e)
+    private void OnUriChanged(object? sender, EventArgs e)
     {
-        TfsUriChange.Invoke(null, null);
+        TfsUriChange?.Invoke(null, EventArgs.Empty);
     }
 
     #region Singleton
-    private static volatile TfsService _instance;
+    private static volatile TfsService? _instance;
     private static object SyncRoot { get; } = new();
 
     public static TfsService Instance
@@ -131,7 +131,7 @@ public sealed class TfsService : ThreadingAwareViewModel
         SelectedEnvironmentHasChanged += OnSelectedEnvironmentHasChanged;
     }
 
-    private void TfsEnvironments_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void TfsEnvironments_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (SelectedEnvironment == null
             || TfsEnvironments.All(x => x.ServerUri != SelectedEnvironment.ServerUri))

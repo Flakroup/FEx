@@ -63,11 +63,11 @@ public static class ControlsHandler
         return -1;
     }
 
-    public static string GetColumnHeader(this DataGridColumn col) => GetColumnHeader(col.Header);
+    public static string? GetColumnHeader(this DataGridColumn col) => GetColumnHeader(col.Header);
 
-    public static string GetColumnHeader(this GridViewColumn col) => GetColumnHeader(col.Header);
+    public static string? GetColumnHeader(this GridViewColumn col) => GetColumnHeader(col.Header);
 
-    public static string GetColumnHeader(object colHeader)
+    public static string? GetColumnHeader(object colHeader)
     {
         if (colHeader is TextBlock block)
             return block.Text;

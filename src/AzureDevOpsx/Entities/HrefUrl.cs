@@ -6,5 +6,5 @@ namespace FEx.AzureDevOpsx.Entities;
 public class HrefUrl
 {
     [JsonProperty("href")]
-    public Uri Href { get; set; }
+    public Uri? Href { get; set; }
 }

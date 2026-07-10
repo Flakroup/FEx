@@ -28,12 +28,12 @@ public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposabl
                                                                           string caption,
                                                                           MessageIcon messageBoxImage,
                                                                           FExMessageButton button,
-                                                                          ISupportInitialize ownerWindow,
+                                                                          ISupportInitialize? ownerWindow,
                                                                           bool informUser,
                                                                           bool wait,
-                                                                          Stopwatch sw,
+                                                                          Stopwatch? sw,
                                                                           LogLevel level,
-                                                                          Exception exception)
+                                                                          Exception? exception)
     {
         try
         {
@@ -45,7 +45,7 @@ public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposabl
                     wait,
                     (MessageBoxImage)messageBoxImage,
                     (MessageBoxButton)button,
-                    (Window)ownerWindow,
+                    ownerWindow as Window,
                     sw);
         }
         catch (Exception ex)
@@ -56,7 +56,7 @@ public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposabl
                     wait,
                     (MessageBoxImage)messageBoxImage,
                     (MessageBoxButton)button,
-                    (Window)ownerWindow,
+                    ownerWindow as Window,
                     sw);
         }
 
@@ -67,8 +67,8 @@ public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposabl
                                                            string caption,
                                                            MessageBoxImage messageBoxImage,
                                                            MessageBoxButton buttons,
-                                                           Window owner,
-                                                           Stopwatch sw)
+                                                           Window? owner,
+                                                           Stopwatch? sw)
     {
         sw?.Stop();
 
@@ -91,8 +91,8 @@ public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposabl
                                                                       bool wait,
                                                                       MessageBoxImage messageBoxImage,
                                                                       MessageBoxButton buttons,
-                                                                      Window owner,
-                                                                      Stopwatch sw)
+                                                                      Window? owner,
+                                                                      Stopwatch? sw)
     {
         if (Application.Current is null
             || !MessagesCache.Add(message))
@@ -124,7 +124,7 @@ public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposabl
         return MessageResult.None;
     }
 
-    private void Log(string txt, LogLevel level, Exception exception) => _logger.Log(level, exception, txt);
+    private void Log(string txt, LogLevel level, Exception? exception) => _logger.Log(level, exception, txt);
 
     #region IDisposable
     public void Dispose() => MessagesCacheSemaphore?.Dispose();

@@ -99,9 +99,9 @@ public static class FileUtil
                                                   uint nFiles,
                                                   string[] rgsFilenames,
                                                   uint nApplications,
-                                                  [In] RM_UNIQUE_PROCESS[] rgApplications,
+                                                  [In] RM_UNIQUE_PROCESS[]? rgApplications,
                                                   uint nServices,
-                                                  string[] rgsServiceNames);
+                                                  string[]? rgsServiceNames);
 
     [DllImport("rstrtmgr.dll", CharSet = CharSet.Unicode)]
     private static extern int RmStartSession(out uint pSessionHandle, int dwSessionFlags, string strSessionKey);
@@ -113,7 +113,7 @@ public static class FileUtil
     private static extern int RmGetList(uint dwSessionHandle,
                                         out uint pnProcInfoNeeded,
                                         ref uint pnProcInfo,
-                                        [In] [Out] RM_PROCESS_INFO[] rgAffectedApps,
+                                        [In] [Out] RM_PROCESS_INFO[]? rgAffectedApps,
                                         ref uint lpdwRebootReasons);
 
     // ReSharper disable InconsistentNaming

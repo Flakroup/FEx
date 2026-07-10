@@ -14,7 +14,7 @@ namespace FEx.Downloader;
 public sealed class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisposable
 {
     private long _size;
-    private FileStream _fileStream;
+    private FileStream? _fileStream;
     private bool _isFileStreamOpen;
 
     public string RangeHeader { get; }
@@ -53,14 +53,10 @@ public sealed class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisp
         get
         {
             if (_fileStream is null)
-                FileStream = File.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                SetFileStream(File.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None));
 
-            return _fileStream;
-        }
-        private set
-        {
-            if (SetProperty(ref _fileStream, value))
-                IsFileStreamOpen = _fileStream is not null;
+            // Lazy-initialized above (SetFileStream assigns a non-null stream), so it is non-null here.
+            return _fileStream!;
         }
     }
 
@@ -70,14 +66,14 @@ public sealed class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisp
         set => SetProperty(ref _isFileStreamOpen, value);
     }
 
-    private IProgress<double> Progress { get; }
+    private IProgress<double>? Progress { get; }
 
-    public DownloadChunk(long from, long to, DirectoryInfo directory, IProgress<double> progress)
+    public DownloadChunk(long from, long to, DirectoryInfo directory, IProgress<double>? progress)
         : this(new ContentRangeHeaderValue(from, to), directory, progress)
     {
     }
 
-    public DownloadChunk(ContentRangeHeaderValue rangeHeader, DirectoryInfo directory, IProgress<double> progress)
+    public DownloadChunk(ContentRangeHeaderValue rangeHeader, DirectoryInfo directory, IProgress<double>? progress)
     {
         Progress = progress;
         RangeHeaderValue = rangeHeader;
@@ -95,8 +91,8 @@ public sealed class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisp
             FixChunkFileSize();
     }
 
-    public DownloadChunk(string rangeHeader, DirectoryInfo directory, IProgress<double> progress)
-        : this(rangeHeader.GetContentRange(), directory, progress)
+    public DownloadChunk(string rangeHeader, DirectoryInfo directory, IProgress<double>? progress)
+        : this(rangeHeader.GetContentRange().Guard(nameof(rangeHeader)), directory, progress)
     {
     }
 
@@ -143,11 +139,17 @@ public sealed class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisp
     {
         if (IsFileStreamOpen)
         {
-            FileStream?.Flush();
-            FileStream?.Close();
-            FileStream?.Dispose();
-            FileStream = null;
+            _fileStream?.Flush();
+            _fileStream?.Close();
+            _fileStream?.Dispose();
+            SetFileStream(null);
         }
+    }
+
+    private void SetFileStream(FileStream? value)
+    {
+        if (SetProperty(ref _fileStream, value))
+            IsFileStreamOpen = _fileStream is not null;
     }
 
     #region IDisposable

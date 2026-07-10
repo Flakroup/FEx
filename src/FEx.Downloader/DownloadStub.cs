@@ -13,28 +13,28 @@ namespace FEx.Downloader;
 public class DownloadStub : NotifyPropertyChanged, IDownloadStub
 {
     private long _dataLength;
-    private string _filePath;
-    private string _dirPath;
+    private string? _filePath;
+    private string? _dirPath;
 
-    public string MD5Checksum { get; }
-    public Uri Url { get; }
+    public string? MD5Checksum { get; }
+    public Uri? Url { get; }
 
-    public WebRequestParams Pars { get; }
+    public WebRequestParams? Pars { get; }
     public int ParallelRanges { get; }
     public DownloadState DState { get; private set; }
 
-    public string FilePath
+    public string? FilePath
     {
         get => _filePath;
         set =>
             SetProperty(ref _filePath,
                 value,
                 fP => DirPath = fP is not null
-                    ? Directory.GetParent(fP).FullName
+                    ? Directory.GetParent(fP)?.FullName
                     : null);
     }
 
-    public string DirPath
+    public string? DirPath
     {
         get => _dirPath;
         set =>
@@ -64,14 +64,14 @@ public class DownloadStub : NotifyPropertyChanged, IDownloadStub
     {
     }
 
-    public DownloadStub(string url, string filePath, string md5Checksum, WebRequestParams pars, int parallelChunks)
+    public DownloadStub(string url, string filePath, string? md5Checksum, WebRequestParams? pars, int parallelChunks)
         : this(new Uri(url), filePath, md5Checksum, pars, parallelChunks)
     {
     }
 
     public DownloadStub(IDownloadStub downloadItem)
-        : this(downloadItem.Url,
-            downloadItem.FilePath,
+        : this(downloadItem.Url.Guard(nameof(downloadItem.Url)),
+            downloadItem.FilePath.Guard(nameof(downloadItem.FilePath)),
             downloadItem.MD5Checksum,
             downloadItem.Pars,
             downloadItem.ParallelRanges)
@@ -83,7 +83,7 @@ public class DownloadStub : NotifyPropertyChanged, IDownloadStub
     {
     }
 
-    public DownloadStub(Uri url, string filePath, string md5Checksum, WebRequestParams pars, int parallelChunks)
+    public DownloadStub(Uri url, string filePath, string? md5Checksum, WebRequestParams? pars, int parallelChunks)
     {
         MD5Checksum = md5Checksum;
         Url = url;
@@ -101,17 +101,17 @@ public class DownloadStub : NotifyPropertyChanged, IDownloadStub
 
     public Task LoadTargetFileNameAsync() => LoadTargetFileNameAsync(null, null);
 
-    public async Task LoadTargetFileNameAsync(string dirPath, string fallback)
+    public async Task LoadTargetFileNameAsync(string? dirPath, string? fallback)
     {
-        string fileName = (await Url.GetFileNameAsync() ?? fallback).Guard(nameof(fileName));
+        string fileName = (await Url.Guard(nameof(Url)).GetFileNameAsync() ?? fallback).Guard(nameof(fileName));
 
-        FilePath = Path.Combine(dirPath ?? DirPath, fileName);
+        FilePath = Path.Combine((dirPath ?? DirPath).Guard(nameof(dirPath)), fileName);
     }
 
     #region IComparable
-    public override bool Equals(object obj) => Equals(obj as IDownloadBase);
+    public override bool Equals(object? obj) => Equals(obj as IDownloadBase);
 
-    public bool Equals(IDownloadBase other) => other is not null && FilePath == other.FilePath && Url == other.Url;
+    public bool Equals(IDownloadBase? other) => other is not null && FilePath == other.FilePath && Url == other.Url;
 
     public override int GetHashCode()
 #if NETSTANDARD
@@ -126,14 +126,16 @@ public class DownloadStub : NotifyPropertyChanged, IDownloadStub
             HashCode.Combine(FilePath, Url?.AbsoluteUri);
 #endif
 
-    public int CompareTo(object obj) =>
+    public int CompareTo(object? obj) =>
         Equals(obj)
             ? 0
-            : GetHashCode().CompareTo(obj.GetHashCode());
+            // Non-equal branch: obj is effectively non-null at all call sites (preserves prior behavior).
+            : GetHashCode().CompareTo(obj!.GetHashCode());
 
-    public int CompareTo(IDownloadBase other) =>
+    public int CompareTo(IDownloadBase? other) =>
         Equals(other)
             ? 0
-            : GetHashCode().CompareTo(other.GetHashCode());
+            // Non-equal branch: other is effectively non-null at all call sites (preserves prior behavior).
+            : GetHashCode().CompareTo(other!.GetHashCode());
     #endregion
 }

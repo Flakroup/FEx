@@ -14,37 +14,38 @@ namespace FEx.Imaging.Windows.Model;
 public class IndexEntry : IndexEntryBase, IDisposable
 #pragma warning restore IDISP025
 {
-    private Uri _url;
-    private CachedImage _cachedImage;
-    private string _filesCacheRootDirPath;
-    private FileInfo _cache;
-    private string _extension;
-    private string _fileName;
+    private Uri? _url;
+    private CachedImage? _cachedImage;
+    private string? _filesCacheRootDirPath;
+    private FileInfo? _cache;
+    private string? _extension;
+    private string? _fileName;
     private bool _isDownloading;
-    private IIndexEntryConfig _config;
+    private IIndexEntryConfig? _config;
 
     [JsonIgnore]
     [NotMapped]
-    public IIndexEntryConfig Config
+    public IIndexEntryConfig? Config
     {
         get => _config;
         set
         {
             if (SetProperty(ref _config, value))
-                FilesCacheRootDirPath = Config.FilesCacheDirPath;
+                FilesCacheRootDirPath = value?.FilesCacheDirPath;
         }
     }
 
     [JsonIgnore]
     [NotMapped]
-    public Uri Url
+    public Uri? Url
     {
         get => _url;
         protected set
         {
             if (SetProperty(ref _url, value))
             {
-                AbsoluteUri = Url?.AbsoluteUri;
+                // AbsoluteUri (IIndexEntryBase [Key]) is non-nullable by contract but this entity stores null on reset
+                AbsoluteUri = (Url?.AbsoluteUri)!;
 
 #pragma warning disable IDISP003 // semaphore from LockSrv, not owned
                 Semaphore = AbsoluteUri is not null
@@ -61,7 +62,7 @@ public class IndexEntry : IndexEntryBase, IDisposable
 
     [JsonIgnore]
     [NotMapped]
-    public string FilesCacheRootDirPath
+    public string? FilesCacheRootDirPath
     {
         get => _filesCacheRootDirPath;
         protected set
@@ -70,15 +71,16 @@ public class IndexEntry : IndexEntryBase, IDisposable
             {
                 RefreshCachedImage();
 
-                if (FilePath?.StartsWith(FilesCacheRootDirPath) == false)
-                    FilePath = FilePath.Replace(Path.GetDirectoryName(FilePath), FilesCacheRootDirPath);
+                // FilesCacheRootDirPath! preserves prior throw-on-null behavior; FilePath's directory is non-null when FilePath is a full path
+                if (FilePath?.StartsWith(FilesCacheRootDirPath!) == false)
+                    FilePath = FilePath.Replace(Path.GetDirectoryName(FilePath)!, FilesCacheRootDirPath!);
             }
         }
     }
 
     [JsonIgnore]
     [NotMapped]
-    public CachedImage CachedImage
+    public CachedImage? CachedImage
     {
         get => _cachedImage;
         protected set => SetProperty(ref _cachedImage, value);
@@ -86,7 +88,7 @@ public class IndexEntry : IndexEntryBase, IDisposable
 
     [JsonIgnore]
     [NotMapped]
-    public FileInfo Cache
+    public FileInfo? Cache
     {
         get => _cache;
         protected set
@@ -98,7 +100,7 @@ public class IndexEntry : IndexEntryBase, IDisposable
 
     [JsonIgnore]
     [NotMapped]
-    public string FileName
+    public string? FileName
     {
         get => _fileName;
         protected set => SetProperty(ref _fileName, value);
@@ -106,7 +108,7 @@ public class IndexEntry : IndexEntryBase, IDisposable
 
     [JsonIgnore]
     [NotMapped]
-    public string Extension
+    public string? Extension
     {
         get => _extension;
         protected internal set => SetProperty(ref _extension, value);
@@ -123,7 +125,7 @@ public class IndexEntry : IndexEntryBase, IDisposable
 #pragma warning disable IDISP008 // semaphore from LockSrv, ownership managed externally
     [JsonIgnore]
     [NotMapped]
-    protected internal SemaphoreSlim Semaphore { get; protected set; }
+    protected internal SemaphoreSlim? Semaphore { get; protected set; }
 #pragma warning restore IDISP008
 
     private static ISynchronizedAccessService LockSrv => FExCoreStatics.SynchronizedAccessService;
@@ -132,19 +134,20 @@ public class IndexEntry : IndexEntryBase, IDisposable
     {
     }
 
-    public IndexEntry(string absoluteUri, IIndexEntryConfig config, string fileName = null)
+    public IndexEntry(string absoluteUri, IIndexEntryConfig config, string? fileName = null)
         : this()
     {
         Config = config;
         AbsoluteUri = absoluteUri;
 
         if (fileName is not null)
-            FilePath = Path.Combine(FilesCacheRootDirPath, fileName);
+            // Config assigned above sets FilesCacheRootDirPath from the config's non-null cache dir
+            FilePath = Path.Combine(FilesCacheRootDirPath!, fileName);
     }
 
-    public static string GetFileName(Uri url) => GetFileName(url?.AbsoluteUri);
+    public static string? GetFileName(Uri? url) => GetFileName(url?.AbsoluteUri);
 
-    public static string GetFileName(string uri) =>
+    public static string? GetFileName(string? uri) =>
         uri is not null
             ? uri.GenerateMd5OfString()
             : null;
@@ -175,19 +178,20 @@ public class IndexEntry : IndexEntryBase, IDisposable
         if (Cache is not null)
             FileName = Path.GetFileNameWithoutExtension(Cache.Name);
 
-        CheckSum = Cache?.GenerateMd5OfFile();
+        // CheckSum/FilePath/LocalUri are non-nullable per IIndexEntryBase; this entity legitimately clears them to null, so suppress
+        CheckSum = (Cache?.GenerateMd5OfFile())!;
 
         Extension = Cache?.Exists == true
             ? Cache.Extension
             : null;
 
-        FilePath = Cache?.Exists == true
+        FilePath = (Cache?.Exists == true
             ? Cache.FullName
-            : null;
+            : null)!;
 
-        LocalUri = FilePath is not null
+        LocalUri = (FilePath is not null
             ? new Uri($"file:///{FilePath}", UriKind.Absolute)
-            : null;
+            : null)!;
 
         TrySetSize();
     }

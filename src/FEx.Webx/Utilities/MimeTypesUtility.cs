@@ -15,15 +15,17 @@ namespace FEx.Webx.Utilities;
 public static class MimeTypesUtility
 {
     public static IRegistryService RegistryService => FExPlatforms.RegistryService;
-    public static ConcurrentDictionary<string, string> TypeMap { get; }
-    public static IReadOnlyDictionary<string, string> Mappings => TypeMap;
+
+    // Nullable: the static constructor leaves TypeMap unset if building the map throws (catch swallows it).
+    public static ConcurrentDictionary<string, string?>? TypeMap { get; }
+    public static IReadOnlyDictionary<string, string?>? Mappings => TypeMap;
 
     static MimeTypesUtility()
     {
         try
         {
             var typeMap =
-                new ConcurrentDictionary<string, string>(MimeUtility.TypeMap.ToDictionary(x => x.Key, x => x.Value));
+                new ConcurrentDictionary<string, string?>(MimeUtility.TypeMap.ToDictionary(x => x.Key, x => x.Value));
 
             typeMap.TryAdd(".*", "application/octet-stream");
 
@@ -35,32 +37,34 @@ public static class MimeTypesUtility
         }
     }
 
-    public static IReadOnlyCollection<string> GetDefaultExtensions(this MediaTypeHeaderValue contentType) =>
+    public static IReadOnlyCollection<string> GetDefaultExtensions(this MediaTypeHeaderValue? contentType) =>
         GetDefaultExtensions(contentType?.MediaType);
 
     public static IReadOnlyCollection<string> GetDefaultExtensions(MediaTypes mediaType) =>
         GetDefaultExtensions(mediaType.GetEnumValueDescription());
 
-    public static IReadOnlyCollection<string> GetDefaultExtensions(string mimeType)
+    public static IReadOnlyCollection<string> GetDefaultExtensions(string? mimeType)
     {
-        var extensions = Mappings.IsNotNullOrEmptyReadOnlyCollection()
+        var extensions = Mappings is { Count: > 0 }
             ? Mappings.Where(x => x.Value == mimeType).Select(x => x.Key).ToList().AsReadOnly()
             : null;
 
-        return extensions.IsNotNullOrEmptyReadOnlyCollection() ? extensions :
-            RegistryService is not null ? RegistryService.GetDefaultExtension(mimeType).Yield().ToList().AsReadOnly() :
-            Enumerable.Empty<string>().ToList().AsReadOnly();
+        return extensions is { Count: > 0 }
+            ? extensions
+            : RegistryService is not null && RegistryService.GetDefaultExtension(mimeType) is { } registryExtension
+                ? registryExtension.Yield().ToList().AsReadOnly()
+                : Enumerable.Empty<string>().ToList().AsReadOnly();
     }
 
-    public static string GetDefaultMimeType(string extension) =>
-        Mappings.IsNotNullOrEmptyReadOnlyCollection()
+    public static string? GetDefaultMimeType(string extension) =>
+        Mappings is { Count: > 0 }
             ? Mappings.TryGetReadOnlyKeyValue(extension)
             : RegistryService?.GetDefaultMimeType(extension);
 
-    public static string GetDefaultExtension(this MediaTypeHeaderValue contentType) =>
+    public static string? GetDefaultExtension(this MediaTypeHeaderValue? contentType) =>
         contentType.GetDefaultExtensions().FirstOrDefault();
 
-    public static string GetDefaultExtension(string contentType, string fileName)
+    public static string GetDefaultExtension(string? contentType, string fileName)
     {
         var urlExtension = Path.GetExtension(fileName);
         var webExtensions = GetDefaultExtensions(contentType);

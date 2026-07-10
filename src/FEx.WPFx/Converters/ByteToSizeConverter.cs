@@ -8,7 +8,7 @@ namespace FEx.WPFx.Converters;
 
 public class ByteToSizeConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is null)
             return null;
@@ -30,5 +30,5 @@ public class ByteToSizeConverter : IValueConverter
         return FileLengthConverter.ConvertFileLengthToString(length, LengthType.Bytes, lType, digits);
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
+    public object? ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
 }

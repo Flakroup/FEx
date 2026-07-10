@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using System.IO;
 using System.Windows.Media;
 
@@ -5,12 +6,13 @@ namespace FEx.WPFx.SVG.SvgConverter;
 
 public class ConvertedSvgData
 {
-    private string _xaml;
-    private string _svg;
-    private string _objectName;
-    private DrawingImage _convertedObj;
+    private string? _xaml;
+    private string? _svg;
+    private string? _objectName;
+    private DrawingImage? _convertedObj;
 
-    public string Filepath { get; set; }
+    // Set by the ConvertSvg factory methods before any Xaml/Svg/ConvertedObj access.
+    public string Filepath { get; set; } = null!;
 
     public string Xaml
     {
@@ -28,8 +30,8 @@ public class ConvertedSvgData
     {
         get =>
             _convertedObj ??=
-                ConverterLogic.ConvertSvgToObject(this, ResultMode.DrawingImage, null, out _objectName, new()) as
-                    DrawingImage;
+                (ConverterLogic.ConvertSvgToObject(this, ResultMode.DrawingImage, null, out _objectName, new()) as
+                    DrawingImage).Guard(nameof(ConvertedObj));
         set => _convertedObj = value;
     }
 }

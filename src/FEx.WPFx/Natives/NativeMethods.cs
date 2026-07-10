@@ -84,7 +84,7 @@ public static class NativeMethods
 
     public static void WmGetMinMaxInfo(IntPtr hwnd, IntPtr lParam)
     {
-        var mmi = (Minmaxinfo)Marshal.PtrToStructure(lParam, typeof(Minmaxinfo));
+        var mmi = Marshal.PtrToStructure<Minmaxinfo>(lParam);
 
         // Adjust the maximized size and position to fit the work area of the correct monitor
         const int monitorDefaulttonearest = 0x00000002;

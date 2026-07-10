@@ -26,7 +26,7 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
             FrameworkPropertyMetadataOptions.AffectsMeasure,
             (o, a) => ((VirtualizingWrapPanelWithItemExpansion)o).ExpandedItemPropertyChanged(a)));
 
-    private FrameworkElement _expandedItemChild;
+    private FrameworkElement? _expandedItemChild;
 
     private int _itemIndexFollwingExpansion;
 

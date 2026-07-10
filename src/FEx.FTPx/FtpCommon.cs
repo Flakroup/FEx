@@ -12,7 +12,7 @@ namespace FEx.FTPx;
 
 public static class FtpCommon
 {
-    public static async Task<FtpListItem> GetFtpFileInfoAsync(string ftpfilepath,
+    public static async Task<FtpListItem?> GetFtpFileInfoAsync(string ftpfilepath,
                                                               Uri ftphost,
                                                               string username,
                                                               string password,
@@ -69,12 +69,12 @@ public static class FtpCommon
         await factory.ReleaseClientAsync(client);
     }
 
-    public static async Task<string> DownloadFileFtpAsync(string inputdirpath,
+    public static async Task<string?> DownloadFileFtpAsync(string inputdirpath,
                                                           Uri ftphost,
                                                           string ftpfilepath,
                                                           string username,
                                                           string password,
-                                                          IProgressAggregator viewModel = null,
+                                                          IProgressAggregator? viewModel = null,
                                                           bool useProxy = false)
     {
         var fName = Path.GetFileName(ftpfilepath);
@@ -108,7 +108,7 @@ public static class FtpCommon
                                                             string username,
                                                             string password,
                                                             Func<string, bool> onTargetExists,
-                                                            IProgressAggregator viewModel = null,
+                                                            IProgressAggregator? viewModel = null,
                                                             bool useProxy = false)
     {
         FtpStatus? res = null;
@@ -158,7 +158,7 @@ public static class FtpCommon
         return res;
     }
 
-    public static void RunFtpAction(Uri targetUrl, Action<FtpClient> action, NetworkCredential credentials = null)
+    public static void RunFtpAction(Uri targetUrl, Action<FtpClient> action, NetworkCredential? credentials = null)
     {
         using var client = new FtpClient(targetUrl.Host)
         {
@@ -170,7 +170,7 @@ public static class FtpCommon
         client.Disconnect();
     }
 
-    private static IProgress<FtpProgress> GetProgress(IProgressAggregator viewModel, long size)
+    private static IProgress<FtpProgress>? GetProgress(IProgressAggregator? viewModel, long size)
     {
         return viewModel != null
             ? new Progress<FtpProgress>(x =>

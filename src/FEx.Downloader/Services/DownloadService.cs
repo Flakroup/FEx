@@ -118,13 +118,16 @@ public class DownloadService : ProgressAggregator
     }
 
     private void AttachListeners(IDownloadItem di) =>
-        Subscriptions.ReplaceAndDisposeOldValue(di.Url.AbsoluteUri.GenerateMd5OfString(),
+        Subscriptions.ReplaceAndDisposeOldValue(di.Url.Guard(nameof(di.Url)).AbsoluteUri.GenerateMd5OfString().GuardProperty(),
             () => di.WhenAnyValue(x => x.TotalPrg, x => x.DState)
                 .Sample(FExMvvm.DefaultUIRefreshInterval)
                 .Subscribe(_ => OnDownloadPropertyChanged()));
 
     private void DetachListeners(IDownloadItem di) =>
-        Subscriptions.TryGetKeyValue(di.Url.AbsoluteUri.GenerateMd5OfString())?.Dispose();
+        Subscriptions
+            .TryGetKeyValue<string, IDisposable>(
+                di.Url.Guard(nameof(di.Url)).AbsoluteUri.GenerateMd5OfString().GuardProperty())
+            ?.Dispose();
 
     private void OnDownloadPropertyChanged()
     {
@@ -177,6 +180,6 @@ public class DownloadService : ProgressAggregator
     // enqueues them); collecting and returning them is intentional task tracking, not a foreign-task await.
 #pragma warning disable VSTHRD003
     private Task[] GetUnfinishedDownloadsTasks() =>
-        [.. Downloads.Select(x => x.Value.DownloadFileTask).Where(x => x?.IsFinished() == false)];
+        [.. Downloads.Select(x => x.Value.DownloadFileTask).OfType<Task>().Where(x => x.IsFinished() == false)];
 #pragma warning restore VSTHRD003
 }

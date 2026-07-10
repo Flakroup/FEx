@@ -28,15 +28,16 @@ public class IndexEntriesCache : SynchronizedDictionary<string, IndexEntry, File
         BeginInitialization();
     }
 
-    public async Task<IndexEntry> GetOrAddValueAsync(string key, bool addNew = true, string fileName = null) =>
-        await GetOrAddValueAsync(key,
+    // Base returns null only for addNew:false + missing key; callers passing addNew:false null-check the result (preserves pre-nullable behavior)
+    public async Task<IndexEntry> GetOrAddValueAsync(string key, bool addNew = true, string? fileName = null) =>
+        (await GetOrAddValueAsync(key,
             addNew,
             fileName is not null
                 ? new Dictionary<string, object>
                 {
                     [FileName] = fileName
                 }
-                : null);
+                : null))!;
 
     public async Task<int> RemoveIndexEntriesOfMissingFilesAsync(HashSet<string> existingFiles)
     {
@@ -48,10 +49,10 @@ public class IndexEntriesCache : SynchronizedDictionary<string, IndexEntry, File
         if (existingFiles.Count > 0)
         {
             var results = await existingFiles.WithWhenAllAsync(SafeDeleteFile);
-            var errors = results.Where(x => x.IsFailure).Select(x => x.Error).ToList();
+            var errors = results.Where(x => x.IsFailure).Select(x => x.Error!).ToList();
 
             if (errors.Count > 0)
-                throw new AggregateException(errors.Select(x => x.Exception));
+                throw new AggregateException(errors.Select(x => x.Exception).OfType<Exception>());
         }
 
         return removedEntries;
@@ -77,7 +78,7 @@ public class IndexEntriesCache : SynchronizedDictionary<string, IndexEntry, File
 
     protected override DbSet<IndexEntry> DbSetAccessor(FilesCacheContext ctx) => ctx.IndexEntries;
 
-    protected override IndexEntry GetNew(string key, IDictionary<string, object> param = null) =>
+    protected override IndexEntry GetNew(string key, IDictionary<string, object>? param = null) =>
         GetNew(key, GetParam<string>(param, FileName));
 
     protected override void OnRetrievedNew(IndexEntry value)
@@ -87,7 +88,7 @@ public class IndexEntriesCache : SynchronizedDictionary<string, IndexEntry, File
         value.Refresh();
     }
 
-    private IndexEntry GetNew(string key, string fileName = null) => new(key, Config, fileName);
+    private IndexEntry GetNew(string key, string? fileName = null) => new(key, Config, fileName);
 
     private async Task<int> RemoveIndexEntriesOfMissingFilesAsync(FilesCacheContext ctx, HashSet<string> existingFiles)
     {
@@ -134,7 +135,7 @@ public class IndexEntriesCache : SynchronizedDictionary<string, IndexEntry, File
 
         return result.IsSuccess
             ? file
-            : result.Error;
+            : result.Error!; // IsFailure guarantees Error is non-null
     }
 
     private Result<FileInfo, ExceptionError> SafeDeleteFile(string filePath) => SafeDeleteFile(new FileInfo(filePath));

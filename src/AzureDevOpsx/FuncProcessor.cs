@@ -24,7 +24,7 @@ public sealed class FuncProcessor : IDisposable
     public RequestMethod Method { get; }
     public CancellationTokenSource CancellationTokenSource { get; }
     private string RequestUrl { get; }
-    private IDictionary<string, object> Args { get; }
+    private IDictionary<string, object>? Args { get; }
     private CancellationToken CancellationToken { get; }
     private ICredentials Credentials { get; }
 
@@ -32,7 +32,7 @@ public sealed class FuncProcessor : IDisposable
                          string scriptPath,
                          ICredentials credentials,
                          string environmentId,
-                         IDictionary<string, object> args = null,
+                         IDictionary<string, object>? args = null,
                          RequestMethod method = RequestMethod.GET)
         : this(serverUrl + scriptPath, credentials, environmentId, args, method)
     {
@@ -41,7 +41,7 @@ public sealed class FuncProcessor : IDisposable
     public FuncProcessor(string serverUrl,
                          string scriptPath,
                          ICredentials credentials,
-                         IDictionary<string, object> args = null,
+                         IDictionary<string, object>? args = null,
                          RequestMethod method = RequestMethod.GET)
         : this(serverUrl + scriptPath, credentials, TfsService.GetEnvironmentId(serverUrl, credentials), args, method)
     {
@@ -49,7 +49,7 @@ public sealed class FuncProcessor : IDisposable
 
     public FuncProcessor(string requestUrl,
                          ICredentials credentials,
-                         IDictionary<string, object> args = null,
+                         IDictionary<string, object>? args = null,
                          RequestMethod method = RequestMethod.GET)
         : this(requestUrl, credentials, TfsService.GetEnvironmentId(requestUrl, credentials), args, method)
     {
@@ -57,13 +57,13 @@ public sealed class FuncProcessor : IDisposable
 
     public FuncProcessor(string requestUrl,
                          ICredentials credentials,
-                         string environmentId,
-                         IDictionary<string, object> args = null,
+                         string? environmentId,
+                         IDictionary<string, object>? args = null,
                          RequestMethod method = RequestMethod.GET)
     {
-        if (requestUrl.IsNullOrWhiteSpace()
-            || environmentId.IsNullOrWhiteSpace())
-            throw new ArgumentNullException(requestUrl.IsNullOrWhiteSpace()
+        if (string.IsNullOrWhiteSpace(requestUrl)
+            || string.IsNullOrWhiteSpace(environmentId))
+            throw new ArgumentNullException(string.IsNullOrWhiteSpace(requestUrl)
                 ? nameof(requestUrl)
                 : nameof(environmentId));
 
@@ -75,12 +75,12 @@ public sealed class FuncProcessor : IDisposable
         Credentials = credentials;
     }
 
-    public static TResponse ProcessResponse<TResponse>(string response, JsonSerializerSettings settings = null)
+    public static TResponse? ProcessResponse<TResponse>(string response, JsonSerializerSettings? settings = null)
         where TResponse : BaseTfsResponse, new() =>
         response.FromJson<TResponse>(settings);
 
-    public async Task<TResponse> RunAsync<TResponse>(JsonSerializerSettings settings = null,
-                                                     IList<HttpStatusCode> omitCodes = null)
+    public async Task<TResponse?> RunAsync<TResponse>(JsonSerializerSettings? settings = null,
+                                                     IList<HttpStatusCode>? omitCodes = null)
         where TResponse : BaseTfsResponse, new()
     {
         var res = await RunRawAsync(omitCodes);
@@ -90,7 +90,7 @@ public sealed class FuncProcessor : IDisposable
             : default;
     }
 
-    public async Task<string> RunRawAsync(IList<HttpStatusCode> omitCodes = null)
+    public async Task<string?> RunRawAsync(IList<HttpStatusCode>? omitCodes = null)
     {
         using var handler = new HttpClientHandler
         {
@@ -143,7 +143,7 @@ public sealed class FuncProcessor : IDisposable
             {
                 var statusCode = (HttpStatusCode)response.StatusCode;
 
-                if (omitCodes.IsNullOrEmptyList()
+                if (omitCodes == null
                     || !omitCodes.Contains(statusCode))
                 {
                     var content = await response.GetStringAsync();

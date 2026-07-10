@@ -7,10 +7,10 @@ namespace FEx.WPFx.Converters;
 
 public class NullToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+    public object? Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
         value is null
             ? Visibility.Collapsed
             : Visibility.Visible;
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
+    public object? ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
 }

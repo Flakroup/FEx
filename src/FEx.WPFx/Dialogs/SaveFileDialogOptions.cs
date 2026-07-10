@@ -17,11 +17,11 @@ public class SaveFileDialogOptions : SaveFileDialogOptionsBase<SaveFileDialog>
     /// top-level window that will own the modal dialog box.
     /// </param>
     /// <param name="viewModel">The view model.</param>
-    public bool ShowDialog(Window owner = null, IProgressAggregator viewModel = null) =>
+    public bool ShowDialog(Window? owner = null, IProgressAggregator? viewModel = null) =>
         ShowDialog(saveFileDialog => owner is not null
                 ? saveFileDialog.ShowDialog(owner)
                 : saveFileDialog.ShowDialog(),
-            viewModel)
+            viewModel!) // base ShowDialog is null-tolerant (viewModel?.Stopwatch)
         == true;
 
     protected override SaveFileDialog MapToDialog() =>

@@ -40,7 +40,7 @@ public static class TfsExtensions
         return TfsBuildServerVersion.None;
     }
 
-    public static string GetServerVersionDescription(this TfsBuildServerVersion buildServerVersion)
+    public static string? GetServerVersionDescription(this TfsBuildServerVersion buildServerVersion)
     {
         return buildServerVersion.GetEnumValueDescription();
     }
@@ -69,19 +69,19 @@ public static class TfsExtensions
     /// <param name="server">The server.</param>
     /// <param name="separator">The separator.</param>
     /// <returns></returns>
-    public static string GetCurrentUserName(this TfsConfigurationServer server, string separator = " ")
+    public static string? GetCurrentUserName(this TfsConfigurationServer? server, string separator = " ")
     {
         if (server != null)
             return server.AuthorizedIdentity.DisplayName + separator + server.AuthorizedIdentity.UniqueName;
         return null;
     }
 
-    public static async Task<ImageSource> LoadImageAsync(Uri imageUrl, ICredentials credentials, SemaphoreSlim rateLimit = null)
+    public static async Task<ImageSource?> LoadImageAsync(Uri imageUrl, ICredentials credentials, SemaphoreSlim? rateLimit = null)
     {
         if (rateLimit != null)
             await rateLimit.WaitAsync();
 
-        ImageSource res = null;
+        ImageSource? res = null;
         try
         {
             IFilesCacheService cache = FExServiceProvider.Instance.GetRequiredService<FilesCacheService>();
@@ -110,7 +110,7 @@ public static class TfsExtensions
             if (localWorkspaces.Count <= 0)
                 return false;
 
-            var workspace = project.ProjectWorkspaces.Find(x => x.MappingsAvailable);
+            var workspace = project.ProjectWorkspaces?.Find(x => x.MappingsAvailable);
             if (workspace != null)
             {
                 var folder = workspace.Folders.FindInEnumerable(t => (t.ServerItem == "$/" || t.ServerItem == $"$/{project.Name}") && !t.IsCloaked && Directory.Exists(t.LocalItem));

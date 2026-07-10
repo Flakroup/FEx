@@ -17,43 +17,43 @@ namespace FEx.AzureDevOpsx.Entities;
 
 public class ShelvesetContent : NotifyPropertyChanged
 {
-    private TfsEnvironment _tfsEnvironment;
+    private TfsEnvironment? _tfsEnvironment;
 
-    private ConcurrentObservableList<ShelvesetChange> _changes;
-    private string _name;
-    private string _id;
-    private Owner _owner;
+    private ConcurrentObservableList<ShelvesetChange>? _changes;
+    private string? _name;
+    private string? _id;
+    private Owner? _owner;
     private DateTimeOffset _createdDate;
-    private Uri _url;
-    private string _comment;
-    private Links _links;
+    private Uri? _url;
+    private string? _comment;
+    private Links? _links;
 
     [JsonIgnore]
-    public string EnvironmentId { get; internal set; }
+    public string? EnvironmentId { get; internal set; }
 
     [JsonProperty("changes")]
-    public ConcurrentObservableList<ShelvesetChange> Changes
+    public ConcurrentObservableList<ShelvesetChange>? Changes
     {
         get => _changes;
         set => SetProperty(ref _changes, value);
     }
 
     [JsonProperty("name")]
-    public string Name
+    public string? Name
     {
         get => _name;
         set => SetProperty(ref _name, value);
     }
 
     [JsonProperty("id")]
-    public string Id
+    public string? Id
     {
         get => _id;
         set => SetProperty(ref _id, value);
     }
 
     [JsonProperty("owner")]
-    public Owner Owner
+    public Owner? Owner
     {
         get => _owner;
         set => SetProperty(ref _owner, value);
@@ -67,28 +67,28 @@ public class ShelvesetContent : NotifyPropertyChanged
     }
 
     [JsonProperty("url")]
-    public Uri Url
+    public Uri? Url
     {
         get => _url;
         set => SetProperty(ref _url, value);
     }
 
     [JsonProperty("comment")]
-    public string Comment
+    public string? Comment
     {
         get => _comment;
         set => SetProperty(ref _comment, value);
     }
 
     [JsonProperty("_links")]
-    public Links Links
+    public Links? Links
     {
         get => _links;
         set => SetProperty(ref _links, value);
     }
 
     [JsonIgnore]
-    private TfsEnvironment TfsEnvironment
+    private TfsEnvironment? TfsEnvironment
     {
         get
         {
@@ -103,7 +103,9 @@ public class ShelvesetContent : NotifyPropertyChanged
 
     public async Task LoadChangesAsync()
     {
-        var jsonStr = await TfsEnvironment.RunRawAsync(Url.AbsoluteUri,
+        var env = TfsEnvironment.Guard(nameof(TfsEnvironment));
+        var url = Url.Guard(nameof(Url));
+        var jsonStr = await env.RunRawAsync(url.AbsoluteUri,
             new Dictionary<string, object>
             {
                 ["maxChangeCount"] = int.MaxValue
@@ -129,9 +131,11 @@ public class ShelvesetContent : NotifyPropertyChanged
 
     private void GetShelve()
     {
-        var vcs = TfsEnvironment.ProjectsCollections[0].TfsTeamProjectCollection.GetService<VersionControlServer>();
+        var env = TfsEnvironment.Guard(nameof(TfsEnvironment));
+        var vcs = env.ProjectsCollections[0].TfsTeamProjectCollection.GetService<VersionControlServer>();
 
-        var sh = vcs.QueryShelvesets(Name, Owner.UniqueName);
+        var owner = Owner.Guard(nameof(Owner));
+        var sh = vcs.QueryShelvesets(Name, owner.UniqueName);
         var ch = vcs.QueryShelvedChanges(sh[0]);
 
         Changes = ch[0]
@@ -152,18 +156,19 @@ public class ShelvesetContent : NotifyPropertyChanged
             .ToConcurrentObservableList();
     }
 
-    private void Refresh(ShelvesetContent res)
+    private void Refresh(ShelvesetContent? res)
     {
         if (res != null)
         {
+            var resChanges = res.Changes.Guard(nameof(res.Changes));
             if (Changes != null)
             {
                 Changes.Clear();
-                Changes.AddRange(res.Changes);
+                Changes.AddRange(resChanges);
             }
             else
             {
-                Changes = res.Changes.ToConcurrentObservableList();
+                Changes = resChanges.ToConcurrentObservableList();
             }
 
             Name = res.Name;
@@ -172,11 +177,12 @@ public class ShelvesetContent : NotifyPropertyChanged
 
             if (Owner != null)
             {
-                Owner.Id = res.Owner.Id;
-                Owner.DisplayName = res.Owner.DisplayName;
-                Owner.UniqueName = res.Owner.UniqueName;
-                Owner.Url = res.Owner.Url;
-                Owner.ImageUrl = res.Owner.ImageUrl;
+                var resOwner = res.Owner.Guard(nameof(res.Owner));
+                Owner.Id = resOwner.Id;
+                Owner.DisplayName = resOwner.DisplayName;
+                Owner.UniqueName = resOwner.UniqueName;
+                Owner.Url = resOwner.Url;
+                Owner.ImageUrl = resOwner.ImageUrl;
             }
             else
             {
@@ -191,10 +197,11 @@ public class ShelvesetContent : NotifyPropertyChanged
 
             if (Links != null)
             {
-                Links.Changes.Href = res.Links.Changes.Href;
-                Links.Owner.Href = res.Links.Owner.Href;
-                Links.Self.Href = res.Links.Self.Href;
-                Links.WorkItems.Href = res.Links.WorkItems.Href;
+                var resLinks = res.Links.Guard(nameof(res.Links));
+                Links.Changes.Guard(nameof(Links.Changes)).Href = resLinks.Changes.Guard(nameof(resLinks.Changes)).Href;
+                Links.Owner.Guard(nameof(Links.Owner)).Href = resLinks.Owner.Guard(nameof(resLinks.Owner)).Href;
+                Links.Self.Guard(nameof(Links.Self)).Href = resLinks.Self.Guard(nameof(resLinks.Self)).Href;
+                Links.WorkItems.Guard(nameof(Links.WorkItems)).Href = resLinks.WorkItems.Guard(nameof(resLinks.WorkItems)).Href;
             }
             else
             {

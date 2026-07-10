@@ -5,9 +5,9 @@ namespace FEx.MSBuildx;
 
 public class DiffResult
 {
-    public FileInfo Info { get; }
-    public string RelativePath { get; }
-    public string FullPath { get; }
+    public FileInfo? Info { get; }
+    public string? RelativePath { get; }
+    public string? FullPath { get; }
 
     public MSProject Project { get; }
 
@@ -17,14 +17,14 @@ public class DiffResult
 
     public long Length =>
         Exists
-            ? Info.Length
+            ? Info!.Length // Exists is true only when Info is non-null
             : 0L;
 
-    public string Extension => Info?.Extension;
+    public string? Extension => Info?.Extension;
 
-    private MSProjectItem Item { get; }
+    private MSProjectItem? Item { get; }
 
-    public DiffResult(MSProject project, string relativePath = null, MSProjectItem item = null)
+    public DiffResult(MSProject project, string? relativePath = null, MSProjectItem? item = null)
     {
         Project = project;
 
@@ -38,8 +38,8 @@ public class DiffResult
             RelativePath = relativePath;
         }
 
-        if (!RelativePath.PathHasIllegalCharacters())
-            FullPath = Path.Combine(Project.ProjectDir, RelativePath ?? string.Empty);
+        if (RelativePath is not null && !RelativePath.PathHasIllegalCharacters())
+            FullPath = Path.Combine(Project.ProjectDir, RelativePath);
 
         if (FullPath is not null)
             Info = new(FullPath);

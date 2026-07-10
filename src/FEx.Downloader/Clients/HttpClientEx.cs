@@ -22,9 +22,9 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     private const int BufferSize = 81920;
 
     private readonly bool _ownCTS;
-    private string _filePath;
-    private Uri _url;
-    private string _dirPath;
+    private string? _filePath;
+    private Uri? _url;
+    private string? _dirPath;
     private DownloadState _state;
     private bool _isRunning;
     private bool _isDownloaded;
@@ -33,16 +33,16 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
     public CancellationTokenSource CancellationTokenSource { get; }
 
-    public WebRequestParams Pars { get; set; }
+    public WebRequestParams? Pars { get; set; }
 
-    public string FilePath
+    public string? FilePath
     {
         get => _filePath;
         set
         {
             if (SetProperty(ref _filePath, value))
             {
-                DirPath = Directory.GetParent(FilePath).FullName;
+                DirPath = Directory.GetParent(FilePath.Guard(nameof(FilePath)))?.FullName;
 
                 Directory.CreateDirectory(DirPath
                                           ?? throw new InvalidOperationException("Target directory path is null."));
@@ -50,13 +50,13 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         }
     }
 
-    public Uri Url
+    public Uri? Url
     {
         get => _url;
         set => SetProperty(ref _url, value);
     }
 
-    public string DirPath
+    public string? DirPath
     {
         get => _dirPath;
         protected set => SetProperty(ref _dirPath, value);
@@ -133,7 +133,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     {
     }
 
-    public HttpClientEx(WebRequestParams pars, bool disposeHandler, CancellationTokenSource cancellationTokenSource)
+    public HttpClientEx(WebRequestParams pars, bool disposeHandler, CancellationTokenSource? cancellationTokenSource)
         : this(pars.GetHttpClientHandler(), disposeHandler, cancellationTokenSource)
     {
     }
@@ -160,7 +160,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     {
     }
 
-    public HttpClientEx(HttpClientHandler handler, bool disposeHandler, CancellationTokenSource cancellationTokenSource)
+    public HttpClientEx(HttpClientHandler handler, bool disposeHandler, CancellationTokenSource? cancellationTokenSource)
         : base(handler, disposeHandler)
     {
         Buffer = new byte[BufferSize];
@@ -177,17 +177,19 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         }
     }
 
-    public int CompareTo(object obj) =>
+    public int CompareTo(object? obj) =>
         Equals(obj)
             ? 0
-            : GetHashCode().CompareTo(obj.GetHashCode());
+            // Non-equal branch: obj is effectively non-null at all call sites (preserves prior behavior).
+            : GetHashCode().CompareTo(obj!.GetHashCode());
 
-    public int CompareTo(IDownloadBase other) =>
+    public int CompareTo(IDownloadBase? other) =>
         Equals(other)
             ? 0
-            : GetHashCode().CompareTo(other.GetHashCode());
+            // Non-equal branch: other is effectively non-null at all call sites (preserves prior behavior).
+            : GetHashCode().CompareTo(other!.GetHashCode());
 
-    public bool Equals(IDownloadBase other) => other is not null && FilePath == other.FilePath && Url == other.Url;
+    public bool Equals(IDownloadBase? other) => other is not null && FilePath == other.FilePath && Url == other.Url;
 
     public static bool operator ==(HttpClientEx left, HttpClientEx right) => Equals(left, right);
 
@@ -206,7 +208,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
             HashCode.Combine(FilePath, Url?.AbsoluteUri);
 #endif
 
-    public override bool Equals(object obj) =>
+    public override bool Equals(object? obj) =>
         ReferenceEquals(this, obj) || obj is FlakHttpClient other && Equals(other);
 
     public Task DownloadFileAsync(Uri url, string filePath) => DownloadFileAsync(url, filePath, true);
@@ -275,7 +277,8 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 #endif
                 if (streamResponse is not null)
                 {
-                    var dirPath = Directory.GetParent(filePath).FullName;
+                    var dirPath = Directory.GetParent(filePath)?.FullName
+                                  ?? throw new InvalidOperationException("Target directory path is null.");
                     Directory.CreateDirectory(dirPath);
 
                     using var fileStream = new FileStream(filePath,
@@ -336,10 +339,10 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     #endregion
 
     #region INotifyPropertyChanged
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
 #pragma warning disable S2360 // CallerMemberName requires optional parameter
-    public void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    public void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         if (propertyName is null)
             return;
@@ -353,8 +356,8 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
     protected virtual bool SetProperty<TRet>(ref TRet backingField,
                                              TRet newValue,
-                                             Action<TRet> onPropertyChanged = null,
-                                             [CallerMemberName] string propertyName = null)
+                                             Action<TRet>? onPropertyChanged = null,
+                                             [CallerMemberName] string? propertyName = null)
     {
         if (EqualityHelper.IsEqual(ref backingField, newValue))
             return false;
@@ -369,7 +372,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 #pragma warning restore S2360
 
     [NotifyPropertyChangedInvocator]
-    private void NotifyChanged([CallerMemberName] string propertyName = null)
+    private void NotifyChanged([CallerMemberName] string? propertyName = null)
     {
         if (propertyName is null
             || PropertyChanged is null)

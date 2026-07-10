@@ -6,7 +6,7 @@ namespace FEx.WPFx.Converters;
 
 public class BoolAndToVisibilityConverter : IMultiValueConverter
 {
-    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    public object? Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
         var bac = new BoolAndConverter();
         var btv = new BoolToVisibilityConverter();

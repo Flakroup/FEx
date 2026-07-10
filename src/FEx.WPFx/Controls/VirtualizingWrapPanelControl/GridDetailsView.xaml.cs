@@ -28,7 +28,7 @@ public partial class GridDetailsView : GridView
         typeof(GridDetailsView),
         new FrameworkPropertyMetadata(null));
 
-    private FrameworkElement _expandedItemContainerRoot;
+    private FrameworkElement? _expandedItemContainerRoot;
 
     private bool _animateExpansion;
     private bool _animateCloseExpansion;
@@ -41,7 +41,7 @@ public partial class GridDetailsView : GridView
     }
 
     /// <summary>Gets the currently expanded item. If no item is expanded null is returned.</summary>
-    public object ExpandedItem
+    public object? ExpandedItem
     {
         get => GetValue(ExpandedItemProperty);
         private set => SetValue(ExpandedItemProperty, value);

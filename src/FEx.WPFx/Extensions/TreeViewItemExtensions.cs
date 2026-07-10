@@ -4,13 +4,13 @@ namespace FEx.WPFx.Extensions;
 
 public static class TreeViewItemExtensions
 {
-    public static string FullPath(this HeaderedItemsControl sender)
+    public static string? FullPath(this HeaderedItemsControl sender)
     {
-        string res = null;
+        string? res = null;
 
         sender.InvokeOnDispatcherContext(() =>
         {
-            res = sender.Header.ToString();
+            res = sender.Header?.ToString();
             var curr = sender.Parent as TreeViewItem;
 
             while (curr is not null)

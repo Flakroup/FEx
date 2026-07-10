@@ -16,10 +16,10 @@ public class FtpClientFactory
     private readonly SemaphoreSlim _semaphore;
     public Uri HostUri { get; }
     public ICredentials ProxyCredentials { get; set; } = CredentialCache.DefaultCredentials;
-    public string ProxyHost { get; set; }
+    public string? ProxyHost { get; set; }
     public int ProxyPort { get; set; }
 
-    public Task<FtpClient> CreateAsync(string user = null, string pass = null, bool useProxy = false, int port = 0)
+    public Task<FtpClient> CreateAsync(string? user = null, string? pass = null, bool useProxy = false, int port = 0)
     {
         var credentials = user != null || pass != null
             ? new NetworkCredential(user, pass)
@@ -30,7 +30,7 @@ public class FtpClientFactory
         return CreateAsync(credentials, proxy, port);
     }
 
-    public Task<FtpClient> CreateAsync(string user = null, string pass = null, ProxyInfo proxy = null, int port = 0)
+    public Task<FtpClient> CreateAsync(string? user = null, string? pass = null, ProxyInfo? proxy = null, int port = 0)
     {
         var credentials = user != null || pass != null
             ? new NetworkCredential(user, pass)
@@ -39,14 +39,14 @@ public class FtpClientFactory
         return CreateAsync(credentials, proxy, port);
     }
 
-    public Task<FtpClient> CreateAsync(NetworkCredential credentials = null, bool useProxy = false, int port = 0)
+    public Task<FtpClient> CreateAsync(NetworkCredential? credentials = null, bool useProxy = false, int port = 0)
     {
         var proxy = GetProxy(useProxy);
 
         return CreateAsync(credentials, proxy, port);
     }
 
-    public async Task<FtpClient> CreateAsync(NetworkCredential credentials = null, ProxyInfo proxy = null, int port = 0)
+    public async Task<FtpClient> CreateAsync(NetworkCredential? credentials = null, ProxyInfo? proxy = null, int port = 0)
     {
         await _semaphore.WaitAsync();
 
@@ -100,7 +100,7 @@ public class FtpClientFactory
         e.Accept = true;
     }
 
-    internal ProxyInfo GetProxy(bool useProxy)
+    internal ProxyInfo? GetProxy(bool useProxy)
     {
         if (useProxy)
             return new()

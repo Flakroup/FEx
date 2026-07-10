@@ -12,41 +12,41 @@ namespace FEx.AzureDevOpsx.Entities;
 
 public class Owner : NotifyPropertyChanged
 {
-    private TfsEnvironment _tfsEnvironment;
+    private TfsEnvironment? _tfsEnvironment;
 
-    private string _id;
-    private string _displayName;
-    private string _uniqueName;
-    private Uri _url;
-    private Uri _imageUrl;
-    private ImageSource _image;
+    private string? _id;
+    private string? _displayName;
+    private string? _uniqueName;
+    private Uri? _url;
+    private Uri? _imageUrl;
+    private ImageSource? _image;
 
     [JsonIgnore]
-    public string EnvironmentId { get; internal set; }
+    public string? EnvironmentId { get; internal set; }
 
     [JsonProperty("id")]
-    public string Id
+    public string? Id
     {
         get => _id;
         set => SetProperty(ref _id, value);
     }
 
     [JsonProperty("displayName")]
-    public string DisplayName
+    public string? DisplayName
     {
         get => _displayName;
         set => SetProperty(ref _displayName, value);
     }
 
     [JsonProperty("uniqueName")]
-    public string UniqueName
+    public string? UniqueName
     {
         get => _uniqueName;
         set => SetProperty(ref _uniqueName, value);
     }
 
     [JsonProperty("url")]
-    public Uri Url
+    public Uri? Url
     {
         get => _url;
         set => SetProperty(ref _url, value);
@@ -59,14 +59,14 @@ public class Owner : NotifyPropertyChanged
     /// The image URL.
     /// </value>
     [JsonProperty("imageUrl")]
-    public Uri ImageUrl
+    public Uri? ImageUrl
     {
         get => _imageUrl;
         set => SetProperty(ref _imageUrl, value);
     }
 
     [JsonIgnore]
-    public ImageSource Image
+    public ImageSource? Image
     {
         get
         {
@@ -80,7 +80,7 @@ public class Owner : NotifyPropertyChanged
     }
 
     [JsonIgnore]
-    private TfsEnvironment TfsEnvironment
+    private TfsEnvironment? TfsEnvironment
     {
         get
         {
@@ -109,9 +109,10 @@ public class Owner : NotifyPropertyChanged
         }
     }
 
-    public async Task RefreshImageAsync(TfsEnvironment env)
+    public async Task RefreshImageAsync(TfsEnvironment? env)
     {
-        if (env != null)
-            Image = await TfsExtensions.LoadImageAsync(ImageUrl, env.Server.Credentials);
+        if (env != null
+            && ImageUrl != null)
+            Image = await TfsExtensions.LoadImageAsync(ImageUrl, env.Server.Guard(nameof(env.Server)).Credentials);
     }
 }

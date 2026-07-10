@@ -19,7 +19,7 @@ namespace FEx.WPFx.Controls;
 
 public class FExUserControl : UserControl, IFExNotifyPropertyChanged
 {
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
     public ConcurrentDictionary<string, IDisposable> Subscriptions { get; }
 
     public bool IsInDesignMode { get; }
@@ -42,7 +42,7 @@ public class FExUserControl : UserControl, IFExNotifyPropertyChanged
             OnPropertyChanged(propertyName);
     }
 
-    public virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    public virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         if (PropertyChanged is null
             || propertyName is null)
@@ -57,8 +57,8 @@ public class FExUserControl : UserControl, IFExNotifyPropertyChanged
 
     public virtual bool SetProperty<TRet>(ref TRet backingField,
                                           TRet newValue,
-                                          Action<TRet> onPropertyChanged = null,
-                                          [CallerMemberName] string propertyName = null)
+                                          Action<TRet>? onPropertyChanged = null,
+                                          [CallerMemberName] string? propertyName = null)
     {
         if (EqualityHelper.IsEqual(ref backingField, newValue))
             return false;
@@ -72,17 +72,17 @@ public class FExUserControl : UserControl, IFExNotifyPropertyChanged
         return true;
     }
 
-    public virtual void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
+    public virtual void OnPropertySet<T>(T oldValue, T newValue, string? propertyName)
     {
     }
 
-    public virtual async Task RunAsync<T>(T viewModel, Action action, object sender = null, JobSpecs? specs = null)
+    public virtual async Task RunAsync<T>(T viewModel, Action action, object? sender = null, JobSpecs? specs = null)
         where T : IThreadingAwareViewModel =>
         await viewModel.RunAsync(action, specs, () => PreAction(sender), isSuccess => PostAction(sender, isSuccess));
 
     public virtual async Task RunTaskAsync<T>(T viewModel,
                                               Func<Task> function,
-                                              object sender = null,
+                                              object? sender = null,
                                               JobSpecs? specs = null) where T : IThreadingAwareViewModel =>
         await viewModel.RunTaskAsync(function,
             specs,
@@ -91,7 +91,7 @@ public class FExUserControl : UserControl, IFExNotifyPropertyChanged
 
     public virtual async Task<TResult> RunTaskAsync<TResult, T>(T viewModel,
                                                                 Func<Task<TResult>> function,
-                                                                object sender = null,
+                                                                object? sender = null,
                                                                 JobSpecs? specs = null)
         where T : IThreadingAwareViewModel =>
         await viewModel.RunTaskAsync(function,
@@ -101,7 +101,7 @@ public class FExUserControl : UserControl, IFExNotifyPropertyChanged
 
     public virtual async Task<TResult> RunFuncAsync<TResult, T>(T viewModel,
                                                                 Func<TResult> function,
-                                                                object sender = null,
+                                                                object? sender = null,
                                                                 JobSpecs? specs = null)
         where T : IThreadingAwareViewModel =>
         await viewModel.RunFuncAsync(function,
@@ -109,24 +109,24 @@ public class FExUserControl : UserControl, IFExNotifyPropertyChanged
             () => PreAction(sender),
             isSuccess => PostAction(sender, isSuccess));
 
-    protected virtual void PreAction(object sender) => DisableUIElement(sender);
+    protected virtual void PreAction(object? sender) => DisableUIElement(sender);
 
-    protected virtual void PostAction(object sender, bool isSuccess) => EnableUIElement(sender);
+    protected virtual void PostAction(object? sender, bool isSuccess) => EnableUIElement(sender);
 
-    private static void EnableUIElement(object sender)
+    private static void EnableUIElement(object? sender)
     {
         if (sender is UIElement uiElement)
             uiElement.EnableUIElement(true);
     }
 
-    private static void DisableUIElement(object sender)
+    private static void DisableUIElement(object? sender)
     {
         if (sender is UIElement uiElement)
             uiElement.DisableUIElement(true);
     }
 
     [NotifyPropertyChangedInvocator]
-    private void NotifyChanged([CallerMemberName] string propertyName = null)
+    private void NotifyChanged([CallerMemberName] string? propertyName = null)
     {
         if (propertyName is null
             || PropertyChanged is null)

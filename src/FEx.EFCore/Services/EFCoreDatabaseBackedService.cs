@@ -19,7 +19,7 @@ public abstract class EFCoreDatabaseBackedService<TDbContext> : BulkDbServiceBas
     IEFCoreDatabaseBackedService<TDbContext> where TDbContext : DbContext
 {
     private readonly ISqlDbHelper _dbHelper;
-    public string DbKey { get; protected set; }
+    public string? DbKey { get; protected set; }
 
     protected EFCoreDatabaseBackedService(IScopeProvider scopeProvider,
                                           IDbServiceConfig config,

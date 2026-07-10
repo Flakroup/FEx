@@ -1,4 +1,5 @@
 #if NET5_0_OR_GREATER
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Json.Extensions;
 using FEx.SecureStorage.Abstractions;
 using System;
@@ -72,7 +73,8 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
             Marshal.Copy(passwordPtr, bytes, 0, (int)passwordLength);
             var json = Encoding.UTF8.GetString(bytes);
 
-            return json.FromJson<T>();
+            // Get<T> contract is non-null; a null here means corrupt/missing stored JSON - fail loudly.
+            return json.FromJson<T>().Guard(nameof(key));
         }
         finally
         {

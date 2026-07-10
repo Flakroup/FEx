@@ -30,7 +30,7 @@ public static class GitWorktreeExtensions
         if (!File.Exists(gitPath))
             return GitWorktreeKind.None;
 
-        string firstLine;
+        string? firstLine;
 
         try
         {

@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.AppSettings.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions;
@@ -13,8 +14,10 @@ namespace FEx.AppSettings;
 [Register(typeof(FExAppSettingsModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExAppSettingsModule : InitializeModule<IFExAppSettingsModule, IServiceCollection>
 {
-    protected override void RegisterServices(IFExAppSettingsModule container, IServiceCollection services)
+    protected override void RegisterServices(IFExAppSettingsModule? container, IServiceCollection services)
     {
+        container = container.Guard(nameof(container));
+
         services.AddSingletonServiceUsingContainer<IConfigurationService>(container);
     }
 }

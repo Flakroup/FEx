@@ -32,25 +32,25 @@ public abstract class DbServiceBase<TDbContext> : PooledDbService<TDbContext>, I
         await RunFuncInDbContextAsync(dbContext => InternalGetEntities(dbContext, query));
 
     public async Task<EntityEntry<T>> AddAsync<T>(T entity,
-                                                  string errorMessage = null,
+                                                  string? errorMessage = null,
                                                   bool saveChanges = true,
                                                   bool useTransaction = true) where T : class =>
         await RunFuncInDbContextAsync(dbContext => dbContext.Add(entity), errorMessage, saveChanges, useTransaction);
 
     public async Task<EntityEntry<T>> UpdateAsync<T>(T entity,
-                                                     string errorMessage = null,
+                                                     string? errorMessage = null,
                                                      bool saveChanges = true,
                                                      bool useTransaction = true) where T : class =>
         await RunFuncInDbContextAsync(dbContext => dbContext.Update(entity), errorMessage, saveChanges, useTransaction);
 
     public async Task<EntityEntry<T>> RemoveAsync<T>(T entity,
-                                                     string errorMessage = null,
+                                                     string? errorMessage = null,
                                                      bool saveChanges = true,
                                                      bool useTransaction = true) where T : class =>
         await RunFuncInDbContextAsync(dbContext => dbContext.Remove(entity), errorMessage, saveChanges, useTransaction);
 
     public async Task AddRangeAsync<T>(IEnumerable<T> entities,
-                                       string errorMessage = null,
+                                       string? errorMessage = null,
                                        bool saveChanges = true,
                                        bool useTransaction = true) where T : class =>
         await RunActionInDbContextAsync(dbContext => dbContext.AddRange(entities),

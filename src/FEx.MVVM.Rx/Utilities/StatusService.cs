@@ -8,7 +8,8 @@ namespace FEx.MVVM.Rx.Utilities;
 
 public sealed class StatusService : IStatusService
 {
-    public IStatusHub MainHub { get; private set; }
+    // IStatusService declares MainHub non-null; it stays null until the first GetOrAdd(markAsMain: true) call.
+    public IStatusHub MainHub { get; private set; } = null!;
     public Guid? MainHubKey => MainHub?.Key;
 
     private ConcurrentDictionary<Guid, StatusHub> StatusHubs { get; }
@@ -19,9 +20,9 @@ public sealed class StatusService : IStatusService
     }
 
     public IStatusHub GetOrAdd(Guid? key,
-                               Action<Guid, string> onStatusAdded,
-                               Action<Guid, string> onStatusRemoved,
-                               Action onStatusesReset,
+                               Action<Guid, string>? onStatusAdded,
+                               Action<Guid, string>? onStatusRemoved,
+                               Action? onStatusesReset,
                                bool markAsMain)
     {
         key ??= Guid.NewGuid();
@@ -39,7 +40,7 @@ public sealed class StatusService : IStatusService
 
     public void RemoveMainLog(Guid statusKey) => MainHub?.RemoveStatus(statusKey);
 
-    public DisposableAction Log(string status, IStatusHub hub, bool unique) => (hub ?? MainHub).Log(status, unique);
+    public DisposableAction Log(string status, IStatusHub? hub, bool unique) => (hub ?? MainHub).Log(status, unique);
 
     public IStatusHub GetOrAdd() => GetOrAdd(null, null, null, null, false);
 

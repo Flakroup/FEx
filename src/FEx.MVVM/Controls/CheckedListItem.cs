@@ -5,11 +5,11 @@ namespace FEx.MVVM.Controls;
 public class CheckedListItem : NotifyPropertyChanged
 {
     private bool _isChecked;
-    private string _name;
+    private string? _name;
     private bool _isEnabled;
-    private object _tooltip;
+    private object? _tooltip;
 
-    public string Name
+    public string? Name
     {
         get => _name;
         set => SetProperty(ref _name, value);
@@ -27,7 +27,7 @@ public class CheckedListItem : NotifyPropertyChanged
         set => SetProperty(ref _isEnabled, value);
     }
 
-    public object ToolTip
+    public object? ToolTip
     {
         get => _tooltip;
         set => SetProperty(ref _tooltip, value);
@@ -37,7 +37,7 @@ public class CheckedListItem : NotifyPropertyChanged
     {
     }
 
-    public CheckedListItem(string name, bool isEnabled = true, bool isChecked = false, object toolTip = null)
+    public CheckedListItem(string name, bool isEnabled = true, bool isChecked = false, object? toolTip = null)
     {
         _tooltip = toolTip;
         _isChecked = isChecked;

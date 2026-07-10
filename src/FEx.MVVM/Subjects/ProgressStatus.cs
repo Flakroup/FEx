@@ -15,15 +15,17 @@ public class ProgressStatus : LinkableNotifyPropertyChanged, IProgressStatus
     private bool _isIndeterminate;
     private double _percentage;
     private double _precisePercentage;
-    private string _prgUnit;
-    private string _info;
+
+    // IProgressStatus exposes these as non-null strings; default to empty until the progress lifecycle sets them.
+    private string _prgUnit = string.Empty;
+    private string _info = string.Empty;
     private ProgressOperationMode _mode;
     private ProgressState _state;
     private bool _isBusy;
     private bool? _isInfoVisible;
-    private string _currItemInfo;
-    private string _statusInfo;
-    private string _threadsInfo;
+    private string _currItemInfo = string.Empty;
+    private string _statusInfo = string.Empty;
+    private string _threadsInfo = string.Empty;
 
     public double Value
     {
@@ -117,9 +119,10 @@ public class ProgressStatus : LinkableNotifyPropertyChanged, IProgressStatus
         ExcludedProperties = new(ProgressAggregatorExtensions.ListenerPropertyNames);
     }
 
-    public override void OnPropertyChanged(string propertyName = null)
+    public override void OnPropertyChanged(string? propertyName = null)
     {
-        if (ExcludedProperties.Contains(propertyName))
+        if (propertyName is not null
+            && ExcludedProperties.Contains(propertyName))
         {
             OnExcludedPropertyChanged(propertyName);
 
@@ -129,7 +132,7 @@ public class ProgressStatus : LinkableNotifyPropertyChanged, IProgressStatus
         InvokePropertyChanged(propertyName);
     }
 
-    protected virtual void InvokePropertyChanged(string propertyName) => base.OnPropertyChanged(propertyName);
+    protected virtual void InvokePropertyChanged(string? propertyName) => base.OnPropertyChanged(propertyName);
 
     protected virtual void OnStateChanged(ProgressState state) => IsBusy = state == ProgressState.Busy;
 

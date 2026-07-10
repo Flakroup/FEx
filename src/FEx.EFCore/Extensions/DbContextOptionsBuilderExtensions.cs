@@ -40,7 +40,7 @@ public static class DbContextOptionsBuilderExtensions
     }
 
     public static void UseSqlite(this DbContextOptionsBuilder options, IFExDbConfig config) =>
-        options.UseSqlite($"data source={config.SqliteDbFile.FullName}",
+        options.UseSqlite($"data source={config.SqliteDbFile.Guard(nameof(IFExDbConfig.SqliteDbFile)).FullName}",
             sqliteDbContextOptionsBuilder => sqliteDbContextOptionsBuilder.CommandTimeout(config.CommandTimeout));
 
     public static bool UseSqlServer(this DbContextOptionsBuilder options, IFExDbConfig config) =>
@@ -48,7 +48,7 @@ public static class DbContextOptionsBuilderExtensions
 
     public static bool UseSqlServer(this DbContextOptionsBuilder options,
                                     IFExDbConfig config,
-                                    Action<SqlServerDbContextOptionsBuilder> configure)
+                                    Action<SqlServerDbContextOptionsBuilder>? configure)
     {
         config.SqlInstance.Guard(nameof(IFExDbConfig.SqlInstance));
 

@@ -6,10 +6,10 @@ namespace FEx.AppSettings.Abstractions.Interfaces;
 
 public interface IConfigurationService
 {
-    Dictionary<string, string> AppSettings { get; }
-    IConfigurationRoot Configuration { get; }
+    Dictionary<string, string>? AppSettings { get; }
+    IConfigurationRoot? Configuration { get; }
 
-    void Build(IEnumerable<IConfigurationSource> sources);
+    void Build(IEnumerable<IConfigurationSource>? sources);
     bool? GetBoolSetting(string key, bool? defaultValue);
     T GetSetting<T>(string key, Func<string, T> func);
 }

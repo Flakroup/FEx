@@ -10,7 +10,7 @@ public sealed class DateTimeProviderContext : IDisposable
     private static readonly ThreadLocal<Stack<DateTimeProviderContext>> _threadScopeStack = new(static () => new());
     private bool _isDisposed;
 
-    public static DateTimeProviderContext Current =>
+    public static DateTimeProviderContext? Current =>
         _threadScopeStack.Value?.Count == 0
             ? null
             : _threadScopeStack.Value?.Peek();

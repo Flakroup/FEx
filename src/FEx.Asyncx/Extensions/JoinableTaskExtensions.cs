@@ -5,6 +5,7 @@ using FEx.Core.Abstractions;
 using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace FEx.Asyncx.Extensions;
@@ -61,6 +62,7 @@ public static class JoinableTaskExtensions
             FExCoreStatics.AsyncHelper.FireTaskAndForget(func);
     }
 
+    [return: MaybeNull]
     public static T FireOrWait<T>(Func<Task<T>> func, bool wait)
     {
         if (wait)

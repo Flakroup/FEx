@@ -3,6 +3,8 @@
 namespace FEx.EFCore.Models;
 
 public class ChangeInfo<TKey, TValue>
+    where TKey : notnull
+    where TValue : notnull
 {
     public Change<TValue, TKey> Change { get; }
     public TKey Key => Change.Key;

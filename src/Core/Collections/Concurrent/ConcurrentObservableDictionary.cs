@@ -26,6 +26,7 @@ namespace FEx.Core.Collections.Concurrent;
 public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<KeyValuePair<TKey, TValue>>,
     IDictionary<TKey, TValue>, IDictionary, IReadOnlyDictionary<TKey, TValue>, INotifyCollectionChanged,
     INotifyPropertyChanged
+    where TKey : notnull
 {
     private readonly ConcurrentDictionary<TKey, TValue> _dictionary;
 
@@ -36,13 +37,13 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
     /// Occurs when the collection changes, either by adding or removing an item.
     /// </summary>
     [field: NonSerialized]
-    public event NotifyCollectionChangedEventHandler CollectionChanged;
+    public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
     /// <summary>
     /// PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
     [field: NonSerialized]
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public int Count => _dictionary.Count;
     public bool IsSynchronized => ((ICollection)_dictionary).IsSynchronized;
@@ -52,10 +53,12 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
     public ICollection<TKey> Keys => _dictionary.Keys;
     public ICollection<TValue> Values => _dictionary.Values;
 
-    public object this[object key]
+    public object? this[object key]
     {
-        get => this[key.GetObject<TKey>()];
-        set => this[key.GetObject<TKey>()] = value.GetObject<TValue>();
+        // Non-generic IDictionary boundary: key boxes a non-null TKey; GetObject is null-tolerant
+        // and value may be null for reference TValue.
+        get => this[key.GetObject<TKey>().Guard(nameof(key))];
+        set => this[key.GetObject<TKey>().Guard(nameof(key))] = value!.GetObject<TValue>()!;
     }
 
     public TValue this[TKey key]
@@ -94,13 +97,14 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
     void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex) =>
         ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).CopyTo(array, arrayIndex);
 
-    public void Add(object key, object value) => TryAdd(key.GetObject<TKey>(), value.GetObject<TValue>());
+    public void Add(object key, object? value) =>
+        TryAdd(key.GetObject<TKey>().Guard(nameof(key)), value!.GetObject<TValue>()!);
 
-    public bool Contains(object key) => ContainsKey(key.GetObject<TKey>());
+    public bool Contains(object key) => ContainsKey(key.GetObject<TKey>().Guard(nameof(key)));
 
     public IDictionaryEnumerator GetEnumerator() => ((IDictionary)_dictionary).GetEnumerator();
 
-    public void Remove(object key) => Remove(key.GetObject<TKey>());
+    public void Remove(object key) => Remove(key.GetObject<TKey>().Guard(nameof(key)));
 
     public void Clear()
     {
@@ -117,12 +121,26 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
         var flag = _dictionary.TryRemove(key, out var val);
 
         if (flag)
-            OnRemoveFromCollection(new KeyValuePair<TKey, TValue>(key, val), -1);
+            // val holds the value that was just removed under `flag`.
+            OnRemoveFromCollection(new KeyValuePair<TKey, TValue>(key, val!), -1);
 
         return flag;
     }
 
-    public bool TryGetValue(TKey key, out TValue value) => _dictionary.TryGetValue(key, out value);
+    public bool TryGetValue(TKey key, out TValue value)
+    {
+        if (_dictionary.TryGetValue(key, out var v))
+        {
+            value = v;
+
+            return true;
+        }
+
+        // Per the TryGetValue contract the out value is only meaningful when the method returns true.
+        value = default!;
+
+        return false;
+    }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -198,7 +216,8 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
             });
 
         if (wasUpdated)
-            OnReplaceInCollection(new(key, value), new(key, capturedOldValue), -1);
+            // capturedOldValue was assigned by the update factory that ran under `wasUpdated`.
+            OnReplaceInCollection(new(key, value), new(key, capturedOldValue!), -1);
         else
             OnAddToCollection(new(key, value), -1);
 

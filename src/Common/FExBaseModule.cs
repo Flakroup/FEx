@@ -16,7 +16,7 @@ namespace FEx.Common;
 [RegisterModule(typeof(FExCommonModule))]
 public class FExBaseModule : InitializeModule<IFExBaseContainer, IServiceCollection>
 {
-    protected override void RegisterServices(IFExBaseContainer container, IServiceCollection context)
+    protected override void RegisterServices(IFExBaseContainer? container, IServiceCollection context)
     {
     }
 }

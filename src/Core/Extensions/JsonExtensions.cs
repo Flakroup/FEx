@@ -24,5 +24,5 @@ public static class JsonExtensions
     public static string SafeSerializeObject(this object initializeParameter) =>
         JsonConvert.SerializeObject(initializeParameter, Formatting.Indented, Settings);
 
-    private static void OnError(object sender, ErrorEventArgs e) => FExStaticLogger.Error(e.ErrorContext.Error);
+    private static void OnError(object? sender, ErrorEventArgs e) => FExStaticLogger.Error(e.ErrorContext.Error);
 }

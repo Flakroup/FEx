@@ -1,4 +1,5 @@
 ﻿using EFCore.BulkExtensions;
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.EFCore.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -23,7 +24,7 @@ public static class BulkOperationsExtensions
 
     public static async Task BulkInsertAsync<TDbContext, T>(this IBulkDbServiceBase<TDbContext> service,
                                                             IList<T> entities,
-                                                            string errorMessage = null,
+                                                            string? errorMessage = null,
                                                             CancellationToken cancellationToken = default)
         where TDbContext : DbContext where T : class =>
         await DoBulkDbContextTaskAsync(entities,
@@ -36,7 +37,7 @@ public static class BulkOperationsExtensions
 
     public static async Task BulkDeleteAsync<TDbContext, T>(this IBulkDbServiceBase<TDbContext> service,
                                                             IList<T> entities,
-                                                            string errorMessage = null,
+                                                            string? errorMessage = null,
                                                             CancellationToken cancellationToken = default)
         where TDbContext : DbContext where T : class =>
         await DoBulkDbContextTaskAsync(entities,
@@ -49,7 +50,7 @@ public static class BulkOperationsExtensions
 
     public static async Task BulkInsertOrUpdateAsync<TDbContext, T>(this IBulkDbServiceBase<TDbContext> service,
                                                                     IList<T> entities,
-                                                                    string errorMessage = null,
+                                                                    string? errorMessage = null,
                                                                     CancellationToken cancellationToken = default)
         where TDbContext : DbContext where T : class =>
         await DoBulkDbContextTaskAsync(entities,
@@ -63,7 +64,7 @@ public static class BulkOperationsExtensions
     public static async Task BulkInsertOrUpdateOrDeleteAsync<TDbContext, T>(
         this IBulkDbServiceBase<TDbContext> service,
         IList<T> entities,
-        string errorMessage = null,
+        string? errorMessage = null,
         CancellationToken cancellationToken = default) where TDbContext : DbContext where T : class
     {
         const OperationType operationType =
@@ -83,7 +84,7 @@ public static class BulkOperationsExtensions
 
     public static async Task BulkReadAsync<TDbContext, T>(this IBulkDbServiceBase<TDbContext> service,
                                                           IList<T> entities,
-                                                          string errorMessage = null,
+                                                          string? errorMessage = null,
                                                           CancellationToken cancellationToken = default)
         where TDbContext : DbContext where T : class =>
         await DoBulkDbContextTaskAsync(entities,
@@ -96,7 +97,7 @@ public static class BulkOperationsExtensions
 
     public static async Task BulkUpdateAsync<TDbContext, T>(this IBulkDbServiceBase<TDbContext> service,
                                                             IList<T> entities,
-                                                            string errorMessage = null,
+                                                            string? errorMessage = null,
                                                             CancellationToken cancellationToken = default)
         where TDbContext : DbContext where T : class =>
         await DoBulkDbContextTaskAsync(entities,
@@ -107,7 +108,7 @@ public static class BulkOperationsExtensions
             OperationType.Update,
             cancellationToken);
 
-    private static BulkConfig EnsureConfig<T>(ICollection<T> entities, Func<BulkConfig> config) where T : class
+    private static BulkConfig EnsureConfig<T>(ICollection<T> entities, Func<BulkConfig>? config) where T : class
     {
         var cfg = config?.Invoke() ?? DefaultBulkConfig();
 
@@ -120,10 +121,10 @@ public static class BulkOperationsExtensions
     private static async Task DoBulkDbContextTaskAsync<TDbContext, T>(IList<T> entities,
                                                                       IBulkDbServiceBase<TDbContext> service,
                                                                       Func<TDbContext, Func<IList<T>, BulkConfig,
-                                                                          Action<decimal>, Type, CancellationToken,
+                                                                          Action<decimal>?, Type?, CancellationToken,
                                                                           Task>> func,
-                                                                      Func<BulkConfig> configFunc,
-                                                                      string errorMessage,
+                                                                      Func<BulkConfig>? configFunc,
+                                                                      string? errorMessage,
                                                                       OperationType type,
                                                                       CancellationToken cancellationToken)
         where TDbContext : DbContext where T : class
@@ -137,7 +138,7 @@ public static class BulkOperationsExtensions
         {
             var id = Guid.NewGuid().ToString();
             var hasCompleted = false;
-            var tableName = service.TableMappings.ForwardIndex[typeof(T).FullName];
+            var tableName = service.TableMappings.ForwardIndex[typeof(T).FullName.Guard(nameof(T))];
 
             await service.RunTaskInDbContextAsync(ctx => func(ctx)(entities,
                     config,

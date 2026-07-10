@@ -40,7 +40,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     {
     }
 
-    public ConcurrentList(IEnumerable<T> collection)
+    public ConcurrentList(IEnumerable<T>? collection)
     {
         Items = [];
         _lock = new(this);
@@ -102,7 +102,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     {
         var (startingIndex, itemsToAdd) = Write(() =>
         {
-            var itemsToAdd = collection?.ToList();
+            var itemsToAdd = collection?.ToList() ?? [];
 
             if (itemsToAdd.IsNullOrEmpty())
                 return (-1, itemsToAdd);
@@ -141,11 +141,12 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
 
     /// <inheritdoc />
     public void
-        AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector, IEqualityComparer<TKey> comparer) =>
+        AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector, IEqualityComparer<TKey>? comparer) =>
         AddRange([.. range.DistinctBy(keySelector, comparer)
             .Where(distinctItem => Items.All(item =>
                 !comparer?.Equals(keySelector(distinctItem), keySelector(item))
-                ?? !keySelector(distinctItem).Equals(keySelector(item))))]);
+                // Comparer-less path assumes non-null keys (existing runtime contract).
+                ?? !keySelector(distinctItem)!.Equals(keySelector(item))))]);
 
     /// <inheritdoc />
     public bool RemoveWhere(Func<T, bool> predicate, out List<T> removedItems)
@@ -220,7 +221,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     }
 
     /// <inheritdoc />
-    public void SortBy<TKey>(Func<T, TKey> selector, ListSortDirection order, IComparer<TKey> comparer)
+    public void SortBy<TKey>(Func<T, TKey> selector, ListSortDirection order, IComparer<TKey>? comparer)
     {
         Write(() =>
         {
@@ -271,7 +272,8 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     public IEnumerator<T> GetEnumerator() => Read(Items.GetEnumerator);
 
     /// <inheritdoc cref="List{T}.Add" />
-    public int Add(object value) => AddCoreWithEvents((T)value);
+    // IList.Add: value is unboxed to T; null into a value-type list throws, matching IList semantics.
+    public int Add(object? value) => AddCoreWithEvents((T)value!);
 
     /// <inheritdoc cref="List{T}.IndexOf(T)" />
     public int IndexOf(T item) => Read(() => Items.IndexOf(item));

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 namespace FEx.Agnostics.Collections.Concurrent;
 
 public class FExMemoryCache<TKey, TValue> : IFExMemoryCache<TKey, TValue>, IDictionary<TKey, TValue>, IDictionary
+    where TKey : notnull
 {
     private readonly ConcurrentDictionary<TKey, TValue> _cache;
 
@@ -25,7 +26,7 @@ public class FExMemoryCache<TKey, TValue> : IFExMemoryCache<TKey, TValue>, IDict
         set => _cache[key] = value;
     }
 
-    public object this[object key]
+    public object? this[object key]
     {
         get => ((IDictionary)_cache)[key];
         set => ((IDictionary)_cache)[key] = value;
@@ -73,7 +74,7 @@ public class FExMemoryCache<TKey, TValue> : IFExMemoryCache<TKey, TValue>, IDict
 
     public void Remove(object key) => ((IDictionary)_cache).Remove(key);
 
-    public void Add(object key, object value) => ((IDictionary)_cache).Add(key, value);
+    public void Add(object key, object? value) => ((IDictionary)_cache).Add(key, value);
 
     void IDictionary.Clear() => ((IDictionary)_cache).Clear();
 
@@ -83,7 +84,13 @@ public class FExMemoryCache<TKey, TValue> : IFExMemoryCache<TKey, TValue>, IDict
 
     public bool Remove(TKey key) => ((IDictionary<TKey, TValue>)_cache).Remove(key);
 
-    public bool TryGetValue(TKey key, out TValue value) => _cache.TryGetValue(key, out value);
+    public bool TryGetValue(TKey key, out TValue value)
+    {
+        var found = _cache.TryGetValue(key, out var innerValue);
+        value = innerValue!;
+
+        return found;
+    }
 
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_cache).GetEnumerator();
 

@@ -13,7 +13,7 @@ public sealed class FExOneDrvModule : InitializeOnlyModule
         _options = options;
     }
 
-    protected override void RegisterServices(object container, IServiceCollection services)
+    protected override void RegisterServices(object? container, IServiceCollection services)
     {
         services.AddOneDrv(_options);
     }

@@ -13,7 +13,9 @@ namespace FEx.DependencyInjection;
 public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProvider
 {
     private readonly MethodInfo _method;
-    private IDisposable _provider;
+
+    // Invariant: assigned via SetServiceProvider before any resolve/GetContainer call.
+    private IDisposable _provider = null!;
 
     public FExStrongInjectServiceProvider()
     {
@@ -33,7 +35,7 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
     }
 
 #pragma warning disable IDISP004
-    public T TryResolveService<T>()
+    public T? TryResolveService<T>()
     {
         try
         {
@@ -53,19 +55,24 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
     {
         var generic = _method.MakeGenericMethod(serviceType);
 
-        return (T)generic.Invoke(this, null);
+        var result = generic.Invoke(this, null)
+            ?? throw new InvalidOperationException($"Couldn't resolve type: {serviceType.FullName}");
+
+        return (T)result;
     }
 
     public object GetRequiredService(Type serviceType)
     {
         var generic = _method.MakeGenericMethod(serviceType);
 
-        return generic.Invoke(this, null);
+        return generic.Invoke(this, null)
+            ?? throw new InvalidOperationException($"Couldn't resolve type: {serviceType.FullName}");
     }
 
     public TContainer GetContainer<TContainer>() where TContainer : class => (TContainer)_provider;
 
-    public IScopeProvider CreateScope() => null;
+    public IScopeProvider CreateScope() =>
+        throw new NotSupportedException("Scoping is handled by StrongInject containers");
 
     public T GetInstance<T>() => GetRequiredService<T>();
 
@@ -94,7 +101,7 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
         _provider = container ?? throw new ArgumentNullException(nameof(container));
     }
 
-    public object GetService(Type serviceType)
+    public object? GetService(Type serviceType)
     {
         try
         {

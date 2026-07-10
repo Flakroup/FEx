@@ -3,6 +3,7 @@ using FEx.Agnostics.Abstractions.Flow;
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -61,7 +62,7 @@ public static class ObservableExtensions
 
     public static IObservable<EventPattern<PropertyChangedEventArgs>> GetPropertyChangedObservable(
         this INotifyPropertyChanged notifyPropertyChanged,
-        string propertyName = null)
+        string? propertyName = null)
     {
         var observable = Observable
             .FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
@@ -84,7 +85,7 @@ public static class ObservableExtensions
     public static IObservable<T> MergeMany<T>(this IObservable<T> source, params IObservable<T>[] observables) =>
         observables.Aggregate(source, static (current, observable) => current.Merge(observable));
 
-    public static IDisposable AsyncSubscribe<T>(this IObservable<T> source, Action<T> onNext = null)
+    public static IDisposable AsyncSubscribe<T>(this IObservable<T> source, Action<T>? onNext = null)
     {
         var observable = source.ObserveOn(Scheduler.Default).SubscribeOn(Scheduler.Default);
 
@@ -93,7 +94,7 @@ public static class ObservableExtensions
             : observable.Subscribe();
     }
 
-    public static void AsyncSubscribe<T>(this IObservable<T> source, Action<T> onNext, CompositeDisposable disposable)
+    public static void AsyncSubscribe<T>(this IObservable<T> source, Action<T>? onNext, CompositeDisposable disposable)
     {
         disposable.Guard(nameof(disposable));
 
@@ -166,7 +167,7 @@ public static class ObservableExtensions
     /// </returns>
     public static Result<T, Error> GetResult<T>(this IObservable<T> observable)
     {
-        T result = default;
+        T result = default!;
         var isSet = false;
 
         using var subscription = observable.Subscribe(x =>
@@ -202,9 +203,9 @@ public static class ObservableExtensions
         return item;
     }
 
-    public static void TryGetLastValue<TResult>(this IObservable<TResult> source, out TResult value)
+    public static void TryGetLastValue<TResult>(this IObservable<TResult> source, [MaybeNull] out TResult value)
     {
-        TResult result = default;
+        TResult result = default!;
         using var subscription = source.Subscribe(x => result = x);
         value = result;
     }

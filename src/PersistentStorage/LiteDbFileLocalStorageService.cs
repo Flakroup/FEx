@@ -23,7 +23,7 @@ public class LiteDbFileLocalStorageService : FileLocalStorageService
         downloadResult.UseDataStream(stream => Upload(downloadResult.Url, downloadResult.FileName, stream));
 
     /// <inheritdoc />
-    public override IFExCachedFile GetCachedFile(Uri fileUrl) =>
+    public override IFExCachedFile? GetCachedFile(Uri fileUrl) =>
         FindById(fileUrl) is not { } file
             ? null
             : new FExCachedFile(file);

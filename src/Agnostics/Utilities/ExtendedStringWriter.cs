@@ -10,7 +10,7 @@ public class ExtendedStringWriter : StringWriter
     [EditorBrowsable(EditorBrowsableState.Never)]
     public delegate void FlushedEventHandler(object sender, EventArgs args);
 
-    public event FlushedEventHandler Flushed;
+    public event FlushedEventHandler? Flushed;
 
     public override Encoding Encoding { get; }
 
@@ -31,7 +31,7 @@ public class ExtendedStringWriter : StringWriter
 
     public override void Write(char value) => Run(() => base.Write(value));
 
-    public override void Write(string value) => Run(() => base.Write(value));
+    public override void Write(string? value) => Run(() => base.Write(value));
 
     public override void Write(char[] buffer, int index, int count) => Run(() => base.Write(buffer, index, count));
 

@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -19,9 +20,5 @@ public sealed class CollectionDebugView<T>
         }
     }
 
-    public CollectionDebugView(ICollection<T> collection)
-    {
-        if (collection is not null)
-            _collection = collection;
-    }
+    public CollectionDebugView(ICollection<T> collection) => _collection = collection.GuardProperty();
 }

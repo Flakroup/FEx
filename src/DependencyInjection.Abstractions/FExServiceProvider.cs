@@ -24,7 +24,7 @@ public class FExServiceProvider : IFExServiceProvider
     /// <summary>
     /// Tracks the container instance for idempotent initialization.
     /// </summary>
-    private static IDisposable _containerInstance;
+    private static IDisposable? _containerInstance;
 
     public static FExServiceProvider Instance => new();
 
@@ -33,12 +33,17 @@ public class FExServiceProvider : IFExServiceProvider
     /// <br />
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>
-    public static IFExServiceContainer ServiceContainer { get; private set; }
+    public static IFExServiceContainer? ServiceContainer { get; private set; }
+
+    /// <summary>
+    /// Guarded accessor for <see cref="ServiceContainer" /> for members that assume it has been initialized.
+    /// </summary>
+    private static IFExServiceContainer RequiredServiceContainer => ServiceContainer.Guard(nameof(ServiceContainer));
 
     /// <summary>
     /// Static reference to the current global service provider for multi-DI coordination.
     /// </summary>
-    private static IFExServiceProvider ServiceProvider { get; set; }
+    private static IFExServiceProvider? ServiceProvider { get; set; }
 
     static FExServiceProvider()
     {
@@ -60,33 +65,33 @@ public class FExServiceProvider : IFExServiceProvider
     /// <summary>
     /// Retrieves the instance of the specified type.
     /// </summary>
-    public object GetInstance(Type serviceType) => ServiceContainer.ResolveService<object>();
+    public object GetInstance(Type serviceType) => RequiredServiceContainer.ResolveService<object>();
 
     /// <summary>
     /// Gets the required service object of the specified type.
     /// </summary>
-    public T GetRequiredService<T>() => ServiceContainer.ResolveService<T>();
+    public T GetRequiredService<T>() => RequiredServiceContainer.ResolveService<T>();
 
     /// <summary>
     /// Gets the required service object of the specified type.
     /// </summary>
-    public T GetRequiredService<T>(Type serviceType) => (T)ServiceContainer.ResolveService<object>();
+    public T GetRequiredService<T>(Type serviceType) => (T)RequiredServiceContainer.ResolveService<object>();
 
     /// <summary>
     /// Gets the required service object of the specified type.
     /// </summary>
-    public object GetRequiredService(Type serviceType) => ServiceContainer.ResolveService<object>();
+    public object GetRequiredService(Type serviceType) => RequiredServiceContainer.ResolveService<object>();
 
     /// <summary>
     /// Tries to resolve service of the specified type.
     /// </summary>
-    public T TryResolveService<T>() => ServiceContainer.ResolveOrDefault<T>();
+    public T? TryResolveService<T>() => ServiceContainer is null ? default : ServiceContainer.ResolveOrDefault<T>();
 
     /// <summary>
     /// Gets the container of the specified type.
     /// </summary>
     public TContainer GetContainer<TContainer>() where TContainer : class =>
-        ServiceContainer as TContainer
+        RequiredServiceContainer as TContainer
         ?? throw new InvalidOperationException($"Container is not of type {typeof(TContainer).Name}");
 
     /// <summary>
@@ -101,12 +106,12 @@ public class FExServiceProvider : IFExServiceProvider
     public ValueTask ConfigureServiceProviderAsync() => FExValueTaskHelper.CompletedTask;
 
     /// <inheritdoc />
-    public IEnumerable<T> TryResolveServices<T>() => ServiceContainer.TryResolveServices<T>();
+    public IEnumerable<T> TryResolveServices<T>() => RequiredServiceContainer.TryResolveServices<T>();
 
     /// <summary>
     /// Gets the service object of the specified type.
     /// </summary>
-    public object GetService(Type serviceType) => ServiceContainer.ResolveOrDefault<object>();
+    public object? GetService(Type serviceType) => ServiceContainer?.ResolveOrDefault<object>();
 
     /// <summary>
     /// Retrieves the <see cref="T" /> instance.
@@ -188,9 +193,9 @@ public class FExServiceProvider : IFExServiceProvider
     /// <br />
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>
-    public static T GetOrDefault<T>() => ServiceContainer.ResolveOrDefault(default(T));
+    public static T? GetOrDefault<T>() => RequiredServiceContainer.ResolveOrDefault(default(T));
 
-    public static T GetOrDefault<T>(T fallback) => ServiceContainer.ResolveOrDefault(fallback);
+    public static T? GetOrDefault<T>(T? fallback) => RequiredServiceContainer.ResolveOrDefault(fallback);
 
     /// <summary>
     /// Disposes the container.
@@ -214,12 +219,12 @@ public class FExServiceProvider : IFExServiceProvider
     public static ValueTask<TContainer> InitializeAsync<TContainer>() where TContainer : class, IDisposable, new() =>
         InitializeAsync<TContainer>(null, null);
 
-    public static ValueTask<TContainer> InitializeAsync<TContainer>(IServiceCollection services)
+    public static ValueTask<TContainer> InitializeAsync<TContainer>(IServiceCollection? services)
         where TContainer : class, IDisposable, new() =>
         InitializeAsync<TContainer>(services, null);
 
-    public static async ValueTask<TContainer> InitializeAsync<TContainer>(IServiceCollection services,
-                                                                          Action<TContainer> configureContainer)
+    public static async ValueTask<TContainer> InitializeAsync<TContainer>(IServiceCollection? services,
+                                                                          Action<TContainer>? configureContainer)
         where TContainer : class, IDisposable, new()
     {
         // Idempotent: return existing container if already initialized with same type
@@ -274,15 +279,16 @@ public class FExServiceProvider : IFExServiceProvider
     {
         try
         {
-            return ServiceProvider.GetContainer<TModule>();
+            // Null ServiceProvider intentionally throws here (NRE), handled below via the explicit null check.
+            return ServiceProvider!.GetContainer<TModule>();
         }
         catch (Exception ex)
         {
-            object provider = null;
+            object? provider = null;
 
             try
             {
-                provider = ServiceProvider.GetContainer<object>();
+                provider = ServiceProvider!.GetContainer<object>();
             }
             catch
             {
@@ -305,7 +311,7 @@ public class FExServiceProvider : IFExServiceProvider
         Func<IFExServiceProvider, Task> serviceProviderConfiguration)
     {
         serviceProviderConfiguration.Guard(nameof(serviceProviderConfiguration));
-        var provider = ServiceProvider;
+        var provider = ServiceProvider.Guard(nameof(ServiceProvider));
         await serviceProviderConfiguration(provider);
 
         return provider;

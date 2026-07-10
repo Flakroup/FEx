@@ -13,7 +13,7 @@ namespace FEx.Core.Abstractions.Extensions;
 
 public static class SynchronizationContextExtensions
 {
-    public static SynchronizationContext GetThreadSynchronizationContext(this Thread thread, bool createNew = false)
+    public static SynchronizationContext? GetThreadSynchronizationContext(this Thread thread, bool createNew = false)
     {
         if (thread.ManagedThreadId.Equals(Environment.CurrentManagedThreadId))
             return Get(createNew);
@@ -27,7 +27,7 @@ public static class SynchronizationContextExtensions
 #endif
     }
 
-    public static SynchronizationContext Get(bool createNew = false)
+    public static SynchronizationContext? Get(bool createNew = false)
     {
         if (SynchronizationContext.Current is null && createNew)
             SynchronizationContext.SetSynchronizationContext(new());
@@ -36,13 +36,13 @@ public static class SynchronizationContextExtensions
     }
 
     [SuppressMessage("Usage", "VSTHRD001:Avoid legacy thread switching APIs")]
-    public static T SendInContext<T>(this SynchronizationContext context, object sender, Func<T> func)
+    public static T SendInContext<T>(this SynchronizationContext context, object? sender, Func<T> func)
     {
         var stackTrace = GetStackTrace();
 
         try
         {
-            T res = default;
+            T res = default!;
 
             context.Send(_ =>
                 {
@@ -70,7 +70,7 @@ public static class SynchronizationContextExtensions
     }
 
     [SuppressMessage("Usage", "VSTHRD001:Avoid legacy thread switching APIs")]
-    public static void SendInContext(this SynchronizationContext context, object sender, Action action)
+    public static void SendInContext(this SynchronizationContext context, object? sender, Action action)
     {
         var stackTrace = GetStackTrace();
 
@@ -101,8 +101,8 @@ public static class SynchronizationContextExtensions
 
     public static TaskCompletionSource<bool> PostInContext(this SynchronizationContext context,
                                                            Action action,
-                                                           object sender,
-                                                           Action<AttachedException> handleException = null)
+                                                           object? sender,
+                                                           Action<AttachedException>? handleException = null)
     {
         _ = context.Guard(nameof(context));
         action.Guard(nameof(action));
@@ -117,12 +117,14 @@ public static class SynchronizationContextExtensions
 
     private static StackTrace GetStackTrace() => FExCoreStatics.StackTraceProvider.GetStackTrace();
 
-    private static void HandleAttachedException(object sender,
+    private static void HandleAttachedException(object? sender,
                                                 StackTrace callStack,
-                                                Action<AttachedException> onException,
+                                                Action<AttachedException>? onException,
                                                 Exception ex)
     {
-        var aEx = new AttachedException(sender, callStack, ex);
+        // AttachedException.sender is non-null-annotated in L0, but tolerates a null diagnostic
+        // sender at runtime; preserve the original (possibly-null) sender value.
+        var aEx = new AttachedException(sender!, callStack, ex);
 
         if (onException is not null)
             onException(aEx);
@@ -132,9 +134,9 @@ public static class SynchronizationContextExtensions
             throw aEx;
     }
 
-    private static void Callback(object state)
+    private static void Callback(object? state)
     {
-        var stackTrace = (StackTrace)state;
+        var stackTrace = (StackTrace)state!;
 
         var ex = new AttachedException("Deadlock assumed, as no action could've been performed during timeout.",
             stackTrace);
@@ -147,10 +149,10 @@ public static class SynchronizationContextExtensions
     [SuppressMessage("Usage", "VSTHRD001:Avoid legacy thread switching APIs")]
     private static async Task<bool> InternalPostInContextAsync(this SynchronizationContext context,
                                                                Action action,
-                                                               object sender,
+                                                               object? sender,
                                                                TaskCompletionSource<bool> postFinished,
                                                                StackTrace stackTrace,
-                                                               Action<AttachedException> onException = null)
+                                                               Action<AttachedException>? onException = null)
     {
         try
         {
@@ -188,9 +190,9 @@ public static class SynchronizationContextExtensions
     }
 
     private static void AwaitableInternalPost(Action action,
-                                              object sender,
+                                              object? sender,
                                               StackTrace stackTrace,
-                                              Action<AttachedException> onException,
+                                              Action<AttachedException>? onException,
                                               TaskCompletionSource<bool> postFinished)
     {
         var result = InternalPost(action, sender, stackTrace, onException);
@@ -198,9 +200,9 @@ public static class SynchronizationContextExtensions
     }
 
     private static Result<ExceptionError> InternalPost(Action action,
-                                                       object sender,
+                                                       object? sender,
                                                        StackTrace stackTrace,
-                                                       Action<AttachedException> onException)
+                                                       Action<AttachedException>? onException)
     {
         try
         {

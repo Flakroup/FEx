@@ -45,7 +45,7 @@ public class AsyncHelper : IAsyncHelper
 
     public ITaskWrapper FireAndForget(Action action,
                                       AsyncMode asyncMode,
-                                      IExceptionHandlerOptions options,
+                                      IExceptionHandlerOptions? options,
                                       CancellationToken cancellationToken)
     {
         action.Guard(nameof(action));
@@ -59,7 +59,7 @@ public class AsyncHelper : IAsyncHelper
 
     public ITaskWrapper<T> FireAndForget<T>(Func<T> func,
                                             AsyncMode asyncMode,
-                                            IExceptionHandlerOptions options,
+                                            IExceptionHandlerOptions? options,
                                             CancellationToken cancellationToken)
     {
         func.Guard(nameof(func));
@@ -71,7 +71,7 @@ public class AsyncHelper : IAsyncHelper
 
     public ITaskWrapper FireTaskAndForget(Func<Task> task,
                                           AsyncMode asyncMode = AsyncMode.Default,
-                                          IExceptionHandlerOptions options = null)
+                                          IExceptionHandlerOptions? options = null)
     {
         task.Guard(nameof(task));
         var taskWrapper = new TaskWrapper();
@@ -82,7 +82,7 @@ public class AsyncHelper : IAsyncHelper
 
     public ITaskWrapper<T> FireTaskAndForget<T>(Func<Task<T>> task,
                                                 AsyncMode asyncMode = AsyncMode.Default,
-                                                IExceptionHandlerOptions options = null)
+                                                IExceptionHandlerOptions? options = null)
     {
         task.Guard(nameof(task));
         var taskWrapper = new TaskWrapper<T>();
@@ -93,7 +93,7 @@ public class AsyncHelper : IAsyncHelper
 
     public IReadOnlyList<ITaskWrapper> FireTasksAndForget(IEnumerable<Func<Task>> tasks,
                                                           AsyncMode asyncMode = AsyncMode.Default,
-                                                          IExceptionHandlerOptions options = null)
+                                                          IExceptionHandlerOptions? options = null)
     {
         var deferredList = (tasks?.ToList()).Guard(nameof(tasks));
 
@@ -102,7 +102,7 @@ public class AsyncHelper : IAsyncHelper
 
     public IReadOnlyList<ITaskWrapper<T>> FireTasksAndForget<T>(IEnumerable<Func<Task<T>>> tasks,
                                                                 AsyncMode asyncMode = AsyncMode.Default,
-                                                                IExceptionHandlerOptions options = null)
+                                                                IExceptionHandlerOptions? options = null)
     {
         var deferredList = (tasks?.ToList()).Guard(nameof(tasks));
 
@@ -139,11 +139,11 @@ public class AsyncHelper : IAsyncHelper
     private async Task<T> ExecuteAndCatchAsync<T>(Func<T> func,
                                                   ITaskWrapperBase taskWrapper,
                                                   AsyncMode asyncMode = AsyncMode.Default,
-                                                  IExceptionHandlerOptions options = null,
+                                                  IExceptionHandlerOptions? options = null,
                                                   CancellationToken cancellationToken = default)
     {
         //_tasksInfoSubject.AddTask(taskWrapper);
-        T result = default;
+        T result = default!;
 
         try
         {
@@ -172,10 +172,10 @@ public class AsyncHelper : IAsyncHelper
     private async Task<T> ExecuteTaskAndCatchAsync<T>(Func<Task<T>> task,
                                                       ITaskWrapperBase taskWrapper,
                                                       AsyncMode asyncMode = AsyncMode.Default,
-                                                      IExceptionHandlerOptions options = null)
+                                                      IExceptionHandlerOptions? options = null)
     {
         //_tasksInfoSubject.AddTask(taskWrapper);
-        T result = default;
+        T result = default!;
 
         try
         {

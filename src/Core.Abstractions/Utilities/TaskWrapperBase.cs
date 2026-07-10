@@ -10,8 +10,9 @@ namespace FEx.Core.Abstractions.Utilities;
 public abstract class TaskWrapperBase<TTask, TResult> : ITaskWrapperBase<TTask, TResult> where TTask : Task
     where TResult : class, IResult<ExceptionError>
 {
-    private TTask _task;
-    private TResult _result;
+    // Invariant: _task is assigned via SetTask and _result on completion, before their getters are read.
+    private TTask _task = null!;
+    private TResult _result = null!;
 
     public Guid Id { get; }
 
@@ -41,16 +42,18 @@ public abstract class TaskWrapperBase<TTask, TResult> : ITaskWrapperBase<TTask, 
         }
     }
 
-    protected TaskWrapperBase(Func<TTask> task = null, bool setStackTrace = true)
+    protected TaskWrapperBase(Func<TTask>? task = null, bool setStackTrace = true)
     {
         Id = Guid.NewGuid();
 
         if (task is not null)
             SetTask(task);
 
+        // TaskCreationStackTrace is non-null-annotated (L0 interface) but is intentionally null
+        // when stack-trace capture is disabled; null! preserves that behavior.
         TaskCreationStackTrace = setStackTrace
             ? FExCoreStatics.StackTraceProvider.GetStackTrace()
-            : null;
+            : null!;
     }
 
     public void SetException(Exception exception) => Result = ConvertExceptionToError(exception);

@@ -7,15 +7,15 @@ namespace FEx.Core.Abstractions.Interfaces;
 
 public interface IExceptionHandler
 {
-    event EventHandler<ExceptionEventArgs> ExceptionOccured;
+    event EventHandler<ExceptionEventArgs>? ExceptionOccured;
 
     /// <summary>
     /// The last exception
     /// </summary>
-    Exception LastException { get; set; }
+    Exception? LastException { get; set; }
 
-    Func<string, bool, Task> Callback { get; set; }
+    Func<string, bool, Task>? Callback { get; set; }
     bool ConsolePresent { get; }
 
-    void Handle(Exception exception, IExceptionHandlerOptions options = null);
+    void Handle(Exception exception, IExceptionHandlerOptions? options = null);
 }

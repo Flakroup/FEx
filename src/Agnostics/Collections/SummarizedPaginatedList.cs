@@ -5,7 +5,8 @@ namespace FEx.Agnostics.Collections;
 
 public class SummarizedPaginatedList<T, TSum> : PaginatedList<T>
 {
-    public new static SummarizedPaginatedList<T, TSum> Empty => new(new List<T>(), 0, 0, 0, _ => default);
+    // Empty sentinel: default(TSum) is the intended empty summary (may be null for reference TSum).
+    public new static SummarizedPaginatedList<T, TSum> Empty => new(new List<T>(), 0, 0, 0, static _ => default!);
 
     public TSum Summary { get; }
 

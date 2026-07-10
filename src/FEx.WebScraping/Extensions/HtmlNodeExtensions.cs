@@ -20,10 +20,10 @@ public static class HtmlNodeExtensions
     /// <param name="name">The name of the attribute to get. May not be <c>null</c>.</param>
     /// <param name="def">The default value to return if not found.</param>
     /// <returns>The value of the attribute if found, the default value if not found.</returns>
-    public static string GetNodeAttributeStringValue(this HtmlNode value, string name, string def) =>
-        value.GetAttributeValue(name, def);
+    public static string? GetNodeAttributeStringValue(this HtmlNode value, string name, string? def) =>
+        value.Attributes.Contains(name) ? value.GetAttributeValue(name, string.Empty) : def;
 
-    public static string GetNodeAttributeStringValue(this HtmlNode value, string name) =>
+    public static string? GetNodeAttributeStringValue(this HtmlNode value, string name) =>
         value.GetNodeAttributeStringValue(name, null);
 
     public static bool GetNodeAttributeBoolValue(this HtmlNode value, string name, bool def) =>
@@ -38,11 +38,11 @@ public static class HtmlNodeExtensions
     public static int GetNodeAttributeIntValue(this HtmlNode value, string name) =>
         value.GetNodeAttributeIntValue(name, 0);
 
-    public static string GetSrc(this HtmlNode value) => value.GetNodeAttributeStringValue(Src);
+    public static string? GetSrc(this HtmlNode value) => value.GetNodeAttributeStringValue(Src);
 
-    public static string GetHref(this HtmlNode value) => value.GetNodeAttributeStringValue(Href);
+    public static string? GetHref(this HtmlNode value) => value.GetNodeAttributeStringValue(Href);
 
-    public static string GetNodeTypeAttributeValue(this HtmlNode value) => value.GetNodeAttributeStringValue(Type);
+    public static string? GetNodeTypeAttributeValue(this HtmlNode value) => value.GetNodeAttributeStringValue(Type);
 
     public static bool IsNodeLinkElementOfType(this HtmlNode value, string type) =>
         type is not null

@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -21,9 +22,5 @@ public sealed class ListDebugView<T>
 
     // The constructor for the type proxy class must have a
     // constructor that takes the target type as a parameter.
-    public ListDebugView(IList<T> collection)
-    {
-        if (collection is not null)
-            _collection = collection;
-    }
+    public ListDebugView(IList<T> collection) => _collection = collection.GuardProperty();
 }

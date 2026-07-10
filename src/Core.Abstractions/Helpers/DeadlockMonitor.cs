@@ -19,7 +19,7 @@ public class DeadlockMonitor : IDeadlockMonitor
         _logger = logger;
     }
 
-    public void Execute(Action action, StackTrace stackTrace, uint timeout)
+    public void Execute(Action action, StackTrace? stackTrace, uint timeout)
     {
         stackTrace ??= _stackTraceProvider.GetStackTrace();
 
@@ -36,9 +36,9 @@ public class DeadlockMonitor : IDeadlockMonitor
         }
     }
 
-    private void Callback(object state, uint timeout)
+    private void Callback(object? state, uint timeout)
     {
-        var stackTrace = (StackTrace)state;
+        var stackTrace = (StackTrace)state!;
 
         var ex = new AttachedException(
             $"Deadlock assumed, as no action could've been performed during {TimeSpan.FromMilliseconds(timeout)} timeout.",

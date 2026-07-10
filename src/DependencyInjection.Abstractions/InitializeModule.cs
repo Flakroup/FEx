@@ -33,7 +33,7 @@ public abstract class InitializeModule<TContainer, TEngineContext> : FExInitiali
 
     public virtual ValueTask OnCompleteInitializationAsync(TEngineContext context) => FExValueTaskHelper.CompletedTask;
 
-    protected abstract void RegisterServices(TContainer container, TEngineContext context);
+    protected abstract void RegisterServices(TContainer? container, TEngineContext context);
 
-    protected virtual TContainer GetModule() => FExServiceProvider.GetDefaultContainer<TContainer>();
+    protected virtual TContainer? GetModule() => FExServiceProvider.GetDefaultContainer<TContainer>();
 }

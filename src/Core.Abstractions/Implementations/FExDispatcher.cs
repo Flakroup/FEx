@@ -17,7 +17,7 @@ public abstract class FExDispatcher : IFExDispatcher
     protected readonly IMainThreadContextProvider _mainThreadContextProvider;
     protected readonly IDeadlockMonitor _deadlockMonitor;
     protected readonly IStackTraceProvider _stackTraceProvider;
-    protected readonly SynchronizationContext _ctorSynchronizationContext;
+    protected readonly SynchronizationContext? _ctorSynchronizationContext;
     private readonly bool _isDeadlockMonitoringEnabled;
 
     protected SynchronizationContext MainThreadSynchronizationContext => _mainThreadContextProvider.Context;
@@ -38,30 +38,30 @@ public abstract class FExDispatcher : IFExDispatcher
         _isDeadlockMonitoringEnabled = isDeadlockMonitoringEnabled;
     }
 
-    public abstract bool CheckAccess(object sender = null);
-    public abstract void BeginInvokeOnMainThread(Action action, object sender = null);
-    public abstract Task InvokeOnMainThreadAsync(Action action, object sender = null);
-    public abstract Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object sender = null);
-    public abstract Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object sender = null);
-    public abstract Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null);
+    public abstract bool CheckAccess(object? sender = null);
+    public abstract void BeginInvokeOnMainThread(Action action, object? sender = null);
+    public abstract Task InvokeOnMainThreadAsync(Action action, object? sender = null);
+    public abstract Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object? sender = null);
+    public abstract Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object? sender = null);
+    public abstract Task InvokeOnMainThreadAsync(Func<Task> funcTask, object? sender = null);
 
-    public virtual void InvokeOnIdleMainThread(Action action, object sender = null) =>
+    public virtual void InvokeOnIdleMainThread(Action action, object? sender = null) =>
         //this implementation is not able to determine wherever UI context is idle
         InvokeOnMainThread(action, sender);
 
-    public virtual T InvokeOnIdleMainThread<T>(Func<T> action, object sender = null) =>
+    public virtual T InvokeOnIdleMainThread<T>(Func<T> action, object? sender = null) =>
         //this implementation is not able to determine wherever UI context is idle
         InvokeOnMainThread(action, sender);
 
-    public virtual async Task<T> InvokeOnIdleMainThreadAsync<T>(Func<T> action, object sender = null) =>
+    public virtual async Task<T> InvokeOnIdleMainThreadAsync<T>(Func<T> action, object? sender = null) =>
         //this implementation is not able to determine wherever UI context is idle
         await InvokeOnMainThreadAsync(action, sender);
 
-    public virtual async Task InvokeOnIdleMainThreadAsync(Action action, object sender = null) =>
+    public virtual async Task InvokeOnIdleMainThreadAsync(Action action, object? sender = null) =>
         //this implementation is not able to determine wherever UI context is idle
         await InvokeOnMainThreadAsync(action, sender);
 
-    public virtual void InvokeOnMainThread(Action action, object sender = null)
+    public virtual void InvokeOnMainThread(Action action, object? sender = null)
     {
         var context = sender is Thread thread
             ? thread.GetThreadSynchronizationContext()
@@ -74,7 +74,7 @@ public abstract class FExDispatcher : IFExDispatcher
             context.SendInContext(sender, action);
     }
 
-    public virtual T InvokeOnMainThread<T>(Func<T> action, object sender = null)
+    public virtual T InvokeOnMainThread<T>(Func<T> action, object? sender = null)
     {
         var context = sender is Thread thread
             ? thread.GetThreadSynchronizationContext()

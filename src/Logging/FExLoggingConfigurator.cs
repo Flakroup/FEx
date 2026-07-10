@@ -25,8 +25,11 @@ public class FExLoggingConfigurator : IFExLoggingConfigurator
     public IList<string> Overrides { get; set; } = ["Microsoft", "Microsoft.Hosting.Lifetime", "System"];
     public LogEventLevel ExternalLoggingLevel { get; set; } = LogEventLevel.Warning;
     public LogEventLevel ExternalDebugLoggingLevel { get; set; } = LogEventLevel.Information;
-    public Func<LoggerConfiguration, LoggerConfiguration> CfgFunc { get; set; }
-    public LoggerConfiguration Configuration { get; private set; }
+    // Optional caller-supplied hook; consumed via CfgFunc?.Invoke. Interface contract is non-null.
+    public Func<LoggerConfiguration, LoggerConfiguration> CfgFunc { get; set; } = null!;
+
+    // Assigned during Configure(); null before the first Configure() call. Interface contract is non-null.
+    public LoggerConfiguration Configuration { get; private set; } = null!;
 
     public FExLoggingConfigurator(ILoggingConfiguration loggingConfiguration, ISinkConfigurator[] sinkConfigurators)
     {

@@ -1,12 +1,19 @@
 using FEx.OneDrv.Abstractions;
 using Microsoft.Graph.Models;
+using System;
 
 namespace FEx.OneDrv.Models;
 
 internal static class DriveItemMapper
 {
-    internal static IOneDriveFile MapFile(DriveItem item) =>
-        new OneDriveFile
+    internal static IOneDriveFile MapFile(DriveItem item)
+    {
+        if (item.Id is null)
+            throw new InvalidOperationException("DriveItem is missing an Id.");
+        if (item.Name is null)
+            throw new InvalidOperationException("DriveItem is missing a Name.");
+
+        return new OneDriveFile
         {
             Id = item.Id,
             Name = item.Name,
@@ -23,13 +30,21 @@ internal static class DriveItemMapper
                 ? (int?)item.Video.Duration.Value
                 : null
         };
+    }
 
-    internal static IOneDriveFolder MapFolder(DriveItem item) =>
-        new OneDriveFolder
+    internal static IOneDriveFolder MapFolder(DriveItem item)
+    {
+        if (item.Id is null)
+            throw new InvalidOperationException("DriveItem is missing an Id.");
+        if (item.Name is null)
+            throw new InvalidOperationException("DriveItem is missing a Name.");
+
+        return new OneDriveFolder
         {
             Id = item.Id,
             Name = item.Name,
             Path = item.ParentReference?.Path,
             ChildCount = item.Folder?.ChildCount
         };
+    }
 }

@@ -16,7 +16,7 @@ public class FlakDynamicObject : DynamicObject, INotifyPropertyChanged
     /// <summary>
     /// Occurs when a property value changes.
     /// </summary>
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
     /// Gets or sets the <see cref="System.Object" /> with the specified column name.
@@ -26,7 +26,7 @@ public class FlakDynamicObject : DynamicObject, INotifyPropertyChanged
     /// </value>
     /// <param name="columnName">Name of the column.</param>
     /// <returns></returns>
-    public object this[string columnName]
+    public object? this[string columnName]
     {
         get =>
             Dic.ContainsKey(columnName)
@@ -60,7 +60,7 @@ public class FlakDynamicObject : DynamicObject, INotifyPropertyChanged
     /// </value>
     /// <param name="columnIndex">Index of the column.</param>
     /// <returns></returns>
-    public object this[int columnIndex]
+    public object? this[int columnIndex]
     {
         get =>
             columnIndex < Dic.Keys.Count
@@ -80,7 +80,7 @@ public class FlakDynamicObject : DynamicObject, INotifyPropertyChanged
         }
     }
 
-    private IDictionary<string, object> Dic => _data;
+    private IDictionary<string, object?> Dic => _data;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FlakDynamicObject" /> class.
@@ -94,7 +94,7 @@ public class FlakDynamicObject : DynamicObject, INotifyPropertyChanged
     /// Initializes a new instance of the <see cref="FlakDynamicObject" /> class.
     /// </summary>
     /// <param name="source">The source.</param>
-    public FlakDynamicObject(IDictionary<string, object> source)
+    public FlakDynamicObject(IDictionary<string, object?> source)
     {
         _data = (ExpandoObject)source;
     }
@@ -127,7 +127,7 @@ public class FlakDynamicObject : DynamicObject, INotifyPropertyChanged
     /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the
     /// language determines the behavior. (In most cases, a run-time exception is thrown.)
     /// </returns>
-    public override bool TryGetMember(GetMemberBinder binder, out object result)
+    public override bool TryGetMember(GetMemberBinder binder, out object? result)
     {
         result = this[binder.Name];
 
@@ -155,7 +155,7 @@ public class FlakDynamicObject : DynamicObject, INotifyPropertyChanged
     /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the
     /// language determines the behavior. (In most cases, a language-specific run-time exception is thrown.)
     /// </returns>
-    public override bool TrySetMember(SetMemberBinder binder, object value)
+    public override bool TrySetMember(SetMemberBinder binder, object? value)
     {
         this[binder.Name] = value;
 

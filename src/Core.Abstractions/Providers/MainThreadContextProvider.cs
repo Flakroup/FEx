@@ -10,9 +10,12 @@ namespace FEx.Core.Abstractions.Providers;
 public class MainThreadContextProvider : IMainThreadContextProvider
 {
     private readonly IAppInfoProvider _appInfoProvider;
-    private Thread _mainThread;
-    private SynchronizationContext _mainSynchronizationContext;
-    public event EventHandler<EventArgs> ThreadHasChanged;
+    private Thread? _mainThread;
+
+    // Context is non-null-annotated (interface) but is computed lazily and may be null until a
+    // synchronization context is resolved; null! preserves that behavior without a return-type change.
+    private SynchronizationContext _mainSynchronizationContext = null!;
+    public event EventHandler<EventArgs>? ThreadHasChanged;
 
     public Thread Thread
     {

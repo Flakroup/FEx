@@ -12,17 +12,17 @@ namespace FEx.WebScraping;
 public class HtmlWebHelper : IWebScraper
 {
     public async Task<HtmlDocument> LoadHtmlDocumentAsync(Uri pageLink,
-                                                          Action<HtmlWeb> configWeb,
-                                                          Encoding encoding,
-                                                          NetworkCredential credential,
+                                                          Action<HtmlWeb>? configWeb,
+                                                          Encoding? encoding,
+                                                          NetworkCredential? credential,
                                                           CancellationToken cancellationToken) =>
         await LoadAsync(pageLink, (_, _, d) => d, configWeb, encoding, credential, cancellationToken);
 
     public async Task<T> LoadAsync<T>(Uri pageLink,
                                       Func<Uri, HtmlWeb, HtmlDocument, T> action,
-                                      Action<HtmlWeb> configWeb,
-                                      Encoding encoding,
-                                      NetworkCredential credential,
+                                      Action<HtmlWeb>? configWeb,
+                                      Encoding? encoding,
+                                      NetworkCredential? credential,
                                       CancellationToken cancellationToken)
     {
         var (web, docTask) = Load(pageLink, configWeb, encoding, credential, cancellationToken);
@@ -32,9 +32,9 @@ public class HtmlWebHelper : IWebScraper
     }
 
     public (HtmlWeb web, Task<HtmlDocument> docTask) Load(Uri pageLink,
-                                                          Action<HtmlWeb> configWeb,
-                                                          Encoding encoding,
-                                                          NetworkCredential credential,
+                                                          Action<HtmlWeb>? configWeb,
+                                                          Encoding? encoding,
+                                                          NetworkCredential? credential,
                                                           CancellationToken cancellationToken)
     {
         var web = new HtmlWeb();
@@ -48,8 +48,10 @@ public class HtmlWebHelper : IWebScraper
 
     public async Task<HtmlDocument> LoadHtmlDocumentAsync(HtmlWeb web,
                                                           Uri pageLink,
-                                                          Encoding encoding,
-                                                          NetworkCredential credential,
+                                                          Encoding? encoding,
+                                                          NetworkCredential? credential,
                                                           CancellationToken cancellationToken) =>
-        await web.LoadFromWebAsync(pageLink, encoding, credential, cancellationToken);
+        // HtmlAgilityPack annotates these params non-null, but tolerates null at runtime
+        // (null encoding = auto-detect, null credential = no auth) - the shipping behavior of the null-arg overloads.
+        await web.LoadFromWebAsync(pageLink, encoding!, credential!, cancellationToken);
 }

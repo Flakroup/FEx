@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -67,7 +68,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
     /// trying to get the write lock needs to wait until the existing read locks are left.
     /// However, while this field is set, no new read locks can be acquired.
     /// </summary>
-    private WriteLockState _currentWriteLockState;
+    private WriteLockState? _currentWriteLockState;
 
     /// <summary>
     /// The number of currently held read locks (when ignoring the MSB).
@@ -145,7 +146,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
         {
             // Need to wait until the existing write lock is released.
             // This may throw an OperationCanceledException.
-            waitResult = existingWriteLockState.WaitingReadLocksSemaphore.Wait(millisecondsTimeout, cancellationToken);
+            // Preface returned false, so it created the semaphore before returning.
+            waitResult = existingWriteLockState.WaitingReadLocksSemaphore!.Wait(millisecondsTimeout, cancellationToken);
         }
         finally
         {
@@ -197,8 +199,9 @@ public class AsyncReaderWriterLockSlim : IDisposable
         {
             // Need to wait until the existing write lock is released.
             // This may throw an OperationCanceledException.
+            // Preface returned false, so it created the semaphore before returning.
             waitResult =
-                await existingWriteLockState.WaitingReadLocksSemaphore.WaitAsync(millisecondsTimeout,
+                await existingWriteLockState.WaitingReadLocksSemaphore!.WaitAsync(millisecondsTimeout,
                     cancellationToken);
         }
         finally
@@ -440,7 +443,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
             ObjectDisposedException.ThrowIf(_isDisposed, this);
 #endif
 
-    private bool EnterReadLockPreface(out WriteLockState existingWriteLockState)
+    private bool EnterReadLockPreface([NotNullWhen(false)] out WriteLockState? existingWriteLockState)
     {
         existingWriteLockState = null;
 
@@ -488,7 +491,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
             if (existingLockState.StateIsReleased
                 && existingLockState.WaitingReadLocksCount == 0)
 #pragma warning disable IDISP007
-                existingLockState.WaitingReadLocksSemaphore.Dispose();
+                // Postface only runs after the preface created the semaphore.
+                existingLockState.WaitingReadLocksSemaphore!.Dispose();
 #pragma warning restore IDISP007
 
             if (waitResult)
@@ -644,7 +648,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
             // Reset the read lock release semaphore if it has been released in
             // the meanwhile. It is OK to check this here since the semaphore can
             // only be released within the lock on syncRoot.
-            if (_currentWriteLockState.WaitForReadLocks
+            // Invariant: a write lock state is present whenever this method runs.
+            if (_currentWriteLockState!.WaitForReadLocks
                 && waitFailure
                 && _readLockReleaseSemaphore.CurrentCount > 0)
                 _readLockReleaseSemaphore.Wait();
@@ -653,7 +658,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         }
         else
         {
-            _currentWriteLockState.StateIsActive = false;
+            _currentWriteLockState!.StateIsActive = false;
 
             // If we exit the write lock normally, we have already waited for the
             // read locks to exit, so the next write lock mustn't do that again.
@@ -670,7 +675,8 @@ public class AsyncReaderWriterLockSlim : IDisposable
 
     private void ReleaseWriteLockState()
     {
-        var writeLockState = _currentWriteLockState;
+        // Invariant: ReleaseWriteLockState is only called while a write lock state is present.
+        var writeLockState = _currentWriteLockState!;
 
         writeLockState.StateIsReleased = true;
 
@@ -784,7 +790,7 @@ public class AsyncReaderWriterLockSlim : IDisposable
         /// will be created only if there is at least on additional task or thread that wants
         /// to enter a read lock.
         /// </summary>
-        public SemaphoreSlim WaitingReadLocksSemaphore { get; set; }
+        public SemaphoreSlim? WaitingReadLocksSemaphore { get; set; }
 
         /// <summary>
         /// Gets or sets a value that indicates the number of tasks or threads which intend

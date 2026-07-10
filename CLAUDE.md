@@ -17,7 +17,7 @@ Reference .NET library - shared framework used as a git submodule across several
 - Package versions centralized in `DevConfigs/Directory.Build.props` (`DotNetNugetsVersion`, `AvaloniaVersion`, etc.)
 - Used as a submodule in other projects - breaking changes ripple to consumers
 - Analyzers (via `Directory.Build.targets`): IDisposableAnalyzers, Microsoft.VisualStudio.Threading.Analyzers, ReflectionAnalyzers
-- Nullable: only via csproj/props/targets, never `#nullable enable` in a file
+- Nullable: **enabled globally** via `DevConfigs/Directory.Build.props`; PolySharp polyfills the nullable annotation attributes (`[NotNullWhen]`, `[MaybeNull]`, `[MemberNotNull]`, ...) on down-level TFMs (`netstandard2.0`/`net481`). Set nullability only via csproj/props/targets, never `#nullable enable/disable` in a file; do not re-declare `<Nullable>` per project (it is inherited)
 - NEVER exclude projects from the build - fix the build instead of bypassing
 
 ## Module System

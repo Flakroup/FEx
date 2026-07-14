@@ -12,18 +12,18 @@ public interface ITreeViewBuilder
 
     void AddChildNode(string rootNodeName,
                       List<string> nodePath,
-                      string name,
+                      string? name,
                       bool unique,
-                      string iconPath,
+                      string? iconPath,
                       bool isIconAttachedToFile,
                       bool isExpanded);
 
     void AddChildNode(string rootNodeName,
                       string nodePath,
-                      string name,
+                      string? name,
                       char pathSeparator,
                       bool unique,
-                      string iconPath,
+                      string? iconPath,
                       bool isExpanded);
 
     void AddChildNodes(string rootNodeName, IEnumerable<FExTreeViewNode> childNodes, bool unique);

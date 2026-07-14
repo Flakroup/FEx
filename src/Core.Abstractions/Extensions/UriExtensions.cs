@@ -29,7 +29,7 @@ public static class UriExtensions
     /// <returns>
     /// <c>true</c> if the specified URL is reachable; otherwise, <c>false</c>.
     /// </returns>
-    public static async Task<(bool, long)> IsUriReachableAsync(this string url, WebRequestParams pars = null) =>
+    public static async Task<(bool, long)> IsUriReachableAsync(this string url, WebRequestParams? pars = null) =>
         await new Uri(url).IsUriReachableAsync(pars);
 
     /// <summary>
@@ -42,7 +42,7 @@ public static class UriExtensions
     /// </returns>
     public static async Task<(bool isAvailable, long loadTime)> IsUriReachableAsync(
         this Uri url,
-        WebRequestParams pars = null)
+        WebRequestParams? pars = null)
     {
         if (url is not null)
         {
@@ -86,58 +86,58 @@ public static class UriExtensions
     }
 
     public static async Task<long> GetHttpFileSizeAsync(this Uri url,
-                                                        WebRequestParams pars = null,
-                                                        Stopwatch stopwatch = null) =>
+                                                        WebRequestParams? pars = null,
+                                                        Stopwatch? stopwatch = null) =>
         await url.DoHttpResponseFuncAsync((response, _) => response.ContentLength, pars, stopwatch);
 
     public static async Task<Dictionary<string, string>>
-        GetResponseHeadersAsync(this Uri url, WebRequestParams pars = null) =>
+        GetResponseHeadersAsync(this Uri url, WebRequestParams? pars = null) =>
         await url.DoHttpResponseFuncAsync((response, _) => response.GetAllHeaders(), pars);
 
     public static async Task<T> DoHttpResponseFuncTaskAsync<T>(this Uri url,
                                                                Func<HttpWebResponse, HttpWebRequest, Task<T>> func,
-                                                               WebRequestParams pars = null,
-                                                               Stopwatch stopwatch = null) =>
+                                                               WebRequestParams? pars = null,
+                                                               Stopwatch? stopwatch = null) =>
         await AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
             InternalDoHttpResponseFuncTaskAsync(url, func, pars, stopwatch));
 
     public static async Task<T> DoHttpResponseFuncAsync<T>(this Uri url,
                                                            Func<HttpWebResponse, HttpWebRequest, T> func,
-                                                           WebRequestParams pars = null,
-                                                           Stopwatch stopwatch = null) =>
+                                                           WebRequestParams? pars = null,
+                                                           Stopwatch? stopwatch = null) =>
         await AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
             InternalDoHttpResponseFuncAsync(url, func, pars, stopwatch));
 
     public static async Task DoHttpResponseActionAsync(this Uri url,
                                                        Action<HttpWebResponse, HttpWebRequest> action,
-                                                       WebRequestParams pars = null,
-                                                       Stopwatch stopwatch = null) =>
+                                                       WebRequestParams? pars = null,
+                                                       Stopwatch? stopwatch = null) =>
         await AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
             InternalDoHttpResponseActionAsync(url, action, pars, stopwatch));
 
     public static async Task<T> DoHttpClientResponseFuncTaskAsync<T>(this Uri url,
                                                                      Func<HttpResponseMessage, HttpClient, Task<T>>
                                                                          func,
-                                                                     WebRequestParams pars = null,
-                                                                     Stopwatch stopwatch = null) =>
+                                                                     WebRequestParams? pars = null,
+                                                                     Stopwatch? stopwatch = null) =>
         await AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
             url.InternalDoHttpClientResponseFuncTaskAsync(func, pars, stopwatch));
 
     public static async Task<T> DoHttpClientResponseFuncAsync<T>(this Uri url,
                                                                  Func<HttpResponseMessage, HttpClient, T> func,
-                                                                 WebRequestParams pars = null,
-                                                                 Stopwatch stopwatch = null) =>
+                                                                 WebRequestParams? pars = null,
+                                                                 Stopwatch? stopwatch = null) =>
         await AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
             url.InternalDoHttpClientResponseFuncAsync(func, pars, stopwatch));
 
     public static async Task DoHttpClientResponseActionAsync(this Uri url,
                                                              Action<HttpResponseMessage, HttpClient> action,
-                                                             WebRequestParams pars = null,
-                                                             Stopwatch stopwatch = null) =>
+                                                             WebRequestParams? pars = null,
+                                                             Stopwatch? stopwatch = null) =>
         await AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
             url.InternalDoHttpClientResponseActionAsync(action, pars, stopwatch));
 
-    public static async Task<bool> CheckIfLinkIsExpiredAsync(this Uri link, WebRequestParams pars = null)
+    public static async Task<bool> CheckIfLinkIsExpiredAsync(this Uri link, WebRequestParams? pars = null)
     {
         if (link is not null)
             try
@@ -155,7 +155,7 @@ public static class UriExtensions
         return true;
     }
 
-    public static async Task<Result<Error>> UrlIsValidAsync(this Uri url, WebRequestParams pars = null)
+    public static async Task<Result<Error>> UrlIsValidAsync(this Uri url, WebRequestParams? pars = null)
     {
         try
         {
@@ -202,8 +202,8 @@ public static class UriExtensions
     private static async Task<T> InternalDoHttpResponseFuncTaskAsync<T>(
         Uri url,
         Func<HttpWebResponse, HttpWebRequest, Task<T>> func,
-        WebRequestParams pars = null,
-        Stopwatch stopwatch = null)
+        WebRequestParams? pars = null,
+        Stopwatch? stopwatch = null)
     {
         var req = url.GetHttpRequest(pars);
         stopwatch?.Restart();
@@ -217,8 +217,8 @@ public static class UriExtensions
 
     private static async Task<T> InternalDoHttpResponseFuncAsync<T>(Uri url,
                                                                     Func<HttpWebResponse, HttpWebRequest, T> func,
-                                                                    WebRequestParams pars = null,
-                                                                    Stopwatch stopwatch = null)
+                                                                    WebRequestParams? pars = null,
+                                                                    Stopwatch? stopwatch = null)
     {
         var req = url.GetHttpRequest(pars);
         stopwatch?.Restart();
@@ -232,8 +232,8 @@ public static class UriExtensions
 
     private static async Task InternalDoHttpResponseActionAsync(Uri url,
                                                                 Action<HttpWebResponse, HttpWebRequest> action,
-                                                                WebRequestParams pars = null,
-                                                                Stopwatch stopwatch = null)
+                                                                WebRequestParams? pars = null,
+                                                                Stopwatch? stopwatch = null)
     {
         var req = url.GetHttpRequest(pars);
         stopwatch?.Restart();
@@ -247,10 +247,12 @@ public static class UriExtensions
     private static async Task<T> InternalDoHttpClientResponseFuncTaskAsync<T>(
         this Uri url,
         Func<HttpResponseMessage, HttpClient, Task<T>> func,
-        WebRequestParams pars = null,
-        Stopwatch stopwatch = null)
+        WebRequestParams? pars = null,
+        Stopwatch? stopwatch = null)
     {
-        WebClientExtensions.PrepareHttpClient(out var client, pars);
+        // PrepareHttpClient dereferences pars unconditionally (L0); pass through as before - a null
+        // pars throws there just as it did prior to nullable annotations.
+        WebClientExtensions.PrepareHttpClient(out var client, pars!);
 
         using (client)
         {
@@ -266,10 +268,12 @@ public static class UriExtensions
     private static async Task<T> InternalDoHttpClientResponseFuncAsync<T>(
         this Uri url,
         Func<HttpResponseMessage, HttpClient, T> func,
-        WebRequestParams pars = null,
-        Stopwatch stopwatch = null)
+        WebRequestParams? pars = null,
+        Stopwatch? stopwatch = null)
     {
-        WebClientExtensions.PrepareHttpClient(out var client, pars);
+        // PrepareHttpClient dereferences pars unconditionally (L0); pass through as before - a null
+        // pars throws there just as it did prior to nullable annotations.
+        WebClientExtensions.PrepareHttpClient(out var client, pars!);
 
         using (client)
         {
@@ -284,10 +288,12 @@ public static class UriExtensions
 
     private static async Task InternalDoHttpClientResponseActionAsync(this Uri url,
                                                                       Action<HttpResponseMessage, HttpClient> action,
-                                                                      WebRequestParams pars = null,
-                                                                      Stopwatch stopwatch = null)
+                                                                      WebRequestParams? pars = null,
+                                                                      Stopwatch? stopwatch = null)
     {
-        WebClientExtensions.PrepareHttpClient(out var client, pars);
+        // PrepareHttpClient dereferences pars unconditionally (L0); pass through as before - a null
+        // pars throws there just as it did prior to nullable annotations.
+        WebClientExtensions.PrepareHttpClient(out var client, pars!);
 
         using (client)
         {

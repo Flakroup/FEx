@@ -16,23 +16,23 @@ public class DummyPopupService : IMessagePopupService
                                                       string caption,
                                                       MessageIcon messageBoxImage,
                                                       FExMessageButton button,
-                                                      ISupportInitialize ownerWindow,
+                                                      ISupportInitialize? ownerWindow,
                                                       bool informUser,
                                                       bool wait,
-                                                      Stopwatch sw,
+                                                      Stopwatch? sw,
                                                       LogLevel level,
-                                                      Exception exception) =>
+                                                      Exception? exception) =>
         await Task.FromResult(MessageResult.None);
 
     public MessageResult ShowMessage(string txt,
                                      string caption,
                                      MessageIcon messageBoxImage,
                                      FExMessageButton button,
-                                     ISupportInitialize ownerWindow,
+                                     ISupportInitialize? ownerWindow,
                                      bool informUser,
                                      bool wait,
-                                     Stopwatch sw,
+                                     Stopwatch? sw,
                                      LogLevel level,
-                                     Exception exception) =>
+                                     Exception? exception) =>
         MessageResult.None;
 }

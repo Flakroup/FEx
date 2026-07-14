@@ -9,13 +9,13 @@ namespace FEx.Legacy.IO;
 /// </summary>
 public class Wipe
 {
-    public event PassInfoEventHandler PassInfoEvent;
+    public event PassInfoEventHandler? PassInfoEvent;
 
-    public event SectorInfoEventHandler SectorInfoEvent;
+    public event SectorInfoEventHandler? SectorInfoEvent;
 
-    public event WipeDoneEventHandler WipeDoneEvent;
+    public event WipeDoneEventHandler? WipeDoneEvent;
 
-    public event WipeErrorEventHandler WipeErrorEvent;
+    public event WipeErrorEventHandler? WipeErrorEvent;
 
     public static Wipe Instance { get; } = new();
 

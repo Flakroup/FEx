@@ -6,18 +6,18 @@ namespace FEx.Agnostics.Abstractions.Flow;
 
 public class Error : IError
 {
-    private IError _innerError;
+    private IError? _innerError;
 
-    public string Message { get; }
-    public IError RootError { get; private set; }
+    public string? Message { get; }
+    public IError? RootError { get; private set; }
 
-    public IError InnerError
+    public IError? InnerError
     {
         get => _innerError;
         private set
         {
             _innerError = value.GuardProperty();
-            RootError = InnerError.RootError ?? InnerError;
+            RootError = _innerError.RootError ?? _innerError;
         }
     }
 
@@ -25,7 +25,7 @@ public class Error : IError
     {
     }
 
-    public Error(string message)
+    public Error(string? message)
     {
         Message = message;
     }
@@ -35,7 +35,7 @@ public class Error : IError
     {
     }
 
-    public Error(IError innerError, string message)
+    public Error(IError innerError, string? message)
         : this(message)
     {
         InnerError = innerError;
@@ -57,11 +57,11 @@ public class Error<TErrorStatus> : Error
     public TErrorStatus Status { get; }
 
     public Error(TErrorStatus status)
-        : this(status, (string)null)
+        : this(status, (string?)null)
     {
     }
 
-    public Error(TErrorStatus status, string message)
+    public Error(TErrorStatus status, string? message)
         : base(message)
     {
         Status = status;
@@ -72,7 +72,7 @@ public class Error<TErrorStatus> : Error
     {
     }
 
-    public Error(TErrorStatus status, IError innerError, string message)
+    public Error(TErrorStatus status, IError innerError, string? message)
         : base(innerError, message)
     {
         Status = status;

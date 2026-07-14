@@ -28,8 +28,8 @@ public abstract class FlurlApiBase : AsyncInitializable
 #pragma warning restore IDISP006 // Implement IDisposable
     protected IAsyncPolicy<IFlurlResponse> ResiliencePolicy { get; }
 
+    // No dependency on AsyncInitializable parent (empty dependency set) - implicit base ctor
     protected FlurlApiBase(IFlurlConfigurator flurlConfigurator)
-        : base(null) // No dependency on AsyncInitializable parent
     {
         FlurlClient = flurlConfigurator.Guard(nameof(flurlConfigurator)).GetClient();
         ResiliencePolicy = flurlConfigurator.GetResiliencePolicy();
@@ -64,9 +64,9 @@ public abstract class FlurlApiBase : AsyncInitializable
     }
 
     protected virtual async Task<T> GetResponseAsync<T, TReq>(string apiPath,
-                                                              Func<IFlurlRequest, IFlurlRequest> func = null,
+                                                              Func<IFlurlRequest, IFlurlRequest>? func = null,
                                                               RequestMethod method = RequestMethod.GET,
-                                                              TReq requestContent = default,
+                                                              TReq requestContent = default!, // unconstrained generic default (null for reference TReq)
                                                               CancellationToken cancellationToken = default)
     {
         var req = FlurlClient.Request(apiPath);
@@ -122,7 +122,7 @@ public abstract class FlurlApiBase : AsyncInitializable
     protected virtual IFlurlRequest AddConstantsToRequest(IFlurlRequest req) => req;
 
     protected async Task<T> GetResponseAsync<T>(string apiPath,
-                                                Func<IFlurlRequest, IFlurlRequest> func = null,
+                                                Func<IFlurlRequest, IFlurlRequest>? func = null,
                                                 RequestMethod method = RequestMethod.GET,
                                                 CancellationToken cancellationToken = default) =>
         await GetResponseAsync<T, T>(apiPath, func, method, cancellationToken: cancellationToken);

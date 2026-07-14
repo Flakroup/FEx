@@ -10,8 +10,9 @@ public class Cmd : ICmd
 {
     private bool _isDisposed;
 
-    public ProcessStartInfo StartInfo { get; protected set; }
-    public Process Proc { get; protected set; }
+    // Invariant: StartInfo is set in the public constructor; Proc is set in StartProc before any use.
+    public ProcessStartInfo StartInfo { get; protected set; } = null!;
+    public Process Proc { get; protected set; } = null!;
     public int? Code { get; protected set; }
     public StringBuilder Output { get; }
     public StringBuilder ErrOut { get; }
@@ -19,7 +20,7 @@ public class Cmd : ICmd
 
     public Cmd(string procName = "cmd",
                ProcessWindowStyle windowStyle = ProcessWindowStyle.Hidden,
-               Action<ProcessStartInfo> cfg = null)
+               Action<ProcessStartInfo>? cfg = null)
         : this()
     {
         StartInfo = new()
@@ -44,9 +45,9 @@ public class Cmd : ICmd
     }
 
     public async Task RunAsync(string args,
-                               string verb = null,
+                               string? verb = null,
                                bool waitForExit = true,
-                               Func<ICmd, Task> onStarted = null)
+                               Func<ICmd, Task>? onStarted = null)
     {
         Output.Clear();
         ErrOut.Clear();
@@ -68,7 +69,7 @@ public class Cmd : ICmd
             Code = Proc.ExitCode;
     }
 
-    public void Run(string args, string verb = null, bool waitForExit = true, Action<ICmd> onStarted = null)
+    public void Run(string args, string? verb = null, bool waitForExit = true, Action<ICmd>? onStarted = null)
     {
         Output.Clear();
         ErrOut.Clear();
@@ -90,7 +91,7 @@ public class Cmd : ICmd
             Code = Proc.ExitCode;
     }
 
-    protected virtual void OnStarted(bool waitForExit, Action<ICmd> onStarted)
+    protected virtual void OnStarted(bool waitForExit, Action<ICmd>? onStarted)
     {
         onStarted?.Invoke(this);
 
@@ -98,7 +99,7 @@ public class Cmd : ICmd
             Proc.WaitForExit();
     }
 
-    protected virtual async Task OnStartedAsync(bool waitForExit, Func<ICmd, Task> onStarted)
+    protected virtual async Task OnStartedAsync(bool waitForExit, Func<ICmd, Task>? onStarted)
     {
         if (onStarted is not null)
             await onStarted(this);
@@ -126,7 +127,7 @@ public class Cmd : ICmd
         Proc.Start();
     }
 
-    protected void SetProc(string args, string verb)
+    protected void SetProc(string args, string? verb)
     {
         if (StartInfo.FileName == "cmd")
             StartInfo.Arguments = "/C " + args;

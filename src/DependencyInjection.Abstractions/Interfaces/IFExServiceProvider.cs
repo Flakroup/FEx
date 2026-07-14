@@ -7,7 +7,7 @@ namespace FEx.DependencyInjection.Abstractions.Interfaces;
 public interface IFExServiceProvider : IServiceProvider, IDisposable
 {
     T GetRequiredService<T>();
-    T TryResolveService<T>();
+    T? TryResolveService<T>();
     T GetRequiredService<T>(Type serviceType);
     object GetRequiredService(Type serviceType);
     TContainer GetContainer<TContainer>() where TContainer : class;

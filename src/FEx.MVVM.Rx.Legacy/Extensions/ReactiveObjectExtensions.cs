@@ -9,7 +9,7 @@ public static class ReactiveObjectExtensions
     public static bool SetProperty<TObj, TRet>(this TObj sender,
                                                ref TRet backingField,
                                                TRet newValue,
-                                               [CallerMemberName] string propertyName = null)
+                                               [CallerMemberName] string? propertyName = null)
         where TObj : IReactiveObject
     {
         if (propertyName is not null

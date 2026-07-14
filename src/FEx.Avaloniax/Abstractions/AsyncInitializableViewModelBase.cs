@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Logging;
 using FEx.Avaloniax.Abstractions.Interfaces;
 using FEx.Core.Abstractions.Interfaces;
@@ -15,7 +16,7 @@ public abstract partial class AsyncInitializableViewModelBase : FExAvaloniaViewM
         _taskSemaphore = new();
         var instanceType = GetType();
         TypeName = instanceType.Name;
-        TypeFullName = instanceType.FullName;
+        TypeFullName = instanceType.FullName.Guard(nameof(instanceType));
         _dependencies = new();
 
         foreach (var dependency in dependencies)

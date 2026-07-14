@@ -17,23 +17,23 @@ namespace FEx.Imaging.Windows;
 public class SizedImageCache : NotifyPropertyChanged, IDisposable
 #pragma warning restore IDISP025
 {
-    private BitmapImage _cachedImage;
+    private BitmapImage? _cachedImage;
     private bool _isLoadingImage;
-    private Action<BitmapImage> _imageUpdateAction;
+    private Action<BitmapImage>? _imageUpdateAction;
 
     public CancellationTokenSource CancellationTokenSource { get; }
 
-    public Action<BitmapImage> ImageUpdateAction
+    public Action<BitmapImage>? ImageUpdateAction
     {
         get => _imageUpdateAction;
         protected set => SetProperty(ref _imageUpdateAction, value);
     }
 
-    public Task ImageUpdateActionTask { get; protected set; }
+    public Task? ImageUpdateActionTask { get; protected set; }
 
     public SemaphoreSlim LoadingSemaphore { get; }
 
-    public BitmapImage CachedImage
+    public BitmapImage? CachedImage
     {
         get => _cachedImage;
         private set => SetProperty(ref _cachedImage, value);
@@ -51,14 +51,14 @@ public class SizedImageCache : NotifyPropertyChanged, IDisposable
 
     protected CachedImage Cache { get; }
 
-    protected FileInfo CacheFile => Cache.Cache;
+    protected FileInfo? CacheFile => Cache.Cache;
 
     private CancellationToken CancellationToken => CancellationTokenSource.Token;
 
     public SizedImageCache(CachedImage cachedImage,
-                           WidthAndHeight size = null,
-                           BitmapImage image = null,
-                           CancellationTokenSource cancellationTokenSource = null)
+                           WidthAndHeight? size = null,
+                           BitmapImage? image = null,
+                           CancellationTokenSource? cancellationTokenSource = null)
     {
         if (cancellationTokenSource is not null)
         {
@@ -78,7 +78,7 @@ public class SizedImageCache : NotifyPropertyChanged, IDisposable
             CachedImage = image;
     }
 
-    public override void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    public override void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         base.OnPropertyChanged(propertyName);
         OnChange(propertyName);
@@ -100,20 +100,21 @@ public class SizedImageCache : NotifyPropertyChanged, IDisposable
     {
         try
         {
-            CacheFile?.Refresh();
+            var cacheFile = CacheFile;
+            cacheFile?.Refresh();
 
             if ((refresh || CachedImage is null)
-                && CacheFile?.Exists == true)
+                && cacheFile?.Exists == true)
             {
                 await LoadingSemaphore.WaitAsync(CancellationToken);
                 IsLoadingImage = true;
 
-                CacheFile?.Refresh();
+                cacheFile.Refresh();
 
                 if ((refresh || CachedImage is null)
-                    && CacheFile?.Exists == true)
+                    && cacheFile.Exists)
                     CachedImage =
-                        await CommonWindowsImaging.GetBitmapImageFromFileAsync(CacheFile,
+                        await CommonWindowsImaging.GetBitmapImageFromFileAsync(cacheFile,
                             ImageSize,
                             forceLoad,
                             forceMemoryStream);
@@ -136,7 +137,7 @@ public class SizedImageCache : NotifyPropertyChanged, IDisposable
         }
     }
 
-    private void OnChange(string propertyName)
+    private void OnChange(string? propertyName)
     {
         if (CachedImage is not null
             && ImageUpdateAction is not null

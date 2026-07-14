@@ -10,13 +10,13 @@ public sealed class SuppressEventsDisposable : DisposableAction
     {
     }
 
-    public SuppressEventsDisposable(ISuppressEvents suppressedEventSource, Action onNoMoreSuppressedEvents)
+    public SuppressEventsDisposable(ISuppressEvents suppressedEventSource, Action? onNoMoreSuppressedEvents)
         : base(() => Act(suppressedEventSource, onNoMoreSuppressedEvents))
     {
         ++suppressedEventSource.SuppressedEvents;
     }
 
-    private static void Act(ISuppressEvents suppressedEventSource, Action onNoMoreSuppressedEvents)
+    private static void Act(ISuppressEvents suppressedEventSource, Action? onNoMoreSuppressedEvents)
     {
         var suppressedEventsCount = --suppressedEventSource.SuppressedEvents;
 

@@ -16,17 +16,17 @@ public class CmdLineTarget //: SimpleBaseTarget
         //[ArgumentParam(Aliases = "o", LongDesc = "Name for the xaml outputfile")]
         string outputname,
         //[ArgumentParam(DefaultValue = null, ExplicitNeeded = false, LongDesc = "folder for the xaml-Output, optional, default: folder of svgs")]
-        string outputdir = null,
+        string? outputdir = null,
         //[ArgumentParam(LongDesc = "Builds a htmlfile to browse the svgs, optional, default true")]
         bool buildhtmlfile = true,
         //[ArgumentParam(DefaultValue = null, ExplicitNeeded = false, LongDesc = "Prefix to name alll items of this file, optional, default: no prefix")]
-        string nameprefix = null,
+        string? nameprefix = null,
         //[ArgumentParam(DefaultValue = false, ExplicitNeeded = false, LongDesc = "If true, es explicit ResourceKey File is created, default: false", ExplicitWantedArguments = "resKeyNS,resKeyNSName")]
         bool useComponentResKeys = false,
         //[ArgumentParam(DefaultValue = null, ExplicitNeeded = false, LongDesc = "Namespace to use with UseResKey")]
-        string compResKeyNS = null,
+        string? compResKeyNS = null,
         //[ArgumentParam(DefaultValue = null, ExplicitNeeded = false, LongDesc = "name of Namespace to use with UseResKey" )]
-        string compResKeyNSName = null,
+        string? compResKeyNSName = null,
         //[ArgumentParam(DefaultValue = false, ExplicitNeeded = false, LongDesc = "If true, PixelsPerDip is filtered to ensure compatibility for < 4.6.2, default: false")]
         bool filterPixelsPerDip = false)
 #pragma warning restore S2360

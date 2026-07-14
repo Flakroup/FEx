@@ -28,9 +28,9 @@ public class FileSystemIconsProvider
         _dispatcher = dispatcher;
     }
 
-    public Task<BitmapSource> GetFileIconAsync(string filePath) => GetFileIconAsync(filePath, true);
+    public Task<BitmapSource?> GetFileIconAsync(string filePath) => GetFileIconAsync(filePath, true);
 
-    public async Task<BitmapSource> GetFileIconAsync(string filePath, bool isIconAttachedToFile)
+    public async Task<BitmapSource?> GetFileIconAsync(string filePath, bool isIconAttachedToFile)
     {
         var key = isIconAttachedToFile
             ? Path.GetExtension(filePath)
@@ -47,17 +47,18 @@ public class FileSystemIconsProvider
 
         try
         {
-            res = _iconsCache.TryGetKeyValue(key);
+            var cached = _iconsCache.TryGetKeyValue<string, BitmapSource>(key);
 
-            if (res is null)
-            {
-                res = await _dispatcher.InvokeOnMainThreadAsync(() =>
-                    GetBitmapSourceAsync(filePath, isIconAttachedToFile));
+            if (cached is not null)
+                return cached;
 
-                _iconsCache.AddOrUpdateValue(key, res);
-            }
+            var created = await _dispatcher.InvokeOnMainThreadAsync(() =>
+                GetBitmapSourceAsync(filePath, isIconAttachedToFile));
 
-            return res;
+            if (created is not null)
+                _iconsCache.AddOrUpdateValue(key, created);
+
+            return created;
         }
         finally
         {
@@ -65,7 +66,7 @@ public class FileSystemIconsProvider
         }
     }
 
-    private static async Task<BitmapSource> GetBitmapSourceAsync(string filePath, bool isIconAttachedToFile)
+    private static async Task<BitmapSource?> GetBitmapSourceAsync(string filePath, bool isIconAttachedToFile)
     {
         if (!isIconAttachedToFile)
             return await CommonWindowsImaging.GetBitmapImageFromFileAsync(filePath, new(16, 16));

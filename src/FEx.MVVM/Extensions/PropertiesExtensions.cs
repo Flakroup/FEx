@@ -21,13 +21,12 @@ public static class PropertiesExtensions
     public static bool SetPropertyFromExpression<T>(this object target,
                                                     Expression<Func<T>> expression,
                                                     T value,
-                                                    Action<string> onSet)
+                                                    Action<string>? onSet)
     {
         expression.Guard(nameof(expression));
 
-        var memberExpression = FindMemberExpression(expression);
-
-        memberExpression.Guard(nameof(memberExpression), WrongExpressionMessage);
+        var memberExpression = FindMemberExpression(expression)
+            .Guard("memberExpression", WrongExpressionMessage);
 
         if (memberExpression.Member is not PropertyInfo member)
             throw new ArgumentException(WrongExpressionMessage, nameof(expression));
@@ -39,12 +38,12 @@ public static class PropertiesExtensions
             && !member.DeclaringType.IsInstanceOfType(target))
             throw new ArgumentException(WrongExpressionMessage, nameof(expression));
 
-        var setMethod = member.GetSetMethod(true);
+        var setMethod = member.GetSetMethod(true).Guard("setMethod", WrongExpressionMessage);
 
         if (setMethod.IsStatic)
             throw new ArgumentException(WrongExpressionMessage, nameof(expression));
 
-        var getMethod = member.GetGetMethod(true);
+        var getMethod = member.GetGetMethod(true).Guard("getMethod", WrongExpressionMessage);
 
         if (getMethod.Invoke(target, null) is not T oldValue
             || EqualityComparer<T>.Default.Equals(oldValue, value))
@@ -56,7 +55,7 @@ public static class PropertiesExtensions
         return true;
     }
 
-    public static MemberExpression FindMemberExpression<T>(Expression<Func<T>> expression)
+    public static MemberExpression? FindMemberExpression<T>(Expression<Func<T>> expression)
     {
         if (expression.Body is UnaryExpression body)
         {
@@ -69,7 +68,7 @@ public static class PropertiesExtensions
         return expression.Body as MemberExpression;
     }
 
-    public static MemberExpression FindMemberExpression<TSender, T>(Expression<Func<TSender, T>> expression)
+    public static MemberExpression? FindMemberExpression<TSender, T>(Expression<Func<TSender, T>> expression)
     {
         if (expression.Body is UnaryExpression body)
         {
@@ -120,7 +119,7 @@ public static class PropertiesExtensions
     private static void InternalLink<T, TProp>(this T sender,
                                                Expression<Func<T, TProp>> property,
                                                Action<ILink, TProp, TProp> onPropertyChange,
-                                               ILink parentLink = null) where T : class, ILinkableNotifyPropertyChanged
+                                               ILink? parentLink = null) where T : class, ILinkableNotifyPropertyChanged
     {
         sender.Guard(nameof(sender));
         property.Guard(nameof(property));
@@ -136,16 +135,19 @@ public static class PropertiesExtensions
             propertyName,
             GetPropertyValue,
             OnPropertyChange,
-            default(TProp),
+            // Reference-typed TProp legitimately defaults to null; the link stores it as its untyped default carrier.
+            default(TProp)!,
             parentLink);
 
         sender.AddLink(link);
 
         return;
 
-        object GetPropertyValue(ILinkableNotifyPropertyChanged p) => getPropertyValue((T)p);
+        // A reference-typed property value can be null; ILink models the carrier as non-null object, matching pre-nullable behavior.
+        object GetPropertyValue(ILinkableNotifyPropertyChanged p) => getPropertyValue((T)p)!;
 
-        void OnPropertyChange(ILink l, object oldValue, object newValue) =>
-            onPropertyChange(l, (TProp)oldValue, (TProp)newValue);
+        // oldValue/newValue are boxed TProp values round-tripped through the untyped link; unbox back to TProp.
+        void OnPropertyChange(ILink l, object? oldValue, object? newValue) =>
+            onPropertyChange(l, (TProp)oldValue!, (TProp)newValue!);
     }
 }

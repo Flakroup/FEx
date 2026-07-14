@@ -25,8 +25,9 @@ public static class FileLockInspector
     /// <summary>
     /// Finds the process(es) locking a single file. See <see cref="WhoIsLocking(IReadOnlyCollection{string})" />.
     /// </summary>
-    public static IReadOnlyList<LockingProcessInfo> WhoIsLocking(string path) =>
-        WhoIsLocking(string.IsNullOrWhiteSpace(path) ? [] : [path]);
+    public static IReadOnlyList<LockingProcessInfo> WhoIsLocking(string? path) =>
+        // IsNullOrWhiteSpace(path) == false guarantees non-null; ns2.0 lacks the NotNullWhen annotation.
+        WhoIsLocking(string.IsNullOrWhiteSpace(path) ? [] : [path!]);
 
     /// <summary>
     /// Finds the distinct process(es) locking any of the supplied files. Returns an empty list on
@@ -130,15 +131,15 @@ public static class FileLockInspector
                                                    uint nFiles,
                                                    string[] rgsFilenames,
                                                    uint nApplications,
-                                                   [In] RM_UNIQUE_PROCESS[] rgApplications,
+                                                   [In] RM_UNIQUE_PROCESS[]? rgApplications,
                                                    uint nServices,
-                                                   string[] rgsServiceNames);
+                                                   string[]? rgsServiceNames);
 
     [DllImport("rstrtmgr.dll")]
     private static extern int RmGetList(uint dwSessionHandle,
                                         out uint pnProcInfoNeeded,
                                         ref uint pnProcInfo,
-                                        [In] [Out] RM_PROCESS_INFO[] rgAffectedApps,
+                                        [In] [Out] RM_PROCESS_INFO[]? rgAffectedApps,
                                         ref uint lpdwRebootReasons);
 
     // ReSharper disable InconsistentNaming

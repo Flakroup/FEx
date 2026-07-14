@@ -4,5 +4,5 @@ namespace FEx.AppSettings.Abstractions.Interfaces;
 
 public interface IBaseUserSettings : INotifyPropertyChanged
 {
-    string PersistencePath { get; }
+    string? PersistencePath { get; }
 }

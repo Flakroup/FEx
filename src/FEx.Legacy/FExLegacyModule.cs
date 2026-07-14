@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
@@ -14,8 +15,9 @@ namespace FEx.Legacy;
 [Register(typeof(FExLegacyModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public class FExLegacyModule : InitializeModule<IFExLegacyContainer, IServiceCollection>
 {
-    protected override void RegisterServices(IFExLegacyContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExLegacyContainer? container, IServiceCollection services)
     {
+        container = container.Guard(nameof(container));
         services.AddTransientServiceUsingContainer<ITasksHandler>(container);
     }
 }

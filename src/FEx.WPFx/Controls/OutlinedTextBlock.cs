@@ -77,9 +77,9 @@ public class OutlinedTextBlock : FrameworkElement
         typeof(OutlinedTextBlock),
         new FrameworkPropertyMetadata(TextWrapping.NoWrap, OnFormattedTextUpdated));
 
-    private FormattedText _formattedText;
-    private Geometry _textGeometry;
-    private Pen _pen;
+    private FormattedText? _formattedText;
+    private Geometry? _textGeometry;
+    private Pen? _pen;
 
     public Brush Fill
     {
@@ -204,6 +204,9 @@ public class OutlinedTextBlock : FrameworkElement
     {
         EnsureFormattedText();
 
+        if (_formattedText is null)
+            return finalSize;
+
         // update the formatted text with the final size
         _formattedText.MaxTextWidth = finalSize.Width;
         _formattedText.MaxTextHeight = Math.Max(0.0001d, finalSize.Height);
@@ -292,11 +295,15 @@ public class OutlinedTextBlock : FrameworkElement
 
     private void EnsureGeometry()
     {
-        if (_textGeometry is null)
-        {
-            EnsureFormattedText();
-            _textGeometry = _formattedText.BuildGeometry(new(0, 0));
-        }
+        if (_textGeometry is not null)
+            return;
+
+        EnsureFormattedText();
+
+        if (_formattedText is null)
+            return;
+
+        _textGeometry = _formattedText.BuildGeometry(new(0, 0));
     }
 
     private double GetDIP() => VisualTreeHelper.GetDpi(this).PixelsPerDip;

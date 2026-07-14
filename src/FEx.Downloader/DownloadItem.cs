@@ -29,53 +29,53 @@ namespace FEx.Downloader;
 
 public class DownloadItem : ProgressAggregator, IDownloadItem
 {
-    private string _runningTasks;
+    private string? _runningTasks;
     private DownloadState _state;
     private long _dataLength;
     private double _totalPrg;
     private bool _isDownloaded;
     private int _openConnections;
-    private string _filePath;
-    private string _elapsedTime;
+    private string? _filePath;
+    private string? _elapsedTime;
     private long _elapsedMilliseconds;
     private bool _isRunning;
-    private string _dirPath;
-    private string _fileName;
-    private string _fileNameWithoutExtension;
-    private FileInfo _file;
+    private string? _dirPath;
+    private string? _fileName;
+    private string? _fileNameWithoutExtension;
+    private FileInfo? _file;
     private long _ping;
     private bool _targetIsNotCreated;
     private int _maxOpenConnections;
     private bool _isFinished;
     public static long BufferLength { get; } = (long)FileLengthConverter.GetLength(LengthType.Megabytes);
 
-    public string MD5Checksum { get; }
+    public string? MD5Checksum { get; }
     public Uri Url { get; }
 
     public bool ReportProgress { get; }
     public Stopwatch DownloadStopwatch { get; }
-    public WebRequestParams Pars { get; }
+    public WebRequestParams? Pars { get; }
     // Borrowed from the shared ISynchronizedAccessService (keyed by file path); its lifetime is owned by LockSrv,
     // so this item must NOT dispose it (doing so corrupted the cached lock - see Dispose). Hence IDISP002 suppressed.
 #pragma warning disable IDISP002
-    public SemaphoreSlim Semaphore { get; private set; }
+    public SemaphoreSlim? Semaphore { get; private set; }
 #pragma warning restore IDISP002
     public SemaphoreSlim TotalSemaphore { get; }
     public CancellationTokenSource CancellationTokenSource { get; }
-    public Task DownloadFileTask { get; set; }
+    public Task? DownloadFileTask { get; set; }
     public bool IsSpeededUp { get; protected set; }
 
     public int ParallelRanges { get; private set; }
 
 #pragma warning disable IDISP008 // semaphore from LockSrv, ownership managed externally
-    public WebResponse Response { get; protected set; }
+    public WebResponse? Response { get; protected set; }
 #pragma warning restore IDISP008
 
-    public DirectoryInfo TempDirectory { get; protected set; }
+    public DirectoryInfo? TempDirectory { get; protected set; }
 
     public bool OmitQuery { get; set; }
 
-    public FileInfo File
+    public FileInfo? File
     {
         get => _file;
         set
@@ -95,7 +95,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         }
     }
 
-    public string FilePath
+    public string? FilePath
     {
         get => _filePath;
         set
@@ -105,7 +105,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                     value,
                     fP =>
                     {
-                        if (fP != File?.FullName)
+                        if (fP != File?.FullName && fP is not null)
                             File = new(fP);
 
                         if (fP is not null)
@@ -116,7 +116,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         }
     }
 
-    public string FileNameWithoutExtension
+    public string? FileNameWithoutExtension
     {
         get => _fileNameWithoutExtension;
         set
@@ -126,13 +126,15 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                     value,
                     fN =>
                     {
-                        if (fN != Path.GetFileNameWithoutExtension(File?.Name))
-                            File = new(Path.Combine(DirPath, fN + Path.GetExtension(FilePath)));
+                        if (fN != Path.GetFileNameWithoutExtension(File?.Name)
+                            && DirPath is not null
+                            && fN is not null)
+                            File = new(Path.Combine(DirPath, fN + Path.GetExtension(FilePath ?? string.Empty)));
                     });
         }
     }
 
-    public string FileName
+    public string? FileName
     {
         get => _fileName;
         set
@@ -142,13 +144,15 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                     value,
                     fN =>
                     {
-                        if (fN != File?.Name)
+                        if (fN != File?.Name
+                            && DirPath is not null
+                            && fN is not null)
                             File = new(Path.Combine(DirPath, fN));
                     });
         }
     }
 
-    public string DirPath
+    public string? DirPath
     {
         get => _dirPath;
         protected set
@@ -159,7 +163,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                     dP =>
                     {
                         if (dP != File?.DirectoryName
-                            && FileName is not null)
+                            && FileName is not null
+                            && dP is not null)
                             File = new(Path.Combine(dP, FileName));
                     });
         }
@@ -171,7 +176,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         private set => SetProperty(ref _ping, value);
     }
 
-    public string RunningTasks
+    public string? RunningTasks
     {
         get => _runningTasks;
         set => SetProperty(ref _runningTasks, value);
@@ -183,7 +188,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         private set
         {
             if (SetProperty(ref _isDownloaded, value) && IsDownloaded)
-                Value = new FileInfo(FilePath).Length;
+                Value = new FileInfo(FilePath.Guard(nameof(FilePath))).Length;
         }
     }
 
@@ -224,7 +229,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         private set => SetProperty(ref _totalPrg, value);
     }
 
-    public string ElapsedTime
+    public string? ElapsedTime
     {
         get => _elapsedTime;
         protected set => SetProperty(ref _elapsedTime, value);
@@ -248,8 +253,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         private set => SetProperty(ref _maxOpenConnections, value);
     }
 
-    protected IProgress<double> Prg { get; }
-    protected IProgress<bool> ConnPrg { get; }
+    protected IProgress<double>? Prg { get; }
+    protected IProgress<bool>? ConnPrg { get; }
     protected Dictionary<int, DownloadRange> Ranges { get; }
 
     protected int OpenConnections
@@ -266,12 +271,12 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     private static ISynchronizedAccessService LockSrv => FExCoreStatics.SynchronizedAccessService;
 
     private DownloadItem(Uri url,
-                         string filePath,
+                         string? filePath,
                          bool reportProgress,
-                         WebRequestParams pars,
+                         WebRequestParams? pars,
                          int parallelRanges,
                          long dataLength,
-                         string md5Checksum,
+                         string? md5Checksum,
                          CancellationToken cancellationToken)
     {
         ReportProgress = reportProgress;
@@ -314,9 +319,10 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             await CancellationTokenSource.CancelAsync();
 #endif
             using var cts = new CancellationTokenSource();
-            await Semaphore.WaitAsync(cts.Token);
+            var semaphore = Semaphore.Guard(nameof(Semaphore));
+            await semaphore.WaitAsync(cts.Token);
             DState = DownloadState.Cancelled;
-            Semaphore.Release();
+            semaphore.Release();
         }
     }
 
@@ -329,7 +335,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         var retry = true;
         DownloadStopwatch.Start();
 
-        if (File.Exists
+        if (File is { Exists: true }
             && MD5Checksum is not null)
             IsDownloaded = CompareChecksum(false);
 
@@ -340,7 +346,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                    && DState != DownloadState.Cancelled
                    && DState != DownloadState.ChecksumMismatch)
             {
-                await Semaphore.WaitAsync(CancellationToken);
+                await Semaphore.Guard(nameof(Semaphore)).WaitAsync(CancellationToken);
 
                 try
                 {
@@ -376,7 +382,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
                                 using var client = new FlakWebClient(Pars, (_, e) => this.SetCurrentDownloadState(e));
                                 DState = DownloadState.InProgress;
-                                await client.DownloadFileWithProgressAsync(Url, FilePath);
+                                await client.DownloadFileWithProgressAsync(Url, FilePath.Guard(nameof(FilePath)));
                             }
 
                             DState = DownloadState.Finished;
@@ -449,7 +455,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             && downloadItem is DownloadStub ds)
             await ds.LoadTargetFileNameAsync();
 
-        return await CreateAsync(downloadItem.Url,
+        return await CreateAsync(downloadItem.Url.Guard(nameof(downloadItem.Url)),
             downloadItem.FilePath,
             reportProgress,
             downloadItem.Pars,
@@ -459,16 +465,16 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             cancellationToken);
     }
 
-    public static Task<DownloadItem> CreateAsync(string url, string path, bool reportProgress) =>
+    public static Task<DownloadItem> CreateAsync(string url, string? path, bool reportProgress) =>
         CreateAsync(new Uri(url), path, reportProgress, null, 50, -1, null, CancellationToken.None);
 
     public static async Task<DownloadItem> CreateAsync(string url,
-                                                       string path,
+                                                       string? path,
                                                        bool reportProgress,
-                                                       WebRequestParams pars,
+                                                       WebRequestParams? pars,
                                                        int parallelChunks,
                                                        long dataLength,
-                                                       string md5Checksum,
+                                                       string? md5Checksum,
                                                        CancellationToken cancellationToken) =>
         await CreateAsync(new Uri(url),
             path,
@@ -479,16 +485,16 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             md5Checksum,
             cancellationToken);
 
-    public static Task<DownloadItem> CreateAsync(Uri url, string path, bool reportProgress) =>
+    public static Task<DownloadItem> CreateAsync(Uri url, string? path, bool reportProgress) =>
         CreateAsync(url, path, reportProgress, null, 50, -1, null, CancellationToken.None);
 
     public static async Task<DownloadItem> CreateAsync(Uri url,
-                                                       string path,
+                                                       string? path,
                                                        bool reportProgress,
-                                                       WebRequestParams pars,
+                                                       WebRequestParams? pars,
                                                        int parallelChunks,
                                                        long dataLength,
-                                                       string md5Checksum,
+                                                       string? md5Checksum,
                                                        CancellationToken cancellationToken)
     {
         var res = new DownloadItem(url,
@@ -506,16 +512,16 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         return res;
     }
 
-    public static DownloadItem CreateFromResponse(HttpWebResponse response, string filePath, bool reportProgress) =>
+    public static DownloadItem CreateFromResponse(HttpWebResponse response, string? filePath, bool reportProgress) =>
         CreateFromResponse(response, filePath, reportProgress, null, 0, 50, null, CancellationToken.None);
 
     public static DownloadItem CreateFromResponse(HttpWebResponse response,
-                                                  string filePath,
+                                                  string? filePath,
                                                   bool reportProgress,
-                                                  WebRequestParams pars,
+                                                  WebRequestParams? pars,
                                                   long ping,
                                                   int parallelChunks,
-                                                  string md5Checksum,
+                                                  string? md5Checksum,
                                                   CancellationToken cancellationToken)
     {
         var res = new DownloadItem(response.ResponseUri,
@@ -637,7 +643,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     private async Task DownloadSmallItemAsync()
     {
-        using var streamResponse = Response.GetResponseStream();
+        using var streamResponse = Response.Guard(nameof(Response)).GetResponseStream();
+        var file = File.Guard(nameof(File));
 
         if (streamResponse is not null)
         {
@@ -647,7 +654,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             {
                 try
                 {
-                    using (var fileStream = File.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                    using (var fileStream = file.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                     {
                         fileStream.SetLength(0);
 #if NETSTANDARD2_0
@@ -666,8 +673,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                 }
             } while (!successful);
 
-            File.Refresh();
-            TotalPrg = File.Length;
+            file.Refresh();
+            TotalPrg = file.Length;
             PrgSetEnd();
 
             DState = DownloadState.Finished;
@@ -683,8 +690,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         if (Response is null)
             await GetResponseAsync();
 
-        var resultHeaders = Response.GetAllHeaders();
-        var responseUri = Response.ResponseUri;
+        var response = Response.Guard(nameof(Response));
+        var resultHeaders = response.GetAllHeaders();
+        var responseUri = response.ResponseUri;
 
         if (Response is not null)
         {
@@ -771,14 +779,14 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             && FilePath is not null)
             TempDirectory = new(Path.Combine(Path.GetPathRoot(Path.GetTempPath()) == Path.GetPathRoot(FilePath)
                     ? Path.GetTempPath()
-                    : Path.GetPathRoot(FilePath),
+                    : Path.GetPathRoot(FilePath) ?? Path.GetTempPath(),
                 "TempFlakWebCache"));
 
         var dirName = (OmitQuery && Url.Query.IsNotNullOrEmptyString()
             ? Url.AbsoluteUri.Replace(Url.Query, string.Empty)
-            : Url.AbsoluteUri).GenerateMd5OfString();
+            : Url.AbsoluteUri).GenerateMd5OfString().Guard("dirName");
 
-        var dir = TempDirectory.GetDescendantDirectory(dirName);
+        var dir = TempDirectory.Guard(nameof(TempDirectory)).GetDescendantDirectory(dirName);
         dir.Create();
 
         return dir;
@@ -786,6 +794,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     private async Task RunParallelDownloadFileAsync(DirectoryInfo dir)
     {
+        var filePath = FilePath.Guard(nameof(FilePath));
         IsSpeededUp = true;
         DState = DownloadState.InProgress;
         PrgSetMax(DataLength);
@@ -801,12 +810,12 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             var end = (long)Math.Min(offset + operatingSize - 1, DataLength - 1);
 
             Ranges.Add(rangeNo,
-                new(offset, end, dir, Url, Pars, BufferLength, FilePath, DataLength, Prg, ConnPrg, CancellationToken));
+                new(offset, end, dir, Url, Pars, BufferLength, filePath, DataLength, Prg, ConnPrg, CancellationToken));
 
             offset = end + 1;
         }
 
-        var unfinishedRanges = Ranges?.Where(x => x.Value?.DState != DownloadState.Finished)
+        var unfinishedRanges = Ranges.Where(x => x.Value?.DState != DownloadState.Finished)
             .Select(x => x.Key)
             .OrderBy(x => x)
             .ToArray();
@@ -820,7 +829,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                 foreach (var x in unfinishedRanges)
                     await Ranges[x].DoDownloadAsync();
 
-            unfinishedRanges = Ranges?.Where(x => x.Value?.DState != DownloadState.Finished)
+            unfinishedRanges = Ranges.Where(x => x.Value?.DState != DownloadState.Finished)
                 .Select(x => x.Key)
                 .OrderBy(x => x)
                 .ToArray();
@@ -834,10 +843,10 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
         PrgSetMax(DataLength);
 
-        using (var fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))
+        using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))
             fileStream.SetLength(0);
 
-        using (var fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+        using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
         {
             foreach (var range in Ranges.Values.OrderBy(x => x.From))
             {
@@ -859,7 +868,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         await
 #endif
             using (var fileStream =
-                   new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                   new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
             fileStream.SetLength(DataLength);
 
         DState = DownloadState.Cleanup;
@@ -872,7 +881,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     private bool CompareChecksum(bool setChecksumMismatchStatus = true)
     {
-        if (MD5Checksum.IsEqual(File.GenerateMd5OfFile()))
+        if (MD5Checksum.Guard(nameof(MD5Checksum))
+            .IsEqual(File.Guard(nameof(File)).GenerateMd5OfFile() ?? string.Empty))
         {
             DState = DownloadState.Finished;
 
@@ -913,9 +923,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     #endregion
 
     #region IComparable
-    public override bool Equals(object obj) => Equals(obj as IDownloadBase);
+    public override bool Equals(object? obj) => Equals(obj as IDownloadBase);
 
-    public bool Equals(IDownloadBase other) => other is not null && FilePath == other.FilePath && Url == other.Url;
+    public bool Equals(IDownloadBase? other) => other is not null && FilePath == other.FilePath && Url == other.Url;
 
     public override int GetHashCode()
 #if NETSTANDARD
@@ -930,24 +940,26 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             HashCode.Combine(FilePath, Url?.AbsoluteUri);
 #endif
 
-    public int CompareTo(object obj) =>
+    public int CompareTo(object? obj) =>
         Equals(obj)
             ? 0
-            : GetHashCode().CompareTo(obj.GetHashCode());
+            // Non-equal branch: obj is effectively non-null at all call sites (preserves prior behavior).
+            : GetHashCode().CompareTo(obj!.GetHashCode());
 
-    public int CompareTo(IDownloadBase other) =>
+    public int CompareTo(IDownloadBase? other) =>
         Equals(other)
             ? 0
-            : GetHashCode().CompareTo(other.GetHashCode());
+            // Non-equal branch: other is effectively non-null at all call sites (preserves prior behavior).
+            : GetHashCode().CompareTo(other!.GetHashCode());
 
-    public static bool operator ==(DownloadItem a, DownloadItem b)
+    public static bool operator ==(DownloadItem? a, DownloadItem? b)
     {
         if (ReferenceEquals(a, b))
             return true;
 
-        return (object)a is not null && (object)b is not null && a.FilePath == b.FilePath && a.Url == b.Url;
+        return (object?)a is not null && (object?)b is not null && a.FilePath == b.FilePath && a.Url == b.Url;
     }
 
-    public static bool operator !=(DownloadItem a, DownloadItem b) => !(a == b);
+    public static bool operator !=(DownloadItem? a, DownloadItem? b) => !(a == b);
     #endregion
 }

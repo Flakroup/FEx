@@ -8,7 +8,7 @@ namespace FEx.Json.Helpers;
 
 public sealed class DIMeta : InitializeOnlyModule
 {
-    private readonly Dictionary<string, Type> _register;
+    private readonly Dictionary<string, Type?> _register;
 
     public DIMeta()
     {
@@ -23,7 +23,7 @@ public sealed class DIMeta : InitializeOnlyModule
 
     public bool IsRegistred(Type t) => t is not null && _register.ContainsKey(t.FullName!);
 
-    public Type RegistredTypeFor(Type t)
+    public Type? RegistredTypeFor(Type? t)
     {
         var key = t?.FullName;
 
@@ -32,7 +32,7 @@ public sealed class DIMeta : InitializeOnlyModule
             : t;
     }
 
-    protected override void RegisterServices(object container, IServiceCollection services) =>
+    protected override void RegisterServices(object? container, IServiceCollection services) =>
         ProcessRegisteredServices(services);
 
     private void ProcessRegisteredServices(IServiceCollection services)

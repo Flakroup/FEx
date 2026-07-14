@@ -19,28 +19,28 @@ public class FExDebugLogger : IFExLogger
     private const string ErrorLevel = "Error";
     private const string CriticalLevel = "Critical";
 
-    public event EventHandler<FExErrorEventArgs> ErrorLogged;
+    public event EventHandler<FExErrorEventArgs>? ErrorLogged;
 
     // Trace level
     public void Trace(string message) => WriteFormattedMessage(TraceLevel, message);
 
-    public void Trace(Exception exception, string message) => WriteFormattedMessage(TraceLevel, message, exception);
+    public void Trace(Exception exception, string? message) => WriteFormattedMessage(TraceLevel, message, exception);
 
     // Debug level
     public void Debug(string message) => WriteFormattedMessage(DebugLevel, message);
 
-    public void Debug(Exception exception, string message) => WriteFormattedMessage(DebugLevel, message, exception);
+    public void Debug(Exception exception, string? message) => WriteFormattedMessage(DebugLevel, message, exception);
 
     // Information level
     public void Information(string message) => WriteFormattedMessage(InformationLevel, message);
 
-    public void Information(Exception exception, string message) =>
+    public void Information(Exception exception, string? message) =>
         WriteFormattedMessage(InformationLevel, message, exception);
 
     // Warning level
     public void Warning(string message) => WriteFormattedMessage(WarningLevel, message);
 
-    public void Warning(Exception exception, string message) => WriteFormattedMessage(WarningLevel, message, exception);
+    public void Warning(Exception exception, string? message) => WriteFormattedMessage(WarningLevel, message, exception);
 
     // Error level
     public void Error(string message)
@@ -49,7 +49,7 @@ public class FExDebugLogger : IFExLogger
         ErrorLogged?.Invoke(this, new(message));
     }
 
-    public void Error(Exception exception, string message)
+    public void Error(Exception exception, string? message)
     {
         WriteFormattedMessage(ErrorLevel, message, exception);
         ErrorLogged?.Invoke(this, new(message, exception));
@@ -62,7 +62,7 @@ public class FExDebugLogger : IFExLogger
         ErrorLogged?.Invoke(this, new(message));
     }
 
-    public void Critical(Exception exception, string message)
+    public void Critical(Exception exception, string? message)
     {
         WriteFormattedMessage(CriticalLevel, message, exception);
         ErrorLogged?.Invoke(this, new(message, exception));
@@ -87,7 +87,7 @@ public class FExDebugLogger : IFExLogger
     {
     }
 
-    private static void WriteFormattedMessage(string level, string message, Exception exception = null) =>
+    private static void WriteFormattedMessage(string level, string? message, Exception? exception = null) =>
         DebugConsole.WriteLine(
             $"{DateTime.Now.ToString(DateTimeFormat)} [{level}] {message}{Environment.NewLine}{(exception is not null ? exception + Environment.NewLine : string.Empty)}");
 

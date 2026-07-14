@@ -11,13 +11,13 @@ public abstract class ExceptionHandlerBase : IExceptionHandler
     private bool? _consolePresent;
 
     /// <inheritdoc />
-    public abstract event EventHandler<ExceptionEventArgs> ExceptionOccured;
+    public abstract event EventHandler<ExceptionEventArgs>? ExceptionOccured;
 
     /// <inheritdoc />
-    public Exception LastException { get; set; }
+    public Exception? LastException { get; set; }
 
     /// <inheritdoc />
-    public Func<string, bool, Task> Callback { get; set; }
+    public Func<string, bool, Task>? Callback { get; set; }
 
     /// <inheritdoc />
     public bool ConsolePresent
@@ -42,8 +42,8 @@ public abstract class ExceptionHandlerBase : IExceptionHandler
         }
     }
 
-    public virtual void Handle(Exception exception, IExceptionHandlerOptions options = null) =>
+    public virtual void Handle(Exception exception, IExceptionHandlerOptions? options = null) =>
         HandleException(exception, options);
 
-    protected abstract void HandleException(Exception exception, IExceptionHandlerOptions options);
+    protected abstract void HandleException(Exception exception, IExceptionHandlerOptions? options);
 }

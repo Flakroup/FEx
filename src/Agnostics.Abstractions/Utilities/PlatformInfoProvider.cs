@@ -132,7 +132,7 @@ public static class PlatformInfoProvider
     /// <summary>
     /// Gets the edition of the operating system running on this computer.
     /// </summary>
-    public static string EditionString =>
+    public static string? EditionString =>
         Edition != OSEdition.Unknown
             ? Edition.GetEnumValueDescription()
             : null;
@@ -140,12 +140,12 @@ public static class PlatformInfoProvider
     /// <summary>
     /// Gets the name of the operating system running on this computer.
     /// </summary>
-    public static string Name { get; }
+    public static string? Name { get; }
 
     /// <summary>
     /// Gets the service pack information of the operating system running on this computer.
     /// </summary>
-    public static string ServicePack { get; }
+    public static string? ServicePack { get; }
 
     /// <summary>
     /// Gets the build version number of the operating system running on this computer.
@@ -155,7 +155,7 @@ public static class PlatformInfoProvider
     /// <summary>
     /// Gets the full version of the operating system running on this computer.
     /// </summary>
-    public static Version Version { get; }
+    public static Version? Version { get; }
 
     public static string InfoString { get; }
 
@@ -297,7 +297,7 @@ public static class PlatformInfoProvider
         return pbits;
     }
 
-    private static string GetServicePack()
+    private static string? GetServicePack()
     {
         if (!IsWindows)
             return null;
@@ -322,7 +322,7 @@ public static class PlatformInfoProvider
 
 #if NET
     [SuppressMessage("Interoperability", "CA1416")]
-    private static RegistryKey GetRegistryKey(string pathRoot)
+    private static RegistryKey? GetRegistryKey(string pathRoot)
     {
         if (!IsWindows)
             return null;
@@ -453,7 +453,7 @@ public static class PlatformInfoProvider
 #pragma warning disable IDE0079
     [SuppressMessage("ReSharper", "CognitiveComplexity")]
 #pragma warning restore IDE0079
-    private static string GetName()
+    private static string? GetName()
     {
         if (!IsWindows)
             return null;
@@ -485,7 +485,7 @@ public static class PlatformInfoProvider
                         "CurrentVersion",
                         "");
 
-                    if (!string.IsNullOrEmpty(exactVersion))
+                    if (exactVersion.IsNotNullOrEmptyString())
                     {
                         var splitResult = exactVersion.Split('.');
                         majorVersion = Convert.ToInt32(splitResult[0]);
@@ -564,7 +564,7 @@ public static class PlatformInfoProvider
             : 0;
     }
 
-    private static Version GetVersion()
+    private static Version? GetVersion()
     {
         if (!IsWindows)
             return null;
@@ -606,7 +606,7 @@ public static class PlatformInfoProvider
 
     [SuppressMessage("Interoperability", "CA1416:Walidacja zgodności z platformą")]
     [SuppressMessage("ReSharper", "UnusedParameter.Local")]
-    private static string RegistryRead(string registryPath, string field, string defaultValue)
+    private static string? RegistryRead(string registryPath, string field, string? defaultValue)
     {
 #if NET
         try
@@ -627,11 +627,11 @@ public static class PlatformInfoProvider
 
 #if NET
     [SupportedOSPlatform("windows")]
-    private static string ReadOurKey(string field, string defaultValue, string[] splitResult)
+    private static string? ReadOurKey(string field, string? defaultValue, string[] splitResult)
     {
         var backSlash = "";
         var newRegistryPath = "";
-        string rtn = null;
+        string? rtn = null;
         var ourKey = GetRegistryKey(splitResult[0]);
 
         try
@@ -653,7 +653,7 @@ public static class PlatformInfoProvider
 #pragma warning restore IDISP007
 #pragma warning restore IDISP016
                     ourKey = ourKey.OpenSubKey(newRegistryPath);
-                    rtn = (string)ourKey?.GetValue(field, defaultValue);
+                    rtn = (string?)ourKey?.GetValue(field, defaultValue);
                     ourKey?.Close();
                 }
             }

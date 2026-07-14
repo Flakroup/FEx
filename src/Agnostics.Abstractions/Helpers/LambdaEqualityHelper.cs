@@ -12,7 +12,7 @@ public class LambdaEqualityHelper<T>
         _equalityContributorAccessors = equalityContributorAccessors;
     }
 
-    public bool Equals(T instance, T other)
+    public bool Equals(T? instance, T? other)
     {
         if (instance is null ^ other is null)
             return false;
@@ -20,7 +20,8 @@ public class LambdaEqualityHelper<T>
         if (ReferenceEquals(instance, other))
             return true;
 
-        return instance.GetType() == other.GetType()
+        // Both are non-null here: the checks above cover the differing-null and both-null cases.
+        return instance!.GetType() == other!.GetType()
                && _equalityContributorAccessors.All(accessor => Equals(accessor(instance), accessor(other)));
     }
 

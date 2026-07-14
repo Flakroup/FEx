@@ -32,7 +32,7 @@ public static class WebClientExtensions
             : new HttpClient();
 
         if (resultAsJson)
-            client.DefaultRequestHeaders.Accept.Add(new(MediaTypes.ApplicationJson.GetEnumValueDescription()));
+            client.DefaultRequestHeaders.Accept.Add(new(MediaTypes.ApplicationJson.GetEnumValueDescription()!));
 
         if (pars?.Timeout is not null)
             client.Timeout = TimeSpan.FromMilliseconds(pars.Timeout.Value);

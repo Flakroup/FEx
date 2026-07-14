@@ -1,5 +1,6 @@
 using FEx.Agnostics.Abstractions.Extensions;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.WPFx.Attributes;
 
@@ -25,7 +26,7 @@ public class IconAttribute : Attribute
     /// <summary>
     ///     Gets the alt text.
     /// </summary>
-    public string AltText
+    public string? AltText
     {
         get { return GetIconDescriptorAttributePropertyValue(x => x.AltText); }
     }
@@ -45,6 +46,7 @@ public class IconAttribute : Attribute
     /// <typeparam name="TResult">The type of the result.</typeparam>
     /// <param name="propertySelector">The property selector.</param>
     /// <returns>Property value.</returns>
+    [return: MaybeNull]
     private TResult GetIconDescriptorAttributePropertyValue<TResult>(
         Func<IconDescriptorAttribute, TResult> propertySelector)
     {

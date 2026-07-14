@@ -1,5 +1,6 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #if !NETSTANDARD
 using System.Threading;
@@ -18,7 +19,7 @@ public sealed class FExAgnosticsStatics
 #else
     private static readonly Lock _lockObject = new();
 #endif
-    private static IAsyncHelper _asyncHelper;
+    private static IAsyncHelper? _asyncHelper;
     private static bool _hasBeenInitialized;
 
     /// <summary>
@@ -77,6 +78,7 @@ public sealed class FExAgnosticsStatics
         }
     }
 
+    [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowNotInitializedException()
     {

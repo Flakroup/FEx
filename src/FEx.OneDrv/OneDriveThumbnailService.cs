@@ -23,7 +23,7 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<byte[]> GetThumbnailAsync(string itemId, CancellationToken cancellationToken)
+    public async Task<byte[]?> GetThumbnailAsync(string itemId, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(itemId))
             throw new ArgumentNullException(nameof(itemId));

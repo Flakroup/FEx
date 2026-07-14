@@ -25,13 +25,13 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
     /// Occurs when the collection changes, either by adding or removing an item.
     /// </summary>
     [field: NonSerialized]
-    public event NotifyCollectionChangedEventHandler CollectionChanged;
+    public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
     /// <summary>
     /// PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
     [field: NonSerialized]
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public IObservable<EventPattern<NotifyCollectionChangedEventArgs>> CollectionChangedObservable =>
         Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(ev =>
@@ -49,7 +49,7 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
     {
     }
 
-    public ConcurrentObservableList(IEnumerable<T> collection)
+    public ConcurrentObservableList(IEnumerable<T>? collection)
         : base(collection)
     {
 #pragma warning disable CS0618 // Type or member is obsolete

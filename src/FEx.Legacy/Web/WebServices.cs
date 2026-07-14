@@ -35,24 +35,27 @@ public static class WebServices
     /// <returns>
     /// <see cref="string" /> with requested data.
     /// </returns>
-    public static async Task<string> GetRequestResultAsync(string requestUrl,
-                                                           ICredentials credentials = null,
+    public static async Task<string?> GetRequestResultAsync(string requestUrl,
+                                                           ICredentials? credentials = null,
                                                            bool resultAsJson = true,
-                                                           List<HttpStatusCode> omitCodes = null,
-                                                           List<Cookie> cookies = null)
+                                                           List<HttpStatusCode>? omitCodes = null,
+                                                           List<Cookie>? cookies = null)
     {
-        string responseBody = null;
+        string? responseBody = null;
         requestUrl = $"{BaseRequestUrl}{requestUrl}";
 
         //requestUrl = Uri.EscapeUriString(requestUrl);
         if (requestUrl.IsNotNullOrEmptyString())
         {
             using var client = PrepareHttpClient(requestUrl, credentials, resultAsJson, cookies);
-            HttpResponseMessage response = null;
+            HttpResponseMessage? response = null;
 
             try
             {
-                response = await GetHttpResponseAsync(() => client.GetAsync(requestUrl));
+                // Guard: GetHttpResponseAsync returns null only after all retries throw; original code dereferenced it and would NRE - Guard preserves the throw-on-failure behavior.
+#pragma warning disable IDISP004 // Guard returns the same instance; it does not create a disposable
+                response = (await GetHttpResponseAsync(() => client.GetAsync(requestUrl))).Guard(nameof(response));
+#pragma warning restore IDISP004
                 responseBody = await response.Content.ReadAsStringAsync();
 
                 if (omitCodes?.Contains(response.StatusCode) != true)
@@ -100,9 +103,9 @@ public static class WebServices
         return responseBody;
     }
 
-    public static async Task<HttpResponseMessage> GetHttpResponseAsync(Func<Task<HttpResponseMessage>> responseFunc)
+    public static async Task<HttpResponseMessage?> GetHttpResponseAsync(Func<Task<HttpResponseMessage>> responseFunc)
     {
-        HttpResponseMessage response = null;
+        HttpResponseMessage? response = null;
         var retry = 20;
 
         while (retry > 0)
@@ -162,9 +165,9 @@ public static class WebServices
     /// <returns></returns>
     // ReSharper disable UnusedParameter.Global
     public static HttpClient PrepareHttpClient(string address,
-                                               ICredentials credentials,
+                                               ICredentials? credentials,
                                                bool resultAsJson,
-                                               IEnumerable<Cookie> cookies = null)
+                                               IEnumerable<Cookie>? cookies = null)
         // ReSharper restore UnusedParameter.Global
     {
         var pars = new WebRequestParams(cookies)
@@ -229,9 +232,9 @@ public static class WebServices
     /// <returns><see cref="bool" /> indicating success of operation.</returns>
     public static async Task<ResponseResult> PostRequestResultAsync(string requestUrl,
                                                                     string postContent,
-                                                                    ICredentials credentials = null,
-                                                                    List<HttpStatusCode> omitCodes = null,
-                                                                    List<Cookie> cookies = null)
+                                                                    ICredentials? credentials = null,
+                                                                    List<HttpStatusCode>? omitCodes = null,
+                                                                    List<Cookie>? cookies = null)
     {
         // SYSLIB0013: Uri.EscapeUriString escapes a complete URI string; switching to
         // Uri.EscapeDataString here would corrupt the scheme/host/slashes. Behavior retained.
@@ -257,16 +260,19 @@ public static class WebServices
     /// System.Boolean
     /// </returns>
     public static async Task<ResponseResult> HandleResponseAsync(string requestUrl,
-                                                                 List<HttpStatusCode> omitCodes,
+                                                                 List<HttpStatusCode>? omitCodes,
                                                                  Func<Task<HttpResponseMessage>> responseHandler)
     {
-        HttpResponseMessage response = null;
-        string responseBody = null;
+        HttpResponseMessage? response = null;
+        string? responseBody = null;
         var isSuccess = false;
 
         try
         {
-            response = await GetHttpResponseAsync(responseHandler);
+            // Guard: GetHttpResponseAsync returns null only after all retries throw; original code dereferenced it and would NRE - Guard preserves the throw-on-failure behavior.
+#pragma warning disable IDISP004 // Guard returns the same instance; it does not create a disposable
+            response = (await GetHttpResponseAsync(responseHandler)).Guard(nameof(response));
+#pragma warning restore IDISP004
 
             if (omitCodes?.Contains(response.StatusCode) != true)
             {
@@ -291,7 +297,8 @@ public static class WebServices
             response?.Dispose();
         }
 
-        return new(isSuccess, responseBody);
+        // Coalesce: responseBody is null on failure; ResponseResult.ResponseBody is non-null - empty string represents "no body".
+        return new(isSuccess, responseBody ?? string.Empty);
     }
 
     /// <summary>

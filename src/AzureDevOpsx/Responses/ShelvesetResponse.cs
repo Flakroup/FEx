@@ -22,5 +22,5 @@ public class ShelvesetResponse : BaseTfsResponse
     };
 
     [JsonProperty("value")]
-    public ShelvesetContent[] Value { get; set; }
+    public ShelvesetContent[]? Value { get; set; }
 }

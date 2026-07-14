@@ -1,4 +1,5 @@
 #if NET5_0_OR_GREATER
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Json.Extensions;
 using FEx.SecureStorage.Abstractions;
 using System;
@@ -72,9 +73,10 @@ public class LinuxLibsecretSecureStorageService : ISecureStorageService
         try
         {
             var json = Marshal.PtrToStringAnsi(passwordPtr);
+            // Get<T> contract is non-null; a null here means corrupt/missing stored JSON - fail loudly.
             return json is null
                 ? throw new InvalidOperationException("libsecret returned a null UTF-8 password.")
-                : json.FromJson<T>();
+                : json.FromJson<T>().Guard(nameof(key));
         }
         finally
         {
@@ -145,7 +147,7 @@ public class LinuxLibsecretSecureStorageService : ISecureStorageService
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool secret_password_store_sync(
         IntPtr schema,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string collection,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string? collection,
         [MarshalAs(UnmanagedType.LPUTF8Str)] string label,
         [MarshalAs(UnmanagedType.LPUTF8Str)] string password,
         IntPtr cancellable,

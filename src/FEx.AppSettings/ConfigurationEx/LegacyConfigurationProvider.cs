@@ -14,6 +14,11 @@ public class LegacyConfigurationProvider : ConfigurationProvider, IConfiguration
             Data.Add($"ConnectionStrings:{connectionString.Name}", connectionString.ConnectionString);
 
         foreach (var settingKey in ConfigurationManager.AppSettings.AllKeys)
+        {
+            if (settingKey is null)
+                continue;
+
             Data.Add(settingKey, ConfigurationManager.AppSettings[settingKey]);
+        }
     }
 }

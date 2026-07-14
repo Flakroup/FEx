@@ -19,11 +19,11 @@ public class AvaloniaMessagePopupService : MessagePopupServiceBase
                                                                           string caption,
                                                                           MessageIcon messageBoxImage,
                                                                           FExMessageButton button,
-                                                                          ISupportInitialize ownerWindow,
+                                                                          ISupportInitialize? ownerWindow,
                                                                           bool informUser,
                                                                           bool wait,
-                                                                          Stopwatch sw,
+                                                                          Stopwatch? sw,
                                                                           LogLevel level,
-                                                                          Exception exception) =>
+                                                                          Exception? exception) =>
         await Task.FromResult(MessageResult.OK);
 }

@@ -1,11 +1,13 @@
 using FEx.Agnostics.Abstractions.Utilities;
 using Microsoft.Win32;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.Platforms.Extensions;
 
 public static class RegistryKeyExtensions
 {
-    public static T GetKeyValue<T>(this RegistryKey reg, string keyName, T fallback)
+    [return: MaybeNull]
+    public static T GetKeyValue<T>(this RegistryKey reg, string keyName, [AllowNull] T fallback)
     {
         var value = PlatformInfoProvider.IsWindows
 #pragma warning disable CA1416
@@ -18,5 +20,6 @@ public static class RegistryKeyExtensions
             : default;
     }
 
+    [return: MaybeNull]
     public static T GetKeyValue<T>(this RegistryKey reg, string keyName) => reg.GetKeyValue<T>(keyName, default);
 }

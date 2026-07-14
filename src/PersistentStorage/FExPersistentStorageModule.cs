@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.PersistentStorage.Abstractions;
@@ -14,8 +15,10 @@ namespace FEx.PersistentStorage;
 [Register(typeof(LocalStorageService), typeof(ILocalStorageService))]
 public class FExPersistentStorageModule : InitializeModule<IFExPersistentStorageContainer, IServiceCollection>
 {
-    protected override void RegisterServices(IFExPersistentStorageContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExPersistentStorageContainer? container, IServiceCollection services)
     {
+        container.Guard(nameof(container));
+
         services.AddSingletonServiceUsingContainer<IDatabaseProvider>(container);
 
         services.AddTransientServiceUsingContainer<ICacheService>(container);

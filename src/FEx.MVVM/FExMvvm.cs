@@ -11,7 +11,7 @@ namespace FEx.MVVM;
 public class FExMvvm : FExInitializable
 {
     private readonly IExceptionHandler _exceptionHandler;
-    private static IMessagePopupService _messagePopupService;
+    private static IMessagePopupService? _messagePopupService;
 
     public static TimeSpan DefaultUIRefreshInterval { get; set; } = TimeSpan.FromMilliseconds(25);
 

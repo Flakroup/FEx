@@ -48,7 +48,8 @@ public class WindowsDpapiSecureStorageService : ISecureStorageService
  ProtectedData.Unprotect(encrypted, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
         var json = System.Text.Encoding.UTF8.GetString(decrypted);
 
-        return json.FromJson<T>();
+        // Get<T> contract is non-null; a null here means corrupt/missing stored JSON - fail loudly.
+        return json.FromJson<T>().Guard(nameof(key));
     }
 
     public void Set(string key, object content)

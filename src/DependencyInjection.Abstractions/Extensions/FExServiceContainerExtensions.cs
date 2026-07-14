@@ -9,5 +9,5 @@ public static class FExServiceContainerExtensions
         where TContainer : class, IDisposable =>
         container.RegisterServices(diContainer, null);
 
-    public static T ResolveOrDefault<T>(this IFExServiceContainer container) => container.ResolveOrDefault(default(T));
+    public static T? ResolveOrDefault<T>(this IFExServiceContainer container) => container.ResolveOrDefault(default(T));
 }

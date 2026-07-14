@@ -39,7 +39,7 @@ public static class FExConfigurationExtensions
             : appSettings;
     }
 
-    public static TConf GetBindedConfiguration<TConf>(string sectionKey, string basePath, string settingsFilePath)
+    public static TConf GetBindedConfiguration<TConf>(string? sectionKey, string? basePath, string settingsFilePath)
     {
         var builder = new ConfigurationBuilder();
         builder.SetBasePath(basePath ?? Directory.GetCurrentDirectory()).AddJsonFile(settingsFilePath, false);
@@ -65,7 +65,7 @@ public static class FExConfigurationExtensions
     public static TConf GetBindedConfiguration<TConf>(string sectionKey, string basePath) =>
         GetBindedConfiguration<TConf>(sectionKey, basePath, "appsettings.json");
 
-    public static void BindJsonNet(this IConfigurationSection config, object instance, Func<string, string> jsonFunc)
+    public static void BindJsonNet(this IConfigurationSection config, object instance, Func<string, string>? jsonFunc)
     {
         var jsonText = GetSerializedConfig(config, jsonFunc);
 
@@ -75,7 +75,7 @@ public static class FExConfigurationExtensions
     public static void BindJsonNet(this IConfigurationSection config, object instance) =>
         config.BindJsonNet(instance, null);
 
-    public static T BindJsonNet<T>(this IConfigurationSection config, Func<string, string> jsonFunc) where T : new()
+    public static T BindJsonNet<T>(this IConfigurationSection config, Func<string, string>? jsonFunc) where T : new()
     {
         var jsonText = GetSerializedConfig(config, jsonFunc);
 
@@ -119,7 +119,7 @@ public static class FExConfigurationExtensions
         }
     }
 
-    private static string GetSerializedConfig(IConfigurationSection config, Func<string, string> jsonFunc)
+    private static string GetSerializedConfig(IConfigurationSection config, Func<string, string>? jsonFunc)
     {
         var obj = BindToExpandoObject(config);
 
@@ -131,7 +131,7 @@ public static class FExConfigurationExtensions
         return jsonText;
     }
 
-    private static ExpandoObject BindToExpandoObject(IConfigurationSection config)
+    private static ExpandoObject? BindToExpandoObject(IConfigurationSection config)
     {
         var result = new ExpandoObject();
 
@@ -140,7 +140,7 @@ public static class FExConfigurationExtensions
 
         foreach (var kvp in configs)
         {
-            IDictionary<string, object> parent = result;
+            IDictionary<string, object?> parent = result;
             var path = kvp.Key.Split(':');
 
             // create or retrieve the hierarchy (keep last path item for later)
@@ -151,7 +151,7 @@ public static class FExConfigurationExtensions
                 if (!parent.ContainsKey(path[i]))
                     parent.Add(path[i], new ExpandoObject());
 
-                parent = (IDictionary<string, object>)parent[path[i]];
+                parent = (IDictionary<string, object?>)parent[path[i]]!;
             }
 
             if (kvp.Value is not null)
@@ -165,29 +165,32 @@ public static class FExConfigurationExtensions
         ReplaceWithArray(null, null, result);
 
         return result.Any()
-            ? (ExpandoObject)((IDictionary<string, object>)result)[config.Key]
+            ? (ExpandoObject?)((IDictionary<string, object?>)result)[config.Key]
             : null;
     }
 
-    private static void ReplaceWithArray(ExpandoObject parent, string key, ExpandoObject input)
+    private static void ReplaceWithArray(ExpandoObject? parent, string? key, ExpandoObject? input)
     {
         if (input is null)
             return;
 
-        IDictionary<string, object> dict = input;
+        IDictionary<string, object?> dict = input;
         string[] keys = [.. dict.Keys];
 
         // it's an array if all keys are integers
         if (keys.All(k => int.TryParse(k, out var dummy)))
         {
-            var array = new object[keys.Length];
+            var array = new object?[keys.Length];
 
             foreach (var kvp in dict)
                 array[int.Parse(kvp.Key)] = kvp.Value;
 
-            IDictionary<string, object> parentDict = parent;
-            parentDict?.Remove(key);
-            parentDict?.Add(key, array);
+            if (parent is not null && key is not null)
+            {
+                IDictionary<string, object?> parentDict = parent;
+                parentDict.Remove(key);
+                parentDict.Add(key, array);
+            }
         }
         else
         {

@@ -15,7 +15,8 @@ namespace FEx.Asyncx.Services;
 public abstract class AsyncWorkersPool<TWorker, TResult> : AsyncInitializable
     where TWorker : AsyncWorker<TWorker, TResult>
 {
-    public TWorker IdleWorker { get; protected set; }
+    // Populated by InitializePool during BeginInitialization (invoked in the ctor); init-before-use invariant.
+    public TWorker IdleWorker { get; protected set; } = null!;
 
     protected AsyncProcessingQueue ProcessingQueue { get; }
     protected ConcurrentList<TWorker> Workers { get; }
@@ -33,7 +34,7 @@ public abstract class AsyncWorkersPool<TWorker, TResult> : AsyncInitializable
     public Task<TResult> ExecuteOnPoolAsync(Func<TWorker, string, Task<TResult>> func) =>
         ExecuteOnPoolAsync(func, null);
 
-    public async Task<TResult> ExecuteOnPoolAsync(Func<TWorker, string, Task<TResult>> func, Func<Guid, string> getId)
+    public async Task<TResult> ExecuteOnPoolAsync(Func<TWorker, string, Task<TResult>> func, Func<Guid, string>? getId)
     {
         var guid = Guid.NewGuid();
         var id = getId?.Invoke(guid) ?? guid.ToString();

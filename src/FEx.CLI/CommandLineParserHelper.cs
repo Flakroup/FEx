@@ -10,14 +10,15 @@ public static class CommandLineParserHelper
 {
     public static T GetConfiguration<T>(string[] args)
     {
-        T config = default;
-        IList<Error> errors = null;
+        // Invariant: on a successful parse WithParsed assigns config; the failure path throws below.
+        T config = default!;
+        IList<Error>? errors = null;
 
         Parser.Default.ParseArguments<T>(args)
             .WithParsed(opts => config = opts)
             .WithNotParsed(errs => errors = errs.ToArray());
 
-        return errors.IsNotNullOrEmptyList()
+        return errors is not null && errors.IsNotNullOrEmptyList()
             ? throw new(string.Join(", ", errors.Select(GetErrorInfo)))
             : config;
     }

@@ -12,17 +12,17 @@ public interface IAzureStorageService
 {
     void Configure(string connStr, int parallelOpsMultiplier);
 
-    Task<(CloudBlockBlob blob, bool isSuccess)> CopyBlobAsync(string containerName,
-                                                              string srcBlob,
-                                                              string destBlob,
-                                                              bool overwrite,
-                                                              Func<CloudBlob, Task> blobAction);
+    Task<(CloudBlockBlob? blob, bool isSuccess)> CopyBlobAsync(string containerName,
+                                                               string srcBlob,
+                                                               string destBlob,
+                                                               bool overwrite,
+                                                               Func<CloudBlob, Task>? blobAction);
 
     Task<bool> DeleteBlobAsync(CloudBlockBlob blob,
                                DeleteSnapshotsOption deleteSnapshotsOption,
-                               AccessCondition accessCondition,
-                               BlobRequestOptions options,
-                               OperationContext operationContext,
+                               AccessCondition? accessCondition,
+                               BlobRequestOptions? options,
+                               OperationContext? operationContext,
                                CancellationToken cancellationToken);
 
     Task<bool> DownloadLatestBlobsAsync(string downloadDir,
@@ -34,21 +34,21 @@ public interface IAzureStorageService
 
     Task<bool> ExistsAsync(CloudBlockBlob blob,
                            bool primaryOnly,
-                           BlobRequestOptions options,
-                           OperationContext operationContext,
+                           BlobRequestOptions? options,
+                           OperationContext? operationContext,
                            CancellationToken cancellationToken);
 
     Task<bool> ExistsAsync(string containerName,
                            string path,
                            string fileName,
                            bool primaryOnly,
-                           BlobRequestOptions options,
-                           OperationContext operationContext,
+                           BlobRequestOptions? options,
+                           OperationContext? operationContext,
                            CancellationToken cancellationToken);
 
     Task<CloudBlockBlobInfo> GetBlobAsync(string path,
-                                          CloudBlobContainer container,
-                                          string containerName,
+                                          CloudBlobContainer? container,
+                                          string? containerName,
                                           CancellationToken cancellationToken);
 
     Task<IList<T>> GetBlobsAsync<T>(string containerName,
@@ -73,8 +73,8 @@ public interface IAzureStorageService
     Task<(FileInfo file, CloudBlockBlobInfo blob)> UploadFileAsync(string path,
                                                                    bool overwrite,
                                                                    FileInfo file,
-                                                                   string containerName,
-                                                                   CloudBlobContainer container,
+                                                                   string? containerName,
+                                                                   CloudBlobContainer? container,
                                                                    CancellationToken cancellationToken);
 
     Task<IDictionary<FileInfo, CloudBlockBlobInfo>> UploadFilesAsync(string containerName,
@@ -87,6 +87,6 @@ public interface IAzureStorageService
                                                                bool overwrite,
                                                                string fileName,
                                                                Stream stream,
-                                                               string containerName,
-                                                               CloudBlobContainer container);
+                                                               string? containerName,
+                                                               CloudBlobContainer? container);
 }

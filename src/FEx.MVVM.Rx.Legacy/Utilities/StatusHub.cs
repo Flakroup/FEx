@@ -12,9 +12,9 @@ namespace FEx.MVVM.Rx.Legacy.Utilities;
 
 public sealed class StatusHub : IDisposable, IStatusHub
 {
-    public EventHandler<(Guid key, string status)> StatusAdded;
-    public EventHandler<(Guid key, string status)> StatusRemoved;
-    public EventHandler<EventArgs> Reset;
+    public EventHandler<(Guid key, string status)>? StatusAdded;
+    public EventHandler<(Guid key, string status)>? StatusRemoved;
+    public EventHandler<EventArgs>? Reset;
 
     public Guid Key { get; }
     private ConcurrentDictionary<Guid, string> Statuses { get; }
@@ -27,9 +27,9 @@ public sealed class StatusHub : IDisposable, IStatusHub
     }
 
     public StatusHub(Guid key,
-                     Action<Guid, string> onStatusAdded,
-                     Action<Guid, string> onStatusRemoved,
-                     Action onStatusesReset)
+                     Action<Guid, string>? onStatusAdded,
+                     Action<Guid, string>? onStatusRemoved,
+                     Action? onStatusesReset)
     {
         Key = key;
         Statuses = new();
@@ -41,9 +41,9 @@ public sealed class StatusHub : IDisposable, IStatusHub
         AttachToStatusChanges(onStatusAdded, onStatusRemoved, onStatusesReset);
     }
 
-    public void AttachToStatusChanges(Action<Guid, string> onStatusAdded,
-                                      Action<Guid, string> onStatusRemoved,
-                                      Action onStatusesReset)
+    public void AttachToStatusChanges(Action<Guid, string>? onStatusAdded,
+                                      Action<Guid, string>? onStatusRemoved,
+                                      Action? onStatusesReset)
     {
         if (onStatusAdded is not null)
             StatusAdded += (_, s) => onStatusAdded(s.key, s.status);
@@ -90,16 +90,19 @@ public sealed class StatusHub : IDisposable, IStatusHub
         if (!Statuses.IsEmpty)
         {
             Statuses.Clear();
-            StatusChange?.Report((Guid.Empty, null, NotifyCollectionChangedAction.Reset));
+
+            // Reset carries no status text; StatusChanged ignores the status for the Reset action, so string.Empty is inert.
+            StatusChange?.Report((Guid.Empty, string.Empty, NotifyCollectionChangedAction.Reset));
         }
     }
 
     public IList<string> GetStatuses() => [.. Statuses.Values];
 
-    public string GetStatusString(string separator)
+    public string GetStatusString(string? separator)
     {
+        // IStatusHub.GetStatusString is a non-nullable contract; an empty status set yields an empty string (was null before the nullable migration).
         if (Statuses.IsEmpty)
-            return null;
+            return string.Empty;
 
         if (Statuses.Count < 100)
             return string.Join(separator ?? string.Empty, Statuses.Values);

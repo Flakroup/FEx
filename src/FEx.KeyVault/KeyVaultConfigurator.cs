@@ -14,6 +14,8 @@ public static class KeyVaultConfigurator
     public static void AddAzureKeyVaultWithCertificate(this IConfigurationBuilder config,
                                                        IKeyVaultByCertCredentials credentials)
     {
+        ArgumentNullException.ThrowIfNull(credentials);
+
         var keyVaultEndpoint = GetKeyVaultEndpoint(credentials.KeyVaultName);
         var cert = GetCertificate(credentials.AzureADCertThumbprint);
 
@@ -25,6 +27,8 @@ public static class KeyVaultConfigurator
     public static void AddAzureKeyVaultWithClientSecret(this IConfigurationBuilder config,
                                                         IKeyVaultByClientSecretCredentials credentials)
     {
+        ArgumentNullException.ThrowIfNull(credentials);
+
         var keyVaultEndpoint = GetKeyVaultEndpoint(credentials.KeyVaultName);
 
         var clientSecretCredential = new ClientSecretCredential(credentials.AzureADTenantId,
@@ -36,8 +40,10 @@ public static class KeyVaultConfigurator
         config.AddAzureKeyVault(client, new KeyVaultSecretManager());
     }
 
-    private static X509Certificate2 GetCertificate(string certificateThumbprint)
+    private static X509Certificate2 GetCertificate(string? certificateThumbprint)
     {
+        ArgumentNullException.ThrowIfNull(certificateThumbprint);
+
         using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser, OpenFlags.ReadOnly);
 
         var certs = store.Certificates.Find(X509FindType.FindByThumbprint, certificateThumbprint, false);
@@ -45,6 +51,10 @@ public static class KeyVaultConfigurator
         return certs.Single();
     }
 
-    private static Uri GetKeyVaultEndpoint(string vaultName) =>
-        new KeyVaultConfiguration($"https://{vaultName}.vault.azure.net/").VaultUri;
+    private static Uri GetKeyVaultEndpoint(string? vaultName)
+    {
+        ArgumentNullException.ThrowIfNull(vaultName);
+
+        return new KeyVaultConfiguration($"https://{vaultName}.vault.azure.net/").VaultUri;
+    }
 }

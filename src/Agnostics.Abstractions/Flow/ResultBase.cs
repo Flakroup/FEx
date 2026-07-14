@@ -5,7 +5,7 @@ namespace FEx.Agnostics.Abstractions.Flow;
 
 public abstract class ResultBase<TError> : IResult<TError> where TError : class, IError, new()
 {
-    public TError Error { get; }
+    public TError? Error { get; }
     public bool IsSuccess => !IsFailure;
     public bool IsFailure { get; }
 

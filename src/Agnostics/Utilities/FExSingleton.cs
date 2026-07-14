@@ -42,7 +42,7 @@ public abstract class FExSingleton : IDisposable
 
 public abstract class FExSingleton<T> : FExSingleton where T : class, new()
 {
-    private static T _instance;
+    private static T? _instance;
 
     public static T Instance
     {
@@ -52,7 +52,8 @@ public abstract class FExSingleton<T> : FExSingleton where T : class, new()
                 lock (SyncRoot)
                     _instance ??= new();
 
-            return _instance;
+            // Non-null here: either already set, or just created under the lock above.
+            return _instance!;
         }
     }
 

@@ -28,7 +28,7 @@ public static class DataGridBehavior
             || !(bool)e.NewValue)
             return;
 
-        EventHandler<DataGridRowEventArgs> loadedRowHandler = null;
+        EventHandler<DataGridRowEventArgs>? loadedRowHandler = null;
 
         loadedRowHandler = (_, ea) =>
         {
@@ -44,7 +44,7 @@ public static class DataGridBehavior
 
         dataGrid.LoadingRow += loadedRowHandler;
 
-        ItemsChangedEventHandler itemsChangedHandler = null;
+        ItemsChangedEventHandler? itemsChangedHandler = null;
 
         itemsChangedHandler = (_, _) =>
         {

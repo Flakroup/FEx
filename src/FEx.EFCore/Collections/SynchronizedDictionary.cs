@@ -29,14 +29,14 @@ namespace FEx.EFCore.Collections;
 /// <typeparam name="TDbCtx"></typeparam>
 /// <remarks>Requires <c>Initialize();</c> call in .ctor</remarks>
 public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitializable, IReadOnlyCollection<TValue>
-    where TKey : IEquatable<TKey> where TValue : class, INotifyPropertyChanged where TDbCtx : DbContext
+    where TKey : notnull, IEquatable<TKey> where TValue : class, INotifyPropertyChanged where TDbCtx : DbContext
 {
     protected readonly IEFCoreDatabaseBackedService<TDbCtx> _dbSrv;
-    private readonly Func<TValue, IObservable<object>>[] _observables;
+    private readonly Func<TValue, IObservable<object>>[]? _observables;
     private bool _isDisposed;
     private string[] _observedProperties;
-    private IDisposable _cacheSubscription;
-    private Func<TValue, TKey> _keyRetriver;
+    private IDisposable? _cacheSubscription;
+    private Func<TValue, TKey>? _keyRetriver;
 
     public ConcurrentHashSet<TKey> Index { get; }
     public bool UseIndex { get; protected set; }
@@ -53,7 +53,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     protected SynchronizedDictionary(IEFCoreDatabaseBackedService<TDbCtx> dbService,
                                      string keyPropertyName,
-                                     Func<TValue, IObservable<object>>[] observables = null,
+                                     Func<TValue, IObservable<object>>[]? observables = null,
                                      params string[] observedProperties)
         : base(dbService)
     {
@@ -71,7 +71,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     public IEnumerator<TValue> GetEnumerator() => Cache.Items.GetEnumerator();
 
-    public async Task<TValue> GetOrAddValueAsync(TKey key, bool addNew = true, IDictionary<string, object> param = null)
+    public async Task<TValue?> GetOrAddValueAsync(TKey key, bool addNew = true, IDictionary<string, object>? param = null)
     {
         var optional = Cache.Lookup(key);
 
@@ -80,12 +80,12 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             : await FindExistingValueOrAddNewAsync(key, addNew, param);
     }
 
-    public async Task<TimeSpan> CacheAllAsync(HashSet<TKey> keys = null)
+    public async Task<TimeSpan> CacheAllAsync(HashSet<TKey>? keys = null)
     {
         var sw = Stopwatch.StartNew();
         await _dbSrv.RunTaskInDbContextAsync(ctx => CacheAllAsync(ctx, keys));
 
-        if (keys.IsNullOrEmptyCollection()
+        if (keys is null || keys.Count == 0
             || Index.UnorderedSequenceEqual(keys))
             HasCachedAll = true;
 
@@ -172,7 +172,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     protected abstract DbSet<TValue> DbSetAccessor(TDbCtx ctx);
 #pragma warning restore VSTHRD200
 
-    protected abstract TValue GetNew(TKey key, IDictionary<string, object> param = null);
+    protected abstract TValue GetNew(TKey key, IDictionary<string, object>? param = null);
 
     protected virtual async Task OnChangesDetectedAsync(ICollection<ChangeInfo<TKey, TValue>> changes) =>
         await _dbSrv.RunTaskInDbContextAsync(ctx => SaveCacheChangesAsync(ctx, changes));
@@ -195,7 +195,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     {
         await base.OnInitializeAsync();
 
-        var mappedProperties = _dbSrv.Mappings[typeof(TValue).FullName].Properties;
+        var mappedProperties = _dbSrv.Mappings[typeof(TValue).FullName.Guard(nameof(TValue))].Properties;
 
         _observedProperties = _observedProperties is null
             ? [.. mappedProperties]
@@ -232,10 +232,10 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     protected TKey KeyRetriver(TValue value) => (_keyRetriver ??= RetriveKey().Compile()).Invoke(value);
 
-    protected T GetParam<T>(IDictionary<string, object> param, string key) =>
+    protected T? GetParam<T>(IDictionary<string, object>? param, string key) =>
         param is null || param.Count == 0
             ? default
-            : (T)param.TryGetKeyValue(key);
+            : (T?)param.TryGetKeyValue<string, object>(key);
 
     protected async Task SaveCacheChangesAsync(TDbCtx dbContext, ICollection<ChangeInfo<TKey, TValue>> changes)
     {
@@ -277,7 +277,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     {
         var iParam = Expression.Parameter(typeof(TValue));
         var prop = Expression.Property(iParam, KeyPropertyName);
-        var method = keys.GetType().GetMethod(nameof(HashSet<>.Contains), [typeof(TKey)]);
+        var method = keys.GetType().GetMethod(nameof(HashSet<>.Contains), [typeof(TKey)]).Guard("method");
         var call = Expression.Call(Expression.Constant(keys), method, prop);
 
         return Expression.Lambda<Func<TValue, bool>>(call, iParam);
@@ -312,16 +312,16 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         return distinctChanges;
     }
 
-    private async Task<TValue> FindExistingValueOrAddNewAsync(TKey key,
-                                                              bool addNew,
-                                                              IDictionary<string, object> param = null)
+    private async Task<TValue?> FindExistingValueOrAddNewAsync(TKey key,
+                                                               bool addNew,
+                                                               IDictionary<string, object>? param = null)
     {
         var optional = Cache.Lookup(key);
 
         if (optional.HasValue)
             return optional.Value;
 
-        TValue value = null;
+        TValue? value = null;
 
         if (!HasCachedAll
             && (!UseIndex || Index.Contains(key)))
@@ -425,7 +425,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         }
     }
 
-    private async Task<TValue> FindExistingAsync(TDbCtx ctx, TKey key)
+    private async Task<TValue?> FindExistingAsync(TDbCtx ctx, TKey key)
     {
         var entity = await DbSetAccessor(ctx).FindAsync(key);
 
@@ -440,7 +440,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             Remove(key);
     }
 
-    private async Task CacheAllAsync(TDbCtx db, HashSet<TKey> keys = null)
+    private async Task CacheAllAsync(TDbCtx db, HashSet<TKey>? keys = null)
     {
         List<TValue> toCache;
 

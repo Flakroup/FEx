@@ -15,7 +15,9 @@ namespace FEx.DependencyInjection;
 public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
 {
     private readonly ILogger _logger;
-    private ServiceProvider _provider;
+
+    // Invariant: built during ConfigureServiceProviderAsync before any resolve call.
+    private ServiceProvider _provider = null!;
 
     public FExMicrosoftDIServiceProvider(ILogger logger)
     {
@@ -66,9 +68,9 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
     /// <typeparam name="T">The type of service object to get.</typeparam>
     /// <returns>A service object of type <typeparamref name="T" />.</returns>
     /// <exception cref="InvalidOperationException">There is no service of type <typeparamref name="T" />.</exception>
-    public T GetRequiredService<T>() => _provider.GetRequiredService<T>();
+    public T GetRequiredService<T>() => (T)_provider.GetRequiredService(typeof(T));
 
-    public T TryResolveService<T>() => _provider.GetService<T>();
+    public T? TryResolveService<T>() => _provider.GetService<T>();
 
     /// <summary>
     /// Get service of type <paramref name="serviceType" /> from the <see cref="IServiceProvider" />.
@@ -83,7 +85,9 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
 
     public object GetRequiredService(Type serviceType) => _provider.GetRequiredService(serviceType);
 
-    public TContainer GetContainer<TContainer>() where TContainer : class => _provider as TContainer;
+    public TContainer GetContainer<TContainer>() where TContainer : class =>
+        _provider as TContainer
+        ?? throw new InvalidOperationException($"Container is not of type {typeof(TContainer).Name}");
 
     public IScopeProvider CreateScope() => new MicrosoftDIScopeProviderAdapter(_provider);
 
@@ -91,12 +95,13 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
 
     public object GetInstance(Type serviceType) => GetRequiredService(serviceType);
 
-    public object GetService(Type serviceType) => _provider.GetService(serviceType);
+    public object? GetService(Type serviceType) => _provider.GetService(serviceType);
 
     private static async Task InitializeMicrosoftDIModulesAsync(IServiceCollection services)
     {
         // Use TryResolveServices to gracefully handle cases where no modules are registered
-        IInitializeModule<IServiceCollection>[] modules = [.. FExServiceProvider.ServiceContainer.TryResolveServices<IInitializeModule<IServiceCollection>>()];
+        IInitializeModule<IServiceCollection>[] modules =
+            [.. FExServiceProvider.ServiceContainer?.TryResolveServices<IInitializeModule<IServiceCollection>>() ?? []];
 
         if (modules.IsNullOrEmptyList())
             return;

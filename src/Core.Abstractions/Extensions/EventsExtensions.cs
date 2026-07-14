@@ -11,19 +11,19 @@ public static class EventsExtensions
                                                      ref TRet backingField,
                                                      TRet newValue,
                                                      Action<string> propertyChanged,
-                                                     [CallerMemberName] string propertyName = null)
+                                                     [CallerMemberName] string? propertyName = null)
         where TObj : INotifyPropertyChanged
     {
-        Action<TObj, string, TRet> action = propertyChanged is not null && propertyName is not null
+        Action<TObj, string?, TRet> action = propertyChanged is not null && propertyName is not null
             ? (s, p, _) => s.OnPropertyChangedStatic(propertyChanged, p)
-            : null;
+            : static (_, _, _) => { };
 
         return sender.SetObjectProperty(ref backingField, newValue, action, propertyName);
     }
 
     public static void OnPropertyChangedStatic<TObj>(this TObj sender,
                                                      Action<string> propertyChanged,
-                                                     [CallerMemberName] string propertyName = null)
+                                                     [CallerMemberName] string? propertyName = null)
         where TObj : INotifyPropertyChanged
     {
         propertyChanged.Guard(nameof(propertyChanged));

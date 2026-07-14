@@ -16,28 +16,28 @@ namespace FEx.Logging;
 public class FExSerilogLogger : IFExLogger, IDisposable
 #pragma warning restore IDISP025
 {
-    private object _state;
-    private IDisposable _scope;
-    public event EventHandler<FExErrorEventArgs> ErrorLogged;
+    private object? _state;
+    private IDisposable? _scope;
+    public event EventHandler<FExErrorEventArgs>? ErrorLogged;
 
     // Trace level
     public void Trace(string message) => Log.Verbose(message);
-    public void Trace(Exception exception, string message) => Log.Verbose(exception, message ?? exception.Message);
+    public void Trace(Exception exception, string? message) => Log.Verbose(exception, message ?? exception.Message);
 
     // Debug level
     public void Debug(string message) => Log.Debug(message);
-    public void Debug(Exception exception, string message) => Log.Debug(exception, message ?? exception.Message);
+    public void Debug(Exception exception, string? message) => Log.Debug(exception, message ?? exception.Message);
 
     // Information level
     public void Information(string message) => Log.Information(message);
 
-    public void Information(Exception exception, string message) =>
+    public void Information(Exception exception, string? message) =>
         Log.Information(exception, message ?? exception.Message);
 
     // Warning level
     public void Warning(string message) => Log.Warning(message);
 
-    public void Warning(Exception exception, string message) => Log.Warning(exception, message ?? exception.Message);
+    public void Warning(Exception exception, string? message) => Log.Warning(exception, message ?? exception.Message);
 
     // Error level
     public void Error(string message)
@@ -46,7 +46,7 @@ public class FExSerilogLogger : IFExLogger, IDisposable
         ErrorLogged?.Invoke(this, new(message));
     }
 
-    public void Error(Exception exception, string message)
+    public void Error(Exception exception, string? message)
     {
         Log.Error(exception, message ?? exception.Message);
         ErrorLogged?.Invoke(this, new(message));
@@ -59,7 +59,7 @@ public class FExSerilogLogger : IFExLogger, IDisposable
         ErrorLogged?.Invoke(this, new(message));
     }
 
-    public void Critical(Exception exception, string message)
+    public void Critical(Exception exception, string? message)
     {
         Log.Fatal(exception, message ?? exception.Message);
         ErrorLogged?.Invoke(this, new(message));

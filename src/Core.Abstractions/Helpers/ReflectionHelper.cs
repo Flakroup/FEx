@@ -9,7 +9,7 @@ namespace FEx.Core.Abstractions.Helpers;
 
 public static class ReflectionHelper
 {
-    public static object GetPropertyValue(this object obj, string propertyName)
+    public static object? GetPropertyValue(this object obj, string propertyName)
     {
         obj.Guard(nameof(obj));
 
@@ -41,7 +41,7 @@ public static class ReflectionHelper
         }
     }
 
-    public static object GetFieldValue(this object obj, string fieldName)
+    public static object? GetFieldValue(this object obj, string fieldName)
     {
         obj.Guard(nameof(obj));
 
@@ -72,7 +72,7 @@ public static class ReflectionHelper
             : false;
     }
 
-    public static string ReadEmbeddedFile(this Assembly assembly,
+    public static string? ReadEmbeddedFile(this Assembly assembly,
                                           string resourceName,
                                           bool throwIfMissing = true,
                                           bool addNamespace = false)
@@ -95,7 +95,9 @@ public static class ReflectionHelper
 
     public static string GetEntryAssemblyAttribute<T>(this Assembly assembly, Func<T, string> func)
         where T : Attribute =>
-        func((T)assembly?.GetCustomAttributes(typeof(T), false).FindInEnumerable());
+        // FindInEnumerable is [MaybeNull]; the ! preserves the original behavior of passing the
+        // (possibly-null) attribute straight to func rather than short-circuiting.
+        func((T)assembly.GetCustomAttributes(typeof(T), false).FindInEnumerable()!);
 
     public static T ToObject<T>(this IDictionary<string, object> source) where T : class, new()
     {
@@ -103,46 +105,58 @@ public static class ReflectionHelper
         var someObjectType = someObject.GetType();
 
         foreach (var item in source)
-            someObjectType.GetProperty(item.Key).SetValue(someObject, item.Value, null);
+            // Property is assumed present for the given key; a missing key throws (NRE) as before.
+            someObjectType.GetProperty(item.Key)!.SetValue(someObject, item.Value, null);
 
         return someObject;
     }
 
-    public static IDictionary<string, object> AsDictionary(this object source,
+    public static IDictionary<string, object?> AsDictionary(this object source,
                                                            BindingFlags bindingAttr =
                                                                BindingFlags.DeclaredOnly
                                                                | BindingFlags.Public
                                                                | BindingFlags.Instance) =>
         source.GetType()
             .GetProperties(bindingAttr)
-            .ToDictionary(propInfo => propInfo.Name, propInfo => propInfo.GetValue(source, null));
+            // Cast required: on down-level TFMs GetValue returns oblivious 'object', which would
+            // infer Dictionary<string, object> and break the IDictionary<string, object?> contract.
+            // ReSharper disable once RedundantCast
+            .ToDictionary(propInfo => propInfo.Name, propInfo => (object?)propInfo.GetValue(source, null));
 
-    private static PropertyInfo GetPropertyInfo(Type type, string propertyName)
+    private static PropertyInfo? GetPropertyInfo(Type type, string propertyName)
     {
-        PropertyInfo propInfo;
+        PropertyInfo? propInfo;
+        // 'var' would infer non-null Type and break the 'currentType = currentType.BaseType' (Type?) reassignment.
+        // ReSharper disable once SuggestVarOrType_SimpleTypes
+        Type? currentType = type;
 
         do
         {
-            propInfo = type.GetProperty(propertyName,
+            propInfo = currentType.GetProperty(propertyName,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
-            type = type.BaseType;
+            currentType = currentType.BaseType;
         } while (propInfo is null
-                 && type is not null);
+                 && currentType is not null);
 
         return propInfo;
     }
 
-    private static FieldInfo GetFieldInfo(Type type, string fieldName)
+    private static FieldInfo? GetFieldInfo(Type type, string fieldName)
     {
-        FieldInfo fieldInfo;
+        FieldInfo? fieldInfo;
+        // 'var' would infer non-null Type and break the 'currentType = currentType.BaseType' (Type?) reassignment.
+        // ReSharper disable once SuggestVarOrType_SimpleTypes
+        Type? currentType = type;
 
         do
         {
-            fieldInfo = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            type = type.BaseType;
+            fieldInfo = currentType.GetField(fieldName,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            currentType = currentType.BaseType;
         } while (fieldInfo is null
-                 && type is not null);
+                 && currentType is not null);
 
         return fieldInfo;
     }

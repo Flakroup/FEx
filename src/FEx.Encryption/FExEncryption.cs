@@ -9,7 +9,8 @@ namespace FEx.Encryption;
 public class FExEncryption : InitializeOnlyModule, IFExPriorityInitialize
 {
     private readonly IFExEncryptionSettings _settings;
-    private static string _passPhrase;
+    // Set during OnInitialize; the getter guards against pre-init access.
+    private static string? _passPhrase;
 
     public static string PassPhrase
     {
@@ -27,6 +28,6 @@ public class FExEncryption : InitializeOnlyModule, IFExPriorityInitialize
     protected override void OnInitialize()
     {
         base.OnInitialize();
-        PassPhrase = _settings?.PassPhrase ?? $"{Environment.UserName}@{Environment.MachineName}".GenerateMd5OfString();
+        PassPhrase = (_settings?.PassPhrase ?? $"{Environment.UserName}@{Environment.MachineName}".GenerateMd5OfString()).Guard(nameof(PassPhrase));
     }
 }

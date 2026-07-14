@@ -36,7 +36,7 @@ public class FExBehaviorSubject<T> : FExSubject<T>, IFExBehaviorSubject<T>
     public T Value => _behaviorSubject.Value;
 
     public FExBehaviorSubject()
-        : this(default)
+        : this(default!)
     {
     }
 

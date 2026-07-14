@@ -239,26 +239,26 @@ public static class TaskExtensions
             ? await Task.WhenAll(taskArray)
             : await Task.WhenAll(tasks.ToArray());
 
-    public static object Wrap(this Action action)
+    public static object? Wrap(this Action action)
     {
         action();
 
         return null;
     }
 
-    public static Func<Task<object>> WrapTask(this Func<Task> taskFunc) => taskFunc.WrapTaskAsync;
+    public static Func<Task<object?>> WrapTask(this Func<Task> taskFunc) => taskFunc.WrapTaskAsync;
 
-    public static Func<Task<object>> WrapTask<T>(this Func<T, Task> taskFunc, T arg) =>
+    public static Func<Task<object?>> WrapTask<T>(this Func<T, Task> taskFunc, T arg) =>
         () => taskFunc.WrapTaskAsync(arg);
 
-    public static async Task<object> WrapTaskAsync<T>(this Func<T, Task> taskFunc, T arg)
+    public static async Task<object?> WrapTaskAsync<T>(this Func<T, Task> taskFunc, T arg)
     {
         await taskFunc(arg);
 
         return null;
     }
 
-    public static async Task<object> WrapTaskAsync(this Func<Task> taskFunc)
+    public static async Task<object?> WrapTaskAsync(this Func<Task> taskFunc)
     {
         await taskFunc();
 
@@ -315,17 +315,17 @@ public static class TaskExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, $"Mode {mode} is not supported")
         };
 
-    private static async Task ExecuteDeferredTaskOnMainThreadAsync(Action action, IAsyncHelper asyncHelper = null) =>
+    private static async Task ExecuteDeferredTaskOnMainThreadAsync(Action action, IAsyncHelper? asyncHelper = null) =>
         await (asyncHelper ?? AsyncHelper).ExecuteDeferredTaskOnMainThreadAsync(action);
 
     private static async Task<T>
-        ExecuteDeferredTaskOnMainThreadAsync<T>(Func<T> func, IAsyncHelper asyncHelper = null) =>
+        ExecuteDeferredTaskOnMainThreadAsync<T>(Func<T> func, IAsyncHelper? asyncHelper = null) =>
         await (asyncHelper ?? AsyncHelper).ExecuteDeferredTaskOnMainThreadAsync(func);
 
-    private static async Task ExecuteDeferredTaskOnMainThreadAsync(Func<Task> task, IAsyncHelper asyncHelper = null) =>
+    private static async Task ExecuteDeferredTaskOnMainThreadAsync(Func<Task> task, IAsyncHelper? asyncHelper = null) =>
         await (asyncHelper ?? AsyncHelper).ExecuteDeferredTaskOnMainThreadAsync(task);
 
     private static async Task<T>
-        ExecuteDeferredTaskOnMainThreadAsync<T>(Func<Task<T>> task, IAsyncHelper asyncHelper = null) =>
+        ExecuteDeferredTaskOnMainThreadAsync<T>(Func<Task<T>> task, IAsyncHelper? asyncHelper = null) =>
         await (asyncHelper ?? AsyncHelper).ExecuteDeferredTaskOnMainThreadAsync(task);
 }

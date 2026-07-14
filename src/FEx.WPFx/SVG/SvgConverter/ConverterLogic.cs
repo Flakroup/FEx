@@ -45,7 +45,7 @@ public static class ConverterLogic
                                        ResultMode resultMode,
                                        ResKeyInfo resKeyInfo,
                                        bool filterPixelsPerDip,
-                                       WpfDrawingSettings wpfDrawingSettings)
+                                       WpfDrawingSettings? wpfDrawingSettings)
     {
         var obj = ConvertSvgToObject(svg, resultMode, wpfDrawingSettings, out var name, resKeyInfo);
 
@@ -74,7 +74,7 @@ public static class ConverterLogic
 
     public static object ConvertSvgToObject(ConvertedSvgData svg,
                                             ResultMode resultMode,
-                                            WpfDrawingSettings wpfDrawingSettings,
+                                            WpfDrawingSettings? wpfDrawingSettings,
                                             out string name,
                                             ResKeyInfo resKeyInfo)
     {
@@ -96,15 +96,16 @@ public static class ConverterLogic
         }
     }
 
-    public static string SvgObjectToXaml(object obj, bool includeRuntime, string name, bool filterPixelsPerDip)
+    public static string SvgObjectToXaml(object obj, bool includeRuntime, string? name, bool filterPixelsPerDip)
     {
         var xamlUntidy = WpfObjToXaml(obj, includeRuntime);
 
         var doc = XDocument.Parse(xamlUntidy);
-        BeautifyDrawingElement(doc.Root, name);
+        var root = doc.Root.Guard(nameof(doc.Root)); // XDocument.Parse always yields a root element
+        BeautifyDrawingElement(root, name);
 
         if (filterPixelsPerDip)
-            FilterPixelsPerDip(doc.Root);
+            FilterPixelsPerDip(root);
 
         var xamlWithNamespaces = doc.ToString();
 
@@ -118,22 +119,24 @@ public static class ConverterLogic
 
     public static string SvgDirToXaml(string folder,
                                       ResKeyInfo resKeyInfo,
-                                      WpfDrawingSettings wpfDrawingSettings,
+                                      WpfDrawingSettings? wpfDrawingSettings,
                                       bool filterPixelsPerDip)
     {
         //firstChar Upper
-        var firstChar = char.ToUpperInvariant(resKeyInfo.XamlName[0]);
-        resKeyInfo.XamlName = firstChar + resKeyInfo.XamlName.Remove(0, 1);
+        var xamlName = resKeyInfo.XamlName.Guard(nameof(resKeyInfo.XamlName));
+        var firstChar = char.ToUpperInvariant(xamlName[0]);
+        resKeyInfo.XamlName = firstChar + xamlName.Remove(0, 1);
 
         var files = SvgFilesFromFolder(folder);
         var dict = ConvertFilesToResourceDictionary(files, wpfDrawingSettings, resKeyInfo);
         var xamlUntidy = WpfObjToXaml(dict, wpfDrawingSettings?.IncludeRuntime ?? false);
 
         var doc = XDocument.Parse(xamlUntidy);
-        RemoveResDictEntries(doc.Root);
 
         if (doc.Root is null)
             throw new InvalidOperationException();
+
+        RemoveResDictEntries(doc.Root);
 
         var drawingGroupElements = doc.Root.XPathSelectElements("defns:DrawingGroup", NsManager).ToList();
 
@@ -331,7 +334,7 @@ public static class ConverterLogic
     }
 
     internal static ResourceDictionary ConvertFilesToResourceDictionary(IEnumerable<string> files,
-                                                                        WpfDrawingSettings wpfDrawingSettings,
+                                                                        WpfDrawingSettings? wpfDrawingSettings,
                                                                         ResKeyInfo resKeyInfo)
     {
         var dict = new ResourceDictionary();
@@ -359,7 +362,7 @@ public static class ConverterLogic
         }
     }
 
-    internal static DrawingGroup SvgFileToWpfObject(ConvertedSvgData svg, WpfDrawingSettings wpfDrawingSettings)
+    internal static DrawingGroup SvgFileToWpfObject(ConvertedSvgData svg, WpfDrawingSettings? wpfDrawingSettings)
     {
         wpfDrawingSettings ??= new()
         {
@@ -393,7 +396,7 @@ public static class ConverterLogic
             ? XDocument.Parse(svg.Svg)
             : XDocument.Load(Path.GetFullPath(svg.Filepath));
 
-        FixIds(doc.Root); //id="3d-view-icon" -> id="_3d-view-icon"
+        FixIds(doc.Root.Guard(nameof(doc.Root))); //id="3d-view-icon" -> id="_3d-view-icon"
         using var ms = new MemoryStream();
         doc.Save(ms);
         ms.Position = 0;
@@ -494,8 +497,10 @@ public static class ConverterLogic
         return $"{{{resourceIdent} {refName}}}";
     }
 
-    internal static string GetElemNameFromResKey(string name, ResKeyInfo resKeyInfo)
+    internal static string GetElemNameFromResKey(string? name, ResKeyInfo resKeyInfo)
     {
+        name = name.Guard(nameof(name));
+
         if (resKeyInfo.UseComponentResKeys)
         {
             //{x:Static NameSpaceName:XamlName.ElementName}
@@ -536,7 +541,7 @@ public static class ConverterLogic
     internal static void SetRootElementname(DependencyObject drawingGroup, string name) =>
         drawingGroup.SetValue(FrameworkElement.NameProperty, name);
 
-    internal static XElement GetClipElement(XElement drawingGroupElement, out Rect rect)
+    internal static XElement? GetClipElement(XElement? drawingGroupElement, out Rect rect)
     {
         rect = default;
 
@@ -574,7 +579,7 @@ public static class ConverterLogic
     private static void AddNameSpaceDef(XElement root, ResKeyInfo resKeyInfo)
     {
         if (resKeyInfo.UseComponentResKeys)
-            root.Add(new XAttribute(XNamespace.Xmlns + resKeyInfo.NameSpaceName,
+            root.Add(new XAttribute(XNamespace.Xmlns + resKeyInfo.NameSpaceName.Guard(nameof(resKeyInfo.NameSpaceName)),
                 "clr-namespace:" + resKeyInfo.NameSpace));
     }
 
@@ -603,7 +608,7 @@ public static class ConverterLogic
         }
     }
 
-    private static DrawingGroup ConvertFileToDrawingGroup(ConvertedSvgData svg, WpfDrawingSettings wpfDrawingSettings)
+    private static DrawingGroup ConvertFileToDrawingGroup(ConvertedSvgData svg, WpfDrawingSettings? wpfDrawingSettings)
     {
         var dg = SvgFileToWpfObject(svg, wpfDrawingSettings);
         SetSizeToGeometries(dg);
@@ -627,7 +632,7 @@ public static class ConverterLogic
         }
     }
 
-    private static void BeautifyDrawingElement(XElement drawingElement, string name)
+    private static void BeautifyDrawingElement(XElement drawingElement, string? name)
     {
         InlineClipping(drawingElement);
         RemoveCascadedDrawingGroup(drawingElement);
@@ -729,7 +734,7 @@ public static class ConverterLogic
         }
     }
 
-    private static void SetDrawingElementxKey(XElement drawingElement, string name)
+    private static void SetDrawingElementxKey(XElement drawingElement, string? name)
     {
         if (string.IsNullOrWhiteSpace(name))
             return;

@@ -10,7 +10,9 @@ namespace FEx.Avaloniax;
 public abstract class FExAvaloniaApp<TContainer> : Application
     where TContainer : class, IFExContainer, IDisposable, new()
 {
-    public TContainer Container { get; }
+    // Never assigned in this base type - the container lifetime is owned by FExServiceProvider; exposed here only as an
+    // optional hook for derived apps, hence nullable.
+    public TContainer? Container { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FExAvaloniaApp{TContainer}" /> class.

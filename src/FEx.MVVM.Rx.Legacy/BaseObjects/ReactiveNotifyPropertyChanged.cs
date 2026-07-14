@@ -33,7 +33,7 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
     /// </summary>
     /// <param name="propertyName">The property names.</param>
     [NotifyPropertyChangedInvocator]
-    public void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    public void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         if (propertyName is not null)
             OnPropertyChangedInternal(propertyName);
@@ -42,8 +42,8 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
     [NotifyPropertyChangedInvocator]
     public virtual bool SetProperty<TRet>(ref TRet backingField,
                                           TRet newValue,
-                                          Action<TRet> onPropertyChanged,
-                                          [CallerMemberName] string propertyName = null)
+                                          Action<TRet>? onPropertyChanged,
+                                          [CallerMemberName] string? propertyName = null)
     {
         propertyName.Guard(nameof(propertyName));
 
@@ -67,7 +67,7 @@ public class ReactiveNotifyPropertyChanged : ReactiveObject, IFExNotifyPropertyC
 
     public bool SetProperty<TRet>(ref TRet backingField,
                                   TRet newValue,
-                                  [CallerMemberName] string propertyName = null) =>
+                                  [CallerMemberName] string? propertyName = null) =>
         SetProperty(ref backingField, newValue, null, propertyName);
 
     private void OnPropertyChangingInternal(string propertyName)

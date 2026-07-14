@@ -30,44 +30,44 @@ public static class CommonWindowsImaging
         return await image.ToBitmapImageAsync();
     }
 
-    public static Task<BitmapImage> GetBitmapImageFromFileAsync(string filePath) =>
+    public static Task<BitmapImage?> GetBitmapImageFromFileAsync(string filePath) =>
         GetBitmapImageFromFileAsync(filePath, null);
 
-    public static Task<BitmapImage> GetBitmapImageFromFileAsync(string filePath, WidthAndHeight size) =>
+    public static Task<BitmapImage?> GetBitmapImageFromFileAsync(string filePath, WidthAndHeight? size) =>
         GetBitmapImageFromFileAsync(filePath, size, false, true, true);
 
-    public static Task<BitmapImage> GetBitmapImageFromFileAsync(string filePath,
-                                                                WidthAndHeight size,
+    public static Task<BitmapImage?> GetBitmapImageFromFileAsync(string filePath,
+                                                                WidthAndHeight? size,
                                                                 bool forceLoad,
                                                                 bool forceMemoryStream) =>
         GetBitmapImageFromFileAsync(filePath, size, forceLoad, forceMemoryStream, true);
 
-    public static async Task<BitmapImage> GetBitmapImageFromFileAsync(string filePath,
-                                                                      WidthAndHeight size,
+    public static async Task<BitmapImage?> GetBitmapImageFromFileAsync(string filePath,
+                                                                      WidthAndHeight? size,
                                                                       bool forceLoad,
                                                                       bool forceMemoryStream,
                                                                       bool lockOnFile) =>
         await GetBitmapImageFromFileAsync(new FileInfo(filePath), size, forceLoad, forceMemoryStream, lockOnFile);
 
-    public static Task<BitmapImage> GetBitmapImageFromFileAsync(FileInfo file) =>
+    public static Task<BitmapImage?> GetBitmapImageFromFileAsync(FileInfo file) =>
         GetBitmapImageFromFileAsync(file, null);
 
-    public static Task<BitmapImage> GetBitmapImageFromFileAsync(FileInfo file, WidthAndHeight size) =>
+    public static Task<BitmapImage?> GetBitmapImageFromFileAsync(FileInfo file, WidthAndHeight? size) =>
         GetBitmapImageFromFileAsync(file, size, false, true, true);
 
-    public static Task<BitmapImage> GetBitmapImageFromFileAsync(FileInfo file,
-                                                                WidthAndHeight size,
+    public static Task<BitmapImage?> GetBitmapImageFromFileAsync(FileInfo file,
+                                                                WidthAndHeight? size,
                                                                 bool forceLoad,
                                                                 bool forceMemoryStream) =>
         GetBitmapImageFromFileAsync(file, size, forceLoad, forceMemoryStream, true);
 
-    public static async Task<BitmapImage> GetBitmapImageFromFileAsync(FileInfo file,
-                                                                      WidthAndHeight size,
+    public static async Task<BitmapImage?> GetBitmapImageFromFileAsync(FileInfo file,
+                                                                      WidthAndHeight? size,
                                                                       bool forceLoad,
                                                                       bool forceMemoryStream,
                                                                       bool lockOnFile)
     {
-        BitmapImage res = null;
+        BitmapImage? res = null;
 
         file?.Refresh();
 

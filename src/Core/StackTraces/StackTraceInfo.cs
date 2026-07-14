@@ -5,15 +5,18 @@ namespace FEx.Core.StackTraces;
 [Serializable]
 public class StackTraceInfo : IEquatable<StackTraceInfo>
 {
-    public StackTraceFrame[] Frames { get; set; }
+    public StackTraceFrame[]? Frames { get; set; }
 
-    public bool Equals(StackTraceInfo other)
+    public bool Equals(StackTraceInfo? other)
     {
         if (other is null)
             return false;
 
         if (this == other)
             return true;
+
+        if (Frames is null || other.Frames is null)
+            return Frames is null && other.Frames is null;
 
         if (Frames.Length != other.Frames.Length)
             return false;
@@ -27,7 +30,7 @@ public class StackTraceInfo : IEquatable<StackTraceInfo>
         return true;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj is null)
             return false;

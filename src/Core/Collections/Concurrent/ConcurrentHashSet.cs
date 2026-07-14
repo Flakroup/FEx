@@ -1,4 +1,3 @@
-using FEx.Agnostics.Abstractions.Extensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -291,7 +290,7 @@ public class ConcurrentHashSet<T> : ISet<T>, IReadOnlyCollection<T>, IDisposable
     {
         var deferredList = items?.ToList();
 
-        if (deferredList.IsNullOrEmpty())
+        if (deferredList is null || deferredList.Count == 0)
             return;
 
         _lock.EnterWriteLock();

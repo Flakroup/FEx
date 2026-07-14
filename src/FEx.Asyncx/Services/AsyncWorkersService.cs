@@ -16,9 +16,9 @@ public abstract class AsyncWorkersService<TPool, TWorker, TQueue, TConf> : Async
     where TConf : IAsyncWorkerConfig
 {
     protected TPool Pool { get; set; }
-    protected TConf Config { get; }
+    protected TConf? Config { get; }
 
-    protected AsyncWorkersService(uint poolSize, TConf config = default)
+    protected AsyncWorkersService(uint poolSize, TConf? config = default)
     {
         Config = config;
         OnConstruction();

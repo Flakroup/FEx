@@ -34,7 +34,7 @@ public static class EnumerableExtensions
     }
 
     [ContractAnnotation("enumerable: null => stop")]
-    public static bool HasAny(this IEnumerable enumerable) =>
+    public static bool HasAny(this IEnumerable? enumerable) =>
         enumerable switch
         {
             null => false,
@@ -62,7 +62,8 @@ public static class EnumerableExtensions
     /// <param name="source">The list itself.</param>
     /// <param name="predicate">Condition of the element to search for.</param>
     /// <returns>If found, an element of type T; otherwise default(T).</returns>
-    public static T FindInEnumerable<T>(this IEnumerable<T> source, Func<T, bool> predicate = null)
+    [return: MaybeNull]
+    public static T FindInEnumerable<T>(this IEnumerable<T> source, Func<T, bool>? predicate = null)
     {
         return source switch
         {
@@ -74,7 +75,7 @@ public static class EnumerableExtensions
         bool Predicate(T i) => predicate?.Invoke(i) ?? true;
     }
 
-    public static bool None<T>(this IEnumerable<T> source, Func<T, bool> predicate = null) =>
+    public static bool None<T>(this IEnumerable<T> source, Func<T, bool>? predicate = null) =>
         predicate is null
             ? !source.Any()
             : !source.Any(predicate);
@@ -183,6 +184,7 @@ public static class EnumerableExtensions
     /// <param name="items">The items.</param>
     /// <param name="selector">The selector.</param>
     /// <returns></returns>
+    [return: MaybeNull]
     public static TResult MaxOrDefault<TItem, TResult>(this IEnumerable<TItem> items, Func<TItem, TResult> selector) =>
         items.Any()
             ? items.Max(selector)
@@ -195,7 +197,7 @@ public static class EnumerableExtensions
     /// <param name="items">The items.</param>
     /// <returns>The joined string.</returns>
     public static string ToJoinedString<TItem>(this IEnumerable<TItem> items) =>
-        string.Join(", ", [.. items.Select(i => i.ToString())]);
+        string.Join(", ", [.. items.Select(i => i?.ToString())]);
 
     /// <summary>
     /// Converts <see cref="IEnumerable{T}" /> to the <see cref="ObservableCollection{T}" />.
@@ -270,7 +272,7 @@ public static class EnumerableExtensions
     /// </summary>
     /// <param name="enumerable">The enumerable.</param>
     /// <returns></returns>
-    public static Type GetItemType(this IEnumerable enumerable) => enumerable.GetType().GetElementType();
+    public static Type? GetItemType(this IEnumerable enumerable) => enumerable.GetType().GetElementType();
 
     /// <summary>
     /// Checks if two sequences contain the same elements without checking their order
@@ -374,7 +376,7 @@ public static class EnumerableExtensions
         return count;
     }
 
-    public static IEnumerable<T> GetAllItemsChildren<T>(this IEnumerable<T> items,
+    public static IEnumerable<T>? GetAllItemsChildren<T>(this IEnumerable<T> items,
                                                         Func<T, IEnumerable<T>> getChildrenFunc) =>
         items?.SelectMany(item => item.Yield().Concat(item.GetAllItemChildren(getChildrenFunc)));
 
@@ -390,7 +392,7 @@ public static class EnumerableExtensions
     public static IOrderedEnumerable<T> SortBy<T, TKey>(this IEnumerable<T> items,
                                                         Func<T, TKey> selector,
                                                         ListSortDirection order = ListSortDirection.Ascending,
-                                                        IComparer<TKey> comparer = null) =>
+                                                        IComparer<TKey>? comparer = null) =>
         order == ListSortDirection.Ascending
             ? items.OrderBy(selector, comparer)
             : items.OrderByDescending(selector, comparer);
@@ -402,7 +404,8 @@ public static class EnumerableExtensions
         foreach (var (item, counter) in items.Select(static (item, counter) => (item, counter)))
         {
             if (IsCompatibleObject(item)
-                && item.Equals(itemToFind))
+                // IsCompatibleObject gates the comparison; preserve the original (throw-on-null) dereference.
+                && item!.Equals(itemToFind))
             {
                 index = counter;
 

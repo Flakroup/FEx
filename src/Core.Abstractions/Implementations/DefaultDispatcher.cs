@@ -26,33 +26,33 @@ public class DefaultDispatcher : FExDispatcher
         _mainThreadSynchronizationContext = new();
     }
 
-    public override bool CheckAccess(object sender = null) => true; // Default implementation
+    public override bool CheckAccess(object? sender = null) => true; // Default implementation
 
-    public override void BeginInvokeOnMainThread(Action action, object sender = null) =>
+    public override void BeginInvokeOnMainThread(Action action, object? sender = null) =>
         _mainThreadSynchronizationContext.Post(_ => action(), null);
 
-    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object sender = null) =>
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object? sender = null) =>
         await Task.Run(() =>
         {
-            T result = default;
+            T result = default!;
             _mainThreadSynchronizationContext.Send(_ => result = action(), null);
 
             return result;
         });
 
-    public override async Task InvokeOnMainThreadAsync(Action action, object sender = null) =>
+    public override async Task InvokeOnMainThreadAsync(Action action, object? sender = null) =>
         await Task.Run(() => _mainThreadSynchronizationContext.Send(_ => action(), null));
 
-    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object sender = null) =>
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object? sender = null) =>
         await Task.Run(async () =>
         {
-            var task = Task.FromResult(default(T));
+            var task = Task.FromResult(default(T)!);
             _mainThreadSynchronizationContext.Send(_ => task = funcTask(), null);
 
             return await task;
         });
 
-    public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null) =>
+    public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object? sender = null) =>
         await Task.Run(async () =>
         {
             var task = Task.CompletedTask;

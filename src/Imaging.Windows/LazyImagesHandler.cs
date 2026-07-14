@@ -25,15 +25,16 @@ public class LazyImagesHandler
     public bool AnyOtherImageTaskIsRunning(string key) =>
         ImagesTasks.Where(x => x.Key != key).Select(x => x.Value).Any(x => x.IsRunning());
 
-    public async Task<bool> GetImageTaskAsync(string propertyName) => await ImagesTasks.TryGetKeyValue(propertyName);
+    public async Task<bool> GetImageTaskAsync(string propertyName) =>
+        await ImagesTasks.TryGetKeyValue<string, Task<bool>>(propertyName);
 
     public bool AddEnsureImageTask(string propertyName,
                                    Uri imageUrl,
-                                   Action<BitmapImage> imageSetAction,
-                                   WidthAndHeight size = null,
-                                   Action beforeAction = null,
-                                   Action afterAction = null,
-                                   WebRequestParams pars = null,
+                                   Action<BitmapImage?> imageSetAction,
+                                   WidthAndHeight? size = null,
+                                   Action? beforeAction = null,
+                                   Action? afterAction = null,
+                                   WebRequestParams? pars = null,
                                    bool refresh = false,
                                    bool forceLoad = true,
                                    bool forceMemoryStream = false)
@@ -59,11 +60,11 @@ public class LazyImagesHandler
     }
 
     private async Task<bool> EnsureImageAsync(Uri imageUrl,
-                                              Action<BitmapImage> imageSetAction,
-                                              WidthAndHeight size,
-                                              Action beforeAction,
-                                              Action afterAction,
-                                              WebRequestParams pars,
+                                              Action<BitmapImage?> imageSetAction,
+                                              WidthAndHeight? size,
+                                              Action? beforeAction,
+                                              Action? afterAction,
+                                              WebRequestParams? pars,
                                               bool refresh,
                                               bool forceLoad = true,
                                               bool forceMemoryStream = false)

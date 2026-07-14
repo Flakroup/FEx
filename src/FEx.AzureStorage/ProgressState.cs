@@ -14,8 +14,8 @@ public class ProgressState
     public long LoggedProgress { get; set; }
     public double LoggedPercentage { get; set; }
     public double TotalSize { get; private set; }
-    public string Name { get; private set; }
-    public object OperationString { get; private set; }
+    public string? Name { get; private set; }
+    public object? OperationString { get; private set; }
     public string ElapsedTime => Sw.GetTime();
     protected Stopwatch Sw { get; }
 
@@ -24,7 +24,7 @@ public class ProgressState
     {
     }
 
-    public ProgressState(IProgress<string> progress, StorageOperation operation, string name, double? totalSize)
+    public ProgressState(IProgress<string> progress, StorageOperation operation, string? name, double? totalSize)
     {
         OperationString = operation.GetEnumValueDescription();
         _progress = progress;
@@ -37,7 +37,7 @@ public class ProgressState
 
     public void Reset() => Reset(null, null, null);
 
-    public void Reset(string name, double? totalSize, StorageOperation? operation)
+    public void Reset(string? name, double? totalSize, StorageOperation? operation)
     {
         if (Sw.IsRunning)
             Sw.Stop();

@@ -7,7 +7,7 @@ namespace FEx.Telemetry.Sentry.Services;
 
 public sealed class SentryService : ISentryService, IDisposable
 {
-    private IDisposable _sdkHandle;
+    private IDisposable? _sdkHandle;
 
     public bool IsInitialized { get; private set; }
 

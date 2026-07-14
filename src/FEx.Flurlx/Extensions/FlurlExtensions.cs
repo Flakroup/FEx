@@ -10,12 +10,12 @@ public static class FlurlExtensions
 {
     public static IFlurlRequest FixBooleanQueryParameters(this IFlurlRequest req)
     {
-        (req?.Url).FixBooleanQueryParameters();
+        req.Url.FixBooleanQueryParameters();
 
         return req;
     }
 
-    public static Url FixBooleanQueryParameters(this Url url)
+    public static Url? FixBooleanQueryParameters(this Url? url)
     {
         if (url?.QueryParams?.Count > 0)
         {
@@ -36,7 +36,7 @@ public static class FlurlExtensions
         return url;
     }
 
-    public static HttpContent StripCharsetQuotes(this HttpContent content)
+    public static HttpContent? StripCharsetQuotes(this HttpContent? content)
     {
         var contentType = content?.Headers?.ContentType;
 

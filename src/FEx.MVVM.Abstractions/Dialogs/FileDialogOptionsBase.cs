@@ -93,5 +93,6 @@ public abstract class FileDialogOptionsBase<TDialog> : DialogOptionsBase<TDialog
         Filter = "All files (*.*)|*.*";
         Title = string.Empty;
         CheckPathExists = true;
+        FileNames = [string.Empty];
     }
 }

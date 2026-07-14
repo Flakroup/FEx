@@ -11,6 +11,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using NotNullWhenAttribute = System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
@@ -68,12 +69,12 @@ public static class StringExtensions
     public static Regex LettersAndNumbersRegex { get; } = new("^[a-zA-Z0-9]+$", RegexOptions.Compiled);
     public static Regex LettersNumbersAndUnderscoreRegex { get; } = new("^[a-zA-Z0-9_]+$", RegexOptions.Compiled);
 
-    public static string ToCamel(this string text) =>
+    public static string? ToCamel(this string text) =>
         !string.IsNullOrWhiteSpace(text)
             ? $"{char.ToUpperInvariant(text[0])}{text.Substring(1).ToLowerInvariant()}"
             : null;
 
-    public static string ToNiceString(this string text)
+    public static string? ToNiceString(this string text)
     {
         if (!string.IsNullOrWhiteSpace(text))
             return new([.. text.Where(static c => char.IsLetter(c) || c == '\'' || char.IsWhiteSpace(c))]);
@@ -81,7 +82,7 @@ public static class StringExtensions
         return null;
     }
 
-    public static string ToFormattedPhoneNumber(this string phoneNumber)
+    public static string? ToFormattedPhoneNumber(this string phoneNumber)
     {
         if (!string.IsNullOrWhiteSpace(phoneNumber))
             return phoneNumber[0] == '+'
@@ -184,7 +185,7 @@ public static class StringExtensions
             : throw new("Cannot unmarshal type decimal");
     }
 
-    public static Uri ToUri(this string source, Uri baseUri = null, UriKind kind = UriKind.Absolute)
+    public static Uri? ToUri(this string source, Uri? baseUri = null, UriKind kind = UriKind.Absolute)
     {
         if (source?.IsNotNullOrEmptyOrWhiteSpace() != true)
             return null;
@@ -325,7 +326,8 @@ public static class StringExtensions
     /// <param name="value">string to test.</param>
     /// <returns>True if string is Null or Empty otherwise False.</returns>
     [ContractAnnotation("null => true")]
-    public static bool IsNullOrEmptyString(this string value) => value is null || string.IsNullOrEmpty(value);
+    public static bool IsNullOrEmptyString([NotNullWhen(false)] this string? value) =>
+        value is null || string.IsNullOrEmpty(value);
 
     /// <summary>
     /// Gets a value indicating if the string is NOT Null or Empty.
@@ -333,7 +335,8 @@ public static class StringExtensions
     /// <param name="value">string to test.</param>
     /// <returns>True if string is Null or Empty otherwise False.</returns>
     [ContractAnnotation("null => false")]
-    public static bool IsNotNullOrEmptyString(this string value) => value is not null && !string.IsNullOrEmpty(value);
+    public static bool IsNotNullOrEmptyString([NotNullWhen(true)] this string? value) =>
+        value is not null && !string.IsNullOrEmpty(value);
 
     /// <summary>
     /// Removes the specified chars from current string.
@@ -658,14 +661,14 @@ public static class StringExtensions
         return value.Length;
     }
 
-    public static string ToBase64(this string str, Encoding enc = null)
+    public static string ToBase64(this string str, Encoding? enc = null)
     {
         enc ??= Encoding.UTF8;
 
         return Convert.ToBase64String(enc.GetBytes(str));
     }
 
-    public static string FromBase64(this string base64EncodedData, Encoding enc = null)
+    public static string FromBase64(this string base64EncodedData, Encoding? enc = null)
     {
         enc ??= Encoding.UTF8;
 
@@ -729,7 +732,7 @@ public static class StringExtensions
         return bytes;
     }
 
-    public static string GetGuidString(this Guid? guid) =>
+    public static string? GetGuidString(this Guid? guid) =>
         guid.HasValue
             ? guid.Value.GetGuidString()
             : null;
@@ -808,7 +811,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>MD5 of string</returns>
-    public static string GenerateMd5OfString(this string value)
+    public static string? GenerateMd5OfString(this string value)
     {
         if (value is null)
             return null;

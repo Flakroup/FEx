@@ -12,13 +12,13 @@ namespace FEx.DependencyInjection;
 
 public class FExServiceContainer : IFExServiceContainer
 {
-    private IDisposable _container;
+    private IDisposable? _container;
 
     private IDisposable Container => _container.GuardProperty();
 
     private bool _isDisposed;
 
-    public void RegisterServices<TContainer>(TContainer container, IServiceCollection services)
+    public void RegisterServices<TContainer>(TContainer container, IServiceCollection? services)
         where TContainer : class, IDisposable
     {
         if (_container is not null)
@@ -44,7 +44,7 @@ public class FExServiceContainer : IFExServiceContainer
         throw new InvalidOperationException($"Couldn't resolve type: {typeof(T).FullName}");
     }
 
-    public T ResolveOrDefault<T>(T fallback) =>
+    public T? ResolveOrDefault<T>(T? fallback) =>
         Container is IContainer<T>
             ? ResolveService<T>()
             : fallback;

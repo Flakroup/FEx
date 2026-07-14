@@ -13,8 +13,8 @@ public static class StreamExtensions
 
     public static async Task CopyStreamToStreamAsync(this Stream sourceStream,
                                                      Stream destStream,
-                                                     Action<double> progressMaximumSet = null,
-                                                     Action<double> progressValueSet = null,
+                                                     Action<double>? progressMaximumSet = null,
+                                                     Action<double>? progressValueSet = null,
                                                      long? length = null,
                                                      CancellationToken cancellationToken = default)
     {
@@ -71,8 +71,8 @@ public static class StreamExtensions
 
     public static void CopyStreamToStream(this Stream sourceStream,
                                           Stream destStream,
-                                          Action<double> progressMaximumSet = null,
-                                          Action<double> progressValueSet = null,
+                                          Action<double>? progressMaximumSet = null,
+                                          Action<double>? progressValueSet = null,
                                           long? length = null)
     {
         var buffer = new byte[BufferSize];
@@ -121,10 +121,11 @@ public static class StreamExtensions
 #pragma warning restore IDISP007
         await using (var ms = await input.CopyToMemoryStreamAsync(true))
 #endif
-            return ms.ToArray();
+            // A non-null, non-cancellable source (no token passed) never yields a null stream here.
+            return ms!.ToArray();
     }
 
-    public static async Task<MemoryStream> CopyToMemoryStreamAsync(this Stream streamToCopy,
+    public static async Task<MemoryStream?> CopyToMemoryStreamAsync(this Stream streamToCopy,
                                                                    bool disposeSource = false,
                                                                    CancellationToken cancellationToken = default)
     {
@@ -159,7 +160,7 @@ public static class StreamExtensions
         }
     }
 
-    public static MemoryStream CopyToMemoryStream(this Stream streamToCopy, bool disposeSource = false)
+    public static MemoryStream? CopyToMemoryStream(this Stream streamToCopy, bool disposeSource = false)
     {
         const int defaultBufferSize = 81920;
 
@@ -181,7 +182,7 @@ public static class StreamExtensions
         return stream;
     }
 
-    public static async Task<Stream> CopyToStreamAsync(this Stream streamToCopy,
+    public static async Task<Stream?> CopyToStreamAsync(this Stream streamToCopy,
                                                        CancellationToken cancellationToken = default) =>
         await streamToCopy.CopyToMemoryStreamAsync(false, cancellationToken);
 

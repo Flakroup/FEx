@@ -13,13 +13,13 @@ public class AppConfig : IAppConfig
 {
     public IViewDesign MainDesign { get; protected set; }
     public IViewDesign SplashDesign { get; protected set; }
-    public string SplashResourceName { get; protected set; }
-    public WidthAndHeight SplashSize { get; protected set; }
-    public string ApplicationLogoResourceName { get; protected set; }
-    public string WindowIconName { get; protected set; }
-    public ImageSource ApplicationLogo { get; protected set; }
-    public Image WindowIcon { get; protected set; }
-    public string ChangelogWindowHeader { get; protected set; }
+    public string? SplashResourceName { get; protected set; }
+    public WidthAndHeight? SplashSize { get; protected set; }
+    public string? ApplicationLogoResourceName { get; protected set; }
+    public string? WindowIconName { get; protected set; }
+    public ImageSource? ApplicationLogo { get; protected set; }
+    public Image? WindowIcon { get; protected set; }
+    public string? ChangelogWindowHeader { get; protected set; }
 
     public AppConfig()
         : this(null, null, null, null, null, null, null)
@@ -31,13 +31,13 @@ public class AppConfig : IAppConfig
     {
     }
 
-    public AppConfig(IViewDesign mainDesign,
-                     IViewDesign splashDesign,
-                     string splashResourceName,
-                     WidthAndHeight splashSize,
-                     string applicationLogoResourceName,
-                     string windowIconName,
-                     string changelogWindowHeader)
+    public AppConfig(IViewDesign? mainDesign,
+                     IViewDesign? splashDesign,
+                     string? splashResourceName,
+                     WidthAndHeight? splashSize,
+                     string? applicationLogoResourceName,
+                     string? windowIconName,
+                     string? changelogWindowHeader)
     {
         MainDesign = mainDesign ?? new ViewDesign();
         SplashDesign = splashDesign ?? new ViewDesign();
@@ -55,8 +55,8 @@ public class AppConfig : IAppConfig
         WindowIcon = GetWindowIcon();
     }
 
-    protected virtual TResource GetApplicationResource<TResource>(string resourceName,
-                                                                  Func<object, TResource> converter)
+    protected virtual TResource? GetApplicationResource<TResource>(string resourceName,
+                                                                  Func<object, TResource?> converter)
         where TResource : class
     {
         var resource = Application.Current.TryFindResource(resourceName);
@@ -79,17 +79,17 @@ public class AppConfig : IAppConfig
             new byte[] { 0, 0, 0, 0 },
             1);
 
-    protected Image GetWindowIcon() =>
+    protected Image? GetWindowIcon() =>
         WindowIconName is not null
             ? GetApplicationResource(WindowIconName, GetImage)
             : null;
 
-    protected ImageSource GetApplicationLogo() =>
+    protected ImageSource? GetApplicationLogo() =>
         ApplicationLogoResourceName is not null
             ? GetApplicationResource(ApplicationLogoResourceName, GetImageSource)
             : GetDefaultApplicationLogo();
 
-    private static ImageSource GetImageSource(object resource) =>
+    private static ImageSource? GetImageSource(object resource) =>
         resource switch
         {
             ImageSource imageSource => imageSource,
@@ -97,7 +97,7 @@ public class AppConfig : IAppConfig
             _ => null
         };
 
-    private static Image GetImage(object resource) =>
+    private static Image? GetImage(object resource) =>
         resource switch
         {
             ImageSource imageSource => new()

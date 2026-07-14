@@ -26,10 +26,11 @@ public class NuGetManager : AsyncInitializable
 
     private NuGetLogger<NuGetManager> Logger { get; }
     private List<Lazy<INuGetResourceProvider>> Providers { get; }
-    private SourceRepository SourceRepository { get; set; }
-    private PackageMetadataResource PackageMetadataResource { get; set; }
-    private PackageUpdateResource PackageUpdateResource { get; set; }
-    private DownloadResource DownloadResource { get; set; }
+    // Populated in OnInitializeAsync before any use (AsyncInitializable init-before-use invariant).
+    private SourceRepository SourceRepository { get; set; } = null!;
+    private PackageMetadataResource PackageMetadataResource { get; set; } = null!;
+    private PackageUpdateResource PackageUpdateResource { get; set; } = null!;
+    private DownloadResource DownloadResource { get; set; } = null!;
     private SourceCacheContext SourceCacheContext { get; }
 
     private ISettings Settings { get; }
@@ -113,7 +114,8 @@ public class NuGetManager : AsyncInitializable
 
                 if (isSuccess)
                 {
-                    using (var targetPackageStream = (FileStream)downloadResult.PackageStream)
+                    // isSuccess == true guarantees a non-null download result (see RestorePackageAsync).
+                    using (var targetPackageStream = (FileStream)downloadResult!.PackageStream)
                     {
                         var bqFile = new FileInfo(Path.Combine(backupDirectory.FullName,
                             Path.GetFileName(targetPackageStream.Name)));
@@ -122,8 +124,8 @@ public class NuGetManager : AsyncInitializable
 
                         if (bqFile.Exists)
                         {
-                            string targetContentHash = null;
-                            string bqContentHash = null;
+                            string? targetContentHash = null;
+                            string? bqContentHash = null;
 
                             try
                             {
@@ -164,7 +166,9 @@ public class NuGetManager : AsyncInitializable
                 }
                 else
                 {
-                    retry = downloadResult.Status != DownloadResourceResultStatus.NotFound;
+                    // A failed-but-non-null result carries a Status; a null result here preserves the
+                    // pre-nullable behaviour of throwing (caught by the outer try) rather than looping.
+                    retry = downloadResult!.Status != DownloadResourceResultStatus.NotFound;
                 }
             }
 
@@ -181,7 +185,7 @@ public class NuGetManager : AsyncInitializable
         }
     }
 
-    public async Task<(DownloadResourceResult result, bool isSuccess)> RestorePackageByIdAsync(
+    public async Task<(DownloadResourceResult? result, bool isSuccess)> RestorePackageByIdAsync(
         string packageId,
         bool includePrerelease = false,
         bool includeUnlisted = false,
@@ -235,13 +239,13 @@ public class NuGetManager : AsyncInitializable
         return false;
     }
 
-    public async Task<(DownloadResourceResult result, bool isSuccess)> RestorePackageAsync(
+    public async Task<(DownloadResourceResult? result, bool isSuccess)> RestorePackageAsync(
         PackageIdentity pkgToRestore,
         DownloadResource downloadResource,
         SourceCacheContext sourceCacheContext,
         ISettings settings,
         bool directDownload = false,
-        string directDownloadDirectory = null)
+        string? directDownloadDirectory = null)
     {
         if (pkgToRestore is not null)
             try
@@ -267,7 +271,7 @@ public class NuGetManager : AsyncInitializable
     }
 
     public async Task<FileInfo[]> GetNuGetsToPublishOnNuGetOrgAsync(FileInfo[] allNuGets,
-                                                                    HashSet<string> excludedPackageNames = null,
+                                                                    HashSet<string>? excludedPackageNames = null,
                                                                     params string[] packagesToPublish)
     {
         var packageMetadataResource = await GetNuGetOrgPackageMetadataResourceAsync();
@@ -280,7 +284,7 @@ public class NuGetManager : AsyncInitializable
 
     public async Task<FileInfo[]> GetNuGetsToPublishAsync(PackageMetadataResource packageMetadataResource,
                                                           FileInfo[] allNuGets,
-                                                          HashSet<string> excludedPackageNames = null,
+                                                          HashSet<string>? excludedPackageNames = null,
                                                           params string[] packagesToPublish)
     {
         using var sourceCacheContext = new SourceCacheContext();
@@ -308,7 +312,7 @@ public class NuGetManager : AsyncInitializable
         await RestorePackageByIdAsync("NuGet.CommandLine");
     }
 
-    private async Task<(DownloadResourceResult result, bool isSuccess)> RestorePackageByIdAsync(
+    private async Task<(DownloadResourceResult? result, bool isSuccess)> RestorePackageByIdAsync(
         string packageId,
         PackageMetadataResource packageMetadataResource,
         SourceCacheContext sourceCacheContext,
@@ -337,10 +341,10 @@ public class NuGetManager : AsyncInitializable
         PackageMetadataResource packageMetadataResource,
         SourceCacheContext sourceCacheContext,
         FileInfo file,
-        HashSet<string> excludedPackageNames = null,
+        HashSet<string>? excludedPackageNames = null,
         bool includePrerelease = false,
         bool includeUnlisted = false,
-        ICollection<string> filterIds = null,
+        ICollection<string>? filterIds = null,
         CancellationToken token = default)
     {
         PackageIdentity identity;
@@ -351,13 +355,15 @@ public class NuGetManager : AsyncInitializable
             identity = packageArchiveReader.NuspecReader.GetIdentity();
         }
 
-        if (excludedPackageNames.IsNotNullOrEmptyCollection()
+        if (excludedPackageNames is not null
+            && excludedPackageNames.IsNotNullOrEmptyCollection()
             && excludedPackageNames.Contains(identity.Id))
             return (file, false);
 
-        PackageSearchMetadataRegistration[] listedPackages = null;
+        PackageSearchMetadataRegistration[]? listedPackages = null;
 
-        if (filterIds.IsNullOrEmptyCollection()
+        if (filterIds is null
+            || filterIds.IsNullOrEmptyCollection()
             || filterIds.Contains(identity.Id))
             listedPackages =
                 (await packageMetadataResource.GetMetadataAsync(identity.Id,

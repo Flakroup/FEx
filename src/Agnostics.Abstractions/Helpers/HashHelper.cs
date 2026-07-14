@@ -1,15 +1,17 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.Agnostics.Abstractions.Helpers;
 
 public static class HashHelper
 {
-    public static string GetHashString(this byte[] hash,
-                                       bool removeDashes = true,
-                                       bool toLower = true,
-                                       bool asBase64String = false)
+    [return: NotNullIfNotNull(nameof(hash))]
+    public static string? GetHashString(this byte[]? hash,
+                                        bool removeDashes = true,
+                                        bool toLower = true,
+                                        bool asBase64String = false)
     {
-        string hashString = null;
+        string? hashString = null;
 
         if (hash is not null)
         {

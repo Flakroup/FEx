@@ -15,7 +15,7 @@ public sealed class MsalAuthService : IOneDriveAuthService
     private readonly OneDriveOptions _options;
     private readonly IFExLogger _logger;
     private readonly SemaphoreSlim _appLock = new(1, 1);
-    private IPublicClientApplication _app;
+    private IPublicClientApplication? _app;
 
     public MsalAuthService(OneDriveOptions options, IFExLogger logger)
     {

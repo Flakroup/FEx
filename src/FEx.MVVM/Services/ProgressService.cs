@@ -18,7 +18,7 @@ public sealed class ProgressService : SubscriberBase, IProgressService
 {
     private static readonly Lazy<ProgressService> _lazy = new(() => new());
 
-    public static string MainContainerId { get; private set; }
+    public static string? MainContainerId { get; private set; }
 
     public static ProgressService Instance => _lazy.Value;
 
@@ -165,7 +165,8 @@ public sealed class ProgressService : SubscriberBase, IProgressService
         var properties = Containers[id]
             .AsDictionary(BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public);
 
-        properties.ForEachInEnumerable(kv => ReportToListener(def, kv.Key, kv.Value));
+        // Property snapshot may hold null values (e.g. unset string properties); Report models the carrier as non-null object, preserving pre-nullable pass-through.
+        properties.ForEachInEnumerable(kv => ReportToListener(def, kv.Key, kv.Value!));
     }
 
     private void DetachContainer(string containerId)

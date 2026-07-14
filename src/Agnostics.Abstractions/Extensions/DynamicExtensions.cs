@@ -16,7 +16,7 @@ public static class DynamicExtensions
     /// <param name="expandoObject">The expando object.</param>
     /// <returns></returns>
     public static IEnumerable<string> GetDynamicMemberNames(this ExpandoObject expandoObject) =>
-        ((IDictionary<string, object>)expandoObject).Keys;
+        ((IDictionary<string, object?>)expandoObject).Keys;
 
     /// <summary>
     /// Adds the properties from dictionary.
@@ -27,9 +27,9 @@ public static class DynamicExtensions
     /// dynamic
     /// </returns>
     public static dynamic AddPropertiesFromDictionary(this ExpandoObject eo,
-                                                      IDictionary<string, object> propsDictionary)
+                                                      IDictionary<string, object?> propsDictionary)
     {
-        ICollection<KeyValuePair<string, object>> eoColl = eo;
+        ICollection<KeyValuePair<string, object?>> eoColl = eo;
 
         foreach (var kvp in propsDictionary)
             eoColl.Add(kvp);

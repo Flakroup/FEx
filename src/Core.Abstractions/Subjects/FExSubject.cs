@@ -18,7 +18,7 @@ public class FExSubject<T> : IFExSubject<T>
     {
     }
 
-    public FExSubject(ISubject<T> subject)
+    public FExSubject(ISubject<T>? subject)
     {
         _subject = subject ?? new Subject<T>();
         _syncSubject = Subject.Synchronize(_subject);

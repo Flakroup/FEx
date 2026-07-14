@@ -20,11 +20,11 @@ public class EnumToVisibilityConverter : IValueConverter
     /// <returns>
     /// A converted value. If the method returns null, the valid null value is used.
     /// </returns>
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         var result = value is not null
                      && parameter is not null
-                     && value.ToString().Equals(parameter.ToString(), StringComparison.InvariantCultureIgnoreCase);
+                     && string.Equals(value.ToString(), parameter.ToString(), StringComparison.InvariantCultureIgnoreCase);
 
         return result
             ? Visibility.Visible
@@ -39,5 +39,5 @@ public class EnumToVisibilityConverter : IValueConverter
     /// <param name="parameter"></param>
     /// <param name="culture"></param>
     /// <returns></returns>
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
+    public object? ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
 }

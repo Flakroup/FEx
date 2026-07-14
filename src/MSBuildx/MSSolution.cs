@@ -15,7 +15,7 @@ namespace FEx.MSBuildx;
 
 public class MSSolution : AsyncInitializable
 {
-    public string SolutionDir { get; }
+    public string? SolutionDir { get; }
     public IReadOnlyList<MSProject> Projects { get; }
     public SolutionFile Solution { get; }
     public string SolutionFilePath { get; }

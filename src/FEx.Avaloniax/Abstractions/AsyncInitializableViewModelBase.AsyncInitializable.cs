@@ -18,7 +18,7 @@ public abstract partial class AsyncInitializableViewModelBase
     protected readonly IFExLogger _logger;
     protected readonly ConcurrentDictionary<string, IAsyncInitializable> _dependencies;
 
-    protected Task _initializationTask;
+    protected Task? _initializationTask;
 
     private readonly FExSemaphoreSlim _initializationSemaphore;
     private readonly FExSemaphoreSlim _taskSemaphore;
@@ -116,7 +116,7 @@ public abstract partial class AsyncInitializableViewModelBase
         if (!failed.Any())
             return;
 
-        throw new AggregateException(failed.Select(static fail => fail.Error.Exception));
+        throw new AggregateException(failed.Select(static fail => fail.Error?.Exception).OfType<Exception>());
     }
 
     protected virtual async Task InitializeCoreAsync()

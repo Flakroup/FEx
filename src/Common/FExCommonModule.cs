@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Common.Abstractions.Interfaces;
 using FEx.Common.Helpers;
 using FEx.Common.Implementations;
@@ -18,8 +19,9 @@ namespace FEx.Common;
 [Register(typeof(ConnectivityChangedSubject), Scope.SingleInstance, typeof(IConnectivityChangedSubject))]
 public class FExCommonModule : InitializeModule<IFExCommonContainer, IServiceCollection>
 {
-    protected override void RegisterServices(IFExCommonContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExCommonContainer? container, IServiceCollection services)
     {
+        container = container.Guard(nameof(container));
         services.AddSingletonServiceUsingContainer<IConnectivityChangedSubject>(container);
         services.AddSingletonServiceUsingContainer<IMainThreadContextProvider>(container);
 

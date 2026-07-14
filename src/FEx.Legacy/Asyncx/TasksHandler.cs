@@ -25,21 +25,22 @@ public class TasksHandler : ITasksHandler
 
     public async Task RunAsync(Action task,
                                JobSpecs? specs,
-                               Action<JobSpecs?> pre,
-                               Action<bool, JobSpecs?> post,
+                               Action<JobSpecs?>? pre,
+                               Action<bool, JobSpecs?>? post,
                                AsyncMode asyncMode,
                                CancellationToken cancellationToken) =>
         await RunFuncAsync(task.Wrap, specs, pre, post, asyncMode, cancellationToken);
 
     public async Task<T> RunTaskAsync<T>(Func<Task<T>> task,
                                          JobSpecs? specs,
-                                         Action<JobSpecs?> pre,
-                                         Action<bool, JobSpecs?> post,
+                                         Action<JobSpecs?>? pre,
+                                         Action<bool, JobSpecs?>? post,
                                          AsyncMode asyncMode)
     {
         var taskId = Guid.NewGuid();
         _tasksInfoSubject.AddTask(taskId);
-        T result = default;
+        // default!: unconstrained T; result is overwritten on success and intentionally returned as default(T) on failure (may be null for reference T) - behavior unchanged.
+        T result = default!;
         var isSuccess = true;
 
         try
@@ -69,14 +70,15 @@ public class TasksHandler : ITasksHandler
 
     public async Task<T> RunFuncAsync<T>(Func<T> task,
                                          JobSpecs? specs,
-                                         Action<JobSpecs?> pre,
-                                         Action<bool, JobSpecs?> post,
+                                         Action<JobSpecs?>? pre,
+                                         Action<bool, JobSpecs?>? post,
                                          AsyncMode asyncMode,
                                          CancellationToken cancellationToken)
     {
         var taskId = Guid.NewGuid();
         _tasksInfoSubject.AddTask(taskId);
-        T result = default;
+        // default!: unconstrained T; result is overwritten on success and intentionally returned as default(T) on failure (may be null for reference T) - behavior unchanged.
+        T result = default!;
         var isSuccess = true;
 
         try
@@ -108,8 +110,8 @@ public class TasksHandler : ITasksHandler
 
     public async Task RunTaskAsync(Func<Task> task,
                                    JobSpecs? specs,
-                                   Action<JobSpecs?> pre,
-                                   Action<bool, JobSpecs?> post,
+                                   Action<JobSpecs?>? pre,
+                                   Action<bool, JobSpecs?>? post,
                                    AsyncMode asyncMode) =>
         await RunTaskAsync(task.WrapTaskAsync, specs, pre, post, asyncMode);
 }

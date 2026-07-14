@@ -94,7 +94,7 @@ public static class ListExtensions
         bool Predicate(T i) => predicate(i);
     }
 
-    public static List<T> GetRange<T>(this IList<T> sourceList, int index, int count)
+    public static List<T>? GetRange<T>(this IList<T> sourceList, int index, int count)
     {
         if (index > 0
             && count > 0
@@ -123,7 +123,7 @@ public static class ListExtensions
         return list;
     }
 
-    public static void SyncWithItem<T>(this IList<T> sourceList, T item, Action<T, T> syncAction = null)
+    public static void SyncWithItem<T>(this IList<T> sourceList, T item, Action<T, T>? syncAction = null)
         where T : IEquatable<T>
     {
         var synced = false;
@@ -206,7 +206,7 @@ public static class ListExtensions
     public static bool SyncWith<T>(this IList<T> sourceList,
                                    IList<T> syncedList,
                                    Func<T, T, bool> equalityComparator,
-                                   Action<T, T> syncAction = null)
+                                   Action<T, T>? syncAction = null)
     {
         if (sourceList is IConcurrentList<T> t)
             return t.Combo(items => SyncWithCore(items, syncedList, equalityComparator, syncAction));
@@ -220,7 +220,7 @@ public static class ListExtensions
     private static bool SyncWithCore<T>(IList<T> sourceList,
                                         IList<T> syncedList,
                                         Func<T, T, bool> equalityComparator,
-                                        Action<T, T> syncAction)
+                                        Action<T, T>? syncAction)
     {
         var hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !equalityComparator(x, y)));
 
@@ -253,7 +253,7 @@ public static class ListExtensions
         return hasChanged;
     }
 
-    public static bool SyncWith<T>(this IList<T> sourceList, IList<T> syncedList, Action<T, T> syncAction = null)
+    public static bool SyncWith<T>(this IList<T> sourceList, IList<T> syncedList, Action<T, T>? syncAction = null)
         where T : IEquatable<T>
     {
         if (sourceList is IConcurrentList<T> t)
@@ -263,7 +263,7 @@ public static class ListExtensions
     }
 
     // Non-concurrent core: must NOT re-check IConcurrentList (see the equalityComparator overload above for why).
-    private static bool SyncWithCore<T>(IList<T> sourceList, IList<T> syncedList, Action<T, T> syncAction)
+    private static bool SyncWithCore<T>(IList<T> sourceList, IList<T> syncedList, Action<T, T>? syncAction)
         where T : IEquatable<T>
     {
         var hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !x.Equals(y)));

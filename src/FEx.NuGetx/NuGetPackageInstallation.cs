@@ -7,7 +7,7 @@ namespace FEx.NuGetx;
 public class NuGetPackageInstallation : NotifyPropertyChanged
 {
     public string Name { get; }
-    public string Version { get; }
+    public string? Version { get; }
     public Uri Url { get; }
 
     public NuGetPackageInstallation(PackageIdentity package)

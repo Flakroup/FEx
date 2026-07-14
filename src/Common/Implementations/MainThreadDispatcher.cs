@@ -28,33 +28,33 @@ public class MainThreadDispatcher : FExDispatcher
     {
     }
 
-    public override bool CheckAccess(object sender = null) => _mainThreadContextProvider.Thread == Thread.CurrentThread;
+    public override bool CheckAccess(object? sender = null) => _mainThreadContextProvider.Thread == Thread.CurrentThread;
 
-    public override void BeginInvokeOnMainThread(Action action, object sender = null) =>
+    public override void BeginInvokeOnMainThread(Action action, object? sender = null) =>
         _mainThreadContextProvider.Context?.Post(_ => action(), null);
 
-    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object sender = null) =>
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object? sender = null) =>
         await Task.Run(() =>
         {
-            T result = default;
+            T result = default!;
             _mainThreadContextProvider.Context?.Send(_ => result = action(), null);
 
             return result;
         });
 
-    public override async Task InvokeOnMainThreadAsync(Action action, object sender = null) =>
+    public override async Task InvokeOnMainThreadAsync(Action action, object? sender = null) =>
         await Task.Run(() => _mainThreadContextProvider.Context?.Send(_ => action(), null));
 
-    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object sender = null) =>
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object? sender = null) =>
         await Task.Run(async () =>
         {
-            var task = Task.FromResult(default(T));
+            var task = Task.FromResult(default(T)!);
             _mainThreadContextProvider.Context?.Send(_ => task = funcTask(), null);
 
             return await task;
         });
 
-    public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender = null) =>
+    public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object? sender = null) =>
         await Task.Run(async () =>
         {
             var task = Task.CompletedTask;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
@@ -12,6 +13,7 @@ namespace FEx.WPFx.Converters;
 /// <typeparam name="TIn">The type of the input value.</typeparam>
 /// <typeparam name="TOut">The type of the output value.</typeparam>
 public abstract class BaseMappingConverter<TIn, TOut> : IValueConverter
+    where TIn : notnull
 {
     /// <summary>
     /// The default parameter.
@@ -21,11 +23,12 @@ public abstract class BaseMappingConverter<TIn, TOut> : IValueConverter
     /// <summary>
     /// The mappings;
     /// </summary>
-    private Dictionary<object, Dictionary<TIn, TOut>> _mappings;
+    private Dictionary<object, Dictionary<TIn, TOut>>? _mappings;
 
     /// <summary>
     /// Gets the default value.
     /// </summary>
+    [MaybeNull]
     protected virtual TOut DefaultValue => default;
 
     /// <summary>
@@ -57,7 +60,7 @@ public abstract class BaseMappingConverter<TIn, TOut> : IValueConverter
     /// <param name="parameter">The converter parameter to use.</param>
     /// <param name="culture">The culture to use in the converter.</param>
     /// <returns>A converted value. If the method returns null, the valid null value is used.</returns>
-    public virtual object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public virtual object? Convert(object? value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is not null)
         {
@@ -80,10 +83,10 @@ public abstract class BaseMappingConverter<TIn, TOut> : IValueConverter
     /// <param name="parameter">The converter parameter to use.</param>
     /// <param name="culture">The culture to use in the converter.</param>
     /// <returns>A converted value. If the method returns null, the valid null value is used.</returns>
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object? ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
         IDictionary<TIn, TOut> selectedMappings = Mappings[parameter ?? DefaultParameter];
-        var selectedPair = selectedMappings.FirstOrDefault(sm => sm.Value.Equals((TOut)value));
+        var selectedPair = selectedMappings.FirstOrDefault(sm => Equals(sm.Value, (TOut)value));
 
         return selectedPair.Key;
     }

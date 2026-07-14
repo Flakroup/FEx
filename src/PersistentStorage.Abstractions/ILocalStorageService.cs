@@ -13,7 +13,7 @@ public interface ILocalStorageService : IFileLocalStorageService
     /// <typeparam name="T">The type of cacheable object</typeparam>
     /// <param name="predicate">Predicate</param>
     /// <returns></returns>
-    IReadOnlyList<T> GetAll<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem;
+    IReadOnlyList<T> GetAll<T>(Expression<Func<T, bool>>? predicate) where T : ICacheableItem;
 
     /// <summary>
     /// Returns first object of collection or null if there are no results of query
@@ -21,7 +21,7 @@ public interface ILocalStorageService : IFileLocalStorageService
     /// <typeparam name="T">The type of cacheable object</typeparam>
     /// <param name="predicate">Predicate</param>
     /// <returns></returns>
-    T FirstOrDefault<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem;
+    T? FirstOrDefault<T>(Expression<Func<T, bool>>? predicate) where T : ICacheableItem;
 
     /// <summary>
     /// Insert a new object into collection.
@@ -52,7 +52,7 @@ public interface ILocalStorageService : IFileLocalStorageService
     /// <param name="item">Object to be updated or inserted</param>
     /// <param name="predicate">Predicate</param>
     /// <returns>True if insert entity or false if update entity</returns>
-    bool Upsert<T>(T item, Expression<Func<T, bool>> predicate) where T : ICacheableItem;
+    bool Upsert<T>(T item, Expression<Func<T, bool>>? predicate) where T : ICacheableItem;
 
     /// <summary>
     /// Insert or Update objects based on _id key or predicate.
@@ -60,7 +60,7 @@ public interface ILocalStorageService : IFileLocalStorageService
     /// <typeparam name="T">The type of cacheable object</typeparam>
     /// <param name="items">Objects to be updated or inserted</param>
     /// <param name="predicate">Predicate</param>
-    void Upsert<T>(IEnumerable<T> items, Expression<Func<T, bool>> predicate) where T : ICacheableItem;
+    void Upsert<T>(IEnumerable<T> items, Expression<Func<T, bool>>? predicate) where T : ICacheableItem;
 
     /// <summary>
     /// Delete entity based on _id key
@@ -83,7 +83,7 @@ public interface ILocalStorageService : IFileLocalStorageService
     /// <typeparam name="T">The type of cacheable object</typeparam>
     /// <param name="predicate">Predicate</param>
     /// <returns></returns>
-    bool DeleteAll<T>(Expression<Func<T, bool>> predicate) where T : ICacheableItem;
+    bool DeleteAll<T>(Expression<Func<T, bool>>? predicate) where T : ICacheableItem;
 
     /// <summary>
     /// Deletes all items in provided items collection and replaces it with that items

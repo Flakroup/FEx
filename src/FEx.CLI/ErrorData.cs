@@ -5,17 +5,17 @@ namespace FEx.CLI;
 
 public class ErrorData
 {
-    private NameInfo _nameInfo;
+    private NameInfo? _nameInfo;
 
     public ErrorType Tag { get; }
 
-    public string NameInfoString { get; private set; }
-    public string Token { get; }
-    public string SetName { get; }
-    public string Verb { get; }
-    public Exception Exception { get; }
+    public string? NameInfoString { get; private set; }
+    public string? Token { get; }
+    public string? SetName { get; }
+    public string? Verb { get; }
+    public Exception? Exception { get; }
 
-    public NameInfo NameInfo
+    public NameInfo? NameInfo
     {
         get => _nameInfo;
         private set
@@ -28,7 +28,7 @@ public class ErrorData
         }
     }
 
-    public ErrorData(ErrorType tag, NameInfo nameInfo, string token, string setName, string verb, Exception exception)
+    public ErrorData(ErrorType tag, NameInfo? nameInfo, string? token, string? setName, string? verb, Exception? exception)
     {
         Tag = tag;
         NameInfo = nameInfo;

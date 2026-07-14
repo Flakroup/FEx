@@ -18,7 +18,7 @@ internal sealed class DelegatingAccessTokenProvider : IAccessTokenProvider
     }
 
     public Task<string> GetAuthorizationTokenAsync(Uri uri,
-                                                   Dictionary<string, object> additionalAuthenticationContext,
-                                                   CancellationToken cancellationToken) =>
+                                                   Dictionary<string, object>? additionalAuthenticationContext = null,
+                                                   CancellationToken cancellationToken = default) =>
         _tokenFactory(cancellationToken);
 }

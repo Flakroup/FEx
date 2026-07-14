@@ -23,37 +23,37 @@ public class AvaloniaDispatcher : FExDispatcher
     {
     }
 
-    public override bool CheckAccess(object sender) => Dispatcher.CheckAccess();
+    public override bool CheckAccess(object? sender = null) => Dispatcher.CheckAccess();
 
-    public override void InvokeOnIdleMainThread(Action action, object sender) =>
+    public override void InvokeOnIdleMainThread(Action action, object? sender = null) =>
         Dispatcher.Invoke(action, DispatcherPriority.ApplicationIdle);
 
-    public override T InvokeOnIdleMainThread<T>(Func<T> action, object sender) =>
+    public override T InvokeOnIdleMainThread<T>(Func<T> action, object? sender = null) =>
         Dispatcher.Invoke(action, DispatcherPriority.ApplicationIdle);
 
-    public override void InvokeOnMainThread(Action action, object sender) => Dispatcher.Invoke(action);
+    public override void InvokeOnMainThread(Action action, object? sender = null) => Dispatcher.Invoke(action);
 
-    public override T InvokeOnMainThread<T>(Func<T> action, object sender) => Dispatcher.Invoke(action);
+    public override T InvokeOnMainThread<T>(Func<T> action, object? sender = null) => Dispatcher.Invoke(action);
 
-    public override async Task InvokeOnIdleMainThreadAsync(Action action, object sender) =>
+    public override async Task InvokeOnIdleMainThreadAsync(Action action, object? sender = null) =>
         await Dispatcher.InvokeAsync(action, DispatcherPriority.ApplicationIdle);
 
-    public override async Task<T> InvokeOnIdleMainThreadAsync<T>(Func<T> action, object sender) =>
+    public override async Task<T> InvokeOnIdleMainThreadAsync<T>(Func<T> action, object? sender = null) =>
         await Dispatcher.InvokeAsync(action, DispatcherPriority.ApplicationIdle);
 
-    public override async Task InvokeOnMainThreadAsync(Action action, object sender) =>
+    public override async Task InvokeOnMainThreadAsync(Action action, object? sender = null) =>
         await Dispatcher.InvokeAsync(action);
 
-    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object sender) =>
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object? sender = null) =>
         await Dispatcher.InvokeAsync(action);
 
-    public override void BeginInvokeOnMainThread(Action action, object sender) =>
+    public override void BeginInvokeOnMainThread(Action action, object? sender = null) =>
         FExCoreStatics.AsyncHelper.FireAndForget(() => Dispatcher.Invoke(action), AsyncMode.ThreadPool);
 
-    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object sender) =>
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object? sender = null) =>
         await Dispatcher.InvokeAsync(funcTask);
 
-    public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender) =>
+    public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object? sender = null) =>
         await Dispatcher.InvokeAsync(funcTask);
 
     public override void SendInContext(Action action, object sender, bool useMain, uint? timeout = 3000) =>

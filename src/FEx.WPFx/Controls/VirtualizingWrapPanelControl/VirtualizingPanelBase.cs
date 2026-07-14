@@ -37,13 +37,13 @@ public abstract class VirtualizingPanelBase : VirtualizingPanel, IScrollInfo
             typeof(VirtualizingPanelBase),
             new FrameworkPropertyMetadata(3));
 
-    private DependencyObject _itemsOwner;
-    private ItemContainerGenerator _itemContainerGenerator;
+    private DependencyObject? _itemsOwner;
+    private ItemContainerGenerator? _itemContainerGenerator;
 
     private Visibility _previousVerticalScrollBarVisibility = Visibility.Collapsed;
     private Visibility _previousHorizontalScrollBarVisibility = Visibility.Collapsed;
 
-    public ScrollViewer ScrollOwner { get; set; }
+    public ScrollViewer? ScrollOwner { get; set; }
 
     public bool CanVerticallyScroll { get; set; }
     public bool CanHorizontallyScroll { get; set; }

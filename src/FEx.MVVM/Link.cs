@@ -8,12 +8,12 @@ namespace FEx.MVVM;
 
 public class Link : ILink
 {
-    private readonly Action<ILink, object, object> _onPropertyChange;
+    private readonly Action<ILink, object?, object?> _onPropertyChange;
     private readonly ILinkableNotifyPropertyChanged _sender;
     private readonly Func<ILinkableNotifyPropertyChanged, object> _getPropertyValue;
-    private readonly ILink _parentLink;
-    private ConcurrentDictionary<Guid, ILink> _childLinks;
-    private object _lastValue;
+    private readonly ILink? _parentLink;
+    private ConcurrentDictionary<Guid, ILink>? _childLinks;
+    private object? _lastValue;
     private bool _isUnlinked;
 
     public Type PropertyType { get; }
@@ -26,7 +26,7 @@ public class Link : ILink
                 ILinkableNotifyPropertyChanged sender,
                 string propertyName,
                 Func<ILinkableNotifyPropertyChanged, object> getPropertyValue,
-                Action<ILink, object, object> onPropertyChange,
+                Action<ILink, object?, object?> onPropertyChange,
                 object defaultValue)
         : this(propertyType, sender, propertyName, getPropertyValue, onPropertyChange, defaultValue, null)
     {
@@ -36,9 +36,9 @@ public class Link : ILink
                 ILinkableNotifyPropertyChanged sender,
                 string propertyName,
                 Func<ILinkableNotifyPropertyChanged, object> getPropertyValue,
-                Action<ILink, object, object> onPropertyChange,
+                Action<ILink, object?, object?> onPropertyChange,
                 object defaultValue,
-                ILink parentLink)
+                ILink? parentLink)
     {
         _sender = sender.Guard(nameof(sender));
         PropertyType = propertyType.Guard(nameof(propertyType));
@@ -52,7 +52,8 @@ public class Link : ILink
 
     public void UnlinkChildren(bool resetPropertyValue)
     {
-        if (_childLinks.IsNullOrEmptyCollection())
+        if (_childLinks is null
+            || _childLinks.IsEmpty)
             return;
 
         foreach (var key in _childLinks.Keys.ToList())
@@ -78,7 +79,7 @@ public class Link : ILink
 
     public object GetPropertyValue() => _getPropertyValue(_sender);
 
-    public void OnPropertyChange(object oldValue, object newValue)
+    public void OnPropertyChange(object? oldValue, object? newValue)
     {
         if (_isUnlinked)
             throw new InvalidOperationException("You cannot call unlinked link");

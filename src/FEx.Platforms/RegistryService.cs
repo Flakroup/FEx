@@ -15,7 +15,7 @@ namespace FEx.Platforms;
 public class RegistryService : IRegistryService
 {
     private const string Release = "Release";
-    private static RegistryService _instance;
+    private static RegistryService? _instance;
 
     public static RegistryService Instance => _instance ??= new();
 
@@ -32,7 +32,7 @@ public class RegistryService : IRegistryService
             using var key = lm.OpenSubKey(registryKey);
 
             if (key is not null)
-                keys.AddRange([.. key.GetSubKeyNames().Select(key.OpenSubKey)]);
+                keys.AddRange(key.GetSubKeyNames().Select(key.OpenSubKey).OfType<RegistryKey>());
         }
 
         using (var lm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
@@ -40,7 +40,7 @@ public class RegistryService : IRegistryService
             using var key = lm.OpenSubKey(registry64Key);
 
             if (key is not null)
-                keys.AddRange([.. key.GetSubKeyNames().Select(key.OpenSubKey)]);
+                keys.AddRange(key.GetSubKeyNames().Select(key.OpenSubKey).OfType<RegistryKey>());
         }
 
         return keys;
@@ -63,9 +63,9 @@ public class RegistryService : IRegistryService
             if (versionKeyName.StartsWith("v"))
             {
                 using var versionKey = ndpKey.OpenSubKey(versionKeyName);
-                var name = (string)versionKey!.GetValue("Version", "");
-                var sp = versionKey.GetValue("SP", "").ToString();
-                var install = versionKey.GetValue("Install", "").ToString();
+                var name = (string)(versionKey!.GetValue("Version", "") ?? "");
+                var sp = versionKey.GetValue("SP", "")?.ToString();
+                var install = versionKey.GetValue("Install", "")?.ToString();
 
                 if (name.Length != 0)
                 {
@@ -87,9 +87,9 @@ public class RegistryService : IRegistryService
                             name = (string)(subKey?.GetValue("Version", "") ?? "");
 
                             if (name.Length != 0)
-                                sp = subKey?.GetValue("SP", "").ToString() ?? "";
+                                sp = subKey?.GetValue("SP", "")?.ToString() ?? "";
 
-                            install = subKey?.GetValue("Install", "").ToString() ?? "";
+                            install = subKey?.GetValue("Install", "")?.ToString() ?? "";
 
                             if (install.Length == 0) //no install info, must be later.
                                 versions.Add(new(name)); //}  {name}");
@@ -107,7 +107,7 @@ public class RegistryService : IRegistryService
         return versions;
     }
 
-    public List<Version> Get45PlusFromRegistry()
+    public List<Version>? Get45PlusFromRegistry()
     {
         const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
 
@@ -118,16 +118,16 @@ public class RegistryService : IRegistryService
             : null;
     }
 
-    public RegistryKey GetClassesRootSubKey(string subKey, bool writable) =>
+    public RegistryKey? GetClassesRootSubKey(string subKey, bool writable) =>
         RunClassesRootFunc(lm => GetSubKey(lm, subKey, writable));
 
-    public RegistryKey GetLocalMachineSubKey(string subKey, bool writable) =>
+    public RegistryKey? GetLocalMachineSubKey(string subKey, bool writable) =>
         RunLocalMachineFunc(lm => GetSubKey(lm, subKey, writable));
 
-    public RegistryKey GetCurrentUserSubKey(string subKey, bool writable) =>
+    public RegistryKey? GetCurrentUserSubKey(string subKey, bool writable) =>
         RunCurrentUserFunc(cu => GetSubKey(cu, subKey, writable));
 
-    public RegistryKey GetSubKey(RegistryKey registry, string subKey, bool writable) =>
+    public RegistryKey? GetSubKey(RegistryKey registry, string subKey, bool writable) =>
         registry.OpenSubKey(subKey, writable);
 
     public RegistryKey GetOrAddCurrentUserSubKey(string subKey, bool writable) =>
@@ -153,7 +153,7 @@ public class RegistryService : IRegistryService
     public string GetStandardBrowserPath()
     {
         var browserPath = string.Empty;
-        RegistryKey browserKey = null;
+        RegistryKey? browserKey = null;
 
         try
         {
@@ -191,10 +191,10 @@ public class RegistryService : IRegistryService
         }
 
         //Return default browsers path
-        return browserPath;
+        return browserPath ?? string.Empty;
     }
 
-    public string GetDefaultExtension(string mimeType)
+    public string? GetDefaultExtension(string? mimeType)
     {
         using var key = GetClassesRootSubKey($@"MIME\Database\Content Type\{mimeType}", false);
         const string name = "Extension";
@@ -202,14 +202,14 @@ public class RegistryService : IRegistryService
         return key?.GetValue(name, null)?.ToString();
     }
 
-    public string GetDefaultMimeType(string extension)
+    public string? GetDefaultMimeType(string extension)
     {
         using var key = GetClassesRootSubKey(@"MIME\Database\Content Type", false);
 
         return key?.GetSubKeyNames().FirstOrDefault(subKey => GetDefaultExtension(subKey) == extension);
     }
 
-    public string GetDefaultExtension(MediaTypes mediaType) => GetDefaultExtension(mediaType.GetEnumValueDescription());
+    public string? GetDefaultExtension(MediaTypes mediaType) => GetDefaultExtension(mediaType.GetEnumValueDescription());
 
     public string GetOrAddRegistryKeyStringValue(string path, string keyName, Func<string> getNewValue)
     {
@@ -219,7 +219,8 @@ public class RegistryService : IRegistryService
             && !reg.GetValueNames().Contains(keyName))
             reg.SetValue(keyName, getNewValue(), RegistryValueKind.String);
 
-        return reg.GetKeyValue<string>(keyName);
+        // The value was set above if missing, so it is present on read; Guard throws if it unexpectedly is not.
+        return reg.GetKeyValue<string>(keyName).Guard(nameof(keyName));
     }
 
     // Checking the version using >= will enable forward compatibility.
@@ -298,7 +299,10 @@ public class RegistryService : IRegistryService
 
         using var _ = root.CreateSubKey(subKey);
 
-        return GetSubKey(root, subKey, writable);
+        // The subkey was just created above, so re-opening it must succeed; Guard throws if it unexpectedly does not.
+#pragma warning disable IDISP004 // Guard returns the same instance; ownership passes to the caller
+        return GetSubKey(root, subKey, writable).Guard(nameof(subKey));
+#pragma warning restore IDISP004
     }
 }
 #pragma warning restore CA1416

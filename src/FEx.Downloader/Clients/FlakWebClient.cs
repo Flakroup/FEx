@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Agnostics.Abstractions.Models;
 using FEx.Core.Abstractions.Extensions;
@@ -31,24 +32,24 @@ public sealed class FlakWebClient : WebClient
     public HttpStatusCode StatusCode { get; private set; }
     public bool HeadOnly { get; set; }
 
-    public Uri ResponseUri { get; private set; }
+    public Uri? ResponseUri { get; private set; }
 
-    public Uri RequestUri { get; private set; }
+    public Uri? RequestUri { get; private set; }
 
-    public Uri DownloadedFileAddress { get; private set; }
+    public Uri? DownloadedFileAddress { get; private set; }
 
     public FlakWebClient()
         : this(null, null)
     {
     }
 
-    public FlakWebClient(WebRequestParams pars)
+    public FlakWebClient(WebRequestParams? pars)
         : this(pars, null)
     {
     }
 
-    public FlakWebClient(WebRequestParams pars,
-                         Action<object, DownloadProgressChangedEventArgs> downloadProgressHandler)
+    public FlakWebClient(WebRequestParams? pars,
+                         Action<object?, DownloadProgressChangedEventArgs>? downloadProgressHandler)
     {
         pars ??= new();
 
@@ -72,15 +73,20 @@ public sealed class FlakWebClient : WebClient
     /// <returns></returns>
     public List<Cookie> CookieMonster()
     {
-        var table = (Hashtable)Pars.Cookies.GetType()
+        var cookies = Pars.Cookies.Guard(nameof(Pars.Cookies));
+
+        var domainTable = cookies.GetType()
             .InvokeMember("m_domainTable",
                 BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance,
                 null,
-                Pars.Cookies,
-                []);
+                cookies,
+                [])
+            .Guard(nameof(cookies));
+
+        var table = (Hashtable)domainTable;
 
         return [.. table.Keys.Cast<object>()
-            .SelectMany(key => Pars.Cookies.GetCookies(new($"http://{key}/"))
+            .SelectMany(key => cookies.GetCookies(new($"http://{key}/"))
 #if NETSTANDARD
                     .Cast<Cookie>()
 #endif
@@ -118,9 +124,13 @@ public sealed class FlakWebClient : WebClient
     {
         try
         {
+            // IDISP001: the returned WebResponse is owned and disposed by the WebClient infrastructure that
+            // calls this override, not by this method - so it is intentionally neither disposed nor tracked here.
+#pragma warning disable IDISP001
             var res = base.GetWebResponse(request);
             ReadCookies(res);
             var response = (HttpWebResponse)res;
+#pragma warning restore IDISP001
 
             if (response is not null)
             {
@@ -131,19 +141,21 @@ public sealed class FlakWebClient : WebClient
                 StatusCode = response.StatusCode;
             }
 
-            return response;
+            // Base contract is non-null, but netstandard reference assemblies annotate the cast result as
+            // maybe-null; a null response is propagated to the caller by existing design (failed request).
+            return response!;
         }
         catch (Exception ex)
         {
             ex.HandleException(false);
-            var exception = ex as WebException;
 
-            if ((HttpWebResponse)exception?.Response is not null
-                && ((HttpWebResponse)exception.Response).StatusCode == HttpStatusCode.NotFound)
+            if (ex is WebException { Response: HttpWebResponse { StatusCode: HttpStatusCode.NotFound } })
                 Unreachable.Add(request.RequestUri.AbsoluteUri);
         }
 
-        return null;
+        // WebClient.GetWebResponse is non-null by base contract, but this override returns null on failure
+        // (unreachable request) by existing design.
+        return null!;
     }
 
     protected override WebResponse GetWebResponse(WebRequest request, IAsyncResult result)
@@ -214,6 +226,6 @@ public sealed class FlakWebClient : WebClient
             return;
 
         var cookies = response.Cookies;
-        Pars.Cookies.Add(cookies);
+        Pars.Cookies?.Add(cookies);
     }
 }

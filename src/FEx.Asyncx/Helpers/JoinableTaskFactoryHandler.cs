@@ -60,7 +60,7 @@ public class JoinableTaskFactoryHandler
         RunAsync(asyncMethod, null, JoinableTaskCreationOptions.None);
 
     public async Task<JoinableTask> RunAsync(Func<Task> asyncMethod,
-                                             string parentToken,
+                                             string? parentToken,
                                              JoinableTaskCreationOptions creationOptions)
     {
         if (!await _semaphore.WaitAsync(TimeSpan.Zero))
@@ -80,7 +80,7 @@ public class JoinableTaskFactoryHandler
         RunAsync(asyncMethod, null, JoinableTaskCreationOptions.None);
 
     public async Task<JoinableTask<T>> RunAsync<T>(Func<Task<T>> asyncMethod,
-                                                   string parentToken,
+                                                   string? parentToken,
                                                    JoinableTaskCreationOptions creationOptions)
     {
         if (!await _semaphore.WaitAsync(TimeSpan.Zero))

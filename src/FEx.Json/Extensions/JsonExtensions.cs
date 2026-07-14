@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -15,7 +16,7 @@ public static class JsonExtensions
 {
     public static string NullString { get; } = "\"null\"";
 
-    public static JsonSerializerSettings DefaultSettings => JsonConvert.DefaultSettings?.Invoke();
+    public static JsonSerializerSettings? DefaultSettings => JsonConvert.DefaultSettings?.Invoke();
 
     private static JsonSerializerSettings DefaultSettingsInstance { get; set; }
 
@@ -43,21 +44,23 @@ public static class JsonExtensions
 
     public static void ConfigureDefaultSettings(Action<JsonSerializerSettings> configuration)
     {
-        DefaultSettingsInstance = DefaultSettings;
+        // DefaultSettings is backed by DefaultSettingsInstance via the static ctor lambda,
+        // so it is non-null in practice; fall back to the current instance defensively.
+        DefaultSettingsInstance = DefaultSettings ?? DefaultSettingsInstance;
         configuration(DefaultSettingsInstance);
     }
 
-    public static string ToJson(this object self, JsonSerializerSettings settings, Formatting formatting) =>
+    public static string ToJson(this object self, JsonSerializerSettings? settings, Formatting formatting) =>
         JsonConvert.SerializeObject(self, formatting, settings ?? DefaultSettings);
 
     public static string ToJson(this object self) => self.ToJson(null, Formatting.None);
 
-    public static string ToJson(this object self, JsonSerializerSettings settings) =>
+    public static string ToJson(this object self, JsonSerializerSettings? settings) =>
         self.ToJson(settings, Formatting.None);
 
     public static string ToJson(this object self, Formatting formatting) => self.ToJson(null, formatting);
 
-    public static T FromJson<T>(this string json, JsonSerializerSettings settings, T fallback)
+    public static T? FromJson<T>(this string json, JsonSerializerSettings? settings, T? fallback)
     {
         try
         {
@@ -76,17 +79,18 @@ public static class JsonExtensions
         }
     }
 
-    public static T FromJson<T>(this string json) => json.FromJson<T>(null, default);
+    public static T? FromJson<T>(this string json) => json.FromJson<T>(null, default);
 
-    public static T FromJson<T>(this string json, JsonSerializerSettings settings) =>
+    public static T? FromJson<T>(this string json, JsonSerializerSettings? settings) =>
         json.FromJson<T>(settings, default);
 
-    public static object FromJson(this string json, JsonSerializerSettings settings) =>
-        JsonConvert.DeserializeObject(json, settings ?? DefaultSettings);
+    public static object? FromJson(this string json, JsonSerializerSettings? settings) =>
+        // DefaultSettings is backed by the static ctor and non-null; this overload needs non-null settings.
+        JsonConvert.DeserializeObject(json, settings ?? DefaultSettings!);
 
-    public static object FromJson(this string json) => json.FromJson(null);
+    public static object? FromJson(this string json) => json.FromJson(null);
 
-    public static object DeserializeFromStream(this Stream stream, JsonSerializerSettings settings)
+    public static object? DeserializeFromStream(this Stream stream, JsonSerializerSettings? settings)
     {
         var serializer = JsonSerializer.Create(settings ?? DefaultSettings);
 
@@ -96,9 +100,9 @@ public static class JsonExtensions
         return serializer.Deserialize(jsonTextReader);
     }
 
-    public static object DeserializeFromStream(this Stream stream) => stream.DeserializeFromStream(null);
+    public static object? DeserializeFromStream(this Stream stream) => stream.DeserializeFromStream(null);
 
-    public static T DeserializeFromStream<T>(this Stream stream, JsonSerializerSettings settings)
+    public static T? DeserializeFromStream<T>(this Stream stream, JsonSerializerSettings? settings)
     {
         var serializer = JsonSerializer.Create(settings ?? DefaultSettings);
 
@@ -108,7 +112,7 @@ public static class JsonExtensions
         return serializer.Deserialize<T>(jsonTextReader);
     }
 
-    public static T DeserializeFromStream<T>(this Stream stream) => stream.DeserializeFromStream<T>(null);
+    public static T? DeserializeFromStream<T>(this Stream stream) => stream.DeserializeFromStream<T>(null);
 
     /// <summary>
     /// Reformats the json.
@@ -133,12 +137,13 @@ public static class JsonExtensions
     /// <returns>
     /// T
     /// </returns>
-    public static T DeserializeToken<T>(this JToken jToken, JsonSerializerSettings settings) =>
+    public static T? DeserializeToken<T>(this JToken jToken, JsonSerializerSettings? settings) =>
         jToken.ToString().FromJson<T>(settings);
 
-    public static T DeserializeToken<T>(this JToken jToken) => jToken.DeserializeToken<T>(null);
+    public static T? DeserializeToken<T>(this JToken jToken) => jToken.DeserializeToken<T>(null);
 
-    public static string TrimJsonString(this string jsonValue)
+    [return: NotNullIfNotNull(nameof(jsonValue))]
+    public static string? TrimJsonString(this string? jsonValue)
     {
         jsonValue = jsonValue?.Trim();
 
@@ -162,8 +167,8 @@ public static class JsonExtensions
     }
 
     public static string PrettyPrintJson(this string json,
-                                         JsonLoadSettings loadSettings,
-                                         JsonSerializerSettings saveSettings,
+                                         JsonLoadSettings? loadSettings,
+                                         JsonSerializerSettings? saveSettings,
                                          Formatting formatting)
     {
         if (string.IsNullOrWhiteSpace(json))
@@ -191,18 +196,18 @@ public static class JsonExtensions
                                          JsonSerializerSettings saveSettings) =>
         json.PrettyPrintJson(loadSettings, saveSettings, Formatting.Indented);
 
-    public static T DeserializeFromFile<T>(this FileInfo file, JsonSerializerSettings settings)
+    public static T? DeserializeFromFile<T>(this FileInfo file, JsonSerializerSettings? settings)
     {
         using var fStream = file.OpenRead();
 
         return fStream.DeserializeFromStream<T>(settings);
     }
 
-    public static T DeserializeFromFile<T>(this FileInfo file) => file.DeserializeFromFile<T>(null);
+    public static T? DeserializeFromFile<T>(this FileInfo file) => file.DeserializeFromFile<T>(null);
 
     public static void SerializeToFile(this FileInfo file,
                                        object self,
-                                       JsonSerializerSettings settings,
+                                       JsonSerializerSettings? settings,
                                        Formatting formatting) =>
         File.WriteAllText(file.FullName, self.ToJson(settings, formatting));
 

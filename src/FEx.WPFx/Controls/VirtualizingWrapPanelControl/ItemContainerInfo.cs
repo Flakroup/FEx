@@ -59,7 +59,7 @@ internal class ItemContainerInfo : IItemContainerInfo
     public static bool operator !=(ItemContainerInfo obj1, ItemContainerInfo obj2) =>
         !ReferenceEquals(obj1?.UIElement, obj2?.UIElement);
 
-    public override bool Equals(object obj) =>
+    public override bool Equals(object? obj) =>
         obj is ItemContainerInfo other && ReferenceEquals(UIElement, other.UIElement);
 
     public override int GetHashCode() => UIElement.GetHashCode();

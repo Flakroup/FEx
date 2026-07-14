@@ -13,10 +13,10 @@ namespace FEx.AppSettings.Abstractions;
 
 public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserSettings
 {
-    private string _persistencePath;
+    private string? _persistencePath;
 
     [JsonIgnore]
-    public string PersistencePath
+    public string? PersistencePath
     {
         get => _persistencePath;
         private set => base.SetProperty(ref _persistencePath, value);
@@ -25,7 +25,7 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
     [JsonIgnore]
     public bool IsAsync { get; private set; }
 
-    public virtual void Initialize(string persistencePath, (bool hasBeenReadFromFile, bool isAsync) tuple)
+    public virtual void Initialize(string? persistencePath, (bool hasBeenReadFromFile, bool isAsync) tuple)
     {
         if (PersistencePath.IsNotNullOrEmptyString())
             FExCoreStatics.SynchronizedAccessService.RemoveLock(PersistencePath);
@@ -44,8 +44,8 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
 #pragma warning disable S2360
     public override bool SetProperty<TRet>(ref TRet backingField,
                                            TRet newValue,
-                                           Action<TRet> onPropertyChanged = null,
-                                           [CallerMemberName] string propertyName = null) =>
+                                           Action<TRet>? onPropertyChanged = null,
+                                           [CallerMemberName] string? propertyName = null) =>
 #pragma warning restore S2360
         base.SetProperty(ref backingField,
             newValue,
@@ -110,14 +110,14 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
 
 public abstract class BaseUserSettings<T> : BaseUserSettings where T : BaseUserSettings, new()
 {
-    public static T GetSettings(string persistencePath, bool isAsync)
+    public static T GetSettings(string? persistencePath, bool isAsync)
     {
         var content = persistencePath.IsNotNullOrEmptyString() && File.Exists(persistencePath)
             ? File.ReadAllText(persistencePath)
             : null;
 
         var config = content.IsNotNullOrEmptyString()
-            ? content.FromJson<T>()
+            ? content.FromJson<T>() ?? new()
             : new();
 
         config.Initialize(persistencePath, (content.IsNotNullOrEmptyString(), isAsync));
@@ -127,5 +127,5 @@ public abstract class BaseUserSettings<T> : BaseUserSettings where T : BaseUserS
 
     public static T GetSettings() => GetSettings(null, false);
 
-    public static T GetSettings(string persistencePath) => GetSettings(persistencePath, false);
+    public static T GetSettings(string? persistencePath) => GetSettings(persistencePath, false);
 }

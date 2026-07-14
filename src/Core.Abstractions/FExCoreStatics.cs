@@ -29,16 +29,16 @@ public class FExCoreStatics : StaticsBase
     private static readonly SynchronizedAccessService _defaultSynchronizedAccessServiceInstance;
     private static readonly AlphanumComparatorFast _defaultAlphanumComparatorFastInstance;
 
-    private static Func<IAsyncHelper> _asyncHelperFactory;
-    private static Func<IStackTraceProvider> _stackTraceProviderFactory;
-    private static Func<IFExDispatcher> _dispatcherFactory;
-    private static Func<IExceptionHandler> _exceptionHandlerFactory;
-    private static Func<ILogger> _loggerFactory;
-    private static Func<IMainThreadContextProvider> _mainThreadContextProviderFactory;
-    private static Func<IDeadlockMonitor> _deadlockMonitorFactory;
-    private static Func<IAppInfoProvider> _appInfoProviderFactory;
-    private static Func<ISynchronizedAccessService> _synchronizedAccessServiceFactory;
-    private static Func<AlphanumComparatorFast> _alphanumComparatorFastFactory;
+    private static Func<IAsyncHelper>? _asyncHelperFactory;
+    private static Func<IStackTraceProvider>? _stackTraceProviderFactory;
+    private static Func<IFExDispatcher>? _dispatcherFactory;
+    private static Func<IExceptionHandler>? _exceptionHandlerFactory;
+    private static Func<ILogger>? _loggerFactory;
+    private static Func<IMainThreadContextProvider>? _mainThreadContextProviderFactory;
+    private static Func<IDeadlockMonitor>? _deadlockMonitorFactory;
+    private static Func<IAppInfoProvider>? _appInfoProviderFactory;
+    private static Func<ISynchronizedAccessService>? _synchronizedAccessServiceFactory;
+    private static Func<AlphanumComparatorFast>? _alphanumComparatorFastFactory;
 
     /// <summary>
     /// Retrieves the <see cref="IAsyncHelper" /> instance.
@@ -141,16 +141,16 @@ public class FExCoreStatics : StaticsBase
     }
 
 #pragma warning disable S2360 // Optional parameters should not be used - Configure uses named arguments pattern, overloads impractical for 10 independent params
-    public static void Configure(Func<IStackTraceProvider> stackTraceProviderFactory = null,
-                                 Func<IFExDispatcher> dispatcherFactory = null,
-                                 Func<IAsyncHelper> asyncHelperFactory = null,
-                                 Func<ILogger> loggerFactory = null,
-                                 Func<IMainThreadContextProvider> mainThreadContextProviderFactory = null,
-                                 Func<IDeadlockMonitor> deadlockMonitorFactory = null,
-                                 Func<IAppInfoProvider> appInfoProviderFactory = null,
-                                 Func<IExceptionHandler> exceptionHandlerFactory = null,
-                                 Func<ISynchronizedAccessService> synchronizedAccessServiceFactory = null,
-                                 Func<AlphanumComparatorFast> alphanumComparatorFastFactory = null)
+    public static void Configure(Func<IStackTraceProvider>? stackTraceProviderFactory = null,
+                                 Func<IFExDispatcher>? dispatcherFactory = null,
+                                 Func<IAsyncHelper>? asyncHelperFactory = null,
+                                 Func<ILogger>? loggerFactory = null,
+                                 Func<IMainThreadContextProvider>? mainThreadContextProviderFactory = null,
+                                 Func<IDeadlockMonitor>? deadlockMonitorFactory = null,
+                                 Func<IAppInfoProvider>? appInfoProviderFactory = null,
+                                 Func<IExceptionHandler>? exceptionHandlerFactory = null,
+                                 Func<ISynchronizedAccessService>? synchronizedAccessServiceFactory = null,
+                                 Func<AlphanumComparatorFast>? alphanumComparatorFastFactory = null)
     {
         if (stackTraceProviderFactory is not null)
             _stackTraceProviderFactory = stackTraceProviderFactory;
@@ -188,36 +188,38 @@ public class FExCoreStatics : StaticsBase
 #pragma warning restore S2360
 
     #region Null/default helper types
+    // Null-object providers: every member intentionally returns null under a non-null interface
+    // contract (used as a no-op fallback where DI is unavailable). null! keeps that runtime behavior.
     private sealed class NullAppInfoProvider : IAppInfoProvider
     {
-        public string EntryAssemblyName => null;
-        public Assembly EntryAssembly => null;
-        public FileInfo EntryAssemblyLocation => null;
-        public string Name => null;
-        public Version Version => null;
-        public string VersionString => null;
-        public string Company => null;
-        public string Copyright => null;
-        public string NameAndVersionWithPrefix => null;
-        public string NameLineVersion => null;
-        public string NameLineVersionWithPrefix => null;
-        public string NameAndVersion => null;
-        public DirectoryInfo UserData => null;
-        public string UserDataPath => null;
-        public DirectoryInfo AppData => null;
-        public string AppDataPath => null;
-        public string UserSettingsPath => null;
+        public string EntryAssemblyName => null!;
+        public Assembly EntryAssembly => null!;
+        public FileInfo EntryAssemblyLocation => null!;
+        public string Name => null!;
+        public Version Version => null!;
+        public string VersionString => null!;
+        public string Company => null!;
+        public string Copyright => null!;
+        public string NameAndVersionWithPrefix => null!;
+        public string NameLineVersion => null!;
+        public string NameLineVersionWithPrefix => null!;
+        public string NameAndVersion => null!;
+        public DirectoryInfo UserData => null!;
+        public string UserDataPath => null!;
+        public DirectoryInfo AppData => null!;
+        public string AppDataPath => null!;
+        public string UserSettingsPath => null!;
         public IAppInfo AppInfo { get; } = new NullAppInfo();
 
         private sealed class NullAppInfo : IAppInfo
         {
-            public string Name => null;
-            public Version Version => null;
-            public string Company => null;
+            public string Name => null!;
+            public Version Version => null!;
+            public string Company => null!;
             public bool IsUIApp { get; set; } = false;
-            public DirectoryInfo UserData => null;
-            public DirectoryInfo AppData => null;
-            public string LogDirPath => null;
+            public DirectoryInfo UserData => null!;
+            public DirectoryInfo AppData => null!;
+            public string LogDirPath => null!;
         }
     }
     #endregion

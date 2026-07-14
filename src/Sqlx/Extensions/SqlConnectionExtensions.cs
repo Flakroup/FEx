@@ -43,7 +43,7 @@ public static class SqlConnectionExtensions
     public static IDictionary<string, object>[] RunSql(this SqlConnection connection, string sql) =>
         [.. connection.Query(sql).Cast<IDictionary<string, object>>()];
 
-    public static async Task<IList<string>> LoadDatabasesAsync(this SqlConnection connection)
+    public static async Task<IList<string?>> LoadDatabasesAsync(this SqlConnection connection)
     {
         const string sql = "SELECT name, database_id, create_date  FROM sys.databases";
 
@@ -55,14 +55,15 @@ public static class SqlConnectionExtensions
         const string sql = "select * from sys.tables order by name";
         var result = await connection.RunSqlAsync(sql);
 
-        return result.ToDictionary(x => Convert.ToString(x["name"]),
+        // name is a non-nullable sysname column; Guard throws if absent (a Dictionary null key would throw anyway).
+        return result.ToDictionary(x => Convert.ToString(x["name"]).Guard("name"),
             x => Convert.ToInt64(Convert.ToString(x["object_id"])));
     }
 
-    public static async Task<(long tableId, string[] columnNames)> LoadColumnsAsync(
+    public static async Task<(long tableId, string?[] columnNames)> LoadColumnsAsync(
         this SqlConnection connection,
         long tableId,
-        IProgress<bool> prg = null)
+        IProgress<bool>? prg = null)
     {
         var sql = $"select name from sys.columns where object_id={tableId}";
         var result = await connection.RunSqlAsync(sql);

@@ -242,7 +242,7 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
                 .WithBody("{\"id\":1,\"name\":\"Concurrent\"}"));
 
         // Act - Fire 5 concurrent requests (with MaxParallelization=2, MaxQueuing=1, 4th and 5th will be rejected)
-        var tasks = new List<Task<TestData>>();
+        var tasks = new List<Task<TestData?>>();
 
         for (var i = 0; i < 5; i++)
         {
@@ -336,12 +336,12 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
     private sealed class TestData
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; }
     }
 
     private sealed class TestRequestData
     {
-        public string Value { get; set; }
+        public string? Value { get; set; }
         public int Count { get; set; }
     }
 

@@ -22,7 +22,7 @@ namespace FEx.Avaloniax;
 [RegisterModule(typeof(FExAvaloniaxModule))]
 public class FExModule : InitializeModule<IFExContainer, IServiceCollection>
 {
-    protected override void RegisterServices(IFExContainer container, IServiceCollection context)
+    protected override void RegisterServices(IFExContainer? container, IServiceCollection context)
     {
     }
 }

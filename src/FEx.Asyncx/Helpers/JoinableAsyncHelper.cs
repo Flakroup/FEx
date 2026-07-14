@@ -10,7 +10,7 @@ namespace FEx.Asyncx.Helpers;
 
 public static class JoinableAsyncHelper
 {
-    private static JoinableTaskFactoryHandler _mainJTF;
+    private static JoinableTaskFactoryHandler? _mainJTF;
     private static ConcurrentDictionary<int, JoinableTaskFactoryHandler> Factories { get; } = new();
 
     private static JoinableTaskFactoryHandler MainJTF
@@ -77,7 +77,7 @@ public static class JoinableAsyncHelper
 
     public static JoinableTaskFactoryHandler GetFactory() => GetFactory(null, false);
 
-    public static JoinableTaskFactoryHandler GetFactory(Thread thread, bool replace)
+    public static JoinableTaskFactoryHandler GetFactory(Thread? thread, bool replace)
     {
         var key = thread?.ManagedThreadId ?? Environment.CurrentManagedThreadId;
         var func = () => GetNew(thread);
@@ -87,7 +87,7 @@ public static class JoinableAsyncHelper
             : Factories.GetOrAddValue(key, func);
     }
 
-    private static JoinableTaskFactoryHandler GetNew(Thread thread)
+    private static JoinableTaskFactoryHandler GetNew(Thread? thread)
     {
         var key = thread?.ManagedThreadId ?? Environment.CurrentManagedThreadId;
 

@@ -6,7 +6,8 @@ namespace FEx.Platforms;
 
 public class FExPlatforms : FExInitializable
 {
-    private static IRegistryService _registryService;
+    // Set via the RegistryService setter in the ctor (Guard-checked); reads go through GuardProperty which throws if unset.
+    private static IRegistryService _registryService = null!;
 
     public static IRegistryService RegistryService
     {

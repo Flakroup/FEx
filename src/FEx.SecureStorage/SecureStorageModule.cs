@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.SecureStorage.Abstractions;
@@ -43,8 +44,9 @@ public class SecureStorageModule : InitializeModule<ISecureStorageContainer, ISe
         return new FileSecureStorageService();
     }
 
-    protected override void RegisterServices(ISecureStorageContainer container, IServiceCollection services)
+    protected override void RegisterServices(ISecureStorageContainer? container, IServiceCollection services)
     {
+        container = container.Guard(nameof(container));
         services.AddSingletonServiceUsingContainer(container);
     }
 }

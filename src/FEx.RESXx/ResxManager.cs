@@ -1,4 +1,3 @@
-using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Core.Abstractions.Interfaces;
 using Microsoft.CSharp;
 using System.Collections;
@@ -69,7 +68,7 @@ public class ResxManager : IResxManager
                 var key = entry.Key.ToString();
                 var value = entry.Value?.ToString() ?? string.Empty;
 
-                if (key.IsNotNullOrWhiteSpace()
+                if (!string.IsNullOrWhiteSpace(key)
                     && !resourceEntries.ContainsValue(value))
                     resourceEntries.Add(key, value);
             }
@@ -97,6 +96,7 @@ public class ResxManager : IResxManager
         using var writer = new StreamWriter(resxDesigner, false, Encoding.UTF8);
         codeProvider.GenerateCodeFromCompileUnit(code, writer, new());
 
-        return unmatchedElements;
+        // StronglyTypedResourceBuilder.Create may set unmatchedElements to null; interface contract is non-null string[], so coalesce to empty.
+        return unmatchedElements ?? [];
     }
 }

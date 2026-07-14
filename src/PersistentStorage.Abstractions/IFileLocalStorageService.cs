@@ -15,8 +15,8 @@ public interface IFileLocalStorageService
     /// Find cached file for provided download URL
     /// </summary>
     /// <param name="fileUrl">URL of downloaded file</param>
-    /// <returns>Cached file</returns>
-    IFExCachedFile GetCachedFile(Uri fileUrl);
+    /// <returns>Cached file, or <see langword="null" /> when no cached file exists for the URL.</returns>
+    IFExCachedFile? GetCachedFile(Uri fileUrl);
 
     /// <summary>
     /// Overwrite cached file with new value

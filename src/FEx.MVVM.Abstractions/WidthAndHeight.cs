@@ -15,7 +15,7 @@ public class WidthAndHeight : IComparable<WidthAndHeight>, IEquatable<WidthAndHe
         Height = height;
     }
 
-    public int CompareTo(WidthAndHeight other)
+    public int CompareTo(WidthAndHeight? other)
     {
         if (Width > other?.Width
             || Height > other?.Height)
@@ -26,10 +26,10 @@ public class WidthAndHeight : IComparable<WidthAndHeight>, IEquatable<WidthAndHe
             : 1;
     }
 
-    public bool Equals(WidthAndHeight other) =>
+    public bool Equals(WidthAndHeight? other) =>
         other is not null && (ReferenceEquals(this, other) || Width == other.Width && Height == other.Height);
 
-    public override bool Equals(object obj) =>
+    public override bool Equals(object? obj) =>
         obj is WidthAndHeight widthAndHeight
         && (ReferenceEquals(this, widthAndHeight) || widthAndHeight.GetType() == GetType() && Equals(widthAndHeight));
 

@@ -7,7 +7,7 @@ namespace FEx.DependencyInjection.Abstractions.Interfaces;
 
 public interface IFExServiceContainer : IDisposable
 {
-    void RegisterServices<TContainer>(TContainer container, IServiceCollection services)
+    void RegisterServices<TContainer>(TContainer container, IServiceCollection? services)
         where TContainer : class, IDisposable;
 
     T ResolveService<T>();
@@ -15,6 +15,6 @@ public interface IFExServiceContainer : IDisposable
     Task<IEnumerable<T>> ResolveServicesAsync<T>();
     IEnumerable<T> ResolveServices<T>();
     IEnumerable<T> TryResolveServices<T>();
-    T ResolveOrDefault<T>(T fallback);
+    T? ResolveOrDefault<T>(T? fallback);
     void Release();
 }

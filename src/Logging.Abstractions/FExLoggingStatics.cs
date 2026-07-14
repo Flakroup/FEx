@@ -6,9 +6,9 @@ namespace FEx.Logging.Abstractions;
 
 public class FExLoggingStatics : StaticsBase
 {
-    private static readonly ILoggerFactory _defaultLoggerFactoryInstance;
+    private static readonly ILoggerFactory? _defaultLoggerFactoryInstance;
 
-    private static Func<ILoggerFactory> _loggerFactoryFactory;
+    private static Func<ILoggerFactory>? _loggerFactoryFactory;
 
     /// <summary>
     /// Retrieves the <see cref="ILoggerFactory" /> instance.
@@ -16,7 +16,9 @@ public class FExLoggingStatics : StaticsBase
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>
     public static ILoggerFactory LoggerFactory =>
-        Get(_loggerFactoryFactory, static () => _defaultLoggerFactoryInstance);
+        // _defaultLoggerFactoryInstance is null unless Initialize/Configure was called; Get<T>'s Guard() enforces
+        // non-null at runtime and throws otherwise, so the null-forgiving operator here is safe.
+        Get(_loggerFactoryFactory, static () => _defaultLoggerFactoryInstance!);
 
     static FExLoggingStatics()
     {
@@ -28,12 +30,12 @@ public class FExLoggingStatics : StaticsBase
         _loggerFactoryFactory = null;
     }
 
-    public static void Configure(Func<ILoggerFactory> loggerFactoryFactory = null)
+    public static void Configure(Func<ILoggerFactory>? loggerFactoryFactory = null)
     {
         if (loggerFactoryFactory is not null)
             _loggerFactoryFactory = loggerFactoryFactory;
     }
 
-    public static void Initialize(ILoggerFactory loggerFactory, ILogger logger = null) =>
+    public static void Initialize(ILoggerFactory loggerFactory, ILogger? logger = null) =>
         Configure(() => loggerFactory);
 }

@@ -35,7 +35,7 @@ public sealed class InterlockedBool
 
     public static bool operator !=(bool obj1, InterlockedBool obj2) => !obj1.Equals(obj2.Value);
 
-    public override bool Equals(object obj) =>
+    public override bool Equals(object? obj) =>
         ReferenceEquals(this, obj) || obj is InterlockedBool other && Equals(other);
 
     public override int GetHashCode() => _value;

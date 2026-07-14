@@ -5,7 +5,8 @@ namespace FEx.MVVM.Abstractions.Dialogs;
 
 public abstract class DialogOptionsBase<TDialog>
 {
-    public TDialog Dialog { get; protected set; }
+    // Assigned by ShowDialog before any consumer reads it.
+    public TDialog Dialog { get; protected set; } = default!;
 
     protected abstract TDialog MapToDialog();
 
@@ -13,10 +14,11 @@ public abstract class DialogOptionsBase<TDialog>
 
     protected T ShowDialog<T>(Func<TDialog, T> dialogFunc, IProgressAggregator viewModel)
     {
-        var wasRunning = viewModel?.Stopwatch?.IsRunning ?? false;
+        var stopwatch = viewModel?.Stopwatch;
+        var wasRunning = stopwatch?.IsRunning ?? false;
 
         if (wasRunning)
-            viewModel.Stopwatch.Stop();
+            stopwatch!.Stop();
 
         try
         {
@@ -30,7 +32,7 @@ public abstract class DialogOptionsBase<TDialog>
         finally
         {
             if (wasRunning)
-                viewModel.Stopwatch.Start();
+                stopwatch!.Start();
         }
     }
 }

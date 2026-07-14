@@ -5,7 +5,7 @@ namespace FEx.Legacy.Mvvm.Observables;
 
 public class DelayedNotificationObserver<T> : IDisposable
 {
-    protected EventHandler<T> _stateChanged;
+    protected EventHandler<T>? _stateChanged;
 
     private bool _isDisposed;
 

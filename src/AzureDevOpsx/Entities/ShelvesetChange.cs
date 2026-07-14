@@ -11,13 +11,13 @@ public class ShelvesetChange
     private ChangeType? _type;
 
     [JsonProperty("item")]
-    public ChangeItem Item { get; set; }
+    public ChangeItem? Item { get; set; }
 
     [JsonProperty("changeType")]
-    public string ChangeTypeString { get; set; }
+    public string? ChangeTypeString { get; set; }
 
     [JsonProperty("sourceServerItem")]
-    public string SourceServerItem { get; set; }
+    public string? SourceServerItem { get; set; }
 
     [JsonIgnore]
     public ChangeType Type
@@ -28,7 +28,7 @@ public class ShelvesetChange
             {
                 _type = ChangeType.None;
 
-                foreach (var changeType in ChangeTypeString.Split(',').Select(x => x.Trim()).ToArray())
+                foreach (var changeType in (ChangeTypeString ?? string.Empty).Split(',').Select(x => x.Trim()).ToArray())
                 {
                     if (_type == ChangeType.None)
                         _type = TfsExtensions.ChangeTypes.FirstOrDefault(x => x.Value.IsEqual(changeType)).Key;

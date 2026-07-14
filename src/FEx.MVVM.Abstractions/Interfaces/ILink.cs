@@ -12,7 +12,7 @@ public interface ILink
     void UnlinkChildren(bool resetPropertyValue);
     void ResetProperty();
     object GetPropertyValue();
-    void OnPropertyChange(object oldValue, object newValue);
+    void OnPropertyChange(object? oldValue, object? newValue);
     void Initialize();
     void AddChild(ILink link);
     void RelinkChildren<T>(T newSender, Action onNewSender) where T : ILinkableNotifyPropertyChanged;

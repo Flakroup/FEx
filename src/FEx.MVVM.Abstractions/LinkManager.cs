@@ -19,9 +19,9 @@ public class LinkManager
         Links = new();
     }
 
-    public void OnPropertySet<T>(T oldValue, T newValue, string propertyName)
+    public void OnPropertySet<T>(T oldValue, T newValue, string? propertyName)
     {
-        if (Links.TryGetValue(propertyName, out var links))
+        if (propertyName is not null && Links.TryGetValue(propertyName, out var links))
             TriggerLinks([.. links.Values], oldValue, newValue);
     }
 
@@ -55,7 +55,7 @@ public class LinkManager
             link.ResetProperty();
     }
 
-    private static void TriggerLinks(IEnumerable<ILink> propertyLinks, object oldValue, object newValue)
+    private static void TriggerLinks(IEnumerable<ILink> propertyLinks, object? oldValue, object? newValue)
     {
         foreach (var link in propertyLinks)
             link.OnPropertyChange(oldValue, newValue);

@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using StrongInject;
 using StrongInject.Extensions.DependencyInjection;
+using System;
 
 namespace FEx.Json;
 
@@ -19,10 +20,14 @@ namespace FEx.Json;
 public class FExJsonModule : InitializeModule<IFExJsonContainer, IServiceCollection>
 {
     [Factory]
-    public static JsonSerializerSettings JsonSerializerSettingsFactory() => JsonExtensions.DefaultSettings;
+    // DefaultSettings is backed by JsonExtensions' static ctor and is always non-null here.
+    public static JsonSerializerSettings JsonSerializerSettingsFactory() => JsonExtensions.DefaultSettings!;
 
-    protected override void RegisterServices(IFExJsonContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExJsonContainer? container, IServiceCollection services)
     {
+        if (container is null)
+            throw new ArgumentNullException(nameof(container));
+
         services.AddTransientServiceUsingContainer<DIMeta>(container);
         services.AddTransientServiceUsingContainer<JsonSerializerSettings>(container);
 

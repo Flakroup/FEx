@@ -29,9 +29,9 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
 
     public void AddChildNode(string rootNodeName,
                              List<string> nodePath,
-                             string name,
+                             string? name,
                              bool unique,
-                             string iconPath,
+                             string? iconPath,
                              bool isIconAttachedToFile,
                              bool isExpanded)
     {
@@ -49,10 +49,10 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
 
     public void AddChildNode(string rootNodeName,
                              string nodePath,
-                             string name,
+                             string? name,
                              char pathSeparator,
                              bool unique,
-                             string iconPath,
+                             string? iconPath,
                              bool isExpanded) =>
         AddChildNode(rootNodeName,
             FExTreeViewNode.GetNodePath(nodePath, pathSeparator),
@@ -127,7 +127,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
         // //LockService.Instance.Release(header);
 
         var headers = await _dispatcher.InvokeOnMainThreadAsync(() => tree.Items.OfType<TItem>()
-            .Select(x => x.Header.ToString())
+            .Select(x => x.Header?.ToString() ?? string.Empty)
             .ToList());
 
         await GrowTreeAsync(tree, nodeStub, headers, locationIndex, setDirectoriesIcons);
@@ -142,7 +142,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
         if (tree != null)
         {
             var header = nodeStub.NodePath[locationIndex];
-            TItem node = null;
+            TItem? node = null;
             var idx = headers.IndexOf(header);
 
             if (idx > -1)
@@ -225,7 +225,7 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
         return res;
     }
 
-    protected virtual async Task<BitmapSource> GetBitmapSourceAsync(FExTreeViewNode nodeStub) =>
+    protected virtual async Task<BitmapSource?> GetBitmapSourceAsync(FExTreeViewNode nodeStub) =>
         nodeStub.IconPath is not null
             ? await _fileSystemIconsProvider.GetFileIconAsync(nodeStub.IconPath, nodeStub.IsIconAttachedToFile)
             : null;

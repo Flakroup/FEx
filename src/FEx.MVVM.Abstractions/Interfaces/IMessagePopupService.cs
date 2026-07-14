@@ -15,21 +15,21 @@ public interface IMessagePopupService
                                          string caption,
                                          MessageIcon messageBoxImage,
                                          FExMessageButton button,
-                                         ISupportInitialize ownerWindow,
+                                         ISupportInitialize? ownerWindow,
                                          bool informUser,
                                          bool wait,
-                                         Stopwatch sw,
+                                         Stopwatch? sw,
                                          LogLevel level,
-                                         Exception exception);
+                                         Exception? exception);
 
     MessageResult ShowMessage(string txt,
                               string caption,
                               MessageIcon messageBoxImage,
                               FExMessageButton button,
-                              ISupportInitialize ownerWindow,
+                              ISupportInitialize? ownerWindow,
                               bool informUser,
                               bool wait,
-                              Stopwatch sw,
+                              Stopwatch? sw,
                               LogLevel level,
-                              Exception exception);
+                              Exception? exception);
 }

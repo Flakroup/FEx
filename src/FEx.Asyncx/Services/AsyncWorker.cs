@@ -30,8 +30,11 @@ public abstract class AsyncWorker<T, TResult> : AsyncInitializable where T : cla
         }
     }
 
-    private TaskCompletionSource<T> Tcs { get; set; }
-    private TaskCompletionSource<bool> IdleTcs { get; set; }
+    private TaskCompletionSource<T> Tcs { get; set; } = new();
+    private TaskCompletionSource<bool> IdleTcs { get; set; } = new();
+
+    // Self is always T: the self-referential generic constraint binds T to the concrete worker type.
+    private T Self => (this as T)!;
 
     protected AsyncWorker(int id)
     {
@@ -51,7 +54,7 @@ public abstract class AsyncWorker<T, TResult> : AsyncInitializable where T : cla
     {
         IdleTcs = new();
         IsBusy = false;
-        Tcs.SetResult(this as T);
+        Tcs.SetResult(Self);
     }
 
     protected override async Task OnInitializeAsync()
@@ -66,7 +69,7 @@ public abstract class AsyncWorker<T, TResult> : AsyncInitializable where T : cla
     {
         try
         {
-            return await func(this as T);
+            return await func(Self);
         }
         finally
         {

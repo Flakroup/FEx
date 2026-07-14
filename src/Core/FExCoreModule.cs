@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Comparers;
 using FEx.Agnostics.Helpers;
@@ -37,8 +38,9 @@ namespace FEx.Core;
 [Register(typeof(AppThreadingSettings), typeof(IAppThreadingSettings))]
 public class FExCoreModule : InitializeModule<IFExCoreContainer, IServiceCollection>
 {
-    protected override void RegisterServices(IFExCoreContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExCoreContainer? container, IServiceCollection services)
     {
+        container = container.Guard(nameof(container));
         services.AddSingletonServiceUsingContainer<IStackTraceProvider>(container);
         services.AddSingletonServiceUsingContainer<INavigationFlowSubject>(container);
 

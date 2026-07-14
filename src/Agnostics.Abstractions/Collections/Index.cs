@@ -53,7 +53,15 @@ public class Index<TKey, TValue> : IIndex<TKey, TValue>
     /// <inheritdoc />
     public bool Remove(TKey key) => _dictionary.Remove(key);
 
-    public bool TryGetValue(TKey key, out TValue value) => _dictionary.TryGetValue(key, out value);
+    public bool TryGetValue(TKey key, out TValue value)
+    {
+        var found = _dictionary.TryGetValue(key, out var v);
+
+        // v is default(TValue) when not found; the bool result guards meaningful reads.
+        value = v!;
+
+        return found;
+    }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 

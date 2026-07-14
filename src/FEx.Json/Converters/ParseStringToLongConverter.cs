@@ -9,7 +9,7 @@ public class ParseStringToLongConverter : JsonConverter
 
     public override bool CanConvert(Type t) => t == typeof(long) || t == typeof(long?);
 
-    public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+    public override object? ReadJson(JsonReader reader, Type t, object? existingValue, JsonSerializer serializer)
     {
         if (reader.TokenType == JsonToken.Null)
             return null;
@@ -22,7 +22,7 @@ public class ParseStringToLongConverter : JsonConverter
         throw new("Cannot unmarshal type long");
     }
 
-    public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, object? untypedValue, JsonSerializer serializer)
     {
         if (untypedValue == null)
         {

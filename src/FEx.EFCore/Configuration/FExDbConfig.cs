@@ -8,16 +8,16 @@ namespace FEx.EFCore.Configuration;
 
 public record FExDbConfig : IFExDbConfig //todo inherit SqlConnectionStringBuilder
 {
-    public string SqlInstance { get; set; }
-    public string SqlDbName { get; init; }
-    public string Username { get; init; }
-    public string Password { get; init; }
+    public string? SqlInstance { get; set; }
+    public string? SqlDbName { get; init; }
+    public string? Username { get; init; }
+    public string? Password { get; init; }
     public bool RunMigrations { get; set; } = true;
     public bool GetMappings { get; set; } = true;
     public bool DropIfMigrationFailed { get; init; }
     public int DelayOnTimeout { get; init; } = 1000;
     public int PoolSize { get; init; } = 100;
-    public FileInfo SqliteDbFile { get; init; }
+    public FileInfo? SqliteDbFile { get; init; }
     public bool UseSqlite { get; init; }
     public int MaxRetryCount { get; init; } = 10;
     public TimeSpan MaxRetryDelay { get; init; } = TimeSpan.FromSeconds(10);

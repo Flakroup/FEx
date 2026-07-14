@@ -16,19 +16,20 @@ public static class WebResponseExtensions
     public const string AcceptRangesHeaderName = "Accept-Ranges";
 
     public static Dictionary<string, string> GetAllHeaders(this WebResponse resp) =>
-        resp?.Headers.AllKeys.ToDictionary(x => x, x => resp.Headers[x]);
+        // Keys come from AllKeys, so the indexer never returns null for them.
+        resp.Headers.AllKeys.ToDictionary(x => x, x => resp.Headers[x]!);
 
     public static async Task<(bool, LengthType)> TryGetRangeAsync(this WebResponse response,
                                                                   int rangeFrom,
                                                                   int rangeTo,
-                                                                  WebRequestParams pars = null) =>
+                                                                  WebRequestParams? pars = null) =>
         await response.ResponseUri.TryGetRangeAsync(response.GetAllHeaders(), rangeFrom, rangeTo, pars);
 
     public static async Task<(bool, LengthType)> TryGetRangeAsync(this Uri responseUri,
                                                                   Dictionary<string, string> responseHeaders,
                                                                   int rangeFrom,
                                                                   int rangeTo,
-                                                                  WebRequestParams pars = null)
+                                                                  WebRequestParams? pars = null)
     {
         if (!responseHeaders.ContainsKey(AcceptRangesHeaderName))
             return (false, LengthType.AutoDetect);
@@ -43,14 +44,15 @@ public static class WebResponseExtensions
         return (responseHeaders.ContainsKey(ContentRangeHeaderName), LengthType.Bytes);
     }
 
-    public static ContentRangeHeaderValue GetContentRange(this HttpWebResponse response)
+    public static ContentRangeHeaderValue? GetContentRange(this HttpWebResponse response)
     {
         var resultHeaders = response.GetAllHeaders();
+        var rangeHeader = resultHeaders.TryGetKeyValue<string, string>(ContentRangeHeaderName);
 
-        return resultHeaders.TryGetKeyValue(ContentRangeHeaderName).GetContentRange();
+        return rangeHeader.GetContentRange();
     }
 
-    public static ContentRangeHeaderValue GetContentRange(this string rangeHeader)
+    public static ContentRangeHeaderValue? GetContentRange(this string? rangeHeader)
     {
         if (rangeHeader?.Trim().IsNullOrEmptyString() ?? true)
             return null;

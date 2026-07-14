@@ -84,7 +84,7 @@ public static class SQLConnectionHelper
         if (config.Password is not null)
             sB.Password = config.Password;
 
-        var host = config.SqlInstance.Split('\\')[0];
+        var host = config.SqlInstance.Guard(nameof(IFExDbConfig.SqlInstance)).Split('\\')[0];
 
         if ((host.CompareOrdinalIgnoreCase("localhost") || host.CompareOrdinalIgnoreCase(Environment.MachineName))
             && PlatformInfoProvider.IsWindows)

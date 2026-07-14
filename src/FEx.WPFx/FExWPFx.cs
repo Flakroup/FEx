@@ -20,8 +20,11 @@ public class FExWpfx : FExInitializable
     public static string MaximizeString { get; set; }
     public static string ShowSystemMenuString { get; set; }
     public static bool IsMainWindowInitialized { get; private set; }
-    public static Splash Splash { get; private set; }
-    public static IAppConfig AppConfig { get; private set; }
+    // Set by the DI-constructed instance before any static access; guaranteed non-null at use.
+    public static Splash Splash { get; private set; } = null!;
+
+    // Set by the DI-constructed instance before any static access; guaranteed non-null at use.
+    public static IAppConfig AppConfig { get; private set; } = null!;
 
     public FExWpfx(IAppConfig appConfig, Splash splash)
     {
@@ -55,7 +58,7 @@ public class FExWpfx : FExInitializable
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
     }
 
-    private static void WindowInitialized(object sender, RoutedEventArgs e)
+    private static void WindowInitialized(object? sender, RoutedEventArgs e)
     {
         if (IsMainWindowInitialized)
             return;

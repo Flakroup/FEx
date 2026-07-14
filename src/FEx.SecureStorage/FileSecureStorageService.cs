@@ -23,7 +23,7 @@ public class FileSecureStorageService : ISecureStorageService
 
     public FileSecureStorageService()
     {
-        _cipher = $"{Environment.UserName}@{Environment.MachineName}".GenerateMd5OfString();
+        _cipher = $"{Environment.UserName}@{Environment.MachineName}".GenerateMd5OfString().Guard(nameof(_cipher));
 
         _storage = SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile]
             .Directory.GetDescendantDirectory(".fexStorage");
@@ -41,7 +41,8 @@ public class FileSecureStorageService : ISecureStorageService
         var encrypted = File.ReadAllText(file.FullName);
         var decrypted = StringHasher.DecryptString(_cipher, encrypted);
 
-        return decrypted.FromJson<T>();
+        // Get<T> contract is non-null; a null here means corrupt/missing stored JSON - fail loudly.
+        return decrypted.FromJson<T>().Guard(nameof(key));
     }
 
     public void Set(string key, object content)

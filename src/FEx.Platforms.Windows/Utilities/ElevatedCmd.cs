@@ -9,8 +9,8 @@ namespace FEx.Platforms.Windows.Utilities;
 
 public class ElevatedCmd : Cmd
 {
-    public string OutFile { get; protected set; }
-    public Task OutTask { get; protected set; }
+    public string? OutFile { get; protected set; }
+    public Task? OutTask { get; protected set; }
 
     public ElevatedCmd(string procName = "cmd")
     {
@@ -29,7 +29,7 @@ public class ElevatedCmd : Cmd
 #pragma warning restore IDISP003
     }
 
-    protected override void OnStarted(bool waitForExit, Action<ICmd> onStarted)
+    protected override void OnStarted(bool waitForExit, Action<ICmd>? onStarted)
     {
         onStarted?.Invoke(this);
 
@@ -48,6 +48,7 @@ public class ElevatedCmd : Cmd
     private void GetProcOutput()
     {
         Proc.WaitForExit();
-        File.ReadAllLines(OutFile).ForEachInEnumerable(x => Output.AppendLine(x));
+        // OutFile is always assigned by AttachToOutput() before StartProc()/GetProcOutput() run.
+        File.ReadAllLines(OutFile.Guard(nameof(OutFile))).ForEachInEnumerable(x => Output.AppendLine(x));
     }
 }

@@ -47,23 +47,24 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
             view => view.TotalDesiredHeight,
             propertyChanged: tuple => OnHeightChanged(tuple.view, tuple.newValue));
 
-    public static EventHandler<EventArgs> CloseIt;
+    public static EventHandler<EventArgs>? CloseIt;
 
     private readonly IAppInfoProvider _appInfoProvider;
     private readonly IAsyncHelper _asyncHelper;
     private readonly IStatusService _statusService;
     private readonly IAppConfig _appConfig;
 
-    private string _status;
+    private string? _status;
     private double _desiredTextWidth;
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-    public static Task<bool> InitializationTask { get; private set; }
+    // Set in the constructor before any consumer awaits it.
+    public static Task<bool> InitializationTask { get; private set; } = null!;
 
     public string AppNameAndVersion => _appInfoProvider.NameLineVersion;
 
-    public BitmapImage ApplicationLogo { get; private set; }
+    public BitmapImage? ApplicationLogo { get; private set; }
 
     public FontFamily Font { get; }
 
@@ -71,7 +72,7 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
 
     public Brush ForegroundBrush { get; }
 
-    public string ResourceName { get; protected set; }
+    public string? ResourceName { get; protected set; }
 
     public double DesiredTextWidth
     {
@@ -79,7 +80,7 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
         set => SetProperty(ref _desiredTextWidth, value);
     }
 
-    public string Status
+    public string? Status
     {
         get => _status;
         private set => SetProperty(ref _status, value);
@@ -111,7 +112,7 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
 
     protected Assembly ResourceAssembly { get; }
 
-    protected IStatusHub StatusHub { get; set; }
+    protected IStatusHub? StatusHub { get; set; }
 
     protected Guid? MainHubKey { get; }
 
@@ -144,7 +145,7 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
     }
 
     [NotifyPropertyChangedInvocator]
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         if (propertyName is null
             || PropertyChanged is null)
@@ -156,8 +157,8 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
 #pragma warning disable S2360 // CallerMemberName requires optional parameter
     protected bool SetProperty<T>(ref T backingField,
                                   T newValue,
-                                  Action<T> onPropertyChanged = null,
-                                  [CallerMemberName] string propertyName = null) =>
+                                  Action<T>? onPropertyChanged = null,
+                                  [CallerMemberName] string? propertyName = null) =>
 #pragma warning restore S2360
         this.SetPropertyStatic(ref backingField,
             newValue,
@@ -176,12 +177,12 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
         window.Height = newValue;
     }
 
-    private static UnmanagedMemoryStream GetResourceStream(ResourceManager resourceManager, string resourceName) =>
+    private static UnmanagedMemoryStream? GetResourceStream(ResourceManager resourceManager, string resourceName) =>
         resourceManager.GetStream(resourceName, CultureInfo.CurrentUICulture)
         ?? resourceManager.GetStream(ResourceIdHelper.GetResourceIdFromRelativePath(resourceName),
             CultureInfo.CurrentUICulture);
 
-    private void WhenPropertyChanged<T>(string propertyName, T newValue, Action<T> onPropertyChanged)
+    private void WhenPropertyChanged<T>(string propertyName, T newValue, Action<T>? onPropertyChanged)
     {
         OnPropertyChanged(propertyName);
         onPropertyChanged?.Invoke(newValue);
@@ -215,7 +216,8 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
         ResourceName = ResourceName.Guard(nameof(ResourceName)).ToLowerInvariant();
 
         var resourceManager =
-            new ResourceManager($"{new AssemblyName(ResourceAssembly.FullName).Name}.g", ResourceAssembly);
+            new ResourceManager($"{new AssemblyName(ResourceAssembly.FullName.Guard(nameof(ResourceAssembly))).Name}.g",
+                ResourceAssembly);
 
         using UnmanagedMemoryStream stream = GetResourceStream(resourceManager, ResourceName).Guard(nameof(stream));
         ApplicationLogo = stream.ToBitmapImage(true);
@@ -229,14 +231,14 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
 
     // VSTHRD001: WPF UI-thread marshaling via Dispatcher.Invoke.
 #pragma warning disable VSTHRD001
-    private void CloseSplash(object sender, EventArgs e) => Dispatcher?.Invoke(Close);
+    private void CloseSplash(object? sender, EventArgs e) => Dispatcher?.Invoke(Close);
 #pragma warning restore VSTHRD001
 
     // VSTHRD001: WPF UI-thread marshaling via Dispatcher.InvokeAsync.
 #pragma warning disable VSTHRD001
     [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods")]
     private async void OnStatusChange() =>
-        await Dispatcher.InvokeAsync(() => Status = StatusHub.GetStatusString(Environment.NewLine)?.ToUpper(),
+        await Dispatcher.InvokeAsync(() => Status = StatusHub?.GetStatusString(Environment.NewLine)?.ToUpper(),
             DispatcherPriority.Send);
 #pragma warning restore VSTHRD001
 

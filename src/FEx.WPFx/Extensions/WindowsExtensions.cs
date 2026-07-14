@@ -65,7 +65,7 @@ public static class WindowsExtensions
         window.PlaceToMonitor(primaryScreen);
     }
 
-    public static void PlaceToMonitor(this Window window, Screen screen)
+    public static void PlaceToMonitor(this Window window, Screen? screen)
     {
         if (screen is not null)
         {

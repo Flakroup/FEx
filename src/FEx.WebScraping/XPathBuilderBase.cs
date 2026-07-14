@@ -13,7 +13,7 @@ public abstract class XPathBuilderBase<T> where T : XPathBuilderBase<T>, new()
     {
     }
 
-    protected XPathBuilderBase(HtmlNode node)
+    protected XPathBuilderBase(HtmlNode? node)
     {
         SB = new();
 

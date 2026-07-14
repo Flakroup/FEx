@@ -5,5 +5,5 @@ namespace FEx.Core.Abstractions.Interfaces;
 
 public interface IDeadlockMonitor
 {
-    void Execute(Action action, StackTrace stackTrace, uint timeout);
+    void Execute(Action action, StackTrace? stackTrace, uint timeout);
 }

@@ -9,7 +9,8 @@ namespace FEx.MVVM.Rx;
 
 public class FExMvvmRx : FExInitializable
 {
-    public static IStatusService StatusService { get; private set; }
+    // Set in the constructor via DI before any static access; the DI singleton is built before consumers use it.
+    public static IStatusService StatusService { get; private set; } = null!;
 
     public FExMvvmRx(IStatusService statusService)
     {

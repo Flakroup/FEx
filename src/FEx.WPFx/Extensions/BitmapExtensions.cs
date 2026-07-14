@@ -34,9 +34,9 @@ public static class BitmapExtensions
         // below; when forceLoad is false the image reads lazily from it, so disposing here would
         // break image loading.
         if (forceMemoryStream && stream is not MemoryStream)
-#pragma warning disable IDISP001
-            stream = await stream.CopyToMemoryStreamAsync(true);
-#pragma warning restore IDISP001
+#pragma warning disable IDISP001, IDISP004 // IDISP001: ownership transfers to the BitmapImage; IDISP004: Guard returns the same instance
+            stream = (await stream.CopyToMemoryStreamAsync(true)).Guard(nameof(stream));
+#pragma warning restore IDISP001, IDISP004
 
         return stream.ToBitmapImage(forceLoad, decodePixelHeight, decodePixelWidth);
     }
@@ -152,10 +152,10 @@ public static class BitmapExtensions
     /// </returns>
     public static Task<BitmapImage> ToBitmapImageAsync(this Image image) => image.ToBitmapImageAsync(null, false);
 
-    public static Task<BitmapImage> ToBitmapImageAsync(this Image image, ImageFormat imageFormat) =>
+    public static Task<BitmapImage> ToBitmapImageAsync(this Image image, ImageFormat? imageFormat) =>
         image.ToBitmapImageAsync(imageFormat, false);
 
-    public static async Task<BitmapImage> ToBitmapImageAsync(this Image image, ImageFormat imageFormat, bool forceLoad)
+    public static async Task<BitmapImage> ToBitmapImageAsync(this Image image, ImageFormat? imageFormat, bool forceLoad)
     {
         //https://stackoverflow.com/questions/25326137/converting-bitmap-to-imagesource-made-my-images-background-black
         using var stream = new MemoryStream();

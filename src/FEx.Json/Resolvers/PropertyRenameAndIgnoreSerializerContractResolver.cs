@@ -50,18 +50,19 @@ public class PropertyRenameAndIgnoreSerializerContractResolver : DefaultContract
         return property;
     }
 
-    private bool IsIgnored(Type type, string jsonPropertyName) =>
-        _ignores.ContainsKey(type) && _ignores[type].Contains(jsonPropertyName);
+    private bool IsIgnored(Type? type, string? jsonPropertyName) =>
+        type is not null && jsonPropertyName is not null
+        && _ignores.ContainsKey(type) && _ignores[type].Contains(jsonPropertyName);
 
-    private bool IsRenamed(Type type, string jsonPropertyName, out string newJsonPropertyName)
+    private bool IsRenamed(Type? type, string? jsonPropertyName, out string? newJsonPropertyName)
     {
-        if (!_renames.TryGetValue(type, out var renames)
-            || !renames.TryGetValue(jsonPropertyName, out newJsonPropertyName))
-        {
-            newJsonPropertyName = null;
+        newJsonPropertyName = null;
 
+        if (type is null
+            || jsonPropertyName is null
+            || !_renames.TryGetValue(type, out var renames)
+            || !renames.TryGetValue(jsonPropertyName, out newJsonPropertyName))
             return false;
-        }
 
         return true;
     }

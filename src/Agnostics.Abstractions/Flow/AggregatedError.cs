@@ -17,7 +17,7 @@ public class AggregatedError : Error
     {
     }
 
-    public AggregatedError(IReadOnlyCollection<IError> innerErrors, string message)
+    public AggregatedError(IReadOnlyCollection<IError> innerErrors, string? message)
         : base(message)
     {
         InnerErrors = innerErrors;

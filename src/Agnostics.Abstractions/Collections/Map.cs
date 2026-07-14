@@ -5,6 +5,8 @@ using System.Collections.Generic;
 namespace FEx.Agnostics.Abstractions.Collections;
 
 public class Map<TForwardKey, TReverseKey> : IMap<TForwardKey, TReverseKey>
+    where TForwardKey : notnull
+    where TReverseKey : notnull
 {
     private readonly Dictionary<TForwardKey, TReverseKey> _forwardDictionary = [];
     private readonly Dictionary<TReverseKey, TForwardKey> _reverseDictionary = [];

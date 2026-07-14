@@ -8,7 +8,7 @@ namespace FEx.Avaloniax.Desktop;
 public class FExTrayIcon
 {
     private readonly string _toolTipText;
-    private TrayIcon _trayIcon;
+    private TrayIcon? _trayIcon;
 
     public FExTrayIcon(string toolTipText)
     {
@@ -72,7 +72,7 @@ public class FExTrayIcon
         Hide();
     }
 
-    private void OnTrayIconClicked(object sender, EventArgs e) => ShowMainWindow();
+    private void OnTrayIconClicked(object? sender, EventArgs e) => ShowMainWindow();
 
     private NativeMenu CreateMenu()
     {

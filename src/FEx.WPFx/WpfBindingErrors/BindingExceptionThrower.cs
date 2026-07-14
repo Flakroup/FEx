@@ -19,7 +19,7 @@ namespace FEx.WPFx.WpfBindingErrors;
 /// </remarks>
 public static class BindingExceptionThrower
 {
-    private static BindingErrorListener _errorListener;
+    private static BindingErrorListener? _errorListener;
 
     public static JsonSerializerSettings DefaultSettings { get; } = new()
     {
@@ -37,7 +37,8 @@ public static class BindingExceptionThrower
     /// </value>
     public static bool IsAttached => _errorListener is not null;
 
-    private static string BindingErrorsCacheFile { get; set; }
+    // Set by Attach before any binding error fires; GetCachedBindingErrors tolerates the pre-Attach null at runtime.
+    private static string BindingErrorsCacheFile { get; set; } = null!;
 
     private static SemaphoreSlim BindingErrorsCacheSemaphore { get; } = new(1, 1);
 
@@ -46,7 +47,7 @@ public static class BindingExceptionThrower
     /// <summary>
     /// Start listening WPF binding error
     /// </summary>
-    public static void Attach(string bindingErrorsCacheDirectory)
+    public static void Attach(string? bindingErrorsCacheDirectory)
     {
         BindingErrorsCacheFile = Path.Combine(bindingErrorsCacheDirectory ?? Path.GetTempPath(),
             $"{Guid.NewGuid()}_BindingErrors.json");
@@ -60,6 +61,9 @@ public static class BindingExceptionThrower
     /// </summary>
     public static void Detach()
     {
+        if (_errorListener is null)
+            return;
+
         _errorListener.ErrorCatched -= OnErrorCatched;
         _errorListener.Dispose();
         _errorListener = null;
@@ -77,7 +81,7 @@ public static class BindingExceptionThrower
     private static void OnErrorCatched(TraceEventCache eventCache,
                                        string source,
                                        TraceEventType eventType,
-                                       string message)
+                                       string? message)
     {
         if (eventType == TraceEventType.Error)
         {

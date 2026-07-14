@@ -27,20 +27,22 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
 {
     private readonly bool _ownCTS;
 
-    protected internal FileInfo Cache => ParentIndexEntry.Cache;
+    protected internal FileInfo? Cache => ParentIndexEntry.Cache;
 
     protected CancellationTokenSource CancellationTokenSource { get; }
     protected CancellationToken CancellationToken => CancellationTokenSource.Token;
     protected ConcurrentObservableDictionary<WidthAndHeight, SizedImageCache> CachedImages { get; }
-    protected Task<bool> CachingTask { get; set; }
+    protected Task<bool>? CachingTask { get; set; }
     protected IndexEntry ParentIndexEntry { get; }
-    protected string FileName => ParentIndexEntry.FileName;
-    protected SemaphoreSlim Semaphore => ParentIndexEntry.Semaphore;
-    protected Uri Url => ParentIndexEntry.Url;
-    protected string FilesCacheDirPath => ParentIndexEntry.FilesCacheRootDirPath;
-    protected TimeSpan? CacheValidTime => ParentIndexEntry.Config.CacheValidPeriod;
+    // A live CachedImage exists only while Url and FilesCacheRootDirPath are non-null (see IndexEntry.RefreshCachedImage);
+    // FileName is derived from the non-null Url, so these proxies are non-null for the CachedImage lifetime.
+    protected string FileName => ParentIndexEntry.FileName!;
+    protected SemaphoreSlim Semaphore => ParentIndexEntry.Semaphore!;
+    protected Uri Url => ParentIndexEntry.Url!;
+    protected string FilesCacheDirPath => ParentIndexEntry.FilesCacheRootDirPath!;
+    protected TimeSpan? CacheValidTime => ParentIndexEntry.Config?.CacheValidPeriod;
 
-    protected string Extension
+    protected string? Extension
     {
         get => ParentIndexEntry.Extension;
         set => ParentIndexEntry.Extension = value;
@@ -58,7 +60,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
         set => ParentIndexEntry.IsDownloading = value;
     }
 
-    public CachedImage(IndexEntry indexEntry, CancellationTokenSource cancellationTokenSource = null)
+    public CachedImage(IndexEntry indexEntry, CancellationTokenSource? cancellationTokenSource = null)
     {
         ParentIndexEntry = indexEntry;
         CachedImages = [];
@@ -74,13 +76,13 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
         }
     }
 
-    public async Task<BitmapImage> GetImageAsync(WidthAndHeight size = null,
-                                                 WebRequestParams pars = null,
+    public async Task<BitmapImage?> GetImageAsync(WidthAndHeight? size = null,
+                                                 WebRequestParams? pars = null,
                                                  bool refresh = false,
                                                  bool forceLoad = false,
                                                  bool forceMemoryStream = true,
                                                  bool useHttpClientService = false,
-                                                 HttpWebResponse response = null)
+                                                 HttpWebResponse? response = null)
     {
         var res = EnsureSize(size);
 
@@ -98,8 +100,10 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
             && res.CachedImage is not null)
             return res.CachedImage;
 
-        if (CachingTask.IsRunning())
-            await CachingTask;
+        var runningTask = CachingTask;
+
+        if (runningTask?.IsRunning() == true)
+            await runningTask;
 
         CachingTask = Task.Run(() => PrepareCacheAsync(pars, refresh, useHttpClientService, response),
             CancellationToken);
@@ -113,12 +117,12 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
         return res.CachedImage;
     }
 
-    public async Task<bool> PrepareCacheAsync(WebRequestParams pars = null,
+    public async Task<bool> PrepareCacheAsync(WebRequestParams? pars = null,
                                               bool refresh = false,
                                               bool useHttpClientService = false,
-                                              HttpWebResponse response = null,
-                                              string checksum = null,
-                                              Func<Uri, Uri> urlModifier = null)
+                                              HttpWebResponse? response = null,
+                                              string? checksum = null,
+                                              Func<Uri, Uri>? urlModifier = null)
     {
         try
         {
@@ -163,16 +167,17 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
 
     public bool CacheIsInvalid(bool refresh = false)
     {
-        Cache?.Refresh();
+        var cache = Cache;
+        cache?.Refresh();
 
         return refresh
-               || Cache?.Exists != true
-               || ResponseContentLength != Cache.Length
-               || Extension != Cache.Extension
-               || CacheValidTime.HasValue && Cache.LastWriteTime.Add(CacheValidTime.Value).IsEarlierThan(DateTime.Now);
+               || cache?.Exists != true
+               || ResponseContentLength != cache.Length
+               || Extension != cache.Extension
+               || CacheValidTime.HasValue && cache.LastWriteTime.Add(CacheValidTime.Value).IsEarlierThan(DateTime.Now);
     }
 
-    public void RemoveImageUpdate(WidthAndHeight size = null) => EnsureSize(size).RemoveImageUpdateAction();
+    public void RemoveImageUpdate(WidthAndHeight? size = null) => EnsureSize(size).RemoveImageUpdateAction();
 
     public void OnParentConfigurationChange() => CachedImages.Clear();
 
@@ -184,11 +189,11 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
     /// <param name="response">The response.</param>
     /// <param name="checksum">The checksum.</param>
     /// <returns></returns>
-    private async Task<bool> InternalPrepareCacheAsync(WebRequestParams pars,
+    private async Task<bool> InternalPrepareCacheAsync(WebRequestParams? pars,
                                                        bool refresh = false,
-                                                       HttpWebResponse response = null,
-                                                       string checksum = null,
-                                                       Func<Uri, Uri> urlModifier = null)
+                                                       HttpWebResponse? response = null,
+                                                       string? checksum = null,
+                                                       Func<Uri, Uri>? urlModifier = null)
     {
         try
         {
@@ -218,10 +223,11 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
 
                     if (await file.DownloadFileAsync())
                     {
-                        ParentIndexEntry.ResetCacheFile(file.FilePath);
+                        // a successful download guarantees a non-null FilePath, and ResetCacheFile then sets Cache
+                        ParentIndexEntry.ResetCacheFile(file.FilePath!);
 
                         if (hasInvalidContentLength)
-                            ResponseContentLength = Cache.Length;
+                            ResponseContentLength = Cache!.Length;
 
                         return true;
                     }
@@ -319,7 +325,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
         return false;
     }
 
-    private SizedImageCache EnsureSize(WidthAndHeight size = null, BitmapImage image = null)
+    private SizedImageCache EnsureSize(WidthAndHeight? size = null, BitmapImage? image = null)
     {
         size ??= WidthAndHeight.Default;
 

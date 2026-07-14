@@ -15,20 +15,20 @@ public static class FindFilesPatternToRegex
 
     private static Regex CatchExtentionRegex { get; } = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
 
-    public static string FindFileEmulator(this string pattern, string name) =>
+    public static string? FindFileEmulator(this string pattern, string name) =>
         pattern.FindFilesEmulator(name).FirstOrDefault();
 
     public static IEnumerable<string> FindFilesEmulator(this string pattern, params string[] names) =>
         FindFilesEmulator(names, patterns: pattern);
 
-    public static FileInfo FindFileEmulator(this FileInfo file, params string[] patterns) =>
+    public static FileInfo? FindFileEmulator(this FileInfo file, params string[] patterns) =>
         FindFilesEmulator([file], patterns).FirstOrDefault();
 
     public static IEnumerable<FileInfo> FindFilesEmulator(this IEnumerable<FileInfo> files, params string[] patterns) =>
         FindFilesEmulator(files, x => x.Name, patterns);
 
     public static IEnumerable<T> FindFilesEmulator<T>(IEnumerable<T> items,
-                                                      Func<T, string> selector = null,
+                                                      Func<T, string>? selector = null,
                                                       params string[] patterns)
     {
         var regexes = patterns.Select(Convert).ToArray();

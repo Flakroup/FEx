@@ -20,7 +20,7 @@ public class FExLoggingService : IFExLoggingService
 
     public IFExLogger GetLogger(object sender) => Logger;
 
-    public void LogCritical<T>(string message, Exception exception = null)
+    public void LogCritical<T>(string message, Exception? exception = null)
     {
         if (exception is null)
             Logger.Critical(message);
@@ -28,7 +28,7 @@ public class FExLoggingService : IFExLoggingService
             Logger.Critical(exception, message);
     }
 
-    public void LogDebug<T>(string message, Exception exception = null)
+    public void LogDebug<T>(string message, Exception? exception = null)
     {
         if (exception is null)
             Logger.Debug(message);
@@ -36,7 +36,7 @@ public class FExLoggingService : IFExLoggingService
             Logger.Debug(exception, message);
     }
 
-    public void LogError<T>(string message, Exception exception = null)
+    public void LogError<T>(string message, Exception? exception = null)
     {
         if (exception is null)
             Logger.Error(message);
@@ -44,7 +44,7 @@ public class FExLoggingService : IFExLoggingService
             Logger.Error(exception, message);
     }
 
-    public void LogInformation<T>(string message, Exception exception = null)
+    public void LogInformation<T>(string message, Exception? exception = null)
     {
         if (exception is null)
             Logger.Information(message);
@@ -52,7 +52,7 @@ public class FExLoggingService : IFExLoggingService
             Logger.Information(exception, message);
     }
 
-    public void LogTrace<T>(string message, Exception exception = null)
+    public void LogTrace<T>(string message, Exception? exception = null)
     {
         if (exception is null)
             Logger.Trace(message);
@@ -60,7 +60,7 @@ public class FExLoggingService : IFExLoggingService
             Logger.Trace(exception, message);
     }
 
-    public void LogWarning<T>(string message, Exception exception = null)
+    public void LogWarning<T>(string message, Exception? exception = null)
     {
         if (exception is null)
             Logger.Warning(message);
@@ -68,7 +68,7 @@ public class FExLoggingService : IFExLoggingService
             Logger.Warning(exception, message);
     }
 
-    public void Log<T>(LogLevel logLevel, string message, Exception exception = null)
+    public void Log<T>(LogLevel logLevel, string message, Exception? exception = null)
     {
         switch (logLevel)
         {
@@ -103,24 +103,24 @@ public class FExLoggingService : IFExLoggingService
         }
     }
 
-    public void LogCritical(object sender, string message, Exception exception = null) =>
+    public void LogCritical(object sender, string message, Exception? exception = null) =>
         LogCritical<object>(message, exception);
 
-    public void LogDebug(object sender, string message, Exception exception = null) =>
+    public void LogDebug(object sender, string message, Exception? exception = null) =>
         LogDebug<object>(message, exception);
 
-    public void LogError(object sender, string message, Exception exception = null) =>
+    public void LogError(object sender, string message, Exception? exception = null) =>
         LogError<object>(message, exception);
 
-    public void LogInformation(object sender, string message, Exception exception = null) =>
+    public void LogInformation(object sender, string message, Exception? exception = null) =>
         LogInformation<object>(message, exception);
 
-    public void LogTrace(object sender, string message, Exception exception = null) =>
+    public void LogTrace(object sender, string message, Exception? exception = null) =>
         LogTrace<object>(message, exception);
 
-    public void LogWarning(object sender, string message, Exception exception = null) =>
+    public void LogWarning(object sender, string message, Exception? exception = null) =>
         LogWarning<object>(message, exception);
 
-    public void Log(object sender, LogLevel logLevel, string message, Exception exception = null) =>
+    public void Log(object sender, LogLevel logLevel, string message, Exception? exception = null) =>
         Log<object>(logLevel, message, exception);
 }

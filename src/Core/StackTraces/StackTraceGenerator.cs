@@ -13,7 +13,10 @@ namespace FEx.Core.StackTraces;
 public class StackTraceGenerator : IStackTraceProvider
 {
     private readonly IStackTraceFilter[] _stackTraceFilters;
-    private StackTraceCache _stackTraceCache;
+
+    // Assigned during construction via CheatClrAndUseDynamicMethodsToGetStackTraceFast or the Fallback path;
+    // one of them always runs before the ctor returns.
+    private StackTraceCache _stackTraceCache = null!;
 
     public bool DotNotFixDynamicProxyStackTrace { get; set; }
 
@@ -42,7 +45,7 @@ public class StackTraceGenerator : IStackTraceProvider
 
     public StackTrace GetStackTrace() => _stackTraceCache.GetStackTrace();
 
-    public StackTraceInfo GetStackTraceInfo(string logger = null, string message = null)
+    public StackTraceInfo? GetStackTraceInfo(string? logger = null, string? message = null)
     {
         if (!RequiresStackTrace(logger, message))
             return null;
@@ -58,7 +61,8 @@ public class StackTraceGenerator : IStackTraceProvider
         for (var i = 0; i < stackFrameArray.Length; i++)
         {
             var stackFrame = stackFrameArray[i];
-            var declaringType = stackFrame.GetMethod().DeclaringType;
+            var method = stackFrame.GetMethod();
+            var declaringType = method?.DeclaringType;
 
             if (declaringType is not null)
                 stackTraceFrames.Add(new()
@@ -66,7 +70,7 @@ public class StackTraceGenerator : IStackTraceProvider
                     Column = stackFrame.GetFileColumnNumber(),
                     Line = stackFrame.GetFileLineNumber(),
                     FullFilename = stackFrame.GetFileName(),
-                    Method = stackFrame.GetMethod().Name,
+                    Method = method?.Name,
                     Type = declaringType.FullName,
                     Namespace = declaringType.Namespace ?? ""
                 });
@@ -101,6 +105,14 @@ public class StackTraceGenerator : IStackTraceProvider
 
         var method = stackTraceType.GetMethod("GetStackFramesInternal", BindingFlags.Static | BindingFlags.NonPublic);
 
+        var createMethod = typeof(MethodHandleAndILOffset).GetMethod(nameof(MethodHandleAndILOffset.Create),
+            [typeof(nint[]), typeof(int[])]);
+
+        // If any required reflection member is missing on the current runtime, bail out so the ctor
+        // falls back to the slow-and-safe path (leaving _stackTraceCache unset here).
+        if (field is null || fieldInfo is null || method is null || createMethod is null)
+            return;
+
         var dynamicMethod = new DynamicMethod("GetStackTraceFast",
             typeof(MethodHandleAndILOffset[]),
             Type.EmptyTypes,
@@ -130,7 +142,7 @@ public class StackTraceGenerator : IStackTraceProvider
         lGenerator.Emit(OpCodes.Ldfld, field);
         lGenerator.Emit(OpCodes.Ldloc_0);
         lGenerator.Emit(OpCodes.Ldfld, fieldInfo);
-        lGenerator.Emit(OpCodes.Call, typeof(MethodHandleAndILOffset).GetMethod(nameof(MethodHandleAndILOffset.Create), [typeof(nint[]), typeof(int[])]));
+        lGenerator.Emit(OpCodes.Call, createMethod);
         lGenerator.Emit(OpCodes.Ret);
 
         var getMethodRuntimeHandle =
@@ -139,7 +151,7 @@ public class StackTraceGenerator : IStackTraceProvider
         _stackTraceCache = new(() => new(getMethodRuntimeHandle()));
     }
 
-    private bool RequiresStackTrace(string logger, string message)
+    private bool RequiresStackTrace(string? logger, string? message)
     {
         var stackTraceFilterArray = _stackTraceFilters;
 
@@ -166,7 +178,12 @@ public class StackTraceGenerator : IStackTraceProvider
             var methodHandleAndIlOffset = new MethodHandleAndILOffset[frames.Length];
 
             for (var i = 0; i < methodHandleAndIlOffset.Length; i++)
-                methodHandleAndIlOffset[i] = new(frames[i].GetMethod().MethodHandle.Value, frames[i].GetILOffset());
+            {
+                // A real stack frame's method is expected; fall back to a zero handle if the runtime omits it.
+                var frameMethod = frames[i].GetMethod();
+                methodHandleAndIlOffset[i] =
+                    new(frameMethod?.MethodHandle.Value ?? IntPtr.Zero, frames[i].GetILOffset());
+            }
 
             return new(methodHandleAndIlOffset);
         });
@@ -184,7 +201,7 @@ public class StackTraceGenerator : IStackTraceProvider
             _items = items;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is not Key key)
                 return false;
@@ -247,7 +264,7 @@ public class StackTraceGenerator : IStackTraceProvider
             return methodHandleAndILOffset;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is not MethodHandleAndILOffset methodHandleAndILOffset)
                 return false;
@@ -287,7 +304,7 @@ public class StackTraceGenerator : IStackTraceProvider
 
         public StackTrace GetStackTrace()
         {
-            StackTrace stackTrace;
+            StackTrace? stackTrace;
             StackTrace stackTrace1;
             var key = _createKey();
             _rwLock.EnterReadLock();

@@ -6,7 +6,7 @@ namespace FEx.WPFx.Converters;
 /// <summary>
 /// Bool to visibility converter.
 /// </summary>
-public class BoolToVisibilityConverter : BaseMappingConverter<bool?, Visibility>
+public class BoolToVisibilityConverter : BaseMappingConverter<bool, Visibility>
 {
     /// <summary>
     /// Gets the default value.
@@ -16,7 +16,7 @@ public class BoolToVisibilityConverter : BaseMappingConverter<bool?, Visibility>
     /// <summary>
     /// Initializes the mappings.
     /// </summary>
-    protected override Dictionary<bool?, Visibility> InitializeMappings() =>
+    protected override Dictionary<bool, Visibility> InitializeMappings() =>
         new()
         {
             [true] = Visibility.Visible

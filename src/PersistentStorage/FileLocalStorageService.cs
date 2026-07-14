@@ -8,7 +8,7 @@ public abstract class FileLocalStorageService : IFileLocalStorageService
 {
     public abstract IFExCachedFile CacheFile(IFExDownloadResult downloadResult);
 
-    public abstract IFExCachedFile GetCachedFile(Uri fileUrl);
+    public abstract IFExCachedFile? GetCachedFile(Uri fileUrl);
 
     public abstract void UpdateFile(IFExCachedFile cachedFile);
 

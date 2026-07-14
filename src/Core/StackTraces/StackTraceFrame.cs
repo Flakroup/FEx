@@ -8,21 +8,21 @@ namespace FEx.Core.StackTraces;
 [Serializable]
 public class StackTraceFrame : IEquatable<StackTraceFrame>
 {
-    private string _fullFilename;
+    private string? _fullFilename;
 
     private bool? _fileExists;
 
     public int Column { get; set; }
 
-    public string Filename { get; set; }
+    public string? Filename { get; set; }
 
     public int Line { get; set; }
 
-    public string Method { get; set; }
+    public string? Method { get; set; }
 
-    public string Namespace { get; set; }
+    public string? Namespace { get; set; }
 
-    public string Type { get; set; }
+    public string? Type { get; set; }
 
     public bool FileExists
     {
@@ -36,7 +36,7 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
         set => _fileExists = value;
     }
 
-    public string FullFilename
+    public string? FullFilename
     {
         get => _fullFilename;
         set
@@ -45,7 +45,7 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
 
             try
             {
-                Filename = Path.GetFileName(value);
+                Filename = value is null ? null : Path.GetFileName(value);
             }
             catch (ArgumentException)
             {
@@ -56,7 +56,7 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
 
     public string FullTypeName => string.Concat(Namespace, ".", Type);
 
-    public bool Equals(StackTraceFrame other)
+    public bool Equals(StackTraceFrame? other)
     {
         if (other is null)
             return false;
@@ -73,7 +73,7 @@ public class StackTraceFrame : IEquatable<StackTraceFrame>
                && Equals(other.Namespace, Namespace);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj is null)
             return false;

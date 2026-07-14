@@ -6,8 +6,8 @@ namespace FEx.MVVM.Controls;
 public class ViewField : NotifyPropertyChanged
 {
     private bool _isVisible;
-    public string Header { get; set; }
-    public string ToolTip { get; set; }
+    public string? Header { get; set; }
+    public string? ToolTip { get; set; }
 
     public bool IsVisible
     {
@@ -20,7 +20,7 @@ public class ViewField : NotifyPropertyChanged
         }
     }
 
-    public Action<bool> IsVisiblePersistence { get; set; }
+    public Action<bool>? IsVisiblePersistence { get; set; }
 
     public ViewField()
     {

@@ -91,7 +91,7 @@ public static class FileLengthConverter
             _ => LengthType.AutoDetect
         };
 
-    private static string GetUnitShortcut(LengthType lengthType, double size = 0) =>
+    private static string? GetUnitShortcut(LengthType lengthType, double size = 0) =>
         lengthType switch
         {
             LengthType.Bytes => "B",

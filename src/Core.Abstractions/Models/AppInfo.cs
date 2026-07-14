@@ -6,11 +6,12 @@ namespace FEx.Core.Abstractions.Models;
 
 public record AppInfo : IAppInfo
 {
-    public string Name { get; init; }
-    public Version Version { get; init; }
-    public string Company { get; init; }
+    // Non-null-annotated per IAppInfo; expected to be supplied via object initializer at construction.
+    public string Name { get; init; } = null!;
+    public Version Version { get; init; } = null!;
+    public string Company { get; init; } = null!;
     public bool IsUIApp { get; set; }
-    public DirectoryInfo UserData { get; init; }
-    public DirectoryInfo AppData { get; init; }
-    public string LogDirPath { get; init; }
+    public DirectoryInfo UserData { get; init; } = null!;
+    public DirectoryInfo AppData { get; init; } = null!;
+    public string LogDirPath { get; init; } = null!;
 }

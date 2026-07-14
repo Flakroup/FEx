@@ -5,24 +5,25 @@ namespace FEx.Legacy.Mvvm.Observables;
 public class SubscriptionActions<T>
 {
     public Action<T> OnNext { get; }
-    public Action<Exception> OnError { get; }
-    public Action OnCompleted { get; }
+    public Action<Exception>? OnError { get; }
+    public Action? OnCompleted { get; }
 
     public SubscriptionActions(Action<T> onNext)
         : this(onNext, null, null)
     {
     }
 
-    public SubscriptionActions(Action<T> onNext, Action<Exception> onError, Action onCompleted)
+    public SubscriptionActions(Action<T> onNext, Action<Exception>? onError, Action? onCompleted)
     {
         OnNext = onNext;
         OnError = onError;
         OnCompleted = onCompleted;
     }
 
-    public IDisposable GetSubscription(IObservable<T> observable) => GetSubscription(observable, default);
+    // default!: unconstrained T; the parameterless overload intentionally passes default(T) as the initial argument - behavior unchanged.
+    public IDisposable? GetSubscription(IObservable<T> observable) => GetSubscription(observable, default!);
 
-    public IDisposable GetSubscription(IObservable<T> observable, T subscriptionArgument)
+    public IDisposable? GetSubscription(IObservable<T> observable, T subscriptionArgument)
     {
         if (OnNext is not null)
         {

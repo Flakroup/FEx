@@ -7,7 +7,7 @@ namespace FEx.WPFx.Converters;
 
 public class LongToTimeStringConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is null)
             return null;
@@ -17,5 +17,5 @@ public class LongToTimeStringConverter : IValueConverter
         return time.GetTime();
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
+    public object? ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
 }

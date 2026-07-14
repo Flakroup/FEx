@@ -122,7 +122,7 @@ public static class MappedDriveResolver
         using var driveSearcher = new ManagementObjectSearcher(selectWmiQuery);
         //Soem variables to be used inside and out of the foreach.
         var found = false;
-        string serverName = null;
+        string? serverName = null;
         using var disks = driveSearcher.Get();
 
         foreach (var disk in disks.Cast<ManagementObject>())
@@ -146,10 +146,11 @@ public static class MappedDriveResolver
             }
         }
 
+        // serverName!: reached only when found==true, where serverName was assigned from a DriveType==4 network drive's ProviderName (always non-null).
         return !found
             ? throw new DirectoryNotFoundException(
                 $"The drive {mappedDrive} was not found. Were your network drives mapped correctly?")
-            : serverName;
+            : serverName!;
     }
 
     /// <summary>
@@ -224,7 +225,8 @@ public static class MappedDriveResolver
         // Query WMI if the drive letter is a network drive
         using var mo = new ManagementObject();
         mo.Path = new($"Win32_LogicalDisk='{driveLetter}'");
-        var networkRoot = Convert.ToString(mo["ProviderName"]);
+        // Coalesce: ProviderName is null for non-network drives; empty string keeps the tuple's non-null string contract (Item3 is only read when Item1 == Network).
+        var networkRoot = Convert.ToString(mo["ProviderName"]) ?? string.Empty;
 
         return ((DriveType)(uint)mo["DriveType"], driveLetter, networkRoot);
     }

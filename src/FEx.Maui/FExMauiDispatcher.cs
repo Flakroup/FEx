@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Core.Abstractions.Implementations;
 using FEx.Core.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -29,24 +30,25 @@ public class FExMauiDispatcher : FExDispatcher
                              bool isDeadlockMonitoringEnabled)
         : base(logger, mainThreadContextProvider, deadlockMonitor, stackTraceProvider, isDeadlockMonitoringEnabled)
     {
-        _dispatcher = Dispatcher.GetForCurrentThread();
+        // MAUI dispatcher must exist on the thread that constructs this type; fail fast if it does not.
+        _dispatcher = Dispatcher.GetForCurrentThread().Guard(nameof(Dispatcher));
     }
 
-    public override void BeginInvokeOnMainThread(Action action, object sender) => _dispatcher.Dispatch(action);
+    public override void BeginInvokeOnMainThread(Action action, object? sender = null) => _dispatcher.Dispatch(action);
 
-    public override async Task InvokeOnMainThreadAsync(Action action, object sender) =>
+    public override async Task InvokeOnMainThreadAsync(Action action, object? sender = null) =>
         await _dispatcher.DispatchAsync(action);
 
-    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> func, object sender) =>
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> func, object? sender = null) =>
         await _dispatcher.DispatchAsync(func);
 
-    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object sender) =>
+    public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object? sender = null) =>
         await _dispatcher.DispatchAsync(funcTask);
 
-    public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object sender) =>
+    public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object? sender = null) =>
         await _dispatcher.DispatchAsync(funcTask);
 
-    public override bool CheckAccess(object sender) => _dispatcher.IsDispatchRequired;
+    public override bool CheckAccess(object? sender = null) => _dispatcher.IsDispatchRequired;
 
     public override void EnableCollectionSynchronization(IEnumerable collection,
                                                          object context,

@@ -5,7 +5,7 @@ namespace FEx.Core.Abstractions.Interfaces;
 
 public interface IMainThreadContextProvider
 {
-    event EventHandler<EventArgs> ThreadHasChanged;
+    event EventHandler<EventArgs>? ThreadHasChanged;
     Thread Thread { get; }
     bool IsDispatcherContext { get; set; }
     SynchronizationContext Context { get; }

@@ -21,14 +21,14 @@ public class ExceptionHandler : ExceptionHandlerBase
     private readonly IFExLogger _logger;
 
     /// <inheritdoc />
-    public override event EventHandler<ExceptionEventArgs> ExceptionOccured;
+    public override event EventHandler<ExceptionEventArgs>? ExceptionOccured;
 
     public ExceptionHandler(IFExLogger logger)
     {
         _logger = logger;
     }
 
-    public override void Handle(Exception exception, IExceptionHandlerOptions options = null)
+    public override void Handle(Exception exception, IExceptionHandlerOptions? options = null)
     {
         options ??= new ExceptionHandlerOptions();
 
@@ -37,8 +37,10 @@ public class ExceptionHandler : ExceptionHandlerBase
             base.Handle(exception, options);
     }
 
-    protected override void HandleException(Exception exception, IExceptionHandlerOptions options)
+    protected override void HandleException(Exception exception, IExceptionHandlerOptions? options)
     {
+        // Base.Handle only reaches HandleException after Handle() coalesced options to a non-null instance.
+        options = options.Guard(nameof(options));
         var args = new ExceptionEventArgs(exception, options.Custom);
         LastException = exception;
         ExceptionOccured?.Invoke(null, args);

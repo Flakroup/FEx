@@ -21,7 +21,7 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
     public string NodeName { get; }
     public string NodeHeader { get; }
     public ConcurrentList<FExTreeViewNode> ChildNodes { get; }
-    public string IconPath { get; }
+    public string? IconPath { get; }
     public bool IsExpanded { get; }
 
     public FExTreeViewNode(string path)
@@ -29,20 +29,20 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
     {
     }
 
-    public FExTreeViewNode(string path, string name)
+    public FExTreeViewNode(string path, string? name)
         : this(path, name, '\\', null, true, false)
     {
     }
 
-    public FExTreeViewNode(string path, string name, char pathSeparator)
+    public FExTreeViewNode(string path, string? name, char pathSeparator)
         : this(path, name, pathSeparator, null, true, false)
     {
     }
 
     public FExTreeViewNode(string path,
-                           string name,
+                           string? name,
                            char pathSeparator,
-                           string iconPath,
+                           string? iconPath,
                            bool isIconAttachedToFile,
                            bool isExpanded)
         : this(GetNodePath(path, pathSeparator), name, iconPath, isIconAttachedToFile, isExpanded)
@@ -54,17 +54,17 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
     {
     }
 
-    public FExTreeViewNode(List<string> path, string name)
+    public FExTreeViewNode(List<string> path, string? name)
         : this(path, name, null, true, false)
     {
     }
 
-    public FExTreeViewNode(List<string> path, string name, string iconPath)
+    public FExTreeViewNode(List<string> path, string? name, string? iconPath)
         : this(path, name, iconPath, true, false)
     {
     }
 
-    public FExTreeViewNode(List<string> path, string name, string iconPath, bool isIconAttachedToFile, bool isExpanded)
+    public FExTreeViewNode(List<string> path, string? name, string? iconPath, bool isIconAttachedToFile, bool isExpanded)
     {
         ChildNodes = [];
         NodeHeader = path.Last();
@@ -97,7 +97,7 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
         return $"_{name}";
     }
 
-    public string GetIconCacheKey()
+    public string? GetIconCacheKey()
     {
         if (IconPath is null)
             return null;
@@ -110,19 +110,19 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
     public void AddChildNode(string nodePath) => AddChildNode(nodePath, null, '\\', true, null, false);
 
     public void AddChildNode(string nodePath,
-                             string name,
+                             string? name,
                              char pathSeparator,
                              bool unique,
-                             string iconPath,
+                             string? iconPath,
                              bool isExpanded) =>
         AddChildNode(GetNodePath(nodePath, pathSeparator), name, unique, iconPath, true, isExpanded);
 
     public void AddChildNode(List<string> nodePath) => AddChildNode(nodePath, null, true, null, true, false);
 
     public void AddChildNode(List<string> nodePath,
-                             string name,
+                             string? name,
                              bool unique,
-                             string iconPath,
+                             string? iconPath,
                              bool isIconAttachedToFile,
                              bool isExpanded)
     {
@@ -145,7 +145,7 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
     }
 
     #region IEquatable
-    public bool Equals(FExTreeViewNode other)
+    public bool Equals(FExTreeViewNode? other)
     {
         if (other is null)
             return false;
@@ -153,7 +153,7 @@ public class FExTreeViewNode : IEquatable<FExTreeViewNode>
         return ReferenceEquals(this, other) || NodePath.SequenceEqual(other.NodePath);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj is null)
             return false;

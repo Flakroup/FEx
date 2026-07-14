@@ -37,13 +37,13 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     /// Occurs when the collection changes, either by adding or removing an item.
     /// </summary>
     [field: NonSerialized]
-    public event NotifyCollectionChangedEventHandler CollectionChanged;
+    public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
     /// <summary>
     /// PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
     [field: NonSerialized]
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public static T[] NoItems { get; } = [];
 
@@ -83,7 +83,7 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     /// comparing values in the set, or null to use the default <see cref="IEqualityComparer{T}" />
     /// implementation for the set type.
     /// </param>
-    public ObservableHashSet(IEnumerable<T> collection = null, IEqualityComparer<T> comparer = null)
+    public ObservableHashSet(IEnumerable<T>? collection = null, IEqualityComparer<T>? comparer = null)
     {
 #pragma warning disable CS0618 // Type or member is obsolete
         _dispatcher = FExCoreStatics.Dispatcher;
@@ -381,17 +381,21 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     /// </summary>
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
-        if (EventsAreSuppressed || PropertyChanged is null)
+        var handler = PropertyChanged;
+
+        if (EventsAreSuppressed || handler is null)
             return;
 
-        Dispatch(() => PropertyChanged.HandlePropertyChanged(this, e));
+        Dispatch(() => handler.HandlePropertyChanged(this, e));
     }
 
     protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
     {
-        if (EventsAreSuppressed || CollectionChanged is null)
+        var handler = CollectionChanged;
+
+        if (EventsAreSuppressed || handler is null)
             return;
 
-        Dispatch(() => CollectionChanged.Invoke(this, e));
+        Dispatch(() => handler.Invoke(this, e));
     }
 }

@@ -42,6 +42,9 @@ public sealed class OneDriveItemEnumerator : IOneDriveItemEnumerator
                     .Items[parentId]
                     .Children.GetAsync(cancellationToken: cancelToken);
 
+                if (response is null)
+                    throw new InvalidOperationException("Graph returned no response for the folder listing.");
+
                 var iterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(client,
                     response,
                     item =>

@@ -14,7 +14,7 @@ public class NullableBoolInvertedConverter : IValueConverter
         var b = value as bool?;
 
         return b.HasValue
-            ? !b
+            ? !b.Value
             : throw new InvalidOperationException("The target must be a boolean");
     }
 

@@ -19,7 +19,8 @@ public abstract class CachedSubjectBase<TData, T, TCacheable> : FExBehaviorSubje
 #endif
 
     protected CachedSubjectBase(ICacheService cacheService, ClearCacheReason clearCacheReason)
-        : this(cacheService, clearCacheReason, default)
+        // default! mirrors the FExBehaviorSubject default-value idiom; TData is unconstrained so default may be null and that is the intended empty state.
+        : this(cacheService, clearCacheReason, default!)
     {
     }
 

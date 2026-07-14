@@ -61,5 +61,5 @@ public static class DirectoryInfoExtensions
         folder.GetSpecialDirectory().Directory.GetDescendantPath(descendants);
 
     public static SpecialDirectory GetSpecialDirectory(this Environment.SpecialFolder folder) =>
-        SpecialDirectory.SpecialDirectories.TryGetReadOnlyKeyValue(folder);
+        SpecialDirectory.SpecialDirectories.TryGetReadOnlyKeyValue<Environment.SpecialFolder, SpecialDirectory>(folder);
 }

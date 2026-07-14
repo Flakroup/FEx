@@ -20,7 +20,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
     protected readonly IFExLogger _logger;
     protected readonly ConcurrentDictionary<string, IAsyncInitializable> _dependencies;
 
-    protected Task _initializationTask;
+    protected Task? _initializationTask;
 
     private readonly FExSemaphoreSlim _initializationSemaphore;
     private readonly FExSemaphoreSlim _taskSemaphore;
@@ -47,7 +47,8 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         _taskSemaphore = new();
         var instanceType = GetType();
         TypeName = instanceType.Name;
-        TypeFullName = instanceType.FullName;
+        // Type.FullName is non-null for concrete runtime types (instances); Guard proves it to the compiler.
+        TypeFullName = instanceType.FullName.Guard(nameof(instanceType));
         _dependencies = new();
         AddDependencies(dependencies);
     }
@@ -130,7 +131,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         if (!failed.Any())
             return;
 
-        throw new AggregateException(failed.Select(static fail => fail.Error.Exception));
+        throw new AggregateException(failed.Select(static fail => fail.Error?.Exception).OfType<Exception>());
     }
 
     protected virtual async Task InitializeCoreAsync()

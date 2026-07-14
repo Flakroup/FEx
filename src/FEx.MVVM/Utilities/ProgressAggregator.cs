@@ -27,7 +27,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
 
     private bool _isDisposed;
 
-    public event ProgressPropertyChangedEventHandler ProgressPropertyChanged;
+    public event ProgressPropertyChangedEventHandler? ProgressPropertyChanged;
     public Stopwatch Stopwatch { get; }
 
     public IFExTimer Timer { get; }
@@ -52,8 +52,8 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
 
     public override bool SetProperty<TRet>(ref TRet backingField,
                                            TRet newValue,
-                                           Action<TRet> onPropertyChanged = null,
-                                           [CallerMemberName] string propertyName = null)
+                                           Action<TRet>? onPropertyChanged = null,
+                                           [CallerMemberName] string? propertyName = null)
     {
         if (!base.SetProperty(ref backingField, newValue, onPropertyChanged, propertyName))
             return false;
@@ -158,7 +158,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
 
     public bool SetProperty<TRet>(ref TRet backingField,
                                   TRet newValue,
-                                  [CallerMemberName] string propertyName = null) =>
+                                  [CallerMemberName] string? propertyName = null) =>
         SetProperty(ref backingField, newValue, null, propertyName);
 
     protected virtual void LogError(string message) => FExStaticLogger.Error(message);
@@ -284,8 +284,7 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         _changedPropertiesSubject.OnNext(propertyName);
     }
 
-    protected void InvokeProgressPropertyChanged<TRet>(TRet newValue, string propertyName)
-
+    protected void InvokeProgressPropertyChanged<TRet>(TRet newValue, string? propertyName)
     {
         if (ProgressPropertyChanged is null)
             return;
@@ -294,7 +293,9 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
 
         return;
 
-        void EventDelegate() => InvokeProgressPropertyChanged(new(Id, propertyName, newValue));
+        // propertyName is supplied by [CallerMemberName]; newValue carries a boxed property value that may legitimately be null,
+        // matching the non-null object carrier modelled by ProgressPropertyChangedEventArgs (pre-nullable pass-through preserved).
+        void EventDelegate() => InvokeProgressPropertyChanged(new(Id, propertyName!, newValue!));
     }
 
     private void OnExcludedPropertiesChanged(IEnumerable<string> propertyNames)

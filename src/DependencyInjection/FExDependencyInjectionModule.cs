@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,8 +14,10 @@ public class FExDependencyInjectionModule : InitializeModule<IFExDependencyInjec
     [Instance(Options.AsEverythingPossible)]
     public static FExStrongInjectServiceProvider ServiceProvider { get; } = new();
 
-    protected override void RegisterServices(IFExDependencyInjectionContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExDependencyInjectionContainer? container, IServiceCollection services)
     {
+        container.Guard(nameof(container));
+
         services.AddSingletonServiceUsingContainer<IFExServiceContainer>(container);
 
         services.AddTransientServiceUsingContainer<IAsyncConfigurator[]>(container);

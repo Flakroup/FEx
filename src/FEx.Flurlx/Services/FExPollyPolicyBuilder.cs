@@ -186,12 +186,16 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
     private sealed class FExFallbackResponse : IFlurlResponse
     {
         public int StatusCode { get; init; }
-        public IFlurlRequest Request => null;
-        public HttpResponseMessage ResponseMessage => null;
-        public IReadOnlyList<FlurlCookie> Cookies => null;
-        public IReadOnlyNameValueList<string> Headers => null;
 
-        public Task<T> GetJsonAsync<T>() => Task.FromResult<T>(default);
+        // Fallback stub: only StatusCode is consumed by callers; the other IFlurlResponse
+        // members are never accessed on this degradation response, so null is safe here.
+        public IFlurlRequest Request => null!;
+        public HttpResponseMessage ResponseMessage => null!;
+        public IReadOnlyList<FlurlCookie> Cookies => null!;
+        public IReadOnlyNameValueList<string> Headers => null!;
+
+        // Fallback stub: deserialization is never invoked on the degradation response.
+        public Task<T> GetJsonAsync<T>() => Task.FromResult<T>(default!);
         public Task<string> GetStringAsync() => Task.FromResult("Service temporarily unavailable");
         public Task<byte[]> GetBytesAsync() => Task.FromResult(Array.Empty<byte>());
         public Task<Stream> GetStreamAsync() => Task.FromResult(Stream.Null);

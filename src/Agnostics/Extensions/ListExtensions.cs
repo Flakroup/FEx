@@ -7,11 +7,11 @@ namespace FEx.Agnostics.Extensions;
 
 public static class ListExtensions
 {
-    public static PaginatedList<T> MakePaginatedList<T>(this IList<T> items, int itemsPerPage, int page)
+    public static PaginatedList<T>? MakePaginatedList<T>(this IList<T> items, int itemsPerPage, int page)
     {
         var itemsToSkip = (page - 1) * itemsPerPage;
 
-        if (items?.Count > 0
+        if (items.Count > 0
             && (itemsToSkip > items.Count || itemsToSkip < 0))
             return null;
 

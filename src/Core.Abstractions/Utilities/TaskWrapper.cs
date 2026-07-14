@@ -7,7 +7,7 @@ namespace FEx.Core.Abstractions.Utilities;
 
 public class TaskWrapper : TaskWrapperBase<Task, Result<ExceptionError>>, ITaskWrapper
 {
-    public TaskWrapper(Func<Task> task = null, bool setStackTrace = true)
+    public TaskWrapper(Func<Task>? task = null, bool setStackTrace = true)
         : base(task, setStackTrace)
     {
     }
@@ -22,14 +22,15 @@ public class TaskWrapper : TaskWrapperBase<Task, Result<ExceptionError>>, ITaskW
         if (!IsFinished)
             await task();
 
+        // IsFailure guarantees a non-null Error; its Exception is set by ConvertExceptionToError.
         if (Result.IsFailure)
-            throw Result.Error.Exception;
+            throw Result.Error!.Exception!;
     }
 }
 
 public class TaskWrapper<T> : TaskWrapperBase<Task<T>, Result<T, ExceptionError>>, ITaskWrapper<T>
 {
-    public TaskWrapper(Func<Task<T>> task = null, bool setStackTrace = true)
+    public TaskWrapper(Func<Task<T>>? task = null, bool setStackTrace = true)
         : base(task, setStackTrace)
     {
     }
@@ -44,8 +45,9 @@ public class TaskWrapper<T> : TaskWrapperBase<Task<T>, Result<T, ExceptionError>
         if (!IsFinished)
             await task();
 
+        // IsFailure guarantees a non-null Error; its Exception is set by ConvertExceptionToError.
         if (Result.IsFailure)
-            throw Result.Error.Exception;
+            throw Result.Error!.Exception!;
 
         return Result.Data;
     }

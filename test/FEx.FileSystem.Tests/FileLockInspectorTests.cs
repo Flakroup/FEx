@@ -12,7 +12,7 @@ public sealed class FileLockInspectorTests
     public void WhoIsLocking_NullPath_ReturnsEmpty()
     {
         // Act
-        var result = FileLockInspector.WhoIsLocking((string)null);
+        var result = FileLockInspector.WhoIsLocking((string?)null);
 
         // Assert
         result.ShouldBeEmpty();

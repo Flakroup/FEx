@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Downloader.Abstractions.Interfaces;
 using System;
 
@@ -6,15 +7,15 @@ namespace FEx.Downloader;
 public class DownloadIndex : IEquatable<DownloadIndex>
 {
     public string Url { get; }
-    public string FilePath { get; }
+    public string? FilePath { get; }
 
     public DownloadIndex(IDownloadBase di)
     {
-        Url = di.Url.AbsoluteUri;
+        Url = di.Url.Guard(nameof(di.Url)).AbsoluteUri;
         FilePath = di.FilePath;
     }
 
-    public bool Equals(DownloadIndex other)
+    public bool Equals(DownloadIndex? other)
     {
         if (other is null)
             return false;
@@ -30,7 +31,7 @@ public class DownloadIndex : IEquatable<DownloadIndex>
 
     public override string ToString() => $"{Url}\t{FilePath}";
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj is null)
             return false;

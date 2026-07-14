@@ -2,6 +2,7 @@ using FEx.Agnostics.Abstractions.Flow;
 using FEx.Agnostics.Abstractions.Interfaces.Flow;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
@@ -13,7 +14,7 @@ public static class ErrorExtensions
             ? error
             : error.InnerError.GetErrorRoot();
 
-    public static bool TryGetError<TError>(this IError error, out TError foundError) where TError : IError
+    public static bool TryGetError<TError>(this IError error, [MaybeNullWhen(false)] out TError foundError) where TError : IError
     {
         if (error is TError innerError)
         {
@@ -47,5 +48,5 @@ public static class ErrorExtensions
         }.AsReadOnly());
 
     public static AggregateException ToAggregateException(this AggregatedError error) =>
-        new(error.InnerErrors.OfType<IExceptionError>().Select(static x => x.Exception));
+        new(error.InnerErrors.OfType<IExceptionError>().Select(static x => x.Exception).OfType<Exception>());
 }

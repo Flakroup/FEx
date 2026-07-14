@@ -33,8 +33,9 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
 
     public int? DelayOnTimeout => _dbConfig.DelayOnTimeout;
 
-    public IReadOnlyDictionary<string, Mapping> Mappings { get; private set; }
-    public Map<string, string> TableMappings { get; private set; }
+    // Both are populated in EnsureMappingSnapshotAsync during async initialization, before any consumer access.
+    public IReadOnlyDictionary<string, Mapping> Mappings { get; private set; } = null!;
+    public Map<string, string> TableMappings { get; private set; } = null!;
 
     protected PooledDbService(IScopeProvider scopeProvider,
                               ResilientTransaction transaction,
@@ -48,19 +49,19 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     }
 
     public async Task RunTaskInDbContextAsync(Func<TDbContext, Task> func,
-                                              string errorMessage = null,
+                                              string? errorMessage = null,
                                               bool saveChanges = true,
                                               bool useTransaction = true) =>
         await RunTaskInDbContextAsync(func.WrapTask, errorMessage, saveChanges, useTransaction);
 
     public async Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Task<T>> func,
-                                                    string errorMessage = null,
+                                                    string? errorMessage = null,
                                                     bool saveChanges = true,
                                                     bool useTransaction = true) =>
         await RunWithinTransactionAsync(func, errorMessage, saveChanges, useTransaction);
 
     public async Task<T> RunTaskInDbContextAsync<T>(Func<TDbContext, Func<Task<T>>> func,
-                                                    string errorMessage = null,
+                                                    string? errorMessage = null,
                                                     bool saveChanges = true,
                                                     bool useTransaction = true) =>
         await RunWithinTransactionAsync(dbContext => func(dbContext)(), errorMessage, saveChanges, useTransaction);
@@ -106,27 +107,27 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     }
 
     public async Task RunActionInDbContextAsync(Action<TDbContext> func,
-                                                string errorMessage,
+                                                string? errorMessage,
                                                 bool saveChanges,
                                                 bool useTransaction) =>
         await RunFuncInDbContextAsync(dbContext =>
             {
                 func(dbContext);
 
-                return (object)null;
+                return (object?)null;
             },
             errorMessage,
             saveChanges,
             useTransaction);
 
     public async Task<T> RunFuncInDbContextAsync<T>(Func<TDbContext, T> func,
-                                                    string errorMessage = null,
+                                                    string? errorMessage = null,
                                                     bool saveChanges = true,
                                                     bool useTransaction = true) =>
         await RunWithinTransactionAsync(func, errorMessage, saveChanges, useTransaction);
 
     public T RunWithinTransaction<T>(Func<TDbContext, T> func,
-                                     string errorMessage,
+                                     string? errorMessage,
                                      bool saveChanges,
                                      bool useTransaction,
                                      IsolationLevel isolationLevel)
@@ -154,7 +155,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     }
 
     public async Task<T> RunWithinTransactionAsync<T>(Func<TDbContext, T> func,
-                                                      string errorMessage = null,
+                                                      string? errorMessage = null,
                                                       bool saveChanges = true,
                                                       bool useTransaction = true,
                                                       IsolationLevel isolationLevel = IsolationLevel.Unspecified)
@@ -182,7 +183,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     }
 
     public async Task<T> RunWithinTransactionAsync<T>(Func<TDbContext, Task<T>> func,
-                                                      string errorMessage = null,
+                                                      string? errorMessage = null,
                                                       bool saveChanges = true,
                                                       bool useTransaction = true,
                                                       IsolationLevel isolationLevel = IsolationLevel.Unspecified)
@@ -247,7 +248,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
                     .Select(t => new Mapping
                     {
                         ClrTypeName = t.ClrType.FullName.Guard("ClrTypeName"),
-                        TableName = t.GetTableName(),
+                        TableName = t.GetTableName().Guard(nameof(Mapping.TableName)),
                         Properties = t.GetMappedProperties()
                     })
                     .ToDictionary(mapping => mapping.ClrTypeName);

@@ -29,7 +29,9 @@ public class DIContractResolver : DefaultContractResolver
                         BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                     ?.MakeGenericMethod(objectType);
 
-                return method?.Invoke(FExServiceProvider.ServiceContainer, null);
+                // objectType is registered (checked above), so ResolveService exists and
+                // returns a non-null service instance.
+                return method?.Invoke(FExServiceProvider.ServiceContainer, null)!;
             };
 
             return contract;

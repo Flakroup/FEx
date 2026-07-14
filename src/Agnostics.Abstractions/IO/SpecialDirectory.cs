@@ -9,15 +9,16 @@ namespace FEx.Agnostics.Abstractions.IO;
 
 public class SpecialDirectory
 {
+    // Populated by the static constructor before any access.
     public static IReadOnlyDictionary<Environment.SpecialFolder, SpecialDirectory> SpecialDirectories
     {
         get;
         private set;
-    }
+    } = null!;
 
     public Environment.SpecialFolder DirectoryType { get; }
     public DirectoryInfo Directory { get; }
-    public string FullName => Directory?.FullName;
+    public string FullName => Directory.FullName;
 
     public SpecialDirectory(Environment.SpecialFolder directoryType, DirectoryInfo directory)
     {
@@ -46,12 +47,13 @@ public class SpecialDirectory
     {
         var source = EnumExtensions.GetEnumValues<Environment.SpecialFolder>()
             .Select(x => (key: x, value: EvaluateSpecialDirectory(x)))
-            .ToDictionary(x => x.key, x => x.value);
+            .Where(x => x.value is not null)
+            .ToDictionary(x => x.key, x => x.value!);
 
         SpecialDirectories = new ConcurrentDictionary<Environment.SpecialFolder, SpecialDirectory>(source);
     }
 
-    private static SpecialDirectory EvaluateSpecialDirectory(Environment.SpecialFolder value)
+    private static SpecialDirectory? EvaluateSpecialDirectory(Environment.SpecialFolder value)
     {
         try
         {

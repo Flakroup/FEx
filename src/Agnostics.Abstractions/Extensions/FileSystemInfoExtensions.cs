@@ -4,7 +4,7 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 
 public static class FileSystemInfoExtensions
 {
-    public static DirectoryInfo GetDirectory(this FileSystemInfo fileSystemInfo) =>
+    public static DirectoryInfo? GetDirectory(this FileSystemInfo fileSystemInfo) =>
         fileSystemInfo switch
         {
             DirectoryInfo info => info,

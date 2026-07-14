@@ -5,11 +5,11 @@ namespace FEx.EFCore.Interfaces;
 
 public interface IFExDbConfig
 {
-    string SqlInstance { get; set; }
-    string SqlDbName { get; }
-    string Username { get; }
-    string Password { get; }
-    FileInfo SqliteDbFile { get; }
+    string? SqlInstance { get; set; }
+    string? SqlDbName { get; }
+    string? Username { get; }
+    string? Password { get; }
+    FileInfo? SqliteDbFile { get; }
     int? CommandTimeout { get; }
     int MaxRetryCount { get; }
     TimeSpan MaxRetryDelay { get; }

@@ -24,7 +24,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
     private readonly Duration _zoomAnimationDuration = new(TimeSpan.FromMilliseconds(100));
     private readonly SemaphoreSlim _zoomSemaphore;
 
-    private UIElement _child;
+    private UIElement? _child;
     private bool _isReseted;
     private Point _originBottomRight;
     private Point _originTopLeft;
@@ -35,7 +35,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
     private double _scale;
     private bool _isAutoFitEnabled;
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public override UIElement Child
     {
@@ -54,7 +54,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
     public double MaxScaleToZoomIn { get; } = 2;
     public double DefaultScale { get; } = 1;
     public double DefaultZoom { get; } = .1;
-    public Action<ZoomBorder, double> ScaleChanged { get; private set; }
+    public Action<ZoomBorder, double>? ScaleChanged { get; private set; }
 
     public ConcurrentDictionary<string, IDisposable> Subscriptions { get; }
 
@@ -73,10 +73,10 @@ public class ZoomBorder : Border, INotifyPropertyChanged
 
     protected Size ParentSize { get; set; }
 
-    protected TaskCompletionSource<bool> AnimationSXTcs { get; set; }
-    protected TaskCompletionSource<bool> AnimationSYTcs { get; set; }
-    protected TaskCompletionSource<bool> AnimationAXTcs { get; set; }
-    protected TaskCompletionSource<bool> AnimationAYTcs { get; set; }
+    protected TaskCompletionSource<bool>? AnimationSXTcs { get; set; }
+    protected TaskCompletionSource<bool>? AnimationSYTcs { get; set; }
+    protected TaskCompletionSource<bool>? AnimationAXTcs { get; set; }
+    protected TaskCompletionSource<bool>? AnimationAYTcs { get; set; }
 
     public ZoomBorder()
     {
@@ -153,7 +153,8 @@ public class ZoomBorder : Border, INotifyPropertyChanged
                     zoom = GetZoom();
                 }
 
-                if (zoom != Math.Round(Scale - 1, 2))
+                if (zoom != Math.Round(Scale - 1, 2)
+                    && _child is not null)
                 {
                     var x = _child.RenderSize.Width / 2 - 2;
                     var y = _child.RenderSize.Height / 2 - 2;
@@ -164,7 +165,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
     }
 
     [NotifyPropertyChangedInvocator]
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         if (propertyName is null
             || PropertyChanged is null)
@@ -234,6 +235,9 @@ public class ZoomBorder : Border, INotifyPropertyChanged
 
     private void SetCoordinates()
     {
+        if (_child is null)
+            return;
+
         _originTopLeft = new(_tt.X, _tt.Y);
 
         _originBottomRight = new(_tt.X + _child.RenderSize.Width * _st.ScaleX,
@@ -323,6 +327,9 @@ public class ZoomBorder : Border, INotifyPropertyChanged
 
     private void MoveChild(Point currentPosition)
     {
+        if (_child is null)
+            return;
+
         var v = _start - currentPosition;
 
         var newXLeft = _originTopLeft.X - v.X;
@@ -398,7 +405,8 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         var newX = absoluteX - diffX;
         var newY = absoluteY - diffY;
 
-        if (zoom <= 0)
+        if (zoom <= 0
+            && _child is not null)
         {
             var bottomRight = new Point(absoluteX + _child.RenderSize.Width * newScaleX,
                 absoluteY + _child.RenderSize.Height * newScaleY);
@@ -507,19 +515,19 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         switch (key)
         {
             case nameof(AnimationSXTcs):
-                AnimationSXTcs.TrySetResult(true);
+                AnimationSXTcs?.TrySetResult(true);
 
                 break;
             case nameof(AnimationSYTcs):
-                AnimationSYTcs.TrySetResult(true);
+                AnimationSYTcs?.TrySetResult(true);
 
                 break;
             case nameof(AnimationAXTcs):
-                AnimationAXTcs.TrySetResult(true);
+                AnimationAXTcs?.TrySetResult(true);
 
                 break;
             case nameof(AnimationAYTcs):
-                AnimationAYTcs.TrySetResult(true);
+                AnimationAYTcs?.TrySetResult(true);
 
                 break;
         }
@@ -529,10 +537,10 @@ public class ZoomBorder : Border, INotifyPropertyChanged
     {
         if (!_isAnimationCancelled)
         {
-            AnimationSXTcs.TrySetResult(false);
-            AnimationSYTcs.TrySetResult(false);
-            AnimationAXTcs.TrySetResult(false);
-            AnimationAYTcs.TrySetResult(false);
+            AnimationSXTcs?.TrySetResult(false);
+            AnimationSYTcs?.TrySetResult(false);
+            AnimationAXTcs?.TrySetResult(false);
+            AnimationAYTcs?.TrySetResult(false);
 
             double x = _tt.X, y = _tt.Y, scaleX = _st.ScaleX, scaleY = _st.ScaleY;
             _st.BeginAnimation(ScaleTransform.ScaleXProperty, null);
@@ -555,6 +563,9 @@ public class ZoomBorder : Border, INotifyPropertyChanged
 
     private double GetZoom()
     {
+        if (_child is null)
+            return 0;
+
         var relativePoint = TranslatePoint(new(0.0, 0.0), null);
         var originTopLeft = new Point(relativePoint.X, relativePoint.Y);
         var originBottomRight = new Point(relativePoint.X + RenderSize.Width, relativePoint.Y + RenderSize.Height);

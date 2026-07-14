@@ -20,11 +20,11 @@ public abstract class BulkDbServiceBase<TDbContext> : DbServiceBase<TDbContext>,
 {
     private bool _isDisposed;
 
-    public Func<BulkConfig> BulkConfig { get; }
-    public SemaphoreSlim BulkOperationsSemaphore { get; }
+    public Func<BulkConfig>? BulkConfig { get; }
+    public SemaphoreSlim? BulkOperationsSemaphore { get; }
 
     protected BulkDbServiceBase(IScopeProvider scopeProvider,
-                                IBulkDbConfig bulkDbConfig,
+                                IBulkDbConfig? bulkDbConfig,
                                 ResilientTransaction resilientTransaction,
                                 IFExDbConfig dbConfig,
                                 IAsyncInitializable[] dependencies)

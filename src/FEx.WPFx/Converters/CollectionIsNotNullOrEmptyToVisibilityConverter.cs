@@ -27,16 +27,12 @@ public class CollectionIsNotNullOrEmptyToVisibilityConverter : IValueConverter
     /// <returns>
     /// System.Windows.Visibility.Visible if value is false; otherwise, System.Windows.Visibility.Collapsed.
     /// </returns>
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is not null)
-        {
-            var res = value as IEnumerable<object>;
-
+        if (value is IEnumerable<object> res)
             return res.IsNotNullOrEmptyEnumerable()
                 ? Visibility.Visible
                 : Visibility.Collapsed;
-        }
 
         return false;
     }
@@ -51,5 +47,5 @@ public class CollectionIsNotNullOrEmptyToVisibilityConverter : IValueConverter
     /// <returns>
     /// A converted value. False if value is System.Windows.Visibility.Visible; otherwise, true.
     /// </returns>
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => false;
+    public object? ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => false;
 }

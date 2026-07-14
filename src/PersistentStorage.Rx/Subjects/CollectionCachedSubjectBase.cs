@@ -23,7 +23,7 @@ public abstract class
             && value.Count == 0)
             return;
 
-        if (value.IsNullOrEmpty())
+        if (value is null || value.IsNullOrEmpty())
         {
             ClearCache();
 

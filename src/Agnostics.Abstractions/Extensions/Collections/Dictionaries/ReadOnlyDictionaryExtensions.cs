@@ -9,7 +9,7 @@ public static class ReadOnlyDictionaryExtensions
 {
     public static TValue TryGetReadOnlyKeyValue<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary,
                                                               TKey key,
-                                                              TValue fallback = default)
+                                                              TValue fallback = default!)
     {
         if (key is not null
             && dictionary.IsNotNullOrEmptyReadOnlyCollection()
@@ -29,6 +29,7 @@ public static class ReadOnlyDictionaryExtensions
     {
         var res = dictionary.TryGetValue(key, out var v);
 
-        return (res, v);
+        // v is meaningful only when res is true; otherwise it is default(TV) by the Try pattern.
+        return (res, v!);
     }
 }

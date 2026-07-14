@@ -16,7 +16,7 @@ public static class UrlExtensions
 
     public static Task<double> CalculateSizeAsync(this Url url, LengthType unit) => url.CalculateSizeAsync(unit, null);
 
-    public static async Task<double> CalculateSizeAsync(this Url url, LengthType unit, IFlurlClient client)
+    public static async Task<double> CalculateSizeAsync(this Url url, LengthType unit, IFlurlClient? client)
     {
         var dispose = false;
 
@@ -40,7 +40,7 @@ public static class UrlExtensions
         finally
         {
             if (dispose)
-                client.Dispose();
+                client?.Dispose(); // client is non-null whenever dispose is true (freshly created above)
         }
     }
 
@@ -56,7 +56,7 @@ public static class UrlExtensions
         url.GetBytesAsync(client, origin, offset, null);
 
     public static async Task<MemoryStream> GetBytesAsync(this Url url,
-                                                         IFlurlClient client,
+                                                         IFlurlClient? client,
                                                          SeekOrigin origin,
                                                          long offset,
                                                          long? length)
@@ -126,7 +126,7 @@ public static class UrlExtensions
         finally
         {
             if (dispose)
-                client.Dispose();
+                client?.Dispose(); // client is non-null whenever dispose is true (freshly created above)
         }
     }
 

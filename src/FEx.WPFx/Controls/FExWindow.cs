@@ -26,10 +26,14 @@ public class FExWindow<TViewModel> : Window, IViewFor<TViewModel>, IRunAsyncView
         typeof(FExWindow<TViewModel>));
 
     public bool IsInDesignMode { get; }
-    public Grid MainGrid { get; protected set; }
-    public Screen DisplayScreen { get; protected set; }
 
-    public TViewModel ViewModel
+    // Assigned by EnableRescaling before any rescale access; non-null once rescaling is enabled.
+    public Grid MainGrid { get; protected set; } = null!;
+
+    // Assigned by EnableRescaling before any rescale access; non-null once rescaling is enabled.
+    public Screen DisplayScreen { get; protected set; } = null!;
+
+    public TViewModel? ViewModel
     {
         get => (TViewModel)FExCoreStatics.Dispatcher.InvokeOnMainThread(() => GetValue(ViewModelProperty));
         set => FExCoreStatics.Dispatcher.InvokeOnMainThread(() => SetValue(ViewModelProperty, value));
@@ -37,10 +41,10 @@ public class FExWindow<TViewModel> : Window, IViewFor<TViewModel>, IRunAsyncView
 
     protected double FixedWidth { get; set; }
 
-    object IViewFor.ViewModel
+    object? IViewFor.ViewModel
     {
         get => ViewModel;
-        set => ViewModel = (TViewModel)value;
+        set => ViewModel = (TViewModel?)value;
     }
 
     public FExWindow()
@@ -54,30 +58,34 @@ public class FExWindow<TViewModel> : Window, IViewFor<TViewModel>, IRunAsyncView
         }
     }
 
-    public virtual async Task RunAsync(Action action, object sender = null, JobSpecs? specs = null) =>
-        await ViewModel.RunAsync(action, specs, () => PreAction(sender), isSuccess => PostAction(sender, isSuccess));
+    public virtual async Task RunAsync(Action action, object? sender = null, JobSpecs? specs = null) =>
+        await ViewModel.Guard(nameof(ViewModel))
+            .RunAsync(action, specs, () => PreAction(sender), isSuccess => PostAction(sender, isSuccess));
 
-    public virtual async Task RunTaskAsync(Func<Task> function, object sender = null, JobSpecs? specs = null) =>
-        await ViewModel.RunTaskAsync(function,
-            specs,
-            () => PreAction(sender),
-            isSuccess => PostAction(sender, isSuccess));
+    public virtual async Task RunTaskAsync(Func<Task> function, object? sender = null, JobSpecs? specs = null) =>
+        await ViewModel.Guard(nameof(ViewModel))
+            .RunTaskAsync(function,
+                specs,
+                () => PreAction(sender),
+                isSuccess => PostAction(sender, isSuccess));
 
     public virtual async Task<TResult> RunTaskAsync<TResult>(Func<Task<TResult>> function,
-                                                             object sender = null,
+                                                             object? sender = null,
                                                              JobSpecs? specs = null) =>
-        await ViewModel.RunTaskAsync(function,
-            specs,
-            () => PreAction(sender),
-            isSuccess => PostAction(sender, isSuccess));
+        await ViewModel.Guard(nameof(ViewModel))
+            .RunTaskAsync(function,
+                specs,
+                () => PreAction(sender),
+                isSuccess => PostAction(sender, isSuccess));
 
     public virtual async Task<TResult> RunFuncAsync<TResult>(Func<TResult> function,
-                                                             object sender = null,
+                                                             object? sender = null,
                                                              JobSpecs? specs = null) =>
-        await ViewModel.RunFuncAsync(function,
-            specs,
-            () => PreAction(sender),
-            isSuccess => PostAction(sender, isSuccess));
+        await ViewModel.Guard(nameof(ViewModel))
+            .RunFuncAsync(function,
+                specs,
+                () => PreAction(sender),
+                isSuccess => PostAction(sender, isSuccess));
 
     public void FExWindow_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e) =>
         RefreshViewModel(true);
@@ -88,9 +96,9 @@ public class FExWindow<TViewModel> : Window, IViewFor<TViewModel>, IRunAsyncView
         this.PlaceToPrimaryMonitor();
     }
 
-    protected virtual void PreAction(object sender) => DisableUIElement(sender);
+    protected virtual void PreAction(object? sender) => DisableUIElement(sender);
 
-    protected virtual void PostAction(object sender, bool isSuccess) => EnableUIElement(sender);
+    protected virtual void PostAction(object? sender, bool isSuccess) => EnableUIElement(sender);
 
     protected virtual void ReScale()
     {
@@ -151,7 +159,7 @@ public class FExWindow<TViewModel> : Window, IViewFor<TViewModel>, IRunAsyncView
                 .Subscribe(_ => ReScale()));
     }
 
-    private static void EnableUIElement(object sender)
+    private static void EnableUIElement(object? sender)
     {
         if (sender is not UIElement element)
             return;
@@ -159,7 +167,7 @@ public class FExWindow<TViewModel> : Window, IViewFor<TViewModel>, IRunAsyncView
         element.EnableUIElement(true);
     }
 
-    private static void DisableUIElement(object sender)
+    private static void DisableUIElement(object? sender)
     {
         if (sender is not UIElement element)
             return;

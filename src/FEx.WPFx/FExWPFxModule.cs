@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Collections.Concurrent;
 using FEx.Core.Abstractions.Interfaces;
@@ -30,8 +31,10 @@ public class FExWpfxModule : InitializeModule<IFExWpfxContainer, IServiceCollect
     [Instance]
     public static IAppConfig AppConfig { get; } = new AppConfig(); //todo make it configurable
 
-    protected override void RegisterServices(IFExWpfxContainer container, IServiceCollection services)
+    protected override void RegisterServices(IFExWpfxContainer? container, IServiceCollection services)
     {
+        container = container.Guard(nameof(container));
+
         services.AddSingletonServiceUsingContainer<IAppConfig>(container);
         services.AddSingletonServiceUsingContainer<IFExMemoryCache<string, BitmapSource>>(container);
         services.AddSingletonServiceUsingContainer<Splash>(container);

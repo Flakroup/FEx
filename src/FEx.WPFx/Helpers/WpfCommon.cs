@@ -37,7 +37,7 @@ public static class WpfCommon
         }
     }
 
-    public static object ExitFrame(object frame)
+    public static object? ExitFrame(object frame)
     {
         ((DispatcherFrame)frame).Continue = false;
 

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<Description>MudBlazor integration: a Polish localizer for MudBlazor's built-in UI strings</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MudBlazor" Version="9.6.0" />
+	</ItemGroup>
+
+</Project>

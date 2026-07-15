@@ -13,6 +13,7 @@ Reference .NET library - shared framework used as a git submodule across several
 
 - **Multi-target**: `net10.0`, `netstandard2.0`, `netstandard2.1`, `net481` (via MSBuild properties in `Directory.Build.props`)
 - Project naming: `FEx.<Feature>` + `FEx.<Feature>.Abstractions` - abstractions always in a separate project (interfaces in `.Abstractions`, implementations in the main project)
+- Naming a module after a trademarked/product name: append `x` (`FEx.WPFx`, `FEx.Blazorx`, `FEx.AspNetCorex`, `FEx.Avaloniax`). A generic-sounding name stays plain (`FEx.Offline`, `FEx.Logging`, `FEx.Encryption`) - no `x` added for its own sake.
 - Folder naming: new folders without the `FEx.` prefix (e.g. `src/Sqlx/FEx.Sqlx.csproj`, `src/MSBuildx/FEx.MSBuildx.csproj`)
 - Package versions centralized in `DevConfigs/Directory.Build.props` (`DotNetNugetsVersion`, `AvaloniaVersion`, etc.)
 - Used as a submodule in other projects - breaking changes ripple to consumers

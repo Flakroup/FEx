@@ -88,6 +88,12 @@
   <Folder Name="/test/">
     <File Path="test/Directory.Build.props" />
     <File Path="test/Directory.Build.targets" />
+    <Project Path="test/FEx.AspNetCorex.Tests/FEx.AspNetCorex.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.Blazorx.Tests/FEx.Blazorx.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.DependencyInjection.Tests/FEx.DependencyInjection.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
@@ -103,12 +109,18 @@
     <Project Path="test/FEx.FileSystem.Tests/FEx.FileSystem.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.Offline.Tests/FEx.Offline.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.OneDrv.Tests/FEx.OneDrv.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
   </Folder>
   <Project Path="build/_build.csproj" />
   <Project Path="src/FEx.AppSettings/FEx.AppSettings.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/AspNetCorex/FEx.AspNetCorex.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Asyncx/FEx.Asyncx.csproj">
@@ -118,6 +130,9 @@
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Avaloniax/FEx.Avaloniax.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/Blazorx/FEx.Blazorx.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.AzureStorage/FEx.AzureStorage.csproj">
@@ -179,6 +194,12 @@
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.NuGetx/FEx.NuGetx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/Offline.Abstractions/FEx.Offline.Abstractions.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/Offline/FEx.Offline.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.OneDrv.Abstractions/FEx.OneDrv.Abstractions.csproj">

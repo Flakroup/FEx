@@ -31,6 +31,30 @@ public sealed class HttpOutboxTests
     }
 
     [Fact]
+    public async Task EnqueueWithExplicitId_PersistsThatKey_AndReplaysOnIt()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        Guid key = new("11111111-1111-1111-1111-111111111111");
+
+        // The key a request already carried online: enqueuing under it lets the server dedup a landed-but-
+        // lost write instead of executing it twice.
+        var entry = await outbox.EnqueueAsync(key, "POST", "api/sales/contracts/5/payments", """{"n":1}""");
+        entry.Id.ShouldBe(key);
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Created);
+
+        using HttpClient http = new(handler)
+        {
+            BaseAddress = new("http://localhost/")
+        };
+
+        await outbox.FlushAsync(http);
+
+        handler.IdempotencyKeys.ShouldBe(new() { key.ToString() });
+    }
+
+    [Fact]
     public async Task Flush_SendsInEnqueueOrder_WithThePersistedIdempotencyKey_AndEmptiesTheQueue()
     {
         FixedTime time = new(T0);

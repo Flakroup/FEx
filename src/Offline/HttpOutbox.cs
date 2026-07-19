@@ -53,9 +53,19 @@ public sealed class HttpOutbox
         _json = json ?? JsonSerializerOptions.Web;
     }
 
-    public async Task<OutboxEntry> EnqueueAsync(string method, string url, string? jsonBody)
+    public Task<OutboxEntry> EnqueueAsync(string method, string url, string? jsonBody) =>
+        EnqueueAsync(Guid.NewGuid(), method, url, jsonBody);
+
+    /// <summary>
+    /// Queue a write under a caller-chosen <paramref name="id" /> (the Idempotency-Key). Use this when the
+    /// same request was already attempted online under that key: enqueuing it with the SAME key lets the
+    /// server-side idempotency cache recognise a request that DID land but whose response was lost, so the
+    /// replay never double-executes. The parameterless overload keeps the fresh-key behaviour for
+    /// writes made purely offline (no online attempt to reconcile with).
+    /// </summary>
+    public async Task<OutboxEntry> EnqueueAsync(Guid id, string method, string url, string? jsonBody)
     {
-        OutboxEntry entry = new(Guid.NewGuid(), method, url, jsonBody, _time.GetUtcNow(), 0, null);
+        OutboxEntry entry = new(id, method, url, jsonBody, _time.GetUtcNow(), 0, null);
         await SaveAsync(entry);
 
         return entry;

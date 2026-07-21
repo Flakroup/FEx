@@ -52,6 +52,15 @@ public static class CoverageGate
             }
         }
 
+        foreach ((string path, int line) in options.LineExclusions)
+        {
+            if (byFile.TryGetValue(path.Replace('\\', '/'), out LineSets? lines))
+            {
+                lines.Measurable.Remove(line);
+                lines.Covered.Remove(line);
+            }
+        }
+
         List<CoverageFile> files = byFile
             .Select(entry => entry.Value.ToFile(entry.Key))
             .OrderByDescending(static f => f.UncoveredLines.Count)
@@ -153,6 +162,15 @@ public sealed class CoverageGateOptions
 
     /// <summary>Root-relative files or subtrees exempt from the threshold. Every entry needs a written reason.</summary>
     public IReadOnlyList<string> Exclusions { get; init; } = [];
+
+    /// <summary>
+    /// Individual (root-relative file, line number) pairs exempt from the threshold - for a single
+    /// defensive branch inside an otherwise fully-tested file, where excluding the whole file would
+    /// throw away real coverage. Every entry needs a written reason, same as <see cref="Exclusions" />.
+    /// A pair that matches nothing (line already covered, or renumbered by an edit) is silently a no-op -
+    /// harmless, since it excludes nothing and the gate still fails on whatever is genuinely uncovered.
+    /// </summary>
+    public IReadOnlyList<(string Path, int Line)> LineExclusions { get; init; } = [];
 
     /// <summary>
     /// Assemblies that must show up in the reports. A project whose assembly is absent contributes zero

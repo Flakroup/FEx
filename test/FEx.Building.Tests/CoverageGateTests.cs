@@ -90,6 +90,47 @@ public sealed class CoverageGateTests
     }
 
     [Fact]
+    public void ExcludedLine_DoesNotFailTheGate_ButItsUncoveredSiblingsStillDo()
+    {
+        CoverageReport report = Analyze(
+            Options(lineExclusions: [("src/Acme.Core/Money.cs", 2)]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0), (7, 0)));
+
+        report.Failed.ShouldBeTrue();
+        CoverageFile file = report.IncompleteFiles.ShouldHaveSingleItem();
+        file.UncoveredLines.ShouldBe([7]); // line 2 excluded, line 7 still fails the gate
+    }
+
+    [Fact]
+    public void ExcludedLine_RemovesItFromBothTheNumeratorAndDenominator()
+    {
+        // Excluding a line must not count it as "covered" (which would inflate the rate) - it is removed
+        // from the measurable total entirely, as if it were never instrumented.
+        CoverageReport report = Analyze(
+            Options(lineExclusions: [("src/Acme.Core/Money.cs", 2)]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)));
+
+        report.Failed.ShouldBeFalse();
+        report.MeasurableLines.ShouldBe(1);
+        report.CoveredLines.ShouldBe(1);
+        report.Rate.ShouldBe(1d);
+    }
+
+    [Fact]
+    public void LineExclusionThatMatchesNothing_IsANoOp()
+    {
+        // A stale entry (the line got covered by a later test, or the file was edited and renumbered)
+        // must not silently exclude some OTHER, unrelated line - it excludes nothing, and the file's real
+        // uncovered lines still fail the gate exactly as if the entry were absent.
+        CoverageReport report = Analyze(
+            Options(lineExclusions: [("src/Acme.Core/Money.cs", 99)]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)));
+
+        report.Failed.ShouldBeTrue();
+        report.IncompleteFiles.ShouldHaveSingleItem().UncoveredLines.ShouldBe([2]);
+    }
+
+    [Fact]
     public void FileOutsideTheIncludedPrefix_IsNotPoliced()
     {
         CoverageReport report = Analyze(
@@ -180,12 +221,14 @@ public sealed class CoverageGateTests
     private static CoverageReport Analyze(CoverageGateOptions options, params XDocument[] reports) =>
         CoverageGate.Analyze(reports, options);
 
-    private static CoverageGateOptions Options(string[]? exclusions = null, string[]? expectedModules = null) =>
+    private static CoverageGateOptions Options(
+        string[]? exclusions = null, string[]? expectedModules = null, (string Path, int Line)[]? lineExclusions = null) =>
         new()
         {
             RootDirectory = Root,
             IncludedPrefixes = ["src"],
             Exclusions = exclusions ?? [],
+            LineExclusions = lineExclusions ?? [],
             ExpectedModules = expectedModules ?? []
         };
 

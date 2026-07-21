@@ -43,6 +43,13 @@ public interface ICoverageTarget : ICompileTarget
     IReadOnlyList<string> CoverageExclusions => [];
 
     /// <summary>
+    /// Individual (root-relative file, line number) exemptions - for a single defensive branch inside a
+    /// file that is otherwise fully tested, where <see cref="CoverageExclusions" /> would throw away real
+    /// coverage by exempting the whole file. Each one needs a reason on record, same as file exclusions.
+    /// </summary>
+    IReadOnlyList<(string Path, int Line)> CoverageLineExclusions => [];
+
+    /// <summary>
     /// Projects under <see cref="CoverageOwnedProjectPrefixes" /> that legitimately produce no
     /// instrumentable code (interface-only or constant-only assemblies), so their absence is expected.
     /// </summary>
@@ -72,6 +79,7 @@ public interface ICoverageTarget : ICompileTarget
                         RootDirectory = RootDirectory,
                         IncludedPrefixes = CoverageIncludedPrefixes,
                         Exclusions = CoverageExclusions,
+                        LineExclusions = CoverageLineExclusions,
                         ExpectedModules = ExpectedCoverageModules()
                     });
 

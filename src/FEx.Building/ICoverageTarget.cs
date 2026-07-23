@@ -72,7 +72,7 @@ public interface ICoverageTarget : ICompileTarget
                         $"No cobertura reports under {CoverageDirectory}. Coverage did not run, so the gate "
                         + "cannot vouch for anything.");
 
-                CoverageReport report = CoverageGate.AnalyzeFiles(
+                var report = CoverageGate.AnalyzeFiles(
                     reports.Select(static path => path.ToString()),
                     new CoverageGateOptions
                     {
@@ -106,7 +106,6 @@ public interface ICoverageTarget : ICompileTarget
             .Where(static directory => Directory.Exists(directory))
             .SelectMany(static directory => Directory.EnumerateFiles(directory, "*.csproj", SearchOption.AllDirectories))
             .Select(static path => Path.GetFileNameWithoutExtension(path))
-            .OfType<string>()
             .Where(name => !ModulesWithoutExecutableCode.Contains(name, StringComparer.OrdinalIgnoreCase))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(static name => name, StringComparer.OrdinalIgnoreCase)
@@ -117,14 +116,16 @@ public interface ICoverageTarget : ICompileTarget
         Log.Information("Coverage merged from {Reports} report(s): {Covered}/{Measurable} lines ({Rate:P1})",
             reportCount, report.CoveredLines, report.MeasurableLines, report.Rate);
 
-        foreach (string module in report.Modules)
+        foreach (var module in report.Modules)
             Log.Information("  module {Module}", module);
 
-        foreach (string missing in report.MissingModules)
+        foreach (var missing in report.MissingModules)
             Log.Error("  MISSING module {Module} - it produced no coverage data at all", missing);
 
-        foreach (CoverageFile file in report.IncompleteFiles)
+        foreach (var file in report.IncompleteFiles)
+        {
             Log.Warning("  {Rate,6:P1} {File} - uncovered lines: {Lines}",
                 file.Rate, file.Path, string.Join(", ", file.UncoveredLines));
+        }
     }
 }

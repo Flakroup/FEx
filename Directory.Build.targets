@@ -7,8 +7,8 @@
         <PackageIcon>flakroup.png</PackageIcon>
         <WarnOnPackingNonPackableProject>true</WarnOnPackingNonPackableProject>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageProjectUrl>https://gitlab.com/flakroup/FEx</PackageProjectUrl>
-        <RepositoryUrl>https://gitlab.com/flakroup/FEx.git</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/Flakroup/FEx</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Flakroup/FEx.git</RepositoryUrl>
         <PackageTags>dotnet;utilities;extensions;fex;flakroup</PackageTags>
     </PropertyGroup>
 

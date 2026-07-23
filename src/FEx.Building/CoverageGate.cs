@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -23,51 +22,51 @@ public static class CoverageGate
         ArgumentNullException.ThrowIfNull(reports);
         ArgumentNullException.ThrowIfNull(options);
 
-        Dictionary<string, LineSets> byFile = new(StringComparer.OrdinalIgnoreCase);
-        HashSet<string> modules = new(StringComparer.OrdinalIgnoreCase);
+        var byFile = new Dictionary<string, LineSets>(StringComparer.OrdinalIgnoreCase);
+        var modules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (XDocument report in reports)
+        foreach (var report in reports)
         {
-            foreach (XElement package in report.Descendants("package"))
+            foreach (var package in report.Descendants("package"))
             {
-                string? module = package.Attribute("name")?.Value;
+                var module = package.Attribute("name")?.Value;
                 if (!string.IsNullOrEmpty(module))
                     modules.Add(module);
             }
 
-            foreach (XElement @class in report.Descendants("class"))
+            foreach (var @class in report.Descendants("class"))
             {
-                string? file = @class.Attribute("filename")?.Value;
+                var file = @class.Attribute("filename")?.Value;
                 if (string.IsNullOrEmpty(file))
                     continue;
 
-                string? relative = Relativize(file, options.RootDirectory);
+                var relative = Relativize(file, options.RootDirectory);
                 if (relative is null || !IsInScope(relative, options))
                     continue;
 
-                if (!byFile.TryGetValue(relative, out LineSets? lines))
+                if (!byFile.TryGetValue(relative, out var lines))
                     byFile[relative] = lines = new LineSets();
 
                 Collect(@class, lines);
             }
         }
 
-        foreach ((string path, int line) in options.LineExclusions)
+        foreach ((var path, var line) in options.LineExclusions)
         {
-            if (byFile.TryGetValue(path.Replace('\\', '/'), out LineSets? lines))
+            if (byFile.TryGetValue(path.Replace('\\', '/'), out var lines))
             {
                 lines.Measurable.Remove(line);
                 lines.Covered.Remove(line);
             }
         }
 
-        List<CoverageFile> files = byFile
+        var files = byFile
             .Select(entry => entry.Value.ToFile(entry.Key))
             .OrderByDescending(static f => f.UncoveredLines.Count)
             .ThenBy(static f => f.Path, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        List<string> missing = options.ExpectedModules
+        var missing = options.ExpectedModules
             .Where(expected => !modules.Contains(expected))
             .OrderBy(static m => m, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -87,14 +86,14 @@ public static class CoverageGate
     {
         // <lines> appears both under <class> and under each <method>; Descendants covers both, and the
         // sets dedupe the overlap.
-        foreach (XElement line in @class.Descendants("line"))
+        foreach (var line in @class.Descendants("line"))
         {
-            if (!int.TryParse(line.Attribute("number")?.Value, out int number))
+            if (!int.TryParse(line.Attribute("number")?.Value, out var number))
                 continue;
 
             lines.Measurable.Add(number);
 
-            if (int.TryParse(line.Attribute("hits")?.Value, out int hits) && hits > 0)
+            if (int.TryParse(line.Attribute("hits")?.Value, out var hits) && hits > 0)
                 lines.Covered.Add(number);
         }
     }
@@ -105,12 +104,12 @@ public static class CoverageGate
     /// </summary>
     private static string? Relativize(string absolutePath, string rootDirectory)
     {
-        string normalized = absolutePath.Replace('\\', '/');
+        var normalized = absolutePath.Replace('\\', '/');
 
         if (string.IsNullOrEmpty(rootDirectory))
             return normalized;
 
-        string root = rootDirectory.Replace('\\', '/').TrimEnd('/') + "/";
+        var root = rootDirectory.Replace('\\', '/').TrimEnd('/') + "/";
 
         return normalized.StartsWith(root, StringComparison.OrdinalIgnoreCase)
             ? normalized[root.Length..]
@@ -132,7 +131,7 @@ public static class CoverageGate
     /// <summary>Matches a whole file or a directory subtree - no globbing, so a pattern cannot silently over-match.</summary>
     private static bool Matches(string relativePath, string pattern)
     {
-        string normalized = pattern.Replace('\\', '/').TrimEnd('/');
+        var normalized = pattern.Replace('\\', '/').TrimEnd('/');
 
         return relativePath.Equals(normalized, StringComparison.OrdinalIgnoreCase)
                || relativePath.StartsWith(normalized + "/", StringComparison.OrdinalIgnoreCase);

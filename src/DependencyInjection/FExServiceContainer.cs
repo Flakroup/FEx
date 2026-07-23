@@ -18,6 +18,14 @@ public class FExServiceContainer : IFExServiceContainer
 
     private bool _isDisposed;
 
+    // StrongInject's Resolve() returns an Owned<T> that owns the resolved instance graph; discarding it (as
+    // this container used to, with IDISP004 suppressed) leaked every IDisposable resolved through the static
+    // FExServiceProvider.Get<T>(). We retain each Owned and dispose it when the provider is released, so a
+    // resolved disposable is freed on shutdown instead of never. Guarded by a lock - resolutions can run on
+    // background threads. (Async resolutions via IAsyncContainer are not tracked; FEx containers are sync.)
+    private readonly List<IDisposable> _resolvedOwneds = [];
+    private readonly object _resolvedOwnedsLock = new();
+
     public void RegisterServices<TContainer>(TContainer container, IServiceCollection? services)
         where TContainer : class, IDisposable
     {
@@ -37,8 +45,8 @@ public class FExServiceContainer : IFExServiceContainer
     public T ResolveService<T>()
     {
         if (Container is IContainer<T> container)
-#pragma warning disable IDISP004
-            return container.Resolve<T>().Value;
+#pragma warning disable IDISP004 // the Owned is retained in _resolvedOwneds and disposed on Release
+            return TrackOwned(container.Resolve<T>());
 #pragma warning restore IDISP004
 
         throw new InvalidOperationException($"Couldn't resolve type: {typeof(T).FullName}");
@@ -52,8 +60,8 @@ public class FExServiceContainer : IFExServiceContainer
     public IEnumerable<T> ResolveServices<T>()
     {
         if (Container is IContainer<T[]> container)
-#pragma warning disable IDISP004
-            return container.Resolve<T[]>().Value;
+#pragma warning disable IDISP004 // the Owned is retained in _resolvedOwneds and disposed on Release
+            return TrackOwned(container.Resolve<T[]>());
 #pragma warning restore IDISP004
 
         throw new InvalidOperationException($"Couldn't resolve collection of type: {typeof(T).FullName}");
@@ -63,12 +71,22 @@ public class FExServiceContainer : IFExServiceContainer
     {
         if (Container is IContainer<T[]> container)
         {
-#pragma warning disable IDISP004
-            return container.Resolve<T[]>().Value;
+#pragma warning disable IDISP004 // the Owned is retained in _resolvedOwneds and disposed on Release
+            return TrackOwned(container.Resolve<T[]>());
 #pragma warning restore IDISP004
         }
 
         return [];
+    }
+
+    // Retains the Owned so its resolved instance graph is disposed on Release, and returns the instance.
+    // (Resolving after Release cannot reach here - Container throws on the nulled backing field first.)
+    private T TrackOwned<T>(Owned<T> owned)
+    {
+        lock (_resolvedOwnedsLock)
+            _resolvedOwneds.Add(owned);
+
+        return owned.Value;
     }
 
     public async Task<T> ResolveServiceAsync<T>() =>
@@ -85,10 +103,26 @@ public class FExServiceContainer : IFExServiceContainer
 
     public void Release()
     {
+        DisposeResolvedOwneds();
 #pragma warning disable IDISP007 // Don't dispose injected
         _container?.Dispose();
 #pragma warning restore IDISP007 // Don't dispose injected
         _container = null;
+    }
+
+    private void DisposeResolvedOwneds()
+    {
+        IDisposable[] owneds;
+        lock (_resolvedOwnedsLock)
+        {
+            owneds = [.. _resolvedOwneds];
+            _resolvedOwneds.Clear();
+        }
+
+        foreach (var owned in owneds)
+#pragma warning disable IDISP007 // we own these Owned handles (created in TrackOwned via Resolve)
+            owned.Dispose();
+#pragma warning restore IDISP007
     }
 
     private void Initialize()

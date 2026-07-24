@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
-        <IsPackable>false</IsPackable>
+        <Description>Shared NUKE build components (FExBuild, compile/test/pack/tag/GitVersion targets) for consuming repositories that build via packages instead of a submodule</Description>
         <Configurations>Debug;Release;Build</Configurations>
     </PropertyGroup>
 

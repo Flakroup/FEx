@@ -126,6 +126,9 @@
   <Project Path="src/AspNetCorex/FEx.AspNetCorex.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
+  <Project Path="src/AspNetCorex.Abstractions/FEx.AspNetCorex.Abstractions.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
   <Project Path="src/FEx.Asyncx/FEx.Asyncx.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>

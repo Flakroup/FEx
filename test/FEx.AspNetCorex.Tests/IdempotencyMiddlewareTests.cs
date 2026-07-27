@@ -1,11 +1,14 @@
+using FEx.AspNetCorex.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Claims;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -226,10 +229,83 @@ public sealed class IdempotencyMiddlewareTests
         retry.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
     }
 
+    /// <summary>
+    /// The seam that lets a host swap in storage outliving the process: the middleware must read and write
+    /// through whatever <see cref="IIdempotencyStore"/> it is handed, never a cache of its own. Nothing else
+    /// proves it - a memory-backed test passes either way.
+    /// </summary>
+    [Fact]
+    public async Task ACustomStore_IsWhatTheMiddlewareReadsAndWrites()
+    {
+        RecordingStore store = new();
+        var executions = 0;
+
+        var middleware = Middleware(store,
+            context =>
+            {
+                executions++;
+
+                return context.Response.WriteAsync("from-the-handler");
+            });
+
+        await middleware.InvokeAsync(PostContext(Key));
+        var retry = PostContext(Key);
+        await middleware.InvokeAsync(retry);
+
+        executions.ShouldBe(1);
+        store.Entries.Count.ShouldBe(1);
+        store.Reads.ShouldBe(2);
+        Body(retry).ShouldBe("from-the-handler");
+    }
+
     // --- Harness ----------------------------------------------------------------------------------
 
-    private static IdempotencyMiddleware Middleware(IMemoryCache cache, RequestDelegate next) =>
-        new(next, cache, NullLogger<IdempotencyMiddleware>.Instance);
+    private static TestPipeline Middleware(IMemoryCache cache, RequestDelegate next) =>
+        Middleware(new MemoryCacheIdempotencyStore(cache), next);
+
+    private static TestPipeline Middleware(IIdempotencyStore store, RequestDelegate next) =>
+        new(new IdempotencyMiddleware(next, NullLogger<IdempotencyMiddleware>.Instance), store);
+
+    /// <summary>Pairs the middleware with the store the host would resolve per request, so each test reads
+    /// the way the pipeline actually runs.</summary>
+    private sealed class TestPipeline
+    {
+        private readonly IdempotencyMiddleware _middleware;
+        private readonly IIdempotencyStore _store;
+
+        public TestPipeline(IdempotencyMiddleware middleware, IIdempotencyStore store)
+        {
+            _middleware = middleware;
+            _store = store;
+        }
+
+        public Task InvokeAsync(HttpContext context) => _middleware.InvokeAsync(context, _store);
+    }
+
+    private sealed class RecordingStore : IIdempotencyStore
+    {
+        public Dictionary<string, IdempotentResponse> Entries { get; } = [];
+
+        public int Reads { get; private set; }
+
+        public Task<IdempotentResponse?> TryGetAsync(string key, CancellationToken cancellationToken = default)
+        {
+            Reads++;
+
+            return Task.FromResult(Entries.TryGetValue(key, out var stored) ? stored : null);
+        }
+
+        public Task SetAsync(
+            string key,
+            IdempotentResponse response,
+            TimeSpan lifetime,
+            CancellationToken cancellationToken = default)
+        {
+            Entries[key] = response;
+
+            return Task.CompletedTask;
+        }
+    }
 
     private static DefaultHttpContext PostContext(Guid? key, string? userId = "user-1")
     {

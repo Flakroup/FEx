@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<Description>The replay-store contract the idempotent-POST middleware builds on</Description>
+	</PropertyGroup>
+
+</Project>

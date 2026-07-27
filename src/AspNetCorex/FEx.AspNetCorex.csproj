@@ -13,4 +13,8 @@
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="$(DotNetNugetsVersion)" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\AspNetCorex.Abstractions\FEx.AspNetCorex.Abstractions.csproj" />
+	</ItemGroup>
+
 </Project>

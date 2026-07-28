@@ -26,7 +26,7 @@ public interface ITagTarget : INuGetPublishTarget
                 var remote = ResolveCiRemote()!.Value;
                 var tag = $"{TagPrefix}{SemVer}";
 
-                var skip = DescribeTagSkip(tag, VersionTagsOnHead(TagPrefix), TagExists(tag));
+                var skip = DescribeTagSkip(tag, GitTags.OnHead(TagPrefix), GitTags.All().Contains(tag));
 
                 if (skip is not null)
                 {
@@ -98,42 +98,18 @@ public interface ITagTarget : INuGetPublishTarget
     /// publish re-run on an already-published commit then stacks a second version tag on it.
     /// </summary>
     /// <returns>The reason to skip tagging, or <c>null</c> when the tag may be created.</returns>
-    public static string? DescribeTagSkip(string tag, IReadOnlyCollection<string> versionTagsOnHead, bool tagNameTaken)
+    public static string? DescribeTagSkip(string tag, ISet<string> versionTagsOnHead, bool tagNameTaken)
     {
         if (versionTagsOnHead.Contains(tag))
             return "HEAD already carries it";
 
         if (versionTagsOnHead.Count > 0)
-            return $"HEAD already carries version tag(s) {string.Join(", ", versionTagsOnHead)}";
+            return "HEAD already carries version tag(s) "
+                   + string.Join(", ", versionTagsOnHead.OrderBy(static t => t, StringComparer.Ordinal));
 
         return tagNameTaken
             ? "the name is taken by another commit"
             : null;
-    }
-
-    static IReadOnlyCollection<string> VersionTagsOnHead(string tagPrefix) =>
-        GitLines($"tag --points-at HEAD --list {tagPrefix}*");
-
-    static bool TagExists(string tag) => GitLines($"tag -l {tag}").Contains(tag);
-
-    // Reads git output as trimmed, non-empty lines. Asserts the exit code: a git failure swallowed into
-    // an empty list would read as "nothing tagged yet" and re-create the duplicate this guards against.
-    static IReadOnlyCollection<string> GitLines(string arguments)
-    {
-        using var process = ProcessTasks.StartProcess("git",
-            arguments,
-            NukeBuild.RootDirectory,
-            logOutput: false,
-            logInvocation: false);
-
-        process.AssertZeroExitCode();
-
-        return
-        [
-            .. process.Output
-                .Select(static line => line.Text.Trim())
-                .Where(static text => text.Length > 0)
-        ];
     }
 
     static void RunGit(string arguments)

@@ -74,37 +74,43 @@ public interface IGitVersionComponent : INukeBuild
             info.BranchName);
 
         if (NukeBuild.IsServerBuild)
-            info = BumpIfTagExists(info);
+            info = BumpPastTags(info, GitTags.All(), GitTags.OnHead());
 
         return info;
     }
 
-    private static GitVersionInfo BumpIfTagExists(GitVersionInfo info)
+    /// <summary>
+    /// Resolves a tag-name collision by bumping the patch, but only when the colliding tag sits on a
+    /// <em>different</em> commit. A version tag on HEAD means this commit was already published: bumping
+    /// past it would hand identical sources a version nobody asked for and republish them. The commit
+    /// keeps its published version instead, which is what lets the publish steps recognise it and skip.
+    /// </summary>
+    public static GitVersionInfo BumpPastTags(GitVersionInfo info, ISet<string> allTags, ISet<string> tagsOnHead)
     {
-        var existingTags = GetExistingTags();
         var candidate = info;
 
-        while (existingTags.Contains($"v{candidate.SemVer}"))
+        while (allTags.Contains($"{GitTags.DefaultPrefix}{candidate.SemVer}"))
         {
+            if (tagsOnHead.Contains($"{GitTags.DefaultPrefix}{candidate.SemVer}"))
+            {
+                Log.Information(
+                    "Tag {Prefix}{Version} is on HEAD - this commit is already published, keeping its version",
+                    GitTags.DefaultPrefix,
+                    candidate.SemVer);
+
+                return candidate;
+            }
+
             var oldVersion = candidate.SemVer;
             candidate = candidate.WithPatch(candidate.Patch + 1);
-            Log.Warning("Tag v{OldVersion} already exists - bumping to {NewVersion}", oldVersion, candidate.SemVer);
+
+            Log.Warning("Tag {Prefix}{OldVersion} exists on another commit - bumping to {NewVersion}",
+                GitTags.DefaultPrefix,
+                oldVersion,
+                candidate.SemVer);
         }
 
         return candidate;
-    }
-
-    private static HashSet<string> GetExistingTags()
-    {
-        using var process = ProcessTasks.StartProcess("git",
-            "tag -l",
-            NukeBuild.RootDirectory,
-            logOutput: false,
-            logInvocation: false);
-
-        process.WaitForExit();
-
-        return process.Output.Select(static line => line.Text.Trim()).Where(static t => t.Length > 0).ToHashSet();
     }
 }
 

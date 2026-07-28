@@ -1,4 +1,5 @@
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using Xunit;
 
@@ -13,57 +14,58 @@ namespace FEx.Building.Tests;
 public sealed class TagTargetTests
 {
     [Fact]
-    public void NoCollidingTag_KeepsTheResolvedVersion()
+    public void NoCollidingTag_IsAvailable()
     {
-        var bumped = IGitVersionComponent.BumpPastTags(Version(0, 1, 0), Tags(), Tags());
-
-        bumped.SemVer.ShouldBe("0.1.0-alpha.412");
+        Should.NotThrow(() => IGitVersionComponent.AssertVersionAvailable(Version(), "v", Tags(), Tags()));
     }
 
     [Fact]
-    public void TagOnHead_KeepsTheVersionInsteadOfBumping()
+    public void TagOnHead_IsAvailable_BecauseTheCommitKeepsItsReleasedVersion()
     {
-        // The bug: a second publish of the same commit saw its own tag from the first run, bumped the
-        // patch to a version nobody asked for, and shipped identical sources again as 0.1.1.
-        var bumped = IGitVersionComponent.BumpPastTags(
-            Version(0, 1, 0),
+        // The bug: a second publish of the same commit saw its own tag from the first run and invented
+        // 0.1.1 to get around it, shipping identical sources under a version nobody planned.
+        Should.NotThrow(() => IGitVersionComponent.AssertVersionAvailable(
+            Version(),
+            "v",
             Tags("v0.1.0-alpha.412"),
-            Tags("v0.1.0-alpha.412"));
-
-        bumped.SemVer.ShouldBe("0.1.0-alpha.412");
+            Tags("v0.1.0-alpha.412")));
     }
 
     [Fact]
-    public void TagOnAnotherCommit_StillBumpsPastTheNameCollision()
+    public void TagOnAnotherCommit_StopsTheBuildInsteadOfInventingAVersion()
     {
-        var bumped = IGitVersionComponent.BumpPastTags(Version(0, 1, 0), Tags("v0.1.0-alpha.412"), Tags());
+        var error = Should.Throw<InvalidOperationException>(() => IGitVersionComponent.AssertVersionAvailable(
+            Version(),
+            "v",
+            Tags("v0.1.0-alpha.412"),
+            Tags()));
 
-        bumped.SemVer.ShouldBe("0.1.1-alpha.412");
-        bumped.Patch.ShouldBe(1);
+        error.Message.ShouldContain("v0.1.0-alpha.412");
     }
 
     [Fact]
-    public void ChainOfTakenNames_BumpsPastAllOfThem()
+    public void NonDefaultPrefix_IsRecognisedOnHeadRatherThanTreatedAsACollision()
     {
-        var bumped = IGitVersionComponent.BumpPastTags(
-            Version(0, 1, 0),
-            Tags("v0.1.0-alpha.412", "v0.1.1-alpha.412", "v0.1.2-alpha.412"),
-            Tags());
-
-        bumped.SemVer.ShouldBe("0.1.3-alpha.412");
+        // The prefix reaches the resolver, the publish gate and the tag step from one parameter. Read from
+        // two places, a custom prefix would leave this looking like a foreign tag and fail the build.
+        Should.NotThrow(() => IGitVersionComponent.AssertVersionAvailable(
+            Version(),
+            "rel-",
+            Tags("rel-0.1.0-alpha.412"),
+            Tags("rel-0.1.0-alpha.412")));
     }
 
     [Fact]
-    public void HeadTagReachedWhileBumping_StopsTheChain()
+    public void UntaggedHead_IsNotAReleasedCommit()
     {
-        // v0.1.0 collided with another commit, but v0.1.1 is HEAD's own published version - stop there
-        // rather than bumping past a release this very commit already made.
-        var bumped = IGitVersionComponent.BumpPastTags(
-            Version(0, 1, 0),
-            Tags("v0.1.0-alpha.412", "v0.1.1-alpha.412"),
-            Tags("v0.1.1-alpha.412"));
+        GitTags.MarksReleasedCommit(Tags()).ShouldBeFalse();
+    }
 
-        bumped.SemVer.ShouldBe("0.1.1-alpha.412");
+    [Fact]
+    public void HeadCarryingAVersionTag_IsAReleasedCommit()
+    {
+        // What stops the publish gate from pushing packages a second time.
+        GitTags.MarksReleasedCommit(Tags("v0.1.0-alpha.412")).ShouldBeTrue();
     }
 
     [Fact]
@@ -124,16 +126,17 @@ public sealed class TagTargetTests
 
     private static ISet<string> Tags(params string[] tags) => new HashSet<string>(tags);
 
-    private static GitVersionInfo Version(int major, int minor, int patch) =>
+    // Shaped like the develop pre-release GitVersion actually emits here (ContinuousDeployment mode).
+    private static GitVersionInfo Version() =>
         new()
         {
-            Major = major,
-            Minor = minor,
-            Patch = patch,
-            MajorMinorPatch = $"{major}.{minor}.{patch}",
+            Major = 0,
+            Minor = 1,
+            Patch = 0,
+            MajorMinorPatch = "0.1.0",
             PreReleaseTagWithDash = "-alpha.412",
             NuGetPreReleaseTagV2 = "alpha.412",
-            SemVer = $"{major}.{minor}.{patch}-alpha.412",
+            SemVer = "0.1.0-alpha.412",
             BranchName = "develop",
             Sha = "ffe637fa5fbea9d7f9293329a4a7c388d3d648fa"
         };

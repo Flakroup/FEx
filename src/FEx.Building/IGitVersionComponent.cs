@@ -16,6 +16,12 @@ public interface IGitVersionComponent : INukeBuild
     [Parameter("GitVersion output (auto-resolved)", Name = "GitVersionInfo")]
     sealed GitVersionInfo? VersionInfo => TryGetValue(() => VersionInfo) ?? ResolveGitVersion();
 
+    // Lives here rather than on ITagTarget because everything that treats a version tag as "already
+    // released" - resolving the version, publishing, tagging - has to read the same prefix. Split across
+    // two declarations, a non-default prefix would leave the publish gate blind to the tags it creates.
+    [Parameter("Git tag prefix (default: v)")]
+    string TagPrefix => TryGetValue(() => TagPrefix) ?? "v";
+
     sealed string SemVer =>
         !string.IsNullOrEmpty(VersionInfo?.SemVer)
             ? VersionInfo!.SemVer
@@ -74,43 +80,39 @@ public interface IGitVersionComponent : INukeBuild
             info.BranchName);
 
         if (NukeBuild.IsServerBuild)
-            info = BumpPastTags(info, GitTags.All(), GitTags.OnHead());
+            AssertVersionAvailable(info, TagPrefix, GitTags.All(), GitTags.OnHead(TagPrefix));
 
         return info;
     }
 
     /// <summary>
-    /// Resolves a tag-name collision by bumping the patch, but only when the colliding tag sits on a
-    /// <em>different</em> commit. A version tag on HEAD means this commit was already published: bumping
-    /// past it would hand identical sources a version nobody asked for and republish them. The commit
-    /// keeps its published version instead, which is what lets the publish steps recognise it and skip.
+    /// A version tag names exactly one commit. On HEAD it means this commit is already released, which the
+    /// publish and tag steps recognise and skip on. On any other commit it means the tags or the history are
+    /// wrong - a stale manual tag, a rewritten history - and inventing a fresh version to dodge the collision
+    /// would ship releases nobody planned, so the build stops for a human instead.
     /// </summary>
-    public static GitVersionInfo BumpPastTags(GitVersionInfo info, ISet<string> allTags, ISet<string> tagsOnHead)
+    /// <exception cref="InvalidOperationException">The version's tag is taken by a different commit.</exception>
+    public static void AssertVersionAvailable(GitVersionInfo info,
+                                              string tagPrefix,
+                                              ISet<string> allTags,
+                                              ISet<string> tagsOnHead)
     {
-        var candidate = info;
+        var tag = $"{tagPrefix}{info.SemVer}";
 
-        while (allTags.Contains($"{GitTags.DefaultPrefix}{candidate.SemVer}"))
+        if (tagsOnHead.Contains(tag))
         {
-            if (tagsOnHead.Contains($"{GitTags.DefaultPrefix}{candidate.SemVer}"))
-            {
-                Log.Information(
-                    "Tag {Prefix}{Version} is on HEAD - this commit is already published, keeping its version",
-                    GitTags.DefaultPrefix,
-                    candidate.SemVer);
+            Log.Information("Tag {Tag} is on HEAD - this commit is already released, keeping its version", tag);
 
-                return candidate;
-            }
-
-            var oldVersion = candidate.SemVer;
-            candidate = candidate.WithPatch(candidate.Patch + 1);
-
-            Log.Warning("Tag {Prefix}{OldVersion} exists on another commit - bumping to {NewVersion}",
-                GitTags.DefaultPrefix,
-                oldVersion,
-                candidate.SemVer);
+            return;
         }
 
-        return candidate;
+        if (!allTags.Contains(tag))
+            return;
+
+        throw new InvalidOperationException(
+            $"Version {info.SemVer} resolves to tag {tag}, which is already on a different commit. "
+            + "Publishing it would release the same version twice. Delete the stale tag, or fix the history "
+            + "that made two commits resolve to one version.");
     }
 }
 
@@ -202,32 +204,6 @@ public sealed record GitVersionInfo
 
     [JsonPropertyName("UncommittedChanges")]
     public int UncommittedChanges { get; init; }
-
-    public GitVersionInfo WithPatch(int newPatch)
-    {
-        var mmp = $"{Major}.{Minor}.{newPatch}";
-
-        var semver = string.IsNullOrEmpty(PreReleaseTagWithDash)
-            ? mmp
-            : $"{mmp}{PreReleaseTagWithDash}";
-
-        var nuget = string.IsNullOrEmpty(NuGetPreReleaseTagV2)
-            ? mmp
-            : $"{mmp}-{NuGetPreReleaseTagV2}";
-
-        return this with
-        {
-            Patch = newPatch,
-            MajorMinorPatch = mmp,
-            SemVer = semver,
-            FullSemVer = semver,
-            NuGetVersionV2 = nuget,
-            NuGetVersion = nuget,
-            AssemblySemVer = $"{mmp}.0",
-            AssemblySemFileVer = $"{mmp}.0",
-            InformationalVersion = $"{semver}+Branch.{BranchName}.Sha.{Sha}"
-        };
-    }
 }
 
 internal sealed class LenientStringConverter : JsonConverter<string>

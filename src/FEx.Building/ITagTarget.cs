@@ -9,9 +9,6 @@ namespace FEx.Building;
 
 public interface ITagTarget : INuGetPublishTarget
 {
-    [Parameter("Git tag prefix (default: v)")]
-    string TagPrefix => TryGetValue(() => TagPrefix) ?? "v";
-
     Target Tag =>
         _ => _.Description("Creates and pushes a Git version tag (e.g. v1.2.3-alpha.4)")
             .TriggeredBy(Publish)
@@ -92,10 +89,9 @@ public interface ITagTarget : INuGetPublishTarget
     static bool IsReleaseBranch(string? branch) => branch is "main" or "master" or "develop";
 
     /// <summary>
-    /// A commit carries at most one version tag. Checking only whether the tag <em>name</em> is free is
-    /// not enough: GitVersion hands the same commit a different SemVer whenever the version base moves
-    /// (a bumped major/minor, a rewritten history that carried the old tags forward), and a manual
-    /// publish re-run on an already-published commit then stacks a second version tag on it.
+    /// A commit carries at most one version tag. Checking only whether the tag <em>name</em> is free is not
+    /// enough - a re-run that resolves to a different SemVer would find the new name free and stack a second
+    /// tag on a commit that is already released.
     /// </summary>
     /// <returns>The reason to skip tagging, or <c>null</c> when the tag may be created.</returns>
     public static string? DescribeTagSkip(string tag, ISet<string> versionTagsOnHead, bool tagNameTaken)
@@ -103,7 +99,7 @@ public interface ITagTarget : INuGetPublishTarget
         if (versionTagsOnHead.Contains(tag))
             return "HEAD already carries it";
 
-        if (versionTagsOnHead.Count > 0)
+        if (GitTags.MarksReleasedCommit(versionTagsOnHead))
             return "HEAD already carries version tag(s) "
                    + string.Join(", ", versionTagsOnHead.OrderBy(static t => t, StringComparer.Ordinal));
 

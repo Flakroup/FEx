@@ -12,15 +12,19 @@ namespace FEx.Building;
 /// </summary>
 public static class GitTags
 {
-    /// <summary>Default prefix version tags are created under.</summary>
-    public const string DefaultPrefix = "v";
-
     /// <summary>Every tag in the repository.</summary>
     public static ISet<string> All() => Lines("tag -l").ToHashSet();
 
     /// <summary>Version tags (those under <paramref name="prefix" />) carried by the current HEAD.</summary>
-    public static ISet<string> OnHead(string prefix = DefaultPrefix) =>
+    public static ISet<string> OnHead(string prefix) =>
         Lines($"tag --points-at HEAD --list {prefix}*").ToHashSet();
+
+    /// <summary>
+    /// Whether the version tags on a commit mark it as already released. The single source of truth for
+    /// that question - the publish gate and the tag gate both ask it here, so they cannot drift apart and
+    /// start disagreeing about whether a commit has shipped.
+    /// </summary>
+    public static bool MarksReleasedCommit(ISet<string> versionTagsOnHead) => versionTagsOnHead.Count > 0;
 
     // Reads git output as trimmed, non-empty lines. Asserts the exit code: a git failure swallowed into
     // an empty set would read as "nothing tagged yet", which is exactly the state that re-publishes.

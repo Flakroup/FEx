@@ -19,7 +19,7 @@ public class FExServiceProvider : IFExServiceProvider
     /// <summary>
     /// Lock object for thread-safe initialization.
     /// </summary>
-    private static readonly FExSemaphoreSlim _initializationLock = new();
+    private static readonly FExSemaphoreSlim InitializationLock = new();
 
     /// <summary>
     /// Tracks the container instance for idempotent initialization.
@@ -232,7 +232,7 @@ public class FExServiceProvider : IFExServiceProvider
             return existingContainer;
 
         // Thread-safety: prevent concurrent initialization
-        await _initializationLock.WaitAsync();
+        await InitializationLock.WaitAsync();
 
         try
         {
@@ -271,7 +271,7 @@ public class FExServiceProvider : IFExServiceProvider
         }
         finally
         {
-            _initializationLock.Release();
+            InitializationLock.Release();
         }
     }
 

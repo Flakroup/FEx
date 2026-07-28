@@ -10,7 +10,7 @@ public static class StringHelpers
 
         var byteBuffer = new byte[1024 * 1024];
         const int bytesAtTheTime = 4;
-        char? detectedEOL = null;
+        char? detectedEol = null;
         char? currentChar = null;
 
         int bytesRead;
@@ -23,31 +23,31 @@ public static class StringHelpers
             {
                 currentChar = (char)byteBuffer[i];
 
-                if (detectedEOL is not null)
+                if (detectedEol is not null)
                 {
-                    if (currentChar == detectedEOL)
+                    if (currentChar == detectedEol)
                         lineCount++;
 
                     currentChar = (char)byteBuffer[i + 1];
 
-                    if (currentChar == detectedEOL)
+                    if (currentChar == detectedEol)
                         lineCount++;
 
                     currentChar = (char)byteBuffer[i + 2];
 
-                    if (currentChar == detectedEOL)
+                    if (currentChar == detectedEol)
                         lineCount++;
 
                     currentChar = (char)byteBuffer[i + 3];
 
-                    if (currentChar == detectedEOL)
+                    if (currentChar == detectedEol)
                         lineCount++;
                 }
                 else
                 {
                     if (currentChar is '\n' or '\r')
                     {
-                        detectedEOL = currentChar;
+                        detectedEol = currentChar;
                         lineCount++;
                     }
 
@@ -59,16 +59,16 @@ public static class StringHelpers
             {
                 currentChar = (char)byteBuffer[i];
 
-                if (detectedEOL is not null)
+                if (detectedEol is not null)
                 {
-                    if (currentChar == detectedEOL)
+                    if (currentChar == detectedEol)
                         lineCount++;
                 }
                 else
                 {
                     if (currentChar is '\n' or '\r')
                     {
-                        detectedEOL = currentChar;
+                        detectedEol = currentChar;
                         lineCount++;
                     }
                 }

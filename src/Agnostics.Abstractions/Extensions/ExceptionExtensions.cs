@@ -9,7 +9,7 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 
 public static class ExceptionExtensions
 {
-    private static readonly Func<Exception, StackTrace, Exception> _setStackTraceFunc =
+    private static readonly Func<Exception, StackTrace, Exception> SetStackTraceFunc =
         new Func<Func<Exception, StackTrace, Exception>>(static () =>
         {
             var target = Expression.Parameter(typeof(Exception));
@@ -52,7 +52,7 @@ public static class ExceptionExtensions
     {
         stack.Guard(nameof(stack));
 
-        return _setStackTraceFunc(target, stack);
+        return SetStackTraceFunc(target, stack);
     }
 
     /// <summary>

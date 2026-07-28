@@ -61,8 +61,8 @@ public static class StringExtensions
     /// </summary>
     public const string SqlWildCardOneCharacterEscaped = "[_]";
 
-    private static readonly Regex _phoneNumberRegex = new("[^.0-9]", RegexOptions.Compiled);
-    private static readonly int[] _doubledValues = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9];
+    private static readonly Regex PhoneNumberRegex = new("[^.0-9]", RegexOptions.Compiled);
+    private static readonly int[] DoubledValues = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9];
 
     public static Regex WordRegex { get; } = new(@"\b[\w']+\b", RegexOptions.Compiled);
     public static Regex LettersRegex { get; } = new("^[a-zA-Z]+$", RegexOptions.Compiled);
@@ -86,8 +86,8 @@ public static class StringExtensions
     {
         if (!string.IsNullOrWhiteSpace(phoneNumber))
             return phoneNumber[0] == '+'
-                ? _phoneNumberRegex.Replace(phoneNumber.Substring(2), string.Empty).Trim()
-                : _phoneNumberRegex.Replace(phoneNumber, string.Empty).Trim();
+                ? PhoneNumberRegex.Replace(phoneNumber.Substring(2), string.Empty).Trim()
+                : PhoneNumberRegex.Replace(phoneNumber, string.Empty).Trim();
 
         return null;
     }
@@ -242,7 +242,7 @@ public static class StringExtensions
                 return false;
 
             sum += shouldApplyDouble
-                ? _doubledValues[currentDigit]
+                ? DoubledValues[currentDigit]
                 : currentDigit;
 
             shouldApplyDouble = !shouldApplyDouble;
@@ -746,13 +746,13 @@ public static class StringExtensions
         // it will still work
         var builder = new StringBuilder((int)(input.Length * 1.1));
 
-        var lastWasCR = false;
+        var lastWasCr = false;
 
         foreach (var c in input)
         {
-            if (lastWasCR)
+            if (lastWasCr)
             {
-                lastWasCR = false;
+                lastWasCr = false;
 
                 if (c == '\n')
                     continue; // Already written \r\n
@@ -762,7 +762,7 @@ public static class StringExtensions
             {
                 case '\r':
                     builder.Append("\r\n");
-                    lastWasCR = true;
+                    lastWasCr = true;
 
                     break;
                 case '\n':

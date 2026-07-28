@@ -9,10 +9,10 @@ namespace FEx.Building.Helpers;
 /// </summary>
 public static class JoinableTaskHelper
 {
-    private static readonly JoinableTaskContext _context = new();
-    private static readonly JoinableTaskFactory _factory = _context.Factory;
+    private static readonly JoinableTaskContext Context = new();
+    private static readonly JoinableTaskFactory Factory = Context.Factory;
 
-    public static void Run(Func<Task> asyncMethod) => _factory.Run(asyncMethod);
+    public static void Run(Func<Task> asyncMethod) => Factory.Run(asyncMethod);
 
-    public static T Run<T>(Func<Task<T>> asyncMethod) => _factory.Run(asyncMethod);
+    public static T Run<T>(Func<Task<T>> asyncMethod) => Factory.Run(asyncMethod);
 }

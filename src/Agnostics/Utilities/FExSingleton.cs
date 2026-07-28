@@ -5,22 +5,22 @@ namespace FEx.Agnostics.Utilities;
 
 public abstract class FExSingleton : IDisposable
 {
-    private static readonly List<FExSingleton> _singletons = [];
+    private static readonly List<FExSingleton> Singletons = [];
 
     protected FExSingleton()
     {
-        lock (_singletons)
-            _singletons.Add(this);
+        lock (Singletons)
+            Singletons.Add(this);
     }
 
     public static void ClearAllSingletons()
     {
-        lock (_singletons)
+        lock (Singletons)
         {
-            foreach (var s in _singletons)
+            foreach (var s in Singletons)
                 s.Dispose();
 
-            _singletons.Clear();
+            Singletons.Clear();
         }
     }
 

@@ -29,7 +29,7 @@ namespace FEx.Agnostics.Abstractions.Utilities;
 /// </summary>
 public static class PlatformInfoProvider
 {
-    private const int SmTabletPC = 86;
+    private const int SmTabletPc = 86;
 
     /// <summary>
     /// Indicates whether the operating-system is arm64.
@@ -414,7 +414,7 @@ public static class PlatformInfoProvider
                         };
                     case 5 when productType == (int)VerNt.Workstation:
                         return (suiteMask & (int)VerSuite.Personal) != 0 ? OSEdition.Home :
-                            GetSystemMetrics(SmTabletPC) == 0 ? OSEdition.Professional : OSEdition.TabletEdition;
+                            GetSystemMetrics(SmTabletPc) == 0 ? OSEdition.Professional : OSEdition.TabletEdition;
                     case 5 when productType == (int)VerNt.Server:
                         return minorVersion == 0
                             ?

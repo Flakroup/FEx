@@ -2,6 +2,7 @@ using Nuke.Common;
 using Nuke.Common.Tooling;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FEx.Building;
@@ -25,9 +26,11 @@ public interface ITagTarget : INuGetPublishTarget
                 var remote = ResolveCiRemote()!.Value;
                 var tag = $"{TagPrefix}{SemVer}";
 
-                if (TagExists(tag))
+                var skip = DescribeTagSkip(tag, VersionTagsOnHead(TagPrefix), TagExists(tag));
+
+                if (skip is not null)
                 {
-                    Log.Information("Tag {Tag} already exists - skipping", tag);
+                    Log.Information("Skipping tag {Tag}: {Reason}", tag, skip);
 
                     return;
                 }
@@ -88,17 +91,49 @@ public interface ITagTarget : INuGetPublishTarget
 
     static bool IsReleaseBranch(string? branch) => branch is "main" or "master" or "develop";
 
-    static bool TagExists(string tag)
+    /// <summary>
+    /// A commit carries at most one version tag. Checking only whether the tag <em>name</em> is free is
+    /// not enough: GitVersion hands the same commit a different SemVer whenever the version base moves
+    /// (a bumped major/minor, a rewritten history that carried the old tags forward), and a manual
+    /// publish re-run on an already-published commit then stacks a second version tag on it.
+    /// </summary>
+    /// <returns>The reason to skip tagging, or <c>null</c> when the tag may be created.</returns>
+    public static string? DescribeTagSkip(string tag, IReadOnlyCollection<string> versionTagsOnHead, bool tagNameTaken)
+    {
+        if (versionTagsOnHead.Contains(tag))
+            return "HEAD already carries it";
+
+        if (versionTagsOnHead.Count > 0)
+            return $"HEAD already carries version tag(s) {string.Join(", ", versionTagsOnHead)}";
+
+        return tagNameTaken
+            ? "the name is taken by another commit"
+            : null;
+    }
+
+    static IReadOnlyCollection<string> VersionTagsOnHead(string tagPrefix) =>
+        GitLines($"tag --points-at HEAD --list {tagPrefix}*");
+
+    static bool TagExists(string tag) => GitLines($"tag -l {tag}").Contains(tag);
+
+    // Reads git output as trimmed, non-empty lines. Asserts the exit code: a git failure swallowed into
+    // an empty list would read as "nothing tagged yet" and re-create the duplicate this guards against.
+    static IReadOnlyCollection<string> GitLines(string arguments)
     {
         using var process = ProcessTasks.StartProcess("git",
-            $"tag -l {tag}",
+            arguments,
             NukeBuild.RootDirectory,
             logOutput: false,
             logInvocation: false);
 
-        process.WaitForExit();
+        process.AssertZeroExitCode();
 
-        return process.Output.Any(line => line.Text.Trim() == tag);
+        return
+        [
+            .. process.Output
+                .Select(static line => line.Text.Trim())
+                .Where(static text => text.Length > 0)
+        ];
     }
 
     static void RunGit(string arguments)

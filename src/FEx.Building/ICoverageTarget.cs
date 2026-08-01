@@ -43,11 +43,19 @@ public interface ICoverageTarget : ICompileTarget
     IReadOnlyList<string> CoverageExclusions => [];
 
     /// <summary>
-    /// Individual (root-relative file, line number) exemptions - for a single defensive branch inside a
-    /// file that is otherwise fully tested, where <see cref="CoverageExclusions" /> would throw away real
-    /// coverage by exempting the whole file. Each one needs a reason on record, same as file exclusions.
+    /// The comment marker that exempts the source line it appears on, for a single defensive branch inside
+    /// a file that is otherwise fully tested - where <see cref="CoverageExclusions" /> would throw away real
+    /// coverage by exempting the whole file:
+    /// <code>} // coverage-exclude: closing brace of a for(;;) whose every path returns from inside it</code>
     /// </summary>
-    IReadOnlyList<(string Path, int Line)> CoverageLineExclusions => [];
+    /// <remarks>
+    /// Deliberately not a list of line numbers in this file. A number has no anchor in the source, so every
+    /// line inserted above it slides the exemption onto a neighbour - and since the neighbour is usually
+    /// covered, the gate goes on passing with nothing to notice. The marker travels with its code, dies with
+    /// it, and carries its reason where the next reader is already looking. A marker that exempts nothing
+    /// fails the gate rather than lingering.
+    /// </remarks>
+    string CoverageLineExclusionMarker => "coverage-exclude:";
 
     /// <summary>
     /// Projects under <see cref="CoverageOwnedProjectPrefixes" /> that legitimately produce no
@@ -79,7 +87,7 @@ public interface ICoverageTarget : ICompileTarget
                         RootDirectory = RootDirectory,
                         IncludedPrefixes = CoverageIncludedPrefixes,
                         Exclusions = CoverageExclusions,
-                        LineExclusions = CoverageLineExclusions,
+                        LineExclusionMarker = CoverageLineExclusionMarker,
                         ExpectedModules = ExpectedCoverageModules()
                     });
 
@@ -88,7 +96,8 @@ public interface ICoverageTarget : ICompileTarget
                 if (report.Failed)
                     throw new InvalidOperationException(
                         $"Coverage gate failed: {report.IncompleteFiles.Count} file(s) below 100%, "
-                        + $"{report.MissingModules.Count} module(s) missing from the reports.");
+                        + $"{report.MissingModules.Count} module(s) missing from the reports, "
+                        + $"{report.StaleExclusions.Count} marker(s) exempting nothing.");
             });
 
     /// <summary>
@@ -127,5 +136,18 @@ public interface ICoverageTarget : ICompileTarget
             Log.Warning("  {Rate,6:P1} {File} - uncovered lines: {Lines}",
                 file.Rate, file.Path, string.Join(", ", file.UncoveredLines));
         }
+
+        // Named individually, with the line: the whole failure mode being fixed here is an exemption nobody
+        // could tell had stopped applying, so a count alone would repeat the mistake.
+        foreach (var stale in report.StaleExclusions)
+            Log.Error("  STALE marker {File}:{Line} - {Reason}", stale.Path, stale.Line, Explain(stale.Reason));
     }
+
+    private static string Explain(StaleReason reason) => reason switch
+    {
+        StaleReason.LineIsCovered => "the line is covered, so the marker excuses nothing - delete it",
+        StaleReason.NothingToExclude => "no instrumented code on that line - the statement it was written for has moved",
+        StaleReason.NoReasonGiven => "no reason after the marker - an exemption nobody can review is not one",
+        _ => reason.ToString(),
+    };
 }

@@ -1,4 +1,4 @@
-using FEx.Offline.Abstractions;
+﻿using FEx.Offline.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -155,7 +155,7 @@ public sealed class HttpOutbox
 
                 break;
             }
-        }
+        } // coverage-exclude: the foreach body's closing brace: every branch inside ends in continue or break, so nothing falls through to it
 
         return new(sent, rejected, await CountAsync(), lastError);
     }

@@ -90,24 +90,24 @@ public sealed class CoverageGateTests
     }
 
     [Fact]
-    public void ExcludedLine_DoesNotFailTheGate_ButItsUncoveredSiblingsStillDo()
+    public void MarkedLine_DoesNotFailTheGate_ButItsUncoveredSiblingsStillDo()
     {
         CoverageReport report = Analyze(
-            Options(lineExclusions: [("src/Acme.Core/Money.cs", 2)]),
+            Options(source: ["covered", "throw; // coverage-exclude: unreachable guard", "", "", "", "", "forgotten"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0), (7, 0)));
 
         report.Failed.ShouldBeTrue();
         CoverageFile file = report.IncompleteFiles.ShouldHaveSingleItem();
-        file.UncoveredLines.ShouldBe([7]); // line 2 excluded, line 7 still fails the gate
+        file.UncoveredLines.ShouldBe([7]); // line 2 marked, line 7 still fails the gate
     }
 
     [Fact]
-    public void ExcludedLine_RemovesItFromBothTheNumeratorAndDenominator()
+    public void MarkedLine_RemovesItFromBothTheNumeratorAndDenominator()
     {
-        // Excluding a line must not count it as "covered" (which would inflate the rate) - it is removed
+        // Exempting a line must not count it as "covered" (which would inflate the rate) - it is removed
         // from the measurable total entirely, as if it were never instrumented.
         CoverageReport report = Analyze(
-            Options(lineExclusions: [("src/Acme.Core/Money.cs", 2)]),
+            Options(source: ["covered", "throw; // coverage-exclude: unreachable guard"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)));
 
         report.Failed.ShouldBeFalse();
@@ -116,18 +116,124 @@ public sealed class CoverageGateTests
         report.Rate.ShouldBe(1d);
     }
 
+    /// <summary>
+    /// The failure this whole mechanism exists to stop. A marker on a covered line excuses nothing, and
+    /// worse, would go on hiding that line if a real gap appeared there later - so it fails the gate
+    /// instead of sitting quietly, which is what a line-number entry used to do after any edit above it.
+    /// </summary>
     [Fact]
-    public void LineExclusionThatMatchesNothing_IsANoOp()
+    public void MarkerOnACoveredLine_FailsTheGate_NamingTheLine()
     {
-        // A stale entry (the line got covered by a later test, or the file was edited and renumbered)
-        // must not silently exclude some OTHER, unrelated line - it excludes nothing, and the file's real
-        // uncovered lines still fail the gate exactly as if the entry were absent.
         CoverageReport report = Analyze(
-            Options(lineExclusions: [("src/Acme.Core/Money.cs", 99)]),
+            Options(source: ["covered", "also covered // coverage-exclude: stale, this got tested"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 1)));
+
+        report.Failed.ShouldBeTrue();
+        report.IncompleteFiles.ShouldBeEmpty();
+        StaleExclusion stale = report.StaleExclusions.ShouldHaveSingleItem();
+        stale.Path.ShouldBe("src/Acme.Core/Money.cs");
+        stale.Line.ShouldBe(2);
+        stale.Reason.ShouldBe(StaleReason.LineIsCovered);
+    }
+
+    /// <summary>A marker left behind on a line the compiler does not instrument - the statement it was
+    /// written for has moved or gone, and the comment stayed.</summary>
+    [Fact]
+    public void MarkerOnALineWithNoInstrumentedCode_FailsTheGate()
+    {
+        CoverageReport report = Analyze(
+            Options(source: ["covered", "// coverage-exclude: whatever this guarded is long gone"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1)));
+
+        report.Failed.ShouldBeTrue();
+        report.StaleExclusions.ShouldHaveSingleItem().Reason.ShouldBe(StaleReason.NothingToExclude);
+    }
+
+    /// <summary>An exemption nobody can review is not an exemption. The reason is the entire reason the
+    /// marker is allowed to exist at all.</summary>
+    [Fact]
+    public void MarkerWithNoReason_FailsTheGate_EvenOnAGenuinelyUncoveredLine()
+    {
+        CoverageReport report = Analyze(
+            Options(source: ["covered", "throw; // coverage-exclude:"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)));
 
         report.Failed.ShouldBeTrue();
+        report.StaleExclusions.ShouldHaveSingleItem().Reason.ShouldBe(StaleReason.NoReasonGiven);
+    }
+
+    /// <summary>
+    /// A statement split across lines cannot carry a comment on its continuations - they are inside a
+    /// string literal - so the marker states its span outright. Every line of that span is still judged
+    /// separately, which is what stops a span from quietly swallowing the code below it.
+    /// </summary>
+    [Fact]
+    public void MarkerWithASpan_CoversTheContinuationLinesToo()
+    {
+        CoverageReport report = Analyze(
+            Options(source:
+            [
+                "covered",
+                "throw new Exception( // coverage-exclude+2: unreachable, the caller checked already",
+                "    $\"first half {value}\"",
+                "    + \"second half\");",
+            ]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0), (3, 0), (4, 0)));
+
+        report.Failed.ShouldBeFalse();
+        report.MeasurableLines.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ASpanReachingPastWhatItExcuses_FailsTheGate()
+    {
+        CoverageReport report = Analyze(
+            Options(source: ["covered", "throw; // coverage-exclude+1: reaches one line too far", "covered too"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0), (3, 1)));
+
+        report.Failed.ShouldBeTrue();
+        StaleExclusion stale = report.StaleExclusions.ShouldHaveSingleItem();
+        stale.Line.ShouldBe(3);
+        stale.Reason.ShouldBe(StaleReason.LineIsCovered);
+    }
+
+    /// <summary>A marker written without its colon is reported, not ignored: silently doing nothing is the
+    /// exact behaviour this mechanism replaces.</summary>
+    [Fact]
+    public void MarkerWithoutItsColon_IsReportedRatherThanIgnored()
+    {
+        CoverageReport report = Analyze(
+            Options(source: ["covered", "throw; // coverage-exclude unreachable guard"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)));
+
+        report.Failed.ShouldBeTrue();
+        report.StaleExclusions.ShouldHaveSingleItem().Reason.ShouldBe(StaleReason.NoReasonGiven);
+    }
+
+    /// <summary>Source the checkout does not have (a submodule built elsewhere) says nothing about
+    /// coverage, so it is not a verdict - the file is policed on its report alone.</summary>
+    [Fact]
+    public void SourceThatCannotBeRead_LeavesTheFileJudgedOnItsReport()
+    {
+        CoverageReport report = Analyze(
+            Options(source: null),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)));
+
+        report.StaleExclusions.ShouldBeEmpty();
         report.IncompleteFiles.ShouldHaveSingleItem().UncoveredLines.ShouldBe([2]);
+    }
+
+    /// <summary>With no reader wired in, Analyze touches no filesystem at all - the property that keeps it
+    /// a pure function and lets every test above run without one.</summary>
+    [Fact]
+    public void WithNoSourceReader_NoMarkerApplies()
+    {
+        CoverageReport report = CoverageGate.Analyze(
+            [Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 0))],
+            new CoverageGateOptions { RootDirectory = Root, IncludedPrefixes = ["src"] });
+
+        report.StaleExclusions.ShouldBeEmpty();
+        report.IncompleteFiles.ShouldHaveSingleItem().UncoveredLines.ShouldBe([1]);
     }
 
     [Fact]
@@ -221,15 +327,20 @@ public sealed class CoverageGateTests
     private static CoverageReport Analyze(CoverageGateOptions options, params XDocument[] reports) =>
         CoverageGate.Analyze(reports, options);
 
+    /// <summary>
+    /// Options for one file's worth of source. <paramref name="source" /> is what the reader hands back for
+    /// EVERY path - the tests each use a single file, and a null stands for source this checkout cannot
+    /// read. The reader is a delegate precisely so these tests never touch a disk.
+    /// </summary>
     private static CoverageGateOptions Options(
-        string[]? exclusions = null, string[]? expectedModules = null, (string Path, int Line)[]? lineExclusions = null) =>
+        string[]? exclusions = null, string[]? expectedModules = null, string[]? source = null) =>
         new()
         {
             RootDirectory = Root,
             IncludedPrefixes = ["src"],
             Exclusions = exclusions ?? [],
-            LineExclusions = lineExclusions ?? [],
-            ExpectedModules = expectedModules ?? []
+            ExpectedModules = expectedModules ?? [],
+            ReadSourceLines = _ => source,
         };
 
     /// <summary>Builds a minimal cobertura document: one package, one class, the given (line, hits) pairs.</summary>

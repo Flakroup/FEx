@@ -136,17 +136,44 @@ public sealed class CoverageGateTests
         stale.Reason.ShouldBe(StaleReason.LineIsCovered);
     }
 
-    /// <summary>A marker left behind on a line the compiler does not instrument - the statement it was
-    /// written for has moved or gone, and the comment stayed.</summary>
+    /// <summary>
+    /// A marker on a line this run did not instrument is REPORTED, not fatal. Whether a closing brace or a
+    /// bare `continue` gets a sequence point differs between Debug and Release and between platforms, so the
+    /// same marker is genuinely needed where a developer runs the gate and genuinely inert on CI. Failing on
+    /// it would mean no marker could satisfy both at once - measured, not assumed: markers that were
+    /// required on Windows/Debug came back as "nothing to exclude" on Linux/Release.
+    /// </summary>
     [Fact]
-    public void MarkerOnALineWithNoInstrumentedCode_FailsTheGate()
+    public void MarkerOnALineWithNoInstrumentedCode_IsReportedButDoesNotFailTheGate()
     {
         CoverageReport report = Analyze(
-            Options(source: ["covered", "// coverage-exclude: whatever this guarded is long gone"]),
+            Options(source: ["covered", "} // coverage-exclude: a brace this configuration does not instrument"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1)));
 
+        report.Failed.ShouldBeFalse();
+        report.StaleExclusions.ShouldBeEmpty();
+        StaleExclusion unused = report.UnusedExclusions.ShouldHaveSingleItem();
+        unused.Line.ShouldBe(2);
+        unused.Reason.ShouldBe(StaleReason.NothingToExclude);
+    }
+
+    /// <summary>The distinction that keeps the gate useful: a marker on an UNINSTRUMENTED line is a
+    /// configuration difference, a marker on a COVERED line is rot - only the second one fails.</summary>
+    [Fact]
+    public void ACoveredLineStillFails_EvenWhileAnUninstrumentedOneOnlyReports()
+    {
+        CoverageReport report = Analyze(
+            Options(source:
+            [
+                "covered",
+                "also covered // coverage-exclude: rot - this got tested",
+                "} // coverage-exclude: a brace this configuration does not instrument",
+            ]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 1)));
+
         report.Failed.ShouldBeTrue();
-        report.StaleExclusions.ShouldHaveSingleItem().Reason.ShouldBe(StaleReason.NothingToExclude);
+        report.StaleExclusions.ShouldHaveSingleItem().Line.ShouldBe(2);
+        report.UnusedExclusions.ShouldHaveSingleItem().Line.ShouldBe(3);
     }
 
     /// <summary>An exemption nobody can review is not an exemption. The reason is the entire reason the

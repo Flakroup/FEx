@@ -52,7 +52,7 @@ public static class CoverageGate
             }
         }
 
-        var stale = ApplyMarkers(byFile, options);
+        (var stale, var unused) = ApplyMarkers(byFile, options);
 
         var files = byFile
             .Select(entry => entry.Value.ToFile(entry.Key))
@@ -69,7 +69,8 @@ public static class CoverageGate
             files,
             modules.OrderBy(static m => m, StringComparer.OrdinalIgnoreCase).ToList(),
             missing,
-            stale);
+            stale,
+            unused);
     }
 
     /// <summary>
@@ -82,13 +83,14 @@ public static class CoverageGate
     /// A comment moves with the code it belongs to, and disappears with it.
     /// </para>
     /// </summary>
-    private static IReadOnlyList<StaleExclusion> ApplyMarkers(
+    private static (IReadOnlyList<StaleExclusion> Stale, IReadOnlyList<StaleExclusion> Unused) ApplyMarkers(
         Dictionary<string, LineSets> byFile, CoverageGateOptions options)
     {
         if (options.ReadSourceLines is null || string.IsNullOrWhiteSpace(options.LineExclusionMarker))
-            return [];
+            return ([], []);
 
         List<StaleExclusion> stale = [];
+        List<StaleExclusion> unused = [];
         foreach ((var path, var lines) in byFile)
         {
             var source = options.ReadSourceLines(path);
@@ -113,7 +115,7 @@ public static class CoverageGate
                         if (lines.Covered.Contains(number))
                             stale.Add(new StaleExclusion(path, number, StaleReason.LineIsCovered));
                         else if (!lines.Measurable.Contains(number))
-                            stale.Add(new StaleExclusion(path, number, StaleReason.NothingToExclude));
+                            unused.Add(new StaleExclusion(path, number, StaleReason.NothingToExclude));
                     }
 
                     lines.Measurable.Remove(number);
@@ -122,10 +124,14 @@ public static class CoverageGate
             }
         }
 
-        return stale
-            .OrderBy(static s => s.Path, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(static s => s.Line)
-            .ToList();
+        return (Ordered(stale), Ordered(unused));
+
+        static IReadOnlyList<StaleExclusion> Ordered(List<StaleExclusion> entries) =>
+        [
+            .. entries
+                .OrderBy(static s => s.Path, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(static s => s.Line),
+        ];
     }
 
     /// <summary>
@@ -322,8 +328,12 @@ public enum StaleReason
     /// excuse, and would go on hiding the line if a real gap ever appeared there.</summary>
     LineIsCovered,
 
-    /// <summary>The line carries no instrumented code at all: the statement the marker was written for
-    /// has moved or gone, and the comment stayed behind.</summary>
+    /// <summary>
+    /// The line carries no instrumented code in THIS run. Reported, never fatal: whether a closing brace or
+    /// a bare <c>continue</c> gets a sequence point differs between Debug and Release and between platforms,
+    /// so the same marker is genuinely needed where the developer runs the gate and genuinely inert where CI
+    /// runs it. Failing on it would mean no marker could satisfy both at once.
+    /// </summary>
     NothingToExclude,
 
     /// <summary>The marker carries no reason. An exemption nobody can review is not an exemption.</summary>
@@ -338,7 +348,8 @@ public sealed record CoverageReport(
     IReadOnlyList<CoverageFile> Files,
     IReadOnlyList<string> Modules,
     IReadOnlyList<string> MissingModules,
-    IReadOnlyList<StaleExclusion> StaleExclusions)
+    IReadOnlyList<StaleExclusion> StaleExclusions,
+    IReadOnlyList<StaleExclusion> UnusedExclusions)
 {
     public int MeasurableLines => Files.Sum(static f => f.MeasurableLines);
 
@@ -350,8 +361,9 @@ public sealed record CoverageReport(
 
     /// <summary>
     /// True when anything is under the threshold, when an expected assembly never reported, or when a
-    /// marker exempts nothing. The last one is a failure rather than a warning on purpose: a dead
-    /// exemption is how the gate quietly stops guarding the thing it was written for.
+    /// marker sits on a covered line or carries no reason. Those two are failures rather than warnings on
+    /// purpose: a dead exemption is how the gate quietly stops guarding the thing it was written for.
+    /// <see cref="UnusedExclusions"/> is deliberately NOT here - see <see cref="StaleReason.NothingToExclude"/>.
     /// </summary>
     public bool Failed => IncompleteFiles.Count > 0 || MissingModules.Count > 0 || StaleExclusions.Count > 0;
 }

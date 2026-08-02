@@ -141,12 +141,17 @@ public interface ICoverageTarget : ICompileTarget
         // could tell had stopped applying, so a count alone would repeat the mistake.
         foreach (var stale in report.StaleExclusions)
             Log.Error("  STALE marker {File}:{Line} - {Reason}", stale.Path, stale.Line, Explain(stale.Reason));
+
+        // Informational: this run did not instrument that line, which says nothing about whether the marker
+        // is needed where the gate runs in another configuration.
+        foreach (var unused in report.UnusedExclusions)
+            Log.Information("  unused marker {File}:{Line} - {Reason}", unused.Path, unused.Line, Explain(unused.Reason));
     }
 
     private static string Explain(StaleReason reason) => reason switch
     {
         StaleReason.LineIsCovered => "the line is covered, so the marker excuses nothing - delete it",
-        StaleReason.NothingToExclude => "no instrumented code on that line - the statement it was written for has moved",
+        StaleReason.NothingToExclude => "no instrumented code on that line in this configuration",
         StaleReason.NoReasonGiven => "no reason after the marker - an exemption nobody can review is not one",
         _ => reason.ToString(),
     };

@@ -17,7 +17,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void FullyCoveredFile_Passes()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 3)));
 
@@ -29,12 +29,12 @@ public sealed class CoverageGateTests
     [Fact]
     public void UncoveredLine_FailsAndIsListedByNumber()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0), (7, 0)));
 
         report.Failed.ShouldBeTrue();
-        CoverageFile file = report.IncompleteFiles.ShouldHaveSingleItem();
+        var file = report.IncompleteFiles.ShouldHaveSingleItem();
         file.Path.ShouldBe("src/Acme.Core/Money.cs");
         file.UncoveredLines.ShouldBe([2, 7]);
     }
@@ -44,7 +44,7 @@ public sealed class CoverageGateTests
     {
         // The same class exercised by two test projects: neither report alone is complete, together
         // they are. Averaging the per-report rates would report ~50% and fail a fully covered file.
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 0), (2, 5)));
@@ -57,7 +57,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void GeneratedCodeUnderObj_IsIgnored()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\obj\Release\net10.0\Regex.g.cs", (1, 0), (2, 0)));
 
@@ -68,7 +68,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void ExcludedFile_DoesNotFailTheGate()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(exclusions: ["src/Acme.Core/Migrations"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Migrations\Initial.cs", (1, 0)));
 
@@ -81,7 +81,7 @@ public sealed class CoverageGateTests
     {
         // "Migrations" must not also exempt "MigrationsHelper.cs" - a prefix match on the raw string
         // would quietly widen every exclusion.
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(exclusions: ["src/Acme.Core/Migrations"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\MigrationsHelper.cs", (1, 0)));
 
@@ -92,12 +92,12 @@ public sealed class CoverageGateTests
     [Fact]
     public void MarkedLine_DoesNotFailTheGate_ButItsUncoveredSiblingsStillDo()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(source: ["covered", "throw; // coverage-exclude: unreachable guard", "", "", "", "", "forgotten"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0), (7, 0)));
 
         report.Failed.ShouldBeTrue();
-        CoverageFile file = report.IncompleteFiles.ShouldHaveSingleItem();
+        var file = report.IncompleteFiles.ShouldHaveSingleItem();
         file.UncoveredLines.ShouldBe([7]); // line 2 marked, line 7 still fails the gate
     }
 
@@ -106,7 +106,7 @@ public sealed class CoverageGateTests
     {
         // Exempting a line must not count it as "covered" (which would inflate the rate) - it is removed
         // from the measurable total entirely, as if it were never instrumented.
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(source: ["covered", "throw; // coverage-exclude: unreachable guard"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)));
 
@@ -124,13 +124,13 @@ public sealed class CoverageGateTests
     [Fact]
     public void MarkerOnACoveredLine_FailsTheGate_NamingTheLine()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(source: ["covered", "also covered // coverage-exclude: stale, this got tested"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 1)));
 
         report.Failed.ShouldBeTrue();
         report.IncompleteFiles.ShouldBeEmpty();
-        StaleExclusion stale = report.StaleExclusions.ShouldHaveSingleItem();
+        var stale = report.StaleExclusions.ShouldHaveSingleItem();
         stale.Path.ShouldBe("src/Acme.Core/Money.cs");
         stale.Line.ShouldBe(2);
         stale.Reason.ShouldBe(StaleReason.LineIsCovered);
@@ -146,13 +146,13 @@ public sealed class CoverageGateTests
     [Fact]
     public void MarkerOnALineWithNoInstrumentedCode_IsReportedButDoesNotFailTheGate()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(source: ["covered", "} // coverage-exclude: a brace this configuration does not instrument"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1)));
 
         report.Failed.ShouldBeFalse();
         report.StaleExclusions.ShouldBeEmpty();
-        StaleExclusion unused = report.UnusedExclusions.ShouldHaveSingleItem();
+        var unused = report.UnusedExclusions.ShouldHaveSingleItem();
         unused.Line.ShouldBe(2);
         unused.Reason.ShouldBe(StaleReason.NothingToExclude);
     }
@@ -162,7 +162,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void ACoveredLineStillFails_EvenWhileAnUninstrumentedOneOnlyReports()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(source:
             [
                 "covered",
@@ -181,7 +181,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void MarkerWithNoReason_FailsTheGate_EvenOnAGenuinelyUncoveredLine()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(source: ["covered", "throw; // coverage-exclude:"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)));
 
@@ -197,7 +197,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void MarkerWithASpan_CoversTheContinuationLinesToo()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(source:
             [
                 "covered",
@@ -214,12 +214,12 @@ public sealed class CoverageGateTests
     [Fact]
     public void ASpanReachingPastWhatItExcuses_FailsTheGate()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(source: ["covered", "throw; // coverage-exclude+1: reaches one line too far", "covered too"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0), (3, 1)));
 
         report.Failed.ShouldBeTrue();
-        StaleExclusion stale = report.StaleExclusions.ShouldHaveSingleItem();
+        var stale = report.StaleExclusions.ShouldHaveSingleItem();
         stale.Line.ShouldBe(3);
         stale.Reason.ShouldBe(StaleReason.LineIsCovered);
     }
@@ -229,7 +229,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void MarkerWithoutItsColon_IsReportedRatherThanIgnored()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(source: ["covered", "throw; // coverage-exclude unreachable guard"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)));
 
@@ -242,7 +242,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void SourceThatCannotBeRead_LeavesTheFileJudgedOnItsReport()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(source: null),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)));
 
@@ -255,7 +255,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void WithNoSourceReader_NoMarkerApplies()
     {
-        CoverageReport report = CoverageGate.Analyze(
+        var report = CoverageGate.Analyze(
             [Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 0))],
             new CoverageGateOptions { RootDirectory = Root, IncludedPrefixes = ["src"] });
 
@@ -266,7 +266,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void FileOutsideTheIncludedPrefix_IsNotPoliced()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(),
             Cobertura("Acme.Tests", @"X:\repo\test\Acme.Tests\MoneyTests.cs", (1, 0)));
 
@@ -279,7 +279,7 @@ public sealed class CoverageGateTests
     {
         // The P6d failure mode: an assembly nothing loads contributes no measurable lines, so a naive
         // gate scores it 0/0 = 100% and waves it through.
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(expectedModules: ["Acme.Core", "Acme.Untested"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1)));
 
@@ -291,7 +291,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void AllExpectedModulesPresent_ReportsNoneMissing()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(expectedModules: ["Acme.Core"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1)));
 
@@ -304,7 +304,7 @@ public sealed class CoverageGateTests
     public void LineRepeatedUnderMethodAndClass_IsCountedOnce()
     {
         // Cobertura lists each line twice: once under <method>, once under the class-level <lines>.
-        XDocument report = XDocument.Parse(
+        var report = XDocument.Parse(
             $"""
              <coverage>
                <packages>
@@ -324,7 +324,7 @@ public sealed class CoverageGateTests
              </coverage>
              """);
 
-        CoverageReport result = Analyze(Options(), report);
+        var result = Analyze(Options(), report);
 
         result.MeasurableLines.ShouldBe(1);
         result.CoveredLines.ShouldBe(1);
@@ -333,7 +333,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void PathOutsideTheRepositoryRoot_IsSkipped()
     {
-        CoverageReport report = Analyze(
+        var report = Analyze(
             Options(),
             Cobertura("Acme.Core", @"C:\elsewhere\src\Other.cs", (1, 0)));
 
@@ -344,7 +344,7 @@ public sealed class CoverageGateTests
     [Fact]
     public void NoReports_YieldNothingToPolice()
     {
-        CoverageReport report = CoverageGate.Analyze([], Options());
+        var report = CoverageGate.Analyze([], Options());
 
         report.Files.ShouldBeEmpty();
         report.Rate.ShouldBe(1d);
@@ -373,7 +373,7 @@ public sealed class CoverageGateTests
     /// <summary>Builds a minimal cobertura document: one package, one class, the given (line, hits) pairs.</summary>
     private static XDocument Cobertura(string module, string filename, params (int Line, int Hits)[] lines)
     {
-        string body = string.Join("", lines.Select(l => $"""<line number="{l.Line}" hits="{l.Hits}" />"""));
+        var body = string.Join("", lines.Select(l => $"""<line number="{l.Line}" hits="{l.Hits}" />"""));
 
         return XDocument.Parse(
             $"""

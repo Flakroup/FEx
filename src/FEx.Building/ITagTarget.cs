@@ -2,15 +2,13 @@ using Nuke.Common;
 using Nuke.Common.Tooling;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FEx.Building;
 
 public interface ITagTarget : INuGetPublishTarget
 {
-    [Parameter("Git tag prefix (default: v)")]
-    string TagPrefix => TryGetValue(() => TagPrefix) ?? "v";
-
     Target Tag =>
         _ => _.Description("Creates and pushes a Git version tag (e.g. v1.2.3-alpha.4)")
             .TriggeredBy(Publish)
@@ -25,9 +23,11 @@ public interface ITagTarget : INuGetPublishTarget
                 var remote = ResolveCiRemote()!.Value;
                 var tag = $"{TagPrefix}{SemVer}";
 
-                if (TagExists(tag))
+                var skip = DescribeTagSkip(tag, GitTags.OnHead(TagPrefix), GitTags.All().Contains(tag));
+
+                if (skip is not null)
                 {
-                    Log.Information("Tag {Tag} already exists - skipping", tag);
+                    Log.Information("Skipping tag {Tag}: {Reason}", tag, skip);
 
                     return;
                 }
@@ -88,17 +88,24 @@ public interface ITagTarget : INuGetPublishTarget
 
     static bool IsReleaseBranch(string? branch) => branch is "main" or "master" or "develop";
 
-    static bool TagExists(string tag)
+    /// <summary>
+    /// A commit carries at most one version tag. Checking only whether the tag <em>name</em> is free is not
+    /// enough - a re-run that resolves to a different SemVer would find the new name free and stack a second
+    /// tag on a commit that is already released.
+    /// </summary>
+    /// <returns>The reason to skip tagging, or <c>null</c> when the tag may be created.</returns>
+    public static string? DescribeTagSkip(string tag, ISet<string> versionTagsOnHead, bool tagNameTaken)
     {
-        using var process = ProcessTasks.StartProcess("git",
-            $"tag -l {tag}",
-            NukeBuild.RootDirectory,
-            logOutput: false,
-            logInvocation: false);
+        if (versionTagsOnHead.Contains(tag))
+            return "HEAD already carries it";
 
-        process.WaitForExit();
+        if (GitTags.MarksReleasedCommit(versionTagsOnHead))
+            return "HEAD already carries version tag(s) "
+                   + string.Join(", ", versionTagsOnHead.OrderBy(static t => t, StringComparer.Ordinal));
 
-        return process.Output.Any(line => line.Text.Trim() == tag);
+        return tagNameTaken
+            ? "the name is taken by another commit"
+            : null;
     }
 
     static void RunGit(string arguments)

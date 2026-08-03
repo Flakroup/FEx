@@ -19,6 +19,11 @@ public interface INuGetPublishTarget : IPackTarget
         _ => _.Description("Publishes NuGet packages to the configured feed")
             .DependsOn(Pack)
             .OnlyWhenDynamic(() => !string.IsNullOrEmpty(NuGetApiKey), "Skipping publish: no NuGetApiKey configured")
+            // Publishing is idempotent per commit: the version tag left behind by the first run marks the
+            // commit as released, so a re-run pushes nothing instead of shipping the same sources again
+            // under a fresh version.
+            .OnlyWhenDynamic(() => !GitTags.MarksReleasedCommit(GitTags.OnHead(TagPrefix)),
+                "Skipping publish: HEAD already carries a version tag, so this commit was already published")
             .Executes(() =>
             {
                 var packages = PackagesDirectory.GlobFiles("*.nupkg");

@@ -21,7 +21,7 @@ public sealed class MemoryCacheIdempotencyStoreTests
         using MemoryCache cache = new(new MemoryCacheOptions());
         MemoryCacheIdempotencyStore store = new(cache);
 
-        CancellationToken ct = TestContext.Current.CancellationToken;
+        var ct = TestContext.Current.CancellationToken;
 
         await store.SetAsync(
             "k",
@@ -29,7 +29,7 @@ public sealed class MemoryCacheIdempotencyStoreTests
             TimeSpan.FromHours(1),
             ct);
 
-        IdempotentResponse? stored = await store.TryGetAsync("k", ct);
+        var stored = await store.TryGetAsync("k", ct);
 
         stored.ShouldNotBeNull();
         stored.StatusCode.ShouldBe(201);
@@ -52,8 +52,8 @@ public sealed class MemoryCacheIdempotencyStoreTests
         ServiceCollection services = new();
         services.AddIdempotency();
 
-        using ServiceProvider provider = services.BuildServiceProvider();
-        using IServiceScope scope = provider.CreateScope();
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
 
         scope.ServiceProvider.GetRequiredService<IIdempotencyStore>().ShouldBeOfType<MemoryCacheIdempotencyStore>();
     }
@@ -68,8 +68,8 @@ public sealed class MemoryCacheIdempotencyStoreTests
         services.AddScoped<IIdempotencyStore, DurableStub>();
         services.AddIdempotency();
 
-        using ServiceProvider provider = services.BuildServiceProvider();
-        using IServiceScope scope = provider.CreateScope();
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
 
         scope.ServiceProvider.GetRequiredService<IIdempotencyStore>().ShouldBeOfType<DurableStub>();
     }

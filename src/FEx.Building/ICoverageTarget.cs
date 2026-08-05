@@ -5,21 +5,27 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 namespace FEx.Building;
 
 /// <summary>
-/// Runs the test suite with code coverage and fails the build when production code is not fully covered.
+/// Fails the build when production code is not fully covered, judging the coverage reports that
+/// <see cref="ITestTarget.Test" /> left behind.
 /// </summary>
 /// <remarks>
 /// The threshold is a hard 100% by design: any number between 0 and 100 turns into a negotiation, and a
 /// gate that is negotiable stops being a gate. Genuinely untestable code leaves through
 /// <see cref="CoverageExclusions" />, where every entry is visible in review and needs a written reason.
+/// <para>
+/// The gate does not run the suite - it inherits <see cref="ITestTarget" />, whose single run is
+/// instrumented on its behalf. It used to execute a second <c>dotnet test</c> of its own, which doubled
+/// every verification round and left a database-backed suite fighting its own connections.
+/// </para>
 /// </remarks>
-public interface ICoverageTarget : ICompileTarget
+public interface ICoverageTarget : ITestTarget
 {
-    sealed AbsolutePath CoverageDirectory => RootDirectory / "artifacts" / "coverage";
+    /// <summary>The gate exists, so the one test run is instrumented and the reports are its by-product.</summary>
+    bool ITestTarget.CollectsCoverage => true;
 
     /// <summary>Root-relative subtrees whose files must reach the threshold.</summary>
     /// <remarks>
@@ -64,21 +70,16 @@ public interface ICoverageTarget : ICompileTarget
     IReadOnlyList<string> ModulesWithoutExecutableCode => [];
 
     Target Coverage =>
-        _ => _.Description("Runs tests with coverage and fails below 100% outside the declared exclusions")
-            .DependsOn(Compile)
+        _ => _.Description("Fails below 100% outside the declared exclusions, on the reports the test run left")
+            .DependsOn(Test)
             .Executes(() =>
             {
-                CoverageDirectory.CreateOrCleanDirectory();
-
                 // One solution-wide MTP run emits one cobertura file per test assembly.
-                DotNet($"test --solution {Solution} --configuration {Configuration} --no-build " +
-                       $"--coverage --coverage-output-format cobertura --results-directory {CoverageDirectory}");
-
-                var reports = CoverageDirectory.GlobFiles("*.cobertura.xml");
+                var reports = TestResultsDirectory.GlobFiles("*.cobertura.xml");
                 if (reports.Count == 0)
                     throw new InvalidOperationException(
-                        $"No cobertura reports under {CoverageDirectory}. Coverage did not run, so the gate "
-                        + "cannot vouch for anything.");
+                        $"No cobertura reports under {TestResultsDirectory}. The test run produced no coverage "
+                        + "data, so the gate cannot vouch for anything.");
 
                 var report = CoverageGate.AnalyzeFiles(
                     reports.Select(static path => path.ToString()),

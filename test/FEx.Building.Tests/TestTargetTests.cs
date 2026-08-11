@@ -1,5 +1,6 @@
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace FEx.Building.Tests;
@@ -92,8 +93,116 @@ public sealed class TestTargetTests
         ((ITestTarget)new UngatedBuild()).CollectsCoverage.ShouldBeFalse();
     }
 
-    private static string Arguments(bool withCoverage) =>
-        ITestTarget.TestArguments("C:/repo/Some.slnx", "Release", "C:/repo/artifacts/test-results", withCoverage);
+    [Fact]
+    public void TestFilter_NarrowsTheRunToTheClassesThatMatch()
+    {
+        var arguments = Arguments(withCoverage: false, testFilter: "*OrderTests");
+
+        arguments.ShouldContain("--filter-class *OrderTests");
+    }
+
+    [Fact]
+    public void NoTestFilter_LeavesTheWholeSuiteRunning()
+    {
+        Arguments(withCoverage: false).ShouldNotContain("--filter-class");
+    }
+
+    [Fact]
+    public void BlankTestFilter_IsNotAFilter()
+    {
+        // NUKE hands back an empty string for a parameter named without a value, and passing that on would
+        // narrow the run to the classes called "" - a green build that tested nothing.
+        Arguments(withCoverage: false, testFilter: "   ").ShouldNotContain("--filter-class");
+    }
+
+    [Fact]
+    public void AdditionalArguments_ReachTheRunner()
+    {
+        var arguments = Arguments(withCoverage: false, additional: ["--ignore-exit-code", "8"]);
+
+        arguments.ShouldContain("--ignore-exit-code 8");
+    }
+
+    [Fact]
+    public void ContributingExtraArguments_DoesNotCostTheStandardOnes()
+    {
+        // This is the property that makes the seam worth having. A repository trims its suite by adding
+        // arguments and keeps every report, the results directory and --no-build; if it did not, forking
+        // the whole target would be the only way to trim, and the fork would then miss whatever is added
+        // here next.
+        var arguments = Arguments(
+            withCoverage: true, testFilter: "*OrderTests", additional: ["--filter-not-namespace", "Slow.Tests*"]);
+
+        arguments.ShouldStartWith("test ");
+        arguments.ShouldContain("--report-xunit-trx");
+        arguments.ShouldContain("--coverage");
+        arguments.ShouldContain("--no-build");
+        arguments.ShouldContain("--results-directory C:/repo/artifacts/test-results");
+        arguments.ShouldContain("--filter-class *OrderTests");
+        arguments.ShouldContain("--filter-not-namespace Slow.Tests*");
+    }
+
+    [Fact]
+    public void ABuildThatContributesNothing_GetsTheStandardCommandLine()
+    {
+        ((ITestTarget)new UngatedBuild()).AdditionalTestArguments().ShouldBeEmpty();
+        ((ITestTarget)new UngatedBuild()).IgnoredTestExitCodes.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AFilteredRun_ForgivesTheAssembliesItEmptied()
+    {
+        // Measured: a solution-wide run is one process per assembly, so a filter naming one class leaves
+        // every other assembly matching nothing, each returning NoTestsRan. Unforgiven, the filter reports
+        // a failed build however green the tests it actually ran - which is what it did before this line.
+        Arguments(withCoverage: false, testFilter: "*OrderTests")
+            .ShouldContain($"--ignore-exit-code {ITestTarget.NoTestsRanExitCode}");
+    }
+
+    [Fact]
+    public void AWholeRunWithNothingContributed_ForgivesNothing()
+    {
+        // The whole suite running nothing is a broken build, not an intention - so the flag is absent
+        // rather than present and empty, which would forgive that too.
+        Arguments(withCoverage: false).ShouldNotContain("--ignore-exit-code");
+    }
+
+    [Fact]
+    public void IgnoredExitCodes_AreOneFlag_BecauseMtpTakesAListAndNotARepeat()
+    {
+        var arguments = Arguments(withCoverage: false, testFilter: "*OrderTests", ignoredExitCodes: [8, 9]);
+
+        Occurrences(arguments, "--ignore-exit-code").ShouldBe(1);
+        arguments.ShouldContain("--ignore-exit-code 8;9");
+    }
+
+    [Fact]
+    public void ACodeTheRunAlreadyForgives_IsNotListedTwice()
+    {
+        // A build that trims its suite AND filters asks for NoTestsRan from both sides; MTP reads the list
+        // once, and "8;8" is a command line nobody wrote on purpose.
+        var arguments = Arguments(
+            withCoverage: false,
+            testFilter: "*OrderTests",
+            ignoredExitCodes: [ITestTarget.NoTestsRanExitCode]);
+
+        arguments.ShouldContain($"--ignore-exit-code {ITestTarget.NoTestsRanExitCode}");
+        arguments.ShouldNotContain($"{ITestTarget.NoTestsRanExitCode};{ITestTarget.NoTestsRanExitCode}");
+    }
+
+    private static string Arguments(
+        bool withCoverage,
+        string? testFilter = null,
+        IEnumerable<string>? additional = null,
+        IEnumerable<int>? ignoredExitCodes = null) =>
+        ITestTarget.TestArguments(
+            "C:/repo/Some.slnx",
+            "Release",
+            "C:/repo/artifacts/test-results",
+            withCoverage,
+            testFilter,
+            additional,
+            ignoredExitCodes);
 
     private static int Occurrences(string arguments, string flag)
     {

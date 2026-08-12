@@ -13,7 +13,7 @@ public interface ICompileTarget : INukeBuild
     Target Restore =>
         _ => _.Executes(() =>
         {
-            DotNetRestore(s => s.SetProjectFile(Solution).SetProperty("NuGetAudit", !NukeBuild.IsServerBuild));
+            DotNetRestore(s => s.SetProjectFile(Solution));
         });
 
     Target Compile =>

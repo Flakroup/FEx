@@ -98,8 +98,7 @@ public interface IAppPublishTarget : ICompileTarget
                         s = s.SetProject(entry.ProjectPath)
                             .SetConfiguration(Configuration)
                             .EnableNoBuild()
-                            .SetOutput(entry.OutputDirectory)
-                            .SetProperty("NuGetAudit", !NukeBuild.IsServerBuild);
+                            .SetOutput(entry.OutputDirectory);
 
                         if (PublishRuntime is not null)
                             s = s.SetRuntime(PublishRuntime).SetSelfContained(PublishSelfContained);

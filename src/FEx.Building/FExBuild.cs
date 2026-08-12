@@ -43,19 +43,17 @@ public abstract class FExBuild : NukeBuild, ICompileTarget
             .SetNoRestore(noRestore)
             .SetProjectFile(solution)
             .SetProcessAdditionalArguments("-m", "-bl")
-            .When(_ => !noRestore, s => s.SetProperty("NuGetAudit", !IsServerBuild))
             .When(_ => verbosity is not null, s => s.SetVerbosity(verbosity));
 
     public virtual DotNetRestoreSettings GetRestoreSettings(DotNetRestoreSettings settings,
                                                             AbsolutePath solution,
                                                             Configuration? configuration = null) =>
         settings.SetProjectFile(solution)
-            .SetProperty("NuGetAudit", !IsServerBuild)
             .When(_ => configuration is not null, s => s.SetProperty("Configuration", configuration!.ToString()));
 
     // Overrides ICompileTarget's defaults: restores in the SAME Configuration Compile builds with
     // (via GetRestoreSettings above), then Compile skips its own implicit restore (SetNoRestore in
-    // GetBuildSettings) - one restore instead of two, and the NuGetAudit override actually sticks.
+    // GetBuildSettings) - one restore instead of two.
     Target ICompileTarget.Restore =>
         _ => _.Executes(() => DotNetRestore(s => GetRestoreSettings(s, Solution, Configuration)));
 

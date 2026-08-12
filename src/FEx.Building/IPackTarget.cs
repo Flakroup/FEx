@@ -42,8 +42,7 @@ public interface IPackTarget : ICompileTarget, IGitVersionComponent
                         .SetFileVersion(VersionInfo!.AssemblySemFileVer)
                         .SetInformationalVersion(InformationalVersion)
                         .SetProperty("PackageVersion", version)
-                        .SetProperty("NoWarn", "CS1591")
-                        .SetProperty("NuGetAudit", !NukeBuild.IsServerBuild));
+                        .SetProperty("NoWarn", "CS1591"));
                 }
 
                 var packages = PackagesDirectory.GlobFiles("*.nupkg");

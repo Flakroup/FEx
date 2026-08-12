@@ -27,10 +27,10 @@ public interface IGitVersionComponent : INukeBuild
             ? VersionInfo!.SemVer
             : "0.0.0";
 
-    sealed string NuGetVersion =>
-        !string.IsNullOrEmpty(VersionInfo?.NuGetVersionV2) ? VersionInfo!.NuGetVersionV2 :
-        !string.IsNullOrEmpty(VersionInfo?.NuGetVersion) ? VersionInfo!.NuGetVersion :
-        !string.IsNullOrEmpty(VersionInfo?.SemVer) ? VersionInfo!.SemVer : "0.0.0";
+    // SemVer is the package version. GitVersion 6 no longer emits the NuGetVersion* variables, so a
+    // fallback chain reading them resolved to empty and handed the packages a version with the
+    // pre-release label silently stripped - which is how a develop snapshot shipped as a stable release.
+    sealed string NuGetVersion => SemVer;
 
     sealed string InformationalVersion =>
         !string.IsNullOrEmpty(VersionInfo?.InformationalVersion)
@@ -66,24 +66,60 @@ public interface IGitVersionComponent : INukeBuild
         process.AssertZeroExitCode();
         output = process.Output;
 
-        var json = output.Where(o => o.Type == OutputType.Std).Select(o => o.Text).JoinNewLine();
+        var json = output.Where(static o => o.Type == OutputType.Std).Select(static o => o.Text).JoinNewLine();
 
-        var jsonOptions = new JsonSerializerOptions();
-        jsonOptions.Converters.Add(new LenientStringConverter());
+        var info = Parse(json);
 
-        var info = JsonSerializer.Deserialize<GitVersionInfo>(json, jsonOptions)
-                   ?? throw new InvalidOperationException("GitVersion returned empty output");
-
-        Log.Information("GitVersion: SemVer={SemVer} NuGet={NuGetVersion} Branch={Branch}",
-            info.SemVer,
-            info.NuGetVersionV2,
-            info.BranchName);
+        Log.Information("GitVersion: SemVer={SemVer} Branch={Branch}", info.SemVer, info.BranchName);
 
         if (NukeBuild.IsServerBuild)
+        {
+            AssertStableOnlyFromReleaseBranch(info);
             AssertVersionAvailable(info, TagPrefix, GitTags.All(), GitTags.OnHead(TagPrefix));
+        }
 
         return info;
     }
+
+    /// <summary>
+    /// Reads <c>gitversion /output json</c>. Public so the output contract is pinned by tests against real
+    /// tool output rather than only by a build that has already pushed packages - GitVersion has changed
+    /// which variables it emits between major versions, and a field that quietly stops arriving reads as an
+    /// empty string here, not as an error.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">GitVersion produced no output.</exception>
+    public static GitVersionInfo Parse(string json)
+    {
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(new LenientStringConverter());
+
+        return JsonSerializer.Deserialize<GitVersionInfo>(json, options)
+               ?? throw new InvalidOperationException("GitVersion returned empty output");
+    }
+
+    /// <summary>
+    /// A version without a pre-release label is a stable release, and only <c>main</c>/<c>master</c> may
+    /// produce one. Everywhere else - develop, a detached HEAD, a branch GitVersion could not name - a
+    /// label-less version means the version was mangled on the way to the packages, not that a release was
+    /// intended. That is not recoverable after the push: the stable version outranks every pre-release that
+    /// follows it, so the whole alpha line disappears behind it. The build stops here instead.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">A stable version was resolved off a release branch.</exception>
+    public static void AssertStableOnlyFromReleaseBranch(GitVersionInfo info)
+    {
+        if (!string.IsNullOrEmpty(info.PreReleaseTag)
+            || IsStableReleaseBranch(info.BranchName))
+            return;
+
+        throw new InvalidOperationException(
+            $"Version {info.SemVer} carries no pre-release label, but it was resolved on branch "
+            + $"'{info.BranchName}' rather than main/master. Publishing it would take the stable slot on the "
+            + "feed and outrank every pre-release built after it. Fix the version resolution, or release "
+            + "from main/master.");
+    }
+
+    /// <summary>Branches a stable, label-less version may be released from.</summary>
+    public static bool IsStableReleaseBranch(string? branch) => branch is "main" or "master";
 
     /// <summary>
     /// A version tag names exactly one commit. On HEAD it means this commit is already released, which the
@@ -181,17 +217,8 @@ public sealed record GitVersionInfo
     [JsonPropertyName("ShortSha")]
     public string ShortSha { get; init; } = "";
 
-    [JsonPropertyName("NuGetVersionV2")]
-    public string NuGetVersionV2 { get; init; } = "";
-
-    [JsonPropertyName("NuGetVersion")]
-    public string NuGetVersion { get; init; } = "";
-
-    [JsonPropertyName("NuGetPreReleaseTag")]
-    public string NuGetPreReleaseTag { get; init; } = "";
-
-    [JsonPropertyName("NuGetPreReleaseTagV2")]
-    public string NuGetPreReleaseTagV2 { get; init; } = "";
+    // No NuGetVersion/NuGetVersionV2/NuGetPreReleaseTag* here: GitVersion 6 dropped those variables.
+    // Declared, they deserialize to empty and read as "this build has no pre-release label".
 
     [JsonPropertyName("VersionSourceSha")]
     public string VersionSourceSha { get; init; } = "";
@@ -208,6 +235,12 @@ public sealed record GitVersionInfo
 
 internal sealed class LenientStringConverter : JsonConverter<string>
 {
+    // Without this the serializer handles a JSON null itself and writes it straight into a non-nullable
+    // string property, past both the converter and the "" initialiser - GitVersion emits null for the
+    // metadata it has nothing to put in, so every consumer of these fields would need a null check the
+    // type says it does not need.
+    public override bool HandleNull => true;
+
     public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
         reader.TokenType == JsonTokenType.Number
             ? reader.TryGetInt64(out var n)

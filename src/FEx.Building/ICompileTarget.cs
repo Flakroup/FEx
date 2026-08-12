@@ -3,6 +3,7 @@ using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
@@ -31,8 +32,31 @@ public interface ICompileTarget : INukeBuild
     /// hand those files to CI as artifacts.
     /// </summary>
     IEnumerable<AppPublishEntry> PublishEntries =>
-        PublishProjects.Select(project => new AppPublishEntry(Solution.Projects.Single(p => p.Name == project),
-            PublishDirectory / AppPublishLayout.OutputName(project)));
+        PublishProjects.Select(project =>
+        {
+            var path = ResolvePublishProject(project);
+
+            // The output name comes from the project FILE, never from the name given here: dropping "the
+            // extension" off a bare "Sample.Api" leaves "Sample", and dotted project names are the norm.
+            return new AppPublishEntry(path, PublishDirectory / AppPublishLayout.OutputName(path));
+        });
+
+    /// <summary>
+    /// Finds a declared publish project in the solution by name. Reports what was asked for and what the
+    /// solution actually holds - the bare <c>Single</c> answers a typo with "Sequence contains no matching
+    /// element", which names neither.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">No project, or more than one, carries that name.</exception>
+    sealed AbsolutePath ResolvePublishProject(string project)
+    {
+        var matches = Solution.Projects.Where(p => p.Name == project).ToList();
+
+        return matches.Count == 1
+            ? matches[0].Path
+            : throw new InvalidOperationException(
+                $"PublishProjects names '{project}', which matches {matches.Count} projects in "
+                + $"{Solution.Name}. Available: {string.Join(", ", Solution.Projects.Select(p => p.Name).OrderBy(static n => n))}.");
+    }
 
     /// <summary>
     /// Runtime identifier to publish for (e.g. <c>linux-arm64</c>). Null publishes portable, without a RID.

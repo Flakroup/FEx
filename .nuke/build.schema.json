@@ -78,18 +78,6 @@
         "ShortSha": {
           "type": "string"
         },
-        "NuGetVersionV2": {
-          "type": "string"
-        },
-        "NuGetVersion": {
-          "type": "string"
-        },
-        "NuGetPreReleaseTag": {
-          "type": "string"
-        },
-        "NuGetPreReleaseTagV2": {
-          "type": "string"
-        },
         "VersionSourceSha": {
           "type": "string"
         },
@@ -134,6 +122,7 @@
         "Info",
         "Pack",
         "Publish",
+        "PublishApp",
         "Restore",
         "Tag",
         "Test",
@@ -231,6 +220,22 @@
         "NuGetSource": {
           "type": "string",
           "description": "NuGet source URL for pushing packages (default: nuget.org)"
+        },
+        "PublishFramework": {
+          "type": "string",
+          "description": "Framework to publish for"
+        },
+        "PublishRuntime": {
+          "type": "string",
+          "description": "Runtime to publish for"
+        },
+        "PublishSelfContained": {
+          "type": "boolean",
+          "description": "Indicates whether to publish as self-contained"
+        },
+        "PublishSingleFile": {
+          "type": "boolean",
+          "description": "Indicates whether to publish as single-file"
         },
         "Solution": {
           "type": "string",

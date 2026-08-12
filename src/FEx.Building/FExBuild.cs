@@ -50,6 +50,10 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     [Parameter("Framework to publish for")]
     public string? PublishFramework { get; }
 
+    /// <inheritdoc />
+    [Parameter("Run only test classes matching this name - wildcards with '*' (e.g. '*OrderTests')")]
+    public virtual string? TestFilter { get; }
+
     /// <summary>
     /// Returns a human-readable summary of the scheduled execution plan
     /// (e.g., "Clean => Restore => Compile").
@@ -87,7 +91,7 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     protected virtual void LogBuildInfo()
     {
         Log.Information("═══════════════════════════════════════════════════════════════");
-        Log.Information("Command Line: {CommandLine}", Environment.CommandLine);
+        Log.Information("Command Line: {CommandLine}", MaskSecrets(Environment.CommandLine));
         Log.Information("═══════════════════════════════════════════════════════════════");
         Log.Information("Build Parameters:");
 
@@ -117,6 +121,44 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
         }
     }
 
+    /// <summary>What a secret's value is replaced by everywhere this build logs.</summary>
+    public const string SecretMask = "***";
+
+    /// <summary>
+    /// Replaces every <see cref="SecretAttribute" />-marked parameter's value wherever it appears in
+    /// <paramref name="text" />. Matched by VALUE rather than by option name, so it holds however the
+    /// secret reached the process - <c>--nuget-api-key x</c>, <c>--nuget-api-key=x</c>, an environment
+    /// variable or a parameters file - and does not depend on reproducing NUKE's option-name casing.
+    /// </summary>
+    protected string MaskSecrets(string text) =>
+        GetSecretValues().Aggregate(text, static (masked, secret) => masked.Replace(secret, SecretMask));
+
+    // Reads ONLY the properties marked [Secret]. Kept separate from GetParameterEntries so that collecting
+    // them cannot trigger the other parameters' getters a second time - VersionInfo's runs GitVersion.
+    private IEnumerable<string> GetSecretValues()
+    {
+        foreach (var prop in GetParameterProperties())
+        {
+            if (prop.GetCustomAttribute<SecretAttribute>() is null)
+                continue;
+
+            string? value;
+
+            try
+            {
+                value = prop.GetValue(this)?.ToString();
+            }
+            catch (Exception)
+            {
+                // A secret whose getter throws has no value to leak; the entry listing reports the error.
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(value))
+                yield return value!;
+        }
+    }
+
     /// <summary>
     /// Renders a parameter value for the <see cref="LogBuildInfo" /> output. The default
     /// implementation returns <c>"(not set)"</c> for null and a one-line summary for the
@@ -139,7 +181,9 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
         LogBuildInfo();
     }
 
-    private IEnumerable<(string Name, object? Value)> GetParameterEntries(HashSet<string> seen)
+    // Every [Parameter] this build contributes, its own and its components'. NUKE's own infrastructure
+    // parameters (Help, NoLogo, Plan, Target, ...) are filtered out by declaring assembly.
+    private IEnumerable<PropertyInfo> GetParameterProperties()
     {
         var nukeAssembly = typeof(NukeBuild).Assembly;
         var type = GetType();
@@ -149,19 +193,22 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
                                    | BindingFlags.Instance
                                    | BindingFlags.FlattenHierarchy;
 
-        var properties = type.GetProperties(flags)
-            .Concat(type.GetInterfaces().SelectMany(static i => i.GetProperties()));
+        return type.GetProperties(flags)
+            .Concat(type.GetInterfaces().SelectMany(static i => i.GetProperties()))
+            .Where(p => p.GetCustomAttribute<ParameterAttribute>() is not null
+                        && p.DeclaringType?.Assembly != nukeAssembly);
+    }
 
-        foreach (var prop in properties)
+    /// <summary>
+    /// Every [Parameter] with its value, secrets already replaced by <see cref="SecretMask" />, skipping
+    /// any name already in <paramref name="seen" />. Protected rather than private so a derived build can
+    /// reuse the listing - and so the masking is reachable from a test without reproducing it.
+    /// </summary>
+    protected IEnumerable<(string Name, object? Value)> GetParameterEntries(HashSet<string> seen)
+    {
+        foreach (var prop in GetParameterProperties())
         {
-            if (prop.GetCustomAttribute<ParameterAttribute>() is not { } attr)
-                continue;
-
-            // Skip NUKE's own infrastructure parameters (Help, NoLogo, Plan, Target, ...).
-            if (prop.DeclaringType?.Assembly == nukeAssembly)
-                continue;
-
-            var name = attr.Name ?? prop.Name;
+            var name = prop.GetCustomAttribute<ParameterAttribute>()!.Name ?? prop.Name;
 
             if (!seen.Add(name))
                 continue;
@@ -177,11 +224,14 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
                 value = $"(error: {ex.GetBaseException().Message})";
             }
 
+            // Masked HERE rather than at formatting time: FormatParameterValue is overridable, and an
+            // override that prints what it is handed would put the secret straight back into the log.
+            // "(not set)" still distinguishes an unconfigured secret, which is why publish steps skip.
+            if (value is not null
+                && prop.GetCustomAttribute<SecretAttribute>() is not null)
+                value = SecretMask;
+
             yield return (name, value);
         }
     }
-
-    /// <inheritdoc />
-    [Parameter("Run only test classes matching this name - wildcards with '*' (e.g. '*OrderTests')")]
-    public string? TestFilter { get; }
 }

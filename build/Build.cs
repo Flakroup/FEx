@@ -1,10 +1,14 @@
 using FEx.Building;
 using JetBrains.Annotations;
 using Nuke.Common;
+using System.Collections.Generic;
 
 [DisableDefaultOutput(DefaultOutput.ErrorsAndWarnings)]
 class Build : FExBuild, ITagTarget, ITestTarget
 {
+    // FEx ships packages, not deployable applications - nothing here to PublishApp.
+    public override IEnumerable<string> PublishProjects => [];
+
     [UsedImplicitly] // NUKE Target invoked by the build runner via reflection; R# cannot track it.
     Target Info =>
         _ => _

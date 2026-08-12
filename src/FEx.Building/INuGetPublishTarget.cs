@@ -12,6 +12,8 @@ public interface INuGetPublishTarget : IPackTarget
     string NuGetSource => TryGetValue(() => NuGetSource) ?? "https://api.nuget.org/v3/index.json";
 
     [Parameter("NuGet API key for pushing packages")]
+    // FExBuild.MaskSecrets keeps this out of the build log - both the parameter listing and the command
+    // line echo, matched by value so the option's spelling does not matter.
     [Secret]
     string? NuGetApiKey => TryGetValue(() => NuGetApiKey);
 

@@ -178,10 +178,15 @@ public sealed class TestTargetTests
     /// silently ignores <c>--test-filter</c> and runs the whole suite - measured green across the suite,
     /// because nothing else reads the attribute.
     /// </summary>
+    /// <remarks>
+    /// Asserted on <see cref="FExBuild" /> rather than <see cref="ITestTarget" />: the interface declares
+    /// the seam, but NUKE binds command-line parameters on the build class, so that is where the attribute
+    /// has to survive. Checking the interface passed while the build ignored the switch entirely.
+    /// </remarks>
     [Fact]
     public void TestFilter_IsBoundFromTheCommandLine_NotJustAProperty() =>
-        typeof(ITestTarget).GetProperty(
-                nameof(ITestTarget.TestFilter),
+        typeof(FExBuild).GetProperty(
+                nameof(FExBuild.TestFilter),
                 BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
             .ShouldNotBeNull()
             .GetCustomAttribute<ParameterAttribute>()
@@ -304,14 +309,22 @@ public sealed class TestTargetTests
         return count;
     }
 
-    private sealed class GatedBuild : FExBuild, ICoverageTarget;
+    private sealed class GatedBuild : FExBuild, ICoverageTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+    }
 
-    private sealed class UngatedBuild : FExBuild, ITestTarget;
+    private sealed class UngatedBuild : FExBuild, ITestTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+    }
 
     /// <summary>A repository that uses every seam at once - the shape the wiring test needs.</summary>
     private sealed class ContributingBuild : FExBuild, ITestTarget
     {
-        public string? TestFilter => "*OrderTests";
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        public override string? TestFilter => "*OrderTests";
 
         public bool ForgivesEmptyAssemblies => true;
 

@@ -52,8 +52,11 @@ public interface ITestTarget : ICompileTarget
     /// </para>
     /// <para>
     /// NUKE resolves this from the environment and from <c>.nuke/parameters.json</c> as well as from the
-    /// command line, so it is NOT a developer-only convenience: a stray variable narrows a CI run too. That
-    /// is safe only because of the floor in <see cref="Test" />, which fails a run that executed nothing.
+    /// command line, matching a variable name after stripping every non-alphanumeric character and ignoring
+    /// case - <c>TEST_FILTER</c> and <c>NUKE_TEST_FILTER</c> set it as surely as the switch does. The floor
+    /// in <see cref="Test" /> catches a filter that matched NOTHING; it does not catch one that matched
+    /// something smaller than the suite, so a build that must run everything says so itself rather than
+    /// relying on this.
     /// </para>
     /// </remarks>
     [Parameter("Run only test classes matching this name - wildcards with '*' (e.g. '*OrderTests')")]
@@ -96,9 +99,12 @@ public interface ITestTarget : ICompileTarget
 
     /// <summary>The command line this build's seams compose, given the run's ambient values.</summary>
     /// <remarks>
-    /// Extracted from the target body so the composition is reachable from a test. It was not, and deleting
-    /// every seam from the call left the whole suite green - measured. The ambient values stay parameters
-    /// because a build constructed in a test has no solution.
+    /// Extracted from the target body so the composition is reachable from a test - it was not, and every
+    /// seam could be deleted from the call with the suite staying green. What a test can now reach is this
+    /// method; the target's single call to it is still beyond reach, because exercising a NUKE target needs
+    /// NUKE. The parameters are required rather than optional so that dropping one is a compile error
+    /// instead of a silent narrowing, which is the nearest thing to a test that this boundary can have.
+    /// The ambient values stay parameters because a build constructed in a test has no solution.
     /// </remarks>
     sealed string TestCommandLine(string solution, string configuration, string resultsDirectory) =>
         TestArguments(
@@ -127,9 +133,11 @@ public interface ITestTarget : ICompileTarget
                 // line, the environment or a parameters file.
                 if (MatchedNothing(TestResultsDirectory.GlobFiles("*.trx").Select(trx => XDocument.Load(trx))))
                     throw new InvalidOperationException(
-                        $"The test run executed nothing. Filter: '{TestFilter ?? "(none)"}'. A filter names "
-                        + "test CLASSES and takes wildcards - '*OrderTests', not 'OrderTests', and one "
-                        + "pattern rather than several separated by spaces.");
+                        $"The test run matched no test at all. Filter: '{TestFilter ?? "(none)"}'; extra "
+                        + $"arguments: '{string.Join(' ', AdditionalTestArguments())}'. Whichever of those "
+                        + "narrowed the run, it narrowed it to nothing. A filter names test CLASSES and "
+                        + "takes wildcards - '*OrderTests', not 'OrderTests', and one pattern rather than "
+                        + "several separated by spaces.");
             });
 
     /// <summary>
@@ -147,9 +155,9 @@ public interface ITestTarget : ICompileTarget
         string configuration,
         string resultsDirectory,
         bool withCoverage,
-        string? testFilter = null,
-        IEnumerable<string>? additionalArguments = null,
-        bool forgivesEmptyAssemblies = false)
+        string? testFilter,
+        IEnumerable<string>? additionalArguments,
+        bool forgivesEmptyAssemblies)
     {
         List<string> arguments =
         [

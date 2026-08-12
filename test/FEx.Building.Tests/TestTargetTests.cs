@@ -71,7 +71,10 @@ public sealed class TestTargetTests
             @"C:\src\my repo\Some.slnx",
             "Debug",
             @"C:\src\my repo\artifacts\test-results",
-            withCoverage: true);
+            withCoverage: true,
+            testFilter: null,
+            additionalArguments: null,
+            forgivesEmptyAssemblies: false);
 
         arguments.ShouldContain(@"--solution ""C:\src\my repo\Some.slnx""");
         arguments.ShouldContain(@"--results-directory ""C:\src\my repo\artifacts\test-results""");
@@ -228,6 +231,15 @@ public sealed class TestTargetTests
     /// filter usable and is also what makes "matched one class" and "matched nothing" the same green
     /// outcome - measured: a mistyped filter reported a successful build having executed zero tests.
     /// </summary>
+    /// <summary>
+    /// The one number here that is not ours to choose. Every other assertion in this file interpolates the
+    /// constant, so they hold whatever it says; this one holds it to what the runner actually returns.
+    /// Measured: a test assembly given a filter matching no class prints "Zero tests ran" and exits 8.
+    /// </summary>
+    [Fact]
+    public void NoTestsRanExitCode_IsTheCodeTheRunnerActuallyReturns() =>
+        ITestTarget.NoTestsRanExitCode.ShouldBe(8);
+
     [Fact]
     public void ARunThatMatchedNothingAnywhere_IsNotAPass() =>
         ITestTarget.MatchedNothing([Report(total: 0), Report(total: 0)]).ShouldBeTrue();
@@ -248,9 +260,21 @@ public sealed class TestTargetTests
 
     /// <summary>The shape MTP actually writes, measured from a real run: one Counters element per report,
     /// carrying total on the attribute this reads.</summary>
+    /// <summary>
+    /// A report shaped like the ones MTP writes, NAMESPACE INCLUDED.
+    /// </summary>
+    /// <remarks>
+    /// The namespace is the whole point of this fixture. Without it the obvious implementation -
+    /// <c>Descendants("Counters")</c> - passes every test here and matches nothing at all against a real
+    /// report, so every green suite would report that it had run no test. Verified against the reports of a
+    /// real run: <c>&lt;TestRun … xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010"&gt;</c>
+    /// with one <c>Counters</c> element carrying <c>total</c>.
+    /// </remarks>
     private static XDocument Report(int total, int? executed = null) =>
         XDocument.Parse(
-            $"""<TestRun><ResultSummary outcome="Completed"><Counters total="{total}" executed="{executed ?? total}" passed="{executed ?? total}" failed="0" /></ResultSummary></TestRun>""");
+            $"""<TestRun xmlns="{TrxNamespace}"><ResultSummary outcome="Completed"><Counters total="{total}" executed="{executed ?? total}" passed="{executed ?? total}" failed="0" /></ResultSummary></TestRun>""");
+
+    private const string TrxNamespace = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
 
     private static string Arguments(
         bool withCoverage,

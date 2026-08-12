@@ -10,7 +10,7 @@ namespace FEx.Building;
 /// One application to publish: the project to build and the directory its output lands in. Separate
 /// entries never share a directory - see <see cref="AppPublishLayout.EnsureNoOutputCollision" />.
 /// </summary>
-public sealed record AppPublishEntry(string ProjectPath, AbsolutePath OutputDirectory);
+public sealed record AppPublishEntry(AbsolutePath ProjectPath, AbsolutePath OutputDirectory);
 
 /// <summary>
 /// Where <see cref="IAppPublishTarget" /> puts each published application. Separated from the target so the

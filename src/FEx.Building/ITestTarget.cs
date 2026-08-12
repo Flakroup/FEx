@@ -1,5 +1,6 @@
 using Nuke.Common;
 using Nuke.Common.IO;
+using Nuke.Common.Tooling;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -47,7 +48,7 @@ public interface ITestTarget : ICompileTarget
     /// qualified to match anything.
     /// <para>
     /// Deliberately a SIMPLE filter rather than <c>--filter-query</c>: MTP refuses a command line carrying
-    /// both kinds - measured, it answers "expects at most 1 arguments" and runs nothing - and
+    /// both kinds - measured, it answers "expects at most 1 argument" and runs nothing - and
     /// <see cref="AdditionalTestArguments" /> is where a repository contributes its own simple filters.
     /// </para>
     /// <para>
@@ -59,27 +60,7 @@ public interface ITestTarget : ICompileTarget
     /// relying on this.
     /// </para>
     /// </remarks>
-    [Parameter("Run only test classes matching this name - wildcards with '*' (e.g. '*OrderTests')")]
-    string? TestFilter => TryGetValue(() => TestFilter);
-
-    /// <summary>
-    /// MTP arguments this repository's suite needs on top of the standard command line, as individual
-    /// tokens - a flag and its value are two entries, so quoting stays this method's business and not the
-    /// contributor's.
-    /// </summary>
-    /// <remarks>
-    /// This is the seam that keeps the run defined ONCE. A repository with a suite to trim overrides this
-    /// and the target body stays here; replacing <see cref="Test" /> instead forks it, and the fork then
-    /// silently misses every report, environment variable or retry added here afterwards. A method rather
-    /// than a property because an override may legitimately announce what it is leaving out, and a property
-    /// getter that logs surprises its reader.
-    /// <para>
-    /// Do NOT contribute <c>--ignore-exit-code</c> here - see <see cref="ForgivesEmptyAssemblies" />. MTP
-    /// declares that option with an arity of exactly one and sums arity across repeated occurrences, so a
-    /// second copy aborts the run before a test executes.
-    /// </para>
-    /// </remarks>
-    IEnumerable<string> AdditionalTestArguments() => [];
+    string? TestFilter { get; }
 
     /// <summary>
     /// Whether this repository deliberately leaves some of its test assemblies with nothing to run, so an
@@ -97,48 +78,8 @@ public interface ITestTarget : ICompileTarget
     /// </remarks>
     bool ForgivesEmptyAssemblies => false;
 
-    /// <summary>The command line this build's seams compose, given the run's ambient values.</summary>
-    /// <remarks>
-    /// Extracted from the target body so the composition is reachable from a test - it was not, and every
-    /// seam could be deleted from the call with the suite staying green. What a test can now reach is this
-    /// method; the target's single call to it is still beyond reach, because exercising a NUKE target needs
-    /// NUKE. The parameters are required rather than optional so that dropping one is a compile error
-    /// instead of a silent narrowing, which is the nearest thing to a test that this boundary can have.
-    /// The ambient values stay parameters because a build constructed in a test has no solution.
-    /// </remarks>
-    sealed string TestCommandLine(string solution, string configuration, string resultsDirectory) =>
-        TestArguments(
-            solution,
-            configuration,
-            resultsDirectory,
-            CollectsCoverage,
-            TestFilter,
-            AdditionalTestArguments(),
-            ForgivesEmptyAssemblies);
-
     Target Test =>
-        _ => _.Description("Runs tests via Microsoft.Testing.Platform (MTP)")
-            .DependsOn(Compile)
-            .Executes(() =>
-            {
-                TestResultsDirectory.CreateOrCleanDirectory();
-
-                DotNet(TestCommandLine(Solution.Path, Configuration.ToString(), TestResultsDirectory));
-
-                // The floor under every narrowing this target allows. Forgiving NoTestsRan is what makes a
-                // filter usable at all, and it is also what makes "matched one class" and "matched nothing"
-                // the same green outcome - measured: a mistyped filter reported a successful build having
-                // executed zero tests, with nothing above debug level to say so. A run that executed
-                // nothing ANYWHERE is never what the caller meant, whether the filter came from the command
-                // line, the environment or a parameters file.
-                if (MatchedNothing(TestResultsDirectory.GlobFiles("*.trx").Select(trx => XDocument.Load(trx))))
-                    throw new InvalidOperationException(
-                        $"The test run matched no test at all. Filter: '{TestFilter ?? "(none)"}'; extra "
-                        + $"arguments: '{string.Join(' ', AdditionalTestArguments())}'. Whichever of those "
-                        + "narrowed the run, it narrowed it to nothing. A filter names test CLASSES and "
-                        + "takes wildcards - '*OrderTests', not 'OrderTests', and one pattern rather than "
-                        + "several separated by spaces.");
-            });
+        _ => _.Description("Runs tests via Microsoft.Testing.Platform (MTP)").DependsOn(Compile).Executes(OnTest);
 
     /// <summary>
     /// The single <c>dotnet test</c> command line: one execution of the suite carrying every report that
@@ -150,19 +91,18 @@ public interface ITestTarget : ICompileTarget
     /// directed by <c>--results-directory</c> alone - a solution-wide run is one process per test assembly,
     /// and <c>--coverage-output</c> would hand all of them the same file to write.
     /// </remarks>
-    static string TestArguments(
-        string solution,
-        string configuration,
-        string resultsDirectory,
-        bool withCoverage,
-        string? testFilter,
-        IEnumerable<string>? additionalArguments,
-        bool forgivesEmptyAssemblies)
+    static string TestArguments(string solution,
+                                string configuration,
+                                string resultsDirectory,
+                                bool withCoverage,
+                                string? testFilter,
+                                IEnumerable<string>? additionalArguments,
+                                bool forgivesEmptyAssemblies)
     {
         List<string> arguments =
         [
             "test", "--solution", solution, "--configuration", configuration, "--no-build",
-            "--results-directory", resultsDirectory, "--report-xunit-trx",
+            "--results-directory", resultsDirectory, "--report-xunit-trx"
         ];
 
         if (withCoverage)
@@ -179,8 +119,7 @@ public interface ITestTarget : ICompileTarget
         // One process per assembly, so narrowing the run leaves every assembly the narrowing missed with
         // nothing to do, and each reports it. Emitted once, because MTP takes the option exactly once.
         if (filtered || forgivesEmptyAssemblies)
-            arguments.AddRange(
-                ["--ignore-exit-code", NoTestsRanExitCode.ToString(CultureInfo.InvariantCulture)]);
+            arguments.AddRange(["--ignore-exit-code", NoTestsRanExitCode.ToString(CultureInfo.InvariantCulture)]);
 
         return string.Join(" ", arguments.Select(Quote));
     }
@@ -194,11 +133,74 @@ public interface ITestTarget : ICompileTarget
     /// at all counts as nothing - a run that wrote none did not get far enough to have found tests.
     /// </remarks>
     static bool MatchedNothing(IEnumerable<XDocument> reports) =>
-        reports.Sum(report => report
-            .Descendants()
-            .Where(element => element.Name.LocalName == "Counters")
-            .Sum(counters => (int?)counters.Attribute("total") ?? 0)) == 0;
+        reports.Sum(static report => report.Descendants()
+            .Where(static element => element.Name.LocalName == "Counters")
+            .Sum(static counters => (int?)counters.Attribute("total") ?? 0))
+        == 0;
+
+    /// <summary>
+    /// MTP arguments this repository's suite needs on top of the standard command line, as individual
+    /// tokens - a flag and its value are two entries, so quoting stays this method's business and not the
+    /// contributor's.
+    /// </summary>
+    /// <remarks>
+    /// This is the seam that keeps the run defined ONCE. A repository with a suite to trim overrides this
+    /// and the target body stays here; replacing <see cref="Test" /> instead forks it, and the fork then
+    /// silently misses every report, environment variable or retry added here afterward. A method rather
+    /// than a property because an override may legitimately announce what it is leaving out, and a property
+    /// getter that logs surprises its reader.
+    /// <para>
+    /// Do NOT contribute <c>--ignore-exit-code</c> here - see <see cref="ForgivesEmptyAssemblies" />. MTP
+    /// declares that option with an arity of exactly one and sums arity across repeated occurrences, so a
+    /// second copy aborts the run before a test executes.
+    /// </para>
+    /// </remarks>
+    IEnumerable<string> AdditionalTestArguments() => [];
+
+    IReadOnlyCollection<Output> OnTest()
+    {
+        TestResultsDirectory.CreateOrCleanDirectory();
+
+        var result = DotNet(TestCommandLine(Solution.Path, Configuration.ToString(), TestResultsDirectory));
+
+        // The floor under every narrowing this target allows. Forgiving NoTestsRan is what makes a
+        // filter usable at all, and it is also what makes "matched one class" and "matched nothing"
+        // the same green outcome - measured: a mistyped filter reported a successful build having
+        // executed zero tests, with nothing above debug level to say so. A run that executed
+        // nothing ANYWHERE is never what the caller meant, whether the filter came from the command
+        // line, the environment or a parameters file.
+        if (MatchedNothing(TestResultsDirectory.GlobFiles("*.trx").Select(static trx => XDocument.Load(trx))))
+            throw new InvalidOperationException(
+                $"The test run matched no test at all. Filter: '{TestFilter ?? "(none)"}'; extra "
+                + $"arguments: '{string.Join(' ', AdditionalTestArguments())}'. Whichever of those "
+                + "narrowed the run, it narrowed it to nothing. A filter names test CLASSES and "
+                + "takes wildcards - '*OrderTests', not 'OrderTests', and one pattern rather than "
+                + "several separated by spaces.");
+
+        return result;
+    }
+
+    /// <summary>The command line this build's seams compose, given the run's ambient values.</summary>
+    /// <remarks>
+    /// Extracted from the target body so the composition is reachable from a test - it was not, and every
+    /// seam could be deleted from the call with the suite staying green. What a test can now reach is this
+    /// method; the target's single call to it is still beyond reach, because exercising a NUKE target needs
+    /// NUKE. The parameters are required rather than optional so that dropping one is a compile error
+    /// instead of a silent narrowing, which is the nearest thing to a test that this boundary can have.
+    /// The ambient values stay parameters because a build constructed in a test has no solution.
+    /// </remarks>
+    sealed string TestCommandLine(string solution, string configuration, string resultsDirectory) =>
+        TestArguments(solution,
+            configuration,
+            resultsDirectory,
+            CollectsCoverage,
+            TestFilter,
+            AdditionalTestArguments(),
+            ForgivesEmptyAssemblies);
 
     /// <summary>Quotes what a shell would otherwise split - a checkout under a path with a space in it.</summary>
-    private static string Quote(string argument) => argument.Contains(' ') ? $"\"{argument}\"" : argument;
+    private static string Quote(string argument) =>
+        argument.Contains(' ')
+            ? $"\"{argument}\""
+            : argument;
 }

@@ -1,18 +1,15 @@
 using Nuke.Common;
 using Nuke.Common.Execution;
-using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
-using Nuke.Common.Tooling;
-using Nuke.Common.Tools.DotNet;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Nuke.Common.Tools.DotNet.DotNetTasks;
+using System.Reflection;
 
 namespace FEx.Building;
 
-public abstract class FExBuild : NukeBuild, ICompileTarget
+public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
 {
     public static IEnumerable<string> Logo { get; } =
     [
@@ -31,36 +28,32 @@ public abstract class FExBuild : NukeBuild, ICompileTarget
         ? Configuration.Debug
         : Configuration.Release;
 
+    /// <inheritdoc />
+    public abstract IEnumerable<string> PublishProjects { get; }
+
+    /// <inheritdoc />
+    [Parameter("Runtime to publish for")]
+    public string? PublishRuntime { get; }
+
     [Solution]
     public virtual Solution Solution { get; } = null!;
 
-    public virtual DotNetBuildSettings GetBuildSettings(
-        DotNetBuildSettings settings,
-        AbsolutePath solution,
-        bool noRestore = true,
-        DotNetVerbosity? verbosity = null) =>
-        settings.SetConfiguration(Configuration)
-            .SetNoRestore(noRestore)
-            .SetProjectFile(solution)
-            .SetProcessAdditionalArguments("-m", "-bl")
-            .When(_ => verbosity is not null, s => s.SetVerbosity(verbosity));
+    /// <inheritdoc />
+    [Parameter("Indicates whether to publish as self-contained")]
+    public bool PublishSelfContained { get; }
 
-    public virtual DotNetRestoreSettings GetRestoreSettings(DotNetRestoreSettings settings,
-                                                            AbsolutePath solution,
-                                                            Configuration? configuration = null) =>
-        settings.SetProjectFile(solution)
-            .When(_ => configuration is not null, s => s.SetProperty("Configuration", configuration!.ToString()));
+    /// <inheritdoc />
+    [Parameter("Indicates whether to publish as single-file")]
+    public bool PublishSingleFile { get; }
 
-    // Overrides ICompileTarget's defaults: restores in the SAME Configuration Compile builds with
-    // (via GetRestoreSettings above), then Compile skips its own implicit restore (SetNoRestore in
-    // GetBuildSettings) - one restore instead of two.
-    Target ICompileTarget.Restore =>
-        _ => _.Executes(() => DotNetRestore(s => GetRestoreSettings(s, Solution, Configuration)));
+    /// <inheritdoc />
+    [Parameter("Framework to publish for")]
+    public string? PublishFramework { get; }
 
-    Target ICompileTarget.Compile =>
-        _ => _.DependsOn(((ICompileTarget)this).Restore)
-            .Executes(() => DotNetBuild(s => GetBuildSettings(s, Solution)));
-
+    /// <summary>
+    /// Returns a human-readable summary of the scheduled execution plan
+    /// (e.g., "Clean => Restore => Compile").
+    /// </summary>
     public string GetBuildPlan() =>
         string.Join(" => ",
             ExecutionPlan.Where(static t => t.Status is ExecutionStatus.Scheduled)
@@ -95,14 +88,100 @@ public abstract class FExBuild : NukeBuild, ICompileTarget
     {
         Log.Information("═══════════════════════════════════════════════════════════════");
         Log.Information("Command Line: {CommandLine}", Environment.CommandLine);
-        Log.Information("Arguments:    {Args}", string.Join(" ", Environment.GetCommandLineArgs().Skip(1)));
         Log.Information("═══════════════════════════════════════════════════════════════");
         Log.Information("Build Parameters:");
-        Log.Information("  Configuration: {Configuration}", Configuration);
-        Log.Information("  Solution:      {Solution}", Solution);
-        Log.Information("  IsServerBuild: {IsServerBuild}", IsServerBuild);
+
+        var entries = new List<(string Name, object? Value)>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        Add(nameof(Solution), Solution.Path);
+        Add(nameof(IsServerBuild), IsServerBuild);
+
+        entries.AddRange(GetParameterEntries(seen).OrderBy(static e => e.Name));
+
+        var pad = entries.Max(static e => e.Name.Length) + 1;
+
+        foreach (var (name, value) in entries)
+            Log.Information("  {Name} {Value}", $"{name}:".PadRight(pad), FormatParameterValue(name, value));
+
         Log.Information("═══════════════════════════════════════════════════════════════");
         Log.Information("Build Plan");
         Log.Information(GetBuildPlan());
+
+        return;
+
+        void Add(string name, object? value)
+        {
+            if (seen.Add(name))
+                entries.Add((name, value));
+        }
     }
+
+    /// <summary>
+    /// Renders a parameter value for the <see cref="LogBuildInfo" /> output. The default
+    /// implementation returns <c>"(not set)"</c> for null and a one-line summary for the
+    /// few NUKE/FEx injection types whose <c>ToString()</c> dump would be too verbose
+    /// (e.g. <see cref="GitVersionInfo" />). Override in derived builds to add component-specific
+    /// formatting; call <c>base.FormatParameterValue</c> for the default fallback.
+    /// </summary>
+    protected virtual string FormatParameterValue(string name, object? value) =>
+        value switch
+        {
+            null => "(not set)",
+            GitVersionInfo gv => $"{gv.SemVer} ({gv.EscapedBranchName}@{gv.ShortSha})",
+            _ => value.ToString() ?? "(not set)"
+        };
+
+    /// <inheritdoc />
+    protected override void OnBuildInitialized()
+    {
+        base.OnBuildInitialized();
+        LogBuildInfo();
+    }
+
+    private IEnumerable<(string Name, object? Value)> GetParameterEntries(HashSet<string> seen)
+    {
+        var nukeAssembly = typeof(NukeBuild).Assembly;
+        var type = GetType();
+
+        const BindingFlags flags = BindingFlags.Public
+                                   | BindingFlags.NonPublic
+                                   | BindingFlags.Instance
+                                   | BindingFlags.FlattenHierarchy;
+
+        var properties = type.GetProperties(flags)
+            .Concat(type.GetInterfaces().SelectMany(static i => i.GetProperties()));
+
+        foreach (var prop in properties)
+        {
+            if (prop.GetCustomAttribute<ParameterAttribute>() is not { } attr)
+                continue;
+
+            // Skip NUKE's own infrastructure parameters (Help, NoLogo, Plan, Target, ...).
+            if (prop.DeclaringType?.Assembly == nukeAssembly)
+                continue;
+
+            var name = attr.Name ?? prop.Name;
+
+            if (!seen.Add(name))
+                continue;
+
+            object? value;
+
+            try
+            {
+                value = prop.GetValue(this);
+            }
+            catch (Exception ex)
+            {
+                value = $"(error: {ex.GetBaseException().Message})";
+            }
+
+            yield return (name, value);
+        }
+    }
+
+    /// <inheritdoc />
+    [Parameter("Run only test classes matching this name - wildcards with '*' (e.g. '*OrderTests')")]
+    public string? TestFilter { get; }
 }

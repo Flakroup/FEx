@@ -1,9 +1,9 @@
-using System.Collections.Generic;
-using System.Linq;
 using Nuke.Common;
 using Nuke.Common.IO;
+using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
 using Serilog;
+using System.Linq;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 namespace FEx.Building;
@@ -12,7 +12,7 @@ namespace FEx.Building;
 /// Publishes deployable applications. Distinct from <see cref="INuGetPublishTarget" />, which pushes
 /// packages to a feed - hence <c>PublishApp</c> rather than <c>Publish</c>, so a repo can implement both.
 /// <para>
-/// This exists because <c>dotnet build</c> and <c>dotnet test</c> never exercise the publish pipeline, and
+/// This exists because <c>dotnet build</c> and <c>dotnet test</c> never exercise publish pipeline, and
 /// for anything with a Blazor WebAssembly client that pipeline is where the real work happens: assembly
 /// linking, the <c>blazor.boot.json</c> manifest, compression, static asset fingerprinting. A repo whose CI
 /// only builds and tests can be green while its deployable output is broken - the failure then surfaces in
@@ -21,50 +21,27 @@ namespace FEx.Building;
 /// </summary>
 public interface IAppPublishTarget : ICompileTarget
 {
-    /// <summary>Projects to publish, one <c>dotnet publish</c> each. Empty by default: publishing is
-    /// opt-in, and "the whole solution" is never the right answer for a deployable.</summary>
-    IEnumerable<string> PublishProjects => [];
-
-    sealed AbsolutePath PublishDirectory => NukeBuild.RootDirectory / "artifacts" / "publish";
-
     /// <summary>
-    /// The projects paired with the directory each publishes into. Defaults to <see cref="PublishProjects" />
-    /// under <see cref="PublishDirectory" />, one folder per project name. Override when a later step - a
-    /// packaging archive, a container build, a deploy script - reads the output from a path it fixes itself,
-    /// rather than one derived from the project's file name. Note that only <see cref="PublishDirectory" />
-    /// is declared as this target's artifacts, so an override pointing elsewhere publishes there but does not
-    /// hand those files to CI as artifacts.
-    /// </summary>
-    IEnumerable<AppPublishEntry> PublishEntries =>
-        PublishProjects.Select(project =>
-            new AppPublishEntry(project, PublishDirectory / AppPublishLayout.OutputName(project)));
-
-    /// <summary>
-    /// Runtime identifier to publish for (e.g. <c>linux-arm64</c>). Null publishes portable, without a RID.
-    /// <para>
-    /// Setting this makes the build runtime-specific end to end: <c>--no-build</c> only finds artifacts
-    /// under <c>obj/{Configuration}/{TargetFramework}/{Runtime}/</c>, so Restore and Compile must have run
-    /// for the same RID and the same projects.
-    /// </para>
-    /// </summary>
-    string? PublishRuntime => null;
-
-    /// <summary>
-    /// Whether a RID-specific publish carries its own runtime. Ignored without <see cref="PublishRuntime" />.
+    /// Whether a RID-specific publish carries its own runtime. Ignored without <see cref="ICompileTarget.PublishRuntime" />.
     /// Stated explicitly rather than left to the SDK, whose default for <c>-r</c> has changed between
     /// versions - the difference is a self-contained output several times the size of a portable one.
     /// </summary>
-    bool PublishSelfContained => false;
+    bool PublishSelfContained { get; }
+
+    /// <summary>
+    /// Indicates whether to publish as a single-file application.
+    /// </summary>
+    bool PublishSingleFile { get; }
 
     /// <summary>
     /// Target framework moniker to publish. Null publishes the project's own framework, which is what a
     /// single-target project wants; set it for a multi-targeting project, where <c>dotnet publish</c> cannot
     /// choose one for you.
     /// </summary>
-    string? PublishFramework => null;
+    string? PublishFramework { get; }
 
     Target PublishApp =>
-        _ => _.Description("Publishes the deployable projects (exercises the publish pipeline, not just build)")
+        _ => _.Description("Publishes the deployable projects")
             .DependsOn(Compile)
             .Produces(PublishDirectory / "**")
             .Executes(() =>
@@ -91,23 +68,17 @@ public interface IAppPublishTarget : ICompileTarget
                         PublishRuntime ?? "portable",
                         entry.OutputDirectory);
 
-                    // NoBuild: Compile already produced this configuration. Publish still runs its own
-                    // pipeline on top of those outputs, which is exactly what this target is for.
-                    DotNetPublish(s =>
-                    {
-                        s = s.SetProject(entry.ProjectPath)
-                            .SetConfiguration(Configuration)
-                            .EnableNoBuild()
-                            .SetOutput(entry.OutputDirectory);
-
-                        if (PublishRuntime is not null)
-                            s = s.SetRuntime(PublishRuntime).SetSelfContained(PublishSelfContained);
-
-                        if (PublishFramework is not null)
-                            s = s.SetFramework(PublishFramework);
-
-                        return s;
-                    });
+                    DotNetPublish(s => GetPublishSettings(s, entry));
                 }
             });
+
+    virtual DotNetPublishSettings GetPublishSettings(DotNetPublishSettings s, AppPublishEntry entry) =>
+        s.SetProject(entry.ProjectPath)
+            .SetConfiguration(Configuration)
+            .EnableNoBuild()
+            .SetOutput(entry.OutputDirectory)
+            .When(_ => PublishRuntime is not null,
+                c => c.SetRuntime(PublishRuntime).SetSelfContained(PublishSelfContained))
+            .When(_ => PublishFramework is not null, c => c.SetFramework(PublishFramework))
+            .When(_ => PublishSingleFile, static c => c.EnablePublishSingleFile());
 }

@@ -239,6 +239,10 @@
         "TagPrefix": {
           "type": "string",
           "description": "Git tag prefix (default: v)"
+        },
+        "TestFilter": {
+          "type": "string",
+          "description": "Run only test classes matching this name - wildcards with '*' (e.g. '*OrderTests')"
         }
       }
     },

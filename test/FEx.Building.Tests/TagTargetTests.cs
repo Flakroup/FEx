@@ -134,8 +134,8 @@ public sealed class TagTargetTests
             Minor = 1,
             Patch = 0,
             MajorMinorPatch = "0.1.0",
+            PreReleaseTag = "alpha.412",
             PreReleaseTagWithDash = "-alpha.412",
-            NuGetPreReleaseTagV2 = "alpha.412",
             SemVer = "0.1.0-alpha.412",
             BranchName = "develop",
             Sha = "ffe637fa5fbea9d7f9293329a4a7c388d3d648fa"

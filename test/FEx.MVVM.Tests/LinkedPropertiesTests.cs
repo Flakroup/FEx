@@ -1,0 +1,120 @@
+using FEx.MVVM.Abstractions;
+using FEx.MVVM.Extensions;
+using Xunit;
+
+namespace FEx.MVVM.Tests;
+
+public sealed class LinkedPropertiesTests
+{
+    [Fact]
+    public void LinkMemberPropertyTest()
+    {
+        const string aName = "Zbyszko";
+        const string bName = "Monia";
+        const int aAge = 16;
+        const int bAge = 10;
+
+        var p = new SingleParent(true)
+        {
+            Child = new()
+            {
+                Info =
+                {
+                    Name = aName,
+                    Age = aAge
+                }
+            }
+        };
+
+        var c = p.Child;
+        Assert.Equal(aName, p.ChildName);
+        Assert.Equal(aAge, p.ChildAge);
+
+        p.Child = null;
+        Assert.Equal(default, p.ChildName);
+        Assert.Equal(default, p.ChildAge);
+
+        p.Child = c;
+        Assert.Equal(aName, p.ChildName);
+        Assert.Equal(aAge, p.ChildAge);
+
+        // p.Child was just re-assigned the non-null 'c' above
+        p.Child!.Info.Name = bName;
+        p.Child.Info.Age = bAge;
+        Assert.Equal(bName, p.ChildName);
+        Assert.Equal(bAge, p.ChildAge);
+    }
+}
+
+public class Child : LinkableNotifyPropertyChanged
+{
+    private ChildInfo _info = new();
+
+    public ChildInfo Info
+    {
+        get => _info;
+        set => SetProperty(ref _info, value);
+    }
+}
+
+public class ChildInfo : LinkableNotifyPropertyChanged
+{
+    private string? _name;
+    private int _age;
+
+    public string? Name
+    {
+        get => _name;
+        set => SetProperty(ref _name, value);
+    }
+
+    public int Age
+    {
+        get => _age;
+        set => SetProperty(ref _age, value);
+    }
+}
+
+public class SingleParent : LinkableNotifyPropertyChanged
+{
+    private Child? _child;
+
+    public Child? Child
+    {
+        get => _child;
+        set => SetProperty(ref _child, value);
+    }
+
+    public int ChildAge { get; private set; }
+    public string? ChildName { get; private set; }
+
+    public SingleParent(bool link)
+    {
+        if (link)
+            Link(this);
+    }
+
+    public static void Link(SingleParent p)
+    {
+        p.Link(x => x.Child,
+            (l, c) =>
+            {
+                // The link framework only invokes this callback with a non-null child.
+                l.RelinkChildren(c!,
+                    () =>
+                    {
+                        c!.LinkChild(x => x.Info,
+                            (cl, i) =>
+                            {
+                                cl.RelinkChildren(i,
+                                    () =>
+                                    {
+                                        i.LinkChild(x => x.Age, a => p.ChildAge = a, cl);
+                                        i.LinkChild(x => x.Name, n => p.ChildName = n, cl);
+                                    });
+                            },
+                            l);
+                    });
+            });
+    }
+}

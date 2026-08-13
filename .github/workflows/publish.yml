@@ -3,7 +3,6 @@ name: Publish (NuGet)
 # Manual-only. Publishes FEx packages to nuget.org using GitVersion-derived
 # version (pre-release on develop). Requires the NUGET_API_KEY repo secret;
 # without it the NUKE Publish target skips (OnlyWhenDynamic), so it is safe.
-# Dispatch with --ref develop (real code lives on develop, not main).
 on:
   workflow_dispatch:
 
@@ -20,6 +19,8 @@ jobs:
   publish:
     runs-on: windows-latest
     environment: production
+    permissions:
+      contents: write   # allow the NUKE Tag target to push the version tag
     steps:
       - uses: actions/checkout@v5
         with:
@@ -34,4 +35,5 @@ jobs:
       - name: Publish to nuget.org
         env:
           NuGetApiKey: ${{ secrets.NUGET_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}   # for the Tag target to push the git version tag
         run: pwsh ./build.ps1 Publish --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"

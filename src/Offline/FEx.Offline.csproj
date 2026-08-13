@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<Description>A lightweight offline kit for browser clients: draft autosave, a write outbox keyed for idempotent replay, and a network-first read cache</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Offline.Abstractions\FEx.Offline.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

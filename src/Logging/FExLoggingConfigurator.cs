@@ -1,0 +1,77 @@
+using FEx.DependencyInjection.Abstractions.Enums;
+using FEx.Logging.Abstractions.Enums;
+using FEx.Logging.Abstractions.Extensions;
+using FEx.Logging.Abstractions.Interfaces;
+using FEx.Logging.Sinks.Configurations;
+using Serilog;
+using Serilog.Events;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+
+namespace FEx.Logging;
+
+public class FExLoggingConfigurator : IFExLoggingConfigurator
+{
+    private readonly ILoggingConfiguration _loggingConfiguration;
+    private readonly ISinkConfigurator[] _sinkConfigurators;
+
+    public bool IsLoggingEnabled => _loggingConfiguration.IsLoggingEnabled;
+
+    public ConfigurationPriority Priority { get; } = ConfigurationPriority.High;
+
+    public IList<string> Overrides { get; set; } = ["Microsoft", "Microsoft.Hosting.Lifetime", "System"];
+    public LogEventLevel ExternalLoggingLevel { get; set; } = LogEventLevel.Warning;
+    public LogEventLevel ExternalDebugLoggingLevel { get; set; } = LogEventLevel.Information;
+    // Optional caller-supplied hook; consumed via CfgFunc?.Invoke. Interface contract is non-null.
+    public Func<LoggerConfiguration, LoggerConfiguration> CfgFunc { get; set; } = null!;
+
+    // Assigned during Configure(); null before the first Configure() call. Interface contract is non-null.
+    public LoggerConfiguration Configuration { get; private set; } = null!;
+
+    public FExLoggingConfigurator(ILoggingConfiguration loggingConfiguration, ISinkConfigurator[] sinkConfigurators)
+    {
+        _loggingConfiguration = loggingConfiguration;
+
+        _sinkConfigurators = _loggingConfiguration.HasOption(LoggingOptions.Console)
+                             && !sinkConfigurators.OfType<ConsoleSinkConfigurator>().Any()
+            ? [.. sinkConfigurators, new ConsoleSinkConfigurator(_loggingConfiguration)]
+            : sinkConfigurators;
+    }
+
+    public void Configure()
+    {
+        if (!IsLoggingEnabled)
+            return;
+
+        var baseLevel = Debugger.IsAttached
+            ? LogEventLevel.Debug
+            : LogEventLevel.Information;
+
+        var externalLevel = Debugger.IsAttached
+            ? ExternalDebugLoggingLevel
+            : ExternalLoggingLevel;
+
+        var cfg = _sinkConfigurators.Where(static sinkConfigurator => sinkConfigurator.IsEnabled)
+            .Aggregate(new LoggerConfiguration()
+                    .MinimumLevel.Is(baseLevel)
+                    .AddOverrides(Overrides, externalLevel)
+                    .Enrich.FromLogContext(),
+                static (loggerConfiguration, sinkConfigurator) =>
+                    sinkConfigurator.ConfigureSink(loggerConfiguration.WriteTo));
+
+        Configuration = CfgFunc?.Invoke(cfg) ?? cfg;
+        Log.Logger = Configuration.CreateLogger();
+
+        Log.Information("#### Started Application ####");
+
+        var rawCmd = Environment.CommandLine;
+        var argsOnly = rawCmd.Replace($"\"{Environment.GetCommandLineArgs()[0]}\"", "").Trim();
+        Log.Debug($"Startup args:{argsOnly}");
+    }
+
+    public IEnumerable<FileInfo> GetLogFiles() =>
+        _sinkConfigurators.OfType<IFileSinkConfigurator>().SelectMany(static fileSink => fileSink.GetLogFiles());
+}

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>HTTP response extensions, MIME type utilities, and network connectivity helpers</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MimeMapping" Version="4.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+		<ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+		<ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
+		<ProjectReference Include="..\FEx.Platforms\FEx.Platforms.csproj" />
+		<ProjectReference Include="..\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

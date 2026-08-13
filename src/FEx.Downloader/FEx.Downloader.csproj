@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>HTTP/WebClient file download manager with chunked downloads, progress tracking, and resume support</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="StrongInject.Extensions.DependencyInjection" Version="1.4.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Core\FEx.Core.csproj" />
+	  <ProjectReference Include="..\FEx.FileSystem\FEx.FileSystem.csproj" />
+	  <ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
+	  <ProjectReference Include="..\FEx.MVVM.Rx.Legacy\FEx.MVVM.Rx.Legacy.csproj" />
+	  <ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
+	</ItemGroup>
+
+</Project>

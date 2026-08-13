@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>FTP client factory and download utilities with resume support</Description>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="FluentFTP" Version="35.0.4" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+		<ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+		<ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+		<ProjectReference Include="..\FEx.Downloader\FEx.Downloader.csproj" />
+		<ProjectReference Include="..\Logging\FEx.Logging.csproj" />
+		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
+		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
+		<ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
+	</ItemGroup>
+</Project>
+

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Secure storage service for persisting sensitive data</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
+	  <ProjectReference Include="..\FEx.Encryption\FEx.Encryption.csproj" />
+	  <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+	  <ProjectReference Include="..\SecureStorage.Abstractions\FEx.SecureStorage.Abstractions.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.9" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Interfaces and abstractions for SQL Server database helper operations</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>

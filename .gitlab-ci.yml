@@ -1,0 +1,134 @@
+stages:
+  - scan
+  - ci
+
+variables:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+  DOTNET_NOLOGO: "1"
+  CONFIGURATION: "Release"
+  GIT_DEPTH: "0"
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_FORCE_HTTPS: "true"
+  GIT_LFS_SKIP_SMUDGE: "1"
+  GIT_TERMINAL_PROMPT: "0"
+  GCM_INTERACTIVE: "false"
+
+  # Manual pipeline action selector (Run pipeline)
+  ACTION:
+    value: "build"
+    options:
+      - "build"
+      - "test"
+      - "publish"
+      - "cleanup"
+      - "all"
+    description: "Action to run (NUKE target: Compile/Test/Publish/Clean)"
+
+# Default settings for all jobs (Shell executor on JOHNNYABQPC)
+default:
+  tags:
+    - johnnyabqpc
+  before_script:
+    - git lfs pull
+    - pwsh --version
+    - dotnet --version
+
+######################################################################
+# CI - NUKE targets from build/Build.cs
+#
+# NUKE chains dependencies internally (--no-build where possible):
+#   Publish -> Pack -> Compile
+#   Test -> Compile
+#
+# - push on feature branch (no open MR)  -> Compile
+# - merge request pipeline               -> Test (includes Compile)
+# - push on develop/main/master          -> Publish (includes Pack + Compile)
+######################################################################
+
+# ════════════════════════════════════════════
+# SECRET SCAN (every push and MR)
+# ════════════════════════════════════════════
+
+secret-scan:
+  stage: scan
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
+  before_script: []
+  tags: []
+  script:
+    - gitleaks detect --source . --no-git --no-banner -v
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+# ════════════════════════════════════════════
+# BUILD (push on feature branch, no open MR)
+# ════════════════════════════════════════════
+
+build:
+  stage: ci
+  script:
+    - pwsh ./build.ps1 Compile
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH != "develop" && $CI_OPEN_MERGE_REQUESTS == null'
+      when: on_success
+    - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api") && ($ACTION == "build" || $ACTION == "all")'
+      when: on_success
+    - when: never
+
+# ════════════════════════════════════════════
+# TEST (merge request)
+# ════════════════════════════════════════════
+
+test:
+  stage: ci
+  script:
+    - pwsh ./build.ps1 Test
+  artifacts:
+    when: always
+    paths:
+      - artifacts/test-results/*.trx
+    reports:
+      junit: artifacts/test-results/*.trx
+    expire_in: 30 days
+  coverage: '/Total\s+\|\s+(\d+\.?\d*)%/'
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+    - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api") && ($ACTION == "test" || $ACTION == "all")'
+      when: on_success
+    - when: never
+
+# ════════════════════════════════════════════
+# PUBLISH (push on develop/main/master)
+# ════════════════════════════════════════════
+
+publish:
+  stage: ci
+  script:
+    - pwsh -Command 'if (-not $env:NuGetOrgApiKey) { Write-Error "NuGetOrgApiKey environment variable is not set"; exit 1 }'
+    - $env:NuGetApiKey = $env:NuGetOrgApiKey
+    - pwsh ./build.ps1 Publish --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop")'
+      when: on_success
+    - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api") && ($ACTION == "publish" || $ACTION == "all")'
+      when: on_success
+    - when: never
+  environment:
+    name: production
+
+# ════════════════════════════════════════════
+# UTILITY: cleanup (manual only)
+# ════════════════════════════════════════════
+
+cleanup:
+  stage: .post
+  script:
+    - pwsh ./build.ps1 Clean
+  rules:
+    - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api") && ($ACTION == "cleanup" || $ACTION == "all")'
+      when: on_success
+    - when: never

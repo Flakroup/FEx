@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\DependencyInjection\FEx.DependencyInjection.csproj" />
+		<ProjectReference Include="..\..\src\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
+		<ProjectReference Include="..\..\src\Agnostics.TestMocks\FEx.Agnostics.TestMocks.csproj" />
+	</ItemGroup>
+
+</Project>

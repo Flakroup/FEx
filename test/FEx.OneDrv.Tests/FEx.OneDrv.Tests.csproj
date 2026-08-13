@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Graph" Version="6.2.0" />
+		<PackageReference Include="Polly" Version="8.7.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\FEx.OneDrv\FEx.OneDrv.csproj" />
+		<ProjectReference Include="..\..\src\FEx.OneDrv.Abstractions\FEx.OneDrv.Abstractions.csproj" />
+		<ProjectReference Include="..\..\src\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

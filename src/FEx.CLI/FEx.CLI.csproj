@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Command-line argument parsing helpers and error data models</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommandLineParser" Version="2.9.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

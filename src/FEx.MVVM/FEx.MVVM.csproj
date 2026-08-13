@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>CommunityToolkit.Mvvm-based MVVM module with ViewModelBase, progress services, and controls</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+	  <PackageReference Include="System.Reactive" Version="6.1.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Core\FEx.Core.csproj" />
+		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+		<ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
+		<ProjectReference Include="..\FEx.MVVM.Abstractions\FEx.MVVM.Abstractions.csproj" />
+		<ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+	</ItemGroup>
+
+</Project>

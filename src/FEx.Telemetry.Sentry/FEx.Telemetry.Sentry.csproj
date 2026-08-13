@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Sentry error tracking integration with DI module, sink configuration, and service</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Logging\FEx.Logging.csproj" />
+		<ProjectReference Include="..\FEx.Telemetry\FEx.Telemetry.csproj" />
+	</ItemGroup>
+
+</Project>

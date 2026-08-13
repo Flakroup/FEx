@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Concurrent observable collections, stack trace utilities, navigation flow, and exception handler</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DynamicData" Version="9.4.31" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+        <PackageReference Include="TimeZoneConverter" Version="7.2.0" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+        <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+        <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+        <ProjectReference Include="..\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>

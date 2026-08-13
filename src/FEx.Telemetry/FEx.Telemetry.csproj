@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Base telemetry abstractions, configuration, and access token management</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="StrongInject" Version="1.4.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+	  <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+	  <ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

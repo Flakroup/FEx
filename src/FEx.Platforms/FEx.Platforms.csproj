@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Cross-platform services for registry access and platform-specific DI module registration</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="StrongInject.Extensions.DependencyInjection" Version="1.4.4" />
+		<PackageReference Condition="'$(TargetFramework)' != '$(TargetFrameworkId)'" Include="Microsoft.Win32.Registry" Version="5.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+		<ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+		<ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Interfaces and abstractions for secure storage service</Description>
+	</PropertyGroup>
+
+</Project>

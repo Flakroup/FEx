@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Interfaces and abstractions for threading, dispatching, exception handling, and reactive subjects</Description>
+		<Configurations>Debug;Release;Build</Configurations>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DynamicData" Version="9.4.31" />
+        <PackageReference Include="System.Threading.Tasks.Dataflow" Version="$(DotNetNugetsVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+        <ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
+        <ProjectReference Include="..\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>

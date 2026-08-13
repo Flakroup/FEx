@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Serilog-based logging implementation with file, console, debug, and platform sink configurators</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Humanizer" Version="3.0.10" />
+        <PackageReference Include="Nuke.Utilities" Version="10.1.0" />
+        <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
+        <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+        <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+        <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+        <ProjectReference Include="..\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>

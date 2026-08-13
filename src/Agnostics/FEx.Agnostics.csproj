@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Base objects, concurrent collections, comparers, and exception handling implementations</Description>
+		<Configurations>Debug;Release;Build</Configurations>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="System.Text.Json" Version="$(DotNetNugetsVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>

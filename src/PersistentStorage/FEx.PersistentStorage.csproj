@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>LiteDB-backed local storage and caching service implementations</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\PersistentStorage.Abstractions\FEx.PersistentStorage.Abstractions.csproj"/>
+	</ItemGroup>
+
+</Project>

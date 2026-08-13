@@ -21,9 +21,10 @@ public interface INuGetPublishTarget : IPackTarget
         _ => _.Description("Publishes NuGet packages to the configured feed")
             .DependsOn(Pack)
             .OnlyWhenDynamic(() => !string.IsNullOrEmpty(NuGetApiKey), "Skipping publish: no NuGetApiKey configured")
-            // Publishing is idempotent per commit: the version tag left behind by the first run marks the
-            // commit as released, so a re-run pushes nothing instead of shipping the same sources again
-            // under a fresh version.
+            // A commit that COMPLETED a publish carries the version tag its last step pushed, so a re-run
+            // ships nothing rather than the same sources again under a fresh version. A run that died
+            // part-way left no tag, and that case is deliberately not skipped here - re-running it is how
+            // the remaining packages reach the feed. See PushSettings for what makes that re-run work.
             .OnlyWhenDynamic(() => !GitTags.MarksReleasedCommit(GitTags.OnHead(TagPrefix)),
                 "Skipping publish: HEAD already carries a version tag, so this commit was already published")
             .Executes(() =>
@@ -43,9 +44,37 @@ public interface INuGetPublishTarget : IPackTarget
                 {
                     Log.Information("  Pushing {Package}", package.Name);
 
-                    DotNetNuGetPush(s => s.SetTargetPath(package).SetSource(NuGetSource).SetApiKey(NuGetApiKey!));
+                    DotNetNuGetPush(s => PushSettings(s, package, NuGetSource, NuGetApiKey!));
                 }
 
                 Log.Information("Successfully pushed {Count} package(s) to {Source}", packages.Count, NuGetSource);
             });
+
+    /// <summary>
+    /// How one package is pushed: where it goes, what authorises it, and that a version already on the feed
+    /// is a no-op rather than an error.
+    /// </summary>
+    /// <remarks>
+    /// <c>--skip-duplicate</c> is what makes a publish RESUMABLE, and the resumability is the point. The
+    /// packages go up one at a time, so a run that dies part-way - a lost runner, a network drop - leaves
+    /// the feed holding some of them and the rest nowhere. Without the flag the re-run that would finish
+    /// the job fails on the first package already there, because <c>dotnet nuget push</c> treats an
+    /// existing version as an error, and the missing packages never ship at all. The tag guard on the
+    /// target cannot cover this: the tag is pushed after the last package, so a run that never finished
+    /// never left one.
+    /// <para>
+    /// Measured, on the run that prompted this: 53 of the packages reached nuget.org, 6 did not, and every
+    /// published one declared a dependency on a version of the missing ones that was not there - a set no
+    /// consumer could restore.
+    /// </para>
+    /// <para>
+    /// Extracted from the target body so the composition is reachable from a test; the target's own call to
+    /// it is not, because exercising a NUKE target needs NUKE.
+    /// </para>
+    /// </remarks>
+    static DotNetNuGetPushSettings PushSettings(DotNetNuGetPushSettings settings,
+                                                string package,
+                                                string source,
+                                                string apiKey) =>
+        settings.SetTargetPath(package).SetSource(source).SetApiKey(apiKey).EnableSkipDuplicate();
 }

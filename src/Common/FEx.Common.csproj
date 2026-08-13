@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Implementations for device helpers, internet connectivity, dispatchers, and DI module registration</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Common.Abstractions\FEx.Common.Abstractions.csproj"/>
+		<ProjectReference Include="..\DependencyInjection\FEx.DependencyInjection.csproj"/>
+		<ProjectReference Include="..\Core\FEx.Core.csproj"/>
+		<ProjectReference Include="..\Logging\FEx.Logging.csproj"/>
+	</ItemGroup>
+
+</Project>

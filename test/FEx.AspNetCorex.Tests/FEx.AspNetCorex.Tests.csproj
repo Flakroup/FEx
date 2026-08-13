@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\AspNetCorex\FEx.AspNetCorex.csproj" />
+		<ProjectReference Include="..\..\src\Offline\FEx.Offline.csproj" />
+	</ItemGroup>
+
+</Project>

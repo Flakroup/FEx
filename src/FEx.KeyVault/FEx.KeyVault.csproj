@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<Description>Azure Key Vault configuration helpers for certificate and client secret authentication</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Arcus.Security.Providers.AzureKeyVault" Version="2.0.0" />
+		<PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.1" />
+		<PackageReference Include="Azure.Identity" Version="1.21.0" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(DotNetNugetsVersion)" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(DotNetNugetsVersion)" />
+		<PackageReference Include="Polly" Version="8.7.0" />
+	</ItemGroup>
+
+</Project>

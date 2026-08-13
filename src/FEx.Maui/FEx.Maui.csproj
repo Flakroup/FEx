@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<Description>.NET MAUI dispatcher integration for FEx framework</Description>
+		<UseMaui>true</UseMaui>
+		<SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Update="Microsoft.Maui.Controls" Version="10.0.71" />
+		<PackageReference Update="Microsoft.Maui.Controls.Compatibility" Version="10.0.71" />
+	</ItemGroup>
+
+</Project>

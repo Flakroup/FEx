@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<Description>Avalonia UI integration with dispatcher, message popups, ReactiveUI scheduler, and app bootstrapper</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ReactiveUI.Avalonia" Version="12.0.3" />
+		<PackageReference Include="MessageBox.Avalonia" Version="12.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Common.Abstractions\FEx.Common.Abstractions.csproj" />
+		<ProjectReference Include="..\Common\FEx.Common.csproj" />
+		<ProjectReference Include="..\DependencyInjection\FEx.DependencyInjection.csproj" />
+		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
+		<ProjectReference Include="..\FEx.MVVM.Rx\FEx.MVVM.Rx.csproj" />
+		<ProjectReference Include="..\FEx.Platforms\FEx.Platforms.csproj" />
+	</ItemGroup>
+
+</Project>

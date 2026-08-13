@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Reactive cached subjects backed by persistent storage with collection aggregation support</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj"/>
+		<ProjectReference Include="..\PersistentStorage.Abstractions\FEx.PersistentStorage.Abstractions.csproj"/>
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,3 @@
+[submodule "DevConfigs"]
+	path = DevConfigs
+	url = https://github.com/Flakroup/DevConfigs.git

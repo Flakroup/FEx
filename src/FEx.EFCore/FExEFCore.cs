@@ -1,0 +1,17 @@
+using FEx.Agnostics.Abstractions;
+using FEx.Sqlx.Abstractions;
+using System.Threading.Tasks;
+
+namespace FEx.EFCore;
+
+public class FExEFCore : FExInitializable
+{
+    private readonly ISqlDbHelper _sqlDbHelper;
+
+    public FExEFCore(ISqlDbHelper sqlDbHelper)
+    {
+        _sqlDbHelper = sqlDbHelper;
+    }
+
+    public async Task CompleteInitializationAsync() => await _sqlDbHelper.InitializeAsync();
+}

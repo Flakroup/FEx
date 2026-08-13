@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'   # all branch pushes; without this, a tags-only push filter never fires on branches
+    tags-ignore:
+      - '**'   # version tags are pushed by publish.yml; the commit was already built
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: gitleaks
+        run: >
+          docker run --rm -v "${{ github.workspace }}:/repo"
+          zricethezav/gitleaks:latest
+          detect --source /repo --no-git --no-banner -v
+
+  # Feature-branch push (not main/develop, not a PR): compile only.
+  compile:
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          lfs: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore workloads (MAUI for FEx.Maui)
+        run: dotnet workload restore FEx.slnx
+      - name: Compile
+        run: pwsh ./build.ps1 Compile
+
+  # PR only: full test (NUKE Test depends on Compile). Push to main/develop
+  # runs Test as part of the publish job below instead (Publish now depends
+  # on Test via Build.cs), so it isn't duplicated across two jobs/checkouts.
+  test:
+    if: github.event_name == 'pull_request'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          lfs: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore workloads (MAUI for FEx.Maui)
+        run: dotnet workload restore FEx.slnx
+      - name: Test
+        run: pwsh ./build.ps1 Test
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: artifacts/test-results/*.trx
+          if-no-files-found: ignore
+          retention-days: 30
+
+  # Push to main/develop: Publish (NUKE chain: Restore -> Compile -> Test ->
+  # Pack -> Publish -> Tag, single process/job - Test gates Publish via
+  # Build.cs's DependentFor, no separate test job needed here).
+  # Mirrors the old .gitlab-ci.yml publish job (push -> develop/main/master).
+  # Own concurrency group so a running publish is queued, never cancelled by
+  # ci's cancel-in-progress on a fast follow-up push.
+  publish:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: windows-latest
+    environment: production
+    concurrency:
+      group: fex-publish
+      cancel-in-progress: false
+    permissions:
+      contents: write   # allow the NUKE Tag target to push the version tag
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          lfs: true
+          fetch-depth: 0   # GitVersion needs full history + tags
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore workloads (MAUI for FEx.Maui)
+        run: dotnet workload restore FEx.slnx
+      - name: Publish to nuget.org
+        env:
+          NuGetApiKey: ${{ secrets.NUGET_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}   # for the Tag target to push the git version tag
+        run: pwsh ./build.ps1 Publish --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: artifacts/test-results/*.trx
+          if-no-files-found: ignore
+          retention-days: 30

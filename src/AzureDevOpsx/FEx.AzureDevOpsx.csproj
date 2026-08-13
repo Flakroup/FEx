@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>$(FullTargetFrameworkId)</TargetFramework>
+        <Description>Client models and utilities for Azure DevOps / TFS projects, changesets, and builds</Description>
+        <UseWPF>true</UseWPF>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+        <UseWindowsForms>true</UseWindowsForms>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="System.Web" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.9" />
+        <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="20.256.2" />
+        <PackageReference Include="Microsoft.TeamFoundationServer.ExtendedClient" Version="20.256.2" />
+        <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\FEx.Downloader\FEx.Downloader.csproj" />
+        <ProjectReference Include="..\FEx.Flurlx\FEx.Flurlx.csproj" />
+        <ProjectReference Include="..\FEx.Legacy\FEx.Legacy.csproj" />
+        <ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
+        <ProjectReference Include="..\Imaging.Windows\FEx.Imaging.Windows.csproj" />
+    </ItemGroup>
+</Project>

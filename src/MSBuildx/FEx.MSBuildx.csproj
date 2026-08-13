@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(WindowsTargetFrameworkIds)</TargetFrameworks>
+		<Description>MSBuild project and solution parsing with NuGet installation tracking and diff support</Description>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Build" Version="18.7.1" />
+        <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.7.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Core\FEx.Core.csproj" />
+        <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+        <ProjectReference Include="..\FEx.NuGetx\FEx.NuGetx.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,256 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Build" />
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/NFEx/" />
+  <Folder Name="/NFEx/Agnostics/">
+    <Project Path="src/Agnostics.Abstractions/FEx.Agnostics.Abstractions.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="src/Agnostics.TestMocks/FEx.Agnostics.TestMocks.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="src/Agnostics/FEx.Agnostics.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/NFEx/Common/">
+    <Project Path="src/Common.Abstractions/FEx.Common.Abstractions.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="src/Common/FEx.Common.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/NFEx/Core/">
+    <Project Path="src/Core.Abstractions/FEx.Core.Abstractions.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="src/Core/FEx.Core.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/NFEx/DI/">
+    <Project Path="src/DependencyInjection.Abstractions/FEx.DependencyInjection.Abstractions.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="src/DependencyInjection/FEx.DependencyInjection.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/NFEx/Logging/">
+    <Project Path="src/Logging.Abstractions/FEx.Logging.Abstractions.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="src/Logging/FEx.Logging.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="src/FEx.Logging.Web/FEx.Logging.Web.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/NFEx/PS/">
+    <Project Path="src/PersistentStorage.Abstractions/FEx.PersistentStorage.Abstractions.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="src/PersistentStorage.Rx/FEx.PersistentStorage.Rx.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="src/PersistentStorage/FEx.PersistentStorage.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/FEx.Sample.Avalonia/FEx.Sample.Avalonia.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="samples/FEx.Sample.WebAPI/FEx.Sample.WebAPI.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="samples/FEx.Sample.WPF/FEx.Sample.WPF.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+  </Folder>
+  <Folder Name="/Solution Items/DevConfigs/">
+    <File Path="DevConfigs/.editorconfig" />
+    <File Path="DevConfigs/Directory.Build.props" />
+    <File Path="DevConfigs/Directory.Build.targets" />
+  </Folder>
+  <Folder Name="/test/">
+    <File Path="test/Directory.Build.props" />
+    <File Path="test/Directory.Build.targets" />
+    <Project Path="test/FEx.AspNetCorex.Tests/FEx.AspNetCorex.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.Blazorx.Tests/FEx.Blazorx.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.Building.Tests/FEx.Building.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.DependencyInjection.Tests/FEx.DependencyInjection.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.Flurlx.Tests/FEx.Flurlx.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.Logging.Tests/FEx.Logging.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.MVVM.Tests/FEx.MVVM.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.FileSystem.Tests/FEx.FileSystem.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.Offline.Tests/FEx.Offline.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.OneDrv.Tests/FEx.OneDrv.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+  </Folder>
+  <Project Path="build/_build.csproj" />
+  <Project Path="src/FEx.AppSettings/FEx.AppSettings.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/AspNetCorex/FEx.AspNetCorex.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/AspNetCorex.Abstractions/FEx.AspNetCorex.Abstractions.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Asyncx/FEx.Asyncx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/AzureDevOpsx/FEx.AzureDevOpsx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Avaloniax/FEx.Avaloniax.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/Blazorx/FEx.Blazorx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.AzureStorage/FEx.AzureStorage.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Building/FEx.Building.csproj" />
+  <Project Path="src/FEx.CLI/FEx.CLI.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Downloader/FEx.Downloader.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.EFCore/FEx.EFCore.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Encryption/FEx.Encryption.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.FileSystem/FEx.FileSystem.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Flurlx/FEx.Flurlx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Flurlx.Newtonsoft/FEx.Flurlx.Newtonsoft.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/Imaging.Windows/FEx.Imaging.Windows.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.FTPx/FEx.FTPx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Json/FEx.Json.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.KeyVault/FEx.KeyVault.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Legacy/FEx.Legacy.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Maui/FEx.Maui.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/MSBuildx/FEx.MSBuildx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.MVVM.Abstractions/FEx.MVVM.Abstractions.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.MVVM.Rx/FEx.MVVM.Rx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.MVVM.Rx.Legacy/FEx.MVVM.Rx.Legacy.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.MVVM/FEx.MVVM.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.NuGetx/FEx.NuGetx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/Offline.Abstractions/FEx.Offline.Abstractions.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/Offline/FEx.Offline.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.OneDrv.Abstractions/FEx.OneDrv.Abstractions.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.OneDrv/FEx.OneDrv.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Platforms.Windows/FEx.Platforms.Windows.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Platforms/FEx.Platforms.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.RESXx/FEx.RESXx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/SecureStorage.Abstractions/FEx.SecureStorage.Abstractions.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.SecureStorage/FEx.SecureStorage.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/Sqlx.Abstractions/FEx.Sqlx.Abstractions.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/Sqlx/FEx.Sqlx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Telemetry/FEx.Telemetry.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Telemetry.Sentry/FEx.Telemetry.Sentry.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Telemetry.Sentry.Web/FEx.Telemetry.Sentry.Web.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.WebScraping/FEx.WebScraping.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.Webx/FEx.Webx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/FEx.WPFx/FEx.WPFx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+</Solution>

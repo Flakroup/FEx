@@ -1,0 +1,22 @@
+<Project>
+
+    <Import Project="$(MSBuildThisFileDirectory)DevConfigs\Directory.Build.targets"/>
+
+    <PropertyGroup>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <PackageIcon>flakroup.png</PackageIcon>
+        <WarnOnPackingNonPackableProject>true</WarnOnPackingNonPackableProject>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/Flakroup/FEx</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Flakroup/FEx.git</RepositoryUrl>
+        <PackageTags>dotnet;utilities;extensions;fex;flakroup</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup Condition=" '$(IsPackable)' != 'false' ">
+        <None Include="$(MSBuildThisFileDirectory)\flakroup.png">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </None>
+    </ItemGroup>
+
+</Project>

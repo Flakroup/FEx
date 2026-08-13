@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(FullTargetFrameworkIds)</TargetFrameworks>
+		<Description>SQL Server helper with instance discovery, connection extensions, and server property queries</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Dapper" Version="2.1.79" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+        <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="181.25.0" />
+        <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkId)'">
+        <PackageReference Include="System.Management" Version="$(DotNetNugetsVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
+        <ProjectReference Include="..\Core\FEx.Core.csproj" />
+        <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
+        <ProjectReference Include="..\Sqlx.Abstractions\FEx.Sqlx.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>

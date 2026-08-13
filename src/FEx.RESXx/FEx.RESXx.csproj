@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(WindowsTargetFrameworkIds)</TargetFrameworks>
+		<Description>RESX resource file manager implementation</Description>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == '$(FullTargetFrameworkId)' ">
+		<Reference Include="System.Design" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,131 @@
+﻿<Window x:Class="FEx.WPFx.Controls.SplashScreenWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:FEx.WPFx.Controls"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:wpFx="clr-namespace:FEx.WPFx"
+        AllowsTransparency="True"
+        Background="Transparent"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        FontFamily="{Binding Font}"
+        ShowInTaskbar="False"
+        TextElement.FontSize="13"
+        TextElement.FontWeight="Regular"
+        TextElement.Foreground="{Binding ForegroundBrush}"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/FEx.WPFx;component/ConvertersDictionary.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Button.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+        <Border Padding="4"
+                BorderThickness="0"
+                CornerRadius="12,12,12,12"
+                Height="{Binding TotalDesiredHeight}"
+                MaxHeight="{Binding TotalDesiredHeight}"
+                MaxWidth="{Binding TotalDesiredWidth}"
+                Width="{Binding TotalDesiredWidth}">
+            <Border.Background>
+                <SolidColorBrush Opacity="0.3" Color="Gray" />
+            </Border.Background>
+        </Border>
+        <Grid>
+            <Viewbox Margin="5"
+                     Stretch="Uniform"
+                     StretchDirection="Both">
+                <TextBlock FontSize="13"
+                           HorizontalAlignment="Stretch"
+                           TextAlignment="Center"
+                           VerticalAlignment="Center"
+                           Visibility="{Binding ApplicationLogo,
+                                                Converter={StaticResource NullToVisibilityInvertedConverter}}"
+                           Text="{Binding SplashText}" />
+            </Viewbox>
+            <Image x:Name="splashImage"
+                   Height="{Binding DesiredHeight}"
+                   MaxHeight="{Binding DesiredHeight}"
+                   MaxWidth="{Binding DesiredWidth}"
+                   RenderOptions.BitmapScalingMode="Fant"
+                   RenderOptions.EdgeMode="Aliased"
+                   SnapsToDevicePixels="True"
+                   Stretch="Uniform"
+                   StretchDirection="Both"
+                   UseLayoutRounding="True"
+                   Width="{Binding DesiredWidth}"
+                   Source="{Binding ApplicationLogo}" />
+            <materialDesign:Card x:Name="progressCircle"
+                                 Margin="5"
+                                 Padding="4"
+                                 HorizontalAlignment="Left"
+                                 UniformCornerRadius="14"
+                                 VerticalAlignment="Bottom">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                             IsIndeterminate="True"
+                             Value="0" />
+            </materialDesign:Card>
+            <Viewbox Margin="5"
+                     HorizontalAlignment="Right"
+                     MaxHeight="{Binding DesiredHeight}"
+                     MaxWidth="{Binding DesiredTextWidth}"
+                     Stretch="Uniform"
+                     StretchDirection="DownOnly"
+                     VerticalAlignment="Bottom"
+                     Width="{Binding DesiredTextWidth}">
+                <controls:OutlinedTextBlock Fill="{Binding Foreground}"
+                                            FontSize="20"
+                                            FontWeight="Bold"
+                                            MaxHeight="{Binding DesiredHeight}"
+                                            MaxWidth="{Binding DesiredTextWidth}"
+                                            TextAlignment="Right"
+                                            TextWrapping="Wrap"
+                                            Width="{Binding DesiredTextWidth}"
+                                            Text="{Binding Status}">
+                    <controls:OutlinedTextBlock.Stroke>
+                        <SolidColorBrush Opacity="0.8" Color="#2D2D30" />
+                    </controls:OutlinedTextBlock.Stroke>
+                </controls:OutlinedTextBlock>
+            </Viewbox>
+            <Viewbox Margin="5"
+                     HorizontalAlignment="Left"
+                     MaxHeight="226"
+                     MaxWidth="226"
+                     Stretch="Uniform"
+                     StretchDirection="DownOnly"
+                     VerticalAlignment="Top"
+                     Width="226">
+                <controls:OutlinedTextBlock Fill="{Binding Foreground}"
+                                            FontSize="20"
+                                            FontWeight="Bold"
+                                            TextAlignment="Left"
+                                            TextWrapping="Wrap"
+                                            Text="{Binding AppNameAndVersion}">
+                    <controls:OutlinedTextBlock.Stroke>
+                        <SolidColorBrush Opacity="0.8" Color="#2D2D30" />
+                    </controls:OutlinedTextBlock.Stroke>
+                </controls:OutlinedTextBlock>
+            </Viewbox>
+        </Grid>
+        <Button x:Name="closeButton"
+                Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
+                Margin="5"
+                Click="CloseButton_OnClick"
+                Height="{Binding Width,
+                                 RelativeSource={RelativeSource Mode=Self}}"
+                HorizontalAlignment="Right"
+                ToolTip="{Binding Source={x:Static wpFx:FExWpfx.CloseString}}"
+                VerticalAlignment="Top"
+                Width="30">
+            <Viewbox StretchDirection="Both">
+                <materialDesign:PackIcon Kind="Close" />
+            </Viewbox>
+        </Button>
+    </Grid>
+</Window>

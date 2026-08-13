@@ -1,0 +1,24 @@
+using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.DependencyInjection.Abstractions;
+using FEx.DependencyInjection.Abstractions.Interfaces;
+using FEx.EFCore.Helpers;
+using FEx.Sqlx.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+using StrongInject;
+using StrongInject.Extensions.DependencyInjection;
+
+namespace FEx.EFCore;
+
+[Register(typeof(ResilientTransaction))]
+[Register(typeof(FExEFCore), Scope.SingleInstance, typeof(FExEFCore), typeof(IFExInitializable))]
+[Register(typeof(FExEFCoreModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
+public class FExEFCoreModule : InitializeModule<IFExEFCoreModule, IServiceCollection>
+{
+    protected override void RegisterServices(IFExEFCoreModule? container, IServiceCollection services)
+    {
+        container = container.Guard(nameof(container));
+        services.AddTransientServiceUsingContainer<ResilientTransaction>(container);
+        services.AddSingletonServiceUsingContainer<ISqlDbHelper>(container);
+    }
+}

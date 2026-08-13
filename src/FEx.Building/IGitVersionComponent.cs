@@ -13,8 +13,18 @@ namespace FEx.Building;
 
 public interface IGitVersionComponent : INukeBuild
 {
-    [Parameter("GitVersion output (auto-resolved)", Name = "GitVersionInfo")]
-    sealed GitVersionInfo? VersionInfo => TryGetValue(() => VersionInfo) ?? ResolveGitVersion();
+    // Resolved once per process. GitVersion is an external process costing a second or more, and the
+    // version is read from several places - SemVer alone reads this property twice, so an unmemoised
+    // getter launched the tool six times in a single publish run (measured, CI run 30262574981).
+    private static GitVersionInfo? _resolved;
+
+    // Deliberately NOT a [Parameter]. The version comes from git history and nowhere else: the attribute
+    // only ever existed so TryGetValue could read this property back through NUKE's ParameterService, and
+    // what it bought was a supply route nobody uses and that mostly does not work - NUKE's argument parser
+    // is string-to-scalar, so --git-version-info and the environment variable both fail to build the
+    // record, leaving a .nuke parameters file as the one way in. Keeping it published a switch that
+    // cannot be honoured and let an injected value diverge from what IsVersionResolved reported.
+    sealed GitVersionInfo? VersionInfo => _resolved ??= ResolveGitVersion();
 
     // Lives here rather than on ITagTarget because everything that treats a version tag as "already
     // released" - resolving the version, publishing, tagging - has to read the same prefix. Split across

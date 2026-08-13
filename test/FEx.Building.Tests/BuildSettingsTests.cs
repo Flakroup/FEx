@@ -1,5 +1,4 @@
 using Nuke.Common.IO;
-using Nuke.Common.Tools.DotNet;
 using Shouldly;
 using System.Collections.Generic;
 using Xunit;
@@ -14,10 +13,14 @@ namespace FEx.Building.Tests;
 /// </summary>
 public sealed class BuildSettingsTests
 {
+    private static readonly TestBuild Build = new();
+
+    private static AbsolutePath Solution => "/repo/FEx.slnx";
+
     [Fact]
     public void RestoreSettings_DoNotDisableTheAudit()
     {
-        var settings = Build.GetRestoreSettings(new DotNetRestoreSettings(), Solution);
+        var settings = ((ICompileTarget)Build).GetRestoreSettings(new(), Solution);
 
         ShouldLeaveTheAuditAlone(settings.Properties);
     }
@@ -26,7 +29,7 @@ public sealed class BuildSettingsTests
     public void RestoreSettings_StillCarryTheConfigurationTheyAreGiven()
     {
         // The configuration override shares the chain the audit property was removed from.
-        var settings = Build.GetRestoreSettings(new DotNetRestoreSettings(), Solution, Configuration.Release);
+        var settings = ((ICompileTarget)Build).GetRestoreSettings(new(), Solution, Configuration.Release);
 
         settings.Properties.ShouldContainKey("Configuration");
         settings.Properties["Configuration"].ToString().ShouldBe("Release");
@@ -39,7 +42,7 @@ public sealed class BuildSettingsTests
     {
         // The disable used to hang off `noRestore`, so both branches have to be pinned: with an implicit
         // restore, that branch set the property; without one, the restore step set it instead.
-        var settings = Build.GetBuildSettings(new DotNetBuildSettings(), Solution, noRestore);
+        var settings = ((ICompileTarget)Build).GetBuildSettings(new(), Solution, noRestore);
 
         ShouldLeaveTheAuditAlone(settings.Properties);
     }
@@ -47,7 +50,7 @@ public sealed class BuildSettingsTests
     [Fact]
     public void BuildSettings_KeepNoRestoreAndTheBinaryLog()
     {
-        var settings = Build.GetBuildSettings(new DotNetBuildSettings(), Solution);
+        var settings = ((ICompileTarget)Build).GetBuildSettings(new(), Solution);
 
         settings.NoRestore.ShouldBe(true);
         settings.ProcessAdditionalArguments.ShouldBe(["-m", "-bl"]);
@@ -56,13 +59,12 @@ public sealed class BuildSettingsTests
     // Properties is null - not an empty dictionary - until something sets one, so the check has to survive
     // that rather than dereference it.
     private static void ShouldLeaveTheAuditAlone(IReadOnlyDictionary<string, object>? properties) =>
-        (properties?.ContainsKey("NuGetAudit") ?? false)
-        .ShouldBeFalse("the build must never switch the dependency audit off");
-
-    private static AbsolutePath Solution => (AbsolutePath)"/repo/FEx.slnx";
-
-    private static readonly TestBuild Build = new();
+        (properties?.ContainsKey("NuGetAudit") ?? false).ShouldBeFalse(
+            "the build must never switch the dependency audit off");
 
     // FExBuild is abstract; nothing here touches build state, only the settings the two methods return.
-    private sealed class TestBuild : FExBuild;
+    private sealed class TestBuild : FExBuild
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+    }
 }

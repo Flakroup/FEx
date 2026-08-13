@@ -178,14 +178,61 @@ public sealed class TestTargetTests
     /// silently ignores <c>--test-filter</c> and runs the whole suite - measured green across the suite,
     /// because nothing else reads the attribute.
     /// </summary>
+    /// <remarks>
+    /// Asserted on <see cref="FExBuild" /> rather than <see cref="ITestTarget" />: the interface declares
+    /// the seam, but NUKE binds command-line parameters on the build class, so that is where the attribute
+    /// has to survive. Checking the interface passed while the build ignored the switch entirely.
+    /// </remarks>
     [Fact]
     public void TestFilter_IsBoundFromTheCommandLine_NotJustAProperty() =>
-        typeof(ITestTarget).GetProperty(
-                nameof(ITestTarget.TestFilter),
+        typeof(FExBuild).GetProperty(
+                nameof(FExBuild.TestFilter),
                 BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
             .ShouldNotBeNull()
             .GetCustomAttribute<ParameterAttribute>()
             .ShouldNotBeNull();
+
+    /// <summary>
+    /// The same guarantee for every publish switch. Dropping these attributes silently unbinds
+    /// <c>--publish-runtime</c> and friends: the build exits 0, prints no warning, and quietly produces a
+    /// portable framework-dependent output for someone who asked for a self-contained RID build.
+    /// </summary>
+    [Theory]
+    [InlineData(nameof(FExBuild.PublishRuntime))]
+    [InlineData(nameof(FExBuild.PublishSelfContained))]
+    [InlineData(nameof(FExBuild.PublishSingleFile))]
+    [InlineData(nameof(FExBuild.PublishFramework))]
+    public void EveryPublishSwitch_IsBoundFromTheCommandLine_NotJustAProperty(string property) =>
+        typeof(FExBuild).GetProperty(property,
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .ShouldNotBeNull()
+            .GetCustomAttribute<ParameterAttribute>()
+            .ShouldNotBeNull($"--{property} would be silently ignored");
+
+    /// <summary>
+    /// A consuming repository must be able to pin a publish switch in code. Non-virtual, these could not be
+    /// overridden at all - <c>override</c> was a compile error, and the compiler's own suggestion (<c>new</c>)
+    /// compiles clean while the interface dispatch keeps reading FExBuild's value, so the consumer's
+    /// self-contained RID build silently became a portable one.
+    /// </summary>
+    [Theory]
+    [InlineData(nameof(FExBuild.PublishRuntime))]
+    [InlineData(nameof(FExBuild.PublishSelfContained))]
+    [InlineData(nameof(FExBuild.PublishSingleFile))]
+    [InlineData(nameof(FExBuild.PublishFramework))]
+    public void EveryPublishSwitch_CanBeOverriddenByAConsumingBuild(string property)
+    {
+        // IsVirtual alone proves nothing: a property implementing an interface member is emitted
+        // `virtual final` even without the keyword, and `final` is exactly what blocks `override`.
+        var getter = typeof(FExBuild).GetProperty(property,
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .ShouldNotBeNull()
+            .GetMethod
+            .ShouldNotBeNull();
+
+        (getter.IsVirtual && !getter.IsFinal)
+            .ShouldBeTrue($"{property} cannot be overridden, so `new` is the only route and it is silent");
+    }
 
     [Fact]
     public void AFilteredRun_ForgivesTheAssembliesItEmptied()
@@ -304,14 +351,22 @@ public sealed class TestTargetTests
         return count;
     }
 
-    private sealed class GatedBuild : FExBuild, ICoverageTarget;
+    private sealed class GatedBuild : FExBuild, ICoverageTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+    }
 
-    private sealed class UngatedBuild : FExBuild, ITestTarget;
+    private sealed class UngatedBuild : FExBuild, ITestTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+    }
 
     /// <summary>A repository that uses every seam at once - the shape the wiring test needs.</summary>
     private sealed class ContributingBuild : FExBuild, ITestTarget
     {
-        public string? TestFilter => "*OrderTests";
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        public override string? TestFilter => "*OrderTests";
 
         public bool ForgivesEmptyAssemblies => true;
 

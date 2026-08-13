@@ -14,20 +14,29 @@ namespace FEx.Building.Tests;
 public sealed class AppPublishLayoutTests
 {
     [Theory]
-    [InlineData(@"X:\repo\src\Trippy.Api\Trippy.Api.csproj", "Trippy.Api")]
-    [InlineData("src/Trippy.Api/Trippy.Api.csproj", "Trippy.Api")]
-    [InlineData("Trippy.Api.csproj", "Trippy.Api")]
+    [InlineData(@"X:\repo\src\Sample.Api\Sample.Api.csproj", "Sample.Api")]
+    [InlineData("src/Sample.Api/Sample.Api.csproj", "Sample.Api")]
+    [InlineData("Sample.Api.csproj", "Sample.Api")]
     public void OutputName_IsTheProjectFileNameWithoutItsExtension(string project, string expected)
     {
         AppPublishLayout.OutputName(project).ShouldBe(expected);
     }
 
     [Fact]
+    public void OutputName_KeepsEveryDottedSegmentOfTheProjectName()
+    {
+        // A .NET project name is dotted far more often than not, and only the EXTENSION may be dropped.
+        // Given a bare name rather than a path, the same call would answer "Sample" - which is why
+        // PublishEntries has to hand this a project file path.
+        AppPublishLayout.OutputName("src/Sample.Api.Host/Sample.Api.Host.csproj").ShouldBe("Sample.Api.Host");
+    }
+
+    [Fact]
     public void DistinctOutputDirectories_DoNotCollide()
     {
         Should.NotThrow(static () => AppPublishLayout.EnsureNoOutputCollision([
-            Entry("src/Trippy.Api/Trippy.Api.csproj", "/artifacts/publish/Trippy.Api"),
-            Entry("src/Trippy.Seeder/Trippy.Seeder.csproj", "/artifacts/publish/Trippy.Seeder")
+            Entry("/repo/src/Sample.Api/Sample.Api.csproj", "/artifacts/publish/Sample.Api"),
+            Entry("/repo/src/Sample.Seeder/Sample.Seeder.csproj", "/artifacts/publish/Sample.Seeder")
         ]));
     }
 
@@ -36,12 +45,12 @@ public sealed class AppPublishLayoutTests
     {
         // What the default layout produces for two projects that share a file name.
         var error = Should.Throw<InvalidOperationException>(static () => AppPublishLayout.EnsureNoOutputCollision([
-            Entry("apps/web/Host.csproj", "/artifacts/publish/Host"),
-            Entry("apps/admin/Host.csproj", "/artifacts/publish/Host")
+            Entry("/repo/apps/web/Host.csproj", "/artifacts/publish/Host"),
+            Entry("/repo/apps/admin/Host.csproj", "/artifacts/publish/Host")
         ]));
 
-        error.Message.ShouldContain("apps/web/Host.csproj");
-        error.Message.ShouldContain("apps/admin/Host.csproj");
+        error.Message.ShouldContain("web");
+        error.Message.ShouldContain("admin");
     }
 
     [Fact]
@@ -50,8 +59,8 @@ public sealed class AppPublishLayoutTests
         // Only reachable through an explicit PublishEntries override - the names differ, so a check on the
         // project name alone would wave this through and one application would overwrite the other.
         Should.Throw<InvalidOperationException>(static () => AppPublishLayout.EnsureNoOutputCollision([
-            Entry("src/Bootstrapper/Bootstrapper.csproj", "/publish/api"),
-            Entry("src/HalEmulator/HalEmulator.csproj", "/publish/api")
+            Entry("/repo/src/Sample.Api/Sample.Api.csproj", "/publish/app"),
+            Entry("/repo/src/Sample.Worker/Sample.Worker.csproj", "/publish/app")
         ]));
     }
 
@@ -60,8 +69,8 @@ public sealed class AppPublishLayoutTests
     {
         // Windows and Linux disagree about whether these are one directory; the build must not.
         Should.Throw<InvalidOperationException>(static () => AppPublishLayout.EnsureNoOutputCollision([
-            Entry("a/Host.csproj", "/publish/host"),
-            Entry("b/HOST.csproj", "/publish/HOST")
+            Entry("/repo/a/Host.csproj", "/publish/host"),
+            Entry("/repo/b/HOST.csproj", "/publish/HOST")
         ]));
     }
 
@@ -71,6 +80,8 @@ public sealed class AppPublishLayoutTests
         Should.NotThrow(static () => AppPublishLayout.EnsureNoOutputCollision([]));
     }
 
+    // AppPublishEntry.ProjectPath is an AbsolutePath, which rejects a relative path outright - so the
+    // fixtures are rooted even where the test only cares about the file name.
     private static AppPublishEntry Entry(string project, string output) =>
-        new(project, (AbsolutePath)output);
+        new((AbsolutePath)project, (AbsolutePath)output);
 }

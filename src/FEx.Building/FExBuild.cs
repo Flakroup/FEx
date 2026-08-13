@@ -124,6 +124,9 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     /// <summary>What a secret's value is replaced by everywhere this build logs.</summary>
     public const string SecretMask = "***";
 
+    /// <summary>Stands in for the version while nothing in this run has needed it yet.</summary>
+    public const string UnresolvedVersion = "(not resolved yet)";
+
     /// <summary>
     /// Replaces every <see cref="SecretAttribute" />-marked parameter's value wherever it appears in
     /// <paramref name="text" />. Matched by VALUE rather than by option name, so it holds however the
@@ -212,6 +215,18 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
 
             if (!seen.Add(name))
                 continue;
+
+            // Reading this one LAUNCHES GitVersion, an external process - and the release gates that hang
+            // off the resolver fire with it. A listing must never be what triggers that: `Clean` would pay
+            // for a version it does not use, and on CI a gate would fail the build during initialisation,
+            // before any target ran. Reported once something that actually needs the version has resolved it.
+            if (prop.PropertyType == typeof(GitVersionInfo)
+                && !IGitVersionComponent.IsVersionResolved)
+            {
+                yield return (name, UnresolvedVersion);
+
+                continue;
+            }
 
             object? value;
 

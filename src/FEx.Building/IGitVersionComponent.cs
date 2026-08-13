@@ -13,8 +13,20 @@ namespace FEx.Building;
 
 public interface IGitVersionComponent : INukeBuild
 {
+    // Resolved once per process. GitVersion is an external process costing a second or more, and the
+    // version is read from several places - SemVer alone reads this property twice, so an unmemoised
+    // getter launched the tool six times in a single publish run (measured, CI run 30262574981).
+    private static GitVersionInfo? _resolved;
+
     [Parameter("GitVersion output (auto-resolved)", Name = "GitVersionInfo")]
-    sealed GitVersionInfo? VersionInfo => TryGetValue(() => VersionInfo) ?? ResolveGitVersion();
+    sealed GitVersionInfo? VersionInfo => TryGetValue(() => VersionInfo) ?? (_resolved ??= ResolveGitVersion());
+
+    /// <summary>
+    /// Whether the version has already been resolved in this process. Lets a caller that only wants to
+    /// REPORT the version - a parameter listing, a diagnostic banner - avoid being the thing that launches
+    /// GitVersion, and with it the release gates hanging off the resolver.
+    /// </summary>
+    public static bool IsVersionResolved => _resolved is not null;
 
     // Lives here rather than on ITagTarget because everything that treats a version tag as "already
     // released" - resolving the version, publishing, tagging - has to read the same prefix. Split across

@@ -15,17 +15,33 @@ namespace FEx.Building.Tests;
 /// </summary>
 public sealed class VersionResolutionCostTests
 {
+    /// <summary>
+    /// The version is NOT a NUKE parameter, and must not become one again. While it was, the start-up
+    /// listing read it by reflection and so launching GitVersion became a side effect of printing the
+    /// banner - `Clean` paid for a version it never used, and on CI the release gates fired during
+    /// initialisation, before any target ran. The attribute bought nothing in return: NUKE's argument
+    /// parser is string-to-scalar and cannot build this record from a command line or an environment
+    /// variable, so the only route it ever opened was a .nuke parameters file nobody writes.
+    /// </summary>
     [Fact]
-    public void TheParameterListingDoesNotResolveTheVersion()
+    public void TheVersionIsNotAParameter_SoPrintingCannotLaunchGitVersion()
     {
-        // The listing reads every [Parameter] by reflection, and VersionInfo is one of them - so the
-        // banner printed at start-up was launching GitVersion before any target ran. Here the tool is not
-        // even installed, so resolving would throw rather than merely cost a second.
+        typeof(IGitVersionComponent)
+            .GetProperty(nameof(IGitVersionComponent.VersionInfo),
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .ShouldNotBeNull()
+            .GetCustomAttribute<ParameterAttribute>()
+            .ShouldBeNull("a [Parameter] here makes the banner resolve the version");
+    }
+
+    [Fact]
+    public void TheParameterListingNeverMentionsTheVersion()
+    {
+        // The end the attribute test protects: whatever the listing enumerates, the version is not in it,
+        // so no reflective read of it can happen while printing.
         var build = new ListingBuild();
 
-        var entries = build.Entries();
-
-        entries.ShouldContain(e => e.Name == "GitVersionInfo" && Equals(e.Value, FExBuild.UnresolvedVersion));
+        build.Entries().ShouldNotContain(static e => e.Name == "GitVersionInfo");
     }
 
     [Fact]
@@ -35,31 +51,37 @@ public sealed class VersionResolutionCostTests
         Should.NotThrow(() => new ListingBuild().Entries().ToList());
     }
 
-    [Fact]
-    public void TheVersionParameterIsStillReportedOnceSomethingHasResolvedIt()
-    {
-        // Skipping it is about not TRIGGERING the resolve - the value is still worth printing when a
-        // target that genuinely needed the version has already paid for it.
-        FExBuild.UnresolvedVersion.ShouldNotBeNullOrWhiteSpace();
-
-        typeof(IGitVersionComponent)
-            .GetProperty(nameof(IGitVersionComponent.IsVersionResolved),
-                BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
-            .ShouldNotBeNull("the listing needs a way to ask without resolving");
-    }
-
     /// <summary>
-    /// The memoisation that turns repeated reads into one launch. Asserted on the source shape rather than
-    /// by counting processes: the component resolves through a static field, and a getter that dropped it
-    /// would go back to launching the tool per read - which no assertion on a single value would notice.
+    /// The memoisation that turns repeated reads into one launch. Driven through the property rather than
+    /// asserted on the shape of the field: a getter that keeps the field but drops the <c>??=</c> still
+    /// re-launches the tool on every read - the six-launch defect - and a shape assertion stays green.
     /// </summary>
     [Fact]
-    public void TheResolvedVersionIsHeldSoRepeatedReadsDoNotRelaunchTheTool()
+    public void ASecondReadReusesTheResolvedVersionInsteadOfRelaunchingTheTool()
     {
+        var field = ResolvedVersionField();
+        var previous = field.GetValue(null);
+        var seeded = new GitVersionInfo { SemVer = "9.9.9-probe" };
+
+        try
+        {
+            field.SetValue(null, seeded);
+
+            // With the memoisation in place this returns the seeded value without entering the resolver.
+            // Without it, the resolver runs and throws here (GitVersion.Tool is not on the test host).
+            ((IGitVersionComponent)new ListingBuild()).VersionInfo.ShouldBeSameAs(seeded);
+        }
+        finally
+        {
+            field.SetValue(null, previous);
+        }
+    }
+
+    // Looked up by field TYPE: ReflectionAnalyzers rejects a name lookup for a private member (REFL003).
+    private static FieldInfo ResolvedVersionField() =>
         typeof(IGitVersionComponent)
             .GetFields(BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)
-            .ShouldContain(f => f.FieldType == typeof(GitVersionInfo));
-    }
+            .Single(static f => f.FieldType == typeof(GitVersionInfo));
 
     private sealed class ListingBuild : FExBuild, IGitVersionComponent
     {

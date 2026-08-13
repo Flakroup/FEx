@@ -79,14 +79,47 @@ public interface ICompileTarget : INukeBuild
     /// </summary>
     protected bool IsPublishScheduled => ExecutionPlan.Any(static t => t.Name == nameof(IAppPublishTarget.PublishApp));
 
+    /// <summary>
+    /// Restores the solution, and - when publishing for a runtime - the publish projects again for that RID.
+    /// </summary>
+    /// <remarks>
+    /// The RID pass is an ADDITION, never a replacement. Narrowing the run to the publish projects left every
+    /// project they do not reference unrestored and unbuilt - which is every test project, since tests
+    /// reference the libraries and nothing references tests. <c>dotnet test --no-build</c> does not fail on
+    /// missing input, it runs whatever assemblies are on disk, so a single invocation combining
+    /// <c>PublishApp</c> with <c>Test</c> reported a GREEN build over a failing test (measured).
+    /// </remarks>
     virtual IReadOnlyCollection<Output> OnRestore() =>
-        PublishRuntime is null || !IsPublishScheduled
-            ? DotNetRestore(s => GetRestoreSettings(s, Solution, Configuration))
-            :
-            [
-                .. PublishEntries.SelectMany(entry => DotNetRestore(s =>
-                    GetRestoreSettings(s, entry.ProjectPath, Configuration).WithRuntime(PublishRuntime)))
-            ];
+    [
+        .. Scope().SelectMany(step => DotNetRestore(s =>
+            GetRestoreSettings(s, step.Project, Configuration)
+                .WithRuntime(step.WithRuntime ? PublishRuntime : null)))
+    ];
+
+    sealed IEnumerable<(AbsolutePath Project, bool WithRuntime)> Scope() =>
+        Scope(Solution, RuntimeSpecificPublishPass, PublishEntries);
+
+    /// <summary>
+    /// Everything Restore and Compile pass over: the solution, then - only when this run publishes for a
+    /// runtime - each publish project again, that time carrying the RID.
+    /// </summary>
+    /// <remarks>
+    /// The solution entry is unconditional, and that is the whole point. While the RID pass REPLACED it,
+    /// every project the publish entries do not reference went unrestored and unbuilt - which is every test
+    /// project, since tests reference the libraries and nothing references tests. <c>dotnet test --no-build</c>
+    /// does not fail on missing input, so a run combining <c>PublishApp</c> with <c>Test</c> reported a green
+    /// build over a failing test. Static and pure so this decision is testable without running a build.
+    /// </remarks>
+    public static IEnumerable<(AbsolutePath Project, bool WithRuntime)> Scope(
+        AbsolutePath solution,
+        bool runtimeSpecific,
+        IEnumerable<AppPublishEntry> entries) =>
+    [
+        (solution, false),
+        .. runtimeSpecific
+            ? entries.Select(static entry => (entry.ProjectPath, true))
+            : []
+    ];
 
     virtual DotNetRestoreSettings GetRestoreSettings(DotNetRestoreSettings settings,
                                                      AbsolutePath solution,
@@ -94,14 +127,20 @@ public interface ICompileTarget : INukeBuild
         settings.SetProjectFile(solution)
             .When(_ => configuration is not null, s => s.SetProperty("Configuration", configuration!.ToString()));
 
+    /// <summary>
+    /// Builds the solution, and - when publishing for a runtime - the publish projects again for that RID,
+    /// which is what lets the later <c>--no-build</c> publish find artifacts under
+    /// <c>obj/{Configuration}/{TargetFramework}/{Runtime}/</c>. See <see cref="OnRestore" /> for why this
+    /// adds to the solution build rather than replacing it.
+    /// </summary>
     virtual IReadOnlyCollection<Output> OnCompile() =>
-        PublishRuntime is null || !IsPublishScheduled
-            ? DotNetBuild(s => GetBuildSettings(s, Solution))
-            :
-            [
-                .. PublishEntries.SelectMany(entry => DotNetBuild(s =>
-                    GetBuildSettings(s, entry.ProjectPath).WithRuntime(PublishRuntime)))
-            ];
+    [
+        .. Scope().SelectMany(step => DotNetBuild(s =>
+            GetBuildSettings(s, step.Project).WithRuntime(step.WithRuntime ? PublishRuntime : null)))
+    ];
+
+    /// <summary>Whether this run needs the extra RID-specific pass over the publish projects.</summary>
+    protected bool RuntimeSpecificPublishPass => PublishRuntime is not null && IsPublishScheduled;
 
     virtual DotNetBuildSettings GetBuildSettings(DotNetBuildSettings settings,
                                                  AbsolutePath solution,

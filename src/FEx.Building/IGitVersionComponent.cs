@@ -18,15 +18,13 @@ public interface IGitVersionComponent : INukeBuild
     // getter launched the tool six times in a single publish run (measured, CI run 30262574981).
     private static GitVersionInfo? _resolved;
 
-    [Parameter("GitVersion output (auto-resolved)", Name = "GitVersionInfo")]
-    sealed GitVersionInfo? VersionInfo => TryGetValue(() => VersionInfo) ?? (_resolved ??= ResolveGitVersion());
-
-    /// <summary>
-    /// Whether the version has already been resolved in this process. Lets a caller that only wants to
-    /// REPORT the version - a parameter listing, a diagnostic banner - avoid being the thing that launches
-    /// GitVersion, and with it the release gates hanging off the resolver.
-    /// </summary>
-    public static bool IsVersionResolved => _resolved is not null;
+    // Deliberately NOT a [Parameter]. The version comes from git history and nowhere else: the attribute
+    // only ever existed so TryGetValue could read this property back through NUKE's ParameterService, and
+    // what it bought was a supply route nobody uses and that mostly does not work - NUKE's argument parser
+    // is string-to-scalar, so --git-version-info and the environment variable both fail to build the
+    // record, leaving a .nuke parameters file as the one way in. Keeping it published a switch that
+    // cannot be honoured and let an injected value diverge from what IsVersionResolved reported.
+    sealed GitVersionInfo? VersionInfo => _resolved ??= ResolveGitVersion();
 
     // Lives here rather than on ITagTarget because everything that treats a version tag as "already
     // released" - resolving the version, publishing, tagging - has to read the same prefix. Split across

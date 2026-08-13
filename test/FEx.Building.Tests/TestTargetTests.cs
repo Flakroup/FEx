@@ -192,6 +192,48 @@ public sealed class TestTargetTests
             .GetCustomAttribute<ParameterAttribute>()
             .ShouldNotBeNull();
 
+    /// <summary>
+    /// The same guarantee for every publish switch. Dropping these attributes silently unbinds
+    /// <c>--publish-runtime</c> and friends: the build exits 0, prints no warning, and quietly produces a
+    /// portable framework-dependent output for someone who asked for a self-contained RID build.
+    /// </summary>
+    [Theory]
+    [InlineData(nameof(FExBuild.PublishRuntime))]
+    [InlineData(nameof(FExBuild.PublishSelfContained))]
+    [InlineData(nameof(FExBuild.PublishSingleFile))]
+    [InlineData(nameof(FExBuild.PublishFramework))]
+    public void EveryPublishSwitch_IsBoundFromTheCommandLine_NotJustAProperty(string property) =>
+        typeof(FExBuild).GetProperty(property,
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .ShouldNotBeNull()
+            .GetCustomAttribute<ParameterAttribute>()
+            .ShouldNotBeNull($"--{property} would be silently ignored");
+
+    /// <summary>
+    /// A consuming repository must be able to pin a publish switch in code. Non-virtual, these could not be
+    /// overridden at all - <c>override</c> was a compile error, and the compiler's own suggestion (<c>new</c>)
+    /// compiles clean while the interface dispatch keeps reading FExBuild's value, so the consumer's
+    /// self-contained RID build silently became a portable one.
+    /// </summary>
+    [Theory]
+    [InlineData(nameof(FExBuild.PublishRuntime))]
+    [InlineData(nameof(FExBuild.PublishSelfContained))]
+    [InlineData(nameof(FExBuild.PublishSingleFile))]
+    [InlineData(nameof(FExBuild.PublishFramework))]
+    public void EveryPublishSwitch_CanBeOverriddenByAConsumingBuild(string property)
+    {
+        // IsVirtual alone proves nothing: a property implementing an interface member is emitted
+        // `virtual final` even without the keyword, and `final` is exactly what blocks `override`.
+        var getter = typeof(FExBuild).GetProperty(property,
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .ShouldNotBeNull()
+            .GetMethod
+            .ShouldNotBeNull();
+
+        (getter.IsVirtual && !getter.IsFinal)
+            .ShouldBeTrue($"{property} cannot be overridden, so `new` is the only route and it is silent");
+    }
+
     [Fact]
     public void AFilteredRun_ForgivesTheAssembliesItEmptied()
     {

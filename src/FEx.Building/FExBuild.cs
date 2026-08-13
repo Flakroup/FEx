@@ -33,22 +33,22 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
 
     /// <inheritdoc />
     [Parameter("Runtime to publish for")]
-    public string? PublishRuntime { get; }
+    public virtual string? PublishRuntime { get; }
 
     [Solution]
     public virtual Solution Solution { get; } = null!;
 
     /// <inheritdoc />
     [Parameter("Indicates whether to publish as self-contained")]
-    public bool PublishSelfContained { get; }
+    public virtual bool PublishSelfContained { get; }
 
     /// <inheritdoc />
     [Parameter("Indicates whether to publish as single-file")]
-    public bool PublishSingleFile { get; }
+    public virtual bool PublishSingleFile { get; }
 
     /// <inheritdoc />
     [Parameter("Framework to publish for")]
-    public string? PublishFramework { get; }
+    public virtual string? PublishFramework { get; }
 
     /// <inheritdoc />
     [Parameter("Run only test classes matching this name - wildcards with '*' (e.g. '*OrderTests')")]
@@ -98,7 +98,11 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
         var entries = new List<(string Name, object? Value)>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        Add(nameof(Solution), Solution.Path);
+        // Null-conditional because NUKE does not fail a build whose [Solution] cannot be injected - it logs
+        // a warning and leaves the property null, and NUKE 10 does not discover a solution file on its own.
+        // That is the default state for any consumer that has not set the parameter, and a hard dereference
+        // here killed such a build during initialisation, before a single target ran, with a bare NRE.
+        Add(nameof(Solution), Solution?.Path);
         Add(nameof(IsServerBuild), IsServerBuild);
 
         entries.AddRange(GetParameterEntries(seen).OrderBy(static e => e.Name));
@@ -124,9 +128,6 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     /// <summary>What a secret's value is replaced by everywhere this build logs.</summary>
     public const string SecretMask = "***";
 
-    /// <summary>Stands in for the version while nothing in this run has needed it yet.</summary>
-    public const string UnresolvedVersion = "(not resolved yet)";
-
     /// <summary>
     /// Replaces every <see cref="SecretAttribute" />-marked parameter's value wherever it appears in
     /// <paramref name="text" />. Matched by VALUE rather than by option name, so it holds however the
@@ -136,8 +137,21 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     protected string MaskSecrets(string text) =>
         GetSecretValues().Aggregate(text, static (masked, secret) => masked.Replace(secret, SecretMask));
 
-    // Reads ONLY the properties marked [Secret]. Kept separate from GetParameterEntries so that collecting
-    // them cannot trigger the other parameters' getters a second time - VersionInfo's runs GitVersion.
+    /// <summary>
+    /// The NAMES of every secret parameter. Keyed on the name rather than on a single <see cref="PropertyInfo" />
+    /// because one parameter can be declared twice - a consumer re-declaring it on its build class shadows the
+    /// interface member that carries <see cref="SecretAttribute" />, and attributes are not inherited across
+    /// that boundary. Reflection yields class properties before interface ones, so asking only the property in
+    /// hand would have missed the attribute and printed the secret. Reads metadata only: no getter runs here.
+    /// </summary>
+    private HashSet<string> SecretParameterNames() =>
+        new(GetParameterProperties()
+                .Where(static p => p.GetCustomAttribute<SecretAttribute>() is not null)
+                .Select(static p => p.GetCustomAttribute<ParameterAttribute>()!.Name ?? p.Name),
+            StringComparer.OrdinalIgnoreCase);
+
+    // Reads ONLY the properties marked [Secret], so that collecting them cannot run the other parameters'
+    // getters a second time.
     private IEnumerable<string> GetSecretValues()
     {
         foreach (var prop in GetParameterProperties())
@@ -153,7 +167,8 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
             }
             catch (Exception)
             {
-                // A secret whose getter throws has no value to leak; the entry listing reports the error.
+                // Nothing to add to the mask: this getter refused to hand over a value. The listing prints
+                // SecretMask for it either way, since the mask decision there is keyed on the name.
                 continue;
             }
 
@@ -209,24 +224,14 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     /// </summary>
     protected IEnumerable<(string Name, object? Value)> GetParameterEntries(HashSet<string> seen)
     {
+        var secretNames = SecretParameterNames();
+
         foreach (var prop in GetParameterProperties())
         {
             var name = prop.GetCustomAttribute<ParameterAttribute>()!.Name ?? prop.Name;
 
             if (!seen.Add(name))
                 continue;
-
-            // Reading this one LAUNCHES GitVersion, an external process - and the release gates that hang
-            // off the resolver fire with it. A listing must never be what triggers that: `Clean` would pay
-            // for a version it does not use, and on CI a gate would fail the build during initialisation,
-            // before any target ran. Reported once something that actually needs the version has resolved it.
-            if (prop.PropertyType == typeof(GitVersionInfo)
-                && !IGitVersionComponent.IsVersionResolved)
-            {
-                yield return (name, UnresolvedVersion);
-
-                continue;
-            }
 
             object? value;
 
@@ -243,7 +248,7 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
             // override that prints what it is handed would put the secret straight back into the log.
             // "(not set)" still distinguishes an unconfigured secret, which is why publish steps skip.
             if (value is not null
-                && prop.GetCustomAttribute<SecretAttribute>() is not null)
+                && secretNames.Contains(name))
                 value = SecretMask;
 
             yield return (name, value);

@@ -1,99 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "definitions": {
-    "GitVersionInfo": {
-      "type": "object",
-      "properties": {
-        "Major": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "Minor": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "Patch": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "PreReleaseTag": {
-          "type": "string"
-        },
-        "PreReleaseTagWithDash": {
-          "type": "string"
-        },
-        "PreReleaseLabel": {
-          "type": "string"
-        },
-        "PreReleaseLabelWithDash": {
-          "type": "string"
-        },
-        "PreReleaseNumber": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "int32"
-        },
-        "WeightedPreReleaseNumber": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "int32"
-        },
-        "BuildMetaData": {
-          "type": "string"
-        },
-        "FullBuildMetaData": {
-          "type": "string"
-        },
-        "MajorMinorPatch": {
-          "type": "string"
-        },
-        "SemVer": {
-          "type": "string"
-        },
-        "AssemblySemVer": {
-          "type": "string"
-        },
-        "AssemblySemFileVer": {
-          "type": "string"
-        },
-        "FullSemVer": {
-          "type": "string"
-        },
-        "InformationalVersion": {
-          "type": "string"
-        },
-        "BranchName": {
-          "type": "string"
-        },
-        "EscapedBranchName": {
-          "type": "string"
-        },
-        "Sha": {
-          "type": "string"
-        },
-        "ShortSha": {
-          "type": "string"
-        },
-        "VersionSourceSha": {
-          "type": "string"
-        },
-        "CommitsSinceVersionSource": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "CommitDate": {
-          "type": "string"
-        },
-        "UncommittedChanges": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
     "Host": {
       "type": "string",
       "enum": [
@@ -119,7 +26,6 @@
       "enum": [
         "Clean",
         "Compile",
-        "Info",
         "Pack",
         "Publish",
         "PublishApp",
@@ -207,10 +113,6 @@
             "Debug",
             "Release"
           ]
-        },
-        "GitVersionInfo": {
-          "description": "GitVersion output (auto-resolved)",
-          "$ref": "#/definitions/GitVersionInfo"
         },
         "NuGetApiKey": {
           "type": "string",

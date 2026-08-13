@@ -9,12 +9,8 @@ class Build : FExBuild, ITagTarget, ITestTarget
     // FEx ships packages, not deployable applications - nothing here to PublishApp.
     public override IEnumerable<string> PublishProjects => [];
 
-    [UsedImplicitly] // NUKE Target invoked by the build runner via reflection; R# cannot track it.
-    Target Info =>
-        _ => _
-            .DependentFor(((ICompileTarget)this).Compile)
-            .Before(((ICompileTarget)this).Restore)
-            .Executes(LogBuildInfo);
+    // No Info target: FExBuild logs the banner and parameter listing from OnBuildInitialized, so a target
+    // doing the same printed all of it twice on every build - Info was DependentFor(Compile), not opt-in.
 
     [UsedImplicitly] // NUKE Target invoked by the build runner via reflection; R# cannot track it.
     Target Clean =>

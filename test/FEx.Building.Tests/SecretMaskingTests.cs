@@ -1,4 +1,7 @@
 using Nuke.Common;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -93,6 +96,61 @@ public sealed class SecretMaskingTests
             .ShouldNotBeNull();
     }
 
+    /// <summary>
+    /// The call site, not just the helper. `ASecretsValueIsNeverPrintedInTheCommandLineEcho` exercises
+    /// MaskSecrets directly, so reverting LogBuildInfo's echo to the raw Environment.CommandLine left the
+    /// suite fully green while the key went back into the log in full (measured). This drives LogBuildInfo
+    /// itself: the echo is its FIRST line, so everything that needs a running build - Solution.Path,
+    /// ExecutionPlan - throws afterwards and the assertion still has what it came for.
+    /// </summary>
+    [Fact]
+    public void LogBuildInfoItself_MasksTheEchoItPrints()
+    {
+        var build = new CommandLineSecretBuild();
+        var sink = new CapturingSink();
+        var previous = Log.Logger;
+
+        Log.Logger = new LoggerConfiguration().WriteTo.Sink(sink).CreateLogger();
+
+        try
+        {
+            try
+            {
+                build.PrintBuildInfo();
+            }
+            catch (Exception)
+            {
+                // Expected: the listing needs NUKE's execution state. The echo is already emitted.
+            }
+        }
+        finally
+        {
+            Log.Logger = previous;
+        }
+
+        var echo = sink.Messages.Single(static m => m.Contains("Command Line:"));
+
+        echo.ShouldNotContain(CommandLineSecretBuild.Key);
+        echo.ShouldContain(FExBuild.SecretMask);
+    }
+
+    /// <summary>
+    /// A consumer that re-declares a secret parameter on its own build class shadows the interface member
+    /// carrying [Secret], and attributes do not cross that boundary. Reflection yields class properties
+    /// first, so keying the mask on the property in hand printed the key in full - while the command-line
+    /// echo on the same object still showed ***, which reads as proof the masking works.
+    /// </summary>
+    [Fact]
+    public void ASecretRedeclaredOnTheBuildClass_IsStillMasked()
+    {
+        var build = new ShadowingSecretBuild();
+
+        build.LogAndCapture();
+
+        build.FormattedValues.ShouldNotContain(ShadowingSecretBuild.ShadowedKey);
+        build.FormattedValues.ShouldContain(FExBuild.SecretMask);
+    }
+
     private class SecretCarryingBuild : FExBuild, INuGetPublishTarget
     {
         public const string Key = "oy2-FAKE-KEY-DO-NOT-USE";
@@ -119,5 +177,45 @@ public sealed class SecretMaskingTests
     private sealed class EmptySecretBuild : SecretCarryingBuild, INuGetPublishTarget
     {
         string? INuGetPublishTarget.NuGetApiKey => "";
+    }
+
+    // The shape a consumer writes when it wants to source the key itself - and the one this repo's own
+    // test comments recommend, since NUKE binds command-line parameters on the build class.
+    private sealed class ShadowingSecretBuild : FExBuild, INuGetPublishTarget
+    {
+        public const string ShadowedKey = "shadowed-key-must-not-print";
+
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        public List<string> FormattedValues { get; } = [];
+
+        [Parameter("NuGet API key for pushing packages")]
+        public string? NuGetApiKey => ShadowedKey;
+
+        public void LogAndCapture()
+        {
+            foreach (var (name, value) in GetParameterEntries(new(StringComparer.OrdinalIgnoreCase)))
+                FormattedValues.Add(FormatParameterValue(name, value));
+        }
+    }
+
+    // Its key is a slice of the real command line, so the echo genuinely carries it - a fake that does not
+    // appear there would produce identical output masked or not, and the test would pass either way.
+    private sealed class CommandLineSecretBuild : FExBuild, INuGetPublishTarget
+    {
+        public static readonly string Key = Environment.CommandLine[..16];
+
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        string? INuGetPublishTarget.NuGetApiKey => Key;
+
+        public void PrintBuildInfo() => LogBuildInfo();
+    }
+
+    private sealed class CapturingSink : ILogEventSink
+    {
+        public List<string> Messages { get; } = [];
+
+        public void Emit(LogEvent logEvent) => Messages.Add(logEvent.RenderMessage());
     }
 }

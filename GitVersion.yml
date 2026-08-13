@@ -1,9 +1,13 @@
 mode: ContinuousDeployment
-# Lifts the pre-release line above 0.1.1. A build defect once packed a develop snapshot as the stable
-# 0.1.1 and left a v0.1.1-alpha tag behind, which anchored every later alpha to 0.1.1-alpha.N - all of
-# them ordering BELOW the published 0.1.1, so no consumer could ever resolve one. Removing the tag would
-# drop the line further; only moving the base forward puts the alphas back on top.
-next-version: 0.2.0
+# Floor for the version base, used where no tag reaches. It first lifted the pre-release line above
+# 0.1.1: a build defect once packed a develop snapshot as the stable 0.1.1 and left a v0.1.1-alpha tag
+# behind, which anchored every later alpha to 0.1.1-alpha.N - all of them ordering BELOW the published
+# 0.1.1, so no consumer could ever resolve one. Removing the tag would drop the line further; only
+# moving the base forward puts the alphas back on top.
+# It now reads 0.3.0 because main carries no version tag yet and would otherwise release the same tree
+# as a stable 0.2.0, below the 0.3.0-alpha.N develop already publishes - a downgrade for anyone moving
+# off the pre-release feed. Develop is unaffected: its tag-derived base is 0.3.0 either way.
+next-version: 0.3.0
 branches: {}
 ignore:
   sha: []

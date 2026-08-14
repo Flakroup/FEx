@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
-		<Description>String encryption, hashing, and secure property change notification utilities</Description>
+		<Description>Authenticated string encryption (AES-256-CBC with HMAC-SHA256, PBKDF2 key derivation) and secure property change notification utilities</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -14,6 +14,10 @@
 	  <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
 	  <ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
 	  <ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <InternalsVisibleTo Include="FEx.Encryption.Tests" />
 	</ItemGroup>
 
 </Project>

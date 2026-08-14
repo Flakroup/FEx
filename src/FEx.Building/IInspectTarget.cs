@@ -68,12 +68,15 @@ public interface IInspectTarget : ICompileTarget
                         + "repository pins, so create it with `dotnet new tool-manifest` and add the tool "
                         + "with `dotnet tool install JetBrains.ReSharper.GlobalTools`.");
 
-                InspectionCachesDirectory.CreateOrCleanDirectory();
                 InspectionReport.Parent.CreateDirectory();
 
                 RunDotNet("tool restore");
                 RunDotNet(InspectionArguments(
-                    Solution.Path!, InspectionReport, InspectionCachesDirectory, Configuration, InspectionSeverity));
+                    Solution.Path!,
+                    InspectionReport,
+                    FreshCaches(InspectionCachesDirectory),
+                    Configuration,
+                    InspectionSeverity));
 
                 Verdict(InspectionGate.Analyze(File.ReadAllText(InspectionReport)));
             });
@@ -101,6 +104,24 @@ public interface IInspectTarget : ICompileTarget
             $"--properties:Configuration={configuration}",
             $"-o={Quote(report)}",
             $"--caches-home={Quote(cachesDirectory)}");
+
+    /// <summary>
+    /// Empties the caches directory and hands it back, so the command line can only ever be composed
+    /// around a fresh one.
+    /// </summary>
+    /// <remarks>
+    /// On the path to the argument rather than a statement beside it, and public rather than buried in the
+    /// target body, because this is the determinism the whole gate rests on: a caches directory carried
+    /// across a changed type has been measured inventing <c>Cannot resolve symbol</c> for symbols that
+    /// resolve. Deleting the clean was measured leaving the entire suite green, which is exactly the shape
+    /// of regression a gate cannot afford to ship.
+    /// </remarks>
+    public static AbsolutePath FreshCaches(AbsolutePath cachesDirectory)
+    {
+        cachesDirectory.CreateOrCleanDirectory();
+
+        return cachesDirectory;
+    }
 
     private static string Quote(AbsolutePath path) => $"\"{path}\"";
 

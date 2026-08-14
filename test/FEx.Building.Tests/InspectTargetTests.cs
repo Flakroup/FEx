@@ -3,6 +3,7 @@ using Nuke.Common.IO;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Xunit;
 
 namespace FEx.Building.Tests;
@@ -80,7 +81,7 @@ public sealed class InspectTargetTests
     {
         // The whole point, and the one break that leaves every other test here green: a gate that reports
         // findings and returns anyway is a report, not a gate.
-        var findings = new List<InspectionFinding> { new("Rule", "error", "src/Thing.cs", 42, "wrong") };
+        var findings = new List<InspectionFinding> { new("Rule", "src/Thing.cs", 42, "wrong") };
 
         Should.Throw<InvalidOperationException>(() => IInspectTarget.Verdict(findings))
             .Message.ShouldContain("1 finding");
@@ -90,5 +91,26 @@ public sealed class InspectTargetTests
     public void NoFindings_PassesQuietly()
     {
         Should.NotThrow(() => IInspectTarget.Verdict([]));
+    }
+
+    [Fact]
+    public void TheCachesDirectory_IsEmptiedBeforeTheCommandIsComposed()
+    {
+        // The determinism the gate rests on, and it was measurably unpinned: deleting the clean left the
+        // whole suite green while the next run would inspect against a cache carried over from the last.
+        var directory = (AbsolutePath)Path.Combine(Path.GetTempPath(), $"fex-inspect-{Guid.NewGuid():N}");
+        directory.CreateDirectory();
+        File.WriteAllText(directory / "carried-over.bin", "a cache from the previous run");
+
+        try
+        {
+            IInspectTarget.FreshCaches(directory).ShouldBe(directory);
+
+            Directory.EnumerateFileSystemEntries(directory).ShouldBeEmpty();
+        }
+        finally
+        {
+            directory.DeleteDirectory();
+        }
     }
 }

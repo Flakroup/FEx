@@ -1,5 +1,6 @@
 using FEx.Building;
 using Shouldly;
+using System;
 using System.Text.Json;
 using Xunit;
 
@@ -16,6 +17,7 @@ public sealed class InspectionGateTests
         {
           "runs": [
             {
+              "invocations": [ { "executionSuccessful": true } ],
               "tool": { "driver": { "rules": [ { "id": "CheckNamespace",
                 "defaultConfiguration": { "level": "error" } } ] } },
               "results": [
@@ -47,23 +49,6 @@ public sealed class InspectionGateTests
     }
 
     [Fact]
-    public void Analyze_TakesTheLevelFromTheRule_WhenTheResultStatesNone()
-    {
-        // The usual shape for a promoted inspection: severity is declared once on the rule, and every
-        // result inherits it. Reading only the result would call every finding level-less.
-        InspectionGate.Analyze(OneError).ShouldHaveSingleItem().Level.ShouldBe("error");
-    }
-
-    [Fact]
-    public void Analyze_PrefersTheLevelTheResultStatesItself()
-    {
-        var sarif = OneError.Replace("\"ruleId\": \"CheckNamespace\",",
-            "\"ruleId\": \"CheckNamespace\", \"level\": \"warning\",", System.StringComparison.Ordinal);
-
-        InspectionGate.Analyze(sarif).ShouldHaveSingleItem().Level.ShouldBe("warning");
-    }
-
-    [Fact]
     public void Analyze_SurvivesAByteOrderMark()
     {
         // The tool writes one often enough that a reader which cannot take it would fail on the report of
@@ -74,13 +59,52 @@ public sealed class InspectionGateTests
     [Fact]
     public void Analyze_ReportsNothing_WhenTheRunFoundNothing()
     {
-        InspectionGate.Analyze("""{ "runs": [ { "tool": { "driver": {} }, "results": [] } ] }""").ShouldBeEmpty();
+        InspectionGate.Analyze(
+            """
+            { "runs": [ { "invocations": [ { "executionSuccessful": true } ],
+              "tool": { "driver": {} }, "results": [] } ] }
+            """).ShouldBeEmpty();
     }
 
     [Fact]
-    public void Analyze_ReportsNothing_WhenTheReportCarriesNoRunsAtAll()
+    public void Analyze_RefusesAReportThatCarriesNoRun()
     {
-        InspectionGate.Analyze("{}").ShouldBeEmpty();
+        // An empty report is not a clean one. This assertion used to say the opposite, and composed with
+        // the target's "no findings passes quietly" it proved that `{}` ships a green release gate.
+        Should.Throw<InvalidOperationException>(() => InspectionGate.Analyze("{}"))
+            .Message.ShouldContain("no run at all");
+    }
+
+    [Fact]
+    public void Analyze_RefusesARunThatCannotSayItFinished()
+    {
+        // `inspectcode` exits 0 whether it inspected the solution or failed to load it, so the report has
+        // to vouch for its own run before its emptiness means anything.
+        var sarif = OneError.Replace("\"invocations\": [ { \"executionSuccessful\": true } ],", string.Empty,
+            StringComparison.Ordinal);
+
+        Should.Throw<InvalidOperationException>(() => InspectionGate.Analyze(sarif))
+            .Message.ShouldContain("no invocation");
+    }
+
+    [Fact]
+    public void Analyze_RefusesARunThatReportsItselfUnsuccessful()
+    {
+        var sarif = OneError.Replace("\"executionSuccessful\": true", "\"executionSuccessful\": false",
+            StringComparison.Ordinal);
+
+        Should.Throw<InvalidOperationException>(() => InspectionGate.Analyze(sarif))
+            .Message.ShouldContain("proves nothing");
+    }
+
+    [Fact]
+    public void Analyze_RefusesARunWhoseInvocationOmitsTheField()
+    {
+        // Absent is not true. A report that simply does not carry the field is one that does not vouch.
+        var sarif = OneError.Replace("{ \"executionSuccessful\": true }", "{ }", StringComparison.Ordinal);
+
+        Should.Throw<InvalidOperationException>(() => InspectionGate.Analyze(sarif))
+            .Message.ShouldContain("proves nothing");
     }
 
     [Fact]
@@ -89,7 +113,8 @@ public sealed class InspectionGateTests
         // A solution-wide finding carries no location. Dropping it would be the gate quietly narrowing
         // itself to the findings that happen to have a line number.
         var sarif = """
-            { "runs": [ { "tool": { "driver": { "rules": [] } },
+            { "runs": [ { "invocations": [ { "executionSuccessful": true } ],
+              "tool": { "driver": { "rules": [] } },
               "results": [ { "ruleId": "Wide", "message": { "text": "no place" } } ] } ] }
             """;
 

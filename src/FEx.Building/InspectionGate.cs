@@ -21,6 +21,9 @@ public static class InspectionGate
     /// <summary>Every finding in a SARIF report, in the order the tool wrote them. Pure - the unit-test entry point.</summary>
     /// <param name="sarif">The report's text. A byte order mark, present or not, is not allowed to decide anything.</param>
     /// <exception cref="ArgumentNullException"><paramref name="sarif" /> is null.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// The report cannot vouch for its own run, so its emptiness proves nothing.
+    /// </exception>
     /// <exception cref="JsonException">The report is not JSON - which is what reading it as XML looks like from here.</exception>
     public static IReadOnlyList<InspectionFinding> Analyze(string sarif)
     {
@@ -31,8 +34,9 @@ public static class InspectionGate
         // rather than as the character itself, which is invisible in every editor that would have to keep it.
         using var document = JsonDocument.Parse(sarif.TrimStart('\uFEFF'));
 
-        if (!document.RootElement.TryGetProperty("runs", out var runs))
-            return [];
+        if (!document.RootElement.TryGetProperty("runs", out var runs) || runs.GetArrayLength() == 0)
+            throw new InvalidOperationException(
+                "The inspection report carries no run at all, so it says nothing about this commit.");
 
         // Loops rather than LINQ throughout: JsonElement's enumerators are disposable, and foreach is what
         // disposes them.
@@ -40,43 +44,47 @@ public static class InspectionGate
 
         foreach (var run in runs.EnumerateArray())
         {
+            AssertTheInspectionRan(run);
+
             if (!run.TryGetProperty("results", out var results))
                 continue;
 
-            var levels = RuleLevels(run);
-
             foreach (var result in results.EnumerateArray())
-                findings.Add(Read(result, levels));
+                findings.Add(Read(result));
         }
 
         return findings;
     }
 
     /// <summary>
-    /// The severity each rule carries by default, which is where a result's own level comes from when it
-    /// does not state one - the usual case for a promoted inspection.
+    /// Refuses a report that cannot say the inspection finished, BEFORE its emptiness is believed.
     /// </summary>
-    private static Dictionary<string, string> RuleLevels(JsonElement run)
+    /// <remarks>
+    /// An analysis that loaded nothing produces an empty result list and exits 0, which is
+    /// indistinguishable from a clean solution to anything that only counts results. The mechanism is not
+    /// hypothetical: the tool evaluates MSBuild itself, so anything that breaks solution loading under
+    /// <c>--no-build</c> - a configuration whose output is not on disk, a solution format the pinned
+    /// version cannot parse - lands exactly here. An invariant that passes hardest precisely when it is
+    /// broken is worse than no invariant.
+    /// </remarks>
+    private static void AssertTheInspectionRan(JsonElement run)
     {
-        var levels = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (!run.TryGetProperty("invocations", out var invocations) || invocations.GetArrayLength() == 0)
+            throw new InvalidOperationException(
+                "The inspection report carries no invocation, so it cannot say the inspection finished.");
 
-        if (!run.TryGetProperty("tool", out var tool)
-            || !tool.TryGetProperty("driver", out var driver)
-            || !driver.TryGetProperty("rules", out var rules))
-            return levels;
-
-        foreach (var rule in rules.EnumerateArray())
+        foreach (var invocation in invocations.EnumerateArray())
         {
-            if (rule.TryGetProperty("id", out var id)
-                && rule.TryGetProperty("defaultConfiguration", out var configuration)
-                && configuration.TryGetProperty("level", out var level))
-                levels[id.GetString() ?? string.Empty] = level.GetString() ?? string.Empty;
+            // The field has to be THERE and true: absent, or present as anything else, is a report that
+            // does not vouch for its own run.
+            if (!invocation.TryGetProperty("executionSuccessful", out var successful)
+                || successful.ValueKind != JsonValueKind.True)
+                throw new InvalidOperationException(
+                    "The inspection did not report a successful run, so an empty result list proves nothing.");
         }
-
-        return levels;
     }
 
-    private static InspectionFinding Read(JsonElement result, Dictionary<string, string> ruleLevels)
+    private static InspectionFinding Read(JsonElement result)
     {
         var ruleId = Text(result, "ruleId");
 
@@ -95,7 +103,6 @@ public static class InspectionGate
 
         return new InspectionFinding(
             ruleId,
-            Level(result, ruleId, ruleLevels),
             physical.ValueKind == JsonValueKind.Object && physical.TryGetProperty("artifactLocation", out var artifact)
                 ? Text(artifact, "uri")
                 : string.Empty,
@@ -107,15 +114,6 @@ public static class InspectionGate
             result.TryGetProperty("message", out var message) ? Text(message, "text") : string.Empty);
     }
 
-    private static string Level(JsonElement result, string ruleId, Dictionary<string, string> ruleLevels)
-    {
-        var own = Text(result, "level");
-
-        return own.Length > 0 ? own
-            : ruleLevels.TryGetValue(ruleId, out var declared) ? declared
-            : string.Empty;
-    }
-
     private static string Text(JsonElement element, string property) =>
         element.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString() ?? string.Empty
@@ -124,11 +122,10 @@ public static class InspectionGate
 
 /// <summary>One inspection result, flattened to what a person needs in order to go and fix it.</summary>
 /// <param name="RuleId">The inspection's own name, which is what a suppression would have to name.</param>
-/// <param name="Level">Empty when neither the result nor its rule declares one.</param>
 /// <param name="File">Repository-relative, or empty for a finding the tool did not place in a file.</param>
 /// <param name="Line">0 when the finding carries no line.</param>
 /// <param name="Message">The tool's own wording.</param>
-public sealed record InspectionFinding(string RuleId, string Level, string File, int Line, string Message)
+public sealed record InspectionFinding(string RuleId, string File, int Line, string Message)
 {
     /// <summary>One line naming where to go, in the shape an editor and a terminal both make clickable.</summary>
     public override string ToString() =>

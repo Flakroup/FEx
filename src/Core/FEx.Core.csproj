@@ -21,4 +21,8 @@
         <ProjectReference Include="..\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="FEx.Core.Tests" />
+    </ItemGroup>
+
 </Project>

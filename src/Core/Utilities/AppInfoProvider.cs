@@ -59,8 +59,7 @@ public record AppInfoProvider : IAppInfoProvider
 
             var mainModule = Process.GetCurrentProcess().MainModule?.FileName;
 
-            EntryAssemblyLocation = EntryAssembly?.Location is not null ? new(EntryAssembly.Location) :
-                mainModule is not null ? new FileInfo(mainModule) : null!;
+            EntryAssemblyLocation = ResolveEntryAssemblyLocation(EntryAssembly?.Location, mainModule)!;
 
             EntryAssemblyName = EntryAssembly?.GetName().Name!;
 
@@ -112,6 +111,16 @@ public record AppInfoProvider : IAppInfoProvider
 
         UserSettingsPath = Path.Combine(UserDataPath, $"{Name}.config");
     }
+
+    // A single-file published app reports Assembly.Location as an EMPTY string (not null), so a naked null
+    // check let new FileInfo("") throw ArgumentException("The path is empty") while resolving the app info -
+    // before any window appeared. Treat an empty location as "no managed location" and fall back to the
+    // process main module, which is the single-file exe path and is always set. Extracted and internal so the
+    // empty-vs-null branch is pinned by a test rather than only reachable through a real single-file run.
+    internal static FileInfo? ResolveEntryAssemblyLocation(string? assemblyLocation, string? mainModuleFileName) =>
+        !string.IsNullOrEmpty(assemblyLocation) ? new FileInfo(assemblyLocation)
+        : !string.IsNullOrEmpty(mainModuleFileName) ? new FileInfo(mainModuleFileName)
+        : null;
 
     private static Version? ParseVersionString(string? version) =>
         Version.TryParse(version, out var result)

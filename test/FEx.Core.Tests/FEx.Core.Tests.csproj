@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\Core.Abstractions\FEx.Core.Abstractions.csproj" />
+		<ProjectReference Include="..\..\src\Core\FEx.Core.csproj" />
+	</ItemGroup>
+
+</Project>

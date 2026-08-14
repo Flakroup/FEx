@@ -97,6 +97,9 @@
     <Project Path="test/FEx.Building.Tests/FEx.Building.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.Core.Tests/FEx.Core.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.DependencyInjection.Tests/FEx.DependencyInjection.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>

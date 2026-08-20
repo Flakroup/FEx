@@ -17,6 +17,18 @@ public sealed class PolishMudLocalizerTests
         value.ResourceNotFound.ShouldBeFalse();
     }
 
+    /// <summary>The one key outside the data grid: the message under a text-editable date or time field
+    /// whose typed text does not parse. Consumers pin their own wording on top of this - an English
+    /// "Not a valid date time" under a Polish label is what this entry removes.</summary>
+    [Fact]
+    public void TheConverterError_ResolvesToPolish()
+    {
+        var value = _localizer["Converter_InvalidDateTime"];
+
+        value.Value.ShouldBe("Niepoprawna data lub godzina");
+        value.ResourceNotFound.ShouldBeFalse();
+    }
+
     [Fact]
     public void UnknownKey_FallsThroughToTheKeyItself_AndIsFlaggedNotFound()
     {

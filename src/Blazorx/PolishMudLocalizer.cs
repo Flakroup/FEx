@@ -5,13 +5,18 @@ using System.Collections.Generic;
 namespace FEx.Blazorx;
 
 /// <summary>
-/// Polish translations for MudBlazor's built-in UI strings (data-grid filter dialog, pager labels).
-/// Unknown keys fall through to MudBlazor's English defaults (resourceNotFound = true).
+/// Polish translations for MudBlazor's built-in UI strings (data-grid filter dialog, pager labels, the
+/// conversion error under a text-editable picker). Unknown keys fall through to MudBlazor's English
+/// defaults (resourceNotFound = true).
 /// </summary>
 public sealed class PolishMudLocalizer : MudLocalizer
 {
     private static readonly Dictionary<string, string> Translations = new()
     {
+        // Thrown by MudBlazor's value converters when typed text does not parse as a date/time, and
+        // resolved through MudLocalizer exactly like the grid keys - MudFormComponent reads
+        // ConversionErrorMessage via its Localizer, so this is the label an operator sees under the field.
+        ["Converter_InvalidDateTime"] = "Niepoprawna data lub godzina",
         ["MudDataGrid.AddFilter"] = "Dodaj filtr",
         ["MudDataGrid.Apply"] = "Zastosuj",
         ["MudDataGrid.Cancel"] = "Anuluj",

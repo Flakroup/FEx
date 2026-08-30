@@ -78,24 +78,27 @@ public abstract class FlurlApiBase : AsyncInitializable
 
         var responseUri = req.Url.ToUri();
 
-        // Execute with Polly resilience
+        async Task<IFlurlResponse> SendAsync(CancellationToken ct) =>
+            method switch
+            {
+                RequestMethod.GET => await req.GetAsync(cancellationToken: ct),
+                RequestMethod.POST => await req.PostJsonAsync(requestContent, cancellationToken: ct),
+                RequestMethod.PUT => await req.PutJsonAsync(requestContent, cancellationToken: ct),
+                RequestMethod.DELETE => await req.DeleteAsync(cancellationToken: ct),
+                RequestMethod.PATCH => await req.PatchJsonAsync(requestContent, cancellationToken: ct),
+                RequestMethod.HEAD => await req.HeadAsync(cancellationToken: ct),
+                RequestMethod.OPTIONS => await req.OptionsAsync(cancellationToken: ct),
+                _ => throw new NotImplementedException($"{method} is not implemented")
+            };
+
+        // Execute with Polly resilience - but only for methods it is safe to repeat.
 #pragma warning disable IDE0063
         // ReSharper disable ConvertToUsingDeclaration
-        using (var httpResponse = await ResiliencePolicy.ExecuteAsync(async ct =>
-                       // ReSharper restore ConvertToUsingDeclaration
+        using (var httpResponse = ShouldApplyResiliencePolicy(method)
+                   // ReSharper restore ConvertToUsingDeclaration
 #pragma warning restore IDE0063
-                       method switch
-                       {
-                           RequestMethod.GET => await req.GetAsync(cancellationToken: ct),
-                           RequestMethod.POST => await req.PostJsonAsync(requestContent, cancellationToken: ct),
-                           RequestMethod.PUT => await req.PutJsonAsync(requestContent, cancellationToken: ct),
-                           RequestMethod.DELETE => await req.DeleteAsync(cancellationToken: ct),
-                           RequestMethod.PATCH => await req.PatchJsonAsync(requestContent, cancellationToken: ct),
-                           RequestMethod.HEAD => await req.HeadAsync(cancellationToken: ct),
-                           RequestMethod.OPTIONS => await req.OptionsAsync(cancellationToken: ct),
-                           _ => throw new NotImplementedException($"{method} is not implemented")
-                       },
-                   cancellationToken))
+                   ? await ResiliencePolicy.ExecuteAsync(SendAsync, cancellationToken)
+                   : await SendAsync(cancellationToken))
         {
             var content = await httpResponse.GetStringAsync();
 
@@ -120,6 +123,21 @@ public abstract class FlurlApiBase : AsyncInitializable
     }
 
     protected virtual IFlurlRequest AddConstantsToRequest(IFlurlRequest req) => req;
+
+    /// <summary>
+    /// Whether the resilience policy wraps a call made with <paramref name="method"/>. Only the safe
+    /// methods qualify by default; override to opt a specific client back in.
+    /// </summary>
+    /// <remarks>
+    /// The policy retries, and a retry re-sends a request the server may already have applied. Measured in
+    /// a consumer: a password change whose response was lost went out four times in total, so the password
+    /// had been replaced while the caller was told the operation failed. The fallback compounds it - it
+    /// swallows the real exception and substitutes a synthetic 503, so the server's own error message never
+    /// reaches the caller. PUT and DELETE are idempotent by specification but rarely in practice (a repeated
+    /// DELETE typically answers 404), so they are excluded too.
+    /// </remarks>
+    protected virtual bool ShouldApplyResiliencePolicy(RequestMethod method) =>
+        method is RequestMethod.GET or RequestMethod.HEAD or RequestMethod.OPTIONS;
 
     protected async Task<T> GetResponseAsync<T>(string apiPath,
                                                 Func<IFlurlRequest, IFlurlRequest>? func = null,

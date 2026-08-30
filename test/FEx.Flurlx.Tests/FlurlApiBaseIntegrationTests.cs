@@ -285,6 +285,65 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
         return flurlConfigurator;
     }
 
+    // A retry re-sends a request the server may already have applied. Measured in a consumer before this
+    // guard existed: a password change whose response was lost went out four times, so the password had
+    // been replaced while the caller was told the call failed. An unsafe method must reach the server once.
+    [Fact]
+    public async Task GetResponseAsync_UnsafeMethodFailing_IsSentOnceAndNotRetried()
+    {
+        _mockServer.Given(Request.Create().WithPath("/api/create").UsingPost())
+            .RespondWith(Response.Create().WithStatusCode(500));
+
+        await Should.ThrowAsync<Exception>(() =>
+            _testApi.CreateDataAsync(new TestRequestData { Value = "x", Count = 1 }, TestContext.Current.CancellationToken));
+
+        _mockServer.LogEntries.Count(entry => entry.RequestMessage?.Path == "/api/create").ShouldBe(1);
+    }
+
+    // The fallback substitutes a synthetic 503 once the policy gives up, which hides the status the server
+    // actually answered with. Outside the policy the real one survives, so a caller can tell "you sent the
+    // wrong password" from "the service is down".
+    [Fact]
+    public async Task GetResponseAsync_UnsafeMethodFailing_SurfacesTheRealStatusNotTheFallback()
+    {
+        _mockServer.Given(Request.Create().WithPath("/api/create").UsingPost())
+            .RespondWith(Response.Create().WithStatusCode(400).WithBody("Incorrect password."));
+
+        var thrown = await Should.ThrowAsync<FlurlHttpException>(() =>
+            _testApi.CreateDataAsync(new TestRequestData { Value = "x", Count = 1 }, TestContext.Current.CancellationToken));
+
+        thrown.StatusCode.ShouldBe(400);
+        (await thrown.GetResponseStringAsync()).ShouldBe("Incorrect password.");
+    }
+
+    // The guard must not disarm resilience wholesale - a safe method still gets every retry it used to.
+    [Fact]
+    public async Task GetResponseAsync_SafeMethodFailing_IsStillRetried()
+    {
+        _mockServer.Given(Request.Create().WithPath("/api/retry-count").UsingGet())
+            .RespondWith(Response.Create().WithStatusCode(500));
+
+        await Should.ThrowAsync<Exception>(() => _testApi.GetRetryCountDataAsync(TestContext.Current.CancellationToken));
+
+        // MaxRetryAttempts = 2 in this fixture, so the original call plus two retries.
+        _mockServer.LogEntries.Count(entry => entry.RequestMessage?.Path == "/api/retry-count").ShouldBe(3);
+    }
+
+    // The decision is a seam, not a rule: a client whose writes really are idempotent can opt back in.
+    [Fact]
+    public async Task GetResponseAsync_UnsafeMethodOnAnOptedInClient_IsRetried()
+    {
+        _mockServer.Given(Request.Create().WithPath("/api/create").UsingPost())
+            .RespondWith(Response.Create().WithStatusCode(500));
+
+        using var optedIn = new RetryEverythingApi(GetMocks(_flurlClient, _resiliencePolicy));
+
+        await Should.ThrowAsync<Exception>(() =>
+            optedIn.CreateDataAsync(new TestRequestData { Value = "x", Count = 1 }, TestContext.Current.CancellationToken));
+
+        _mockServer.LogEntries.Count(entry => entry.RequestMessage?.Path == "/api/create").ShouldBe(3);
+    }
+
     #region IDisposable
     public void Dispose()
     {
@@ -309,6 +368,9 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
         public async Task<TestData> GetRetryTestDataAsync(CancellationToken ct = default) =>
             await GetResponseAsync<TestData>("api/retry-test", method: RequestMethod.GET, cancellationToken: ct);
 
+        public async Task<TestData> GetRetryCountDataAsync(CancellationToken ct = default) =>
+            await GetResponseAsync<TestData>("api/retry-count", method: RequestMethod.GET, cancellationToken: ct);
+
         public async Task<TestData> GetSlowDataAsync(CancellationToken ct = default) =>
             await GetResponseAsync<TestData>("api/slow", method: RequestMethod.GET, cancellationToken: ct);
 
@@ -331,6 +393,23 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
                 RequestMethod.GET,
                 ct);
         }
+    }
+
+    /// <summary>A client that deliberately opts every method back into the resilience policy.</summary>
+    private sealed class RetryEverythingApi : FlurlApiBase
+    {
+        public RetryEverythingApi(IFlurlConfigurator flurlConfigurator)
+            : base(flurlConfigurator)
+        {
+        }
+
+        protected override bool ShouldApplyResiliencePolicy(RequestMethod method) => true;
+
+        public async Task<TestData> CreateDataAsync(TestRequestData requestData, CancellationToken ct = default) =>
+            await GetResponseAsync<TestData, TestRequestData>("api/create",
+                method: RequestMethod.POST,
+                requestContent: requestData,
+                cancellationToken: ct);
     }
 
     private sealed class TestData

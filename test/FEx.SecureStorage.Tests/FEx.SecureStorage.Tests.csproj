@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\FEx.Encryption\FEx.Encryption.csproj" />
+		<ProjectReference Include="..\..\src\FEx.SecureStorage\FEx.SecureStorage.csproj" />
+		<ProjectReference Include="..\..\src\SecureStorage.Abstractions\FEx.SecureStorage.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

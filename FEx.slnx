@@ -103,6 +103,9 @@
     <Project Path="test/FEx.DependencyInjection.Tests/FEx.DependencyInjection.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.Encryption.Tests/FEx.Encryption.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.Flurlx.Tests/FEx.Flurlx.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
@@ -116,6 +119,9 @@
       <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="test/FEx.Offline.Tests/FEx.Offline.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.SecureStorage.Tests/FEx.SecureStorage.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="test/FEx.OneDrv.Tests/FEx.OneDrv.Tests.csproj">

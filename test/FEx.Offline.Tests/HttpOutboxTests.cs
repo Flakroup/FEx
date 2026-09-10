@@ -280,7 +280,7 @@ public sealed class HttpOutboxTests
         var key = (await store.GetKeysAsync("outbox:")).Single();
         var stored = await store.GetAsync(key);
         stored.ShouldNotBeNull();
-        stored.ShouldNotContain("X-Client", Case.Insensitive);
+        stored.ShouldNotContain("x-client"); // Shouldly compares strings case-insensitively unless told otherwise
         stored.ShouldNotContain(MarkerValue);
     }
 

@@ -50,6 +50,10 @@ internal sealed class ScriptedHandler : HttpMessageHandler
 
     public List<string?> IdempotencyKeys { get; } = [];
 
+    /// <summary>Every request's headers as sent, each multi-valued header joined by a comma. Captured inside
+    /// the send, because the outbox disposes each request once its response is in.</summary>
+    public List<IReadOnlyDictionary<string, string>> RequestHeaders { get; } = [];
+
     public void EnqueueResponse(HttpStatusCode status, string body = "") =>
         _script.Enqueue(_ => new(status)
         {
@@ -70,6 +74,9 @@ internal sealed class ScriptedHandler : HttpMessageHandler
         IdempotencyKeys.Add(request.Headers.TryGetValues("Idempotency-Key", out var values)
             ? string.Join(",", values)
             : null);
+
+        RequestHeaders.Add(request.Headers.ToDictionary(h => h.Key, h => string.Join(",", h.Value),
+            StringComparer.OrdinalIgnoreCase));
 
         if (_script.Count == 0)
             throw new InvalidOperationException("ScriptedHandler ran out of scripted responses.");

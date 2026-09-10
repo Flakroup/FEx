@@ -25,8 +25,8 @@ public sealed record OutboxFlushResult(int Sent, int Rejected, int Remaining, st
 /// <summary>
 /// Store-and-forward queue for writes made while offline. Enqueue persists the request; flush
 /// replays the queue in order, sending each entry's id as the Idempotency-Key header so a retry of a
-/// request that DID land (but whose response was lost) never double-executes. A 2xx removes the
-/// entry; a 4xx removes it too (the server understood and rejected it - retrying forever cannot fix a
+/// request that DID land (but whose response was lost) never double-executes, plus every replay header
+/// the host registered. A 2xx removes the entry; a 4xx removes it too (the server understood and rejected it - retrying forever cannot fix a
 /// validation error) and reports it; a transport failure or 5xx keeps the entry, records the error and
 /// stops the flush (the network is down or the server is sick - hammering the rest of the queue would
 /// not help).
@@ -45,12 +45,55 @@ public sealed class HttpOutbox
     private readonly IKeyValueStore _store;
     private readonly TimeProvider _time;
     private readonly JsonSerializerOptions _json;
+    private readonly KeyValuePair<string, string>[] _replayHeaders;
 
     public HttpOutbox(IKeyValueStore store, TimeProvider time, JsonSerializerOptions? json = null)
+        : this(store, time, json, new Dictionary<string, string>())
     {
+    }
+
+    /// <summary>
+    /// An outbox whose every replay also carries <paramref name="replayHeaders" /> - for a server that refuses
+    /// a write lacking a header the host's own client always sends (a marker forcing a CORS preflight, say).
+    /// Without it such a write replays bare, the server answers 4xx, and the flush drops it as rejected.
+    /// <para>
+    /// Supplied at replay time, never persisted with the entry. The value is the host's to assert on the
+    /// request the flush sends now, not a fact captured from the one that failed - so a write parked before
+    /// the header was registered, by this version or an older one, still replays with it, the stored entry
+    /// keeps the shape every version reads, and nothing new is written to the store. The cost: a header
+    /// whose value differs per request cannot be carried this way.
+    /// </para>
+    /// </summary>
+    /// <exception cref="ArgumentException">A header is <see cref="IdempotencyHeader" />, which the outbox
+    /// sends itself from each entry's id.</exception>
+    /// <exception cref="FormatException">A name or value is not a valid request header.</exception>
+    /// <exception cref="InvalidOperationException">A name is a content header (e.g. <c>Content-Type</c>),
+    /// which belongs to the body rather than the request.</exception>
+    public HttpOutbox(IKeyValueStore store,
+                      TimeProvider time,
+                      JsonSerializerOptions? json,
+                      IReadOnlyDictionary<string, string> replayHeaders)
+    {
+        ArgumentNullException.ThrowIfNull(replayHeaders);
+
         _store = store;
         _time = time;
         _json = json ?? JsonSerializerOptions.Web;
+        _replayHeaders = [.. replayHeaders];
+
+        // Refused here rather than on the first flush: an invalid header throws out of FlushAsync on every
+        // attempt, so a misconfigured host would find out only once a write was already parked.
+        using HttpRequestMessage probe = new();
+
+        foreach (var (name, value) in _replayHeaders)
+        {
+            if (string.Equals(name, IdempotencyHeader, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException(
+                    $"'{IdempotencyHeader}' is sent by the outbox itself, from each entry's id.",
+                    nameof(replayHeaders));
+
+            probe.Headers.Add(name, value);
+        }
     }
 
     public Task<OutboxEntry> EnqueueAsync(string method, string url, string? jsonBody) =>
@@ -101,6 +144,9 @@ public sealed class HttpOutbox
 
             if (entry.JsonBody is not null)
                 request.Content = new StringContent(entry.JsonBody, Encoding.UTF8, "application/json");
+
+            foreach (var (name, value) in _replayHeaders)
+                request.Headers.Add(name, value);
 
             request.Headers.Add(IdempotencyHeader, entry.Id.ToString());
 

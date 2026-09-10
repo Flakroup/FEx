@@ -1,5 +1,7 @@
 using Shouldly;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -203,4 +205,109 @@ public sealed class HttpOutboxTests
         result.ShouldBe(new(0, 0, 0, null));
         handler.Requests.ShouldBeEmpty();
     }
+
+    [Fact]
+    public async Task Flush_StampsTheRegisteredReplayHeaders_OnEveryReplay_BodilessIncluded()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, null, ClientMarker());
+        var withBody = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+
+        // The shape a server that demands the marker most needs it on: a POST with no body at all.
+        var bodiless = await outbox.EnqueueAsync("POST", "api/sales/participations/7/cancel", null);
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.OK);
+        handler.EnqueueResponse(HttpStatusCode.OK);
+
+        using HttpClient http = new(handler)
+        {
+            BaseAddress = new("http://localhost/")
+        };
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(2, 0, 0, null));
+        handler.RequestHeaders.Select(h => h.GetValueOrDefault("X-Client")).ShouldBe(new[] { MarkerValue, MarkerValue });
+
+        // Registering a header must not displace the one the outbox sends itself.
+        handler.IdempotencyKeys.ShouldBe(new()
+        {
+            withBody.Id.ToString(),
+            bodiless.Id.ToString()
+        });
+    }
+
+    [Fact]
+    public async Task EntryParkedByAnOlderVersion_ReplaysWithTheRegisteredHeader()
+    {
+        // Stored exactly as 0.4.0-alpha.8 wrote it, which knew nothing of replay headers: the header can only
+        // come from the outbox doing the replay, which is the whole reason it is not persisted per entry.
+        InMemoryKeyValueStore store = new();
+        Guid id = new("22222222-2222-2222-2222-222222222222");
+
+        await store.SetAsync($"outbox:{T0.UtcTicks:D19}:{id:N}",
+            $$"""{"id":"{{id}}","method":"POST","url":"api/sales/participations/7/cancel","jsonBody":null,"createdAtUtc":"2026-07-15T03:00:00+00:00","attempts":0,"lastError":null}""");
+
+        HttpOutbox outbox = new(store, new FixedTime(T0), null, ClientMarker());
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.OK);
+
+        using HttpClient http = new(handler)
+        {
+            BaseAddress = new("http://localhost/")
+        };
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(1, 0, 0, null));
+        handler.RequestHeaders.Single()["X-Client"].ShouldBe(MarkerValue);
+        handler.IdempotencyKeys.ShouldBe(new() { id.ToString() });
+    }
+
+    [Fact]
+    public async Task ReplayHeaders_AreNeverWrittenToTheStore()
+    {
+        // Nothing a host registers lands in browser storage, so registering a header is never a way to
+        // persist a value in the clear.
+        InMemoryKeyValueStore store = new();
+        HttpOutbox outbox = new(store, new FixedTime(T0), null, ClientMarker());
+
+        await outbox.EnqueueAsync("POST", "api/sales/participations/7/cancel", null);
+
+        var key = (await store.GetKeysAsync("outbox:")).Single();
+        var stored = await store.GetAsync(key);
+        stored.ShouldNotBeNull();
+        stored.ShouldNotContain("X-Client", Case.Insensitive);
+        stored.ShouldNotContain(MarkerValue);
+    }
+
+    [Theory]
+    [InlineData("Idempotency-Key")]
+    [InlineData("idempotency-key")]
+    public void RegisteringTheIdempotencyHeader_IsRefused(string name) =>
+        Should.Throw<ArgumentException>(() => Outbox(new() { [name] = "x" })).ParamName.ShouldBe("replayHeaders");
+
+    [Fact]
+    public void RegisteringAContentHeader_IsRefusedAtConstruction() =>
+        Should.Throw<InvalidOperationException>(() => Outbox(new() { ["Content-Type"] = "application/json" }));
+
+    [Theory]
+    [InlineData("Not A Header", "x")]
+    [InlineData("X-Client", "line\r\nbreak")]
+    public void RegisteringAnInvalidHeader_IsRefusedAtConstruction(string name, string value) =>
+        Should.Throw<FormatException>(() => Outbox(new() { [name] = value }));
+
+    [Fact]
+    public void RegisteringNoDictionary_IsRefused() =>
+        Should.Throw<ArgumentNullException>(() => Outbox(null!));
+
+    private const string MarkerValue = "fex-offline-test-client";
+
+    private static Dictionary<string, string> ClientMarker() => new() { ["X-Client"] = MarkerValue };
+
+    private static HttpOutbox Outbox(Dictionary<string, string> replayHeaders) =>
+        new(new InMemoryKeyValueStore(), new FixedTime(T0), null, replayHeaders);
 }

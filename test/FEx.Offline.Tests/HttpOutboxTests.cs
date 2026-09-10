@@ -230,6 +230,7 @@ public sealed class HttpOutboxTests
 
         result.ShouldBe(new(2, 0, 0, null));
         handler.RequestHeaders.Select(h => h.GetValueOrDefault("X-Client")).ShouldBe(new[] { MarkerValue, MarkerValue });
+        handler.RequestHeaders.Select(h => h.GetValueOrDefault("X-Second")).ShouldBe(new[] { SecondValue, SecondValue });
 
         // Registering a header must not displace the one the outbox sends itself.
         handler.IdempotencyKeys.ShouldBe(new()
@@ -264,6 +265,7 @@ public sealed class HttpOutboxTests
 
         result.ShouldBe(new(1, 0, 0, null));
         handler.RequestHeaders.Single()["X-Client"].ShouldBe(MarkerValue);
+        handler.RequestHeaders.Single()["X-Second"].ShouldBe(SecondValue);
         handler.IdempotencyKeys.ShouldBe(new() { id.ToString() });
     }
 
@@ -297,16 +299,29 @@ public sealed class HttpOutboxTests
     [Theory]
     [InlineData("Not A Header", "x")]
     [InlineData("X-Client", "line\r\nbreak")]
+    [InlineData("X-Client", "zażółć")]
     public void RegisteringAnInvalidHeader_IsRefusedAtConstruction(string name, string value) =>
         Should.Throw<FormatException>(() => Outbox(new() { [name] = value }));
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void RegisteringABlankValue_IsRefused(string value) =>
+        Should.Throw<ArgumentException>(() => Outbox(new() { ["X-Client"] = value })).ParamName.ShouldBe("replayHeaders");
 
     [Fact]
     public void RegisteringNoDictionary_IsRefused() =>
         Should.Throw<ArgumentNullException>(() => Outbox(null!));
 
     private const string MarkerValue = "fex-offline-test-client";
+    private const string SecondValue = "fex-offline-second-header";
 
-    private static Dictionary<string, string> ClientMarker() => new() { ["X-Client"] = MarkerValue };
+    // Two headers, so a replay that stamps only the first one registered cannot pass.
+    private static Dictionary<string, string> ClientMarker() => new()
+    {
+        ["X-Client"] = MarkerValue,
+        ["X-Second"] = SecondValue
+    };
 
     private static HttpOutbox Outbox(Dictionary<string, string> replayHeaders) =>
         new(new InMemoryKeyValueStore(), new FixedTime(T0), null, replayHeaders);

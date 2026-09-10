@@ -26,8 +26,9 @@ public sealed record OutboxFlushResult(int Sent, int Rejected, int Remaining, st
 /// Store-and-forward queue for writes made while offline. Enqueue persists the request; flush
 /// replays the queue in order, sending each entry's id as the Idempotency-Key header so a retry of a
 /// request that DID land (but whose response was lost) never double-executes, plus every replay header
-/// the host registered. A 2xx removes the entry; a 4xx removes it too (the server understood and rejected it - retrying forever cannot fix a
-/// validation error) and reports it; a transport failure or 5xx keeps the entry, records the error and
+/// the host registered. A 2xx removes the entry; a 4xx removes it too (the server understood and
+/// rejected it - retrying forever cannot fix a validation error) and reports it; a transport failure or
+/// 5xx keeps the entry, records the error and
 /// stops the flush (the network is down or the server is sick - hammering the rest of the queue would
 /// not help).
 /// </summary>
@@ -63,10 +64,17 @@ public sealed class HttpOutbox
     /// keeps the shape every version reads, and nothing new is written to the store. The cost: a header
     /// whose value differs per request cannot be carried this way.
     /// </para>
+    /// <para>
+    /// Never register a credential. The headers ride on every replay to whatever URL the entry holds, an
+    /// absolute one included, and a malformed value is echoed in the exception this constructor throws.
+    /// </para>
     /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="replayHeaders" /> is null.</exception>
     /// <exception cref="ArgumentException">A header is <see cref="IdempotencyHeader" />, which the outbox
-    /// sends itself from each entry's id.</exception>
-    /// <exception cref="FormatException">A name or value is not a valid request header.</exception>
+    /// sends itself from each entry's id, or a value is blank - to a server checking for a marker, an empty
+    /// one is no marker at all.</exception>
+    /// <exception cref="FormatException">A name or value is not a valid request header, or a value is not
+    /// ASCII.</exception>
     /// <exception cref="InvalidOperationException">A name is a content header (e.g. <c>Content-Type</c>),
     /// which belongs to the body rather than the request.</exception>
     public HttpOutbox(IKeyValueStore store,
@@ -81,8 +89,10 @@ public sealed class HttpOutbox
         _json = json ?? JsonSerializerOptions.Web;
         _replayHeaders = [.. replayHeaders];
 
-        // Refused here rather than on the first flush: an invalid header throws out of FlushAsync on every
-        // attempt, so a misconfigured host would find out only once a write was already parked.
+        // Refused here rather than on the first flush. A header .NET refuses throws out of FlushAsync on every
+        // attempt; a non-ASCII value passes Headers.Add and is refused by the transport instead, which the
+        // flush reads as "still offline" and so holds the queue forever. Either way a misconfigured host
+        // would find out only once a write was already parked.
         using HttpRequestMessage probe = new();
 
         foreach (var (name, value) in _replayHeaders)
@@ -91,6 +101,12 @@ public sealed class HttpOutbox
                 throw new ArgumentException(
                     $"'{IdempotencyHeader}' is sent by the outbox itself, from each entry's id.",
                     nameof(replayHeaders));
+
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException($"Replay header '{name}' has no value.", nameof(replayHeaders));
+
+            if (!value.All(char.IsAscii))
+                throw new FormatException($"Replay header '{name}' has a non-ASCII value, which no transport sends.");
 
             probe.Headers.Add(name, value);
         }

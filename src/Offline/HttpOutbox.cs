@@ -90,9 +90,10 @@ public sealed class HttpOutbox
         _replayHeaders = [.. replayHeaders];
 
         // Refused here rather than on the first flush. A header .NET refuses throws out of FlushAsync on every
-        // attempt; a non-ASCII value passes Headers.Add and is refused by the transport instead, which the
-        // flush reads as "still offline" and so holds the queue forever. Either way a misconfigured host
-        // would find out only once a write was already parked.
+        // attempt. A non-ASCII value passes Headers.Add and can be refused by the transport instead -
+        // SocketsHttpHandler refuses any, a browser's fetch whatever is not Latin-1 - and the flush reads a
+        // transport refusal as "still offline", so the first entry holds the queue forever. Either way a
+        // misconfigured host would find out only once a write was already parked.
         using HttpRequestMessage probe = new();
 
         foreach (var (name, value) in _replayHeaders)
@@ -106,7 +107,7 @@ public sealed class HttpOutbox
                 throw new ArgumentException($"Replay header '{name}' has no value.", nameof(replayHeaders));
 
             if (!value.All(char.IsAscii))
-                throw new FormatException($"Replay header '{name}' has a non-ASCII value, which no transport sends.");
+                throw new FormatException($"Replay header '{name}' has a non-ASCII value, which a transport may refuse at send time.");
 
             probe.Headers.Add(name, value);
         }

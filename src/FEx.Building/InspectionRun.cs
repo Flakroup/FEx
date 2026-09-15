@@ -30,9 +30,10 @@ public sealed class InspectionRun
     private readonly Func<string, IProcess> _startDotNet;
     private readonly List<Output> _output = [];
     private readonly Stopwatch _running = new();
+    private readonly object _gate = new();
     private JoinableTask<IReadOnlyList<InspectionFinding>>? _pending;
-    private volatile IProcess? _current;
-    private volatile bool _discarded;
+    private IProcess? _current;
+    private bool _discarded;
 
     /// <param name="arguments">The inspection command line, as <see cref="IInspectTarget.InspectionArguments" /> composes it.</param>
     /// <param name="readReport">Hands over the report the tool wrote, once it has exited.</param>
@@ -110,22 +111,30 @@ public sealed class InspectionRun
     /// Stops a run nobody will read: kills the tool if it is still running, and refuses to start the next
     /// process if the run is between two. Idempotent; a run that has already finished is left alone.
     /// </summary>
+    /// <remarks>
+    /// Serialized with the start of each process: a discard cannot land between the check that lets a
+    /// process start and the moment it becomes the one to kill, and it never sees a process that
+    /// <see cref="Run" /> has already disposed.
+    /// </remarks>
     /// <returns>Whether a process was killed.</returns>
     internal bool Discard()
     {
-        _discarded = true;
-
-        if (_current is not { HasExited: false } process)
-            return false;
-
-        try
+        lock (_gate)
         {
-            process.Kill();
-        }
-        catch (InvalidOperationException)
-        {
-            // Exited between the check and the kill - nothing left to stop.
-            return false;
+            _discarded = true;
+
+            if (_current is not { HasExited: false } process)
+                return false;
+
+            try
+            {
+                process.Kill();
+            }
+            catch (InvalidOperationException)
+            {
+                // Exited between the check and the kill - nothing left to stop.
+                return false;
+            }
         }
 
         Log.Warning("Inspection discarded: the build ended before Inspect could read its verdict");
@@ -152,17 +161,31 @@ public sealed class InspectionRun
 
     private void Run(string arguments)
     {
-        if (_discarded)
-            throw new OperationCanceledException("The inspection was discarded before this step could start");
+        IProcess process;
 
-        using var process = _startDotNet(arguments);
+        lock (_gate)
+        {
+            if (_discarded)
+                throw new OperationCanceledException("The inspection was discarded before this step could start");
 
-        _current = process;
-        process.WaitForExit();
-        // Cleared before the process is disposed: Discard asks the process it finds here whether it has
-        // exited, and a disposed one answers with an exception.
-        _current = null;
-        _output.AddRange(process.Output);
-        process.AssertZeroExitCode();
+            process = _startDotNet(arguments);
+            _current = process;
+        }
+
+        using (process)
+        {
+            // The invocation line NUKE would have logged at the start, buffered with the output so both
+            // land in the block that reads them rather than in whichever target was running at the time.
+            _output.Add(new Output { Type = OutputType.Std, Text = $"> dotnet {arguments}" });
+            process.WaitForExit();
+
+            // Cleared before the process is disposed: Discard asks the process it finds here whether it has
+            // exited, and a disposed one answers with an exception.
+            lock (_gate)
+                _current = null;
+
+            _output.AddRange(process.Output);
+            process.AssertZeroExitCode();
+        }
     }
 }

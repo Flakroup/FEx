@@ -1,5 +1,8 @@
 using FEx.Building.Helpers;
 using Nuke.Common.Tooling;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -167,6 +170,47 @@ public sealed class InspectionRunTests
     }
 
     [Fact]
+    public async Task ADiscard_LandingWhileTheToolIsBeingStarted_StillReachesIt()
+    {
+        // Starting a process takes tens of milliseconds, and a discard in that window used to find nothing
+        // to kill - the check had passed, the process was not yet the current one - and let it run on.
+        using var tool = new FakeDotNet(holdTheInspection: true);
+        var run = new InspectionRun(InspectArguments, static () => CleanReport, tool.Start);
+        Task<bool>? discard = null;
+        tool.OnInspectionStarting = () => discard = Task.Run(InspectionRun.DiscardPending);
+
+        run.StartInBackground();
+
+        tool.InspectionStarted.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ShouldBeTrue();
+        (await discard!.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)).ShouldBeTrue();
+        tool.Inspection!.Killed.ShouldBeTrue();
+        Should.Throw<ProcessException>(run.Collect);
+    }
+
+    [Fact]
+    public void Collect_ReplaysEachInvocation_FollowedByWhatItSaid()
+    {
+        // The background thread logs nothing while it runs; the whole account of the tool is what this
+        // replay prints, so a dropped line here is a line nobody ever sees.
+        using var tool = new FakeDotNet();
+        var sink = new CapturingSink();
+        var previous = Log.Logger;
+        Log.Logger = new LoggerConfiguration().MinimumLevel.Verbose().WriteTo.Sink(sink).CreateLogger();
+
+        try
+        {
+            new InspectionRun(InspectArguments, static () => CleanReport, tool.Start).Collect();
+        }
+        finally
+        {
+            Log.Logger = previous;
+        }
+
+        sink.Messages.Where(message => message.StartsWith("> dotnet", StringComparison.Ordinal) || message == "line")
+            .ShouldBe(["> dotnet tool restore", "line", $"> dotnet {InspectArguments}", "line"]);
+    }
+
+    [Fact]
     public void Collect_ClearsThePendingRun()
     {
         // Otherwise the end of the build would "discard" a run it has already read - harmless today, as a
@@ -232,6 +276,7 @@ public sealed class InspectionRunTests
         public ManualResetEventSlim InspectionStarted { get; } = new(false);
         public FakeProcess? Inspection { get; private set; }
         public Action? OnRestoreExited { get; set; }
+        public Action? OnInspectionStarting { get; set; }
 
         public void ReleaseTheInspection() => _inspectionMayExit.Set();
 
@@ -242,6 +287,7 @@ public sealed class InspectionRunTests
             if (arguments == "tool restore")
                 return new FakeProcess(arguments, null, 0, OnRestoreExited);
 
+            OnInspectionStarting?.Invoke();
             Inspection?.Dispose();
             Inspection = new FakeProcess(arguments, _holdTheInspection ? _inspectionMayExit : null, _exitCode, null);
             InspectionStarted.Set();
@@ -255,6 +301,13 @@ public sealed class InspectionRunTests
             InspectionStarted.Dispose();
             Inspection?.Dispose();
         }
+    }
+
+    private sealed class CapturingSink : ILogEventSink
+    {
+        public List<string> Messages { get; } = [];
+
+        public void Emit(LogEvent logEvent) => Messages.Add(logEvent.RenderMessage());
     }
 
     private sealed class FakeProcess : IProcess

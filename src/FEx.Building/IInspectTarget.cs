@@ -80,26 +80,17 @@ public interface IInspectTarget : ICompileTarget
         {
             var definition = _.Description("Starts the ReSharper inspection in the background")
                 .DependsOn(Compile)
-                .Executes(() =>
-                {
-                    var manifest = RootDirectory / ".config" / "dotnet-tools.json";
-                    if (!File.Exists(manifest))
-                        throw new InvalidOperationException(
-                            $"No local tool manifest at {manifest}. The inspection runs the version this "
-                            + "repository pins, so create it with `dotnet new tool-manifest` and add the tool "
-                            + "with `dotnet tool install JetBrains.ReSharper.GlobalTools`.");
-
-                    InspectionReport.Parent.CreateDirectory();
-
-                    NewRun().StartInBackground();
-                });
+                .Executes(() => NewRun().StartInBackground());
 
             return this is ITestTarget tests ? definition.Before(tests.Test) : definition;
         };
 
     Target Inspect =>
         _ => _.Description("Fails on any ReSharper finding at or above the declared severity")
-            .DependsOn(TriggerInspect)
+            // Compile is named here as well as through TriggerInspect: skipping a target on the command
+            // line skips every dependency nothing else scheduled asks for, so without its own edge
+            // `--skip TriggerInspect` would take Compile with it and inspect whatever tree is on disk.
+            .DependsOn(TriggerInspect, Compile)
             .Executes(() =>
             {
                 // Nothing pending when TriggerInspect was skipped on the command line: the inspection
@@ -108,7 +99,8 @@ public interface IInspectTarget : ICompileTarget
             });
 
     /// <summary>
-    /// The run, composed here and started by whichever target gets to it first.
+    /// The run, composed here and started by whichever target gets to it first. Checks for the tool
+    /// manifest on the way, so the guided message comes before a background thread's "command not found".
     /// </summary>
     /// <remarks>
     /// The process is started with the arguments as written - not through <c>DotNetTasks.DotNet</c>, and
@@ -117,17 +109,31 @@ public interface IInspectTarget : ICompileTarget
     /// command or file was not found", having been handed the whole inspection as one token. Quoting paths
     /// is not optional here, because a checkout under a path with a space is ordinary.
     /// </remarks>
-    private InspectionRun NewRun() =>
-        new(InspectionArguments(Solution.Path!,
+    private InspectionRun NewRun()
+    {
+        var manifest = RootDirectory / ".config" / "dotnet-tools.json";
+        if (!File.Exists(manifest))
+            throw new InvalidOperationException(
+                $"No local tool manifest at {manifest}. The inspection runs the version this "
+                + "repository pins, so create it with `dotnet new tool-manifest` and add the tool "
+                + "with `dotnet tool install JetBrains.ReSharper.GlobalTools`.");
+
+        InspectionReport.Parent.CreateDirectory();
+
+        return new InspectionRun(InspectionArguments(Solution.Path!,
                 InspectionReport,
                 FreshCaches(InspectionCachesDirectory),
                 Configuration,
                 InspectionSeverity),
             () => File.ReadAllText(InspectionReport),
-            static arguments => ProcessTasks.StartProcess("dotnet",
+            // Neither the invocation nor the output is logged as it happens: InspectionRun buffers both
+            // for the target that collects the verdict.
+            static arguments => new ProcessTree(ProcessTasks.StartProcess("dotnet",
                 arguments,
                 NukeBuild.RootDirectory,
-                logOutput: false));
+                logOutput: false,
+                logInvocation: false)));
+    }
 
     /// <summary>
     /// The whole command line, as one string. Static and pure so the flags that decide the verdict are

@@ -26,6 +26,14 @@ namespace FEx.Building;
 /// rather than a cheap and an expensive version of one.
 /// </para>
 /// <para>
+/// It runs ALONGSIDE the suite rather than after it: <see cref="TriggerInspect" /> starts the tool right
+/// after the compile step and <see cref="Inspect" /> only collects the verdict, so a build asking for both
+/// ends when the longer of the two does. The inspection is the longest step of such a build, and neither
+/// step reads what the other writes. A build whose suite goes red never reaches <see cref="Inspect" />;
+/// the run still going is killed when the build ends and its verdict is dropped - a redundant cast is
+/// worth nothing while a test is red.
+/// </para>
+/// <para>
 /// The tool is a LOCAL dotnet tool, pinned in the consuming repository's <c>.config/dotnet-tools.json</c>.
 /// That is what keeps one version in play: a gate that installs its own copy disagrees with the command a
 /// developer runs the moment either is bumped, and a gate that argues with the developer is not a gate.
@@ -56,37 +64,77 @@ public interface IInspectTarget : ICompileTarget
     /// </summary>
     sealed AbsolutePath InspectionCachesDirectory => NukeBuild.TemporaryDirectory / "inspectcode-caches";
 
+    /// <summary>
+    /// Starts the inspection and moves on, so it runs alongside the suite; <see cref="Inspect" /> collects
+    /// its verdict later. Only ever scheduled through <see cref="Inspect" />, which depends on it.
+    /// </summary>
+    /// <remarks>
+    /// Ordered before the test target when the build has one - <c>Before</c> is an ordering, not a
+    /// dependency, so a build asking for the inspection alone still gets it without the suite. Nothing
+    /// here waits: the tool reads the tree Compile left and writes only its own report and caches, which
+    /// the suite never touches. A build that stops before <see cref="Inspect" /> - a red test - has
+    /// <see cref="InspectionRun.DiscardPending" /> kill what is still running.
+    /// </remarks>
+    Target TriggerInspect =>
+        _ =>
+        {
+            var definition = _.Description("Starts the ReSharper inspection in the background")
+                .DependsOn(Compile)
+                .Executes(() =>
+                {
+                    var manifest = RootDirectory / ".config" / "dotnet-tools.json";
+                    if (!File.Exists(manifest))
+                        throw new InvalidOperationException(
+                            $"No local tool manifest at {manifest}. The inspection runs the version this "
+                            + "repository pins, so create it with `dotnet new tool-manifest` and add the tool "
+                            + "with `dotnet tool install JetBrains.ReSharper.GlobalTools`.");
+
+                    InspectionReport.Parent.CreateDirectory();
+
+                    NewRun().StartInBackground();
+                });
+
+            return this is ITestTarget tests ? definition.Before(tests.Test) : definition;
+        };
+
     Target Inspect =>
         _ => _.Description("Fails on any ReSharper finding at or above the declared severity")
-            .DependsOn(Compile)
+            .DependsOn(TriggerInspect)
             .Executes(() =>
             {
-                var manifest = RootDirectory / ".config" / "dotnet-tools.json";
-                if (!File.Exists(manifest))
-                    throw new InvalidOperationException(
-                        $"No local tool manifest at {manifest}. The inspection runs the version this "
-                        + "repository pins, so create it with `dotnet new tool-manifest` and add the tool "
-                        + "with `dotnet tool install JetBrains.ReSharper.GlobalTools`.");
-
-                InspectionReport.Parent.CreateDirectory();
-
-                RunDotNet("tool restore");
-                RunDotNet(InspectionArguments(
-                    Solution.Path!,
-                    InspectionReport,
-                    FreshCaches(InspectionCachesDirectory),
-                    Configuration,
-                    InspectionSeverity));
-
-                Verdict(InspectionGate.Analyze(File.ReadAllText(InspectionReport)));
+                // Nothing pending when TriggerInspect was skipped on the command line: the inspection
+                // then runs here, in full, as it did before it could be started early.
+                Verdict((InspectionRun.Pending ?? NewRun()).Collect());
             });
+
+    /// <summary>
+    /// The run, composed here and started by whichever target gets to it first.
+    /// </summary>
+    /// <remarks>
+    /// The process is started with the arguments as written - not through <c>DotNetTasks.DotNet</c>, and
+    /// the difference is not stylistic. That overload takes an <c>ArgumentStringHandler</c>, which wraps a
+    /// pre-composed string carrying quotes into a single argument - measured: <c>dotnet</c> answered "the
+    /// command or file was not found", having been handed the whole inspection as one token. Quoting paths
+    /// is not optional here, because a checkout under a path with a space is ordinary.
+    /// </remarks>
+    private InspectionRun NewRun() =>
+        new(InspectionArguments(Solution.Path!,
+                InspectionReport,
+                FreshCaches(InspectionCachesDirectory),
+                Configuration,
+                InspectionSeverity),
+            () => File.ReadAllText(InspectionReport),
+            static arguments => ProcessTasks.StartProcess("dotnet",
+                arguments,
+                NukeBuild.RootDirectory,
+                logOutput: false));
 
     /// <summary>
     /// The whole command line, as one string. Static and pure so the flags that decide the verdict are
     /// pinned by a unit test rather than by whoever reads the target next.
     /// </summary>
     /// <remarks>
-    /// <c>--no-build</c> is affordable only because <see cref="Inspect" /> depends on the compile step, and
+    /// <c>--no-build</c> is affordable only because the run starts after the compile step, and
     /// it carries the configuration for the same reason: the tool evaluates MSBuild itself, so left to its
     /// own default it would look for a Debug build that a release run never produced and report the whole
     /// solution as unresolvable.
@@ -124,23 +172,6 @@ public interface IInspectTarget : ICompileTarget
     }
 
     private static string Quote(AbsolutePath path) => $"\"{path}\"";
-
-    /// <summary>
-    /// Starts <c>dotnet</c> with the command line composed here, verbatim.
-    /// </summary>
-    /// <remarks>
-    /// Not <c>DotNetTasks.DotNet</c>, and the difference is not stylistic. That overload takes an
-    /// <c>ArgumentStringHandler</c>, which wraps a pre-composed string carrying quotes into a single
-    /// argument - measured: <c>dotnet</c> answered "the command or file was not found", having been handed
-    /// the whole inspection as one token. Quoting paths is not optional here, because a checkout under a
-    /// path with a space is ordinary, so the process is started with the arguments as written.
-    /// </remarks>
-    private static void RunDotNet(string arguments)
-    {
-        using var process = ProcessTasks.StartProcess("dotnet", arguments, NukeBuild.RootDirectory);
-
-        process.AssertZeroExitCode();
-    }
 
     /// <summary>
     /// Names every finding and then fails the build if there was one. Public and static because "a

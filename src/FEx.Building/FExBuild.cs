@@ -199,6 +199,18 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
         LogBuildInfo();
     }
 
+    /// <summary>
+    /// Runs whether the build succeeded or failed, and on Ctrl+C - NUKE calls it from the same place it
+    /// prints the summary table. An inspection <see cref="IInspectTarget.TriggerInspect" /> started for a
+    /// target the build never reached is killed here rather than left running after the process that
+    /// would have read its verdict is gone.
+    /// </summary>
+    protected override void OnBuildFinished()
+    {
+        base.OnBuildFinished();
+        InspectionRun.DiscardPending();
+    }
+
     // Every [Parameter] this build contributes, its own and its components'. NUKE's own infrastructure
     // parameters (Help, NoLogo, Plan, Target, ...) are filtered out by declaring assembly.
     private IEnumerable<PropertyInfo> GetParameterProperties()

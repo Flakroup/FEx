@@ -1,4 +1,3 @@
-using FEx.Building;
 using Nuke.Common.IO;
 using Shouldly;
 using System;
@@ -14,9 +13,9 @@ namespace FEx.Building.Tests;
 /// </summary>
 public sealed class InspectTargetTests
 {
-    private static readonly AbsolutePath Solution = (AbsolutePath)"/repo/My Solution.slnx";
-    private static readonly AbsolutePath Report = (AbsolutePath)"/repo/artifacts/inspection/inspectcode.sarif";
-    private static readonly AbsolutePath Caches = (AbsolutePath)"/repo/.nuke/temp/inspectcode-caches";
+    private static readonly AbsolutePath Solution = "/repo/My Solution.slnx";
+    private static readonly AbsolutePath Report = "/repo/artifacts/inspection/inspectcode.sarif";
+    private static readonly AbsolutePath Caches = "/repo/.nuke/temp/inspectcode-caches";
 
     private static string Arguments(string severity = "ERROR") =>
         IInspectTarget.InspectionArguments(Solution, Report, Caches, Configuration.Release, severity);

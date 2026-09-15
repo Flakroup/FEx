@@ -16,9 +16,9 @@ namespace FEx.Building.Tests;
 /// </summary>
 public sealed class CompileScopeTests
 {
-    private static readonly AbsolutePath Solution = (AbsolutePath)"/repo/Sample.slnx";
-    private static readonly AbsolutePath App = (AbsolutePath)"/repo/src/Sample.App/Sample.App.csproj";
-    private static readonly AbsolutePath Worker = (AbsolutePath)"/repo/src/Sample.Worker/Sample.Worker.csproj";
+    private static readonly AbsolutePath Solution = "/repo/Sample.slnx";
+    private static readonly AbsolutePath App = "/repo/src/Sample.App/Sample.App.csproj";
+    private static readonly AbsolutePath Worker = "/repo/src/Sample.Worker/Sample.Worker.csproj";
 
     private static readonly AppPublishEntry[] Entries =
     [
@@ -47,8 +47,10 @@ public sealed class CompileScopeTests
     {
         // The regression, stated directly: no combination of inputs may drop the solution from the scope.
         foreach (var runtimeSpecific in new[] { true, false })
+        {
             ICompileTarget.Scope(Solution, runtimeSpecific, Entries)
                 .ShouldContain((Solution, false), $"runtimeSpecific: {runtimeSpecific}");
+        }
     }
 
     [Fact]

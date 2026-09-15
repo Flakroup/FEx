@@ -1,4 +1,3 @@
-using FEx.Building;
 using Shouldly;
 using System;
 using System.Text.Json;
@@ -112,7 +111,7 @@ public sealed class InspectionGateTests
     {
         // A solution-wide finding carries no location. Dropping it would be the gate quietly narrowing
         // itself to the findings that happen to have a line number.
-        var sarif = """
+        const string sarif = """
             { "runs": [ { "invocations": [ { "executionSuccessful": true } ],
               "tool": { "driver": { "rules": [] } },
               "results": [ { "ruleId": "Wide", "message": { "text": "no place" } } ] } ] }

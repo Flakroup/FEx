@@ -75,6 +75,18 @@ public sealed class InspectTargetTests
         Arguments().ShouldStartWith("jb inspectcode ");
     }
 
+    [Theory]
+    [InlineData(null, false, false)]
+    [InlineData(null, true, true)]
+    [InlineData(true, false, true)]
+    [InlineData(false, true, false)]
+    public void AnExplicitRequest_OverridesTheConsumersDefault(bool? requested, bool byDefault, bool expected)
+    {
+        // The default is where a consumer says "on for developers, off for CI"; a value passed on the
+        // command line has to beat it both ways, or a slow runner could not be switched off by hand.
+        IInspectTarget.StartsAlongside(requested, byDefault).ShouldBe(expected);
+    }
+
     [Fact]
     public void OneFinding_FailsTheBuild()
     {

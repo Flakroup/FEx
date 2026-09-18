@@ -44,7 +44,7 @@ public sealed class FExSentryWebExtensionsTests
     public async Task AnError_LeavesWithoutTheCallersAddress()
     {
         var sent = await CaptureAsync(sendDefaultPii: false,
-            static (client, request) => client.CaptureEvent(new SentryEvent { Request = request }));
+            static (client, request, _) => client.CaptureEvent(new SentryEvent { Request = request }));
 
         sent.ShouldContain("agent-marker");
         sent.ShouldNotContain(Address);
@@ -54,8 +54,28 @@ public sealed class FExSentryWebExtensionsTests
     public async Task ATransaction_LeavesWithoutTheCallersAddress()
     {
         var sent = await CaptureAsync(sendDefaultPii: false,
-            static (client, request) => client.CaptureTransaction(
+            static (client, request, _) => client.CaptureTransaction(
                 new SentryTransaction("GET /", "http.server") { Request = request }));
+
+        sent.ShouldContain("agent-marker");
+        sent.ShouldNotContain(Address);
+    }
+
+    /// <summary>Feedback skips BeforeSend but not the event processors - which is why the strip is one.</summary>
+    [Fact]
+    public async Task UserFeedback_LeavesWithoutTheCallersAddress()
+    {
+        var sent = await CaptureAsync(sendDefaultPii: false,
+            static (client, request, options) =>
+            {
+                // A hub builds its scope from the same options the client runs with; that is where the
+                // processors live.
+                Scope scope = new(options);
+                scope.Request.Url = request.Url;
+                foreach (var header in request.Headers)
+                    scope.Request.Headers[header.Key] = header.Value;
+                client.CaptureFeedback(new SentryFeedback("slow page"), out _, scope);
+            });
 
         sent.ShouldContain("agent-marker");
         sent.ShouldNotContain(Address);
@@ -66,18 +86,18 @@ public sealed class FExSentryWebExtensionsTests
     public async Task WithDefaultPersonalDataOn_TheAddressIsKept()
     {
         var sent = await CaptureAsync(sendDefaultPii: true,
-            static (client, request) => client.CaptureEvent(new SentryEvent { Request = request }));
+            static (client, request, _) => client.CaptureEvent(new SentryEvent { Request = request }));
 
         sent.ShouldContain(Address);
     }
 
-    private static async Task<string> CaptureAsync(bool sendDefaultPii, Action<SentryClient, SentryRequest> capture)
+    private static async Task<string> CaptureAsync(bool sendDefaultPii, Action<SentryClient, SentryRequest, SentryOptions> capture)
     {
         CapturingTransport transport = new();
         SentryAspNetCoreOptions options = new();
         FExSentryWebExtensions.ConfigureOptions(options, new ConfigurationBuilder().Build(), Dsn);
-        // Set after the mapping on purpose: Sentry binds its configuration section later, and the strip has
-        // to honour the value that holds when an event is sent, not the one seen at startup.
+        // Set after the mapping on purpose: the strip honours the value that holds when an event is sent, so
+        // an application changing it in code after the wiring is not ignored.
         options.SendDefaultPii = sendDefaultPii;
         options.TracesSampleRate = 1.0;
         options.Transport = transport;
@@ -90,7 +110,7 @@ public sealed class FExSentryWebExtensionsTests
 
         using (SentryClient client = new(options))
         {
-            capture(client, request);
+            capture(client, request, options);
             await client.FlushAsync(TimeSpan.FromSeconds(5));
         }
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Sentry;
 using Sentry.AspNetCore;
+using Sentry.Extensibility;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -43,23 +44,11 @@ public static class FExSentryWebExtensions
             && double.TryParse(sampleRateRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var rate))
             opt.TracesSampleRate = rate;
 
-        // Read inside the callbacks, not here: Sentry binds its own configuration section onto the options
-        // after this runs, so SendDefaultPii can still change. The SDK keeps ONE callback of each kind, so an
-        // application setting its own replaces this strip - call StripClientAddress from it instead.
-        opt.SetBeforeSend(sentryEvent =>
-        {
-            if (!opt.SendDefaultPii)
-                StripClientAddress(sentryEvent.Request);
-
-            return sentryEvent;
-        });
-        opt.SetBeforeSendTransaction(transaction =>
-        {
-            if (!opt.SendDefaultPii)
-                StripClientAddress(transaction.Request);
-
-            return transaction;
-        });
+        // Processors rather than BeforeSend: they also run on user feedback, which skips BeforeSend, and they
+        // are a list, so an application's own BeforeSend cannot replace the strip.
+        ClientAddressProcessor processor = new(opt);
+        opt.AddEventProcessor(processor);
+        opt.AddTransactionProcessor(processor);
     }
 
     /// <summary>
@@ -71,7 +60,9 @@ public static class FExSentryWebExtensions
     public static readonly IReadOnlyCollection<string> ClientAddressHeaders =
     [
         "Cf-Connecting-Ip", "Cf-Connecting-Ipv6", "Cf-Pseudo-IPv4", "True-Client-Ip", "X-Forwarded-For",
-        "X-Real-Ip", "X-Client-Ip", "X-Original-For", "Forwarded",
+        "X-Original-Forwarded-For", "X-Forwarded", "Forwarded-For", "Forwarded", "X-Real-Ip", "X-Client-Ip",
+        "X-Original-For", "X-Cluster-Client-Ip", "Fastly-Client-Ip", "X-Envoy-External-Address",
+        "X-Azure-ClientIP",
     ];
 
     /// <summary>Removes <see cref="ClientAddressHeaders"/>, whatever case the request spelled them in.</summary>
@@ -81,5 +72,32 @@ public static class FExSentryWebExtensions
                      .Where(static name => ClientAddressHeaders.Contains(name, StringComparer.OrdinalIgnoreCase))
                      .ToList())
             request.Headers.Remove(name);
+    }
+
+    /// <summary>
+    /// Strips at the moment an event leaves, reading SendDefaultPii then rather than at startup, so an
+    /// application that changes it in code after this wiring still gets what it asked for.
+    /// </summary>
+    private sealed class ClientAddressProcessor : ISentryEventProcessor, ISentryTransactionProcessor
+    {
+        private readonly SentryOptions _options;
+
+        public ClientAddressProcessor(SentryOptions options) => _options = options;
+
+        public SentryEvent Process(SentryEvent @event)
+        {
+            if (!_options.SendDefaultPii)
+                StripClientAddress(@event.Request);
+
+            return @event;
+        }
+
+        public SentryTransaction Process(SentryTransaction transaction)
+        {
+            if (!_options.SendDefaultPii)
+                StripClientAddress(transaction.Request);
+
+            return transaction;
+        }
     }
 }

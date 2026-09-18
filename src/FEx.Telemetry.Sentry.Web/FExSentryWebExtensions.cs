@@ -44,7 +44,8 @@ public static class FExSentryWebExtensions
             opt.TracesSampleRate = rate;
 
         // Read inside the callbacks, not here: Sentry binds its own configuration section onto the options
-        // after this runs, so SendDefaultPii can still change.
+        // after this runs, so SendDefaultPii can still change. The SDK keeps ONE callback of each kind, so an
+        // application setting its own replaces this strip - call StripClientAddress from it instead.
         opt.SetBeforeSend(sentryEvent =>
         {
             if (!opt.SendDefaultPii)

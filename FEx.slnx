@@ -121,6 +121,9 @@
     <Project Path="test/FEx.OneDrv.Tests/FEx.OneDrv.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.Telemetry.Sentry.Web.Tests/FEx.Telemetry.Sentry.Web.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
   </Folder>
   <Project Path="build/_build.csproj" />
   <Project Path="src/FEx.AppSettings/FEx.AppSettings.csproj">

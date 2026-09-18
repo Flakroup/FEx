@@ -77,7 +77,7 @@ public static class FExSentryWebExtensions
     public static void StripClientAddress(SentryRequest request)
     {
         foreach (var name in request.Headers.Keys
-                     .Where(name => ClientAddressHeaders.Contains(name, StringComparer.OrdinalIgnoreCase))
+                     .Where(static name => ClientAddressHeaders.Contains(name, StringComparer.OrdinalIgnoreCase))
                      .ToList())
             request.Headers.Remove(name);
     }

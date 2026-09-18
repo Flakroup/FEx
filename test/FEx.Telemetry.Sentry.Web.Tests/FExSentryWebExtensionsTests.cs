@@ -44,7 +44,7 @@ public sealed class FExSentryWebExtensionsTests
     public async Task AnError_LeavesWithoutTheCallersAddress()
     {
         var sent = await CaptureAsync(sendDefaultPii: false,
-            (client, request) => client.CaptureEvent(new SentryEvent { Request = request }));
+            static (client, request) => client.CaptureEvent(new SentryEvent { Request = request }));
 
         sent.ShouldContain("agent-marker");
         sent.ShouldNotContain(Address);
@@ -54,7 +54,7 @@ public sealed class FExSentryWebExtensionsTests
     public async Task ATransaction_LeavesWithoutTheCallersAddress()
     {
         var sent = await CaptureAsync(sendDefaultPii: false,
-            (client, request) => client.CaptureTransaction(
+            static (client, request) => client.CaptureTransaction(
                 new SentryTransaction("GET /", "http.server") { Request = request }));
 
         sent.ShouldContain("agent-marker");
@@ -66,7 +66,7 @@ public sealed class FExSentryWebExtensionsTests
     public async Task WithDefaultPersonalDataOn_TheAddressIsKept()
     {
         var sent = await CaptureAsync(sendDefaultPii: true,
-            (client, request) => client.CaptureEvent(new SentryEvent { Request = request }));
+            static (client, request) => client.CaptureEvent(new SentryEvent { Request = request }));
 
         sent.ShouldContain(Address);
     }

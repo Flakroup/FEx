@@ -26,12 +26,16 @@ namespace FEx.Building;
 /// rather than a cheap and an expensive version of one.
 /// </para>
 /// <para>
-/// It runs ALONGSIDE the suite rather than after it: <see cref="TriggerInspect" /> starts the tool right
-/// after the compile step and <see cref="Inspect" /> only collects the verdict, so a build asking for both
-/// ends when the longer of the two does. The inspection is the longest step of such a build, and neither
-/// step reads what the other writes. A build whose suite goes red never reaches <see cref="Inspect" />;
-/// the run still going is killed when the build ends and its verdict is dropped - a redundant cast is
-/// worth nothing while a test is red.
+/// It can run ALONGSIDE the suite rather than after it: with <see cref="InspectAlongsideTests" /> on,
+/// <see cref="TriggerInspect" /> starts the tool right after the compile step and <see cref="Inspect" />
+/// only collects the verdict, so a build asking for both ends when the longer of the two does. A build
+/// whose suite goes red never reaches <see cref="Inspect" />; the run still going is killed when the build
+/// ends and its verdict is dropped - a redundant cast is worth nothing while a test is red.
+/// </para>
+/// <para>
+/// Off unless asked, because whether it pays depends on the machine, not on the solution. Measured on one
+/// consumer: a 20-core workstation finished the whole chain 40% sooner with it on, while an 8-core CI
+/// runner finished later - the two processes competed for the cores the suite needed.
 /// </para>
 /// <para>
 /// The tool is a LOCAL dotnet tool, pinned in the consuming repository's <c>.config/dotnet-tools.json</c>.
@@ -65,8 +69,30 @@ public interface IInspectTarget : ICompileTarget
     sealed AbsolutePath InspectionCachesDirectory => NukeBuild.TemporaryDirectory / "inspectcode-caches";
 
     /// <summary>
+    /// Whether <see cref="TriggerInspect" /> starts the inspection alongside the suite. Whoever asked
+    /// decides first - the command line, then the environment, then <c>.nuke/parameters.json</c>, and
+    /// NUKE matches an environment variable after stripping every non-alphanumeric character and ignoring
+    /// case, so <c>INSPECT_ALONGSIDE_TESTS</c> and <c>NUKE_INSPECT_ALONGSIDE_TESTS</c> set it as surely as the
+    /// switch does. <see cref="InspectAlongsideTestsByDefault" /> answers when nobody did.
+    /// </summary>
+    [Parameter("Start the ReSharper inspection alongside the tests rather than after them")]
+    bool InspectAlongsideTests =>
+        StartsAlongside(TryGetValue<bool?>(() => InspectAlongsideTests), InspectAlongsideTestsByDefault);
+
+    /// <summary>
+    /// The answer when nobody passed <see cref="InspectAlongsideTests" />. A consumer that knows where it
+    /// pays - its developers' machines, say, but not its CI runner - overrides this rather than asking
+    /// every developer to remember a flag.
+    /// </summary>
+    bool InspectAlongsideTestsByDefault => false;
+
+    public static bool StartsAlongside(bool? requested, bool byDefault) => requested ?? byDefault;
+
+    /// <summary>
     /// Starts the inspection and moves on, so it runs alongside the suite; <see cref="Inspect" /> collects
-    /// its verdict later. Only ever scheduled through <see cref="Inspect" />, which depends on it.
+    /// its verdict later. Only ever scheduled through <see cref="Inspect" />, which depends on it, and
+    /// skipped unless <see cref="InspectAlongsideTests" /> is on - <see cref="Inspect" /> then runs the
+    /// whole inspection itself.
     /// </summary>
     /// <remarks>
     /// Ordered before the test target when the build has one - <c>Before</c> is an ordering, not a
@@ -80,6 +106,7 @@ public interface IInspectTarget : ICompileTarget
         {
             var definition = _.Description("Starts the ReSharper inspection in the background")
                 .DependsOn(Compile)
+                .OnlyWhenStatic(() => InspectAlongsideTests)
                 .Executes(() => NewRun().StartInBackground());
 
             return this is ITestTarget tests ? definition.Before(tests.Test) : definition;
@@ -93,8 +120,8 @@ public interface IInspectTarget : ICompileTarget
             .DependsOn(TriggerInspect, Compile)
             .Executes(() =>
             {
-                // Nothing pending when TriggerInspect was skipped on the command line: the inspection
-                // then runs here, in full, as it did before it could be started early.
+                // Nothing pending when TriggerInspect was skipped - by InspectAlongsideTests being off,
+                // which is the default, or on the command line: the inspection then runs here, in full.
                 Verdict((InspectionRun.Pending ?? NewRun()).Collect());
             });
 

@@ -49,9 +49,9 @@ public sealed class InspectionRun
     }
 
     /// <summary>
-    /// The run started in the background and not yet collected - one per build process, since a build is
-    /// one process and starts the inspection once. Set by <see cref="StartInBackground" />, cleared by
-    /// <see cref="Collect" /> and <see cref="DiscardPending" />.
+    /// The run not yet collected - one per build process, since a build is one process and starts the
+    /// inspection once. Set by <see cref="StartInBackground" />, or by <see cref="Collect" /> when it runs
+    /// the inspection inline; cleared by <see cref="Collect" /> and <see cref="DiscardPending" />.
     /// </summary>
     public static InspectionRun? Pending { get; private set; }
 
@@ -85,6 +85,11 @@ public sealed class InspectionRun
     public IReadOnlyList<InspectionFinding> Collect()
     {
         var waited = Stopwatch.StartNew();
+
+        // An inline run is published too: it is the default now that the background start is opt-in, and
+        // the end-of-build hook can only kill what it can find.
+        if (_pending is null)
+            Pending = this;
 
         try
         {

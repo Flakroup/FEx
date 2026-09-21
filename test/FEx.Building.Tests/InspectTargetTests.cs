@@ -75,6 +75,54 @@ public sealed class InspectTargetTests
         Arguments().ShouldStartWith("jb inspectcode ");
     }
 
+    [Theory]
+    [InlineData(null, false, false)]
+    [InlineData(null, true, true)]
+    [InlineData(true, false, true)]
+    [InlineData(false, true, false)]
+    public void AnExplicitRequest_OverridesTheConsumersDefault(bool? requested, bool byDefault, bool expected)
+    {
+        // The default is where a consumer says "on for developers, off for CI"; a value passed on the
+        // command line has to beat it both ways, or a slow runner could not be switched off by hand.
+        IInspectTarget.StartsAlongside(requested, byDefault).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void TheParameter_ReadsTheDefaultUnlessAnswered_AndAnAnswerBeatsIt()
+    {
+        // The wiring the Theory above cannot see: the `false` a consumer that says nothing gets, the
+        // override a consumer uses to turn it on, and the [Parameter] read that lets an answer win. One
+        // test, because the environment is process-wide and this is the only place that touches it.
+        const string variable = "INSPECT_ALONGSIDE_TESTS";
+        IInspectTarget quiet = new QuietBuild();
+        IInspectTarget workstation = new WorkstationBuild();
+
+        quiet.InspectAlongsideTests.ShouldBeFalse();
+        workstation.InspectAlongsideTests.ShouldBeTrue();
+
+        try
+        {
+            // One answer only, and the one that beats the default: measured, a second answer set in the
+            // same process is not picked up - after "true" a "false" still read true.
+            Environment.SetEnvironmentVariable(variable, "false");
+            workstation.InspectAlongsideTests.ShouldBeFalse();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variable, null);
+        }
+    }
+
+    private class QuietBuild : FExBuild, IInspectTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+    }
+
+    private sealed class WorkstationBuild : QuietBuild, IInspectTarget
+    {
+        bool IInspectTarget.InspectAlongsideTestsByDefault => true;
+    }
+
     [Fact]
     public void OneFinding_FailsTheBuild()
     {

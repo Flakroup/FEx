@@ -45,49 +45,57 @@ public static class FExSentryWebExtensions
             opt.TracesSampleRate = rate;
 
         // Processors rather than BeforeSend: they also run on user feedback, which skips BeforeSend, and they
-        // are a list, so an application's own BeforeSend cannot replace the strip.
-        ClientAddressProcessor processor = new(opt);
-        opt.AddEventProcessor(processor);
-        opt.AddTransactionProcessor(processor);
+        // are a list, so an application's own BeforeSend cannot replace the scrub.
+        RequestScrubber scrubber = new(opt);
+        opt.AddEventProcessor(scrubber);
+        opt.AddTransactionProcessor(scrubber);
     }
 
     /// <summary>
-    /// Headers a proxy adds to name the caller's address. The SDK withholds the address itself and the
-    /// cookies while SendDefaultPii is off, but it forwards every other header as is - measured on
-    /// Sentry.AspNetCore 6.6.0, Cf-Connecting-Ip reached the envelope intact. Behind Cloudflare or a load
-    /// balancer that is the visitor's IP, on every error and every sampled transaction.
+    /// The only request headers that leave while SendDefaultPii is off. The SDK withholds the caller's address
+    /// and the cookies by itself but forwards every other header as is - measured on Sentry.AspNetCore 6.6.0,
+    /// Cf-Connecting-Ip, an application's own API key header and Cloudflare Access's user e-mail all reached
+    /// the envelope intact. A list of what is safe holds where a list of what is not always misses the next
+    /// proxy's or the next application's header.
     /// </summary>
-    public static readonly IReadOnlyCollection<string> ClientAddressHeaders =
+    public static readonly IReadOnlyCollection<string> SafeRequestHeaders =
     [
-        "Cf-Connecting-Ip", "Cf-Connecting-Ipv6", "Cf-Pseudo-IPv4", "True-Client-Ip", "X-Forwarded-For",
-        "X-Original-Forwarded-For", "X-Forwarded", "Forwarded-For", "Forwarded", "X-Real-Ip", "X-Client-Ip",
-        "X-Original-For", "X-Cluster-Client-Ip", "Fastly-Client-Ip", "X-Envoy-External-Address",
-        "X-Azure-ClientIP",
+        "Accept", "Accept-Encoding", "Accept-Language", "Content-Length", "Content-Type", "Host", "User-Agent",
     ];
 
-    /// <summary>Removes <see cref="ClientAddressHeaders"/>, whatever case the request spelled them in.</summary>
-    public static void StripClientAddress(SentryRequest request)
+    /// <summary>
+    /// Keeps only <see cref="SafeRequestHeaders" />, whatever case the request spelled them in, and drops the
+    /// query string - the SDK sends it whatever SendDefaultPii says, and a search term or a link token in it
+    /// is as personal as a header.
+    /// </summary>
+    public static void ScrubRequest(SentryRequest request)
     {
         foreach (var name in request.Headers.Keys
-                     .Where(static name => ClientAddressHeaders.Contains(name, StringComparer.OrdinalIgnoreCase))
+                     .Where(static name => !SafeRequestHeaders.Contains(name, StringComparer.OrdinalIgnoreCase))
                      .ToList())
             request.Headers.Remove(name);
+
+        request.QueryString = null;
+        // The SDK builds Url without the query today; this holds if it ever stops.
+        var query = request.Url?.IndexOf('?', StringComparison.Ordinal) ?? -1;
+        if (query >= 0)
+            request.Url = request.Url![..query];
     }
 
     /// <summary>
-    /// Strips at the moment an event leaves, reading SendDefaultPii then rather than at startup, so an
+    /// Scrubs at the moment an event leaves, reading SendDefaultPii then rather than at startup, so an
     /// application that changes it in code after this wiring still gets what it asked for.
     /// </summary>
-    private sealed class ClientAddressProcessor : ISentryEventProcessor, ISentryTransactionProcessor
+    private sealed class RequestScrubber : ISentryEventProcessor, ISentryTransactionProcessor
     {
         private readonly SentryOptions _options;
 
-        public ClientAddressProcessor(SentryOptions options) => _options = options;
+        public RequestScrubber(SentryOptions options) => _options = options;
 
         public SentryEvent Process(SentryEvent @event)
         {
             if (!_options.SendDefaultPii)
-                StripClientAddress(@event.Request);
+                ScrubRequest(@event.Request);
 
             return @event;
         }
@@ -95,7 +103,7 @@ public static class FExSentryWebExtensions
         public SentryTransaction Process(SentryTransaction transaction)
         {
             if (!_options.SendDefaultPii)
-                StripClientAddress(transaction.Request);
+                ScrubRequest(transaction.Request);
 
             return transaction;
         }

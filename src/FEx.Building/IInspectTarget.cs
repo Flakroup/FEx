@@ -69,8 +69,11 @@ public interface IInspectTarget : ICompileTarget
     sealed AbsolutePath InspectionCachesDirectory => NukeBuild.TemporaryDirectory / "inspectcode-caches";
 
     /// <summary>
-    /// Whether <see cref="TriggerInspect" /> starts the inspection alongside the suite. The command line
-    /// or a parameters file decides first; <see cref="InspectAlongsideTestsByDefault" /> answers otherwise.
+    /// Whether <see cref="TriggerInspect" /> starts the inspection alongside the suite. Whoever asked
+    /// decides first - the command line, then the environment, then <c>.nuke/parameters.json</c>, and
+    /// NUKE matches an environment variable after stripping every non-alphanumeric character and ignoring
+    /// case, so <c>INSPECT_ALONGSIDE_TESTS</c> and <c>NUKE_INSPECT_ALONGSIDE_TESTS</c> set it as surely as the
+    /// switch does. <see cref="InspectAlongsideTestsByDefault" /> answers when nobody did.
     /// </summary>
     [Parameter("Start the ReSharper inspection alongside the tests rather than after them")]
     bool InspectAlongsideTests =>
@@ -117,8 +120,8 @@ public interface IInspectTarget : ICompileTarget
             .DependsOn(TriggerInspect, Compile)
             .Executes(() =>
             {
-                // Nothing pending when TriggerInspect was skipped on the command line: the inspection
-                // then runs here, in full, as it did before it could be started early.
+                // Nothing pending when TriggerInspect was skipped - by InspectAlongsideTests being off,
+                // which is the default, or on the command line: the inspection then runs here, in full.
                 Verdict((InspectionRun.Pending ?? NewRun()).Collect());
             });
 

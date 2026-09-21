@@ -136,6 +136,24 @@ public sealed class InspectionRunTests
     }
 
     [Fact]
+    public async Task DiscardPending_KillsAnInlineRun_StillGoingWhenTheBuildEnds()
+    {
+        // Ctrl+C, or a cancelled CI job, while Inspect runs the whole inspection itself - the default since
+        // the background start is opt-in. An unpublished run is invisible to the hook, so the tool outlived the build.
+        using var tool = new FakeDotNet(holdTheInspection: true);
+        var run = new InspectionRun(InspectArguments, static () => CleanReport, tool.Start);
+
+        var collecting = Task.Run(run.Collect, TestContext.Current.CancellationToken);
+        tool.InspectionStarted.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ShouldBeTrue();
+
+        InspectionRun.DiscardPending().ShouldBeTrue();
+
+        tool.Inspection!.Killed.ShouldBeTrue();
+        await Should.ThrowAsync<ProcessException>(collecting);
+        InspectionRun.Pending.ShouldBeNull();
+    }
+
+    [Fact]
     public void DiscardPending_LeavesAFinishedRunAlone()
     {
         using var tool = new FakeDotNet();

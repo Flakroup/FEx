@@ -88,6 +88,42 @@ public sealed class InspectTargetTests
     }
 
     [Fact]
+    public void TheParameter_ReadsTheDefaultUnlessAnswered_AndAnAnswerBeatsIt()
+    {
+        // The wiring the Theory above cannot see: the `false` a consumer that says nothing gets, the
+        // override a consumer uses to turn it on, and the [Parameter] read that lets an answer win. One
+        // test, because the environment is process-wide and this is the only place that touches it.
+        const string variable = "INSPECT_ALONGSIDE_TESTS";
+        IInspectTarget quiet = new QuietBuild();
+        IInspectTarget workstation = new WorkstationBuild();
+
+        quiet.InspectAlongsideTests.ShouldBeFalse();
+        workstation.InspectAlongsideTests.ShouldBeTrue();
+
+        try
+        {
+            // One answer only, and the one that beats the default: measured, a second answer set in the
+            // same process is not picked up - after "true" a "false" still read true.
+            Environment.SetEnvironmentVariable(variable, "false");
+            workstation.InspectAlongsideTests.ShouldBeFalse();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variable, null);
+        }
+    }
+
+    private class QuietBuild : FExBuild, IInspectTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+    }
+
+    private sealed class WorkstationBuild : QuietBuild, IInspectTarget
+    {
+        bool IInspectTarget.InspectAlongsideTestsByDefault => true;
+    }
+
+    [Fact]
     public void OneFinding_FailsTheBuild()
     {
         // The whole point, and the one break that leaves every other test here green: a gate that reports

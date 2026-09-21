@@ -65,8 +65,10 @@ public static class FExSentryWebExtensions
 
     /// <summary>
     /// Keeps only <see cref="SafeRequestHeaders" />, whatever case the request spelled them in, and drops the
-    /// query string - the SDK sends it whatever SendDefaultPii says, and a search term or a link token in it
-    /// is as personal as a header.
+    /// query string and the body - the SDK sends the query whatever SendDefaultPii says, and the body whenever
+    /// MaxRequestBodySize is configured, and a search term, a link token or a form is as personal as a header.
+    /// Covers the incoming request only: an outgoing HttpClient call's span and breadcrumb still carry its
+    /// full URL, and a token in the path stays in Url.
     /// </summary>
     public static void ScrubRequest(SentryRequest request)
     {
@@ -76,6 +78,8 @@ public static class FExSentryWebExtensions
             request.Headers.Remove(name);
 
         request.QueryString = null;
+        request.Data = null;
+        request.Cookies = null;
         // The SDK builds Url without the query today; this holds if it ever stops.
         var query = request.Url?.IndexOf('?', StringComparison.Ordinal) ?? -1;
         if (query >= 0)

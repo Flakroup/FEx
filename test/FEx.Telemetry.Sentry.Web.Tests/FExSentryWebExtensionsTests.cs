@@ -28,6 +28,8 @@ public sealed class FExSentryWebExtensionsTests
     private const string Address = "203.0.113.77";
     private const string Secret = "secret-marker";
     private const string SearchTerm = "Kowalska";
+    private const string Body = "body-pesel-marker";
+    private const string Cookie = "session=cookie-marker";
 
     [Fact]
     public void ScrubRequest_KeepsOnlyTheSafeHeadersInAnyCase_AndDropsTheQuery()
@@ -83,6 +85,8 @@ public sealed class FExSentryWebExtensionsTests
                 Scope scope = new(options);
                 scope.Request.Url = request.Url;
                 scope.Request.QueryString = request.QueryString;
+                scope.Request.Data = request.Data;
+                scope.Request.Cookies = request.Cookies;
                 foreach (var header in request.Headers)
                     scope.Request.Headers[header.Key] = header.Value;
                 client.CaptureFeedback(new SentryFeedback("slow page"), out _, scope);
@@ -102,6 +106,8 @@ public sealed class FExSentryWebExtensionsTests
         sent.ShouldContain(Address);
         sent.ShouldContain(Secret);
         sent.ShouldContain(SearchTerm);
+        sent.ShouldContain(Body);
+        sent.ShouldContain(Cookie);
     }
 
     private static void ShouldCarryNothingPersonal(string sent)
@@ -109,6 +115,8 @@ public sealed class FExSentryWebExtensionsTests
         sent.ShouldNotContain(Address);
         sent.ShouldNotContain(Secret);
         sent.ShouldNotContain(SearchTerm);
+        sent.ShouldNotContain(Body);
+        sent.ShouldNotContain(Cookie);
     }
 
     private static async Task<string> CaptureAsync(bool sendDefaultPii, Action<SentryClient, SentryRequest, SentryOptions> capture)
@@ -123,7 +131,10 @@ public sealed class FExSentryWebExtensionsTests
         options.Transport = transport;
         options.AutoSessionTracking = false;
 
-        SentryRequest request = new() { Url = "https://example.com/api/journal", QueryString = $"text={SearchTerm}" };
+        SentryRequest request = new()
+        {
+            Url = "https://example.com/api/journal", QueryString = $"text={SearchTerm}", Data = Body, Cookies = Cookie,
+        };
         request.Headers["Cf-Connecting-Ip"] = Address;
         request.Headers["X-Forwarded-For"] = Address;
         request.Headers["X-Api-Key"] = Secret;

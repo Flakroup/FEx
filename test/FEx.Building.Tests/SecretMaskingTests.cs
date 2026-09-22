@@ -17,6 +17,7 @@ namespace FEx.Building.Tests;
 /// command line echo and once in the parameter listing. GitHub Actions masks values that came from
 /// <c>secrets.*</c>, but nothing masks a local run, a binary log, or another CI.
 /// </summary>
+[Collection(GlobalLoggerCollection.Name)]
 public sealed class SecretMaskingTests
 {
     [Fact]

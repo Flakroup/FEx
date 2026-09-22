@@ -42,13 +42,31 @@ public static class FExSentryWebExtensions
 
         if (!string.IsNullOrWhiteSpace(sampleRateRaw)
             && double.TryParse(sampleRateRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var rate))
+        {
             opt.TracesSampleRate = rate;
+            // Installed only here: a sampler alone switches tracing on, even where no rate was configured.
+            opt.TracesSampler = static context => IsStaticAsset(context.TryGetHttpPath()) ? 0 : null;
+        }
 
         // Processors rather than BeforeSend: they also run on user feedback, which skips BeforeSend, and they
         // are a list, so an application's own BeforeSend cannot replace the scrub.
         RequestScrubber scrubber = new(opt);
         opt.AddEventProcessor(scrubber);
         opt.AddTransactionProcessor(scrubber);
+    }
+
+    /// <summary>
+    /// A request for a file - its last path segment carries an extension, as every framework asset, stylesheet,
+    /// script and manifest does and no API route does. Measured on a Blazor WebAssembly host at a flat 0.1 rate:
+    /// every sampled transaction in the first hour was such a file, each under 5 ms, and none was an API call.
+    /// </summary>
+    public static bool IsStaticAsset(string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        var lastSegment = path[(path.LastIndexOf('/') + 1)..];
+        return lastSegment.IndexOf('.', StringComparison.Ordinal) > 0;
     }
 
     /// <summary>

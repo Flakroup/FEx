@@ -31,6 +31,48 @@ public sealed class FExSentryWebExtensionsTests
     private const string Body = "body-pesel-marker";
     private const string Cookie = "session=cookie-marker";
 
+    [Theory]
+    [InlineData("/_framework/dotnet.runtime.v06hirbjsv.js", true)]
+    [InlineData("/css/app.css", true)]
+    [InlineData("/changelog.json", true)]
+    [InlineData("/api/sales/trips", false)]
+    [InlineData("/api/v1.0/trips", false)]
+    [InlineData("/", false)]
+    [InlineData("/.well-known", false)]
+    [InlineData(null, false)]
+    public void IsStaticAsset_IsDecidedByTheLastSegmentOnly(string? path, bool expected) =>
+        FExSentryWebExtensions.IsStaticAsset(path).ShouldBe(expected);
+
+    [Theory]
+    [InlineData("/_framework/System.Net.Http.Json.lx3tims3m7.wasm", 0.0)]
+    [InlineData("/api/sales/trips", null)]
+    public void WithATracesRate_StaticAssetsAreDropped_AndTheRestKeepsTheRate(string path, double? expected)
+    {
+        SentryAspNetCoreOptions options = new();
+        FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", "0.1")), Dsn);
+
+        TransactionSamplingContext context = new(
+            new TransactionContext("GET " + path, "http.server"),
+            new Dictionary<string, object?> { ["__HttpPath"] = path });
+
+        options.TracesSampleRate.ShouldBe(0.1);
+        options.TracesSampler.ShouldNotBeNull().Invoke(context).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void WithoutATracesRate_NoSamplerSwitchesTracingOn()
+    {
+        SentryAspNetCoreOptions options = new();
+        FExSentryWebExtensions.ConfigureOptions(options, Configuration(), Dsn);
+
+        options.TracesSampler.ShouldBeNull();
+    }
+
+    private static IConfiguration Configuration(params (string Key, string Value)[] values) =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(values.Select(static v => new KeyValuePair<string, string?>(v.Key, v.Value)))
+            .Build();
+
     [Fact]
     public void ScrubRequest_KeepsOnlyTheSafeHeadersInAnyCase_AndDropsTheQuery()
     {

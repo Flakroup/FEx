@@ -135,7 +135,7 @@ public sealed class InspectionRun
             {
                 process.Kill();
             }
-            catch (InvalidOperationException)
+            catch (Exception exception) when (IsExitedRace(exception, process))
             {
                 // Exited between the check and the kill - nothing left to stop.
                 return false;
@@ -146,6 +146,25 @@ public sealed class InspectionRun
 
         return true;
     }
+
+    /// <summary>
+    /// Whether a failed kill only lost the race with the tool's own exit. This runs on the way out of a
+    /// build, so anything it lets through replaces the failure the developer needed to see - and anything
+    /// it swallows is a tool left running.
+    /// </summary>
+    /// <remarks>
+    /// A root that exits after the check reaches the tree kill in one of two ways: <see cref="ProcessTree" />
+    /// sees it exited and refuses (<see cref="InvalidOperationException" />), or it exits after that and
+    /// <see cref="Process.GetProcessById(int)" /> no longer finds its id (<see cref="ArgumentException" />).
+    /// Both types also stand for a live tree that was not killed - the runtime refuses a tree that holds
+    /// the calling process with the first - so neither is a race until the process confirms it has exited.
+    /// A <see cref="System.ComponentModel.Win32Exception" />, or the <see cref="AggregateException" /> a tree
+    /// kill gathers them into, is left to surface: the runtime's own kill already swallows the exited case
+    /// (access denied with an exit code set, or no such process), so what reaches here is a process it
+    /// could not stop.
+    /// </remarks>
+    private static bool IsExitedRace(Exception exception, IProcess process) =>
+        exception is InvalidOperationException or ArgumentException && process.HasExited;
 
     private IReadOnlyList<InspectionFinding> Execute()
     {

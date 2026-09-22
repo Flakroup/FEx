@@ -226,7 +226,7 @@ public sealed class InspectionRunTests
             Log.Logger = previous;
         }
 
-        sink.Messages.Where(message => message.StartsWith("> dotnet", StringComparison.Ordinal) || message == "line")
+        sink.Messages.Where(static message => message.StartsWith("> dotnet", StringComparison.Ordinal) || message == "line")
             .ShouldBe(["> dotnet tool restore", "line", $"> dotnet {InspectArguments}", "line"]);
     }
 
@@ -310,7 +310,7 @@ public sealed class InspectionRunTests
         run.StartInBackground();
         tool.InspectionStarted.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ShouldBeTrue();
 
-        Should.Throw<Exception>(() => InspectionRun.DiscardPending()).ShouldBeSameAs(refusal);
+        Should.Throw<Exception>(static () => InspectionRun.DiscardPending()).ShouldBeSameAs(refusal);
 
         tool.ReleaseTheInspection();
         run.Collect().ShouldBeEmpty();

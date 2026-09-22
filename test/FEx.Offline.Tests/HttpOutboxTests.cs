@@ -11,8 +11,8 @@ namespace FEx.Offline.Tests;
 
 /// <summary>
 /// Outbox: queued writes replay in order with their persisted idempotency key; a landed write
-/// leaves the queue, a validation rejection leaves it too (and is reported), a network failure
-/// keeps everything and stops the flush.
+/// leaves the queue, a validation or permission rejection leaves it too (and is reported), a 401, a
+/// network failure or a server error keeps everything and stops the flush.
 /// </summary>
 public sealed class HttpOutboxTests
 {
@@ -110,8 +110,68 @@ public sealed class HttpOutboxTests
         result.Sent.ShouldBe(0);
         result.Rejected.ShouldBe(1);
         result.Remaining.ShouldBe(0); // retrying an unchanged rejected write can never succeed
-        result.LastError.ShouldNotBeNull();
-        result.LastError.ShouldContain("400");
+        result.LastError.ShouldBe("""HTTP 400: {"detail":"Ten klient jest już zapisany."}""");
+    }
+
+    [Fact]
+    public async Task PermissionRefusal_DropsTheEntry_AndReportsItWithTheBody()
+    {
+        // A 403 is the server refusing this request for this user - no sign-in makes it land, so it must not
+        // block the queue behind it the way a 401 does.
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Forbidden, """{"detail":"Brak uprawnień."}""");
+        handler.EnqueueResponse(HttpStatusCode.Created);
+
+        using HttpClient http = new(handler)
+        {
+            BaseAddress = new("http://localhost/")
+        };
+
+        var result = await outbox.FlushAsync(http);
+
+        result.Sent.ShouldBe(1);
+        result.Rejected.ShouldBe(1);
+        result.Remaining.ShouldBe(0);
+        result.LastError.ShouldBe("""HTTP 403: {"detail":"Brak uprawnień."}""");
+        handler.Requests.Count.ShouldBe(2); // the flush went on past the refusal
+    }
+
+    [Fact]
+    public async Task SessionNotEnough_KeepsTheEntryWithTheError_AndStopsTheFlush()
+    {
+        // A 401 means sign in again: the unchanged write can land afterwards, so dropping it would lose it.
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Unauthorized);
+
+        using HttpClient http = new(handler)
+        {
+            BaseAddress = new("http://localhost/")
+        };
+
+        var result = await outbox.FlushAsync(http);
+
+        result.Sent.ShouldBe(0);
+        result.Rejected.ShouldBe(0);
+        result.Remaining.ShouldBe(2);
+        result.LastError.ShouldBe("HTTP 401");
+        handler.Requests.Count.ShouldBe(1); // the second entry was never attempted
+
+        var kept = (await outbox.ListAsync())[0];
+        kept.Attempts.ShouldBe(1);
+        kept.LastError.ShouldBe("HTTP 401");
+        kept.JsonBody.ShouldBe("""{"n":1}""");
     }
 
     [Fact]

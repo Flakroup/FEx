@@ -1,4 +1,8 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Sentry;
 using Sentry.AspNetCore;
 using Sentry.Extensibility;
@@ -9,6 +13,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,6 +63,68 @@ public sealed class FExSentryWebExtensionsTests
 
         options.TracesSampleRate.ShouldBe(0.1);
         options.TracesSampler.ShouldNotBeNull().Invoke(context).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("sentry-trace")]
+    [InlineData("baggage")]
+    public void ACallersTraceHeader_GetsTheSamplersOwnDraw_NotTheRate(string header)
+    {
+        SentryAspNetCoreOptions options = new();
+        FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", "0.1")), Dsn);
+        DefaultHttpContext http = new();
+        http.Request.Headers[header] = "from-the-caller";
+        TransactionSamplingContext context = new(
+            new TransactionContext("GET /api/sales/trips", "http.server"),
+            new Dictionary<string, object?> { ["__HttpPath"] = "/api/sales/trips", ["__HttpContext"] = http });
+        var sampler = options.TracesSampler.ShouldNotBeNull();
+
+        var draws = Enumerable.Range(0, 2000).Select(_ => sampler(context)).ToList();
+
+        // A certainty either way leaves the caller's sample_rand nothing to compare against; 2000 draws at 0.1
+        // land within seven standard deviations of 200.
+        draws.ShouldAllBe(d => d == 0 || d == 1);
+        draws.Count(d => d == 1).ShouldBeInRange(100, 300);
+    }
+
+    [Fact]
+    public async Task ACallersBaggage_CannotForceItsRequestsIntoTheSample()
+    {
+        CapturingTransport transport = new();
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Sentry:Dsn"] = Dsn, ["Sentry:TracesSampleRate"] = "0.1",
+        });
+        builder.WebHost.UseUrls("http://127.0.0.1:0");
+        builder.AddFExSentry("FEX_TESTS_NO_SUCH_VARIABLE");
+        builder.Services.PostConfigure<SentryAspNetCoreOptions>(o =>
+        {
+            o.Transport = transport;
+            o.AutoSessionTracking = false;
+        });
+        await using var app = builder.Build();
+        app.MapGet("/api/ping", () => "pong");
+        await app.StartAsync(TestContext.Current.CancellationToken);
+
+        using HttpClient client = new() { BaseAddress = new Uri(app.Urls.First()) };
+        for (var i = 0; i < 200; i++)
+        {
+            var traceId = Guid.NewGuid().ToString("N");
+            using HttpRequestMessage request = new(HttpMethod.Get, "/api/ping");
+            request.Headers.Add("sentry-trace", $"{traceId}-1111111111111111-1");
+            request.Headers.Add(
+                "baggage", $"sentry-trace_id={traceId},sentry-public_key=x,sentry-sample_rate=1,sentry-sample_rand=0");
+            using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+            response.EnsureSuccessStatusCode();
+        }
+
+        await app.Services.GetRequiredService<IHub>().FlushAsync(TimeSpan.FromSeconds(5));
+        await app.StopAsync(TestContext.Current.CancellationToken);
+
+        // Before the sampler drew for itself, all 200 were traced; at 0.1 the expectation is 20.
+        transport.Payloads.Count(p => p.Contains("\"type\":\"transaction\"", StringComparison.Ordinal))
+                 .ShouldBeInRange(1, 50);
     }
 
     [Theory]

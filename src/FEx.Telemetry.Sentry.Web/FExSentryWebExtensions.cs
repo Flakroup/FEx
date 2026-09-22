@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Sentry;
 using Sentry.AspNetCore;
@@ -45,10 +46,10 @@ public static class FExSentryWebExtensions
         {
             opt.TracesSampleRate = rate;
             // Only where tracing is on: a sampler alone switches performance monitoring on, even at a rate of 0.
-            // It returns the rate rather than null, since null defers to an incoming sentry-trace header and lets
-            // any anonymous caller force every request of theirs into the sampled budget.
+            // It never returns null, since null defers to an incoming sentry-trace header and lets any anonymous
+            // caller force every request of theirs into the sampled budget.
             if (rate > 0)
-                opt.TracesSampler = context => IsStaticAsset(context.TryGetHttpPath()) ? 0 : rate;
+                opt.TracesSampler = context => Sample(context, rate);
         }
 
         // Processors rather than BeforeSend: they also run on user feedback, which skips BeforeSend, and they
@@ -56,6 +57,22 @@ public static class FExSentryWebExtensions
         RequestScrubber scrubber = new(opt);
         opt.AddEventProcessor(scrubber);
         opt.AddTransactionProcessor(scrubber);
+    }
+
+    // The SDK compares the returned rate with a sample_rand it takes from the caller's baggage, or derives from
+    // the caller's trace id, so a caller sending either header picks the outcome - baggage sample_rand=0 traced
+    // 100 requests out of 100 at a rate of 0.1. Drawing here and answering with a certainty takes that pick away.
+    // A request without those headers keeps the rate itself, which Sentry needs to extrapolate from the sample.
+    private static double Sample(TransactionSamplingContext context, double rate)
+    {
+        if (IsStaticAsset(context.TryGetHttpPath()))
+            return 0;
+
+        if (context.TryGetHttpContext()?.Request.Headers is not { } headers
+            || !(headers.ContainsKey("sentry-trace") || headers.ContainsKey("baggage")))
+            return rate;
+
+        return Random.Shared.NextDouble() < rate ? 1 : 0;
     }
 
     /// <summary>

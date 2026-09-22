@@ -1,7 +1,8 @@
-﻿using FEx.Offline.Abstractions;
+using FEx.Offline.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -26,11 +27,11 @@ public sealed record OutboxFlushResult(int Sent, int Rejected, int Remaining, st
 /// Store-and-forward queue for writes made while offline. Enqueue persists the request; flush
 /// replays the queue in order, sending each entry's id as the Idempotency-Key header so a retry of a
 /// request that DID land (but whose response was lost) never double-executes, plus every replay header
-/// the host registered. A 2xx removes the entry; a 4xx removes it too (the server understood and
-/// rejected it - retrying forever cannot fix a validation error) and reports it; a transport failure or
-/// 5xx keeps the entry, records the error and
-/// stops the flush (the network is down or the server is sick - hammering the rest of the queue would
-/// not help).
+/// the host registered. A 2xx removes the entry; a 4xx other than 401 removes it too (the server understood
+/// and rejected it - retrying forever cannot fix a validation error) and reports it; a 401, a transport
+/// failure or a 5xx keeps the entry, records the error and
+/// stops the flush (the network is down, the server is sick or the session needs renewing - hammering the
+/// rest of the queue would not help).
 /// </summary>
 public sealed class HttpOutbox
 {
@@ -179,10 +180,11 @@ public sealed class HttpOutbox
                     continue;
                 }
 
-                if ((int)response.StatusCode is >= 400 and < 500)
+                // 401 means the session is not enough - once the user signs in again the unchanged write can
+                // land, so it stays queued like a 5xx. Every other 4xx, 403 included, is the server refusing this
+                // request itself (validation, permission, conflict): a retry cannot succeed, so drop and report it.
+                if ((int)response.StatusCode is >= 400 and < 500 && response.StatusCode != HttpStatusCode.Unauthorized)
                 {
-                    // The server understood and said no (validation, auth, conflict). Retrying an
-                    // unchanged request cannot succeed - drop it and surface the rejection.
                     var body = await response.Content.ReadAsStringAsync();
                     await RemoveAsync(entry);
                     rejected++;
@@ -191,7 +193,7 @@ public sealed class HttpOutbox
                     continue;
                 }
 
-                // Server-side trouble (5xx): worth retrying later, not worth hammering now.
+                // Server-side trouble (5xx) or a session to renew (401): worth retrying later, not worth hammering now.
                 var error = $"HTTP {(int)response.StatusCode}";
 
                 await SaveAsync(entry with

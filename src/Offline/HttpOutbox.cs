@@ -30,8 +30,8 @@ public sealed record OutboxFlushResult(int Sent, int Rejected, int Remaining, st
 /// the host registered. A 2xx removes the entry; a 4xx other than 401 removes it too (the server understood
 /// and rejected it - retrying forever cannot fix a validation error) and reports it; a 401, a transport
 /// failure or a 5xx keeps the entry, records the error and
-/// stops the flush (the network is down or the server is sick - hammering the rest of the queue would
-/// not help).
+/// stops the flush (the network is down, the server is sick or the session needs renewing - hammering the
+/// rest of the queue would not help).
 /// </summary>
 public sealed class HttpOutbox
 {

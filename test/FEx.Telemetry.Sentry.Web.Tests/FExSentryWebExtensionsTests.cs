@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sentry;
@@ -65,28 +64,6 @@ public sealed class FExSentryWebExtensionsTests
         options.TracesSampler.ShouldNotBeNull().Invoke(context).ShouldBe(expected);
     }
 
-    [Theory]
-    [InlineData("sentry-trace")]
-    [InlineData("baggage")]
-    public void ACallersTraceHeader_GetsTheSamplersOwnDraw_NotTheRate(string header)
-    {
-        SentryAspNetCoreOptions options = new();
-        FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", "0.1")), Dsn);
-        DefaultHttpContext http = new();
-        http.Request.Headers[header] = "from-the-caller";
-        TransactionSamplingContext context = new(
-            new TransactionContext("GET /api/sales/trips", "http.server"),
-            new Dictionary<string, object?> { ["__HttpPath"] = "/api/sales/trips", ["__HttpContext"] = http });
-        var sampler = options.TracesSampler.ShouldNotBeNull();
-
-        var draws = Enumerable.Range(0, 2000).Select(_ => sampler(context)).ToList();
-
-        // A certainty either way leaves the caller's sample_rand nothing to compare against; 2000 draws at 0.1
-        // land within seven standard deviations of 200.
-        draws.ShouldAllBe(d => d == 0 || d == 1);
-        draws.Count(d => d == 1).ShouldBeInRange(100, 300);
-    }
-
     [Fact]
     public async Task ACallersBaggage_CannotForceItsRequestsIntoTheSample()
     {
@@ -122,9 +99,13 @@ public sealed class FExSentryWebExtensionsTests
         await app.Services.GetRequiredService<IHub>().FlushAsync(TimeSpan.FromSeconds(5));
         await app.StopAsync(TestContext.Current.CancellationToken);
 
-        // Before the sampler drew for itself, all 200 were traced; at 0.1 the expectation is 20.
-        transport.Payloads.Count(p => p.Contains("\"type\":\"transaction\"", StringComparison.Ordinal))
-                 .ShouldBeInRange(1, 50);
+        // With the caller's headers read, all 200 were traced; at 0.1 the expectation is 20, each under the
+        // configured rate and none continuing the caller's trace.
+        var traced = transport.Payloads
+                              .Where(p => p.Contains("\"type\":\"transaction\"", StringComparison.Ordinal))
+                              .ToList();
+        traced.Count.ShouldBeInRange(1, 50);
+        traced.ShouldAllBe(p => p.Contains("\"sample_rate\":\"0.1\"") && !p.Contains("\"public_key\":\"x\""));
     }
 
     [Theory]

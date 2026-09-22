@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Sentry;
 using Sentry.AspNetCore;
@@ -28,6 +29,8 @@ public static class FExSentryWebExtensions
             return builder;
 
         IConfiguration configuration = builder.Configuration;
+        // Registered ahead of UseSentry, so it runs ahead of Sentry's own middleware.
+        builder.Services.AddTransient<IStartupFilter, CallerTraceHeaderStripper>();
         builder.WebHost.UseSentry(opt => ConfigureOptions(opt, configuration, dsn));
 
         return builder;
@@ -49,7 +52,7 @@ public static class FExSentryWebExtensions
             // It never returns null, since null defers to an incoming sentry-trace header and lets any anonymous
             // caller force every request of theirs into the sampled budget.
             if (rate > 0)
-                opt.TracesSampler = context => Sample(context, rate);
+                opt.TracesSampler = context => IsStaticAsset(context.TryGetHttpPath()) ? 0 : rate;
         }
 
         // Processors rather than BeforeSend: they also run on user feedback, which skips BeforeSend, and they
@@ -57,22 +60,6 @@ public static class FExSentryWebExtensions
         RequestScrubber scrubber = new(opt);
         opt.AddEventProcessor(scrubber);
         opt.AddTransactionProcessor(scrubber);
-    }
-
-    // The SDK compares the returned rate with a sample_rand it takes from the caller's baggage, or derives from
-    // the caller's trace id, so a caller sending either header picks the outcome - baggage sample_rand=0 traced
-    // 100 requests out of 100 at a rate of 0.1. Drawing here and answering with a certainty takes that pick away.
-    // A request without those headers keeps the rate itself, which Sentry needs to extrapolate from the sample.
-    private static double Sample(TransactionSamplingContext context, double rate)
-    {
-        if (IsStaticAsset(context.TryGetHttpPath()))
-            return 0;
-
-        if (context.TryGetHttpContext()?.Request.Headers is not { } headers
-            || !(headers.ContainsKey("sentry-trace") || headers.ContainsKey("baggage")))
-            return rate;
-
-        return Random.Shared.NextDouble() < rate ? 1 : 0;
     }
 
     /// <summary>
@@ -149,5 +136,26 @@ public static class FExSentryWebExtensions
 
             return transaction;
         }
+    }
+
+    /// <summary>
+    /// Sentry compares its sample rate with a sample_rand it takes from the caller's baggage, or derives from the
+    /// caller's trace id, so a caller sending either header picks whether it is traced - baggage sample_rand=0
+    /// traced 100 requests out of 100 at a rate of 0.1, and a sampler's own draw still left it the backpressure
+    /// throttle. With the headers gone every request starts its own trace. The cost is that a trace from an
+    /// upstream service no longer continues here, which no caller of these hosts needs today.
+    /// </summary>
+    private sealed class CallerTraceHeaderStripper : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
+        {
+            app.Use((context, nextMiddleware) =>
+            {
+                context.Request.Headers.Remove("sentry-trace");
+                context.Request.Headers.Remove("baggage");
+                return nextMiddleware(context);
+            });
+            next(app);
+        };
     }
 }

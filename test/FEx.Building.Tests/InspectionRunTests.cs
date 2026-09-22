@@ -6,6 +6,7 @@ using Serilog.Events;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ namespace FEx.Building.Tests;
 /// One class on purpose: <see cref="InspectionRun.Pending" /> is process-wide state, and xUnit runs the
 /// tests of one class one after another.
 /// </remarks>
+[Collection(GlobalLoggerCollection.Name)]
 public sealed class InspectionRunTests
 {
     private const string CleanReport = """
@@ -224,7 +226,7 @@ public sealed class InspectionRunTests
             Log.Logger = previous;
         }
 
-        sink.Messages.Where(message => message.StartsWith("> dotnet", StringComparison.Ordinal) || message == "line")
+        sink.Messages.Where(static message => message.StartsWith("> dotnet", StringComparison.Ordinal) || message == "line")
             .ShouldBe(["> dotnet tool restore", "line", $"> dotnet {InspectArguments}", "line"]);
     }
 
@@ -258,6 +260,69 @@ public sealed class InspectionRunTests
 
         tool.Inspection!.Killed.ShouldBeTrue();
     }
+
+    [Theory]
+    [MemberData(nameof(ExitedRaces))]
+    public void ADiscard_ThatLosesTheRaceWithTheToolsExit_ReportsNothingKilled(Exception race)
+    {
+        // The tool exits between the discard's check and its kill. The discard runs from the end-of-build
+        // hook, in a finally: an exception here would replace the red test the developer needs to see.
+        using var tool = new FakeDotNet(holdTheInspection: true) { KillFailure = race, ExitsWhenKillFails = true };
+        var run = new InspectionRun(InspectArguments, static () => CleanReport, tool.Start);
+
+        run.StartInBackground();
+        tool.InspectionStarted.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ShouldBeTrue();
+
+        InspectionRun.DiscardPending().ShouldBeFalse();
+        run.Collect().ShouldBeEmpty();
+    }
+
+    public static TheoryData<Exception> ExitedRaces() =>
+    [
+        new InvalidOperationException("ProcessTree: the root has already exited"),
+        new ArgumentException("Process.GetProcessById: the id is no longer running"),
+    ];
+
+    [Fact]
+    public void ADiscard_ThatLosesTheRaceInsideTheTreeKill_ReportsNothingKilled()
+    {
+        // The real ProcessTree and the real runtime: the root is still running when both checks read it and
+        // gone by the time the tree kill looks its id up, which is when GetProcessById throws.
+        using var tool = new FakeDotNet(holdTheInspection: true) { ExitsWhenAimedAt = true, AsTree = true };
+        var run = new InspectionRun(InspectArguments, static () => CleanReport, tool.Start);
+
+        run.StartInBackground();
+        tool.InspectionStarted.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ShouldBeTrue();
+
+        InspectionRun.DiscardPending().ShouldBeFalse();
+        run.Collect().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [MemberData(nameof(RefusedKills))]
+    public void ADiscard_ThatCannotKillAToolStillRunning_Surfaces(Exception refusal)
+    {
+        // Access denied, or a tree the runtime will not kill: the tool keeps running after the build, and
+        // that is worth an exception - swallowed, it would read exactly like "nothing left to stop".
+        using var tool = new FakeDotNet(holdTheInspection: true) { KillFailure = refusal };
+        var run = new InspectionRun(InspectArguments, static () => CleanReport, tool.Start);
+
+        run.StartInBackground();
+        tool.InspectionStarted.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).ShouldBeTrue();
+
+        Should.Throw<Exception>(static () => InspectionRun.DiscardPending()).ShouldBeSameAs(refusal);
+
+        tool.ReleaseTheInspection();
+        run.Collect().ShouldBeEmpty();
+    }
+
+    public static TheoryData<Exception> RefusedKills() =>
+    [
+        new Win32Exception(5, "Access is denied"),
+        new AggregateException(new Win32Exception(5, "Access is denied")),
+        new InvalidOperationException("Cannot kill a tree that contains the calling process"),
+        new ArgumentException("A live process refused for a reason other than its exit"),
+    ];
 
     [Fact]
     public void RunAsync_StartsTheWork_AndJoinReturnsItsResult()
@@ -295,6 +360,10 @@ public sealed class InspectionRunTests
         public FakeProcess? Inspection { get; private set; }
         public Action? OnRestoreExited { get; set; }
         public Action? OnInspectionStarting { get; set; }
+        public Exception? KillFailure { get; init; }
+        public bool ExitsWhenKillFails { get; init; }
+        public bool ExitsWhenAimedAt { get; init; }
+        public bool AsTree { get; init; }
 
         public void ReleaseTheInspection() => _inspectionMayExit.Set();
 
@@ -307,10 +376,15 @@ public sealed class InspectionRunTests
 
             OnInspectionStarting?.Invoke();
             Inspection?.Dispose();
-            Inspection = new FakeProcess(arguments, _holdTheInspection ? _inspectionMayExit : null, _exitCode, null);
+            Inspection = new FakeProcess(arguments, _holdTheInspection ? _inspectionMayExit : null, _exitCode, null)
+            {
+                KillFailure = KillFailure,
+                ExitsWhenKillFails = ExitsWhenKillFails,
+                ExitsWhenAimedAt = ExitsWhenAimedAt,
+            };
             InspectionStarted.Set();
 
-            return Inspection;
+            return AsTree ? new ProcessTree(Inspection) : Inspection;
         }
 
         public void Dispose()
@@ -343,6 +417,14 @@ public sealed class InspectionRunTests
         }
 
         public bool Killed { get; private set; }
+        public Exception? KillFailure { get; init; }
+        public bool ExitsWhenKillFails { get; init; }
+
+        /// <summary>
+        /// Exits the moment something reads the id to aim a kill at it, and answers with one no process
+        /// holds - the window between a tree kill's exit check and its lookup by id.
+        /// </summary>
+        public bool ExitsWhenAimedAt { get; init; }
 
         public string FileName => "dotnet";
         public string Arguments { get; }
@@ -350,11 +432,36 @@ public sealed class InspectionRunTests
         public IReadOnlyCollection<Output> Output { get; } = [new Output { Type = OutputType.Std, Text = "line" }];
         public int ExitCode => Killed ? -1 : _exitCode;
         public bool HasExited { get; private set; }
-        public int Id => 4242;
+        public int Id
+        {
+            get
+            {
+                if (!ExitsWhenAimedAt)
+                    return 4242;
+
+                Exit();
+
+                return int.MaxValue;
+            }
+        }
 
         public void Kill()
         {
+            if (KillFailure is not null)
+            {
+                if (ExitsWhenKillFails)
+                    Exit();
+
+                throw KillFailure;
+            }
+
             Killed = true;
+            HasExited = true;
+            _mayExit?.Set();
+        }
+
+        private void Exit()
+        {
             HasExited = true;
             _mayExit?.Set();
         }

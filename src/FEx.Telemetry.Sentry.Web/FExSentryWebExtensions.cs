@@ -44,8 +44,11 @@ public static class FExSentryWebExtensions
             && double.TryParse(sampleRateRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var rate))
         {
             opt.TracesSampleRate = rate;
-            // Installed only here: a sampler alone switches tracing on, even where no rate was configured.
-            opt.TracesSampler = static context => IsStaticAsset(context.TryGetHttpPath()) ? 0 : null;
+            // Only where tracing is on: a sampler alone switches performance monitoring on, even at a rate of 0.
+            // It returns the rate rather than null, since null defers to an incoming sentry-trace header and lets
+            // any anonymous caller force every request of theirs into the sampled budget.
+            if (rate > 0)
+                opt.TracesSampler = context => IsStaticAsset(context.TryGetHttpPath()) ? 0 : rate;
         }
 
         // Processors rather than BeforeSend: they also run on user feedback, which skips BeforeSend, and they

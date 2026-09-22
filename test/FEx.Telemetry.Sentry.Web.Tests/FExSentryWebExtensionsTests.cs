@@ -45,25 +45,29 @@ public sealed class FExSentryWebExtensionsTests
 
     [Theory]
     [InlineData("/_framework/System.Net.Http.Json.lx3tims3m7.wasm", 0.0)]
-    [InlineData("/api/sales/trips", null)]
-    public void WithATracesRate_StaticAssetsAreDropped_AndTheRestKeepsTheRate(string path, double? expected)
+    [InlineData("/api/sales/trips", 0.1)]
+    public void WithATracesRate_StaticAssetsAreDropped_AndTheRestKeepsTheRate(string path, double expected)
     {
         SentryAspNetCoreOptions options = new();
         FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", "0.1")), Dsn);
 
+        // A caller's sentry-trace header arrives as an already-made decision; the sampler must still decide.
         TransactionSamplingContext context = new(
-            new TransactionContext("GET " + path, "http.server"),
+            new TransactionContext("GET " + path, "http.server", isSampled: true),
             new Dictionary<string, object?> { ["__HttpPath"] = path });
 
         options.TracesSampleRate.ShouldBe(0.1);
         options.TracesSampler.ShouldNotBeNull().Invoke(context).ShouldBe(expected);
     }
 
-    [Fact]
-    public void WithoutATracesRate_NoSamplerSwitchesTracingOn()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("0")]
+    public void WithoutAPositiveTracesRate_NoSamplerSwitchesTracingOn(string? rate)
     {
         SentryAspNetCoreOptions options = new();
-        FExSentryWebExtensions.ConfigureOptions(options, Configuration(), Dsn);
+        FExSentryWebExtensions.ConfigureOptions(
+            options, rate is null ? Configuration() : Configuration(("Sentry:TracesSampleRate", rate)), Dsn);
 
         options.TracesSampler.ShouldBeNull();
     }

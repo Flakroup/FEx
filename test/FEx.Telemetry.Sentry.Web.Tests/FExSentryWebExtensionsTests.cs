@@ -1,7 +1,10 @@
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Sentry;
 using Sentry.AspNetCore;
 using Sentry.Extensibility;
@@ -21,11 +24,24 @@ using Xunit;
 namespace FEx.Telemetry.Sentry.Web.Tests;
 
 /// <summary>
+/// The tests that swap <see cref="FExStaticLogger" />'s process-wide backing logger for a substitute. xUnit
+/// runs classes in parallel, so a sibling class doing the same swap would race this one and clobber its
+/// "previous" logger mid-test - the same hazard <c>FEx.Building.Tests.GlobalLoggerCollection</c> documents
+/// for Serilog's own <c>Log.Logger</c>. One collection runs them one at a time.
+/// </summary>
+[CollectionDefinition(Name)]
+public sealed class FExStaticLoggerCollection
+{
+    public const string Name = "FExStaticLogger";
+}
+
+/// <summary>
 /// Nothing personal may leave in the request the SDK attaches - not the caller's address, not a secret
 /// header, not a search term in the query string - all of which the SDK passes through untouched. Driven through a real
 /// <see cref="SentryClient" /> and a capturing transport, so what is asserted is the envelope as it would go
 /// on the wire - the callbacks this wires are internal to the SDK and have no other way to be observed.
 /// </summary>
+[Collection(FExStaticLoggerCollection.Name)]
 public sealed class FExSentryWebExtensionsTests
 {
     private const string Dsn = "https://examplePublicKey@o0.ingest.sentry.io/0";
@@ -120,10 +136,87 @@ public sealed class FExSentryWebExtensionsTests
         options.TracesSampler.ShouldBeNull();
     }
 
+    // "abc" fails outright; "0,1" is the locale-formatted decimal an operator typing Polish habits into an
+    // .env file would write - this parses InvariantCulture, so the comma form is rejected the same way.
+    [Theory]
+    [InlineData("abc")]
+    [InlineData("0,1")]
+    public void ConfigureOptions_UnparsableSampleRate_LogsOneWarningNamingTheKeyAndValue(string raw)
+    {
+        var logger = Substitute.For<IFExLogger>();
+        using var restore = ReplaceStaticLogger(logger);
+
+        SentryAspNetCoreOptions options = new();
+        FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", raw)), Dsn);
+
+        options.TracesSampleRate.ShouldBeNull();
+        logger.Received(1).Warning(Arg.Is<string>(message =>
+            message.Contains("Sentry:TracesSampleRate", StringComparison.Ordinal)
+            && message.Contains(raw, StringComparison.Ordinal)));
+    }
+
+    // The raw value is deploy configuration, not an anonymous caller's input, but a newline in it would still
+    // forge a second line in a plain-text sink - stripped before it reaches the message.
+    [Fact]
+    public void ConfigureOptions_UnparsableSampleRate_StripsNewlinesFromTheLoggedValue()
+    {
+        var logger = Substitute.For<IFExLogger>();
+        using var restore = ReplaceStaticLogger(logger);
+        const string raw = "bad\r\nrate";
+
+        SentryAspNetCoreOptions options = new();
+        FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", raw)), Dsn);
+
+        logger.Received(1).Warning(Arg.Is<string>(message =>
+            message.Contains("badrate", StringComparison.Ordinal)
+            && !message.Contains('\r') && !message.Contains('\n')));
+    }
+
+    [Fact]
+    public void ConfigureOptions_ValidSampleRate_SetsRateAndLogsNothing()
+    {
+        var logger = Substitute.For<IFExLogger>();
+        using var restore = ReplaceStaticLogger(logger);
+
+        SentryAspNetCoreOptions options = new();
+        FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", "0.1")), Dsn);
+
+        options.TracesSampleRate.ShouldBe(0.1);
+        logger.DidNotReceive().Warning(Arg.Any<string>());
+    }
+
+    [Fact]
+    public void ConfigureOptions_MissingSampleRate_LeavesDefaultAndLogsNothing()
+    {
+        var logger = Substitute.For<IFExLogger>();
+        using var restore = ReplaceStaticLogger(logger);
+
+        SentryAspNetCoreOptions options = new();
+        FExSentryWebExtensions.ConfigureOptions(options, Configuration(), Dsn);
+
+        options.TracesSampleRate.ShouldBeNull();
+        logger.DidNotReceive().Warning(Arg.Any<string>());
+    }
+
+    // FExStaticLogger backs onto one process-wide field; this class is the only one in the assembly that
+    // reads it, but a test still has to hand the original logger back so a later test in this same class
+    // never observes another test's substitute.
+    private static IDisposable ReplaceStaticLogger(IFExLogger logger)
+    {
+        var original = FExStaticLogger.Instance;
+        _ = new FExStaticLogger(logger);
+        return new RestoreLogger(original);
+    }
+
     private static IConfiguration Configuration(params (string Key, string Value)[] values) =>
         new ConfigurationBuilder()
             .AddInMemoryCollection(values.Select(static v => new KeyValuePair<string, string?>(v.Key, v.Value)))
             .Build();
+
+    private sealed class RestoreLogger(IFExLogger original) : IDisposable
+    {
+        public void Dispose() => _ = new FExStaticLogger(original);
+    }
 
     [Fact]
     public void ScrubRequest_KeepsOnlyTheSafeHeadersInAnyCase_AndDropsTheQuery()

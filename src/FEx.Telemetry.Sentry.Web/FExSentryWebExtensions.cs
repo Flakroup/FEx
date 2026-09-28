@@ -1,3 +1,4 @@
+using FEx.Agnostics.Abstractions.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -44,15 +45,28 @@ public static class FExSentryWebExtensions
         opt.Environment = configuration["Sentry:Environment"] ?? "Production";
         var sampleRateRaw = configuration["Sentry:TracesSampleRate"];
 
-        if (!string.IsNullOrWhiteSpace(sampleRateRaw)
-            && double.TryParse(sampleRateRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var rate))
+        if (!string.IsNullOrWhiteSpace(sampleRateRaw))
         {
-            opt.TracesSampleRate = rate;
-            // Only where tracing is on: a sampler alone switches performance monitoring on, even at a rate of 0.
-            // It never returns null, since null defers to an incoming sentry-trace header and lets any anonymous
-            // caller force every request of theirs into the sampled budget.
-            if (rate > 0)
-                opt.TracesSampler = context => IsStaticAsset(context.TryGetHttpPath()) ? 0 : rate;
+            if (double.TryParse(sampleRateRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var rate))
+            {
+                opt.TracesSampleRate = rate;
+                // Only where tracing is on: a sampler alone switches performance monitoring on, even at a rate of 0.
+                // It never returns null, since null defers to an incoming sentry-trace header and lets any anonymous
+                // caller force every request of theirs into the sampled budget.
+                if (rate > 0)
+                    opt.TracesSampler = context => IsStaticAsset(context.TryGetHttpPath()) ? 0 : rate;
+            }
+            else
+            {
+                // TryParse rejects it silently otherwise - most plausibly a locale-formatted decimal such as
+                // "0,5" (this parses InvariantCulture) - and the SDK default stays in effect with no other signal.
+                // The raw value is deploy configuration, not caller input, but a newline in it would still forge
+                // a second line in a plain-text sink - stripped before it reaches the message.
+                var sanitizedRaw = sampleRateRaw.Replace("\r", string.Empty).Replace("\n", string.Empty);
+                FExStaticLogger.Warning(
+                    $"Sentry:TracesSampleRate value '{sanitizedRaw}' could not be parsed as a number; " +
+                    "keeping the Sentry SDK's default sample rate.");
+            }
         }
 
         // Processors rather than BeforeSend: they also run on user feedback, which skips BeforeSend, and they

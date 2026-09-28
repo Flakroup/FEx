@@ -60,8 +60,11 @@ public static class FExSentryWebExtensions
             {
                 // TryParse rejects it silently otherwise - most plausibly a locale-formatted decimal such as
                 // "0,5" (this parses InvariantCulture) - and the SDK default stays in effect with no other signal.
+                // The raw value is deploy configuration, not caller input, but a newline in it would still forge
+                // a second line in a plain-text sink - stripped before it reaches the message.
+                var sanitizedRaw = sampleRateRaw.Replace("\r", string.Empty).Replace("\n", string.Empty);
                 FExStaticLogger.Warning(
-                    $"Sentry:TracesSampleRate value '{sampleRateRaw}' could not be parsed as a number; " +
+                    $"Sentry:TracesSampleRate value '{sanitizedRaw}' could not be parsed as a number; " +
                     "keeping the Sentry SDK's default sample rate.");
             }
         }

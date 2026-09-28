@@ -24,11 +24,24 @@ using Xunit;
 namespace FEx.Telemetry.Sentry.Web.Tests;
 
 /// <summary>
+/// The tests that swap <see cref="FExStaticLogger" />'s process-wide backing logger for a substitute. xUnit
+/// runs classes in parallel, so a sibling class doing the same swap would race this one and clobber its
+/// "previous" logger mid-test - the same hazard <c>FEx.Building.Tests.GlobalLoggerCollection</c> documents
+/// for Serilog's own <c>Log.Logger</c>. One collection runs them one at a time.
+/// </summary>
+[CollectionDefinition(Name)]
+public sealed class FExStaticLoggerCollection
+{
+    public const string Name = "FExStaticLogger";
+}
+
+/// <summary>
 /// Nothing personal may leave in the request the SDK attaches - not the caller's address, not a secret
 /// header, not a search term in the query string - all of which the SDK passes through untouched. Driven through a real
 /// <see cref="SentryClient" /> and a capturing transport, so what is asserted is the envelope as it would go
 /// on the wire - the callbacks this wires are internal to the SDK and have no other way to be observed.
 /// </summary>
+[Collection(FExStaticLoggerCollection.Name)]
 public sealed class FExSentryWebExtensionsTests
 {
     private const string Dsn = "https://examplePublicKey@o0.ingest.sentry.io/0";
@@ -140,6 +153,23 @@ public sealed class FExSentryWebExtensionsTests
         logger.Received(1).Warning(Arg.Is<string>(message =>
             message.Contains("Sentry:TracesSampleRate", StringComparison.Ordinal)
             && message.Contains(raw, StringComparison.Ordinal)));
+    }
+
+    // The raw value is deploy configuration, not an anonymous caller's input, but a newline in it would still
+    // forge a second line in a plain-text sink - stripped before it reaches the message.
+    [Fact]
+    public void ConfigureOptions_UnparsableSampleRate_StripsNewlinesFromTheLoggedValue()
+    {
+        var logger = Substitute.For<IFExLogger>();
+        using var restore = ReplaceStaticLogger(logger);
+        const string raw = "bad\r\nrate";
+
+        SentryAspNetCoreOptions options = new();
+        FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", raw)), Dsn);
+
+        logger.Received(1).Warning(Arg.Is<string>(message =>
+            message.Contains("badrate", StringComparison.Ordinal)
+            && !message.Contains('\r') && !message.Contains('\n')));
     }
 
     [Fact]

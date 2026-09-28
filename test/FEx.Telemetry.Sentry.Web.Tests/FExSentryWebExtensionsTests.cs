@@ -1,7 +1,10 @@
+using FEx.Agnostics.Abstractions.Interfaces;
+using FEx.Agnostics.Abstractions.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Sentry;
 using Sentry.AspNetCore;
 using Sentry.Extensibility;

@@ -2,9 +2,12 @@ using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using Serilog.Extensions.Logging;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -80,10 +83,10 @@ public sealed class FExSerilogWebExtensionsTests
             builder.AddFExSerilog();
             using var app = builder.Build();
 
-            // Unchanged existing behaviour: Serilog is still the ILoggerFactory backing ASP.NET Core's own
-            // Microsoft.Extensions.Logging pipeline, exactly as before this PR touched AddFExSerilog.
-            var logger = app.Services.GetService(typeof(Microsoft.Extensions.Logging.ILoggerFactory));
-            logger.ShouldNotBeNull();
+            // Unchanged existing behaviour: the host's ILoggerFactory is still Serilog-backed - not just "some
+            // ILoggerFactory", which WebApplication.CreateBuilder() would supply on its own and this test would
+            // then pass even with the UseSerilog call removed.
+            app.Services.GetRequiredService<ILoggerFactory>().ShouldBeOfType<SerilogLoggerFactory>();
         }
         finally
         {

@@ -10,6 +10,7 @@
 		<ProjectReference Include="..\..\src\Core\FEx.Core.csproj" />
 		<ProjectReference Include="..\..\src\Logging\FEx.Logging.csproj" />
 		<ProjectReference Include="..\..\src\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
+		<ProjectReference Include="..\..\src\FEx.Logging.Web\FEx.Logging.Web.csproj" />
 		<ProjectReference Include="..\..\src\DependencyInjection\FEx.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\src\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
 		<ProjectReference Include="..\..\src\Agnostics.TestMocks\FEx.Agnostics.TestMocks.csproj" />

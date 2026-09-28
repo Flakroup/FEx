@@ -123,10 +123,70 @@ public sealed class FExSentryWebExtensionsTests
         options.TracesSampler.ShouldBeNull();
     }
 
+    // "abc" fails outright; "0,1" is the locale-formatted decimal an operator typing Polish habits into an
+    // .env file would write - this parses InvariantCulture, so the comma form is rejected the same way.
+    [Theory]
+    [InlineData("abc")]
+    [InlineData("0,1")]
+    public void ConfigureOptions_UnparsableSampleRate_LogsOneWarningNamingTheKeyAndValue(string raw)
+    {
+        var logger = Substitute.For<IFExLogger>();
+        using var restore = ReplaceStaticLogger(logger);
+
+        SentryAspNetCoreOptions options = new();
+        FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", raw)), Dsn);
+
+        options.TracesSampleRate.ShouldBeNull();
+        logger.Received(1).Warning(Arg.Is<string>(message =>
+            message.Contains("Sentry:TracesSampleRate", StringComparison.Ordinal)
+            && message.Contains(raw, StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public void ConfigureOptions_ValidSampleRate_SetsRateAndLogsNothing()
+    {
+        var logger = Substitute.For<IFExLogger>();
+        using var restore = ReplaceStaticLogger(logger);
+
+        SentryAspNetCoreOptions options = new();
+        FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", "0.1")), Dsn);
+
+        options.TracesSampleRate.ShouldBe(0.1);
+        logger.DidNotReceive().Warning(Arg.Any<string>());
+    }
+
+    [Fact]
+    public void ConfigureOptions_MissingSampleRate_LeavesDefaultAndLogsNothing()
+    {
+        var logger = Substitute.For<IFExLogger>();
+        using var restore = ReplaceStaticLogger(logger);
+
+        SentryAspNetCoreOptions options = new();
+        FExSentryWebExtensions.ConfigureOptions(options, Configuration(), Dsn);
+
+        options.TracesSampleRate.ShouldBeNull();
+        logger.DidNotReceive().Warning(Arg.Any<string>());
+    }
+
+    // FExStaticLogger backs onto one process-wide field; this class is the only one in the assembly that
+    // reads it, but a test still has to hand the original logger back so a later test in this same class
+    // never observes another test's substitute.
+    private static IDisposable ReplaceStaticLogger(IFExLogger logger)
+    {
+        var original = FExStaticLogger.Instance;
+        _ = new FExStaticLogger(logger);
+        return new RestoreLogger(original);
+    }
+
     private static IConfiguration Configuration(params (string Key, string Value)[] values) =>
         new ConfigurationBuilder()
             .AddInMemoryCollection(values.Select(static v => new KeyValuePair<string, string?>(v.Key, v.Value)))
             .Build();
+
+    private sealed class RestoreLogger(IFExLogger original) : IDisposable
+    {
+        public void Dispose() => _ = new FExStaticLogger(original);
+    }
 
     [Fact]
     public void ScrubRequest_KeepsOnlyTheSafeHeadersInAnyCase_AndDropsTheQuery()

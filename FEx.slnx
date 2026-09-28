@@ -109,9 +109,6 @@
     <Project Path="test/FEx.Logging.Tests/FEx.Logging.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
-    <Project Path="test/FEx.Logging.Web.Tests/FEx.Logging.Web.Tests.csproj">
-      <Build Solution="Build|*" Project="false" />
-    </Project>
     <Project Path="test/FEx.MVVM.Tests/FEx.MVVM.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>

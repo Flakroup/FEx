@@ -1,5 +1,6 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Logging;
+using FEx.Logging.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
-namespace FEx.Logging.Web.Tests;
+namespace FEx.Logging.Tests;
 
 /// <summary>
 /// Both <see cref="FExStaticLogger" /> and Serilog's own <see cref="Log.Logger" /> are process-wide static

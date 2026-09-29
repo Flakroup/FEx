@@ -254,7 +254,9 @@ public sealed class IdempotencyMiddlewareTests
 
         executions.ShouldBe(1);
         store.Entries.Count.ShouldBe(1);
-        store.Reads.ShouldBe(2);
+        // 3, not 2: the in-flight lock re-checks the store once more right after it is acquired, so a
+        // concurrent holder's just-stored response is replayed instead of the handler running twice.
+        store.Reads.ShouldBe(3);
         Body(retry).ShouldBe("from-the-handler");
     }
 

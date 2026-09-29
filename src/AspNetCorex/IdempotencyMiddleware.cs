@@ -2,8 +2,10 @@ using FEx.AspNetCorex.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.AspNetCorex;
@@ -26,6 +28,14 @@ public sealed class IdempotencyMiddleware
     public const string HeaderName = "Idempotency-Key";
 
     private static readonly TimeSpan ResponseLifetime = TimeSpan.FromHours(24);
+
+    // A second concurrent request with the same key must wait for the first to finish and then replay
+    // its stored response, rather than executing the handler a second time. One semaphore per store key,
+    // held for the duration of the request; ref-counted so the entry is removed once its last holder
+    // leaves - the dictionary never grows past the number of keys actually in flight right now.
+    private static readonly ConcurrentDictionary<string, KeyLock> InFlightLocks = new();
+
+    internal static int InFlightLockCount => InFlightLocks.Count;
 
     private readonly RequestDelegate _next;
     private readonly ILogger<IdempotencyMiddleware> _logger;
@@ -72,41 +82,73 @@ public sealed class IdempotencyMiddleware
 
         if (await store.TryGetAsync(storeKey, context.RequestAborted) is { } stored)
         {
-            _logger.LogInformation("Idempotency hit {IdempotencyKey} for user {UserId}", key, userId);
-            context.Response.StatusCode = stored.StatusCode;
-            context.Response.ContentType = stored.ContentType;
-            await context.Response.Body.WriteAsync(stored.Body);
+            await ReplayAsync(context, stored, key, userId);
 
             return;
         }
 
-        // Buffer the response so a successful body can be stored AND still reach the client.
-        var originalBody = context.Response.Body;
-        await using MemoryStream memoryBody = new();
-        context.Response.Body = memoryBody;
+        var keyLock = Enter(storeKey);
 
-        await _next(context);
+        try
+        {
+            await keyLock.Semaphore.WaitAsync(context.RequestAborted);
+        }
+        catch
+        {
+            Exit(storeKey, keyLock);
 
-        memoryBody.Seek(0, SeekOrigin.Begin);
-        var bytes = memoryBody.ToArray();
-        memoryBody.Seek(0, SeekOrigin.Begin);
-        await memoryBody.CopyToAsync(originalBody);
-        context.Response.Body = originalBody;
+            throw;
+        }
 
-        // Only a completed write is safe to replay; an error response must stay retryable.
-        // ponytail: two concurrent requests with the same key both execute (the store is written only on
-        // completion); the outbox retries sequentially, so this stays theoretical. Upgrade path: a
-        // per-key in-flight lock.
-        if (context.Response.StatusCode is >= 200 and < 300)
-            await store.SetAsync(storeKey,
-                new IdempotentResponse
-                {
-                    StatusCode = context.Response.StatusCode,
-                    ContentType = context.Response.ContentType ?? "application/json",
-                    Body = bytes
-                },
-                ResponseLifetime,
-                context.RequestAborted);
+        try
+        {
+            // A concurrent request holding the lock may have already run the handler and stored its
+            // response while this one waited - replay that instead of running the handler again.
+            if (await store.TryGetAsync(storeKey, context.RequestAborted) is { } storedAfterWait)
+            {
+                await ReplayAsync(context, storedAfterWait, key, userId);
+
+                return;
+            }
+
+            // Buffer the response so a successful body can be stored AND still reach the client.
+            var originalBody = context.Response.Body;
+            await using MemoryStream memoryBody = new();
+            context.Response.Body = memoryBody;
+
+            await _next(context);
+
+            memoryBody.Seek(0, SeekOrigin.Begin);
+            var bytes = memoryBody.ToArray();
+            memoryBody.Seek(0, SeekOrigin.Begin);
+            await memoryBody.CopyToAsync(originalBody);
+            context.Response.Body = originalBody;
+
+            // Only a completed write is safe to replay; an error response must stay retryable.
+            if (context.Response.StatusCode is >= 200 and < 300)
+                await store.SetAsync(storeKey,
+                    new IdempotentResponse
+                    {
+                        StatusCode = context.Response.StatusCode,
+                        ContentType = context.Response.ContentType ?? "application/json",
+                        Body = bytes
+                    },
+                    ResponseLifetime,
+                    context.RequestAborted);
+        }
+        finally
+        {
+            keyLock.Semaphore.Release();
+            Exit(storeKey, keyLock);
+        }
+    }
+
+    private async Task ReplayAsync(HttpContext context, IdempotentResponse stored, Guid key, string userId)
+    {
+        _logger.LogInformation("Idempotency hit {IdempotencyKey} for user {UserId}", key, userId);
+        context.Response.StatusCode = stored.StatusCode;
+        context.Response.ContentType = stored.ContentType;
+        await context.Response.Body.WriteAsync(stored.Body);
     }
 
     // JWT keeps the standard "sub" claim (inbound mapping disabled); cookie auth maps the user id to
@@ -115,4 +157,44 @@ public sealed class IdempotencyMiddleware
         user.Identity?.IsAuthenticated != true
             ? null
             : user.FindFirstValue("sub") ?? user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.Identity.Name;
+
+    // Ref-counted so the dictionary entry can be removed the instant its last holder leaves, without a
+    // race where a thread starts using an entry that another thread has already begun to remove.
+    private static KeyLock Enter(string key)
+    {
+        while (true)
+        {
+            var keyLock = InFlightLocks.GetOrAdd(key, static _ => new KeyLock());
+
+            lock (keyLock)
+            {
+                if (keyLock.RefCount < 0)
+                    continue; // Removed by another thread between GetOrAdd and this lock - retry with a fresh entry.
+
+                keyLock.RefCount++;
+
+                return keyLock;
+            }
+        }
+    }
+
+    private static void Exit(string key, KeyLock keyLock)
+    {
+        lock (keyLock)
+        {
+            keyLock.RefCount--;
+
+            if (keyLock.RefCount != 0)
+                return;
+
+            keyLock.RefCount = -1; // Mark removed before releasing the monitor so a racing Enter retries instead of reusing it.
+            InFlightLocks.TryRemove(key, out _);
+        }
+    }
+
+    private sealed class KeyLock
+    {
+        public readonly SemaphoreSlim Semaphore = new(1, 1);
+        public int RefCount;
+    }
 }

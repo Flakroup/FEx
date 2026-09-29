@@ -21,6 +21,8 @@ namespace FEx.AspNetCorex;
 /// Where those responses live is the host's choice (<see cref="IIdempotencyStore"/>): call
 /// <c>AddIdempotency()</c> for the in-memory default, or register your own store before it - an app whose
 /// writes move money wants one that outlives the process. Place the middleware after authentication.
+/// The in-flight lock that stops two concurrent same-key requests from both running the handler is
+/// per process; a host scaled out across several instances still needs a shared lock to close that gap.
 /// </remarks>
 public sealed class IdempotencyMiddleware
 {
@@ -113,16 +115,28 @@ public sealed class IdempotencyMiddleware
 
             // Buffer the response so a successful body can be stored AND still reach the client.
             var originalBody = context.Response.Body;
-            await using MemoryStream memoryBody = new();
-            context.Response.Body = memoryBody;
+            byte[] bytes;
 
-            await _next(context);
+            await using (MemoryStream memoryBody = new())
+            {
+                context.Response.Body = memoryBody;
 
-            memoryBody.Seek(0, SeekOrigin.Begin);
-            var bytes = memoryBody.ToArray();
-            memoryBody.Seek(0, SeekOrigin.Begin);
-            await memoryBody.CopyToAsync(originalBody);
-            context.Response.Body = originalBody;
+                try
+                {
+                    await _next(context);
+                }
+                finally
+                {
+                    // Restore even when the handler throws - an upstream exception handler still needs
+                    // to write to the real response, not the buffer this method is about to dispose.
+                    context.Response.Body = originalBody;
+                }
+
+                memoryBody.Seek(0, SeekOrigin.Begin);
+                bytes = memoryBody.ToArray();
+                memoryBody.Seek(0, SeekOrigin.Begin);
+                await memoryBody.CopyToAsync(originalBody);
+            }
 
             // Only a completed write is safe to replay; an error response must stay retryable.
             if (context.Response.StatusCode is >= 200 and < 300)
@@ -134,7 +148,10 @@ public sealed class IdempotencyMiddleware
                         Body = bytes
                     },
                     ResponseLifetime,
-                    context.RequestAborted);
+                    // Not context.RequestAborted: the client that just got a successful response can
+                    // disconnect the instant it receives it, which must not cancel recording that success -
+                    // that is exactly the case a retry from a timed-out client is supposed to replay.
+                    CancellationToken.None);
         }
         finally
         {

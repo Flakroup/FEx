@@ -19,12 +19,15 @@ namespace FEx.AspNetCorex.Tests;
 /// scenario here genuinely overlaps two in-flight requests with a <see cref="TaskCompletionSource"/> gate,
 /// not a sleep, because timing alone cannot prove a lock actually blocked the second caller.
 /// </summary>
+[Collection(IdempotencyLockCollection.Name)]
 public sealed class IdempotencyMiddlewareConcurrencyTests
 {
     private static readonly Guid KeyA = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid KeyB = Guid.Parse("22222222-2222-2222-2222-222222222222");
 
-    [Fact]
+    // A regression that made the second caller wait forever instead of racing to a second execution
+    // must fail the run, not hang it - hence the timeout on every test below that blocks on a lock.
+    [Fact(Timeout = 5000)]
     public async Task ConcurrentRequests_WithSameKey_HandlerRunsOnce_AndBothReplayTheSameResponse()
     {
         RecordingStore store = new();
@@ -123,7 +126,15 @@ public sealed class IdempotencyMiddlewareConcurrencyTests
                 return Task.CompletedTask;
             });
 
-        await Should.ThrowAsync<InvalidOperationException>(() => middleware.InvokeAsync(PostContext(KeyA)));
+        var first = PostContext(KeyA);
+        var originalBody = first.Response.Body;
+
+        await Should.ThrowAsync<InvalidOperationException>(() => middleware.InvokeAsync(first));
+
+        // The response body must be restored to the caller's own stream, not left pointing at the
+        // buffer the middleware disposed - an upstream exception handler still needs to write to it.
+        first.Response.Body.ShouldBeSameAs(originalBody);
+        originalBody.CanWrite.ShouldBeTrue();
 
         var retry = PostContext(KeyA);
         retry.RequestAborted = TestContext.Current.CancellationToken;
@@ -167,6 +178,80 @@ public sealed class IdempotencyMiddlewareConcurrencyTests
 
         attempt.ShouldBe(2);
         retry.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
+    }
+
+    [Fact]
+    public async Task FirstRequest_ClientDisconnectsRightAfterSuccess_StillStoresTheResponse_SoARetryReplaysInsteadOfRerunning()
+    {
+        CancellationAwareStore store = new();
+        var executions = 0;
+        using CancellationTokenSource cts = new();
+
+        var middleware = Middleware(store,
+            async context =>
+            {
+                executions++;
+                context.Response.StatusCode = StatusCodes.Status200OK;
+                await context.Response.WriteAsync("done");
+
+                // The client that receives this response can disconnect the instant it lands - exactly
+                // the case a retry exists for - and that must not cancel recording the success.
+                await cts.CancelAsync();
+            });
+
+        var first = PostContext(KeyA);
+        first.RequestAborted = cts.Token;
+
+        await middleware.InvokeAsync(first);
+
+        var retry = PostContext(KeyA);
+        retry.RequestAborted = TestContext.Current.CancellationToken;
+        await middleware.InvokeAsync(retry);
+
+        executions.ShouldBe(1);
+        retry.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
+    }
+
+    [Fact(Timeout = 5000)]
+    public async Task WaiterCancelled_WhileQueued_DoesNotLeakItsRefCount()
+    {
+        RecordingStore store = new();
+        TaskCompletionSource holderEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource holderRelease = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenSource waiterCts = new();
+        var before = IdempotencyMiddleware.InFlightLockCount;
+
+        var middleware = Middleware(store,
+            async context =>
+            {
+                holderEntered.TrySetResult();
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+                await holderRelease.Task;
+#pragma warning restore VSTHRD003
+                context.Response.StatusCode = StatusCodes.Status200OK;
+            });
+
+        var holder = PostContext(KeyA);
+        holder.RequestAborted = TestContext.Current.CancellationToken;
+        var holderTask = middleware.InvokeAsync(holder);
+        await holderEntered.Task;
+
+        // The waiter is queued on the same key's semaphore, not yet holding it, when its own caller
+        // gives up - it must release the ref-count it took in Enter() without ever running the handler.
+        var waiter = PostContext(KeyA);
+        waiter.RequestAborted = waiterCts.Token;
+        var waiterTask = middleware.InvokeAsync(waiter);
+
+        await waiterCts.CancelAsync();
+
+#pragma warning disable VSTHRD003 // awaiting a task started earlier in the same test method is intentional
+        await Should.ThrowAsync<OperationCanceledException>(() => waiterTask);
+#pragma warning restore VSTHRD003
+
+        holderRelease.TrySetResult();
+        await holderTask;
+
+        IdempotencyMiddleware.InFlightLockCount.ShouldBe(before);
     }
 
     [Fact]
@@ -220,6 +305,33 @@ public sealed class IdempotencyMiddlewareConcurrencyTests
         {
             lock (_gate)
                 _entries[key] = response;
+
+            return Task.CompletedTask;
+        }
+    }
+
+    /// <summary>A store that honours cancellation like a real database-backed one (e.g. EF Core passing
+    /// the token to <c>SaveChangesAsync</c>) - <see cref="RecordingStore"/> ignores it, which would hide
+    /// a token used past the point it should be.</summary>
+    private sealed class CancellationAwareStore : IIdempotencyStore
+    {
+        private readonly Dictionary<string, IdempotentResponse> _entries = [];
+
+        public Task<IdempotentResponse?> TryGetAsync(string key, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            return Task.FromResult(_entries.TryGetValue(key, out var stored) ? stored : null);
+        }
+
+        public Task SetAsync(
+            string key,
+            IdempotentResponse response,
+            TimeSpan lifetime,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _entries[key] = response;
 
             return Task.CompletedTask;
         }

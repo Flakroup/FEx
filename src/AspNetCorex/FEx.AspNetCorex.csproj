@@ -17,4 +17,8 @@
 		<ProjectReference Include="..\AspNetCorex.Abstractions\FEx.AspNetCorex.Abstractions.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="FEx.AspNetCorex.Tests" />
+	</ItemGroup>
+
 </Project>

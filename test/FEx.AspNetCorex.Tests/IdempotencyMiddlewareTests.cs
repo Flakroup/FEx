@@ -19,6 +19,9 @@ namespace FEx.AspNetCorex.Tests;
 /// the completed response instead of executing the write again - scoped per user, successful
 /// responses only, everything else passes through untouched.
 /// </summary>
+// Shares IdempotencyMiddleware's static in-flight lock dictionary with IdempotencyMiddlewareConcurrencyTests;
+// same collection so the two classes never interleave and race each other's InFlightLockCount checks.
+[Collection(IdempotencyLockCollection.Name)]
 public sealed class IdempotencyMiddlewareTests
 {
     private static readonly Guid Key = Guid.Parse("6f9619ff-8b86-d011-b42d-00cf4fc964ff");
@@ -254,7 +257,11 @@ public sealed class IdempotencyMiddlewareTests
 
         executions.ShouldBe(1);
         store.Entries.Count.ShouldBe(1);
-        store.Reads.ShouldBe(2);
+        // 3, not 2: the in-flight lock re-checks the store once more right after it is acquired -
+        // unconditionally, even with no contention - so a concurrent holder's just-stored response is
+        // never missed. This test has no overlap itself; IdempotencyMiddlewareConcurrencyTests covers
+        // the concurrent case the re-check exists for.
+        store.Reads.ShouldBe(3);
         Body(retry).ShouldBe("from-the-handler");
     }
 

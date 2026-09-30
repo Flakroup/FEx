@@ -6,6 +6,7 @@ using FEx.Platforms.Windows.Models;
 using FEx.Platforms.Windows.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Principal;
@@ -20,6 +21,19 @@ namespace FEx.Platforms.Windows.Extensions;
 
 public static class FileSystemExtensions
 {
+    internal const string AccessCheckPathVariable = "FEX_ACL_PATH";
+    internal const string AccessCheckEveryoneVariable = "FEX_ACL_EVERYONE";
+    internal const string AccessCheckUserVariable = "FEX_ACL_USER";
+
+    // Constant on purpose: the path and account names reach PowerShell only through the child's
+    // environment, never through the script text, so no value can end a string literal and run
+    // as code (#77). -LiteralPath keeps [ ] in a path from being read as a wildcard.
+    internal const string AccessCheckScript =
+        "Get-ChildItem -LiteralPath $env:" + AccessCheckPathVariable + " -Recurse"
+        + " | % { $path1 = $_.FullName; Get-Acl -LiteralPath $_.FullName }"
+        + " | % { $owner = $_.Owner; ($_.Access.IdentityReference | % { (($env:" + AccessCheckEveryoneVariable + " -like $_) -or ($env:" + AccessCheckUserVariable + " -like $_)) }) -contains $true }"
+        + " | % { $path1 + '|' + $_ + '|' + (($owner -like $env:" + AccessCheckEveryoneVariable + ") -or ($owner -like $env:" + AccessCheckUserVariable + ")) }";
+
     public static bool SetEverybodyFullControl(this DirectoryInfo dInfo, params string[] excludes)
     {
         dInfo.Create();
@@ -85,15 +99,16 @@ public static class FileSystemExtensions
                                     NTAccount userAccount,
                                     params string[] excludes)
     {
-        var args =
-            $"Get-ChildItem \'{dInfo.FullName}\' -Recurse | % {{ $path1 = $_.fullname; Get-Acl $_.Fullname}} |  % {{$owner =$_.Owner; ($_.access.IdentityReference | %{{((\'{everyoneAccount.Value}\' -like $_) -or (\'{userAccount.Value}\' -like $_))}}) -contains $true}}| %{{$path1+'|'+$_+'|'+(($owner -like \'{everyoneAccount.Value}\') -or ($owner -like \'{userAccount.Value}\'))}}";
-
         string errOut;
         string output;
 
-        using (var c = new Cmd("powershell"))
+        using (var c = new Cmd("powershell",
+                               cfg: si => SetAccessCheckEnvironment(si,
+                                                                    dInfo.FullName,
+                                                                    everyoneAccount.Value,
+                                                                    userAccount.Value)))
         {
-            c.Run(args);
+            c.Run(AccessCheckScript);
             errOut = c.ErrOut.ToString().Trim();
             output = c.Output.ToString().Trim();
         }
@@ -147,6 +162,16 @@ public static class FileSystemExtensions
                 .ToArray();
 
         return wrongOutput || (access?.Any(x => x?.HasEveryoneAccess != true || !x.HasEveryoneOwner) ?? false);
+    }
+
+    internal static void SetAccessCheckEnvironment(ProcessStartInfo startInfo,
+                                                   string path,
+                                                   string everyoneAccount,
+                                                   string userAccount)
+    {
+        startInfo.Environment[AccessCheckPathVariable] = path;
+        startInfo.Environment[AccessCheckEveryoneVariable] = everyoneAccount;
+        startInfo.Environment[AccessCheckUserVariable] = userAccount;
     }
 
     private static void RunIcacls(string argsA, ElevatedCmd c)

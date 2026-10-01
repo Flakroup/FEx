@@ -36,14 +36,7 @@ public abstract class EFCoreDatabaseBackedService<TDbContext> : BulkDbServiceBas
         if (IsInitialized)
             return;
 
-        try
-        {
-            await InitializeAsync();
-        }
-        catch
-        {
-            //ignored
-        }
+        await InitializeAsync();
     }
 
     protected override async Task OnInitializeAsync()

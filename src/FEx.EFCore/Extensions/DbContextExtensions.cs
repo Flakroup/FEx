@@ -238,15 +238,21 @@ public static class DbContextExtensions
             command.Parameters.AddRange(parameters);
 
         db.Database.OpenConnection();
-        using var reader = command.ExecuteReader();
-        var sb = new StringBuilder();
 
-        while (reader.Read())
-            sb.Append(reader.GetString(0));
+        try
+        {
+            using var reader = command.ExecuteReader();
+            var sb = new StringBuilder();
 
-        var result = sb.ToString();
+            while (reader.Read())
+                sb.Append(reader.GetString(0));
 
-        return result;
+            return sb.ToString();
+        }
+        finally
+        {
+            db.Database.CloseConnection();
+        }
     }
 
     public static string GetJsonCommand<TDbContext, T>(this TDbContext context) where TDbContext : DbContext

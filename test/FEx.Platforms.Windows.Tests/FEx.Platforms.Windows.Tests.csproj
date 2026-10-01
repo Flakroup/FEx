@@ -5,7 +5,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\FEx.FileSystem\FEx.FileSystem.csproj" />
+		<ProjectReference Include="..\..\src\FEx.Platforms.Windows\FEx.Platforms.Windows.csproj" />
 	</ItemGroup>
 
 </Project>

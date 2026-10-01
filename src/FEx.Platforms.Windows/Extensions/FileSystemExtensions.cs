@@ -27,12 +27,17 @@ public static class FileSystemExtensions
 
     // Constant on purpose: the path and account names reach PowerShell only through the child's
     // environment, never through the script text, so no value can end a string literal and run
-    // as code (#77). -LiteralPath keeps [ ] in a path from being read as a wildcard.
+    // as code (#77). -LiteralPath keeps [ ] in a path from being read as a wildcard. The root is
+    // listed alongside its descendants, so an empty directory is still checked. Progress is
+    // silenced because Windows PowerShell writes module-loading progress to a redirected stderr,
+    // which the caller reads as a failed check.
     internal const string AccessCheckScript =
-        "Get-ChildItem -LiteralPath $env:" + AccessCheckPathVariable + " -Recurse"
+        "$ProgressPreference = 'SilentlyContinue'; (@(Get-Item -LiteralPath $env:" + AccessCheckPathVariable + ") + @(Get-ChildItem -LiteralPath $env:" + AccessCheckPathVariable + " -Recurse))"
         + " | % { $path1 = $_.FullName; Get-Acl -LiteralPath $_.FullName }"
         + " | % { $owner = $_.Owner; ($_.Access.IdentityReference | % { (($env:" + AccessCheckEveryoneVariable + " -like $_) -or ($env:" + AccessCheckUserVariable + " -like $_)) }) -contains $true }"
         + " | % { $path1 + '|' + $_ + '|' + (($owner -like $env:" + AccessCheckEveryoneVariable + ") -or ($owner -like $env:" + AccessCheckUserVariable + ")) }";
+
+    internal const string AccessCheckArguments = "-NoProfile -NonInteractive -Command " + AccessCheckScript;
 
     public static bool SetEverybodyFullControl(this DirectoryInfo dInfo, params string[] excludes)
     {
@@ -57,12 +62,12 @@ public static class FileSystemExtensions
         if (!shouldRun)
             return true;
 
-        var everyone = account.Value;
-        var argsA = $"icacls \"{dInfo.FullName}\" /T /C /setowner {everyone}";
-        var argsB = $"icacls \"{dInfo.FullName}\" /grant {everyone}:(OI)(CI)F /T";
+        var argsA = BuildSetOwnerArguments(dInfo.FullName, sid);
+        var argsB = BuildGrantArguments(dInfo.FullName, sid);
         bool isSuccess;
 
-        using (var c = new Cmd())
+        // icacls.exe is started directly, not through cmd /C, so no shell ever parses the path.
+        using (var c = new Cmd("icacls"))
         {
             c.Run(argsA);
             isSuccess = c.ErrOut.ToString().IsNullOrEmptyString() && c.Code == 0;
@@ -74,14 +79,17 @@ public static class FileSystemExtensions
             }
         }
 
-        if (!isSuccess)
+        // The elevated fallback needs cmd for its output redirection, and cmd expands %VAR% even
+        // inside double quotes, so a path containing % would reach icacls as a different path.
+        // Such a path is never elevated; the final check below then reports the failure.
+        if (!isSuccess && CanPassThroughCmd(dInfo.FullName))
         {
             using var c = new ElevatedCmd();
 
             try
             {
-                RunIcacls(argsA, c);
-                RunIcacls(argsB, c);
+                RunIcacls("icacls " + argsA, c);
+                RunIcacls("icacls " + argsB, c);
                 //isSuccess = true;
             }
             catch (Exception ex)
@@ -94,35 +102,43 @@ public static class FileSystemExtensions
         return !CheckAccess(dInfo, account, cuAccount, excludes);
     }
 
+    // The SID form (*S-1-1-0 for Everyone) does not depend on the OS language; a localized name
+    // such as "Tout le monde" contains spaces that icacls splits into separate arguments.
+    internal static string BuildSetOwnerArguments(string path, SecurityIdentifier sid) =>
+        $"{QuoteArgument(path)} /T /C /setowner *{sid.Value}";
+
+    internal static string BuildGrantArguments(string path, SecurityIdentifier sid) =>
+        $"{QuoteArgument(path)} /grant *{sid.Value}:(OI)(CI)F /T";
+
+    // Quotes one argument for the Windows command-line parser: a run of backslashes before the
+    // closing quote is doubled so it is not read as an escaped quote (e.g. "C:\").
+    internal static string QuoteArgument(string value)
+    {
+        if (value.IndexOf('"') >= 0)
+            throw new ArgumentException("A Windows path cannot contain a double quote.", nameof(value));
+
+        var trailingBackslashes = value.Length - value.TrimEnd('\\').Length;
+
+        return "\"" + value + new string('\\', trailingBackslashes) + "\"";
+    }
+
+    internal static bool CanPassThroughCmd(string path) => path.IndexOf('%') < 0;
+
+    /// <returns><see langword="true"/> when access still has to be granted, including when the check itself failed.</returns>
     private static bool CheckAccess(DirectoryInfo dInfo,
                                     NTAccount everyoneAccount,
                                     NTAccount userAccount,
                                     params string[] excludes)
     {
-        string errOut;
-        string output;
+        var raw = QueryAccess(dInfo, everyoneAccount, userAccount);
 
-        using (var c = new Cmd("powershell",
-                               cfg: si => SetAccessCheckEnvironment(si,
-                                                                    dInfo.FullName,
-                                                                    everyoneAccount.Value,
-                                                                    userAccount.Value)))
-        {
-            c.Run(AccessCheckScript);
-            errOut = c.ErrOut.ToString().Trim();
-            output = c.Output.ToString().Trim();
-        }
-
-        if (errOut.IsNotNullOrEmptyString())
-            return false;
+        // A check that failed or saw nothing (the root itself is always listed) proves nothing,
+        // so it must never read as "access is already in place".
+        if (raw is null
+            || raw.Length == 0)
+            return true;
 
         var wrongOutput = false;
-        ACL?[]? access = null;
-
-        var raw = output.IsNotNullOrEmptyString()
-            ? output.Split('\n')
-            : [];
-
         HashSet<string>? excluded = null;
 
         if (excludes.IsNotNullOrEmptyList())
@@ -139,30 +155,51 @@ public static class FileSystemExtensions
                 ex.HandleException();
             }
 
-        if (raw.IsNotNullOrEmptyList())
-            access = raw.AsParallel()
-                .Select(x =>
+        var access = raw.AsParallel()
+            .Select(x =>
+            {
+                var splitted = x.Split('|');
+
+                try
                 {
-                    var splitted = x.Trim().Split('|');
+                    if (excludes.IsNullOrEmptyList()
+                        || excluded?.Contains(splitted[0]) != true)
+                        return new ACL(splitted);
+                }
+                catch
+                {
+                    wrongOutput = true;
+                }
 
-                    try
-                    {
-                        if (excludes.IsNullOrEmptyList()
-                            || excluded?.Contains(splitted[0]) != true)
-                            return new ACL(splitted);
-                    }
-                    catch
-                    {
-                        wrongOutput = true;
-                    }
+                return null;
+            })
+            .Where(x => x is not null)
+            .ToArray();
 
-                    return null;
-                })
-                .Where(x => x is not null)
-                .ToArray();
-
-        return wrongOutput || (access?.Any(x => x?.HasEveryoneAccess != true || !x.HasEveryoneOwner) ?? false);
+        return wrongOutput || access.Any(x => x?.HasEveryoneAccess != true || !x.HasEveryoneOwner);
     }
+
+    /// <returns>The script's <c>path|hasAccess|isOwner</c> lines, or <see langword="null"/> when PowerShell wrote to stderr or exited non-zero.</returns>
+    internal static string[]? QueryAccess(DirectoryInfo dInfo, NTAccount everyoneAccount, NTAccount userAccount)
+    {
+        using var c = CreateAccessCheckCmd(dInfo.FullName, everyoneAccount.Value, userAccount.Value);
+        c.Run(AccessCheckArguments);
+
+        if (c.Code != 0
+            || c.ErrOut.ToString().IsNotNullOrEmptyString())
+            return null;
+
+        return
+        [
+            ..c.Output.ToString()
+                .Split('\n')
+                .Select(x => x.Trim())
+                .Where(x => x.Length > 0)
+        ];
+    }
+
+    internal static Cmd CreateAccessCheckCmd(string path, string everyoneAccount, string userAccount) =>
+        new("powershell", cfg: si => SetAccessCheckEnvironment(si, path, everyoneAccount, userAccount));
 
     internal static void SetAccessCheckEnvironment(ProcessStartInfo startInfo,
                                                    string path,
@@ -172,11 +209,15 @@ public static class FileSystemExtensions
         startInfo.Environment[AccessCheckPathVariable] = path;
         startInfo.Environment[AccessCheckEveryoneVariable] = everyoneAccount;
         startInfo.Environment[AccessCheckUserVariable] = userAccount;
+
+        // A host started from pwsh 7 passes on a PSModulePath that makes Windows PowerShell 5.1
+        // fail to load Get-Acl's module; without it 5.1 falls back to its own default.
+        startInfo.Environment.Remove("PSModulePath");
     }
 
-    private static void RunIcacls(string argsA, ElevatedCmd c)
+    private static void RunIcacls(string args, ElevatedCmd c)
     {
-        c.Run(argsA);
+        c.Run(args);
         var lines = c.Output.ToString().Trim().Split('\n');
         var last = lines.Last();
         var failed = last.Split(';')[1];

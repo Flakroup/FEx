@@ -97,6 +97,12 @@
     <Project Path="test/FEx.Building.Tests/FEx.Building.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.Asyncx.Tests/FEx.Asyncx.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.Common.Tests/FEx.Common.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.Core.Tests/FEx.Core.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>

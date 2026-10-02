@@ -1,13 +1,9 @@
-#if NETSTANDARD2_0
-using System.Collections.Concurrent;
-#else
-using System.Threading.Channels;
-#endif
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Asyncx.Utilities;
 using FEx.Core.Abstractions;
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,11 +11,10 @@ namespace FEx.Asyncx.Helpers;
 
 public sealed class AsyncProcessingQueue : IDisposable
 {
-#if NETSTANDARD2_0
-    private readonly ConcurrentQueue<TaskCompletionSource<bool>> _taskQueue;
-#else
-    private readonly Channel<TaskCompletionSource<bool>> _taskChannel;
-#endif
+    private readonly ConcurrentQueue<TaskCompletionSource<bool>> _taskQueue = [];
+    // One permit per queued gate: the processing loop sleeps on it instead of spinning while idle.
+    private readonly SemaphoreSlim _queuedSignal = new(0);
+    private volatile bool _disposed;
     private readonly FExSemaphoreSlim _signal;
     private readonly FExSemaphoreSlim _semaphore;
     private int _concurrencyLimit;
@@ -63,14 +58,7 @@ public sealed class AsyncProcessingQueue : IDisposable
 
     public int RunningCount => Volatile.Read(ref _currentRunning);
 
-    public int QueuedCount
-    {
-#if NETSTANDARD2_0
-        get => _taskQueue.Count;
-#else
-        get => _taskChannel.Reader.Count;
-#endif
-    }
+    public int QueuedCount => _taskQueue.Count;
 
     public AsyncProcessingQueue()
         : this(10)
@@ -82,12 +70,6 @@ public sealed class AsyncProcessingQueue : IDisposable
         _semaphore = new();
         _signal = new();
         ConcurrencyLimit = limit;
-
-#if NETSTANDARD2_0
-        _taskQueue = [];
-#else
-        _taskChannel = Channel.CreateUnbounded<TaskCompletionSource<bool>>();
-#endif
 
         FExCoreStatics.AsyncHelper.FireTaskAndForget(ProcessQueueAsync);
     }
@@ -143,11 +125,8 @@ public sealed class AsyncProcessingQueue : IDisposable
 #endif
             using var registration = cancellationToken.Register(() => gate.TrySetCanceled(cancellationToken));
 
-#if NETSTANDARD2_0
         _taskQueue.Enqueue(gate);
-#else
-        _taskChannel.Writer.TryWrite(gate);
-#endif
+        _queuedSignal.Release();
         await gate.Task;
     }
 
@@ -156,24 +135,18 @@ public sealed class AsyncProcessingQueue : IDisposable
     /// </summary>
     private async Task ProcessQueueAsync()
     {
-#if NETSTANDARD2_0
         while (true)
         {
+            await _queuedSignal.WaitAsync();
+
+            if (_disposed)
+                return;
+
             await WaitWhileAboveLimitAsync();
 
-            while (QueuedCount > 0
-                   && _currentRunning < _concurrencyLimit
-                   && _taskQueue.TryDequeue(out var gate))
+            if (_taskQueue.TryDequeue(out var gate))
                 ReleaseGate(gate);
         }
-#else
-        await foreach (var gate in _taskChannel.Reader.ReadAllAsync())
-        {
-            await WaitWhileAboveLimitAsync();
-
-            ReleaseGate(gate);
-        }
-#endif
     }
 
     private async Task WaitWhileAboveLimitAsync()
@@ -202,9 +175,8 @@ public sealed class AsyncProcessingQueue : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-#if !NETSTANDARD2_0
-        _taskChannel.Writer.TryComplete();
-#endif
+        _disposed = true;
+        _queuedSignal.Release();
         _signal?.Dispose();
         _semaphore?.Dispose();
     }

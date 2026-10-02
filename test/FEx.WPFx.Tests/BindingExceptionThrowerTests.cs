@@ -10,6 +10,7 @@ using Xunit;
 
 namespace FEx.WPFx.Tests;
 
+[Collection(WpfTestCollection.Name)]
 public sealed class BindingExceptionThrowerTests : IDisposable
 {
     private readonly string _dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));

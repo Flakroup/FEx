@@ -7,6 +7,7 @@ using Xunit;
 
 namespace FEx.WPFx.Tests;
 
+[Collection(WpfTestCollection.Name)]
 public class FileSystemIconsProviderTests
 {
     private const uint GdiObjects = 0;

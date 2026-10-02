@@ -1,15 +1,19 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Common.Abstractions.Interfaces;
+using FEx.Core.Abstractions;
 using FEx.WPFx.Abstractions.Interfaces;
 using FEx.WPFx.Controls;
 using NSubstitute;
 using Shouldly;
 using System;
 using System.Runtime.CompilerServices;
+using System.Windows.Media;
+using System.Windows.Threading;
 using Xunit;
 
 namespace FEx.WPFx.Tests;
 
+[Collection(WpfTestCollection.Name)]
 public class SplashScreenWindowTests
 {
     private static int CloseItCount() => SplashScreenWindow.CloseIt?.GetInvocationList().Length ?? 0;
@@ -18,21 +22,37 @@ public class SplashScreenWindowTests
     public void Close_UnsubscribesFromStaticEventAndStatusHub_SoWindowCanBeCollected() =>
         StaTestRunner.Run(() =>
         {
-            var hub = new FakeStatusHub();
-            var baseline = CloseItCount();
+            // The window raises property changes through the static dispatcher; use one that retains nothing.
+            FExCoreStatics.Configure(dispatcherFactory: static () => new InlineDispatcher());
 
-            var window = CreateAndCloseSplash(hub, baseline);
-
-            CloseItCount().ShouldBe(baseline);
-            hub.HandlerCount.ShouldBe(0);
-
-            for (var i = 0; i < 5; i++)
+            try
             {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-            }
+                var hub = new FakeStatusHub();
+                var baseline = CloseItCount();
 
-            window.IsAlive.ShouldBeFalse();
+                var window = CreateAndCloseSplash(hub, baseline);
+
+                CloseItCount().ShouldBe(baseline);
+                hub.HandlerCount.ShouldBe(0);
+
+                // Dispatcher work queued while the window was built (data bindings, ...) references it
+                // until the queue is processed.
+#pragma warning disable VSTHRD001 // synchronous drain on the test's own STA thread
+                Dispatcher.CurrentDispatcher.Invoke(static () => { }, DispatcherPriority.SystemIdle);
+#pragma warning restore VSTHRD001
+
+                for (var i = 0; i < 5; i++)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                }
+
+                window.IsAlive.ShouldBeFalse();
+            }
+            finally
+            {
+                FExCoreStatics.SetDefaults();
+            }
         });
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -40,14 +60,14 @@ public class SplashScreenWindowTests
     {
         var appInfoProvider = Substitute.For<IAppInfoProvider>();
         appInfoProvider.EntryAssembly.Returns(typeof(SplashScreenWindowTests).Assembly);
+        var appConfig = Substitute.For<IAppConfig>();
+        appConfig.SplashDesign.FontFamily.Returns(new FontFamily("Segoe UI"));
         var asyncHelper = Substitute.For<IAsyncHelper>();
 
-        var window = new SplashScreenWindow(appInfoProvider,
-            asyncHelper,
-            Substitute.For<IStatusService>(),
-            Substitute.For<IAppConfig>());
+        var window = new SplashScreenWindow(appInfoProvider, asyncHelper, Substitute.For<IStatusService>(), appConfig);
 
-        // The substitutes record the window's own delegates; forget them so only the window's wiring is under test.
+        // The substitute recorded the window's own Initialize delegate; forget it so only the window's
+        // own wiring is under test.
         asyncHelper.ClearReceivedCalls();
 
         window.AttachToStatusHub(hub);

@@ -55,6 +55,9 @@ public static class BindingExceptionThrower
     /// </param>
     public static void Attach(string? bindingErrorsCacheDirectory)
     {
+        // A second Attach must not leave the first listener alive (it would keep throwing binding errors).
+        Detach();
+
         BindingErrorsCacheFile = bindingErrorsCacheDirectory is null
             ? null
             : Path.Combine(bindingErrorsCacheDirectory, "BindingErrors.json");

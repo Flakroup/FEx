@@ -7,6 +7,7 @@ using Xunit;
 
 namespace FEx.WPFx.Tests;
 
+[Collection(WpfTestCollection.Name)]
 public class ControlsHandlerTests
 {
     private static DataGrid CreateGrid() => new()

@@ -134,16 +134,29 @@ public static class SynchronizationContextExtensions
             throw aEx;
     }
 
-    private static void Callback(object? state)
+    // Runs on a ThreadPool timer thread with no caller to catch: anything escaping here terminates the process,
+    // so the deadlock heuristic only logs (like DeadlockMonitor.Execute) and never throws.
+    internal static void Callback(object? state)
     {
-        var stackTrace = (StackTrace)state!;
+        try
+        {
+            var ex = new AttachedException("Deadlock assumed, as no action could've been performed during timeout.",
+                (StackTrace)state!);
 
-        var ex = new AttachedException("Deadlock assumed, as no action could've been performed during timeout.",
-            stackTrace);
-
-        FExStaticLogger.Error(ex, ex.Message);
-
-        throw ex;
+            FExStaticLogger.Error(ex, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                FExStaticLogger.Error(ex, "Failed to report an assumed deadlock.");
+            }
+            catch (Exception loggingEx)
+            {
+                // The logger (or an ErrorLogged subscriber) is itself failing; nothing is left but a trace.
+                Trace.WriteLine($"Failed to report an assumed deadlock: {ex}; logging failed: {loggingEx}");
+            }
+        }
     }
 
     [SuppressMessage("Usage", "VSTHRD001:Avoid legacy thread switching APIs")]

@@ -30,26 +30,53 @@ public class MainThreadDispatcher : FExDispatcher
 
     public override bool CheckAccess(object? sender = null) => _mainThreadContextProvider.Thread == Thread.CurrentThread;
 
-    public override void BeginInvokeOnMainThread(Action action, object? sender = null) =>
-        _mainThreadContextProvider.Context?.Post(_ => action(), null);
+    // Without a captured main-thread context (console/test host, before SetMainThread) there is no thread to
+    // marshal to, so run inline - the same fallback FExDispatcher.InvokeOnMainThread uses.
+    public override void BeginInvokeOnMainThread(Action action, object? sender = null)
+    {
+        var context = _mainThreadContextProvider.Context;
+
+        if (context is null)
+            action();
+        else
+            context.Post(_ => action(), null);
+    }
 
     public override async Task<T> InvokeOnMainThreadAsync<T>(Func<T> action, object? sender = null) =>
         await Task.Run(() =>
         {
+            var context = _mainThreadContextProvider.Context;
+
+            if (context is null)
+                return action();
+
             T result = default!;
-            _mainThreadContextProvider.Context?.Send(_ => result = action(), null);
+            context.Send(_ => result = action(), null);
 
             return result;
         });
 
     public override async Task InvokeOnMainThreadAsync(Action action, object? sender = null) =>
-        await Task.Run(() => _mainThreadContextProvider.Context?.Send(_ => action(), null));
+        await Task.Run(() =>
+        {
+            var context = _mainThreadContextProvider.Context;
+
+            if (context is null)
+                action();
+            else
+                context.Send(_ => action(), null);
+        });
 
     public override async Task<T> InvokeOnMainThreadAsync<T>(Func<Task<T>> funcTask, object? sender = null) =>
         await Task.Run(async () =>
         {
+            var context = _mainThreadContextProvider.Context;
+
+            if (context is null)
+                return await funcTask();
+
             var task = Task.FromResult(default(T)!);
-            _mainThreadContextProvider.Context?.Send(_ => task = funcTask(), null);
+            context.Send(_ => task = funcTask(), null);
 
             return await task;
         });
@@ -57,8 +84,17 @@ public class MainThreadDispatcher : FExDispatcher
     public override async Task InvokeOnMainThreadAsync(Func<Task> funcTask, object? sender = null) =>
         await Task.Run(async () =>
         {
+            var context = _mainThreadContextProvider.Context;
+
+            if (context is null)
+            {
+                await funcTask();
+
+                return;
+            }
+
             var task = Task.CompletedTask;
-            _mainThreadContextProvider.Context?.Send(_ => task = funcTask(), null);
+            context.Send(_ => task = funcTask(), null);
             await task;
         });
 

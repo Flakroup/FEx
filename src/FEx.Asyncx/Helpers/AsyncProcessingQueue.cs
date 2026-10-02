@@ -1,13 +1,10 @@
-#if NETSTANDARD2_0
-using System.Collections.Concurrent;
-#else
-using System.Threading.Channels;
-#endif
 using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Asyncx.Utilities;
 using FEx.Core.Abstractions;
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,11 +12,11 @@ namespace FEx.Asyncx.Helpers;
 
 public sealed class AsyncProcessingQueue : IDisposable
 {
-#if NETSTANDARD2_0
-    private readonly ConcurrentQueue<TaskCompletionSource<bool>> _taskQueue;
-#else
-    private readonly Channel<TaskCompletionSource<bool>> _taskChannel;
-#endif
+    private readonly ConcurrentQueue<TaskCompletionSource<bool>> _taskQueue = [];
+    // One permit per queued gate: the processing loop sleeps on it instead of spinning while idle.
+    private readonly SemaphoreSlim _queuedSignal = new(0);
+    private readonly ITaskWrapper _processingLoop;
+    private volatile bool _disposed;
     private readonly FExSemaphoreSlim _signal;
     private readonly FExSemaphoreSlim _semaphore;
     private int _concurrencyLimit;
@@ -61,16 +58,12 @@ public sealed class AsyncProcessingQueue : IDisposable
         }
     }
 
+    // Completes once Dispose has stopped the processing loop.
+    internal Task ProcessingLoopTask => _processingLoop.Task;
+
     public int RunningCount => Volatile.Read(ref _currentRunning);
 
-    public int QueuedCount
-    {
-#if NETSTANDARD2_0
-        get => _taskQueue.Count;
-#else
-        get => _taskChannel.Reader.Count;
-#endif
-    }
+    public int QueuedCount => _taskQueue.Count;
 
     public AsyncProcessingQueue()
         : this(10)
@@ -83,13 +76,7 @@ public sealed class AsyncProcessingQueue : IDisposable
         _signal = new();
         ConcurrencyLimit = limit;
 
-#if NETSTANDARD2_0
-        _taskQueue = [];
-#else
-        _taskChannel = Channel.CreateUnbounded<TaskCompletionSource<bool>>();
-#endif
-
-        FExCoreStatics.AsyncHelper.FireTaskAndForget(ProcessQueueAsync);
+        _processingLoop = FExCoreStatics.AsyncHelper.FireTaskAndForget(ProcessQueueAsync);
     }
 
     /// <summary>
@@ -137,17 +124,32 @@ public sealed class AsyncProcessingQueue : IDisposable
 
     private async Task GateAsync(CancellationToken cancellationToken)
     {
+        ThrowIfDisposed();
+
         var gate = new AsyncTaskCompletionSource<bool>();
 #if !NETSTANDARD2_0
         await
 #endif
             using var registration = cancellationToken.Register(() => gate.TrySetCanceled(cancellationToken));
 
-#if NETSTANDARD2_0
         _taskQueue.Enqueue(gate);
-#else
-        _taskChannel.Writer.TryWrite(gate);
-#endif
+
+        // Dispose may have drained the queue between the check above and the enqueue; fail that gate too
+        // instead of leaving it pending forever.
+        if (_disposed)
+            FailPendingGates();
+        else
+        {
+            try
+            {
+                _queuedSignal.Release();
+            }
+            catch (ObjectDisposedException)
+            {
+                FailPendingGates();
+            }
+        }
+
         await gate.Task;
     }
 
@@ -156,24 +158,25 @@ public sealed class AsyncProcessingQueue : IDisposable
     /// </summary>
     private async Task ProcessQueueAsync()
     {
-#if NETSTANDARD2_0
-        while (true)
+        try
         {
-            await WaitWhileAboveLimitAsync();
+            while (true)
+            {
+                await _queuedSignal.WaitAsync();
 
-            while (QueuedCount > 0
-                   && _currentRunning < _concurrencyLimit
-                   && _taskQueue.TryDequeue(out var gate))
-                ReleaseGate(gate);
+                if (_disposed)
+                    return;
+
+                await WaitWhileAboveLimitAsync();
+
+                if (_taskQueue.TryDequeue(out var gate))
+                    ReleaseGate(gate);
+            }
         }
-#else
-        await foreach (var gate in _taskChannel.Reader.ReadAllAsync())
+        catch (ObjectDisposedException) when (_disposed)
         {
-            await WaitWhileAboveLimitAsync();
-
-            ReleaseGate(gate);
+            // Disposed while parked on one of the semaphores - the loop is done.
         }
-#endif
     }
 
     private async Task WaitWhileAboveLimitAsync()
@@ -199,13 +202,33 @@ public sealed class AsyncProcessingQueue : IDisposable
         await TryReleasePollingAsync();
     }
 
-    /// <inheritdoc />
+    private void ThrowIfDisposed()
+    {
+        if (_disposed)
+            throw new ObjectDisposedException(nameof(AsyncProcessingQueue));
+    }
+
+    // Callers still waiting for a slot must not hang: fail them with ObjectDisposedException.
+    private void FailPendingGates()
+    {
+        while (_taskQueue.TryDequeue(out var gate))
+            gate.TrySetException(new ObjectDisposedException(nameof(AsyncProcessingQueue)));
+    }
+
+    /// <summary>
+    /// Stops the processing loop. Callers still waiting for a slot fail with <see cref="ObjectDisposedException" />;
+    /// work that already started is not interrupted.
+    /// </summary>
     public void Dispose()
     {
-#if !NETSTANDARD2_0
-        _taskChannel.Writer.TryComplete();
-#endif
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        FailPendingGates();
+        _queuedSignal.Release();
         _signal?.Dispose();
         _semaphore?.Dispose();
+        _queuedSignal.Dispose();
     }
 }

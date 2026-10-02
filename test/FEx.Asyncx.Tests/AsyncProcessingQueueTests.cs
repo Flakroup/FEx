@@ -5,6 +5,9 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Xunit;
 
+// The Dispose tests deliberately dispose explicitly and keep using the instance afterwards.
+#pragma warning disable IDISP016, IDISP017
+
 namespace FEx.Asyncx.Tests;
 
 public sealed class AsyncProcessingQueueTests
@@ -74,12 +77,77 @@ public sealed class AsyncProcessingQueueTests
             return Task.CompletedTask;
         }, ct);
 
-        secondStarted.Task.IsCompleted.ShouldBeFalse();
+        // Bounded window: with the limit honoured the second item must stay queued for the whole window.
+        // (If the limit were ignored it starts within microseconds, so this fails; it can never flake red.)
+        await Should.ThrowAsync<TimeoutException>(() =>
+            secondStarted.Task.WaitAsync(TimeSpan.FromMilliseconds(300), ct));
         queue.RunningCount.ShouldBe(1);
 
         releaseFirst.SetResult(true);
+        await secondStarted.Task.WaitAsync(_timeout, ct);
         await Task.WhenAll(first, second).WaitAsync(_timeout, ct);
+    }
 
-        secondStarted.Task.IsCompletedSuccessfully.ShouldBeTrue();
+    [Fact]
+    public async Task Dispose_FailsQueuedWork_InsteadOfLeavingItPending()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var queue = new AsyncProcessingQueue(1);
+        var firstStarted = NewSignal();
+        var releaseFirst = NewSignal();
+        var secondRan = false;
+
+        _ = queue.EnqueueAsync(async () =>
+        {
+            firstStarted.SetResult(true);
+            await releaseFirst.Task.WaitAsync(_timeout);
+        }, ct);
+        await firstStarted.Task.WaitAsync(_timeout, ct);
+
+        var second = queue.EnqueueAsync(() =>
+        {
+            secondRan = true;
+
+            return Task.CompletedTask;
+        }, ct);
+
+        queue.Dispose();
+
+        await Should.ThrowAsync<ObjectDisposedException>(() => second.WaitAsync(_timeout, ct));
+        secondRan.ShouldBeFalse();
+
+        releaseFirst.SetResult(true);
+    }
+
+    [Fact]
+    public async Task Dispose_WhileIdle_StopsTheProcessingLoop()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var queue = new AsyncProcessingQueue(2);
+
+        queue.Dispose();
+
+        await queue.ProcessingLoopTask.WaitAsync(_timeout, ct);
+    }
+
+    [Fact]
+    public async Task EnqueueAsync_AfterDispose_Throws()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var queue = new AsyncProcessingQueue(1);
+        queue.Dispose();
+
+        await Should.ThrowAsync<ObjectDisposedException>(() => queue.EnqueueAsync(() => Task.CompletedTask, ct));
+        await Should.ThrowAsync<ObjectDisposedException>(() => queue.EnqueueAsync(() => Task.FromResult(1), ct));
+    }
+
+    [Fact]
+    public void Dispose_IsIdempotent()
+    {
+        var queue = new AsyncProcessingQueue(1);
+
+        queue.Dispose();
+
+        Should.NotThrow(queue.Dispose);
     }
 }

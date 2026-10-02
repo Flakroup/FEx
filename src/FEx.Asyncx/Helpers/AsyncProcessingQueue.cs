@@ -1,4 +1,5 @@
 using FEx.Agnostics.Abstractions.Extensions;
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Asyncx.Utilities;
 using FEx.Core.Abstractions;
@@ -14,6 +15,7 @@ public sealed class AsyncProcessingQueue : IDisposable
     private readonly ConcurrentQueue<TaskCompletionSource<bool>> _taskQueue = [];
     // One permit per queued gate: the processing loop sleeps on it instead of spinning while idle.
     private readonly SemaphoreSlim _queuedSignal = new(0);
+    private readonly ITaskWrapper _processingLoop;
     private volatile bool _disposed;
     private readonly FExSemaphoreSlim _signal;
     private readonly FExSemaphoreSlim _semaphore;
@@ -56,6 +58,9 @@ public sealed class AsyncProcessingQueue : IDisposable
         }
     }
 
+    // Completes once Dispose has stopped the processing loop.
+    internal Task ProcessingLoopTask => _processingLoop.Task;
+
     public int RunningCount => Volatile.Read(ref _currentRunning);
 
     public int QueuedCount => _taskQueue.Count;
@@ -71,7 +76,7 @@ public sealed class AsyncProcessingQueue : IDisposable
         _signal = new();
         ConcurrencyLimit = limit;
 
-        FExCoreStatics.AsyncHelper.FireTaskAndForget(ProcessQueueAsync);
+        _processingLoop = FExCoreStatics.AsyncHelper.FireTaskAndForget(ProcessQueueAsync);
     }
 
     /// <summary>
@@ -119,6 +124,8 @@ public sealed class AsyncProcessingQueue : IDisposable
 
     private async Task GateAsync(CancellationToken cancellationToken)
     {
+        ThrowIfDisposed();
+
         var gate = new AsyncTaskCompletionSource<bool>();
 #if !NETSTANDARD2_0
         await
@@ -126,7 +133,23 @@ public sealed class AsyncProcessingQueue : IDisposable
             using var registration = cancellationToken.Register(() => gate.TrySetCanceled(cancellationToken));
 
         _taskQueue.Enqueue(gate);
-        _queuedSignal.Release();
+
+        // Dispose may have drained the queue between the check above and the enqueue; fail that gate too
+        // instead of leaving it pending forever.
+        if (_disposed)
+            FailPendingGates();
+        else
+        {
+            try
+            {
+                _queuedSignal.Release();
+            }
+            catch (ObjectDisposedException)
+            {
+                FailPendingGates();
+            }
+        }
+
         await gate.Task;
     }
 
@@ -135,17 +158,24 @@ public sealed class AsyncProcessingQueue : IDisposable
     /// </summary>
     private async Task ProcessQueueAsync()
     {
-        while (true)
+        try
         {
-            await _queuedSignal.WaitAsync();
+            while (true)
+            {
+                await _queuedSignal.WaitAsync();
 
-            if (_disposed)
-                return;
+                if (_disposed)
+                    return;
 
-            await WaitWhileAboveLimitAsync();
+                await WaitWhileAboveLimitAsync();
 
-            if (_taskQueue.TryDequeue(out var gate))
-                ReleaseGate(gate);
+                if (_taskQueue.TryDequeue(out var gate))
+                    ReleaseGate(gate);
+            }
+        }
+        catch (ObjectDisposedException) when (_disposed)
+        {
+            // Disposed while parked on one of the semaphores - the loop is done.
         }
     }
 
@@ -172,12 +202,33 @@ public sealed class AsyncProcessingQueue : IDisposable
         await TryReleasePollingAsync();
     }
 
-    /// <inheritdoc />
+    private void ThrowIfDisposed()
+    {
+        if (_disposed)
+            throw new ObjectDisposedException(nameof(AsyncProcessingQueue));
+    }
+
+    // Callers still waiting for a slot must not hang: fail them with ObjectDisposedException.
+    private void FailPendingGates()
+    {
+        while (_taskQueue.TryDequeue(out var gate))
+            gate.TrySetException(new ObjectDisposedException(nameof(AsyncProcessingQueue)));
+    }
+
+    /// <summary>
+    /// Stops the processing loop. Callers still waiting for a slot fail with <see cref="ObjectDisposedException" />;
+    /// work that already started is not interrupted.
+    /// </summary>
     public void Dispose()
     {
+        if (_disposed)
+            return;
+
         _disposed = true;
+        FailPendingGates();
         _queuedSignal.Release();
         _signal?.Dispose();
         _semaphore?.Dispose();
+        _queuedSignal.Dispose();
     }
 }

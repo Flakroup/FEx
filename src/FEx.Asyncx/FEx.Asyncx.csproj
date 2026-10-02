@@ -17,4 +17,8 @@
         <ProjectReference Include="..\Core.Abstractions\FEx.Core.Abstractions.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="FEx.Asyncx.Tests" />
+    </ItemGroup>
+
 </Project>

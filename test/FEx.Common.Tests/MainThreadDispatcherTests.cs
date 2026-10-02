@@ -15,6 +15,33 @@ namespace FEx.Common.Tests;
 /// </summary>
 public sealed class MainThreadDispatcherTests
 {
+    private sealed class RecordingContext : SynchronizationContext
+    {
+        public int Posts;
+        public int Sends;
+
+        public override void Post(SendOrPostCallback d, object? state)
+        {
+            Interlocked.Increment(ref Posts);
+            d(state);
+        }
+
+        public override void Send(SendOrPostCallback d, object? state)
+        {
+            Interlocked.Increment(ref Sends);
+            d(state);
+        }
+    }
+
+    private static MainThreadDispatcher CreateWith(SynchronizationContext? context)
+    {
+        var provider = Substitute.For<IMainThreadContextProvider>();
+        provider.Context.Returns(context!);
+
+        return new(provider, Substitute.For<ILogger>(), Substitute.For<IDeadlockMonitor>(),
+            Substitute.For<IAppThreadingSettings>(), Substitute.For<IStackTraceProvider>());
+    }
+
     private static MainThreadDispatcher CreateWithoutContext()
     {
         var provider = Substitute.For<IMainThreadContextProvider>();
@@ -65,6 +92,67 @@ public sealed class MainThreadDispatcherTests
             return Task.CompletedTask;
         });
 
+        ran.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void BeginInvokeOnMainThread_PostsThroughContext_WhenPresent()
+    {
+        var context = new RecordingContext();
+        var ran = false;
+
+        CreateWith(context).BeginInvokeOnMainThread(() => ran = true);
+
+        context.Posts.ShouldBe(1);
+        ran.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task InvokeOnMainThreadAsync_Func_SendsThroughContext_WhenPresent()
+    {
+        var context = new RecordingContext();
+
+        (await CreateWith(context).InvokeOnMainThreadAsync(() => 42)).ShouldBe(42);
+
+        context.Sends.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task InvokeOnMainThreadAsync_Action_SendsThroughContext_WhenPresent()
+    {
+        var context = new RecordingContext();
+        var ran = false;
+
+        await CreateWith(context).InvokeOnMainThreadAsync(() => ran = true);
+
+        context.Sends.ShouldBe(1);
+        ran.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task InvokeOnMainThreadAsync_FuncTaskOfT_SendsThroughContext_WhenPresent()
+    {
+        var context = new RecordingContext();
+
+        (await CreateWith(context).InvokeOnMainThreadAsync(() => Task.FromResult(7))).ShouldBe(7);
+
+        context.Sends.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task InvokeOnMainThreadAsync_FuncTask_SendsThroughContext_WhenPresent()
+    {
+        var context = new RecordingContext();
+        var ran = false;
+
+        await CreateWith(context).InvokeOnMainThreadAsync(() =>
+        {
+            ran = true;
+
+            return Task.CompletedTask;
+        });
+
+        context.Sends.ShouldBe(1);
         ran.ShouldBeTrue();
     }
 }

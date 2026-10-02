@@ -147,7 +147,15 @@ public static class SynchronizationContextExtensions
         }
         catch (Exception ex)
         {
-            FExStaticLogger.Error(ex, "Failed to report an assumed deadlock.");
+            try
+            {
+                FExStaticLogger.Error(ex, "Failed to report an assumed deadlock.");
+            }
+            catch (Exception loggingEx)
+            {
+                // The logger (or an ErrorLogged subscriber) is itself failing; nothing is left but a trace.
+                Trace.WriteLine($"Failed to report an assumed deadlock: {ex}; logging failed: {loggingEx}");
+            }
         }
     }
 

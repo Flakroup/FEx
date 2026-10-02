@@ -241,8 +241,7 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
 
     protected override void OnClosed(EventArgs e)
     {
-        // CloseIt is static and the main status hub lives for the whole app: drop both subscriptions
-        // so closed splash windows can be collected.
+        // CloseIt is static and the main status hub lives for the whole app: drop both subscriptions.
         CloseIt -= CloseSplash;
         StatusHub?.DetachFromStatusChanges(_onStatusAdded, _onStatusRemoved, OnStatusChange);
         base.OnClosed(e);

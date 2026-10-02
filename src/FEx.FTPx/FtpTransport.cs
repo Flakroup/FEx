@@ -1,29 +1,25 @@
-using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Extensions.Web;
-using FEx.Core.Abstractions.Extensions;
 using FEx.Webx.Utilities;
 using System;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.FTPx;
 
-/// <summary>Per-download retry bookkeeping; never shared between downloads.</summary>
-internal sealed class DownloadState
-{
-    public const int MaxReadRetries = 10;
-
-    public int RetryCount { get; set; }
-}
-
 /// <summary>Seam over the FTP wire calls so <see cref="FtpDownloader" /> can be tested without a server.</summary>
 internal interface IFtpTransport
 {
-    Task<long> GetSizeAsync(Uri serverUri, string username, string password);
+    /// <summary>Remote file size in bytes. Throws when the server cannot be asked; never reports 0 for a failure.</summary>
+    Task<long> GetSizeAsync(Uri serverUri, string username, string password, CancellationToken cancellationToken);
 
-    /// <summary>Opens the file at <paramref name="offset" />; <c>null</c> when the server did not answer.</summary>
-    Task<IFtpResponse?> OpenAsync(Uri serverUri, string username, string password, long offset);
+    /// <summary>Opens the file at <paramref name="offset" />. Throws when the server cannot be reached or refuses.</summary>
+    Task<IFtpResponse> OpenAsync(Uri serverUri,
+                                 string username,
+                                 string password,
+                                 long offset,
+                                 CancellationToken cancellationToken);
 
     bool IsLocalProcessingAbort(Exception exception);
 }
@@ -40,26 +36,36 @@ internal sealed class FtpTransport : IFtpTransport
 {
     public static FtpTransport Instance { get; } = new();
 
-    public async Task<long> GetSizeAsync(Uri serverUri, string username, string password) =>
-        (long)await FtpDownloader.CalculateSizeAsync(serverUri, false, LengthType.Bytes, username, password);
+    public async Task<long> GetSizeAsync(Uri serverUri,
+                                         string username,
+                                         string password,
+                                         CancellationToken cancellationToken)
+    {
+        var request = (FtpWebRequest)serverUri.GetWebRequest();
+        request.Proxy = null;
+        request.ApplyCredentials(username, password);
+        request.Method = WebRequestMethods.Ftp.GetFileSize;
 
-    public async Task<IFtpResponse?> OpenAsync(Uri serverUri, string username, string password, long offset)
+        using var registration = cancellationToken.Register(request.Abort);
+        using var response = (FtpWebResponse)await request.GetResponseAsync();
+
+        return response.ContentLength;
+    }
+
+    public async Task<IFtpResponse> OpenAsync(Uri serverUri,
+                                              string username,
+                                              string password,
+                                              long offset,
+                                              CancellationToken cancellationToken)
     {
         var request = (FtpWebRequest)serverUri.GetWebRequest();
         request.Method = WebRequestMethods.Ftp.DownloadFile;
-        request.Credentials = NetworkUtilities.GetCredentials(username, password);
+        request.ApplyCredentials(username, password);
         request.ContentOffset = offset;
 
-        try
-        {
-            return new Response((FtpWebResponse)await request.GetResponseAsync());
-        }
-        catch (Exception ex)
-        {
-            ex.HandleException();
+        using var registration = cancellationToken.Register(request.Abort);
 
-            return null;
-        }
+        return new Response((FtpWebResponse)await request.GetResponseAsync());
     }
 
     public bool IsLocalProcessingAbort(Exception exception) =>
@@ -74,5 +80,18 @@ internal sealed class FtpTransport : IFtpTransport
 #pragma warning disable IDISP007 // ownership of the response was transferred to this wrapper
         public void Dispose() => inner.Dispose();
 #pragma warning restore IDISP007
+    }
+}
+
+internal static class FtpWebRequestExtensions
+{
+    /// <summary>
+    /// Sets explicit credentials when both parts are given; otherwise keeps the request default (anonymous, or the
+    /// URI user info), because <see cref="FtpWebRequest" /> rejects <see cref="CredentialCache.DefaultNetworkCredentials" />.
+    /// </summary>
+    public static void ApplyCredentials(this FtpWebRequest request, string username, string password)
+    {
+        if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+            request.Credentials = NetworkUtilities.GetCredentials(username, password);
     }
 }

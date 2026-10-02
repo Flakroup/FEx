@@ -39,6 +39,7 @@ public static class FtpDownloader
     /// <returns><c>true</c> when the file is complete; <c>false</c> when attempts ran out without an error to report.</returns>
     /// <exception cref="IOException">Attempts ran out and the last attempt threw; the exception is the inner exception.</exception>
     /// <exception cref="OperationCanceledException">The download was cancelled.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxAttempts" /> is less than 1.</exception>
     public static Task<bool> DownloadFileAsync(string fileName,
                                                Uri serverUri,
                                                IProgressAggregator? viewModel,
@@ -66,7 +67,10 @@ public static class FtpDownloader
                                                        int maxAttempts,
                                                        CancellationToken cancellationToken)
     {
-        var state = new DownloadState();
+        if (maxAttempts < 1)
+            throw new ArgumentOutOfRangeException(nameof(maxAttempts), maxAttempts, "At least one attempt is required.");
+
+        var state = new FtpDownloadState();
         var attempts = 0;
         long lastLength = -1;
         Exception? lastError = null;
@@ -85,7 +89,7 @@ public static class FtpDownloader
             if (++attempts > maxAttempts)
             {
                 if (lastError is not null)
-                    throw new IOException($"FTP download of '{serverUri}' failed after {maxAttempts} attempts.", lastError);
+                    throw new IOException($"FTP download of '{Redact(serverUri)}' failed after {maxAttempts} attempts.", lastError);
 
                 return false;
             }
@@ -99,7 +103,8 @@ public static class FtpDownloader
                         viewModel,
                         offset,
                         username,
-                        password))
+                        password,
+                        cancellationToken))
                     return true;
 
                 lastError = null;
@@ -123,35 +128,44 @@ public static class FtpDownloader
     /// <param name="offset">The offset. Specifies where in the server file to start reading data.</param>
     /// <param name="username">The username.</param>
     /// <param name="password">The password.</param>
+    /// <param name="state">
+    /// Retry bookkeeping. Pass the same instance on every call of a retry loop for one download so that repeated
+    /// aborted reads escalate; omit it and each call starts fresh.
+    /// </param>
+    /// <param name="cancellationToken">Cancels the transfer.</param>
     /// <returns></returns>
     public static Task<bool> RestartDownloadFromServerAsync(string fileName,
                                                             Uri serverUri,
                                                             IProgressAggregator? viewModel,
                                                             long offset = 0,
                                                             string username = "",
-                                                            string password = "") =>
+                                                            string password = "",
+                                                            FtpDownloadState? state = null,
+                                                            CancellationToken cancellationToken = default) =>
         RestartDownloadFromServerAsync(FtpTransport.Instance,
-            new DownloadState(),
+            state ?? new FtpDownloadState(),
             fileName,
             serverUri,
             viewModel,
             offset,
             username,
-            password);
+            password,
+            cancellationToken);
 
     internal static async Task<bool> RestartDownloadFromServerAsync(IFtpTransport transport,
-                                                                    DownloadState state,
+                                                                    FtpDownloadState state,
                                                                     string fileName,
                                                                     Uri serverUri,
                                                                     IProgressAggregator? viewModel,
                                                                     long offset,
                                                                     string username,
-                                                                    string password)
+                                                                    string password,
+                                                                    CancellationToken cancellationToken)
     {
         if (serverUri.Scheme == Uri.UriSchemeFtp)
         {
             viewModel?.IfNotNull(v => v.SetStatusInfo(fileName));
-            var fileSize = await transport.GetSizeAsync(serverUri, username, password);
+            var fileSize = await transport.GetSizeAsync(serverUri, username, password, cancellationToken);
             long localFileSize;
 
             if (File.Exists(fileName))
@@ -162,12 +176,7 @@ public static class FtpDownloader
                     return true;
             }
 
-            using var response = await transport.OpenAsync(serverUri, username, password, offset);
-
-            // Behavior change: bail out cleanly when the FTP response could not be obtained
-            // (previously this dereferenced a null response and threw NullReferenceException).
-            if (response is null)
-                return false;
+            using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
 
             using var stream = response.GetResponseStream();
             viewModel?.PrgSetMax(fileSize - offset);
@@ -207,7 +216,8 @@ public static class FtpDownloader
                             {
                                 var toRead = Math.Min(8192, cacheLength - pos);
                                 buffer = new byte[toRead];
-                                readCount = await stream.ReadAsync(buffer, 0, buffer.Length);
+                                readCount = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+                                cancellationToken.ThrowIfCancellationRequested();
                                 state.RetryCount = 0;
 
                                 if (readCount > 0)
@@ -221,7 +231,7 @@ public static class FtpDownloader
 
                             sw.Stop();
                         }
-                        catch (Exception ex)
+                        catch (Exception ex) when (ex is not OperationCanceledException)
                         {
                             //ex.HandleException( "", false);
                             viewModel?.IfNotNull(v => v.SetStatusInfo(ex.Message));
@@ -229,41 +239,42 @@ public static class FtpDownloader
                             if (cache?.Count > 0)
                                 await fs.WriteAsync([.. cache], 0, cache.Count);
 
+                            if (transport.IsLocalProcessingAbort(ex))
                             {
-                                if (transport.IsLocalProcessingAbort(ex))
+                                if (state.RetryCount >= FtpDownloadState.MaxReadRetries)
                                 {
-                                    if (state.RetryCount >= DownloadState.MaxReadRetries)
-                                    {
-                                        var failedRetryCount = state.RetryCount;
+                                    var failedRetryCount = state.RetryCount;
 
-                                        var newOffset = await DetectOffsetAsync(transport,
-                                            serverUri,
-                                            offset + prg,
-                                            username,
-                                            password,
-                                            viewModel);
+                                    var detectedOffset = await DetectOffsetAsync(transport,
+                                        serverUri,
+                                        offset + prg,
+                                        username,
+                                        password,
+                                        viewModel,
+                                        cancellationToken);
 
-                                        var buffer = new byte[newOffset - (offset + prg)];
-                                        await fs.WriteAsync(buffer, 0, buffer.Length);
+                                    // Never zero-fill past the remote end: the probe steps in 512 KiB chunks.
+                                    var newOffset = Math.Min(detectedOffset, fileSize);
+                                    var buffer = new byte[Math.Max(0, newOffset - (offset + prg))];
+                                    await fs.WriteAsync(buffer, 0, buffer.Length);
 
-                                        state.RetryCount = 0;
+                                    state.RetryCount = 0;
 
-                                        await FExMvvm.MessagePopupService.ShowMessageAsync(
-                                            $"{fileName} bytes at position {offset + prg + 1}-{newOffset} replaced with 0 due to {failedRetryCount} unsuccessful read attempts.\n",
-                                            "Something wrong happened",
-                                            MessageIcon.Exclamation,
-                                            FExMessageButton.OK,
-                                            null,
-                                            true,
-                                            false,
-                                            null,
-                                            LogLevel.Information,
-                                            null);
-                                    }
-                                    else
-                                    {
-                                        state.RetryCount++;
-                                    }
+                                    await FExMvvm.MessagePopupService.ShowMessageAsync(
+                                        $"{fileName} bytes at position {offset + prg + 1}-{newOffset} replaced with 0 due to {failedRetryCount} unsuccessful read attempts.\n",
+                                        "Something wrong happened",
+                                        MessageIcon.Exclamation,
+                                        FExMessageButton.OK,
+                                        null,
+                                        true,
+                                        false,
+                                        null,
+                                        LogLevel.Information,
+                                        null);
+                                }
+                                else
+                                {
+                                    state.RetryCount++;
                                 }
                             }
 
@@ -277,7 +288,7 @@ public static class FtpDownloader
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 //ex.HandleException( "", false);
                 viewModel?.IfNotNull(v => v.SetStatusInfo(ex.Message));
@@ -294,6 +305,9 @@ public static class FtpDownloader
 
         return false;
     }
+
+    private static string Redact(Uri uri) =>
+        uri.GetComponents(UriComponents.SchemeAndServer | UriComponents.Path, UriFormat.Unescaped);
 
     /// <summary>
     /// Calculates the size.
@@ -327,7 +341,7 @@ public static class FtpDownloader
             {
                 var request = (FtpWebRequest)serverUri.GetWebRequest();
                 request.Proxy = null;
-                request.Credentials = NetworkUtilities.GetCredentials(username, password);
+                request.ApplyCredentials(username, password);
                 request.Method = WebRequestMethods.Ftp.GetFileSize;
 
                 using var response = (FtpWebResponse)await request.GetResponseAsync();
@@ -349,23 +363,21 @@ public static class FtpDownloader
                                                       long offset,
                                                       string username,
                                                       string password,
-                                                      IProgressAggregator? viewModel)
+                                                      IProgressAggregator? viewModel,
+                                                      CancellationToken cancellationToken)
     {
         var newOffset = offset;
 
         if (serverUri.Scheme == Uri.UriSchemeFtp)
         {
-            var fileSize = await transport.GetSizeAsync(serverUri, username, password);
+            var fileSize = await transport.GetSizeAsync(serverUri, username, password, cancellationToken);
             viewModel?.PrgSetMax(fileSize - offset);
             var readCount = 0;
 
             while (readCount <= 0
                    && newOffset < fileSize)
             {
-                using var response = await transport.OpenAsync(serverUri, username, password, offset);
-
-                if (response is null)
-                    return offset;
+                using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
 
                 try
                 {
@@ -374,22 +386,19 @@ public static class FtpDownloader
                     if (stream is not null)
                     {
                         var buffer = new byte[1];
-                        readCount = await stream.ReadAsync(buffer, 0, buffer.Length);
+                        readCount = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
                         newOffset--;
 
                         while (readCount > 0)
                         {
-                            using var innerResponse = await transport.OpenAsync(serverUri, username, password, offset);
-
-                            if (innerResponse is null)
-                                return newOffset;
+                            using var innerResponse = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
 
                             using var innerStream = innerResponse.GetResponseStream();
 
                             if (innerStream is not null)
                             {
                                 buffer = new byte[1];
-                                readCount = await innerStream.ReadAsync(buffer, 0, buffer.Length);
+                                readCount = await innerStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
                                 viewModel?.PrgSet(newOffset - offset);
                                 viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
                                 newOffset--;
@@ -397,7 +406,7 @@ public static class FtpDownloader
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not OperationCanceledException)
                 {
                     ex.HandleException();
 

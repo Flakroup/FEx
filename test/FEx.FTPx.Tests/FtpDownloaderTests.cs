@@ -1,4 +1,4 @@
-#pragma warning disable IDISP004 // fake responses are tracked and their disposal is asserted
+#pragma warning disable IDISP001, IDISP004 // fake responses/streams are tracked and their disposal is asserted
 using FEx.Core.Abstractions.Interfaces;
 using FEx.MVVM;
 using FEx.MVVM.Abstractions.Interfaces;
@@ -41,18 +41,65 @@ public sealed class FtpDownloaderTests : IDisposable
     }
 
     [Fact]
-    public async Task DownloadFile_NoResponse_StopsAtCapAndReturnsFalse()
+    public async Task DownloadFile_CapMessage_DoesNotLeakUriCredentials()
     {
-        var transport = new FakeTransport { OpenReturnsNull = true };
+        var transport = new FakeTransport { OpenThrows = new InvalidOperationException("530 login") };
+        var uri = new Uri("ftp://alice:s3cret@example.invalid/dir/file.bin");
 
-        (await Download(transport, NewPath(), 3)).ShouldBeFalse();
-        transport.OpenCalls.ShouldBe(3);
+        var ex = await Should.ThrowAsync<IOException>(() =>
+            FtpDownloader.DownloadFileAsync(transport, NoDelay, NewPath(), uri, null, "", "", 1, TestContext.Current.CancellationToken));
+
+        ex.Message.ShouldNotContain("s3cret");
+        ex.Message.ShouldContain("example.invalid/dir/file.bin");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task DownloadFile_InvalidMaxAttempts_Throws(int maxAttempts)
+    {
+        var transport = new FakeTransport();
+
+        await Should.ThrowAsync<ArgumentOutOfRangeException>(() => Download(transport, NewPath(), maxAttempts));
+
+        transport.OpenCalls.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DownloadFile_ProgressResetsTheAttemptCap()
+    {
+        // Every attempt delivers one byte and then fails: 5 attempts are needed with a cap of 2.
+        var transport = new FakeTransport { Size = 5 };
+
+        for (var i = 0; i < 5; i++)
+            transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([1], new InvalidOperationException("drop"))));
+
+        var path = NewPath();
+
+        (await Download(transport, path, 2)).ShouldBeTrue();
+
+        new FileInfo(path).Length.ShouldBe(5);
+        transport.OpenCalls.ShouldBe(5);
+    }
+
+    [Fact]
+    public async Task DownloadFile_CancelledDuringTransfer_StopsReadingAndThrows()
+    {
+        var transport = new FakeTransport { Size = 100 };
+        using var cts = new CancellationTokenSource();
+        var stream = new ScriptedStream([1]) { OnRead = cts.Cancel };
+        transport.Responses.Enqueue(new FakeResponse(stream));
+
+        await Should.ThrowAsync<OperationCanceledException>(() => Download(transport, NewPath(), 5, cts.Token));
+
+        stream.Reads.ShouldBe(1);
+        transport.Created.ShouldAllBe(r => r.Disposed);
     }
 
     [Fact]
     public async Task DownloadFile_Cancelled_StopsRetrying()
     {
-        var transport = new FakeTransport { OpenReturnsNull = true };
+        var transport = new FakeTransport { OpenThrows = new InvalidOperationException("down") };
         using var cts = new CancellationTokenSource();
         transport.OnOpen = () => cts.Cancel();
 
@@ -80,7 +127,7 @@ public sealed class FtpDownloaderTests : IDisposable
         var transport = new FakeTransport { Size = 4 };
         transport.Responses.Enqueue(new FakeResponse(new ScriptedStream(null, new InvalidOperationException("boom"))));
 
-        (await FtpDownloader.RestartDownloadFromServerAsync(transport, new(), NewPath(), Server, null, 0, "", ""))
+        (await FtpDownloader.RestartDownloadFromServerAsync(transport, new(), NewPath(), Server, null, 0, "", "", TestContext.Current.CancellationToken))
             .ShouldBeFalse();
 
         transport.Created.Count.ShouldBe(1);
@@ -94,31 +141,63 @@ public sealed class FtpDownloaderTests : IDisposable
         // With one shared counter B's successful read resets A's, so A would never reach the threshold.
         _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
         var transport = new FakeTransport { Size = 1_000_000, AbortExceptions = true };
-        var stateA = new DownloadState();
-        var stateB = new DownloadState();
+        var stateA = new FtpDownloadState();
+        var stateB = new FtpDownloadState();
         var pathA = NewPath();
         var pathB = NewPath();
 
-        for (var i = 0; i < DownloadState.MaxReadRetries; i++)
+        for (var i = 0; i < FtpDownloadState.MaxReadRetries; i++)
         {
             transport.Responses.Enqueue(new FakeResponse(new ScriptedStream(null, new AbortException())));
-            await FtpDownloader.RestartDownloadFromServerAsync(transport, stateA, pathA, Server, null, 0, "", "");
+            await FtpDownloader.RestartDownloadFromServerAsync(transport, stateA, pathA, Server, null, 0, "", "", TestContext.Current.CancellationToken);
 
             transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([1])));
-            await FtpDownloader.RestartDownloadFromServerAsync(transport, stateB, pathB, Server, null, 0, "", "");
+            await FtpDownloader.RestartDownloadFromServerAsync(transport, stateB, pathB, Server, null, 0, "", "", TestContext.Current.CancellationToken);
             File.Delete(pathB);
         }
 
-        stateA.RetryCount.ShouldBe(DownloadState.MaxReadRetries);
+        stateA.RetryCount.ShouldBe(FtpDownloadState.MaxReadRetries);
         transport.Responses.Enqueue(new FakeResponse(new ScriptedStream(null, new AbortException())));
         transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([])));
         var before = transport.OpenCalls;
 
-        await FtpDownloader.RestartDownloadFromServerAsync(transport, stateA, pathA, Server, null, 0, "", "");
+        await FtpDownloader.RestartDownloadFromServerAsync(transport, stateA, pathA, Server, null, 0, "", "", TestContext.Current.CancellationToken);
 
         // The 11th failure triggers DetectOffsetAsync, which opens more responses.
         transport.OpenCalls.ShouldBeGreaterThan(before + 1);
         stateA.RetryCount.ShouldBe(0);
+        new FileInfo(pathA).Length.ShouldBeLessThanOrEqualTo(transport.Size);
+        transport.Created.ShouldAllBe(r => r.Disposed);
+    }
+
+    [Fact]
+    public async Task Restart_ZeroFill_NeverGrowsTheFilePastTheRemoteSize()
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        var transport = new FakeTransport { Size = 1_000_000, AbortExceptions = true };
+        var state = new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries };
+        var path = NewPath();
+        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream(null, new AbortException())));
+
+        await FtpDownloader.RestartDownloadFromServerAsync(transport, state, path, Server, null, 0, "", "", TestContext.Current.CancellationToken);
+
+        new FileInfo(path).Length.ShouldBe(1_000_000);
+    }
+
+    [Fact]
+    public async Task Restart_OffsetProbe_DisposesEveryProbeResponse()
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        var transport = new FakeTransport { Size = 1_000_000, AbortExceptions = true };
+        var state = new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries };
+        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream(null, new AbortException())));
+        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([1]))); // outer probe: data
+        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([1]))); // inner probe: data
+        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([])));  // inner probe: EOF
+
+        await FtpDownloader.RestartDownloadFromServerAsync(transport, state, NewPath(), Server, null, 0, "", "", TestContext.Current.CancellationToken);
+
+        transport.Created.Count.ShouldBeGreaterThanOrEqualTo(4);
         transport.Created.ShouldAllBe(r => r.Disposed);
     }
 
@@ -128,16 +207,15 @@ public sealed class FtpDownloaderTests : IDisposable
     {
         public long Size { get; set; }
         public Exception? OpenThrows { get; set; }
-        public bool OpenReturnsNull { get; set; }
         public bool AbortExceptions { get; set; }
         public Action? OnOpen { get; set; }
         public int OpenCalls { get; private set; }
         public Queue<FakeResponse> Responses { get; } = new();
         public List<FakeResponse> Created { get; } = [];
 
-        public Task<long> GetSizeAsync(Uri serverUri, string username, string password) => Task.FromResult(Size);
+        public Task<long> GetSizeAsync(Uri serverUri, string username, string password, CancellationToken cancellationToken) => Task.FromResult(Size);
 
-        public Task<IFtpResponse?> OpenAsync(Uri serverUri, string username, string password, long offset)
+        public Task<IFtpResponse> OpenAsync(Uri serverUri, string username, string password, long offset, CancellationToken cancellationToken)
         {
             OpenCalls++;
             OnOpen?.Invoke();
@@ -145,14 +223,11 @@ public sealed class FtpDownloaderTests : IDisposable
             if (OpenThrows is not null)
                 throw OpenThrows;
 
-            if (OpenReturnsNull)
-                return Task.FromResult<IFtpResponse?>(null);
-
             // Probes past the scripted responses get an empty (EOF) stream.
             var response = Responses.Count > 0 ? Responses.Dequeue() : new FakeResponse(new ScriptedStream([]));
             Created.Add(response);
 
-            return Task.FromResult<IFtpResponse?>(response);
+            return Task.FromResult<IFtpResponse>(response);
         }
 
         public bool IsLocalProcessingAbort(Exception exception) => AbortExceptions && exception is AbortException;
@@ -168,10 +243,13 @@ public sealed class FtpDownloaderTests : IDisposable
         public void Dispose() => Disposed = true;
     }
 
-    /// <summary>Yields <paramref name="data" /> once, then EOF; or throws <paramref name="error" /> on first read.</summary>
+    /// <summary>Yields <paramref name="data" /> once, then EOF, or throws <paramref name="error" /> when no data is left.</summary>
     private sealed class ScriptedStream(byte[]? data, Exception? error = null) : Stream
     {
         private bool _done;
+
+        public Action? OnRead { get; init; }
+        public int Reads { get; private set; }
 
         public override bool CanRead => true;
         public override bool CanSeek => false;
@@ -181,11 +259,11 @@ public sealed class FtpDownloaderTests : IDisposable
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (error is not null)
-                throw error;
+            Reads++;
+            OnRead?.Invoke();
 
             if (_done || data is null)
-                return 0;
+                return error is null ? 0 : throw error;
 
             _done = true;
             data.CopyTo(buffer, offset);

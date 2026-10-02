@@ -138,8 +138,12 @@ public class FExSerilogLogger : IFExLogger, IDisposable
     #region IDisposable
     public void Dispose()
     {
-        while (_currentScope.Value is { } scope)
+#pragma warning disable IDISP007 // the logger owns the scopes it hands out until they are disposed
+        for (var scope = _currentScope.Value; scope is not null; scope = scope.Parent)
             scope.Dispose();
+#pragma warning restore IDISP007
+
+        _currentScope.Value = null;
     }
     #endregion
 
@@ -154,11 +158,9 @@ public class FExSerilogLogger : IFExLogger, IDisposable
         #region IDisposable
         public void Dispose()
         {
-            if (_context is null)
-                return;
-
             // Only unwind this flow's stack when the scope is on it; a scope disposed from an unrelated flow
-            // must not touch that flow's current scope.
+            // must not touch that flow's current scope. This also runs for a scope already disposed from
+            // another flow, which is still current in its own flow.
             for (var current = owner._currentScope.Value; current is not null; current = current.Parent)
             {
                 if (current != this)
@@ -168,6 +170,9 @@ public class FExSerilogLogger : IFExLogger, IDisposable
 
                 break;
             }
+
+            if (_context is null)
+                return;
 
 #pragma warning disable IDISP007 // Scope takes ownership of the LogContext restore handle it is constructed with
             _context.Dispose();

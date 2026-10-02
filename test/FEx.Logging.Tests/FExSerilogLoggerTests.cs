@@ -282,6 +282,55 @@ public sealed class FExSerilogLoggerTests
         }
     }
 
+    // A scope disposed from another flow (created in Task.Run, disposed by the parent) stays current in its own
+    // flow: EndScope must still pop it and Dispose must terminate.
+    [Fact]
+    public async Task ScopeDisposedFromAnotherFlow_DoesNotWedgeEndScopeOrDispose()
+    {
+        var previous = Log.Logger;
+
+        try
+        {
+            Log.Logger = new LoggerConfiguration().WriteTo.Sink(new CapturingSink()).CreateLogger();
+            using var logger = new FExSerilogLogger();
+            LoggerState endScopeState = new();
+            LoggerState disposeState = new();
+
+            var endScopeFlow = await RunWithScopeDisposedByParent(logger, endScopeState, flow =>
+            {
+                logger.EndScope();
+                logger.AddOrUpdateLabel("probe", 1); // the scope was popped: reaches no state
+            });
+            var disposeFlow = await RunWithScopeDisposedByParent(logger, disposeState, flow => logger.Dispose());
+
+            await Task.WhenAll(endScopeFlow, disposeFlow).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            endScopeState.ShouldBeEmpty();
+        }
+        finally
+        {
+            Log.Logger = previous;
+        }
+    }
+
+    private static async Task<Task> RunWithScopeDisposedByParent(
+        FExSerilogLogger logger, LoggerState state, Action<FExSerilogLogger> inFlowAfterwards)
+    {
+        TaskCompletionSource<IDisposable> began = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource disposedByParent = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var flow = Task.Run(async () =>
+        {
+            began.SetResult(logger.BeginLabeledScope(state));
+            await disposedByParent.Task;
+            inFlowAfterwards(logger);
+        }, TestContext.Current.CancellationToken);
+
+        (await began.Task).Dispose();
+        disposedByParent.SetResult();
+
+        return flow;
+    }
+
     private static string? ScopeOf(LogEvent e) =>
         e.Properties.TryGetValue("Scope", out var value) ? ((ScalarValue)value).Value?.ToString() : null;
 

@@ -5,20 +5,24 @@ using System.Text.RegularExpressions;
 namespace FEx.Flurlx.Services;
 
 /// <summary>
-/// Strips secrets from URLs before they reach a log sink.
+/// Masks the credential-bearing parts of URLs (userinfo, query string values, fragment) before they reach a log sink.
 /// </summary>
 /// <remarks>
 /// Flurl (and <see cref="System.Net.Http.HttpRequestException" />) embed the full request URL in exception messages, so
 /// an API key or token passed in the query string or as userinfo would otherwise be written to the logs on every
-/// retry/fallback. Scheme, host, port, path and query parameter names are kept for diagnostics; userinfo, query values
-/// and the fragment are masked.
+/// retry/fallback. Scheme, host, port, path and query parameter names are kept for diagnostics; userinfo, every query
+/// value (and every valueless query token) and the fragment are masked.
+/// Path segments are NOT redacted: APIs that carry a secret in the path (e.g. bot tokens, webhook URLs) are not covered.
+/// Once a query or fragment starts, the rest of the line is treated as part of it (query text may contain unencoded
+/// quotes or spaces), so trailing text after such a URL is masked as well.
 /// </remarks>
 internal static class UrlLogRedactor
 {
     internal const string Mask = "***";
 
-    // Linear pattern (no nested quantifiers): an absolute URL runs until whitespace or a quote/angle bracket.
-    private static readonly Regex AbsoluteUrlRegex = new(@"[A-Za-z][A-Za-z0-9+.\-]*://[^\s""'<>]+",
+    // Linear pattern: starts only at a token boundary; the authority/path runs to whitespace, and a query or fragment
+    // runs to the end of the line because it may hold unencoded quotes or spaces (e.g. OData "$filter=Name eq 'bob'").
+    private static readonly Regex AbsoluteUrlRegex = new(@"(?<![A-Za-z0-9+.\-])[A-Za-z][A-Za-z0-9+.\-]*://[^\s?#]*(?:[?#][^\r\n]*)?",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     /// <summary>
@@ -79,8 +83,14 @@ internal static class UrlLogRedactor
                 if (i > 0)
                     sb.Append('&');
 
-                var eq = parameters[i].IndexOf('=');
-                sb.Append(eq < 0 ? parameters[i] : parameters[i].Substring(0, eq + 1) + Mask);
+                var parameter = parameters[i];
+
+                if (parameter.Length == 0)
+                    continue;
+
+                // A valueless token ("?<apikey>") may itself be the secret, so it is masked as a whole.
+                var eq = parameter.IndexOf('=');
+                sb.Append(eq < 0 ? Mask : parameter.Substring(0, eq + 1) + Mask);
             }
         }
 

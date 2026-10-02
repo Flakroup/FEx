@@ -34,7 +34,13 @@ public sealed class FExPollyPolicyBuilderRedactionTests
         _policyBuilder = new(_logger);
     }
 
-    public static TheoryData<string> SecretUrls => new() { QueryUrl, UserInfoUrl };
+    // OData-style query: Flurl leaves the quotes raw, which must not end the redacted span early.
+    private const string ODataUrl = "https://api.example.com/odata/People?$filter=Name eq 'bob'&api_key=" + Secret;
+
+    // Valueless query token carrying the secret.
+    private const string BareTokenUrl = "https://api.example.com/v1/x?" + Secret;
+
+    public static TheoryData<string> SecretUrls => new() { QueryUrl, UserInfoUrl, ODataUrl, BareTokenUrl };
 
     [Theory]
     [MemberData(nameof(SecretUrls))]
@@ -53,7 +59,7 @@ public sealed class FExPollyPolicyBuilderRedactionTests
         var logs = CapturedLogLines();
         logs.Count(static l => l.Contains("Retry")).ShouldBe(2);
         AssertNoSecrets(logs);
-        logs.ShouldContain(static l => l.Contains("https://") && l.Contains("api.example.com/v1/x?"));
+        logs.ShouldContain(static l => l.Contains("https://") && l.Contains("api.example.com/"));
     }
 
     [Theory]

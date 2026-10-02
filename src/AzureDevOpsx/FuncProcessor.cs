@@ -98,8 +98,12 @@ public sealed class FuncProcessor : IDisposable
             : default;
     }
 
+    // The table owns the clients for the lifetime of their credentials, so the analyzer's "created IDisposable is
+    // ignored" report does not apply here.
+#pragma warning disable IDISP004
     private static IFlurlClient GetClient(ICredentials credentials) =>
         Clients.GetValue(credentials, static c => new FlurlClient(new HttpClient(HandlerFactory(c))));
+#pragma warning restore IDISP004
 
     public async Task<string?> RunRawAsync(IList<HttpStatusCode>? omitCodes = null)
     {

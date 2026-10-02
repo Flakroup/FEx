@@ -223,6 +223,12 @@ public class TfsEnvironment : NotifyPropertyChanged
         ProjectsCollectionsIsDirty = true;
         _projectsCollections.Clear();
         var res = await GetServerAsync(autoLogIn, username, password);
+
+        // GetServerAsync skips LoginAsync (and its load) for an already authenticated server.
+        if (res
+            && Server?.HasAuthenticated == true)
+            await GetProjectsCollectionsAsync();
+
         IsConnecting = false;
 
         return res;
@@ -357,19 +363,24 @@ public class TfsEnvironment : NotifyPropertyChanged
     {
         await EnvironmentLock.WaitAsync();
 
-        if (Server != null)
+        try
         {
-            if (!ProjectsCollectionsIsBusy && ProjectsCollectionsIsDirty)
-                await GetTfsProjectsCollectionsAsync();
+            if (Server != null)
+            {
+                if (!ProjectsCollectionsIsBusy && ProjectsCollectionsIsDirty)
+                    await GetTfsProjectsCollectionsAsync();
+                else
+                    await EnsureProjectsCollectionsCacheAsync();
+            }
             else
-                await EnsureProjectsCollectionsCacheAsync();
+            {
+                ProjectsCollections.Clear();
+            }
         }
-        else
+        finally
         {
-            ProjectsCollections.Clear();
+            EnvironmentLock.Release();
         }
-
-        EnvironmentLock.Release();
     }
 
     /// <summary>

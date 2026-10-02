@@ -46,6 +46,9 @@ public class HasInternetConnectionGate
 
             using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token);
 
+            // Like the former WebRequest probe, any HTTP error (captive portal 511, proxy 407, ...) is "not online".
+            response.EnsureSuccessStatusCode();
+
             return true;
         }
         catch (Exception ex)

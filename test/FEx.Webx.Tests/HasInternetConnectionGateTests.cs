@@ -31,6 +31,27 @@ public sealed class HasInternetConnectionGateTests
             Task.FromResult(new HttpResponseMessage(HttpStatusCode.NoContent));
     }
 
+    private sealed class StatusHandler(HttpStatusCode status) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+                                                               CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(status));
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.ProxyAuthenticationRequired)]
+    [InlineData((HttpStatusCode)511)]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    public async Task CheckAsync_HttpErrorStatus_ReturnsFalse(HttpStatusCode status)
+    {
+        var handler = Substitute.For<IExceptionHandler>();
+        using var client = new HttpClient(new StatusHandler(status));
+        var gate = new HasInternetConnectionGate(handler, client);
+
+        (await gate.CheckAsync(TestContext.Current.CancellationToken)).ShouldBeFalse();
+        handler.Received(1).Handle(Arg.Any<Exception>());
+    }
+
     [Fact]
     public async Task CheckAsync_ReachableUrl_ReturnsTrue()
     {

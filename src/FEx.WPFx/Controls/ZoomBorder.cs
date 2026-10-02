@@ -42,8 +42,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         get => base.Child;
         set
         {
-            if (value is not null
-                && !Equals(value, Child))
+            if (!Equals(value, Child))
                 Initialize(value);
 
             base.Child = value;
@@ -62,7 +61,14 @@ public class ZoomBorder : Border, INotifyPropertyChanged
     {
         get => _scale;
         set => this.SetObjectProperty(ref _scale, value,
-            (z, _, _) => { _ = Task.Run(() => ScaleChanged?.Invoke(z, Scale)); });
+            (z, _, _) =>
+            {
+                // Raised on the UI thread so handlers can safely touch UI elements.
+                // VSTHRD001: WPF UI-thread marshaling via Dispatcher.BeginInvoke.
+#pragma warning disable VSTHRD001
+                _ = z.Dispatcher.BeginInvoke(() => ScaleChanged?.Invoke(z, Scale));
+#pragma warning restore VSTHRD001
+            });
     }
 
     public bool IsAutoFitEnabled
@@ -181,8 +187,11 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         ParentSize = new(parent.ActualWidth, parent.ActualHeight);
     }
 
-    private void Initialize(UIElement element)
+    private void Initialize(UIElement? element)
     {
+        if (_child is FrameworkElement previousChild)
+            previousChild.SizeChanged -= Element_SizeChanged;
+
         _child = element;
 
         if (_child is not null)

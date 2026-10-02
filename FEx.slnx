@@ -154,6 +154,9 @@
     <Project Path="test/FEx.Platforms.Windows.Tests/FEx.Platforms.Windows.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.WPFx.Tests/FEx.WPFx.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.Telemetry.Sentry.Web.Tests/FEx.Telemetry.Sentry.Web.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>

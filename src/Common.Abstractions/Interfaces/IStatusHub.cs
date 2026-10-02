@@ -14,6 +14,10 @@ public interface IStatusHub
                                Action<Guid, string> onStatusRemoved,
                                Action onStatusesReset);
 
+    void DetachFromStatusChanges(Action<Guid, string> onStatusAdded,
+                                 Action<Guid, string> onStatusRemoved,
+                                 Action onStatusesReset);
+
     void CleanStatuses();
     IList<string> GetStatuses();
     string GetStatusString(string? separator = null);

@@ -82,15 +82,32 @@ public class FileSystemIconsProvider
             return null;
 
         using var bitmap = icon.ToBitmap();
+
+        return CreateFrozenBitmapSource(bitmap);
+    }
+
+    /// <summary>
+    /// Creates a frozen <see cref="BitmapSource"/> from <paramref name="bitmap"/> and always releases
+    /// the intermediate GDI HBITMAP (the source holds its own copy of the pixels).
+    /// </summary>
+    internal static BitmapSource CreateFrozenBitmapSource(Bitmap bitmap)
+    {
         var hBitmap = bitmap.GetHbitmap();
 
-        var res = Imaging.CreateBitmapSourceFromHBitmap(hBitmap,
-            IntPtr.Zero,
-            Int32Rect.Empty,
-            BitmapSizeOptions.FromEmptyOptions());
+        try
+        {
+            var res = Imaging.CreateBitmapSourceFromHBitmap(hBitmap,
+                IntPtr.Zero,
+                Int32Rect.Empty,
+                BitmapSizeOptions.FromEmptyOptions());
 
-        res.Freeze();
+            res.Freeze();
 
-        return res;
+            return res;
+        }
+        finally
+        {
+            NativeImagingMethods.DeleteBitmapObject(hBitmap);
+        }
     }
 }

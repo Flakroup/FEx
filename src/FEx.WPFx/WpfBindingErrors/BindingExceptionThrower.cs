@@ -37,20 +37,34 @@ public static class BindingExceptionThrower
     /// </value>
     public static bool IsAttached => _errorListener is not null;
 
-    // Set by Attach before any binding error fires; GetCachedBindingErrors tolerates the pre-Attach null at runtime.
-    private static string BindingErrorsCacheFile { get; set; } = null!;
+    // Set by Attach; null when no cache directory was given, in which case errors are only deduplicated in memory.
+    internal static string? BindingErrorsCacheFile { get; private set; }
 
     private static SemaphoreSlim BindingErrorsCacheSemaphore { get; } = new(1, 1);
 
-    private static HashSet<BindingException> BindingErrorsCache { get; } = GetCachedBindingErrors();
+    // Loaded by Attach once the cache file location is known.
+    private static HashSet<BindingException> BindingErrorsCache { get; set; } = [];
 
     /// <summary>
     /// Start listening WPF binding error
     /// </summary>
+    /// <param name="bindingErrorsCacheDirectory">
+    /// Directory of the persisted binding-error cache, so errors seen in a previous run are not reported
+    /// again. When <c>null</c> nothing is persisted (a shared default location would let unrelated apps
+    /// suppress each other's errors).
+    /// </param>
     public static void Attach(string? bindingErrorsCacheDirectory)
     {
-        BindingErrorsCacheFile = Path.Combine(bindingErrorsCacheDirectory ?? Path.GetTempPath(),
-            $"{Guid.NewGuid()}_BindingErrors.json");
+        // A second Attach must not leave the first listener alive (it would keep throwing binding errors).
+        Detach();
+
+        BindingErrorsCacheFile = bindingErrorsCacheDirectory is null
+            ? null
+            : Path.Combine(bindingErrorsCacheDirectory, "BindingErrors.json");
+
+        BindingErrorsCache = BindingErrorsCacheFile is null
+            ? []
+            : LoadCachedBindingErrors(BindingErrorsCacheFile);
 
         _errorListener = new();
         _errorListener.ErrorCatched += OnErrorCatched;
@@ -78,51 +92,73 @@ public static class BindingExceptionThrower
     /// <param name="message">The message.</param>
     /// <exception cref="BindingException"></exception>
     [DebuggerStepThrough]
-    private static void OnErrorCatched(TraceEventCache eventCache,
-                                       string source,
-                                       TraceEventType eventType,
-                                       string? message)
+    internal static void OnErrorCatched(TraceEventCache eventCache,
+                                        string source,
+                                        TraceEventType eventType,
+                                        string? message)
     {
-        if (eventType == TraceEventType.Error)
-        {
-            BindingErrorsCacheSemaphore.Wait();
-            var exception = new BindingException(eventCache, source, message);
-            var shouldBeThrown = false;
+        if (eventType != TraceEventType.Error)
+            return;
 
+        var exception = new BindingException(eventCache, source, message);
+        var shouldBeThrown = false;
+
+        BindingErrorsCacheSemaphore.Wait();
+
+        try
+        {
             if (!BindingErrorsCache.Any(x => x.Equals(exception)))
             {
                 BindingErrorsCache.Add(exception);
-                var json = JsonConvert.SerializeObject(BindingErrorsCache, Formatting.Indented, DefaultSettings);
-                File.WriteAllText(BindingErrorsCacheFile, json);
                 shouldBeThrown = true;
+                Persist();
             }
-
+        }
+        finally
+        {
             BindingErrorsCacheSemaphore.Release();
+        }
 
-            if (shouldBeThrown)
-                throw exception;
+        if (shouldBeThrown)
+            throw exception;
+    }
+
+    internal static HashSet<BindingException> LoadCachedBindingErrors(string cacheFile)
+    {
+        try
+        {
+            var dir = Path.GetDirectoryName(cacheFile);
+
+            if (dir is not null)
+                Directory.CreateDirectory(dir);
+
+            if (!File.Exists(cacheFile))
+                return [];
+
+            var json = File.ReadAllText(cacheFile);
+
+            return JsonConvert.DeserializeObject<HashSet<BindingException>>(json) ?? [];
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+        {
+            // An unreadable cache only means previously seen errors are reported again.
+            return [];
         }
     }
 
-    private static HashSet<BindingException> GetCachedBindingErrors()
+    private static void Persist()
     {
-        var result = new HashSet<BindingException>();
-        var dir = Path.GetDirectoryName(BindingErrorsCacheFile);
+        if (BindingErrorsCacheFile is null)
+            return;
 
-        if (dir is not null)
+        try
         {
-            Directory.CreateDirectory(dir);
-
-            if (File.Exists(BindingErrorsCacheFile))
-            {
-                var json = File.ReadAllText(BindingErrorsCacheFile);
-                var obj = JsonConvert.DeserializeObject<HashSet<BindingException>>(json);
-
-                if (obj is not null)
-                    result = obj;
-            }
+            var json = JsonConvert.SerializeObject(BindingErrorsCache, Formatting.Indented, DefaultSettings);
+            File.WriteAllText(BindingErrorsCacheFile, json);
         }
-
-        return result;
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // An unwritable cache must not replace the binding error being reported.
+        }
     }
 }

@@ -5,6 +5,10 @@ using System.Threading.Tasks;
 
 namespace FEx.WebScraping.Abstractions.Interfaces;
 
+/// <summary>
+/// Browser-driven scraping. Every member takes an optional <see cref="System.Threading.CancellationToken" />;
+/// implementers written against the earlier token-less signatures must add the parameter (source-breaking).
+/// </summary>
 public interface IWebBrowserScraper
 {
     Task<HtmlDocument> LoadHtmlDocumentAsync(Uri pageLink,

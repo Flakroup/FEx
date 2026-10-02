@@ -69,18 +69,19 @@ public class AzureStorageService : IAzureStorageService
         string downloadDir,
         string path)
     {
-        Log.LogInformation($"Preparing blob for container {containerName} and path {path}");
-
         var containerClient = await GetBlobContainerClientAsync(containerName);
 
-        return await ProcessBlobAsync(containerClient, downloadDir, path);
+        return await ProcessBlobAsync(containerName, containerClient, downloadDir, path);
     }
 
-    private static async Task<(string fileName, FileInfo localFile)> ProcessBlobAsync(
+    private async Task<(string fileName, FileInfo localFile)> ProcessBlobAsync(
+        string containerName,
         BlobContainerClient containerClient,
         string downloadDir,
         string path)
     {
+        Log.LogInformation($"Preparing blob for container {containerName} and path {path}");
+
         var blob = await containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, path, CancellationToken.None)
             .OrderByDescending(x => x.Properties.LastModified)
             .FirstOrDefaultAsync();
@@ -108,11 +109,7 @@ public class AzureStorageService : IAzureStorageService
         var containerClient = await GetBlobContainerClientAsync(containerName);
 
         return await paths.WithWhenAllTasksAsync(path =>
-        {
-            Log.LogInformation($"Preparing blob for container {containerName} and path {path}");
-
-            return ProcessBlobAsync(containerClient, downloadDir, path);
-        });
+            ProcessBlobAsync(containerName, containerClient, downloadDir, path));
     }
 
     public async Task<bool> DownloadLatestBlobsAsync(string downloadDir,
@@ -446,7 +443,7 @@ public class AzureStorageService : IAzureStorageService
         return blobServiceClient.GetBlobContainerClient(container.Name);
     }
 
-    private async Task<(FileInfo localFile, CloudBlockBlob? sourceBlob, bool shouldBeDownloaded)>
+    protected virtual async Task<(FileInfo localFile, CloudBlockBlob? sourceBlob, bool shouldBeDownloaded)>
         PrepareBlobDownloadAsync(string containerName, string fileName, FileInfo localFile, bool noDownload)
     {
         CloudBlockBlob? sourceBlob = null;

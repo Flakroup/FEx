@@ -3,8 +3,10 @@ using FEx.Agnostics.BaseObjects;
 using FEx.Encryption.Exceptions;
 using FEx.Json.Extensions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 
 namespace FEx.Encryption;
 
@@ -27,24 +29,53 @@ namespace FEx.Encryption;
 /// in the UI.
 /// </para>
 /// <para>
-/// <b>Serialize the backing field, never the property.</b> The property getter hands back plaintext, so a
-/// serializer left to its own devices writes the secret out in the clear and undoes the whole point of
-/// this class. Mark the property so it is skipped and the field so it is kept:
+/// <b>Serialization contract: what reaches disk is ciphertext, by default.</b> A property getter hands back
+/// plaintext, so a serializer left to its own devices would write the secret out in the clear. To make the
+/// obvious declaration safe, this class hooks Newtonsoft.Json's serialization callbacks: while an instance
+/// is being serialized, <see cref="DecryptFromSource" /> returns the stored ciphertext instead of decrypting
+/// it, and while it is being deserialized, <see cref="EncryptSource" /> stores the incoming value as the
+/// ciphertext it already is. A plain encrypted property therefore needs no attributes:
 /// <code>
-/// [JsonProperty("secret")]
 /// private string? _secret;
 ///
-/// [JsonIgnore]
 /// public string? Secret
 /// {
 ///     get => DecryptFromSource(_secret);
 ///     set => EncryptSource(ref _secret, value);
 /// }
 /// </code>
+/// A value read back during deserialization that is not a cipher envelope at all - a file written in the
+/// clear by an older version - is encrypted on the way in, so the next save migrates it.
+/// </para>
+/// <para>
+/// A property read through <see cref="DecryptFromJsonSource{T}" /> cannot carry ciphertext in its own type,
+/// so it must be persisted through its backing field instead; reading it while serializing throws rather
+/// than write plaintext or silently drop the value:
+/// <code>
+/// [JsonProperty("payload")]
+/// private string? _payload;
+///
+/// [JsonIgnore]
+/// public Payload? Data
+/// {
+///     get => DecryptFromJsonSource&lt;Payload&gt;(_payload);
+///     set => EncryptJsonSource(ref _payload, value);
+/// }
+/// </code>
+/// The same field pattern works for string properties too. The callbacks are Newtonsoft.Json's (FEx's
+/// serializer, which <c>BaseUserSettings</c> uses); any other serializer must be pointed at the backing
+/// fields the same way.
 /// </para>
 /// </remarks>
 public class SecureNotifyPropertyChanged : NotifyPropertyChanged
 {
+    // The managed thread id that is serializing or deserializing this instance right now, 0 otherwise.
+    // Thread-scoped so a UI binding reading the property on another thread mid-save still gets plaintext.
+    [NonSerialized]
+    private int _serializerThreadId;
+
+    private bool IsInSerializer => _serializerThreadId == Environment.CurrentManagedThreadId;
+
     /// <summary>The cipher used for this instance. Overridable so a test can supply its own.</summary>
     protected virtual FExStringCipher Cipher => FExEncryption.Cipher;
 
@@ -74,6 +105,9 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
     {
         if (source is null)
             return null;
+
+        if (IsInSerializer)
+            return source;
 
         try
         {
@@ -108,6 +142,10 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
     /// </remarks>
     protected T? DecryptFromJsonSource<T>(string? source, [CallerMemberName] string? propertyName = null)
     {
+        if (IsInSerializer && source is not null)
+            throw new InvalidOperationException(
+                $"'{propertyName}' on {GetType().Name} would be serialized as plaintext. Mark it [JsonIgnore] and serialize its backing field with [JsonProperty] instead - see the remarks on {nameof(SecureNotifyPropertyChanged)}.");
+
         var json = DecryptFromSource(source, propertyName);
 
         if (json is null)
@@ -149,8 +187,29 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
                                  [CallerMemberName] string? propertyName = null)
 #pragma warning restore S2360
     {
-        var encrypted = newValue is null ? null : Cipher.Encrypt(newValue);
+        var encrypted = newValue is null
+                        || (IsInSerializer && FExStringCipher.IsEnvelope(newValue))
+            ? newValue
+            : Cipher.Encrypt(newValue);
 
         return SetProperty(ref backingField, encrypted, onPropertyChanged, propertyName);
     }
+
+    [OnSerializing]
+    private void OnSerializingSecure(StreamingContext context) => _serializerThreadId = Environment.CurrentManagedThreadId;
+
+    [OnSerialized]
+    private void OnSerializedSecure(StreamingContext context) => _serializerThreadId = 0;
+
+    [OnDeserializing]
+    private void OnDeserializingSecure(StreamingContext context) => _serializerThreadId = Environment.CurrentManagedThreadId;
+
+    [OnDeserialized]
+    private void OnDeserializedSecure(StreamingContext context) => _serializerThreadId = 0;
+
+    // A failed (de)serialization skips OnSerialized/OnDeserialized; without this the getters on this thread
+    // would keep returning ciphertext for the rest of the instance's life.
+    [OnError]
+    private void OnSerializationErrorSecure(StreamingContext context, ErrorContext errorContext) =>
+        _serializerThreadId = 0;
 }

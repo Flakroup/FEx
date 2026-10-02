@@ -195,6 +195,27 @@ public sealed class FExStringCipher
         }
     }
 
+    /// <summary>
+    /// Whether <paramref name="value" /> has the shape of an envelope this class writes (Base64, long enough,
+    /// known version byte) - without checking that it is authentic. Lets a reader tell a value that was
+    /// never encrypted apart from one encrypted under a different passphrase.
+    /// </summary>
+    internal static bool IsEnvelope(string value)
+    {
+        byte[] envelope;
+
+        try
+        {
+            envelope = Convert.FromBase64String(value);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+
+        return envelope.Length >= PayloadOffset + MinCipherBlock && envelope[0] == EnvelopeVersion;
+    }
+
     private static byte[] FromBase64(string value)
     {
         try

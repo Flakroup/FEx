@@ -93,13 +93,14 @@ public sealed class SecureNotifyPropertyChangedTests
     public void AnObjectWithAnUnreadableFieldStillSerializes()
     {
         // BaseUserSettings re-serializes on every property write, and a serializer walks every public
-        // getter. If an unreadable field threw, saving any unrelated property would fail with it.
-        var secrets = new Secrets(_cipher) { RawSecret = _stranger.Encrypt("written elsewhere") };
+        // getter. If an unreadable field threw, saving any unrelated property would fail with it. Serializing
+        // writes the stored ciphertext without decrypting it, so the unreadable value survives the save too.
+        var foreign = _stranger.Encrypt("written elsewhere");
+        var secrets = new Secrets(_cipher) { RawSecret = foreign };
 
         var json = Should.NotThrow(secrets.ToJson);
 
-        json.ShouldNotBeNullOrEmpty();
-        secrets.Failures.ShouldNotBeEmpty();
+        json.ShouldContain(foreign);
     }
 
     [Fact]

@@ -47,7 +47,7 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
         {
             var sb = new StringBuilder();
 
-            foreach (var m in ex.InnerExceptions.Select(e => e.Message.Split(':')[4])
+            foreach (var m in ex.InnerExceptions.Select(e => ExtractReason(e.Message))
                          .Distinct()
                          .OrderBy(x => x)
                          .ToList())
@@ -57,6 +57,17 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
 
             throw;
         }
+    }
+
+    /// <summary>
+    /// Extracts the reason part of a DI validation message; falls back to the whole message
+    /// when it doesn't have the expected shape so the handler never hides the original error.
+    /// </summary>
+    internal static string ExtractReason(string message)
+    {
+        var parts = message.Split(':');
+
+        return parts.Length > 4 ? parts[4] : message;
     }
 
     /// <inheritdoc />

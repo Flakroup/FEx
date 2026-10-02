@@ -43,7 +43,7 @@ public abstract class StaticsBase : FExInitializable
                 ? localFactory().Guard(paramName)
                 : ServiceProvider.Guard(nameof(ServiceProvider)).GetInstance<T>().Guard(paramName);
         }
-        catch when (fallback is not null)
+        catch (Exception ex) when (fallback is not null && ex is ArgumentNullException or InvalidOperationException)
         {
             return fallback().Guard(paramName);
         }

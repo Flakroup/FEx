@@ -44,8 +44,8 @@ public class DIContractResolver : DefaultContractResolver
     {
         var fType = _diMeta.RegistredTypeFor(objectType);
 
-        return fType is not null
-            ? base.CreateObjectContract(fType)
-            : CreateObjectContract(objectType);
+        // Factory/instance registrations have no ImplementationType - build the contract for the
+        // service type itself instead of re-entering CreateObjectContract (infinite recursion).
+        return base.CreateObjectContract(fType ?? objectType);
     }
 }

@@ -10,6 +10,8 @@ using StrongInject;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
 namespace FEx.DependencyInjection.Abstractions;
@@ -25,6 +27,10 @@ public class FExServiceProvider : IFExServiceProvider
     /// Tracks the container instance for idempotent initialization.
     /// </summary>
     private static IDisposable? _containerInstance;
+
+    private static readonly MethodInfo _resolveServiceMethod =
+        typeof(IFExServiceContainer).GetMethod(nameof(IFExServiceContainer.ResolveService),
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
 
     public static FExServiceProvider Instance => new();
 
@@ -65,7 +71,7 @@ public class FExServiceProvider : IFExServiceProvider
     /// <summary>
     /// Retrieves the instance of the specified type.
     /// </summary>
-    public object GetInstance(Type serviceType) => RequiredServiceContainer.ResolveService<object>();
+    public object GetInstance(Type serviceType) => ResolveByType(serviceType);
 
     /// <summary>
     /// Gets the required service object of the specified type.
@@ -75,12 +81,29 @@ public class FExServiceProvider : IFExServiceProvider
     /// <summary>
     /// Gets the required service object of the specified type.
     /// </summary>
-    public T GetRequiredService<T>(Type serviceType) => (T)RequiredServiceContainer.ResolveService<object>();
+    public T GetRequiredService<T>(Type serviceType) => (T)ResolveByType(serviceType);
 
     /// <summary>
     /// Gets the required service object of the specified type.
     /// </summary>
-    public object GetRequiredService(Type serviceType) => RequiredServiceContainer.ResolveService<object>();
+    public object GetRequiredService(Type serviceType) => ResolveByType(serviceType);
+
+    private static object ResolveByType(Type serviceType)
+    {
+        serviceType.Guard(nameof(serviceType));
+
+        try
+        {
+            return _resolveServiceMethod.MakeGenericMethod(serviceType).Invoke(RequiredServiceContainer, null)
+                ?? throw new InvalidOperationException($"Couldn't resolve type: {serviceType.FullName}");
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException is not null)
+        {
+            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+
+            throw;
+        }
+    }
 
     /// <summary>
     /// Tries to resolve service of the specified type.

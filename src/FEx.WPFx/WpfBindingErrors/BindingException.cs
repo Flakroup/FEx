@@ -28,6 +28,8 @@ public class BindingException : Exception
         Source = source;
     }
 
+    // Used by Json deserialization: Message is read-only, so it can only be restored through this constructor.
+    [JsonConstructor]
     public BindingException(string message)
         : base(message)
     {

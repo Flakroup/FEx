@@ -22,4 +22,9 @@
         <ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
         <ProjectReference Include="..\Imaging.Windows\FEx.Imaging.Windows.csproj" />
     </ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="FEx.AzureDevOpsx.Tests" />
+	</ItemGroup>
+
 </Project>

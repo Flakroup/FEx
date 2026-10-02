@@ -127,6 +127,15 @@
     <Project Path="test/FEx.WebScraping.Tests/FEx.WebScraping.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.Webx.Tests/FEx.Webx.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.AzureStorage.Tests/FEx.AzureStorage.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.AzureDevOpsx.Tests/FEx.AzureDevOpsx.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.Encryption.Tests/FEx.Encryption.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>

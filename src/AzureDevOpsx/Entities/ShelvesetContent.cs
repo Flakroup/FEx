@@ -121,6 +121,7 @@ public class ShelvesetContent : NotifyPropertyChanged
         {
             var res = jsonStr.FromJson<ShelvesetContent>(ShelvesetResponse.Settings);
             Refresh(res);
+            await env.GetProjectsCollectionsAsync();
             GetShelve();
         }
         else

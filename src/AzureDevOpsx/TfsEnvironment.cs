@@ -138,9 +138,14 @@ public class TfsEnvironment : NotifyPropertyChanged
         private set => SetProperty(ref _userInfo, value);
     }
 
+    /// <summary>
+    /// The projects collections loaded so far. Never touches the network: it is filled by
+    /// <see cref="GetProjectsCollectionsAsync" /> (also run by <see cref="LoginAsync" />), so await that first
+    /// when a fresh list is required.
+    /// </summary>
     public ConcurrentList<ProjectsCollection> ProjectsCollections
     {
-        get => GetProjectsCollections();
+        get => _projectsCollections;
         private set => SetProperty(ref _projectsCollections, value);
     }
 
@@ -327,7 +332,10 @@ public class TfsEnvironment : NotifyPropertyChanged
     {
         try
         {
-            if (await GetServerAsync()
+            if (await GetServerAsync())
+                await GetProjectsCollectionsAsync();
+
+            if (Server != null
                 && ProjectsCollections.Any(x => x.IsEnabled))
             {
                 var tfs = ProjectsCollections.Count > 1
@@ -364,6 +372,9 @@ public class TfsEnvironment : NotifyPropertyChanged
         EnvironmentLock.Release();
     }
 
+    /// <summary>
+    /// Blocks the calling thread on <see cref="GetProjectsCollectionsAsync" />; prefer awaiting that instead.
+    /// </summary>
     public ConcurrentList<ProjectsCollection> GetProjectsCollections()
     {
         JoinableTaskExtensions.WaitWithoutThreadLock(GetProjectsCollectionsAsync);

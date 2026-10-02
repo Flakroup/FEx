@@ -41,6 +41,21 @@ public sealed class XPathBuilderLiteralTests
         doc.DocumentNode.SelectSingleNode(Div().WhereNotInnerTextContains(value).ToString()).ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData("hello")]
+    [InlineData("o'brien says \"hi\"")]
+    public void WhereInnerTextEquals_MatchesTheExactText(string value)
+    {
+        // It used to emit [@text()=...], an attribute named "text()" that no node has - it never matched.
+        HtmlDocument doc = new();
+        HtmlNode div = doc.CreateElement("div");
+        div.AppendChild(doc.CreateTextNode(value));
+        doc.DocumentNode.AppendChild(div);
+
+        doc.DocumentNode.SelectSingleNode(Div().WhereInnerTextEquals(value)).ShouldBe(div);
+        doc.DocumentNode.SelectSingleNode(Div().WhereInnerTextEquals(value + "x")).ShouldBeNull();
+    }
+
     [Fact]
     public void PlainValues_ProduceTheSameExpressionAsBefore()
     {

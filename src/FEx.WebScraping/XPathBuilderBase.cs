@@ -66,7 +66,7 @@ public abstract class XPathBuilderBase<T> where T : XPathBuilderBase<T>, new()
             ? throw new("The number needs to be greater than 0")
             : ConcatXPath($"[{number}]");
 
-    public T WhereInnerTextEquals(string value) => ConcatXPath($"[@text()={Literal(value)}]");
+    public T WhereInnerTextEquals(string value) => ConcatXPath($"[text()={Literal(value)}]");
 
     public T WhereInnerTextContains(string value) => ConcatXPath($"[contains(text(), {Literal(value)})]");
 

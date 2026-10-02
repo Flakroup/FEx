@@ -49,14 +49,12 @@ public sealed class TfsEnvironmentTests
         (await WithTimeoutAsync(() => Task.FromResult(env.ProjectsCollections))).ShouldBeEmpty();
     }
 
-    [Fact]
-    public async Task GetProjectsCollectionsAsync_AfterFailedLoad_ReleasesEnvironmentLock()
-    {
-        var env = CreateEnvironment();
-        SetPrivate(env, "Server", new TfsConfigurationServer(new Uri("http://127.0.0.1:1/tfs")));
-        SetPrivate(env, "ProjectsCollectionsIsDirty", true);
+    private static bool GetPrivateBool(TfsEnvironment env, string property) =>
+        (bool)typeof(TfsEnvironment).GetProperty(property, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!
+            .GetGetMethod(true)!.Invoke(env, null)!;
 
-        // The unreachable server makes the load throw; the lock must not stay held afterwards.
+    private static async Task LoadIgnoringServerErrorsAsync(TfsEnvironment env)
+    {
         try
         {
             await WithTimeoutAsync(env.GetProjectsCollectionsAsync);
@@ -64,6 +62,24 @@ public sealed class TfsEnvironmentTests
         catch (Exception ex) when (ex is not TimeoutException)
         {
             // expected: the server is unreachable
+        }
+    }
+
+    [Fact]
+    public async Task GetProjectsCollectionsAsync_AfterFailedLoad_DoesNotWedgeTheNextLoad()
+    {
+        var env = CreateEnvironment();
+        SetPrivate(env, "Server", new TfsConfigurationServer(new Uri("http://127.0.0.1:1/tfs")));
+
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            SetPrivate(env, "ProjectsCollectionsIsDirty", true);
+
+            // The unreachable server makes the load throw. Neither EnvironmentLock, CollectionsLock nor the busy
+            // flag may stay taken, so the second attempt must finish (throwing again) instead of hanging.
+            await LoadIgnoringServerErrorsAsync(env);
+
+            GetPrivateBool(env, "ProjectsCollectionsIsBusy").ShouldBeFalse();
         }
 
         SetPrivate(env, "Server", null);

@@ -1,11 +1,12 @@
 using FEx.Agnostics.Abstractions.Flow;
 using FEx.Agnostics.Abstractions.Interfaces;
-using FEx.Agnostics.Abstractions.Logging;
 using FEx.Agnostics.Models;
 using Serilog;
 using Serilog.Context;
+using Serilog.Events;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace FEx.Logging;
 
@@ -21,122 +22,78 @@ public class FExSerilogLogger : IFExLogger, IDisposable
     // it is disposed; anything written to it vanishes.
     private const string SilentLoggerTypeName = "Serilog.Core.Pipeline.SilentLogger";
 
-    private readonly FExDebugLogger _fallback = new();
-    private readonly List<Scope> _scopes = [];
+    // Scopes form a linked stack per async flow, like Serilog's LogContext: concurrent flows never share
+    // state, and a disposed scope leaves nothing behind.
+    private readonly AsyncLocal<Scope?> _currentScope = new();
     public event EventHandler<FExErrorEventArgs>? ErrorLogged;
 
-    private object? _state => _scopes.Count > 0 ? _scopes[^1].State : null;
+    private object? CurrentState => _currentScope.Value?.State;
 
     private static bool IsSerilogSilent => Log.Logger.GetType().FullName == SilentLoggerTypeName;
 
     // Trace level
-    public void Trace(string message)
-    {
-        if (IsSerilogSilent)
-            _fallback.Trace(message);
-        else
-            Log.Verbose(message);
-    }
-
-    public void Trace(Exception exception, string? message)
-    {
-        if (IsSerilogSilent)
-            _fallback.Trace(exception, message ?? exception.Message);
-        else
-            Log.Verbose(exception, message ?? exception.Message);
-    }
+    public void Trace(string message) => Write(LogEventLevel.Verbose, null, message);
+    public void Trace(Exception exception, string? message) => Write(LogEventLevel.Verbose, exception, message);
 
     // Debug level
-    public void Debug(string message)
-    {
-        if (IsSerilogSilent)
-            _fallback.Debug(message);
-        else
-            Log.Debug(message);
-    }
-
-    public void Debug(Exception exception, string? message)
-    {
-        if (IsSerilogSilent)
-            _fallback.Debug(exception, message ?? exception.Message);
-        else
-            Log.Debug(exception, message ?? exception.Message);
-    }
+    public void Debug(string message) => Write(LogEventLevel.Debug, null, message);
+    public void Debug(Exception exception, string? message) => Write(LogEventLevel.Debug, exception, message);
 
     // Information level
-    public void Information(string message)
-    {
-        if (IsSerilogSilent)
-            _fallback.Information(message);
-        else
-            Log.Information(message);
-    }
+    public void Information(string message) => Write(LogEventLevel.Information, null, message);
 
-    public void Information(Exception exception, string? message)
-    {
-        if (IsSerilogSilent)
-            _fallback.Information(exception, message ?? exception.Message);
-        else
-            Log.Information(exception, message ?? exception.Message);
-    }
+    public void Information(Exception exception, string? message) =>
+        Write(LogEventLevel.Information, exception, message);
 
     // Warning level
-    public void Warning(string message)
-    {
-        if (IsSerilogSilent)
-            _fallback.Warning(message);
-        else
-            Log.Warning(message);
-    }
+    public void Warning(string message) => Write(LogEventLevel.Warning, null, message);
 
-    public void Warning(Exception exception, string? message)
-    {
-        if (IsSerilogSilent)
-            _fallback.Warning(exception, message ?? exception.Message);
-        else
-            Log.Warning(exception, message ?? exception.Message);
-    }
+    public void Warning(Exception exception, string? message) => Write(LogEventLevel.Warning, exception, message);
 
     // Error level
     public void Error(string message)
     {
-        if (IsSerilogSilent)
-            _fallback.Error(message);
-        else
-            Log.Error(message);
-
+        Write(LogEventLevel.Error, null, message);
         ErrorLogged?.Invoke(this, new(message));
     }
 
     public void Error(Exception exception, string? message)
     {
-        if (IsSerilogSilent)
-            _fallback.Error(exception, message ?? exception.Message);
-        else
-            Log.Error(exception, message ?? exception.Message);
-
+        Write(LogEventLevel.Error, exception, message);
         ErrorLogged?.Invoke(this, new(message, exception));
     }
 
     // Critical level (maps to Serilog.Fatal)
     public void Critical(string message)
     {
-        if (IsSerilogSilent)
-            _fallback.Critical(message);
-        else
-            Log.Fatal(message);
-
+        Write(LogEventLevel.Fatal, null, message);
         ErrorLogged?.Invoke(this, new(message));
     }
 
     public void Critical(Exception exception, string? message)
     {
-        if (IsSerilogSilent)
-            _fallback.Critical(exception, message ?? exception.Message);
-        else
-            Log.Fatal(exception, message ?? exception.Message);
-
+        Write(LogEventLevel.Fatal, exception, message);
         ErrorLogged?.Invoke(this, new(message, exception));
+    }
+
+    // While Serilog is silent, write to stderr rather than drop the message. Console.Error (unlike
+    // Debug.WriteLine) is not compiled out of Release builds.
+    private static void Write(LogEventLevel level, Exception? exception, string? message)
+    {
+        message ??= exception?.Message ?? string.Empty;
+
+        if (IsSerilogSilent)
+        {
+            Console.Error.WriteLine(
+                $"{DateTime.Now:s} [{level}] {message}{(exception is null ? string.Empty : Environment.NewLine + exception)}");
+
+            return;
+        }
+
+        if (exception is null)
+            Log.Write(level, message);
+        else
+            Log.Write(level, exception, message);
     }
 
     // Structured logging: Scopes
@@ -144,10 +101,10 @@ public class FExSerilogLogger : IFExLogger, IDisposable
     {
         // LogContext.PushProperty restores the previous context on Dispose, so a nested scope shadows the
         // outer one and hands it back when disposed - the outer scope must stay alive meanwhile.
-#pragma warning disable IDISP004 // the scope is tracked in _scopes and returned to the caller, who disposes it
-        var scope = new Scope(this, state, LogContext.PushProperty("Scope", state));
+#pragma warning disable IDISP004 // the scope is stored in _currentScope and returned to the caller, who disposes it
+        Scope scope = new(this, _currentScope.Value, state, LogContext.PushProperty("Scope", state));
 #pragma warning restore IDISP004
-        _scopes.Add(scope);
+        _currentScope.Value = scope;
 
         return scope;
     }
@@ -159,16 +116,12 @@ public class FExSerilogLogger : IFExLogger, IDisposable
 
     public IDisposable BeginLabeledScope(ILoggerState state) => BeginScope(state);
 
-    public void EndScope()
-    {
-        if (_scopes.Count > 0)
-            _scopes[^1].Dispose();
-    }
+    public void EndScope() => _currentScope.Value?.Dispose();
 
     // Structured logging: Labels
     public void AddOrUpdateLabel(string key, object value)
     {
-        if (_state is not ILoggerState loggerState)
+        if (CurrentState is not ILoggerState loggerState)
             return;
 
         loggerState.AddOrUpdateLabel(key, value);
@@ -176,7 +129,7 @@ public class FExSerilogLogger : IFExLogger, IDisposable
 
     public void RemoveLabel(string key)
     {
-        if (_state is not ILoggerState loggerState)
+        if (CurrentState is not ILoggerState loggerState)
             return;
 
         loggerState.RemoveLabel(key);
@@ -185,16 +138,18 @@ public class FExSerilogLogger : IFExLogger, IDisposable
     #region IDisposable
     public void Dispose()
     {
-        for (var i = _scopes.Count - 1; i >= 0; i--)
-            _scopes[i].Dispose();
+        while (_currentScope.Value is { } scope)
+            scope.Dispose();
     }
     #endregion
 
-    private sealed class Scope(FExSerilogLogger owner, object? state, IDisposable context) : IDisposable
+    private sealed class Scope(FExSerilogLogger owner, Scope? parent, object? state, IDisposable context) : IDisposable
     {
         private IDisposable? _context = context;
 
         public object? State { get; } = state;
+
+        public Scope? Parent { get; } = parent;
 
         #region IDisposable
         public void Dispose()
@@ -202,7 +157,18 @@ public class FExSerilogLogger : IFExLogger, IDisposable
             if (_context is null)
                 return;
 
-            owner._scopes.Remove(this);
+            // Only unwind this flow's stack when the scope is on it; a scope disposed from an unrelated flow
+            // must not touch that flow's current scope.
+            for (var current = owner._currentScope.Value; current is not null; current = current.Parent)
+            {
+                if (current != this)
+                    continue;
+
+                owner._currentScope.Value = Parent;
+
+                break;
+            }
+
 #pragma warning disable IDISP007 // Scope takes ownership of the LogContext restore handle it is constructed with
             _context.Dispose();
 #pragma warning restore IDISP007

@@ -1,5 +1,8 @@
 using FEx.Agnostics.Utilities;
 using Shouldly;
+using System;
+using System.Dynamic;
+using System.Collections.Generic;
 using Xunit;
 
 namespace FEx.Core.Tests.Agnostics;
@@ -28,5 +31,18 @@ public sealed class FlakDynamicObjectTests
 
         obj[2].ShouldBe("a");
         obj[6].ShouldBe("b");
+    }
+
+    [Fact]
+    public void IntIndexerSetter_SkipsPlaceholderKeysAlreadyInUse()
+    {
+        var source = new ExpandoObject();
+        ((IDictionary<string, object?>)source)["  "] = "existing";
+        var obj = new FlakDynamicObject(source);
+
+        Should.NotThrow(() => obj[2] = "v");
+
+        obj[0].ShouldBe("existing");
+        obj[2].ShouldBe("v");
     }
 }

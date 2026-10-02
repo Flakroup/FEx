@@ -17,6 +17,17 @@ public sealed class ExceptionExtensionsTests
     }
 
     [Fact]
+    public void SetStackTrace_StoresTheSuppliedTraceWithoutTrailingNewline()
+    {
+        var stack = new StackTrace();
+
+        var exception = new InvalidOperationException("boom").SetStackTrace(stack);
+
+        exception.StackTrace.ShouldBe(stack.ToString().TrimEnd('\r', '\n'));
+        exception.StackTrace.ShouldNotEndWith("\n");
+    }
+
+    [Fact]
     public void Stack_IncludesInnerExceptionStackTraces()
     {
         var inner = Throw("inner");

@@ -11,7 +11,10 @@ public static class JsonExtensions
 
     static JsonExtensions()
     {
-        var settings = JsonConvert.DefaultSettings?.Invoke() ?? new JsonSerializerSettings();
+        // Work on a copy: the instance DefaultSettings returns can be shared process-wide, and the Handled error
+        // handler below must not make every other JsonConvert call swallow errors.
+        var defaults = JsonConvert.DefaultSettings?.Invoke();
+        var settings = defaults is null ? new JsonSerializerSettings() : new JsonSerializerSettings(defaults);
         settings.NullValueHandling = NullValueHandling.Ignore;
         settings.MissingMemberHandling = MissingMemberHandling.Ignore;
         settings.PreserveReferencesHandling = PreserveReferencesHandling.None;

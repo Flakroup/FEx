@@ -36,7 +36,23 @@ public sealed class FExDebugLoggerTests
         var captured = CaptureStandardError(logger => logger.Error(new InvalidOperationException("kaboom"), "failed"));
 
         captured.ShouldContain("failed");
-        captured.ShouldContain("kaboom");
+        captured.ShouldContain(nameof(InvalidOperationException));
+    }
+
+    [Fact]
+    public void ExceptionMessage_IsNotWrittenToStandardError()
+    {
+        // Exception messages can quote secrets (e.g. a decrypted value in a JSON conversion error).
+        var exception = ThrownException("hunter2-SECRET");
+
+        var captured = CaptureStandardError(logger =>
+        {
+            logger.Error(exception, "failed");
+            logger.Error(exception, exception.Message);
+        });
+
+        captured.ShouldNotContain("hunter2-SECRET");
+        captured.ShouldContain(nameof(ThrownException));
     }
 
     [Fact]
@@ -55,13 +71,12 @@ public sealed class FExDebugLoggerTests
     [Fact]
     public void StaticLoggerDefault_WarningReachesStandardError()
     {
-        var original = FExStaticLogger.Instance;
+        // No Configure here: this exercises the logger FExStaticLogger's static constructor installs.
         var originalError = Console.Error;
         using var writer = new StringWriter();
 
         try
         {
-            FExStaticLogger.Configure(() => new FExDebugLogger());
             Console.SetError(writer);
 
             FExStaticLogger.Warning("static-warning");
@@ -69,10 +84,21 @@ public sealed class FExDebugLoggerTests
         finally
         {
             Console.SetError(originalError);
-            FExStaticLogger.Configure(() => original);
         }
 
         writer.ToString().ShouldContain("static-warning");
+    }
+
+    private static Exception ThrownException(string message)
+    {
+        try
+        {
+            throw new InvalidOperationException(message);
+        }
+        catch (Exception ex)
+        {
+            return ex;
+        }
     }
 
     private static string CaptureStandardError(Action<FExDebugLogger> act)

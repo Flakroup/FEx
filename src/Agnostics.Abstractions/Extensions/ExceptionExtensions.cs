@@ -24,8 +24,8 @@ public static class ExceptionExtensions
     {
         stack.Guard(nameof(stack));
 
-        // The public ToString() renders the same text as the runtime's own "normal" trace format.
-        _stackTraceStringField?.SetValue(target, stack.ToString());
+        // The public ToString() is the "normal" trace plus a trailing newline, which Exception.StackTrace does not have.
+        _stackTraceStringField?.SetValue(target, stack.ToString().TrimEnd('\r', '\n'));
 
         return target;
     }

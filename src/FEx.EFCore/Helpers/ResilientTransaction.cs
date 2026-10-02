@@ -15,6 +15,8 @@ namespace FEx.EFCore.Helpers;
 /// </summary>
 public class ResilientTransaction
 {
+    private const int MaxBeginAttempts = 10;
+
     private readonly IFExLogger _logger;
 
     public ResilientTransaction(IFExLogger logger)
@@ -29,12 +31,13 @@ public class ResilientTransaction
                                          Func<Task<T>> action,
                                          string id,
                                          IsolationLevel isolationLevel,
-                                         int? delayOnTimeout)
+                                         int? delayOnTimeout,
+                                         CancellationToken cancellationToken = default)
     {
         var strategy = context.Database.CreateExecutionStrategy();
 
-        return await strategy.ExecuteAsync(() =>
-            RunTransactionAsync(context, action, id, isolationLevel, delayOnTimeout));
+        return await strategy.ExecuteAsync(ct =>
+            RunTransactionAsync(context, action, id, isolationLevel, delayOnTimeout, ct), cancellationToken);
     }
 
     public Task<T> ExecuteAsync<T>(DbContext context, Func<T> action, string id) =>
@@ -44,12 +47,13 @@ public class ResilientTransaction
                                          Func<T> action,
                                          string id,
                                          IsolationLevel isolationLevel,
-                                         int? delayOnTimeout)
+                                         int? delayOnTimeout,
+                                         CancellationToken cancellationToken = default)
     {
         var strategy = context.Database.CreateExecutionStrategy();
 
-        return await strategy.ExecuteAsync(() =>
-            RunTransactionAsync(context, action, id, isolationLevel, delayOnTimeout));
+        return await strategy.ExecuteAsync(ct =>
+            RunTransactionAsync(context, action, id, isolationLevel, delayOnTimeout, ct), cancellationToken);
     }
 
     public T Execute<T>(DbContext context,
@@ -67,29 +71,22 @@ public class ResilientTransaction
                                                  Func<Task<T>> action,
                                                  string id,
                                                  IsolationLevel isolationLevel = IsolationLevel.Unspecified,
-                                                 int? delayOnTimeout = null)
+                                                 int? delayOnTimeout = null,
+                                                 CancellationToken cancellationToken = default)
     {
         T res;
 
-        await using var transaction = await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout);
+        await using var transaction =
+            await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout, cancellationToken);
 
         try
         {
             res = await action();
-
-            try
-            {
-                await transaction.CommitAsync();
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.Error(ex, $"[{id}]\t{ex.Message}");
-                //ignored
-            }
+            await transaction.CommitAsync();
         }
         catch
         {
-            await transaction.RollbackAsync();
+            await TryRollbackAsync(transaction, id);
 
             throw;
         }
@@ -101,29 +98,22 @@ public class ResilientTransaction
                                                  Func<T> action,
                                                  string id,
                                                  IsolationLevel isolationLevel = IsolationLevel.Unspecified,
-                                                 int? delayOnTimeout = null)
+                                                 int? delayOnTimeout = null,
+                                                 CancellationToken cancellationToken = default)
     {
         T res;
 
-        await using var transaction = await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout);
+        await using var transaction =
+            await GetTransactionAsync(context, id, isolationLevel, delayOnTimeout, cancellationToken);
 
         try
         {
             res = action();
-
-            try
-            {
-                await transaction.CommitAsync();
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.Error(ex, $"[{id}]\t{ex.Message}");
-                //ignored
-            }
+            await transaction.CommitAsync();
         }
         catch
         {
-            await transaction.RollbackAsync();
+            await TryRollbackAsync(transaction, id);
 
             throw;
         }
@@ -144,20 +134,11 @@ public class ResilientTransaction
         try
         {
             res = action();
-
-            try
-            {
-                transaction.Commit();
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.Error(ex, $"[{id}]\t{ex.Message}");
-                //ignored
-            }
+            transaction.Commit();
         }
         catch
         {
-            transaction.Rollback();
+            TryRollback(transaction, id);
 
             throw;
         }
@@ -165,26 +146,51 @@ public class ResilientTransaction
         return res;
     }
 
+    // A failed rollback must not replace the exception that made the transaction fail.
+    private async Task TryRollbackAsync(IDbContextTransaction transaction, string id)
+    {
+        try
+        {
+            await transaction.RollbackAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, $"[{id}]\tRollback failed: {ex.Message}");
+        }
+    }
+
+    private void TryRollback(IDbContextTransaction transaction, string id)
+    {
+        try
+        {
+            transaction.Rollback();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, $"[{id}]\tRollback failed: {ex.Message}");
+        }
+    }
+
     private async Task<IDbContextTransaction> GetTransactionAsync(DbContext context,
                                                                   string id,
                                                                   IsolationLevel isolationLevel =
                                                                       IsolationLevel.Unspecified,
-                                                                  int? delayOnTimeout = null)
+                                                                  int? delayOnTimeout = null,
+                                                                  CancellationToken cancellationToken = default)
     {
-        do
+        for (var attempt = 1;; attempt++)
         {
             try
             {
-                return await context.Database.BeginTransactionAsync(isolationLevel, CancellationToken.None);
+                return await context.Database.BeginTransactionAsync(isolationLevel, cancellationToken);
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException ex) when (attempt < MaxBeginAttempts)
             {
                 _logger.Error(ex, $"[{id}]\t{ex.Message}");
-                //ignored
             }
 
-            await Task.Delay(delayOnTimeout ?? 100);
-        } while (true);
+            await Task.Delay(delayOnTimeout ?? 100, cancellationToken);
+        }
     }
 
     private IDbContextTransaction GetTransaction(DbContext context,
@@ -192,19 +198,18 @@ public class ResilientTransaction
                                                  IsolationLevel isolationLevel = IsolationLevel.Unspecified,
                                                  int? delayOnTimeout = null)
     {
-        do
+        for (var attempt = 1;; attempt++)
         {
             try
             {
                 return context.Database.BeginTransaction(isolationLevel);
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException ex) when (attempt < MaxBeginAttempts)
             {
                 _logger.Error(ex, $"[{id}]\t{ex.Message}");
-                //ignored
             }
 
             JoinableAsyncHelper.DelayWithoutDeadlock(delayOnTimeout ?? 100);
-        } while (true);
+        }
     }
 }

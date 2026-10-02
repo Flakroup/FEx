@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,6 +19,13 @@ public sealed class FuncProcessor : IDisposable
 {
     public static ConcurrentDictionary<string, SemaphoreSlim> RateLimits { get; } = new();
     public static string ExpectedContentType { get; } = "application/json";
+
+    // One client (and so one connection pool) per credentials instance, shared by every processor that uses it.
+    // Keyed weakly so the client goes away with its credentials; it is deliberately never disposed per call.
+    private static readonly ConditionalWeakTable<ICredentials, IFlurlClient> Clients = new();
+
+    internal static Func<ICredentials, HttpMessageHandler> HandlerFactory { get; set; } =
+        credentials => new HttpClientHandler { Credentials = credentials };
 
     public RequestMethod Method { get; }
     public CancellationTokenSource CancellationTokenSource { get; }
@@ -90,17 +98,16 @@ public sealed class FuncProcessor : IDisposable
             : default;
     }
 
+    // The table owns the clients for the lifetime of their credentials, so the analyzer's "created IDisposable is
+    // ignored" report does not apply here.
+#pragma warning disable IDISP004
+    private static IFlurlClient GetClient(ICredentials credentials) =>
+        Clients.GetValue(credentials, static c => new FlurlClient(new HttpClient(HandlerFactory(c))));
+#pragma warning restore IDISP004
+
     public async Task<string?> RunRawAsync(IList<HttpStatusCode>? omitCodes = null)
     {
-        using var handler = new HttpClientHandler
-        {
-            Credentials = Credentials
-        };
-
-        using var httpClient = new HttpClient(handler);
-        using var flurlClient = new FlurlClient(httpClient);
-
-        var request = flurlClient.Request(RequestUrl);
+        var request = GetClient(Credentials).Request(RequestUrl);
 
         if (Args != null)
             foreach (var arg in Args)

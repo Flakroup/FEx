@@ -138,9 +138,14 @@ public class TfsEnvironment : NotifyPropertyChanged
         private set => SetProperty(ref _userInfo, value);
     }
 
+    /// <summary>
+    /// The projects collections loaded so far. Never touches the network: it is filled by
+    /// <see cref="GetProjectsCollectionsAsync" /> (also run by <see cref="LoginAsync" />), so await that first
+    /// when a fresh list is required.
+    /// </summary>
     public ConcurrentList<ProjectsCollection> ProjectsCollections
     {
-        get => GetProjectsCollections();
+        get => _projectsCollections;
         private set => SetProperty(ref _projectsCollections, value);
     }
 
@@ -214,13 +219,35 @@ public class TfsEnvironment : NotifyPropertyChanged
     public async Task<bool> InitializeAsync(bool autoLogIn = true, string? username = null, string? password = null)
     {
         IsConnecting = true;
-        ProjectsCollectionsIsBusy = false;
-        ProjectsCollectionsIsDirty = true;
-        _projectsCollections.Clear();
-        var res = await GetServerAsync(autoLogIn, username, password);
-        IsConnecting = false;
 
-        return res;
+        try
+        {
+            ProjectsCollectionsIsBusy = false;
+            ProjectsCollectionsIsDirty = true;
+            _projectsCollections.Clear();
+            var res = await GetServerAsync(autoLogIn, username, password);
+
+            // GetServerAsync skips LoginAsync (and its load) for an already authenticated server.
+            if (res
+                && Server?.HasAuthenticated == true)
+            {
+                try
+                {
+                    await GetProjectsCollectionsAsync();
+                }
+                catch (Exception ex)
+                {
+                    ex.HandleException();
+                    res = false;
+                }
+            }
+
+            return res;
+        }
+        finally
+        {
+            IsConnecting = false;
+        }
     }
 
     /// <summary>
@@ -327,7 +354,10 @@ public class TfsEnvironment : NotifyPropertyChanged
     {
         try
         {
-            if (await GetServerAsync()
+            if (await GetServerAsync())
+                await GetProjectsCollectionsAsync();
+
+            if (Server != null
                 && ProjectsCollections.Any(x => x.IsEnabled))
             {
                 var tfs = ProjectsCollections.Count > 1
@@ -349,21 +379,29 @@ public class TfsEnvironment : NotifyPropertyChanged
     {
         await EnvironmentLock.WaitAsync();
 
-        if (Server != null)
+        try
         {
-            if (!ProjectsCollectionsIsBusy && ProjectsCollectionsIsDirty)
-                await GetTfsProjectsCollectionsAsync();
+            if (Server != null)
+            {
+                if (!ProjectsCollectionsIsBusy && ProjectsCollectionsIsDirty)
+                    await GetTfsProjectsCollectionsAsync();
+                else
+                    await EnsureProjectsCollectionsCacheAsync();
+            }
             else
-                await EnsureProjectsCollectionsCacheAsync();
+            {
+                ProjectsCollections.Clear();
+            }
         }
-        else
+        finally
         {
-            ProjectsCollections.Clear();
+            EnvironmentLock.Release();
         }
-
-        EnvironmentLock.Release();
     }
 
+    /// <summary>
+    /// Blocks the calling thread on <see cref="GetProjectsCollectionsAsync" />; prefer awaiting that instead.
+    /// </summary>
     public ConcurrentList<ProjectsCollection> GetProjectsCollections()
     {
         JoinableTaskExtensions.WaitWithoutThreadLock(GetProjectsCollectionsAsync);
@@ -447,36 +485,49 @@ public class TfsEnvironment : NotifyPropertyChanged
     private async Task GetTfsProjectsCollectionsAsync()
     {
         ProjectsCollectionsIsBusy = true;
-        ProjectsCollectionsIsDirty = false;
 
-        var server = Server.Guard(nameof(Server));
-        var collectionNodes = server.CatalogNode.QueryChildren([CatalogResourceTypes.ProjectCollection],
-            false,
-            CatalogQueryOptions.None);
-        CollectionNodesCache = collectionNodes;
-
-        await CollectionsLock.WaitAsync();
-
-        if (!ProjectsCollectionsIsDirty)
+        try
         {
-            ProgressViewModel?.IfNotNull(v => v.SetStatusInfo("Receiving projects collections info:"));
-            CollectionsNames.AddRange(collectionNodes.Select(x => x.Resource.DisplayName).OrderBy(x => x));
-            NotifyProgress();
-            ProgressViewModel?.PrgSetMax(collectionNodes.Count);
-            using var flakTimer = new FExTimer().WithCallback(NotifyProgress);
-            flakTimer.Start();
-            var tasks = collectionNodes.Select(GetTfsProjectsCollectionsInfoAsync).ToList();
-            _projectsCollections.Clear();
-            _projectsCollections.AddRange((await Task.WhenAll(tasks)).Where(x => x != null).OrderBy(c => c.Name));
-            flakTimer.Stop();
+            ProjectsCollectionsIsDirty = false;
 
-            if (_projectsCollections.Count == 1)
-                _projectsCollections[0].IsChecked = true;
+            var server = Server.Guard(nameof(Server));
+            var collectionNodes = server.CatalogNode.QueryChildren([CatalogResourceTypes.ProjectCollection],
+                false,
+                CatalogQueryOptions.None);
+            CollectionNodesCache = collectionNodes;
+
+            await CollectionsLock.WaitAsync();
+
+            try
+            {
+                if (!ProjectsCollectionsIsDirty)
+                {
+                    ProgressViewModel?.IfNotNull(v => v.SetStatusInfo("Receiving projects collections info:"));
+                    CollectionsNames.AddRange(collectionNodes.Select(x => x.Resource.DisplayName).OrderBy(x => x));
+                    NotifyProgress();
+                    ProgressViewModel?.PrgSetMax(collectionNodes.Count);
+                    using var flakTimer = new FExTimer().WithCallback(NotifyProgress);
+                    flakTimer.Start();
+                    var tasks = collectionNodes.Select(GetTfsProjectsCollectionsInfoAsync).ToList();
+                    _projectsCollections.Clear();
+                    _projectsCollections.AddRange((await Task.WhenAll(tasks)).Where(x => x != null).OrderBy(c => c.Name));
+                    flakTimer.Stop();
+
+                    if (_projectsCollections.Count == 1)
+                        _projectsCollections[0].IsChecked = true;
+                }
+
+                ProgressViewModel?.IfNotNull(v => v.SetCurrItemInfo(string.Empty));
+            }
+            finally
+            {
+                CollectionsLock.Release();
+            }
         }
-
-        ProgressViewModel?.IfNotNull(v => v.SetCurrItemInfo(string.Empty));
-        CollectionsLock.Release();
-        ProjectsCollectionsIsBusy = false;
+        finally
+        {
+            ProjectsCollectionsIsBusy = false;
+        }
     }
 
     /// <summary>

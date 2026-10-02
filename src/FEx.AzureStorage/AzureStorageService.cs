@@ -69,9 +69,18 @@ public class AzureStorageService : IAzureStorageService
         string downloadDir,
         string path)
     {
-        Log.LogInformation($"Preparing blob for container {containerName} and path {path}");
-
         var containerClient = await GetBlobContainerClientAsync(containerName);
+
+        return await ProcessBlobAsync(containerName, containerClient, downloadDir, path);
+    }
+
+    private async Task<(string fileName, FileInfo localFile)> ProcessBlobAsync(
+        string containerName,
+        BlobContainerClient containerClient,
+        string downloadDir,
+        string path)
+    {
+        Log.LogInformation($"Preparing blob for container {containerName} and path {path}");
 
         var blob = await containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, path, CancellationToken.None)
             .OrderByDescending(x => x.Properties.LastModified)
@@ -92,6 +101,17 @@ public class AzureStorageService : IAzureStorageService
         return blobClient.GetContainerReference(containerName);
     }
 
+    // The container is resolved once for the whole batch instead of once per blob.
+    internal async Task<(string fileName, FileInfo localFile)[]> ProcessBlobsAsync(string containerName,
+                                                                                  string downloadDir,
+                                                                                  string[] paths)
+    {
+        var containerClient = await GetBlobContainerClientAsync(containerName);
+
+        return await paths.WithWhenAllTasksAsync(path =>
+            ProcessBlobAsync(containerName, containerClient, downloadDir, path));
+    }
+
     public async Task<bool> DownloadLatestBlobsAsync(string downloadDir,
                                                      string containerName,
                                                      bool deleteOldFiles,
@@ -102,7 +122,7 @@ public class AzureStorageService : IAzureStorageService
         Directory.CreateDirectory(downloadDir);
 
         (string fileName, FileInfo localFile)[] blobsInfo =
-            await paths.WithWhenAllTasksAsync(path => ProcessBlobAsync(containerName, downloadDir, path));
+            await ProcessBlobsAsync(containerName, downloadDir, paths);
 
         if (deleteOldFiles)
             DeleteOldFiles(downloadDir, deleteFilesMask, [.. blobsInfo.Select(x => x.localFile.FullName)]);
@@ -412,7 +432,7 @@ public class AzureStorageService : IAzureStorageService
         }
     }
 
-    private async Task<BlobContainerClient> GetBlobContainerClientAsync(string containerName)
+    protected virtual async Task<BlobContainerClient> GetBlobContainerClientAsync(string containerName)
     {
         // Create a BlobServiceClient object which will be used to create a container client
         var blobServiceClient = new BlobServiceClient(ConnStr);
@@ -423,7 +443,7 @@ public class AzureStorageService : IAzureStorageService
         return blobServiceClient.GetBlobContainerClient(container.Name);
     }
 
-    private async Task<(FileInfo localFile, CloudBlockBlob? sourceBlob, bool shouldBeDownloaded)>
+    protected virtual async Task<(FileInfo localFile, CloudBlockBlob? sourceBlob, bool shouldBeDownloaded)>
         PrepareBlobDownloadAsync(string containerName, string fileName, FileInfo localFile, bool noDownload)
     {
         CloudBlockBlob? sourceBlob = null;

@@ -36,7 +36,12 @@ public static class ControlsHandler
                                              ListSortDirection listSortDirection,
                                              bool clear = true)
     {
-        var column = dataGrid.Columns[dataGrid.GetColumnIndex(columnName)];
+        // An unknown (or ambiguous) column name is a no-op.
+        var column = dataGrid.FindColumn(columnName);
+
+        if (column is null)
+            return;
+
         dataGrid.ApplySortDescriptions(column, column.GetSortPropertyName(), listSortDirection, clear);
     }
 
@@ -48,19 +53,26 @@ public static class ControlsHandler
 
     public static string GetSortPropertyName(this DataGridColumn col) => col.SortMemberPath;
 
+    /// <summary>
+    /// Gets the index of the column in <see cref="DataGrid.Columns"/> (not its display index), or -1
+    /// when no column, or more than one column, has the given header.
+    /// </summary>
     public static int GetColumnIndex(this DataGrid dataGrid, string columnName)
     {
-        try
-        {
-            if (dataGrid is not null)
-                return dataGrid.Columns.Single(c => c.GetColumnHeader() == columnName).DisplayIndex;
-        }
-        catch (Exception ex)
-        {
-            ex.HandleException();
-        }
+        var column = dataGrid?.FindColumn(columnName);
 
-        return -1;
+        return column is null
+            ? -1
+            : dataGrid!.Columns.IndexOf(column);
+    }
+
+    private static DataGridColumn? FindColumn(this DataGrid dataGrid, string columnName)
+    {
+        var matches = dataGrid.Columns.Where(c => c.GetColumnHeader() == columnName).Take(2).ToList();
+
+        return matches.Count == 1
+            ? matches[0]
+            : null;
     }
 
     public static string? GetColumnHeader(this DataGridColumn col) => GetColumnHeader(col.Header);
@@ -88,7 +100,7 @@ public static class ControlsHandler
     public static void SetColumnVisibility(this DataGrid dataGrid, string columnName, bool visible)
     {
         // An unknown (or ambiguous) column name is a no-op.
-        var column = dataGrid?.Columns.SingleOrDefault(c => c.GetColumnHeader() == columnName);
+        var column = dataGrid?.FindColumn(columnName);
 
         if (column is null)
             return;

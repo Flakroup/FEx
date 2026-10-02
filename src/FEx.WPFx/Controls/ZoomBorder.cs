@@ -42,8 +42,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         get => base.Child;
         set
         {
-            if (value is not null
-                && !Equals(value, Child))
+            if (!Equals(value, Child))
                 Initialize(value);
 
             base.Child = value;
@@ -188,7 +187,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         ParentSize = new(parent.ActualWidth, parent.ActualHeight);
     }
 
-    private void Initialize(UIElement element)
+    private void Initialize(UIElement? element)
     {
         if (_child is FrameworkElement previousChild)
             previousChild.SizeChanged -= Element_SizeChanged;

@@ -16,6 +16,12 @@ public sealed class StatusHub : IDisposable, IStatusHub
     public EventHandler<(Guid key, string status)>? StatusRemoved;
     public EventHandler<EventArgs>? Reset;
 
+    private const int StatusAddedKind = 0;
+    private const int StatusRemovedKind = 1;
+    private const int ResetKind = 2;
+
+    private readonly ConcurrentDictionary<(int kind, Delegate handler), Delegate> _subscriptions = new();
+
     public Guid Key { get; }
     private ConcurrentDictionary<Guid, string> Statuses { get; }
 
@@ -46,13 +52,46 @@ public sealed class StatusHub : IDisposable, IStatusHub
                                       Action? onStatusesReset)
     {
         if (onStatusAdded is not null)
-            StatusAdded += (_, s) => onStatusAdded(s.key, s.status);
+        {
+            EventHandler<(Guid key, string status)> handler = (_, s) => onStatusAdded(s.key, s.status);
+            _subscriptions[(StatusAddedKind, onStatusAdded)] = handler;
+            StatusAdded += handler;
+        }
 
         if (onStatusRemoved is not null)
-            StatusRemoved += (_, s) => onStatusRemoved(s.key, s.status);
+        {
+            EventHandler<(Guid key, string status)> handler = (_, s) => onStatusRemoved(s.key, s.status);
+            _subscriptions[(StatusRemovedKind, onStatusRemoved)] = handler;
+            StatusRemoved += handler;
+        }
 
         if (onStatusesReset is not null)
-            Reset += (_, _) => onStatusesReset();
+        {
+            EventHandler<EventArgs> handler = (_, _) => onStatusesReset();
+            _subscriptions[(ResetKind, onStatusesReset)] = handler;
+            Reset += handler;
+        }
+    }
+
+    /// <summary>
+    /// Removes handlers previously registered with <see cref="AttachToStatusChanges"/>, so a
+    /// short-lived subscriber is not kept alive by this hub. Unknown handlers are ignored.
+    /// </summary>
+    public void DetachFromStatusChanges(Action<Guid, string>? onStatusAdded,
+                                        Action<Guid, string>? onStatusRemoved,
+                                        Action? onStatusesReset)
+    {
+        if (onStatusAdded is not null
+            && _subscriptions.TryRemove((StatusAddedKind, onStatusAdded), out var added))
+            StatusAdded -= (EventHandler<(Guid key, string status)>)added;
+
+        if (onStatusRemoved is not null
+            && _subscriptions.TryRemove((StatusRemovedKind, onStatusRemoved), out var removed))
+            StatusRemoved -= (EventHandler<(Guid key, string status)>)removed;
+
+        if (onStatusesReset is not null
+            && _subscriptions.TryRemove((ResetKind, onStatusesReset), out var reset))
+            Reset -= (EventHandler<EventArgs>)reset;
     }
 
     public Guid AddStatus(string status, bool unique)

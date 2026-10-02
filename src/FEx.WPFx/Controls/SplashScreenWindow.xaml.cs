@@ -54,6 +54,9 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
     private readonly IStatusService _statusService;
     private readonly IAppConfig _appConfig;
 
+    private readonly Action<Guid, string> _onStatusAdded;
+    private readonly Action<Guid, string> _onStatusRemoved;
+
     private string? _status;
     private double _desiredTextWidth;
 
@@ -125,6 +128,8 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
         _asyncHelper = asyncHelper;
         _statusService = statusService;
         _appConfig = appConfig;
+        _onStatusAdded = (_, _) => OnStatusChange();
+        _onStatusRemoved = (_, _) => OnStatusChange();
         _appConfig.SplashDesign.Initialize();
 
         MainHubKey = _statusService.MainHubKey;
@@ -194,9 +199,8 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
         {
             if (MainHubKey.HasValue)
             {
-                StatusHub = _statusService.GetOrAdd(MainHubKey.Value);
+                AttachToStatusHub(_statusService.GetOrAdd(MainHubKey.Value));
                 OnStatusChange();
-                StatusHub.AttachToStatusChanges((_, _) => OnStatusChange(), (_, _) => OnStatusChange(), OnStatusChange);
             }
 
             SetLogo();
@@ -209,6 +213,12 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
 
             return false;
         }
+    }
+
+    internal void AttachToStatusHub(IStatusHub hub)
+    {
+        StatusHub = hub;
+        hub.AttachToStatusChanges(_onStatusAdded, _onStatusRemoved, OnStatusChange);
     }
 
     private void SetLogo()
@@ -231,8 +241,10 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
 
     protected override void OnClosed(EventArgs e)
     {
-        // CloseIt is static: drop the subscription so closed splash windows can be collected.
+        // CloseIt is static and the main status hub lives for the whole app: drop both subscriptions
+        // so closed splash windows can be collected.
         CloseIt -= CloseSplash;
+        StatusHub?.DetachFromStatusChanges(_onStatusAdded, _onStatusRemoved, OnStatusChange);
         base.OnClosed(e);
     }
 

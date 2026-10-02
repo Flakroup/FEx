@@ -15,9 +15,10 @@ namespace FEx.PersistentStorage.Tests;
 public sealed class CacheServiceTests
 {
     private readonly ILocalStorageService _storage = Substitute.For<ILocalStorageService>();
+    private readonly IFExLogger _logger = Substitute.For<IFExLogger>();
     private readonly CacheService _sut;
 
-    public CacheServiceTests() => _sut = new CacheService(_storage, Substitute.For<IFExLogger>());
+    public CacheServiceTests() => _sut = new CacheService(_storage, _logger);
 
     [Fact]
     public void Update_WhenStorageThrows_RethrowsAndDeletesNothing()
@@ -74,6 +75,7 @@ public sealed class CacheServiceTests
 
     private void AssertNothingDeleted()
     {
+        _logger.Received(1).Error(Arg.Any<IOException>(), Arg.Any<string?>());
         _storage.DidNotReceiveWithAnyArgs().DeleteAll<Item>(default(Expression<Func<Item, bool>>));
         _storage.DidNotReceiveWithAnyArgs().Insert(default(Item)!);
         _storage.DidNotReceiveWithAnyArgs().Insert(default(IEnumerable<Item>)!);

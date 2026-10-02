@@ -1,6 +1,7 @@
 using FEx.Core.Abstractions;
 using FEx.Core.Abstractions.Interfaces;
 using FEx.Downloader.Clients;
+using FEx.Downloader.Enums;
 using NSubstitute;
 using Shouldly;
 using System;
@@ -92,17 +93,59 @@ public sealed class HttpClientExTests : IDisposable
     }
 
     [Fact]
-    public void GetRetryDelay_GrowsExponentiallyAndIsCapped()
+    public void ComputeRetryDelay_GrowsExponentiallyAndIsCapped()
     {
-        using var client = new HttpClientEx(new StubHandler(_ => Chunked(string.Empty)))
-        {
-            RetryBaseDelay = TimeSpan.FromMilliseconds(100),
-        };
+        var baseDelay = TimeSpan.FromMilliseconds(100);
 
-        client.GetRetryDelay(0).ShouldBe(TimeSpan.FromMilliseconds(100));
-        client.GetRetryDelay(1).ShouldBe(TimeSpan.FromMilliseconds(200));
-        client.GetRetryDelay(2).ShouldBe(TimeSpan.FromMilliseconds(400));
-        client.GetRetryDelay(50).ShouldBe(TimeSpan.FromSeconds(30));
+        HttpClientEx.ComputeRetryDelay(baseDelay, 0).ShouldBe(TimeSpan.FromMilliseconds(100));
+        HttpClientEx.ComputeRetryDelay(baseDelay, 1).ShouldBe(TimeSpan.FromMilliseconds(200));
+        HttpClientEx.ComputeRetryDelay(baseDelay, 2).ShouldBe(TimeSpan.FromMilliseconds(400));
+        HttpClientEx.ComputeRetryDelay(baseDelay, 50).ShouldBe(TimeSpan.FromSeconds(30));
+    }
+
+    [Fact]
+    public void ComputeRetryDelay_WithZeroBaseDelay_NeverOverflowsToNaN() =>
+        HttpClientEx.ComputeRetryDelay(TimeSpan.Zero, 1024).ShouldBe(TimeSpan.Zero);
+
+    [Fact]
+    public async Task DoDownloadAsync_WhenStreamFailsMidway_KeepsExistingFileAndLeavesNoTempFile()
+    {
+        using var client = new HttpClientEx(new StubHandler(_ => Respond(new FailingStream(Encoding.UTF8.GetBytes("NEW-PARTIAL")))));
+        var path = Path.Combine(_dir, "cached.bin");
+        await File.WriteAllTextAsync(path, "OLD-GOOD-CACHED-IMAGE-CONTENT", Ct);
+
+        using var response = await client.GetAsync(new Uri("http://stub/f"), HttpCompletionOption.ResponseHeadersRead, Ct);
+        await Should.ThrowAsync<IOException>(() => client.DoDownloadAsync(path, response, false));
+
+        (await File.ReadAllTextAsync(path, Ct)).ShouldBe("OLD-GOOD-CACHED-IMAGE-CONTENT");
+        Directory.GetFiles(_dir).ShouldBe([path]);
+    }
+
+    [Fact]
+    public async Task DoDownloadAsync_WithZeroContentLength_ReplacesExistingFileWithEmptyOne()
+    {
+        using var client = new HttpClientEx(new StubHandler(_ => Respond(new MemoryStream([]))));
+        var path = Path.Combine(_dir, "empty.bin");
+        await File.WriteAllTextAsync(path, "previous", Ct);
+
+        using var response = await client.GetAsync(new Uri("http://stub/f"), HttpCompletionOption.ResponseHeadersRead, Ct);
+        response.Content.Headers.ContentLength.ShouldBe(0);
+
+        await client.DoDownloadAsync(path, response, false);
+
+        new FileInfo(path).Length.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DoDownloadAsync_WithoutContentLength_StopsAtMaxDownloadBytes()
+    {
+        using var client = new HttpClientEx(new StubHandler(_ => Chunked(new string('x', 100)))) { MaxDownloadBytes = 10 };
+        var path = Path.Combine(_dir, "huge.bin");
+
+        using var response = await client.GetAsync(new Uri("http://stub/f"), HttpCompletionOption.ResponseHeadersRead, Ct);
+        await Should.ThrowAsync<IOException>(() => client.DoDownloadAsync(path, response, false));
+
+        Directory.GetFiles(_dir).ShouldBeEmpty();
     }
 
     [Fact]
@@ -121,18 +164,17 @@ public sealed class HttpClientExTests : IDisposable
             client.DownloadFileAsync(new Uri("http://stub/f"), Path.Combine(_dir, "c.bin"), false));
 
         handler.Calls.ShouldBe(1);
+        client.DState.ShouldBe(DownloadState.Failed);
     }
 
-    private static HttpResponseMessage Chunked(string body)
-    {
-        // PushStreamContent-style: an unseekable stream content reports no Content-Length.
+    private static HttpResponseMessage Chunked(string body) =>
+        Respond(new NonSeekableStream(Encoding.UTF8.GetBytes(body)));
+
+    // A non-seekable stream makes StreamContent omit Content-Length (chunked); MemoryStream keeps it.
 #pragma warning disable IDISP004 // ownership passes to the returned message
-        return new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StreamContent(new NonSeekableStream(Encoding.UTF8.GetBytes(body))),
-        };
+    private static HttpResponseMessage Respond(Stream body) =>
+        new(HttpStatusCode.OK) { Content = new StreamContent(body) };
 #pragma warning restore IDISP004
-    }
 
     private sealed class StubHandler(Func<int, HttpResponseMessage> respond) : HttpClientHandler
     {
@@ -142,6 +184,26 @@ public sealed class HttpClientExTests : IDisposable
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct) =>
             Task.FromResult(respond(Interlocked.Increment(ref _calls) - 1));
+    }
+
+    private sealed class FailingStream : MemoryStream
+    {
+        private readonly int _size;
+
+        public FailingStream(byte[] data)
+            : base(data, false) => _size = data.Length;
+
+        public override bool CanSeek => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+            Position < _size ? base.ReadAsync(buffer, cancellationToken) : throw new IOException("connection reset");
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+            Position < _size
+                ? base.ReadAsync(buffer, offset, count, cancellationToken)
+                : throw new IOException("connection reset");
     }
 
     private sealed class NonSeekableStream(byte[] data) : MemoryStream(data, false)

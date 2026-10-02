@@ -23,13 +23,12 @@ public interface ICacheService : IFileLocalStorageService
     void Add<T>(IEnumerable<T> items) where T : ICacheableItem;
 
     /// <summary>
-    /// Updates an existing object. May remove the entire collection.
+    /// Updates an existing object.
     /// </summary>
     /// <param name="item">Object to be cached</param>
     /// <typeparam name="T">Type of object to be cached</typeparam>
     /// <remarks>
-    /// The entire collection of cached objects of specified type will be removed in the case of exception caught.
-    /// Item will be added anyway.
+    /// Exceptions from the underlying storage are logged and rethrown; cached objects are never removed on failure.
     /// </remarks>
     bool Update<T>(T item) where T : ICacheableItem;
 
@@ -40,6 +39,7 @@ public interface ICacheService : IFileLocalStorageService
     /// <param name="item">Object to be updated or inserted</param>
     /// <param name="predicate">Predicate</param>
     /// <returns>True if insert entity or false if update entity</returns>
+    /// <remarks>Exceptions from the underlying storage are logged and rethrown; cached objects are never removed on failure.</remarks>
     bool Upsert<T>(T item, Expression<Func<T, bool>>? predicate) where T : ICacheableItem;
 
     /// <summary>
@@ -48,6 +48,7 @@ public interface ICacheService : IFileLocalStorageService
     /// <typeparam name="T">The type of cacheable object</typeparam>
     /// <param name="items">Objects to be updated or inserted</param>
     /// <param name="predicate">Predicate</param>
+    /// <remarks>Exceptions from the underlying storage are logged and rethrown; cached objects are never removed on failure.</remarks>
     void Upsert<T>(IEnumerable<T> items, Expression<Func<T, bool>>? predicate) where T : ICacheableItem;
 
     /// <summary>
@@ -78,9 +79,9 @@ public interface ICacheService : IFileLocalStorageService
     /// <typeparam name="T">Type of object to be found</typeparam>
     /// <returns>
     /// Returns the cached object that fits the requirements of the predicate parameter. Returns "default" when object
-    /// not found of exception caught.
+    /// not found or exception caught.
     /// </returns>
-    /// <remarks>The entire collection of cached objects of specified type will be removed in the case of exception caught.</remarks>
+    /// <remarks>An exception is logged and "default" is returned; cached objects are never removed on failure.</remarks>
     T? FirstOrDefault<T>(Expression<Func<T, bool>>? predicate) where T : ICacheableItem;
 
     /// <summary>
@@ -89,7 +90,7 @@ public interface ICacheService : IFileLocalStorageService
     /// <param name="predicate">Predicate</param>
     /// <typeparam name="T">Type of objects to be retrieved</typeparam>
     /// <returns>Returns all cached objects of specified type matching predicate or all of them if predicate is null</returns>
-    /// <remarks>The entire collection of cached objects of specified type will be removed in the case of exception caught.</remarks>
+    /// <remarks>An exception is logged and an empty collection is returned; cached objects are never removed on failure.</remarks>
     IReadOnlyCollection<T> Get<T>(Expression<Func<T, bool>>? predicate) where T : ICacheableItem;
 
     /// <summary>

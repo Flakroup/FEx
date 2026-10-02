@@ -107,6 +107,12 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     /// <summary>Maximum number of retries after HTTP 429 responses before the download fails.</summary>
     public int MaxRetryAttempts { get; set; } = 5;
 
+    /// <summary>
+    /// Maximum number of bytes accepted from a response that has no Content-Length header (default 4 GiB); such a
+    /// response would otherwise be streamed to disk for as long as the server keeps sending.
+    /// </summary>
+    public long MaxDownloadBytes { get; set; } = 4L * 1024 * 1024 * 1024;
+
     /// <summary>Delay before the first retry; it doubles on every further attempt (capped at 30s).</summary>
     public TimeSpan RetryBaseDelay { get; set; } = TimeSpan.FromMilliseconds(100);
 
@@ -222,52 +228,57 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 
     public async Task DownloadFileAsync(Uri url, string filePath, bool lockOnFilePath)
     {
-        var retry = true;
         var attempt = 0;
 
-        while (retry)
+        try
         {
-            DState = DownloadState.Connecting;
-
-            using var res = await GetAsync(url, HttpCompletionOption.ResponseHeadersRead, CancellationToken);
-
-            try
+            while (true)
             {
-                using (var response = res.EnsureSuccessStatusCode())
-                    await DoDownloadAsync(filePath, response, lockOnFilePath);
+                DState = DownloadState.Connecting;
 
-                retry = false;
-                DState = DownloadState.Finished;
-            }
-            catch (Exception ex)
-            {
-                if (ex is HttpRequestException
-                    && (int)res.StatusCode == 429
-                    && attempt < MaxRetryAttempts)
+                using (var res = await GetAsync(url, HttpCompletionOption.ResponseHeadersRead, CancellationToken))
                 {
-                    await Task.Delay(GetRetryDelay(attempt++), CancellationToken);
-                    retry = !CancellationToken.IsCancellationRequested;
-                }
-                else
-                {
-                    DState = DownloadState.Failed;
+                    try
+                    {
+                        using var response = res.EnsureSuccessStatusCode();
+                        await DoDownloadAsync(filePath, response, lockOnFilePath);
 
-                    throw;
+                        DState = DownloadState.Finished;
+
+                        return;
+                    }
+                    catch (HttpRequestException) when ((int)res.StatusCode == 429 && attempt < MaxRetryAttempts)
+                    {
+                        // rate limited: back off below, after the response is disposed
+                    }
                 }
+
+                await Task.Delay(ComputeRetryDelay(RetryBaseDelay, attempt++), CancellationToken);
             }
+        }
+        catch
+        {
+            DState = DownloadState.Failed;
+
+            throw;
         }
     }
 
-    /// <summary>Exponential backoff: <see cref="RetryBaseDelay" /> * 2^attempt, capped at 30 seconds.</summary>
-    public virtual TimeSpan GetRetryDelay(int attempt) =>
-        TimeSpan.FromMilliseconds(Math.Min(RetryBaseDelay.TotalMilliseconds * Math.Pow(2, attempt),
+    /// <summary>Exponential backoff: <paramref name="baseDelay" /> * 2^attempt, capped at 30 seconds.</summary>
+    internal static TimeSpan ComputeRetryDelay(TimeSpan baseDelay, int attempt) =>
+        TimeSpan.FromMilliseconds(Math.Min(baseDelay.TotalMilliseconds * Math.Pow(2, Math.Min(attempt, 30)),
             MaxRetryDelayMs));
 
     public Task DoDownloadAsync(string filePath, HttpResponseMessage response) =>
         DoDownloadAsync(filePath, response, true);
 
+    /// <summary>
+    /// Downloads the response body to <paramref name="filePath" />. The body is written to a temporary file next to the
+    /// target and moved into place only after it was fully received, so a failed download never damages an existing file.
+    /// </summary>
     public async Task DoDownloadAsync(string filePath, HttpResponseMessage response, bool lockOnFilePath)
     {
+        // -1 means the server sent no Content-Length (e.g. chunked encoding): stream until EOF.
         var length = response.Content.Headers.ContentLength ?? -1;
 
         ProgressMaximum = length > 0
@@ -277,70 +288,65 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         ProgressValue = 0;
         DState = DownloadState.InProgress;
 
-        // length < 0 means the server sent no Content-Length (e.g. chunked encoding): stream until EOF.
+        if (lockOnFilePath)
+            await LockSrv.WaitAsync(filePath, cancellationToken: CancellationToken);
+
+        try
         {
-            if (lockOnFilePath)
-                await LockSrv.WaitAsync(filePath, cancellationToken: CancellationToken);
+            var dirPath = Directory.GetParent(filePath)?.FullName
+                          ?? throw new InvalidOperationException("Target directory path is null.");
+            Directory.CreateDirectory(dirPath);
+
+            if (length >= 0 && File.Exists(filePath) && new FileInfo(filePath).Length == length)
+            {
+                ProgressValue = length;
+
+                return;
+            }
+
+#if NETSTANDARD
+            using var streamResponse = await response.Content.ReadAsStreamAsync();
+#else
+            await using var streamResponse = await response.Content.ReadAsStreamAsync(CancellationToken);
+#endif
+            var tempPath = Path.Combine(dirPath, $"{Path.GetFileName(filePath)}.{Guid.NewGuid():N}.tmp");
 
             try
             {
-#if NETSTANDARD
-                using var streamResponse = await response.Content.ReadAsStreamAsync();
-#else
-                await using var streamResponse = await response.Content.ReadAsStreamAsync(CancellationToken);
-#endif
-                if (streamResponse is not null)
+                using (var fileStream = new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 {
-                    var dirPath = Directory.GetParent(filePath)?.FullName
-                                  ?? throw new InvalidOperationException("Target directory path is null.");
-                    Directory.CreateDirectory(dirPath);
+                    Array.Clear(Buffer, 0, Buffer.Length);
 
-                    using var fileStream = new FileStream(filePath,
-                        FileMode.OpenOrCreate,
-                        FileAccess.ReadWrite,
-                        FileShare.None);
+                    int bytesRead;
 
-                    if (length < 0 || fileStream.Length != length)
+                    while ((bytesRead = await streamResponse.ReadAsync(Buffer, 0, Buffer.Length, CancellationToken))
+                           != 0)
                     {
-                        fileStream.Seek(0, SeekOrigin.Begin);
-                        Array.Clear(Buffer, 0, Buffer.Length);
+                        ProgressValue += bytesRead;
 
-                        while (true)
-                        {
-                            var num = await streamResponse.ReadAsync(Buffer, 0, Buffer.Length, CancellationToken);
-                            int bytesRead;
+                        if (length < 0 && ProgressValue > MaxDownloadBytes)
+                            throw new IOException($"Response without Content-Length exceeded {MaxDownloadBytes} bytes.");
 
-                            if ((bytesRead = num) != 0)
-                            {
-                                await fileStream.WriteAsync(Buffer, 0, bytesRead, CancellationToken);
-                                ProgressValue += num;
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-
-                        if (length < 0)
-                            fileStream.SetLength(fileStream.Position);
-                    }
-                    else
-                    {
-                        ProgressValue = fileStream.Length;
+                        await fileStream.WriteAsync(Buffer, 0, bytesRead, CancellationToken);
                     }
                 }
 
-                if (length >= 0)
-                {
-                    using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-                    fileStream.SetLength(length);
-                }
+                if (File.Exists(filePath))
+                    File.Replace(tempPath, filePath, null);
+                else
+                    File.Move(tempPath, filePath);
             }
-            finally
+            catch
             {
-                if (lockOnFilePath)
-                    LockSrv.Release(filePath);
+                File.Delete(tempPath);
+
+                throw;
             }
+        }
+        finally
+        {
+            if (lockOnFilePath)
+                LockSrv.Release(filePath);
         }
     }
 

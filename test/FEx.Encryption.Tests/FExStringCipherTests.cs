@@ -1,6 +1,7 @@
 using FEx.Encryption.Exceptions;
 using Shouldly;
 using System;
+using System.Linq;
 using Xunit;
 
 namespace FEx.Encryption.Tests;
@@ -170,6 +171,96 @@ public sealed class FExStringCipherTests
         FExStringCipher.DefaultIterations.ShouldBeGreaterThanOrEqualTo(FExStringCipher.MinIterations);
         FExStringCipher.DefaultIterations.ShouldBeLessThanOrEqualTo(FExStringCipher.MaxIterations);
     }
+
+    [Theory]
+    [InlineData(9_999)]
+    [InlineData(1_000_001)]
+    public void Decrypt_RejectsAValidlyTaggedEnvelopeWithAnOutOfRangeIterationCount(int iterations)
+    {
+        // Editing the count of an existing envelope breaks its tag, so that case is refused with or without
+        // the range guard. This envelope is genuinely written - and tagged - at the out-of-range count, so
+        // only the guard stands between it and the derivation it asks for. The counts are literals on
+        // purpose: written as MaxIterations + 1 they would follow a widened bound and pin nothing.
+        var writer = new FExStringCipher(PassPhrase, FastIterations);
+        var envelope = writer.EncryptCore("secret", Bytes(16, 0x10), iterations, Bytes(16, 0x20));
+        var reader = new FExStringCipher(PassPhrase, FastIterations);
+        var derivationsBefore = reader.Derivations;
+
+        Should.Throw<FExDecryptionException>(() => reader.Decrypt(envelope));
+
+        reader.Derivations.ShouldBe(derivationsBefore, "the count must be refused before any key is derived");
+    }
+
+    [Fact]
+    public void Encrypt_ProducesTheVersion1EnvelopeByteForByte()
+    {
+        // Computed independently of this code (Python hashlib + cryptography) from the documented layout:
+        // PBKDF2-HMAC-SHA256 -> 64 bytes, [0..31] AES key, [32..63] MAC key; AES-256-CBC/PKCS7; HMAC-SHA256
+        // over header || ciphertext. Any change here makes every stored value unreadable after an upgrade.
+        const string expected =
+            "AQAAJxAAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHwOwlfbA+BguftrmrsBZzch/IwyRwYdErxLEgiqx/H4ClGxYlODfuCcUKZkgRcf8cgUSnox2uuLvXTg7RnZKJAw=";
+
+        var envelope = _cipher.EncryptCore("golden plaintext ✓", Bytes(16, 0x00), FExStringCipher.MinIterations,
+            Bytes(16, 0x10));
+
+        envelope.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Decrypt_ReadsACheckedInVersion1Envelope()
+    {
+        // Written at DefaultIterations with a salt and IV this suite never generates - a value as it would
+        // sit in a settings file from an earlier build.
+        const string stored =
+            "AQADNFChssPU5fYHGCk6S1xtfo+QDx4tPEtaaXiHlqW0w9Lh8LEs0zedvt2H3ycrTKq9cmcDLeqoT3Z2r7wBn4auqiTtO6G5zAY2d35YQoQym0i7JfbatKivT3qzQYMEIRiAglIPaRwRBTy4MELW1BAu28CI";
+
+        new FExStringCipher(PassPhrase, FastIterations).Decrypt(stored).ShouldBe("written by version 1 of the envelope");
+    }
+
+    [Fact]
+    public void KeyCache_DerivesOncePerSaltAcrossRepeatedReads()
+    {
+        // These are read from property getters; without the cache every read would re-run PBKDF2 - 210k
+        // iterations at the default.
+        var cipher = new FExStringCipher(PassPhrase, FastIterations);
+        var foreign = new FExStringCipher(PassPhrase, FastIterations).Encrypt("from another session");
+        cipher.Derivations.ShouldBe(1, "the constructor pays for its own salt up front");
+
+        for (var i = 0; i < 3; i++)
+        {
+            cipher.Decrypt(cipher.Encrypt("own")).ShouldBe("own");
+            cipher.Decrypt(foreign).ShouldBe("from another session");
+        }
+
+        cipher.Derivations.ShouldBe(2, "one derivation per distinct salt, however many reads");
+    }
+
+    [Fact]
+    public void KeyCache_StopsGrowingAtItsCeiling()
+    {
+        const int ceiling = 64;
+        var writer = new FExStringCipher(PassPhrase, FastIterations);
+        var envelopes = Enumerable.Range(1, ceiling + 20)
+            .Select(i => writer.EncryptCore("secret", Bytes(16, (byte)i), FastIterations, Bytes(16, 0x20)))
+            .ToList();
+        var reader = new FExStringCipher(PassPhrase, FastIterations);
+
+        envelopes.ForEach(envelope => reader.Decrypt(envelope).ShouldBe("secret"));
+
+        reader.CachedKeyCount.ShouldBe(ceiling);
+
+        // Salts that made it in stay free; one past the ceiling pays on every read instead of evicting.
+        var derivations = reader.Derivations;
+        reader.Decrypt(envelopes[0]);
+        reader.Derivations.ShouldBe(derivations);
+        reader.Decrypt(envelopes[^1]);
+        reader.Decrypt(envelopes[^1]);
+        reader.Derivations.ShouldBe(derivations + 2);
+        reader.CachedKeyCount.ShouldBe(ceiling);
+    }
+
+    private static byte[] Bytes(int length, byte start) =>
+        Enumerable.Range(0, length).Select(i => (byte)(start + i)).ToArray();
 
     private static string Tamper(string envelope, int offset)
     {

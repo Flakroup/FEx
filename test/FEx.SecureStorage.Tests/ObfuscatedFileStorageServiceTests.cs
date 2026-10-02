@@ -1,6 +1,5 @@
 using FEx.Encryption;
 using FEx.Encryption.Exceptions;
-using FEx.SecureStorage.Abstractions;
 using Shouldly;
 using System;
 using System.IO;
@@ -89,13 +88,19 @@ public sealed class ObfuscatedFileStorageServiceTests : IDisposable
     }
 
     [Fact]
-    public void ParameterlessConstructor_BuildsAUsableService()
+    public void MachineBoundKey_RoundTripsAcrossInstances()
     {
-        // The shape the DI factory uses. Its key is machine-bound by design; what matters here is that it
-        // constructs and round-trips at all, since nothing else in the suite reaches that constructor.
-        var service = new ObfuscatedFileStorageService();
+        // The key the parameterless constructor - the DI factory's shape - uses, pointed at a temp directory
+        // so the test never writes to the real profile. It is rebuilt from public identifiers on every
+        // construction, so a second instance has to read what the first one wrote.
+        var writer = new ObfuscatedFileStorageService(_storage);
+        writer.Set("token", new Credential { User = "gio", Secret = "hunter2" });
 
-        service.ShouldBeAssignableTo<ISecureStorageService>();
+        var read = new ObfuscatedFileStorageService(_storage).Get<Credential>("token");
+
+        read.User.ShouldBe("gio");
+        read.Secret.ShouldBe("hunter2");
+        File.ReadAllText(Path.Combine(_storage.FullName, "token.sfex")).ShouldNotContain("hunter2");
     }
 
     private sealed class Credential

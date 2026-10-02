@@ -1,7 +1,8 @@
+using FEx.Agnostics.Abstractions.Logging;
 using FEx.Agnostics.BaseObjects;
-using FEx.Core.Abstractions.Extensions;
 using FEx.Encryption.Exceptions;
 using FEx.Json.Extensions;
+using Newtonsoft.Json;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -59,9 +60,14 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
     /// </remarks>
     protected virtual bool IsValid(string? propertyName, string decryptedValue) => true;
 
-    /// <summary>Called when a property could not be read. Logs by default; the stored value is intact.</summary>
+    /// <summary>Called when a property could not be read. Logs a warning by default; the stored value is intact.</summary>
+    /// <remarks>
+    /// The default log names the property and the exception type only. An exception message is not safe to
+    /// write out here: a deserializer quotes the offending value, and that value is decrypted plaintext.
+    /// </remarks>
     protected virtual void OnDecryptionFailed(string? propertyName, Exception exception) =>
-        exception.HandleException(false);
+        FExStaticLogger.Warning(
+            $"Encrypted property '{propertyName}' on {GetType().Name} could not be read ({exception.GetType().Name}); it reads as null and the stored value was left intact.");
 
     /// <summary>Decrypts a backing field, or returns null and reports if it cannot be read.</summary>
     protected string? DecryptFromSource(string? source, [CallerMemberName] string? propertyName = null)
@@ -92,6 +98,13 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
     /// A JSON error here is not an integrity problem - the tag already proved the bytes are ours - it means
     /// the stored shape no longer matches the type, which is what a model change looks like. Degrading to
     /// the default keeps a schema change from bringing the application down, and the failure is logged.
+    /// <para>
+    /// The JSON is deserialized directly rather than through <c>FromJson</c>: that helper logs the
+    /// serializer's exception, whose message quotes the decrypted value, and with a debugger attached it
+    /// writes the whole document to the temp folder. <see cref="OnDecryptionFailed" /> gets a
+    /// <see cref="FExDecryptionException" /> naming the exception type and JSON path instead, with no inner
+    /// exception that could carry the plaintext.
+    /// </para>
     /// </remarks>
     protected T? DecryptFromJsonSource<T>(string? source, [CallerMemberName] string? propertyName = null)
     {
@@ -102,11 +115,22 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
 
         try
         {
-            return json.FromJson<T>();
+            return json == JsonExtensions.NullString
+                ? default
+                : JsonConvert.DeserializeObject<T>(json, JsonExtensions.DefaultSettings);
         }
         catch (Exception ex)
         {
-            OnDecryptionFailed(propertyName, ex);
+            var path = ex switch
+            {
+                JsonReaderException reader => reader.Path,
+                JsonSerializationException serialization => serialization.Path,
+                _ => null
+            };
+
+            OnDecryptionFailed(propertyName,
+                new FExDecryptionException(
+                    $"The stored value of '{propertyName}' is not a valid {typeof(T).Name} ({ex.GetType().Name} at path '{path}')."));
 
             return default;
         }

@@ -39,9 +39,14 @@ public class ObfuscatedFileStorageService : ISecureStorageService
 
     /// <summary>Machine-bound key, default storage directory - the fallback the module picks by itself.</summary>
     public ObfuscatedFileStorageService()
-        : this(new FExStringCipher($"{Environment.UserName}@{Environment.MachineName}"),
-            SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile]
-                .Directory.GetDescendantDirectory(".fexStorage"))
+        : this(SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile]
+            .Directory.GetDescendantDirectory(".fexStorage"))
+    {
+    }
+
+    /// <summary>Machine-bound key, caller-chosen directory - lets a test exercise that key off the real profile.</summary>
+    internal ObfuscatedFileStorageService(DirectoryInfo storage)
+        : this(new FExStringCipher($"{Environment.UserName}@{Environment.MachineName}"), storage)
     {
     }
 

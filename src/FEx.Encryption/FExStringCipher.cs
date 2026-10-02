@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 namespace FEx.Encryption;
 
@@ -67,6 +68,7 @@ public sealed class FExStringCipher
     private readonly string _passPhrase;
     private readonly byte[] _salt;
     private readonly int _iterations;
+    private int _derivations;
 
     /// <inheritdoc cref="FExStringCipher(string, int)" />
     public FExStringCipher(string passPhrase)
@@ -103,11 +105,26 @@ public sealed class FExStringCipher
     {
         plainText.Guard(nameof(plainText));
 
-        var key = GetKey(_salt, _iterations);
+        return EncryptCore(plainText, _salt, _iterations, RandomBytes(IvSize));
+    }
+
+    /// <summary>PBKDF2 derivations this instance has run - the cost the key cache exists to avoid.</summary>
+    internal int Derivations => Volatile.Read(ref _derivations);
+
+    /// <summary>Derived keys currently memoised; never more than the cache ceiling.</summary>
+    internal int CachedKeyCount => _keys.Count;
+
+    /// <summary>
+    /// <see cref="Encrypt" /> with every random or policy input supplied by the caller. A seam for tests: it
+    /// lets them pin the exact envelope bytes and build validly tagged envelopes the reader must refuse.
+    /// </summary>
+    internal string EncryptCore(string plainText, byte[] salt, int iterations, byte[] iv)
+    {
+        var key = GetKey(salt, iterations);
 
         using var aes = Aes.Create();
         aes.Key = key.Cipher;
-        aes.GenerateIV();
+        aes.IV = iv;
 
         byte[] payload;
 
@@ -119,8 +136,8 @@ public sealed class FExStringCipher
 
         var envelope = new byte[PayloadOffset + payload.Length];
         envelope[0] = EnvelopeVersion;
-        WriteInt32BigEndian(envelope, IterationsOffset, _iterations);
-        Buffer.BlockCopy(_salt, 0, envelope, SaltOffset, SaltSize);
+        WriteInt32BigEndian(envelope, IterationsOffset, iterations);
+        Buffer.BlockCopy(salt, 0, envelope, SaltOffset, SaltSize);
         Buffer.BlockCopy(aes.IV, 0, envelope, IvOffset, IvSize);
         Buffer.BlockCopy(payload, 0, envelope, PayloadOffset, payload.Length);
         Buffer.BlockCopy(ComputeTag(key.Mac, envelope, payload), 0, envelope, TagOffset, TagSize);
@@ -238,6 +255,7 @@ public sealed class FExStringCipher
             return cached;
 
         var derived = new DerivedKey(CryptoCompat.DeriveKey(_passPhrase, salt, iterations, KeySize * 2));
+        Interlocked.Increment(ref _derivations);
 
         // Each instance mints one salt, so a stored property carries the salt of the session that last
         // wrote it and a file ends up holding as many distinct salts as it has encrypted properties. Every

@@ -24,7 +24,9 @@ namespace FEx.SecureStorage;
 /// <c>LinuxLibsecretSecureStorageService</c> wherever they exist - they are compiled only for
 /// <c>net5.0</c> and later, so on the down-level targets this type is the only implementation there is.
 /// For real protection here, construct it with a <see cref="FExStringCipher" /> built from a passphrase
-/// only your application knows.
+/// only your application knows, or set <see cref="SecureStorageModule.FallbackCipher" /> so the module does.
+/// Hosts that would rather have no storage than obfuscated storage set
+/// <see cref="SecureStorageModule.AllowObfuscatedFallback" /> to <c>false</c>.
 /// </para>
 /// <para>
 /// What the machine-bound key does still buy: the payload is authenticated, so a file edited or swapped
@@ -39,8 +41,7 @@ public class ObfuscatedFileStorageService : ISecureStorageService
 
     /// <summary>Machine-bound key, default storage directory - the fallback the module picks by itself.</summary>
     public ObfuscatedFileStorageService()
-        : this(SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile]
-            .Directory.GetDescendantDirectory(".fexStorage"))
+        : this(GetDefaultStorage())
     {
     }
 
@@ -57,6 +58,14 @@ public class ObfuscatedFileStorageService : ISecureStorageService
         _cipher = cipher.Guard(nameof(cipher));
         _storage = storage.Guard(nameof(storage));
     }
+
+    /// <summary><c>~/.fexStorage/</c>, created if missing.</summary>
+    internal static DirectoryInfo GetDefaultStorage() =>
+        GetDefaultStorage(SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile].Directory);
+
+    /// <summary><c>.fexStorage/</c> under <paramref name="userProfile" />, created if missing.</summary>
+    internal static DirectoryInfo GetDefaultStorage(DirectoryInfo userProfile) =>
+        userProfile.GetDescendantDirectory(".fexStorage");
 
     /// <exception cref="FExDecryptionException">The stored file has been altered or was written with another key.</exception>
     public T Get<T>(string key)

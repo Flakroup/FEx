@@ -103,6 +103,17 @@ public sealed class ObfuscatedFileStorageServiceTests : IDisposable
         File.ReadAllText(Path.Combine(_storage.FullName, "token.sfex")).ShouldNotContain("hunter2");
     }
 
+    [Fact]
+    public void DefaultStorage_IsDotFexStorageUnderTheUserProfile()
+    {
+        // Existing consumers' values live there; moving it would strand them. The profile is injected so the
+        // test never touches the real one.
+        var storage = ObfuscatedFileStorageService.GetDefaultStorage(_storage);
+
+        storage.FullName.ShouldBe(Path.Combine(_storage.FullName, ".fexStorage"));
+        storage.Exists.ShouldBeTrue();
+    }
+
     private sealed class Credential
     {
         public string? User { get; set; }

@@ -21,6 +21,9 @@ namespace FEx.Logging.Tests;
 /// Both <see cref="FExStaticLogger" /> and Serilog's own <see cref="Log.Logger" /> are process-wide static
 /// state; a sibling class swapping either concurrently would clobber this class's setup mid-test - the same
 /// hazard <c>FEx.Building.Tests.GlobalLoggerCollection</c> documents. One collection runs them one at a time.
+/// Every class that builds a <c>TestContainer</c> belongs here too: <c>FExLoggingModule</c> registers a
+/// <c>SerilogLoggerFactory(null, true, ...)</c>, whose Dispose runs <c>Log.CloseAndFlush()</c> and so swaps
+/// <see cref="Log.Logger" /> for Serilog's SilentLogger under whichever test is running beside it.
 /// </summary>
 [CollectionDefinition(Name)]
 public sealed class FExStaticLoggerCollection

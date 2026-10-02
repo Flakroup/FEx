@@ -37,20 +37,24 @@ public static class BindingExceptionThrower
     /// </value>
     public static bool IsAttached => _errorListener is not null;
 
-    // Set by Attach before any binding error fires; GetCachedBindingErrors tolerates the pre-Attach null at runtime.
+    // Set by Attach before any binding error fires.
     private static string BindingErrorsCacheFile { get; set; } = null!;
 
     private static SemaphoreSlim BindingErrorsCacheSemaphore { get; } = new(1, 1);
 
-    private static HashSet<BindingException> BindingErrorsCache { get; } = GetCachedBindingErrors();
+    // Loaded by Attach once the cache file location is known.
+    private static HashSet<BindingException> BindingErrorsCache { get; set; } = [];
 
     /// <summary>
     /// Start listening WPF binding error
     /// </summary>
     public static void Attach(string? bindingErrorsCacheDirectory)
     {
+        // Stable file name, so errors recorded in a previous run are loaded back and not re-thrown.
         BindingErrorsCacheFile = Path.Combine(bindingErrorsCacheDirectory ?? Path.GetTempPath(),
-            $"{Guid.NewGuid()}_BindingErrors.json");
+            "BindingErrors.json");
+
+        BindingErrorsCache = LoadCachedBindingErrors(BindingErrorsCacheFile);
 
         _errorListener = new();
         _errorListener.ErrorCatched += OnErrorCatched;
@@ -104,25 +108,26 @@ public static class BindingExceptionThrower
         }
     }
 
-    private static HashSet<BindingException> GetCachedBindingErrors()
+    internal static HashSet<BindingException> LoadCachedBindingErrors(string cacheFile)
     {
-        var result = new HashSet<BindingException>();
-        var dir = Path.GetDirectoryName(BindingErrorsCacheFile);
+        var dir = Path.GetDirectoryName(cacheFile);
 
         if (dir is not null)
-        {
             Directory.CreateDirectory(dir);
 
-            if (File.Exists(BindingErrorsCacheFile))
-            {
-                var json = File.ReadAllText(BindingErrorsCacheFile);
-                var obj = JsonConvert.DeserializeObject<HashSet<BindingException>>(json);
+        if (!File.Exists(cacheFile))
+            return [];
 
-                if (obj is not null)
-                    result = obj;
-            }
+        try
+        {
+            var json = File.ReadAllText(cacheFile);
+
+            return JsonConvert.DeserializeObject<HashSet<BindingException>>(json) ?? [];
         }
-
-        return result;
+        catch (JsonException)
+        {
+            // A corrupt cache file only means previously seen errors are reported again.
+            return [];
+        }
     }
 }

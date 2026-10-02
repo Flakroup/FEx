@@ -39,6 +39,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="FEx.WPFx.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\Common\FEx.Common.csproj" />
 	  <ProjectReference Include="..\FEx.Legacy\FEx.Legacy.csproj" />
 	  <ProjectReference Include="..\DependencyInjection\FEx.DependencyInjection.csproj" />

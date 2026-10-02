@@ -87,18 +87,15 @@ public static class ControlsHandler
 
     public static void SetColumnVisibility(this DataGrid dataGrid, string columnName, bool visible)
     {
-        var idx = dataGrid.GetColumnIndex(columnName);
+        // An unknown (or ambiguous) column name is a no-op.
+        var column = dataGrid?.Columns.SingleOrDefault(c => c.GetColumnHeader() == columnName);
 
-        if (dataGrid is not null)
-        {
-            if (idx > 0
-                && dataGrid.Columns[idx] is null)
-                return;
+        if (column is null)
+            return;
 
-            dataGrid.Columns[idx].Visibility = visible
-                ? Visibility.Visible
-                : Visibility.Hidden;
-        }
+        column.Visibility = visible
+            ? Visibility.Visible
+            : Visibility.Hidden;
     }
 
     private static void ApplySortDirection(this DataGrid dataGrid,

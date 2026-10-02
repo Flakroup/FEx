@@ -18,6 +18,7 @@ using System.IO;
 #if !NET5_0_OR_GREATER
 using System.Net;
 #endif
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -47,10 +48,12 @@ public abstract class AppBootstrapper<TContainer> : Application
 
             SetNetwork();
 
-            // VSTHRD002: synchronous wait is required at this WPF bootstrap entry point; exceptions
-            // are handled by the surrounding try/catch.
+            // The constructor cannot be async and runs before the dispatcher loop starts, so the wait
+            // is unavoidable here. Running the initialization on the thread pool keeps its awaits from
+            // capturing the (not yet pumped) DispatcherSynchronizationContext, which would deadlock.
+            // VSTHRD002: exceptions are handled by the surrounding try/catch.
 #pragma warning disable VSTHRD002
-            _container = FExServiceProvider.InitializeAsync<TContainer>().GetAwaiter().GetResult();
+            _container = Task.Run(async () => await FExServiceProvider.InitializeAsync<TContainer>()).GetAwaiter().GetResult();
 #pragma warning restore VSTHRD002
             _appInfoProvider = FExServiceProvider.Get<IAppInfoProvider>();
             _appConfig = FExServiceProvider.Get<IAppConfig>();

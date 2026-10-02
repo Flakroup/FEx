@@ -229,6 +229,13 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
         DesiredTextWidth = DesiredWidth - progressCircle.ActualWidth - 5;
     }
 
+    protected override void OnClosed(EventArgs e)
+    {
+        // CloseIt is static: drop the subscription so closed splash windows can be collected.
+        CloseIt -= CloseSplash;
+        base.OnClosed(e);
+    }
+
     // VSTHRD001: WPF UI-thread marshaling via Dispatcher.Invoke.
 #pragma warning disable VSTHRD001
     private void CloseSplash(object? sender, EventArgs e) => Dispatcher?.Invoke(Close);

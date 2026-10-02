@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\FEx.Json\FEx.Json.csproj" />
+		<ProjectReference Include="..\..\src\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

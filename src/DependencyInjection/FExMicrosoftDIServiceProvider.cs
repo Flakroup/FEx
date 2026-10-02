@@ -47,7 +47,7 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
         {
             var sb = new StringBuilder();
 
-            foreach (var m in ex.InnerExceptions.Select(e => e.Message.Split(':')[4])
+            foreach (var m in ex.InnerExceptions.Select(e => ExtractReason(e.Message))
                          .Distinct()
                          .OrderBy(x => x)
                          .ToList())
@@ -57,6 +57,19 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
 
             throw;
         }
+    }
+
+    /// <summary>
+    /// Extracts the reason from a DI validation message (the text after the closing <c>': </c> of the descriptor
+    /// description, which also holds for keyed descriptors); falls back to the whole message
+    /// when it doesn't have the expected shape so the handler never hides the original error.
+    /// </summary>
+    internal static string ExtractReason(string message)
+    {
+        const string marker = "': ";
+        var index = message.IndexOf(marker, StringComparison.Ordinal);
+
+        return index >= 0 ? message.Substring(index + marker.Length) : message;
     }
 
     /// <inheritdoc />

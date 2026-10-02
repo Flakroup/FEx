@@ -37,17 +37,10 @@ public sealed class FExStrongInjectServiceProvider : IFExStrongInjectServiceProv
 #pragma warning disable IDISP004
     public T? TryResolveService<T>()
     {
-        try
-        {
-            if (_provider is IContainer<T> container)
-                return container.Resolve<T>().Value;
-        }
-        catch
-        {
-            //ignored
-        }
-
-        return default;
+        // Only "not registered" yields default; exceptions thrown by factories/constructors must surface.
+        return _provider is IContainer<T> container
+            ? container.Resolve<T>().Value
+            : default;
     }
 #pragma warning restore IDISP004
 

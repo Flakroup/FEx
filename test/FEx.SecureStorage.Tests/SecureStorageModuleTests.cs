@@ -72,7 +72,7 @@ public sealed class SecureStorageModuleTests : IDisposable
     {
         var keystore = Substitute.For<ISecureStorageService>();
 
-        SecureStorageModule.CreateSecureStorageService(() => keystore, () => _storage).ShouldBeSameAs(keystore);
+        SecureStorageModule.CreateSecureStorageService(() => keystore, () => _storage, true).ShouldBeSameAs(keystore);
 
         _logger.DidNotReceiveWithAnyArgs().Warning(default(string)!);
     }
@@ -80,7 +80,7 @@ public sealed class SecureStorageModuleTests : IDisposable
     [Fact]
     public void NoOsKeystore_FallsBackToTheObfuscatedFileStorage_AndSaysSoAtWarningLevel()
     {
-        var service = SecureStorageModule.CreateSecureStorageService(() => null, () => _storage);
+        var service = SecureStorageModule.CreateSecureStorageService(() => null, () => _storage, true);
 
         service.ShouldBeOfType<ObfuscatedFileStorageService>();
         _logger.ReceivedWithAnyArgs(1).Warning(default(string)!);
@@ -105,7 +105,8 @@ public sealed class SecureStorageModuleTests : IDisposable
             {
                 storageRequested = true;
                 return _storage;
-            }));
+            },
+            true));
 
         storageRequested.ShouldBeFalse();
     }
@@ -116,11 +117,49 @@ public sealed class SecureStorageModuleTests : IDisposable
         var appCipher = new FExStringCipher("an application secret", FExStringCipher.MinIterations);
         SecureStorageModule.FallbackCipher = appCipher;
 
-        var service = SecureStorageModule.CreateSecureStorageService(() => null, () => _storage);
+        var service = SecureStorageModule.CreateSecureStorageService(() => null, () => _storage, true);
         service.Set("token", "hunter2");
 
-        new ObfuscatedFileStorageService(appCipher, _storage).Get<string>("token").ShouldBe("hunter2");
-        Should.Throw<FExDecryptionException>(() => new ObfuscatedFileStorageService(_storage).Get<string>("token"));
+        var cipherStorage = new DirectoryInfo(Path.Combine(_storage.FullName, SecureStorageModule.FallbackCipherDirectory));
+        new ObfuscatedFileStorageService(appCipher, cipherStorage).Get<string>("token").ShouldBe("hunter2");
+        Should.Throw<FExDecryptionException>(() => new ObfuscatedFileStorageService(cipherStorage).Get<string>("token"));
         _logger.ReceivedWithAnyArgs(1).Warning(default(string)!);
+    }
+
+    [Fact]
+    public void FallbackCipher_KeepsItsFilesApartFromTheMachineKeyedOnes()
+    {
+        SecureStorageModule.CreateSecureStorageService(() => null, () => _storage, true).Set("token", "machine-keyed");
+
+        SecureStorageModule.FallbackCipher = new FExStringCipher("an application secret", FExStringCipher.MinIterations);
+        var withCipher = SecureStorageModule.CreateSecureStorageService(() => null, () => _storage, true);
+        withCipher.Set("token", "app-keyed");
+
+        SecureStorageModule.FallbackCipher = null;
+        var machineKeyed = SecureStorageModule.CreateSecureStorageService(() => null, () => _storage, true);
+
+        machineKeyed.Get<string>("token").ShouldBe("machine-keyed", "switching the cipher on must not overwrite what was stored without it");
+        withCipher.Get<string>("token").ShouldBe("app-keyed");
+        File.Exists(Path.Combine(_storage.FullName, SecureStorageModule.FallbackCipherDirectory, "token.sfex")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void WithoutTheKeystoreProbeCompiledIn_BlamesTheBuild_NotTheMachine()
+    {
+        var service = SecureStorageModule.CreateSecureStorageService(() => null, () => _storage, false);
+        SecureStorageModule.AllowObfuscatedFallback = false;
+        var refusal = Should.Throw<PlatformNotSupportedException>(
+            () => SecureStorageModule.CreateSecureStorageService(() => null, () => _storage, false));
+
+        service.ShouldBeOfType<ObfuscatedFileStorageService>();
+        var warning = (string)_logger.ReceivedCalls()
+            .Single(call => call.GetMethodInfo().Name == nameof(IFExLogger.Warning))
+            .GetArguments()[0]!;
+
+        foreach (var message in new[] { warning, refusal.Message })
+        {
+            message.ShouldContain("below net5.0");
+            message.ShouldNotContain("No OS keystore is available");
+        }
     }
 }

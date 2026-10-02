@@ -61,8 +61,11 @@ public class ObfuscatedFileStorageService : ISecureStorageService
 
     /// <summary><c>~/.fexStorage/</c>, created if missing.</summary>
     internal static DirectoryInfo GetDefaultStorage() =>
-        SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile]
-            .Directory.GetDescendantDirectory(".fexStorage");
+        GetDefaultStorage(SpecialDirectory.SpecialDirectories[Environment.SpecialFolder.UserProfile].Directory);
+
+    /// <summary><c>.fexStorage/</c> under <paramref name="userProfile" />, created if missing.</summary>
+    internal static DirectoryInfo GetDefaultStorage(DirectoryInfo userProfile) =>
+        userProfile.GetDescendantDirectory(".fexStorage");
 
     /// <exception cref="FExDecryptionException">The stored file has been altered or was written with another key.</exception>
     public T Get<T>(string key)

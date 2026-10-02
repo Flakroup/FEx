@@ -24,13 +24,26 @@ public class SecureStorageModule : InitializeModule<ISecureStorageContainer, ISe
     /// resolves <see cref="ISecureStorageService" /> to make the factory throw
     /// <see cref="PlatformNotSupportedException" /> instead of downgrading to obfuscation.
     /// </summary>
+    /// <remarks>
+    /// The fallback is always reported through <c>FExStaticLogger.Warning</c>, but that warning reaches a sink
+    /// only once the host has wired logging (for example <c>FExLoggingModule</c>) before the service is
+    /// resolved; the default logger writes nothing in Release builds. Setting this to <c>false</c> is the way to
+    /// make the downgrade impossible to miss.
+    /// </remarks>
     public static bool AllowObfuscatedFallback { get; set; } = true;
 
     /// <summary>
     /// Cipher the file fallback uses instead of its machine-bound key. Build it from a secret only the
     /// application knows to get actual confidentiality from the fallback; leave it <c>null</c> and the fallback
-    /// only obfuscates. Values written under one key cannot be read under the other.
+    /// only obfuscates.
     /// </summary>
+    /// <remarks>
+    /// Values encrypted with this cipher are kept in the <c>cipher</c> subdirectory of the fallback storage,
+    /// apart from the machine-keyed ones, so turning it on or off never overwrites what the other mode
+    /// stored. Values do not carry over between the two: after switching, <c>Get</c> on a key stored under
+    /// the other mode throws as for a key never written, and the value has to be written again. Applications sharing a user profile share that subdirectory, so
+    /// give their keys distinct names.
+    /// </remarks>
     public static FExStringCipher? FallbackCipher { get; set; }
 
     /// <summary>
@@ -51,35 +64,52 @@ public class SecureStorageModule : InitializeModule<ISecureStorageContainer, ISe
     /// </exception>
     [Factory(Scope.SingleInstance)]
     public static ISecureStorageService CreateSecureStorageService() =>
-        CreateSecureStorageService(CreateOsKeystoreService, ObfuscatedFileStorageService.GetDefaultStorage);
+        CreateSecureStorageService(CreateOsKeystoreService, ObfuscatedFileStorageService.GetDefaultStorage,
+                                   OsKeystoreProbeCompiledIn);
+
+    /// <summary>Subdirectory of the fallback storage that holds values encrypted with <see cref="FallbackCipher" />.</summary>
+    internal const string FallbackCipherDirectory = "cipher";
+
+    /// <summary>Whether this build carries the OS keystore probe at all - it is compiled only for <c>net5.0</c> and later.</summary>
+    internal const bool OsKeystoreProbeCompiledIn =
+#if NET5_0_OR_GREATER
+        true;
+#else
+        false;
+#endif
 
     /// <summary>The selection itself, with the OS probe and the fallback directory supplied - reachable from a test on any OS.</summary>
     internal static ISecureStorageService CreateSecureStorageService(Func<ISecureStorageService?> osKeystore,
-                                                                     Func<DirectoryInfo> fallbackStorage)
+                                                                     Func<DirectoryInfo> fallbackStorage,
+                                                                     bool osKeystoreProbeCompiledIn)
     {
         var service = osKeystore();
 
         if (service is not null)
             return service;
 
+        var reason = osKeystoreProbeCompiledIn
+            ? "No OS keystore is available on this machine"
+            : "This build of FEx.SecureStorage targets a framework below net5.0 and carries no OS keystore support (use a net5.0+ target to get DPAPI, Keychain or libsecret)";
+
         if (!AllowObfuscatedFallback)
             throw new PlatformNotSupportedException(
-                $"No OS keystore is available and {nameof(SecureStorageModule)}.{nameof(AllowObfuscatedFallback)} is false.");
+                $"{reason} and {nameof(SecureStorageModule)}.{nameof(AllowObfuscatedFallback)} is false.");
 
         var cipher = FallbackCipher;
 
         if (cipher is null)
         {
             FExStaticLogger.Warning(
-                $"No OS keystore is available; secure storage falls back to {nameof(ObfuscatedFileStorageService)} keyed on public machine and user identifiers - stored values are obfuscated, not confidential. Set {nameof(SecureStorageModule)}.{nameof(FallbackCipher)} to encrypt them with an application secret, or {nameof(AllowObfuscatedFallback)} to false to refuse the fallback.");
+                $"{reason}; secure storage falls back to {nameof(ObfuscatedFileStorageService)} keyed on public machine and user identifiers - stored values are obfuscated, not confidential. Set {nameof(SecureStorageModule)}.{nameof(FallbackCipher)} to encrypt them with an application secret, or {nameof(AllowObfuscatedFallback)} to false to refuse the fallback.");
 
             return new ObfuscatedFileStorageService(fallbackStorage());
         }
 
         FExStaticLogger.Warning(
-            $"No OS keystore is available; secure storage falls back to {nameof(ObfuscatedFileStorageService)} encrypted with the application-supplied {nameof(FallbackCipher)}.");
+            $"{reason}; secure storage falls back to {nameof(ObfuscatedFileStorageService)} encrypted with the application-supplied {nameof(FallbackCipher)}.");
 
-        return new ObfuscatedFileStorageService(cipher, fallbackStorage());
+        return new ObfuscatedFileStorageService(cipher, fallbackStorage().GetDescendantDirectory(FallbackCipherDirectory));
     }
 
     protected override void RegisterServices(ISecureStorageContainer? container, IServiceCollection services)

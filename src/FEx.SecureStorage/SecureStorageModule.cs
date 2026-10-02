@@ -21,6 +21,12 @@ public class SecureStorageModule : InitializeModule<ISecureStorageContainer, ISe
     /// cross-platform file fallback. If libsecret is missing on Linux the factory
     /// silently falls back to the file implementation.
     /// </summary>
+    /// <remarks>
+    /// The last resort is <see cref="ObfuscatedFileStorageService" />, and it earns its name: with no OS
+    /// keystore to lean on it can only key itself off public machine and user identifiers, so it obscures
+    /// values rather than keeping them secret. On the targets below <c>net5.0</c> the branch above is
+    /// compiled out entirely and that fallback is the only implementation this factory can return.
+    /// </remarks>
     [Factory(Scope.SingleInstance)]
     public static ISecureStorageService CreateSecureStorageService()
     {
@@ -41,7 +47,7 @@ public class SecureStorageModule : InitializeModule<ISecureStorageContainer, ISe
                 // libsecret-1.so.0 not installed - fall through to file fallback.
             }
 #endif
-        return new FileSecureStorageService();
+        return new ObfuscatedFileStorageService();
     }
 
     protected override void RegisterServices(ISecureStorageContainer? container, IServiceCollection services)

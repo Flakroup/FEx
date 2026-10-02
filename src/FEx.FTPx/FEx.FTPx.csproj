@@ -16,5 +16,8 @@
 		<ProjectReference Include="..\FEx.MVVM\FEx.MVVM.csproj" />
 		<ProjectReference Include="..\FEx.Webx\FEx.Webx.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="FEx.FTPx.Tests" />
+	</ItemGroup>
 </Project>
 

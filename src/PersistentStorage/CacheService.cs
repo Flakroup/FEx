@@ -7,7 +7,6 @@ using FEx.PersistentStorage.Abstractions.Extensions;
 using LiteDB;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -39,13 +38,9 @@ public sealed class CacheService : ICacheService
         }
         catch (Exception ex)
         {
-            if (Debugger.IsAttached)
-                _logger.Error(ex);
+            _logger.Error(ex);
 
-            Delete((Expression<Func<T, bool>>?)null);
-            Add(item);
-
-            return true;
+            throw;
         }
     }
 
@@ -58,13 +53,9 @@ public sealed class CacheService : ICacheService
         }
         catch (Exception ex)
         {
-            if (Debugger.IsAttached)
-                _logger.Error(ex);
+            _logger.Error(ex);
 
-            Delete((Expression<Func<T, bool>>?)null);
-            Add(item);
-
-            return true;
+            throw;
         }
     }
 
@@ -77,11 +68,9 @@ public sealed class CacheService : ICacheService
         }
         catch (Exception ex)
         {
-            if (Debugger.IsAttached)
-                _logger.Error(ex);
+            _logger.Error(ex);
 
-            Delete((Expression<Func<T, bool>>?)null);
-            Add(items);
+            throw;
         }
     }
 
@@ -104,10 +93,7 @@ public sealed class CacheService : ICacheService
         }
         catch (Exception ex)
         {
-            if (Debugger.IsAttached)
-                _logger.Error(ex);
-
-            Delete((Expression<Func<T, bool>>?)null);
+            _logger.Error(ex);
 
             return default;
         }
@@ -122,10 +108,7 @@ public sealed class CacheService : ICacheService
         }
         catch (Exception ex)
         {
-            if (Debugger.IsAttached)
-                _logger.Error(ex);
-
-            Delete((Expression<Func<T, bool>>?)null);
+            _logger.Error(ex);
 
             return Enumerable.Empty<T>().ToList().AsReadOnly();
         }

@@ -115,6 +115,15 @@
     <Project Path="test/FEx.EFCore.Tests/FEx.EFCore.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.Downloader.Tests/FEx.Downloader.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.PersistentStorage.Tests/FEx.PersistentStorage.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.WebScraping.Tests/FEx.WebScraping.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.Flurlx.Tests/FEx.Flurlx.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>

@@ -6,6 +6,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="FEx.Downloader.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <PackageReference Include="StrongInject.Extensions.DependencyInjection" Version="1.4.4" />
 	</ItemGroup>
 

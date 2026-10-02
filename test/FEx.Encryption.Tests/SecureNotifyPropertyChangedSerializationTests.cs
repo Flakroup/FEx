@@ -2,6 +2,9 @@ using FEx.Json.Extensions;
 using Newtonsoft.Json;
 using Shouldly;
 using System;
+using System.Runtime.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace FEx.Encryption.Tests;
@@ -71,14 +74,91 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
     }
 
     [Fact]
-    public void JsonBackedProperty_WithoutTheFieldPattern_RefusesToSerialize_AndLeavesTheGettersWorking()
+    public void JsonBackedProperty_WithoutAnyAttributes_IsWrittenAsCiphertext_AndRoundTrips()
     {
-        var settings = new LeakyJsonSettings { Data = new() { Name = Plaintext } };
+        var json = new JsonSettings { Data = new() { Name = Plaintext } }.ToJson();
 
-        var ex = Should.Throw<JsonSerializationException>(() => settings.ToJson());
+        json.ShouldNotContain(Plaintext);
+        JsonConvert.DeserializeObject<JsonSettings>(json)!.Data!.Name.ShouldBe(Plaintext);
+    }
 
-        ex.InnerException.ShouldBeOfType<InvalidOperationException>().Message.ShouldContain(nameof(LeakyJsonSettings.Data));
-        settings.Data!.Name.ShouldBe(Plaintext, "a failed save must not leave the getters returning ciphertext");
+    [Fact]
+    public void LegacyPlaintextJsonProperty_IsEncryptedOnLoad()
+    {
+        var read = JsonConvert.DeserializeObject<JsonSettings>($"{{\"Data\":{{\"Name\":\"{Plaintext}\"}}}}")!;
+
+        read.Data!.Name.ShouldBe(Plaintext);
+        read.ToJson().ShouldNotContain(Plaintext);
+    }
+
+    [Fact]
+    public void EnvelopeShapedPlaintext_ThatFailsTheStructuralChecks_IsStillEncryptedOnLoad()
+    {
+        // Base64 of 85 bytes starting 0x01 - the version byte - but with an iteration count far outside the
+        // accepted range: a legacy plaintext key, not a ciphertext, so it must not survive on disk verbatim.
+        var bytes = new byte[85];
+
+        for (var i = 1; i < bytes.Length; i++)
+            bytes[i] = (byte)(i * 7);
+
+        bytes[0] = 1;
+        var legacy = Convert.ToBase64String(bytes);
+
+        var read = JsonConvert.DeserializeObject<PlainSettings>($"{{\"Secret\":\"{legacy}\"}}")!;
+
+        read.Secret.ShouldBe(legacy);
+        read.ToJson().ShouldNotContain(legacy);
+    }
+
+    [Fact]
+    public void HandledSerializerError_NeverLetsALaterPropertyOutInTheClear()
+    {
+        var settings = new ThrowingFirstSettings { Secret = Plaintext };
+        JsonSerializerSettings tolerant = new() { Error = (_, e) => e.ErrorContext.Handled = true };
+
+        var json = JsonConvert.SerializeObject(settings, tolerant);
+
+        json.ShouldNotContain(Plaintext);
+    }
+
+    [Fact]
+    public async Task ConcurrentSerializationOfOneInstance_NeverWritesPlaintext()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        using ManualResetEventSlim firstIsInside = new();
+        using ManualResetEventSlim release = new();
+        var settings = new SlowSettings(firstIsInside, release) { Secret = Plaintext };
+
+        var first = Task.Run(() => settings.ToJson(), ct);
+        firstIsInside.Wait(TimeSpan.FromSeconds(10), ct).ShouldBeTrue();
+        var second = settings.ToJson();
+        release.Set();
+
+        (await first).ShouldNotContain(Plaintext);
+        second.ShouldNotContain(Plaintext);
+    }
+
+    [Fact]
+    public void ThrowingSerializationCallback_LeavesGettersAndTheNextSaveIntact()
+    {
+        var settings = new ThrowingCallbackSettings { Secret = Plaintext, Throw = true };
+
+        Should.Throw<Exception>(() => settings.ToJson());
+        settings.Secret.ShouldBe(Plaintext);
+
+        settings.Throw = false;
+        settings.ToJson().ShouldNotContain(Plaintext);
+    }
+
+    [Fact]
+    public void PopulateObject_WhichBypassesTheConverter_DoesNotEncryptTwice()
+    {
+        var json = new PlainSettings { Secret = Plaintext }.ToJson();
+        PlainSettings target = new();
+
+        JsonConvert.PopulateObject(json, target);
+
+        target.Secret.ShouldBe(Plaintext);
     }
 
     [Fact]
@@ -113,7 +193,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
         protected override FExStringCipher Cipher => _cipher;
     }
 
-    public sealed class LeakyJsonSettings : SecureNotifyPropertyChanged
+    public sealed class JsonSettings : SecureNotifyPropertyChanged
     {
         private string? _payload;
 
@@ -124,6 +204,82 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
         }
 
         protected override FExStringCipher Cipher => _cipher;
+    }
+
+    /// <summary>A member whose getter throws, declared before the secret, as in the reviewed leak.</summary>
+    public sealed class ThrowingFirstSettings : SecureNotifyPropertyChanged
+    {
+        private string? _secret;
+
+        public string Boom => throw new InvalidOperationException("boom");
+
+        public string? Secret
+        {
+            get => DecryptFromSource(_secret);
+            set => EncryptSource(ref _secret, value);
+        }
+
+        protected override FExStringCipher Cipher => _cipher;
+    }
+
+    /// <summary>Its first member blocks the first reader until another serialization has finished.</summary>
+    public sealed class SlowSettings : SecureNotifyPropertyChanged
+    {
+        private readonly ManualResetEventSlim _firstIsInside;
+        private readonly ManualResetEventSlim _release;
+        private int _reads;
+        private string? _secret;
+
+        public SlowSettings(ManualResetEventSlim firstIsInside, ManualResetEventSlim release)
+        {
+            _firstIsInside = firstIsInside;
+            _release = release;
+        }
+
+        public string Slow
+        {
+            get
+            {
+                if (Interlocked.Increment(ref _reads) == 1)
+                {
+                    _firstIsInside.Set();
+                    _release.Wait(TimeSpan.FromSeconds(10));
+                }
+
+                return "s";
+            }
+        }
+
+        public string? Secret
+        {
+            get => DecryptFromSource(_secret);
+            set => EncryptSource(ref _secret, value);
+        }
+
+        protected override FExStringCipher Cipher => _cipher;
+    }
+
+    public sealed class ThrowingCallbackSettings : SecureNotifyPropertyChanged
+    {
+        private string? _secret;
+
+        [JsonIgnore]
+        public bool Throw { get; set; }
+
+        public string? Secret
+        {
+            get => DecryptFromSource(_secret);
+            set => EncryptSource(ref _secret, value);
+        }
+
+        protected override FExStringCipher Cipher => _cipher;
+
+        [OnSerializing]
+        private void OnSerializing(StreamingContext context)
+        {
+            if (Throw)
+                throw new InvalidOperationException("callback");
+        }
     }
 
     public sealed class FieldPatternSettings : SecureNotifyPropertyChanged

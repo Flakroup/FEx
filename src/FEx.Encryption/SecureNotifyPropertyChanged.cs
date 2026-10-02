@@ -3,10 +3,9 @@ using FEx.Agnostics.BaseObjects;
 using FEx.Encryption.Exceptions;
 using FEx.Json.Extensions;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using System;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
 
 namespace FEx.Encryption;
 
@@ -30,11 +29,12 @@ namespace FEx.Encryption;
 /// </para>
 /// <para>
 /// <b>Serialization contract: what reaches disk is ciphertext, by default.</b> A property getter hands back
-/// plaintext, so a serializer left to its own devices would write the secret out in the clear. To make the
-/// obvious declaration safe, this class hooks Newtonsoft.Json's serialization callbacks: while an instance
-/// is being serialized, <see cref="DecryptFromSource" /> returns the stored ciphertext instead of decrypting
-/// it, and while it is being deserialized, <see cref="EncryptSource" /> stores the incoming value as the
-/// ciphertext it already is. A plain encrypted property therefore needs no attributes:
+/// plaintext, so a serializer left to its own devices would write the secret out in the clear. This class
+/// therefore carries <see cref="SecureNotifyPropertyChangedConverter" />, which Newtonsoft.Json picks up for
+/// every derived type. Getters always return plaintext and never depend on serializer state; instead every
+/// call of <see cref="DecryptFromSource" /> and <see cref="EncryptSource" /> records the current ciphertext
+/// of the property it serves, and the converter writes that record in place of the getter's value. A plain
+/// encrypted property therefore needs no attributes:
 /// <code>
 /// private string? _secret;
 ///
@@ -44,37 +44,33 @@ namespace FEx.Encryption;
 ///     set => EncryptSource(ref _secret, value);
 /// }
 /// </code>
-/// A value read back during deserialization that is not a cipher envelope at all - a file written in the
-/// clear by an older version - is encrypted on the way in, so the next save migrates it.
+/// The same holds for a property read through <see cref="DecryptFromJsonSource{T}" />: it is written as its
+/// ciphertext string and read back into the backing field unchanged.
 /// </para>
 /// <para>
-/// A property read through <see cref="DecryptFromJsonSource{T}" /> cannot carry ciphertext in its own type,
-/// so it must be persisted through its backing field instead; reading it while serializing throws rather
-/// than write plaintext or silently drop the value:
-/// <code>
-/// [JsonProperty("payload")]
-/// private string? _payload;
-///
-/// [JsonIgnore]
-/// public Payload? Data
-/// {
-///     get => DecryptFromJsonSource&lt;Payload&gt;(_payload);
-///     set => EncryptJsonSource(ref _payload, value);
-/// }
-/// </code>
-/// The same field pattern works for string properties too. The callbacks are Newtonsoft.Json's (FEx's
-/// serializer, which <c>BaseUserSettings</c> uses); any other serializer must be pointed at the backing
-/// fields the same way.
+/// On the way in, a value with the shape of a cipher envelope is stored as the ciphertext it is - including
+/// one written under another passphrase, which then reads as null and is reported, but survives. Anything
+/// else - a file written in the clear by an older version - is encrypted on the way in, so the next save
+/// migrates it. A setter handed a value that already authenticates as this cipher's output stores it
+/// unchanged, which keeps <c>JsonConvert.PopulateObject</c> (it bypasses the converter on the root object)
+/// from encrypting it twice.
+/// </para>
+/// <para>
+/// The older field pattern - <c>[JsonProperty]</c> on the backing field, <c>[JsonIgnore]</c> on the property -
+/// keeps working unchanged. The converter is Newtonsoft.Json's (FEx's serializer, which <c>BaseUserSettings</c>
+/// uses); any other serializer must be pointed at the backing fields that way.
 /// </para>
 /// </remarks>
+[JsonConverter(typeof(SecureNotifyPropertyChangedConverter))]
 public class SecureNotifyPropertyChanged : NotifyPropertyChanged
 {
-    // The managed thread id that is serializing or deserializing this instance right now, 0 otherwise.
-    // Thread-scoped so a UI binding reading the property on another thread mid-save still gets plaintext.
-    [NonSerialized]
-    private int _serializerThreadId;
+    // The latest ciphertext each encrypted property was seen with, keyed by CLR property name. Refreshed by
+    // every getter and setter call, so the converter can write the ciphertext without asking the getter for it.
+    private readonly ConcurrentDictionary<string, string?> _storedCiphertext = new(StringComparer.Ordinal);
 
-    private bool IsInSerializer => _serializerThreadId == Environment.CurrentManagedThreadId;
+    // Ciphertext the converter is handing to one property's setter while it reads a document. Consumed by that
+    // setter's EncryptSource call and removed by the converter right after; a getter never looks at it.
+    private readonly ConcurrentDictionary<string, string> _incomingCiphertext = new(StringComparer.Ordinal);
 
     /// <summary>The cipher used for this instance. Overridable so a test can supply its own.</summary>
     protected virtual FExStringCipher Cipher => FExEncryption.Cipher;
@@ -103,11 +99,11 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
     /// <summary>Decrypts a backing field, or returns null and reports if it cannot be read.</summary>
     protected string? DecryptFromSource(string? source, [CallerMemberName] string? propertyName = null)
     {
+        if (propertyName is not null)
+            _storedCiphertext[propertyName] = source;
+
         if (source is null)
             return null;
-
-        if (IsInSerializer)
-            return source;
 
         try
         {
@@ -142,10 +138,6 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
     /// </remarks>
     protected T? DecryptFromJsonSource<T>(string? source, [CallerMemberName] string? propertyName = null)
     {
-        if (IsInSerializer && source is not null)
-            throw new InvalidOperationException(
-                $"'{propertyName}' on {GetType().Name} would be serialized as plaintext. Mark it [JsonIgnore] and serialize its backing field with [JsonProperty] instead - see the remarks on {nameof(SecureNotifyPropertyChanged)}.");
-
         var json = DecryptFromSource(source, propertyName);
 
         if (json is null)
@@ -187,29 +179,58 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
                                  [CallerMemberName] string? propertyName = null)
 #pragma warning restore S2360
     {
-        var encrypted = newValue is null
-                        || (IsInSerializer && FExStringCipher.IsEnvelope(newValue))
-            ? newValue
-            : Cipher.Encrypt(newValue);
+        string? encrypted;
+
+        if (propertyName is not null && _incomingCiphertext.TryRemove(propertyName, out var stored))
+            encrypted = stored;
+        else if (newValue is null || IsOwnCiphertext(newValue))
+            encrypted = newValue;
+        else
+            encrypted = Cipher.Encrypt(newValue);
+
+        if (propertyName is not null)
+            _storedCiphertext[propertyName] = encrypted;
 
         return SetProperty(ref backingField, encrypted, onPropertyChanged, propertyName);
     }
 
-    [OnSerializing]
-    private void OnSerializingSecure(StreamingContext context) => _serializerThreadId = Environment.CurrentManagedThreadId;
+    /// <summary>The ciphertext <paramref name="propertyName" /> last read or wrote, if it is an encrypted property.</summary>
+    internal bool TryGetStoredCiphertext(string propertyName, out string? ciphertext) =>
+        _storedCiphertext.TryGetValue(propertyName, out ciphertext);
 
-    [OnSerialized]
-    private void OnSerializedSecure(StreamingContext context) => _serializerThreadId = 0;
+    /// <summary>
+    /// Runs <paramref name="setter" /> so that the <see cref="EncryptSource" /> call it makes for
+    /// <paramref name="propertyName" /> stores <paramref name="ciphertext" /> verbatim instead of encrypting.
+    /// </summary>
+    internal void SetFromStoredCiphertext(string propertyName, string ciphertext, Action setter)
+    {
+        _incomingCiphertext[propertyName] = ciphertext;
 
-    [OnDeserializing]
-    private void OnDeserializingSecure(StreamingContext context) => _serializerThreadId = Environment.CurrentManagedThreadId;
+        try
+        {
+            setter();
+        }
+        finally
+        {
+            // A setter that never called EncryptSource (an unencrypted property) leaves its token behind.
+            _incomingCiphertext.TryRemove(propertyName, out _);
+        }
+    }
 
-    [OnDeserialized]
-    private void OnDeserializedSecure(StreamingContext context) => _serializerThreadId = 0;
+    private bool IsOwnCiphertext(string value)
+    {
+        if (!FExStringCipher.IsEnvelope(value))
+            return false;
 
-    // A failed (de)serialization skips OnSerialized/OnDeserialized; without this the getters on this thread
-    // would keep returning ciphertext for the rest of the instance's life.
-    [OnError]
-    private void OnSerializationErrorSecure(StreamingContext context, ErrorContext errorContext) =>
-        _serializerThreadId = 0;
+        try
+        {
+            Cipher.Decrypt(value);
+
+            return true;
+        }
+        catch (FExDecryptionException)
+        {
+            return false;
+        }
+    }
 }

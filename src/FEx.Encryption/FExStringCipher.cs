@@ -196,9 +196,11 @@ public sealed class FExStringCipher
     }
 
     /// <summary>
-    /// Whether <paramref name="value" /> has the shape of an envelope this class writes (Base64, long enough,
-    /// known version byte) - without checking that it is authentic. Lets a reader tell a value that was
-    /// never encrypted apart from one encrypted under a different passphrase.
+    /// Whether <paramref name="value" /> has the shape of an envelope this class writes - Base64, the known
+    /// version byte, an iteration count inside the accepted range and a whole number of cipher blocks -
+    /// without checking that it is authentic. Lets a reader tell a value that was never encrypted apart from
+    /// one encrypted under a different passphrase. Every structural check counts: a random Base64 string
+    /// passes all of them with a probability around one in twenty million.
     /// </summary>
     internal static bool IsEnvelope(string value)
     {
@@ -213,7 +215,14 @@ public sealed class FExStringCipher
             return false;
         }
 
-        return envelope.Length >= PayloadOffset + MinCipherBlock && envelope[0] == EnvelopeVersion;
+        if (envelope.Length < PayloadOffset + MinCipherBlock
+            || envelope[0] != EnvelopeVersion
+            || (envelope.Length - PayloadOffset) % MinCipherBlock != 0)
+            return false;
+
+        var iterations = ReadInt32BigEndian(envelope, IterationsOffset);
+
+        return iterations is >= MinIterations and <= MaxIterations;
     }
 
     private static byte[] FromBase64(string value)

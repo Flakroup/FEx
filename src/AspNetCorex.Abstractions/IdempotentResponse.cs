@@ -12,4 +12,11 @@ public sealed class IdempotentResponse
     public string ContentType { get; init; } = "application/json";
 
     public byte[] Body { get; init; } = [];
+
+    /// <summary>
+    /// True when the request completed (with <see cref="StatusCode" />) but its body was too large to keep:
+    /// <see cref="Body" /> is empty, and a retry is refused instead of being answered with a replay - or
+    /// executed a second time.
+    /// </summary>
+    public bool BodyNotStored { get; init; }
 }

@@ -1,6 +1,7 @@
 using FEx.AspNetCorex.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System;
 
 namespace FEx.AspNetCorex;
 
@@ -17,5 +18,16 @@ public static class IdempotencyServiceCollectionExtensions
         services.TryAddScoped<IIdempotencyStore, MemoryCacheIdempotencyStore>();
 
         return services;
+    }
+
+    /// <summary>
+    /// <see cref="AddIdempotency(IServiceCollection)" />, plus <see cref="IdempotencyOptions" /> - e.g. a
+    /// different cap on the response size that is stored for replay.
+    /// </summary>
+    public static IServiceCollection AddIdempotency(this IServiceCollection services, Action<IdempotencyOptions> configure)
+    {
+        services.Configure(configure);
+
+        return services.AddIdempotency();
     }
 }

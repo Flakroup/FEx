@@ -87,9 +87,32 @@ public class FExDebugLogger : IFExLogger
     {
     }
 
-    private static void WriteFormattedMessage(string level, string? message, Exception? exception = null) =>
+    // Debug.WriteLine is [Conditional("DEBUG")] and vanishes from Release builds, so Warning and above also go to
+    // stderr (as FExSerilogLogger does while Serilog is silent) rather than being lost.
+    private static void WriteFormattedMessage(string level, string? message, Exception? exception = null)
+    {
         DebugConsole.WriteLine(
             $"{DateTime.Now.ToString(DateTimeFormat)} [{level}] {message}{Environment.NewLine}{(exception is not null ? exception + Environment.NewLine : string.Empty)}");
+
+        if (level is WarningLevel or ErrorLevel or CriticalLevel)
+            Console.Error.WriteLine(FormatForStandardError(level, message, exception));
+    }
+
+    // Exception messages can quote payload values (for example a decrypted secret in a JSON conversion error), and
+    // stderr ends up in journals and CI logs, so only the type and stack trace of the exception are written.
+    // FExStaticLogger passes exception.Message as the message when none is given; that is dropped for the same reason.
+    private static string FormatForStandardError(string level, string? message, Exception? exception)
+    {
+        var text = $"{DateTime.Now.ToString(DateTimeFormat)} [{level}]";
+
+        if (exception is null)
+            return $"{text} {message}";
+
+        if (!string.IsNullOrEmpty(message) && message != exception.Message)
+            text += $" {message}";
+
+        return $"{text}{Environment.NewLine}{exception.GetType()}{Environment.NewLine}{exception.StackTrace}";
+    }
 
     private sealed class NullScope : IDisposable
     {

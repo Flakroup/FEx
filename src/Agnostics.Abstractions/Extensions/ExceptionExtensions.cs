@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
@@ -9,38 +8,11 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 
 public static class ExceptionExtensions
 {
-    private static readonly Func<Exception, StackTrace, Exception> _setStackTraceFunc =
-        new Func<Func<Exception, StackTrace, Exception>>(static () =>
-        {
-            var target = Expression.Parameter(typeof(Exception));
-            var stack = Expression.Parameter(typeof(StackTrace));
-            var traceFormatType = typeof(StackTrace).GetNestedType("TraceFormat", BindingFlags.NonPublic);
-
-            var toString = typeof(StackTrace).GetMethod("ToString",
-                BindingFlags.NonPublic | BindingFlags.Instance,
-                null,
-                // Reflection into StackTrace internals: the nested TraceFormat type is expected to exist.
-                [traceFormatType!],
-                null);
-
-            var normalTraceFormat =
-#if NET9_0_OR_GREATER
-                Enum.GetValuesAsUnderlyingType(traceFormatType!).GetValue(0);
-#else
-                Enum.GetValues(traceFormatType!).GetValue(0);
-#endif
-            var stackTraceString =
-                Expression.Call(stack, toString!, Expression.Constant(normalTraceFormat, traceFormatType!));
-
-            var stackTraceStringField =
-                typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
-
-            var assign = Expression.Assign(Expression.Field(target, stackTraceStringField!), stackTraceString);
-
-            return Expression
-                .Lambda<Func<Exception, StackTrace, Exception>>(Expression.Block(assign, target), target, stack)
-                .Compile();
-        })();
+    // Private runtime field; its name is not guaranteed on every runtime. When it is missing the stack trace
+    // cannot be replaced, so SetStackTrace degrades to leaving the exception untouched instead of throwing from
+    // the type initializer (which would break every member of this class).
+    private static readonly FieldInfo? _stackTraceStringField =
+        typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
 
     /// <summary>
     /// Sets the stack trace of provided exception object
@@ -52,7 +24,10 @@ public static class ExceptionExtensions
     {
         stack.Guard(nameof(stack));
 
-        return _setStackTraceFunc(target, stack);
+        // The public ToString() is the "normal" trace plus a trailing newline, which Exception.StackTrace does not have.
+        _stackTraceStringField?.SetValue(target, stack.ToString().TrimEnd('\r', '\n'));
+
+        return target;
     }
 
     /// <summary>
@@ -82,8 +57,7 @@ public static class ExceptionExtensions
         while (inner is not null)
         {
             stackTrace.AppendLine(inner.StackTrace);
-
-            break;
+            inner = inner.InnerException!;
         }
 
         return stackTrace.ToString();

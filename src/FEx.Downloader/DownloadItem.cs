@@ -698,7 +698,6 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         {
             Response?.Dispose();
             Response = null;
-            GC.Collect();
         }
 
         var (canBeSpeedUp, _) =

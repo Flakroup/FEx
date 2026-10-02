@@ -20,6 +20,7 @@ namespace FEx.Downloader.Clients;
 public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 {
     private const int BufferSize = 81920;
+    private const double MaxRetryDelayMs = 30_000;
 
     private readonly bool _ownCTS;
     private string? _filePath;
@@ -102,6 +103,12 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         get => _progressMaximum;
         protected set => SetProperty(ref _progressMaximum, value);
     }
+
+    /// <summary>Maximum number of retries after HTTP 429 responses before the download fails.</summary>
+    public int MaxRetryAttempts { get; set; } = 5;
+
+    /// <summary>Delay before the first retry; it doubles on every further attempt (capped at 30s).</summary>
+    public TimeSpan RetryBaseDelay { get; set; } = TimeSpan.FromMilliseconds(100);
 
     protected byte[] Buffer { get; }
 
@@ -216,6 +223,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     public async Task DownloadFileAsync(Uri url, string filePath, bool lockOnFilePath)
     {
         var retry = true;
+        var attempt = 0;
 
         while (retry)
         {
@@ -234,9 +242,10 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
             catch (Exception ex)
             {
                 if (ex is HttpRequestException
-                    && (int)res.StatusCode == 429)
+                    && (int)res.StatusCode == 429
+                    && attempt < MaxRetryAttempts)
                 {
-                    await Task.Delay(100, CancellationToken);
+                    await Task.Delay(GetRetryDelay(attempt++), CancellationToken);
                     retry = !CancellationToken.IsCancellationRequested;
                 }
                 else
@@ -248,6 +257,11 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
             }
         }
     }
+
+    /// <summary>Exponential backoff: <see cref="RetryBaseDelay" /> * 2^attempt, capped at 30 seconds.</summary>
+    public virtual TimeSpan GetRetryDelay(int attempt) =>
+        TimeSpan.FromMilliseconds(Math.Min(RetryBaseDelay.TotalMilliseconds * Math.Pow(2, attempt),
+            MaxRetryDelayMs));
 
     public Task DoDownloadAsync(string filePath, HttpResponseMessage response) =>
         DoDownloadAsync(filePath, response, true);
@@ -263,7 +277,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         ProgressValue = 0;
         DState = DownloadState.InProgress;
 
-        if (length > 0)
+        // length < 0 means the server sent no Content-Length (e.g. chunked encoding): stream until EOF.
         {
             if (lockOnFilePath)
                 await LockSrv.WaitAsync(filePath, cancellationToken: CancellationToken);
@@ -286,7 +300,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
                         FileAccess.ReadWrite,
                         FileShare.None);
 
-                    if (fileStream.Length != length)
+                    if (length < 0 || fileStream.Length != length)
                     {
                         fileStream.Seek(0, SeekOrigin.Begin);
                         Array.Clear(Buffer, 0, Buffer.Length);
@@ -306,6 +320,9 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
                                 break;
                             }
                         }
+
+                        if (length < 0)
+                            fileStream.SetLength(fileStream.Position);
                     }
                     else
                     {
@@ -313,8 +330,11 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
                     }
                 }
 
-                using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                if (length >= 0)
+                {
+                    using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
                     fileStream.SetLength(length);
+                }
             }
             finally
             {

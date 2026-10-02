@@ -1,6 +1,8 @@
 using FEx.AspNetCorex.Abstractions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -23,6 +25,11 @@ namespace FEx.AspNetCorex;
 /// writes move money wants one that outlives the process. Place the middleware after authentication.
 /// The in-flight lock that stops two concurrent same-key requests from both running the handler is
 /// per process; a host scaled out across several instances still needs a shared lock to close that gap.
+/// <para>
+/// The response is buffered so it can be both stored and sent, up to
+/// <see cref="IdempotencyOptions.MaxStoredResponseBytes" /> (1 MiB by default). A larger response streams
+/// through to the client untruncated but is not stored, so its retry executes again.
+/// </para>
 /// </remarks>
 public sealed class IdempotencyMiddleware
 {
@@ -41,11 +48,22 @@ public sealed class IdempotencyMiddleware
 
     private readonly RequestDelegate _next;
     private readonly ILogger<IdempotencyMiddleware> _logger;
+    private readonly long _maxStoredResponseBytes;
 
     public IdempotencyMiddleware(RequestDelegate next, ILogger<IdempotencyMiddleware> logger)
+        : this(next, logger, Options.Create(new IdempotencyOptions()))
+    {
+    }
+
+    [ActivatorUtilitiesConstructor]
+    public IdempotencyMiddleware(
+        RequestDelegate next,
+        ILogger<IdempotencyMiddleware> logger,
+        IOptions<IdempotencyOptions> options)
     {
         _next = next;
         _logger = logger;
+        _maxStoredResponseBytes = Math.Max(0, options.Value.MaxStoredResponseBytes);
     }
 
     /// <remarks>
@@ -113,13 +131,14 @@ public sealed class IdempotencyMiddleware
                 return;
             }
 
-            // Buffer the response so a successful body can be stored AND still reach the client.
+            // Buffer the response so a successful body can be stored AND still reach the client - but only
+            // up to the cap: past it the buffer spills to the client and the rest streams straight through.
             var originalBody = context.Response.Body;
-            byte[] bytes;
+            byte[]? bytes;
 
-            await using (MemoryStream memoryBody = new())
+            await using (CappedBufferStream buffer = new(originalBody, _maxStoredResponseBytes))
             {
-                context.Response.Body = memoryBody;
+                context.Response.Body = buffer;
 
                 try
                 {
@@ -132,26 +151,37 @@ public sealed class IdempotencyMiddleware
                     context.Response.Body = originalBody;
                 }
 
-                memoryBody.Seek(0, SeekOrigin.Begin);
-                bytes = memoryBody.ToArray();
-                memoryBody.Seek(0, SeekOrigin.Begin);
-                await memoryBody.CopyToAsync(originalBody);
+                bytes = buffer.BufferedBytes();
+                await buffer.CompleteAsync();
             }
 
             // Only a completed write is safe to replay; an error response must stay retryable.
-            if (context.Response.StatusCode is >= 200 and < 300)
-                await store.SetAsync(storeKey,
-                    new IdempotentResponse
-                    {
-                        StatusCode = context.Response.StatusCode,
-                        ContentType = context.Response.ContentType ?? "application/json",
-                        Body = bytes
-                    },
-                    ResponseLifetime,
-                    // Not context.RequestAborted: the client that just got a successful response can
-                    // disconnect the instant it receives it, which must not cancel recording that success -
-                    // that is exactly the case a retry from a timed-out client is supposed to replay.
-                    CancellationToken.None);
+            if (context.Response.StatusCode is < 200 or >= 300)
+                return;
+
+            if (bytes is null)
+            {
+                _logger.LogInformation(
+                    "Idempotency response for {IdempotencyKey} (user {UserId}) exceeded {MaxStoredResponseBytes} bytes; sent but not stored, so a retry executes again",
+                    key,
+                    userId,
+                    _maxStoredResponseBytes);
+
+                return;
+            }
+
+            await store.SetAsync(storeKey,
+                new IdempotentResponse
+                {
+                    StatusCode = context.Response.StatusCode,
+                    ContentType = context.Response.ContentType ?? "application/json",
+                    Body = bytes
+                },
+                ResponseLifetime,
+                // Not context.RequestAborted: the client that just got a successful response can
+                // disconnect the instant it receives it, which must not cancel recording that success -
+                // that is exactly the case a retry from a timed-out client is supposed to replay.
+                CancellationToken.None);
         }
         finally
         {
@@ -213,5 +243,129 @@ public sealed class IdempotencyMiddleware
     {
         public readonly SemaphoreSlim Semaphore = new(1, 1);
         public int RefCount;
+    }
+
+    /// <summary>
+    /// Collects the response in memory while it fits under the cap. The first write that would push it
+    /// over sends what was buffered to the real body and turns this into a pass-through, so the client
+    /// always receives every byte and memory never holds more than the cap.
+    /// </summary>
+    private sealed class CappedBufferStream : Stream
+    {
+        private readonly Stream _inner;
+        private readonly long _cap;
+        private MemoryStream? _buffer = new();
+        private long _written;
+
+        public CappedBufferStream(Stream inner, long cap)
+        {
+            _inner = inner;
+            _cap = cap;
+        }
+
+        public override bool CanRead => false;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => true;
+
+        public override long Length => _written;
+
+        public override long Position
+        {
+            get => _written;
+            set => throw new NotSupportedException();
+        }
+
+        /// <summary>The whole body, or null once it outgrew the cap and was streamed through.</summary>
+        public byte[]? BufferedBytes() => _buffer?.ToArray();
+
+        /// <summary>Sends a body that stayed under the cap to the real response.</summary>
+        public async Task CompleteAsync()
+        {
+            if (_buffer is null)
+                return;
+
+            _buffer.Position = 0;
+            await _buffer.CopyToAsync(_inner);
+        }
+
+        public override void Write(byte[] buffer, int offset, int count) => Write(buffer.AsSpan(offset, count));
+
+        public override void Write(ReadOnlySpan<byte> source)
+        {
+            if (TryBuffer(source))
+                return;
+
+            if (_buffer is not null)
+            {
+                _buffer.Position = 0;
+                _buffer.CopyTo(_inner);
+                DropBuffer();
+            }
+
+            _inner.Write(source);
+            _written += source.Length;
+        }
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+            WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> source, CancellationToken cancellationToken = default)
+        {
+            if (TryBuffer(source.Span))
+                return;
+
+            if (_buffer is not null)
+            {
+                _buffer.Position = 0;
+                await _buffer.CopyToAsync(_inner, cancellationToken);
+                DropBuffer();
+            }
+
+            await _inner.WriteAsync(source, cancellationToken);
+            _written += source.Length;
+        }
+
+        // While buffering, a flush must not reach the real body: it would start the response early.
+        public override void Flush()
+        {
+            if (_buffer is null)
+                _inner.Flush();
+        }
+
+        public override Task FlushAsync(CancellationToken cancellationToken) =>
+            _buffer is null ? _inner.FlushAsync(cancellationToken) : Task.CompletedTask;
+
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                DropBuffer();
+
+            base.Dispose(disposing);
+        }
+
+        private bool TryBuffer(ReadOnlySpan<byte> source)
+        {
+            if (_buffer is null || _written + source.Length > _cap)
+                return false;
+
+            _buffer.Write(source);
+            _written += source.Length;
+
+            return true;
+        }
+
+        private void DropBuffer()
+        {
+            _buffer?.Dispose();
+            _buffer = null;
+        }
     }
 }

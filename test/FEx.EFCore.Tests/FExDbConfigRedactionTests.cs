@@ -1,6 +1,7 @@
 using FEx.EFCore.Configuration;
 using Newtonsoft.Json;
 using Shouldly;
+using System.Reflection;
 using StjSerializer = System.Text.Json.JsonSerializer;
 using Xunit;
 
@@ -32,6 +33,17 @@ public sealed class FExDbConfigRedactionTests
         text.ShouldContain("Password = ***");
         text.ShouldContain("SqlInstance = db.local");
         text.ShouldContain("Username = svc");
+    }
+
+    [Fact]
+    public void ToString_ListsEveryPublicProperty()
+    {
+        // PrintMembers is hand-written to redact the password; a property added to the record later must not
+        // silently drop out of the log line.
+        var text = Config().ToString();
+
+        foreach (var property in typeof(FExDbConfig).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            text.ShouldContain($"{property.Name} = ");
     }
 
     [Fact]

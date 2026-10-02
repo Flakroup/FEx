@@ -32,6 +32,10 @@ public class FExServiceProvider : IFExServiceProvider
         typeof(IFExServiceContainer).GetMethod(nameof(IFExServiceContainer.ResolveService),
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
 
+    private static readonly MethodInfo _resolveOrDefaultMethod =
+        typeof(IFExServiceContainer).GetMethod(nameof(IFExServiceContainer.ResolveOrDefault),
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
+
     public static FExServiceProvider Instance => new();
 
     /// <summary>
@@ -88,14 +92,19 @@ public class FExServiceProvider : IFExServiceProvider
     /// </summary>
     public object GetRequiredService(Type serviceType) => ResolveByType(serviceType);
 
-    private static object ResolveByType(Type serviceType)
+    private static object ResolveByType(Type serviceType) =>
+        ResolveByType(serviceType, true)
+        ?? throw new InvalidOperationException($"Couldn't resolve type: {serviceType.FullName}");
+
+    private static object? ResolveByType(Type serviceType, bool required)
     {
         serviceType.Guard(nameof(serviceType));
 
         try
         {
-            return _resolveServiceMethod.MakeGenericMethod(serviceType).Invoke(RequiredServiceContainer, null)
-                ?? throw new InvalidOperationException($"Couldn't resolve type: {serviceType.FullName}");
+            return required
+                ? _resolveServiceMethod.MakeGenericMethod(serviceType).Invoke(RequiredServiceContainer, null)
+                : _resolveOrDefaultMethod.MakeGenericMethod(serviceType).Invoke(RequiredServiceContainer, [null]);
         }
         catch (TargetInvocationException ex) when (ex.InnerException is not null)
         {
@@ -134,7 +143,7 @@ public class FExServiceProvider : IFExServiceProvider
     /// <summary>
     /// Gets the service object of the specified type.
     /// </summary>
-    public object? GetService(Type serviceType) => ServiceContainer?.ResolveOrDefault<object>();
+    public object? GetService(Type serviceType) => ServiceContainer is null ? null : ResolveByType(serviceType, false);
 
     /// <summary>
     /// Retrieves the <see cref="T" /> instance.

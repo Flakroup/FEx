@@ -1,9 +1,7 @@
 using FEx.DependencyInjection.Abstractions;
-using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.Json.Helpers;
 using Newtonsoft.Json.Serialization;
 using System;
-using System.Reflection;
 
 namespace FEx.Json.Resolvers;
 
@@ -22,17 +20,10 @@ public class DIContractResolver : DefaultContractResolver
         {
             var contract = DIResolveContract(objectType);
 
-            contract.DefaultCreator = () =>
-            {
-                var method = typeof(IFExServiceContainer)
-                    .GetMethod(nameof(IFExServiceContainer.ResolveService),
-                        BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                    ?.MakeGenericMethod(objectType);
-
-                // objectType is registered (checked above), so ResolveService exists and
-                // returns a non-null service instance.
-                return method?.Invoke(FExServiceProvider.ServiceContainer, null)!;
-            };
+            // Only transient registrations yield a fresh instance per call. Handing Newtonsoft a live
+            // singleton/scoped instance would let deserialization overwrite shared state.
+            if (_diMeta.IsTransient(objectType))
+                contract.DefaultCreator = () => FExServiceProvider.Instance.GetRequiredService(objectType);
 
             return contract;
         }

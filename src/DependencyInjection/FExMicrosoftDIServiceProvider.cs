@@ -60,14 +60,16 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
     }
 
     /// <summary>
-    /// Extracts the reason part of a DI validation message; falls back to the whole message
+    /// Extracts the reason from a DI validation message (the text after the closing <c>': </c> of the descriptor
+    /// description, which also holds for keyed descriptors); falls back to the whole message
     /// when it doesn't have the expected shape so the handler never hides the original error.
     /// </summary>
     internal static string ExtractReason(string message)
     {
-        var parts = message.Split(':');
+        const string marker = "': ";
+        var index = message.IndexOf(marker, StringComparison.Ordinal);
 
-        return parts.Length > 4 ? parts[4] : message;
+        return index >= 0 ? message.Substring(index + marker.Length) : message;
     }
 
     /// <inheritdoc />

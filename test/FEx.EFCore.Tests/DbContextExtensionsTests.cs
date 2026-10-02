@@ -9,12 +9,15 @@ namespace FEx.EFCore.Tests;
 public class DbContextExtensionsTests
 {
     [Fact]
-    public void ExecuteReader_ReturnsValueAndKeepsConnectionState()
+    public void ExecuteReader_ReturnsValueAndLeavesCallerOpenedConnectionOpen()
     {
         using var db = new SqliteMemory();
         using var context = db.CreateContext();
 
         context.ExecuteReader("SELECT 'a' UNION ALL SELECT 'b'").ShouldBe("ab");
+
+        // The caller opened this connection, so ExecuteReader must leave it open.
+        db.Connection.State.ShouldBe(ConnectionState.Open);
     }
 
     [Fact]

@@ -7,6 +7,7 @@ using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using FEx.Sqlx.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Threading.Tasks;
 
 namespace FEx.EFCore.Services;
@@ -37,6 +38,17 @@ public abstract class EFCoreDatabaseBackedService<TDbContext> : BulkDbServiceBas
             return;
 
         await InitializeAsync();
+
+        if (IsInitialized)
+            return;
+
+        // InitializeAsync returns without throwing when an earlier initialization attempt already faulted;
+        // run it again so the real failure reaches the caller instead of a half-initialized service.
+        Reset();
+        await InitializeAsync();
+
+        if (!IsInitialized)
+            throw new InvalidOperationException($"{TypeName} failed to initialize.");
     }
 
     protected override async Task OnInitializeAsync()

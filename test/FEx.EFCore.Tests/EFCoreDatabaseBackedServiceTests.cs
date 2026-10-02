@@ -18,19 +18,57 @@ public class EFCoreDatabaseBackedServiceTests
     [Fact]
     public async Task EnsureIsInitializedAsync_InitializationFails_Throws()
     {
+        using var sut = CreateFailingService();
+
+        var ex = await Should.ThrowAsync<Exception>(sut.Ensure);
+        ex.ToString().ShouldContain("boom");
+    }
+
+    [Fact]
+    public async Task EnsureIsInitializedAsync_CalledAgainAfterFailure_ThrowsAgain()
+    {
+        using var sut = CreateFailingService();
+
+        await Should.ThrowAsync<Exception>(sut.Ensure);
+
+        var ex = await Should.ThrowAsync<Exception>(sut.Ensure);
+        ex.ToString().ShouldContain("boom");
+    }
+
+    [Fact]
+    public async Task EnsureIsInitializedAsync_BackgroundInitializationFaulted_Throws()
+    {
+        using var sut = CreateFailingService();
+
+        sut.BeginInitialization();
+        await WaitUntilFinishedAsync(sut);
+
+        var ex = await Should.ThrowAsync<Exception>(sut.Ensure);
+        ex.ToString().ShouldContain("boom");
+    }
+
+    private static async Task WaitUntilFinishedAsync(TestService sut)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+
+        while (!sut.HasFinishedInitialization && DateTime.UtcNow < deadline)
+            await Task.Delay(10, TestContext.Current.CancellationToken);
+
+        sut.HasFinishedInitialization.ShouldBeTrue();
+    }
+
+    private static TestService CreateFailingService()
+    {
         var dbHelper = Substitute.For<ISqlDbHelper>();
         dbHelper.InitializeAsync().Returns(Task.FromException(new InvalidOperationException("boom")));
 
         var config = Substitute.For<IDbServiceConfig>();
         config.DbConfig.Returns(Substitute.For<IFExDbConfig>());
 
-        using var sut = new TestService(Substitute.For<IScopeProvider>(),
+        return new(Substitute.For<IScopeProvider>(),
             config,
             new(Substitute.For<FEx.Agnostics.Abstractions.Interfaces.IFExLogger>()),
             dbHelper);
-
-        var ex = await Should.ThrowAsync<Exception>(sut.Ensure);
-        ex.ToString().ShouldContain("boom");
     }
 
     private sealed class TestService : EFCoreDatabaseBackedService<TestDbContext>

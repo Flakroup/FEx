@@ -86,7 +86,7 @@ public class ResilientTransaction
         }
         catch
         {
-            await transaction.RollbackAsync();
+            await TryRollbackAsync(transaction, id);
 
             throw;
         }
@@ -113,7 +113,7 @@ public class ResilientTransaction
         }
         catch
         {
-            await transaction.RollbackAsync();
+            await TryRollbackAsync(transaction, id);
 
             throw;
         }
@@ -138,12 +138,37 @@ public class ResilientTransaction
         }
         catch
         {
-            transaction.Rollback();
+            TryRollback(transaction, id);
 
             throw;
         }
 
         return res;
+    }
+
+    // A failed rollback must not replace the exception that made the transaction fail.
+    private async Task TryRollbackAsync(IDbContextTransaction transaction, string id)
+    {
+        try
+        {
+            await transaction.RollbackAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, $"[{id}]\tRollback failed: {ex.Message}");
+        }
+    }
+
+    private void TryRollback(IDbContextTransaction transaction, string id)
+    {
+        try
+        {
+            transaction.Rollback();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, $"[{id}]\tRollback failed: {ex.Message}");
+        }
     }
 
     private async Task<IDbContextTransaction> GetTransactionAsync(DbContext context,

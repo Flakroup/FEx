@@ -68,8 +68,9 @@ public class FlakDynamicObject : DynamicObject, INotifyPropertyChanged
                 : null;
         set
         {
+            // Keys must be unique, so each padding slot gets its own placeholder key.
             while (columnIndex >= Dic.Keys.Count)
-                Dic.Add(string.Empty, null);
+                Dic.Add(string.Empty.PadRight(Dic.Keys.Count + 1), null);
 
             if (Dic[Dic.Keys.ElementAt(columnIndex)] != value)
             {

@@ -31,6 +31,11 @@ public sealed class InterlockedBool
 
     public static bool operator !=(InterlockedBool obj1, bool obj2) => !obj1.Value.Equals(obj2);
 
+    public static bool operator ==(InterlockedBool? obj1, InterlockedBool? obj2) =>
+        ReferenceEquals(obj1, obj2) || obj1 is not null && obj2 is not null && obj1.Equals(obj2);
+
+    public static bool operator !=(InterlockedBool? obj1, InterlockedBool? obj2) => !(obj1 == obj2);
+
     public static bool operator ==(bool obj1, InterlockedBool obj2) => obj1.Equals(obj2.Value);
 
     public static bool operator !=(bool obj1, InterlockedBool obj2) => !obj1.Equals(obj2.Value);

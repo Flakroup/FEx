@@ -24,5 +24,10 @@ public static class JsonExtensions
     public static string SafeSerializeObject(this object initializeParameter) =>
         JsonConvert.SerializeObject(initializeParameter, Formatting.Indented, Settings);
 
-    private static void OnError(object? sender, ErrorEventArgs e) => FExStaticLogger.Error(e.ErrorContext.Error);
+    // Newtonsoft only suppresses the error and carries on when it is marked handled.
+    private static void OnError(object? sender, ErrorEventArgs e)
+    {
+        FExStaticLogger.Error(e.ErrorContext.Error);
+        e.ErrorContext.Handled = true;
+    }
 }

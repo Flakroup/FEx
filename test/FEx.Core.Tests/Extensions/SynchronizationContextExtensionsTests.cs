@@ -11,7 +11,7 @@ using Xunit;
 namespace FEx.Core.Tests.Extensions;
 
 // FExStaticLogger.ErrorLogged is a process-wide event; keep these tests off each other's toes.
-[Collection(nameof(SynchronizationContextExtensionsTests))]
+[Collection(StaticStateCollection.Name)]
 public sealed class SynchronizationContextExtensionsTests
 {
     /// <summary>

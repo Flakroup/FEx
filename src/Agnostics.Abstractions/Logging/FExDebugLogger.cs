@@ -87,9 +87,18 @@ public class FExDebugLogger : IFExLogger
     {
     }
 
-    private static void WriteFormattedMessage(string level, string? message, Exception? exception = null) =>
-        DebugConsole.WriteLine(
-            $"{DateTime.Now.ToString(DateTimeFormat)} [{level}] {message}{Environment.NewLine}{(exception is not null ? exception + Environment.NewLine : string.Empty)}");
+    // Debug.WriteLine is [Conditional("DEBUG")] and vanishes from Release builds, so Warning and above also go to
+    // stderr (as FExSerilogLogger does while Serilog is silent) rather than being lost.
+    private static void WriteFormattedMessage(string level, string? message, Exception? exception = null)
+    {
+        var line =
+            $"{DateTime.Now.ToString(DateTimeFormat)} [{level}] {message}{Environment.NewLine}{(exception is not null ? exception + Environment.NewLine : string.Empty)}";
+
+        DebugConsole.WriteLine(line);
+
+        if (level is WarningLevel or ErrorLevel or CriticalLevel)
+            Console.Error.WriteLine(line);
+    }
 
     private sealed class NullScope : IDisposable
     {

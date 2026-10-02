@@ -97,7 +97,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
                 (outcome, timespan, retryCount, _) =>
                 {
                     _logger.Warning(
-                        $"[FExPolly] Retry {retryCount}/{config.MaxRetryAttempts} after {timespan.TotalSeconds:F1}s due to {(outcome.Exception is not null ? $"exception: {outcome.Exception.Message}" : $"status code: {outcome.Result?.StatusCode}")}");
+                        $"[FExPolly] Retry {retryCount}/{config.MaxRetryAttempts} after {timespan.TotalSeconds:F1}s due to {(outcome.Exception is not null ? $"exception: {UrlLogRedactor.DescribeException(outcome.Exception)}" : $"status code: {outcome.Result?.StatusCode}")}");
                 });
 
     /// <summary>
@@ -165,7 +165,7 @@ public class FExPollyPolicyBuilder : IFExPollyPolicyBuilder
             .FallbackAsync((result, context, _) =>
                 {
                     _logger?.Error(
-                        $"[FExPolly] Fallback activated due to: {result.Exception?.Message ?? "Unknown error"}");
+                        $"[FExPolly] Fallback activated due to: {UrlLogRedactor.DescribeException(result.Exception)}");
 
                     // Future enhancement: Try to get cached response
                     if (context.TryGetValue("CacheKey", out var cacheKey))

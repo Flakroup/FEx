@@ -122,6 +122,62 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
     }
 
     [Fact]
+    public void HelperGetter_WithACtorAssignedField_IsWrittenAsCiphertext_AndRoundTripsUnchanged()
+    {
+        // [CallerMemberName] names the helper, not the property, and no setter ever ran - the converter must
+        // still find the ciphertext rather than fall back to the getter's plaintext.
+        var settings = new HelperSettings();
+
+        var json = settings.ToJson();
+
+        json.ShouldNotContain(Plaintext);
+        json.ShouldContain(settings.RawSecret!);
+        var read = JsonConvert.DeserializeObject<HelperSettings>(json)!;
+        read.Secret.ShouldBe(Plaintext);
+        read.RawSecret.ShouldBe(settings.RawSecret, "the stored ciphertext must be kept, not encrypted again");
+    }
+
+    [Fact]
+    public void GetterThatDecryptsTwoValues_FailsClosed()
+    {
+        var settings = new TwoSecretsSettings();
+        JsonSerializerSettings tolerant = new() { Error = (_, e) => e.ErrorContext.Handled = true };
+
+        Should.Throw<InvalidOperationException>(() => JsonConvert.SerializeObject(settings));
+        var json = JsonConvert.SerializeObject(settings, tolerant);
+
+        json.ShouldNotContain(Plaintext);
+        json.ShouldContain("kept");
+    }
+
+    [Fact]
+    public void HandledSerializerError_OnWrite_SkipsOnlyTheFailingMember()
+    {
+        var settings = new ThrowingFirstSettings { Secret = Plaintext, Visible = "kept" };
+        JsonSerializerSettings tolerant = new() { Error = (_, e) => e.ErrorContext.Handled = true };
+
+        var json = JsonConvert.SerializeObject(settings, tolerant);
+
+        json.ShouldNotContain("Boom");
+        json.ShouldContain("\"Visible\":\"kept\"");
+        json.ShouldContain(settings.RawSecret!);
+    }
+
+    [Fact]
+    public void HandledSerializerError_OnRead_SkipsOnlyTheFailingMember()
+    {
+        var ciphertext = _cipher.Encrypt(Plaintext);
+        var json = $"{{\"Fragile\":\"x\",\"Secret\":\"{ciphertext}\",\"Visible\":\"kept\"}}";
+        JsonSerializerSettings tolerant = new() { Error = (_, e) => e.ErrorContext.Handled = true };
+
+        var read = JsonConvert.DeserializeObject<FragileSettings>(json, tolerant);
+
+        read.ShouldNotBeNull();
+        read.Visible.ShouldBe("kept");
+        read.Secret.ShouldBe(Plaintext);
+    }
+
+    [Fact]
     public async Task ConcurrentSerializationOfOneInstance_NeverWritesPlaintext()
     {
         var ct = TestContext.Current.CancellationToken;
@@ -213,6 +269,10 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
 
         public string Boom => throw new InvalidOperationException("boom");
 
+        public string? Visible { get; set; }
+
+        internal string? RawSecret => _secret;
+
         public string? Secret
         {
             get => DecryptFromSource(_secret);
@@ -280,6 +340,60 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
             if (Throw)
                 throw new InvalidOperationException("callback");
         }
+    }
+
+    /// <summary>Getter and setter go through helpers; the field is assigned in the constructor.</summary>
+    public sealed class HelperSettings : SecureNotifyPropertyChanged
+    {
+        private string? _secret = _cipher.Encrypt(Plaintext);
+
+        public string? Secret
+        {
+            get => Read(_secret);
+            set => Write(ref _secret, value);
+        }
+
+        internal string? RawSecret => _secret;
+
+        protected override FExStringCipher Cipher => _cipher;
+
+        private string? Read(string? source) => DecryptFromSource(source);
+
+        private void Write(ref string? field, string? value) => EncryptSource(ref field, value);
+    }
+
+    public sealed class TwoSecretsSettings : SecureNotifyPropertyChanged
+    {
+        private readonly string _first = _cipher.Encrypt(Plaintext);
+        private readonly string _second = _cipher.Encrypt("other");
+
+        public string Visible => "kept";
+
+        public string Combined => DecryptFromSource(_first) + DecryptFromSource(_second);
+
+        protected override FExStringCipher Cipher => _cipher;
+    }
+
+    /// <summary>Its first member's setter throws on read.</summary>
+    public sealed class FragileSettings : SecureNotifyPropertyChanged
+    {
+        private string? _secret;
+
+        public string? Fragile
+        {
+            get => null;
+            set => throw new InvalidOperationException("fragile");
+        }
+
+        public string? Secret
+        {
+            get => DecryptFromSource(_secret);
+            set => EncryptSource(ref _secret, value);
+        }
+
+        public string? Visible { get; set; }
+
+        protected override FExStringCipher Cipher => _cipher;
     }
 
     public sealed class FieldPatternSettings : SecureNotifyPropertyChanged

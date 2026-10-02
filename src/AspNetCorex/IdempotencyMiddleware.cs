@@ -1,12 +1,14 @@
 using FEx.AspNetCorex.Abstractions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,13 +30,21 @@ namespace FEx.AspNetCorex;
 /// <para>
 /// The response is buffered so it can be both stored and sent, up to
 /// <see cref="IdempotencyOptions.MaxStoredResponseBytes" /> (1 MiB by default). A larger response streams
-/// through to the client untruncated but is not stored, so its retry executes again.
+/// through to the client untruncated, and only the fact that it completed is stored: a retry or a concurrent
+/// request with the same key is answered <c>409 Conflict</c> (problem details, with the original status in
+/// the <c>Idempotency-Original-Status</c> header) and the handler still never runs twice.
 /// </para>
 /// </remarks>
 public sealed class IdempotencyMiddleware
 {
     /// <summary>The request header carrying the client-generated idempotency key (a GUID).</summary>
     public const string HeaderName = "Idempotency-Key";
+
+    /// <summary>
+    /// On a <c>409</c> for a request that already completed but whose response was too large to replay: the
+    /// status the original execution returned.
+    /// </summary>
+    public const string OriginalStatusHeaderName = "Idempotency-Original-Status";
 
     private static readonly TimeSpan ResponseLifetime = TimeSpan.FromHours(24);
 
@@ -55,7 +65,6 @@ public sealed class IdempotencyMiddleware
     {
     }
 
-    [ActivatorUtilitiesConstructor]
     public IdempotencyMiddleware(
         RequestDelegate next,
         ILogger<IdempotencyMiddleware> logger,
@@ -160,22 +169,19 @@ public sealed class IdempotencyMiddleware
                 return;
 
             if (bytes is null)
-            {
                 _logger.LogInformation(
-                    "Idempotency response for {IdempotencyKey} (user {UserId}) exceeded {MaxStoredResponseBytes} bytes; sent but not stored, so a retry executes again",
+                    "Idempotency response for {IdempotencyKey} (user {UserId}) exceeded {MaxStoredResponseBytes} bytes; sent in full, but only its completion is stored - a retry gets 409 instead of a replay",
                     key,
                     userId,
                     _maxStoredResponseBytes);
-
-                return;
-            }
 
             await store.SetAsync(storeKey,
                 new IdempotentResponse
                 {
                     StatusCode = context.Response.StatusCode,
                     ContentType = context.Response.ContentType ?? "application/json",
-                    Body = bytes
+                    Body = bytes ?? [],
+                    BodyNotStored = bytes is null
                 },
                 ResponseLifetime,
                 // Not context.RequestAborted: the client that just got a successful response can
@@ -193,6 +199,25 @@ public sealed class IdempotencyMiddleware
     private async Task ReplayAsync(HttpContext context, IdempotentResponse stored, Guid key, string userId)
     {
         _logger.LogInformation("Idempotency hit {IdempotencyKey} for user {UserId}", key, userId);
+
+        if (stored.BodyNotStored)
+        {
+            // The write happened; only its response is gone. Refuse rather than run the handler again.
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+            context.Response.ContentType = "application/problem+json";
+            context.Response.Headers[OriginalStatusHeaderName] = stored.StatusCode.ToString(CultureInfo.InvariantCulture);
+
+            await context.Response.Body.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object>
+            {
+                ["title"] = "Request already completed",
+                ["status"] = StatusCodes.Status409Conflict,
+                ["detail"] =
+                    $"A request with this {HeaderName} already completed with status {stored.StatusCode}; its response was too large to keep for replay, so it is not executed again."
+            }));
+
+            return;
+        }
+
         context.Response.StatusCode = stored.StatusCode;
         context.Response.ContentType = stored.ContentType;
         await context.Response.Body.WriteAsync(stored.Body);

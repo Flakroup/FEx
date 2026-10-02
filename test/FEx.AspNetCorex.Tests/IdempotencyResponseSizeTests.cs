@@ -19,7 +19,8 @@ namespace FEx.AspNetCorex.Tests;
 /// <summary>
 /// The defect these exist for: every keyed POST was buffered whole into an unbounded MemoryStream and stored
 /// as-is, so a large response pinned unbounded memory per request and in the 24-hour cache. A response over
-/// the cap must still reach the client in full, must not be stored, and the skip must be logged.
+/// the cap must still reach the client in full and must not be stored - but its completion must be, so the
+/// write still never executes twice.
 /// </summary>
 // Runs the middleware, so it shares the static in-flight lock dictionary with the other middleware tests.
 [Collection(IdempotencyLockCollection.Name)]
@@ -28,7 +29,7 @@ public sealed class IdempotencyResponseSizeTests
     private static readonly Guid Key = Guid.Parse("0b0f4c55-0ad6-4bd2-9a8a-1d1d6a2a6b01");
 
     [Fact]
-    public async Task ResponseOverTheCap_ReachesTheClientWhole_IsNotStored_AndIsLogged()
+    public async Task ResponseOverTheCap_ReachesTheClientWhole_AndARetryIsRefused_NotExecutedAgain()
     {
         using MemoryCache cache = new(new MemoryCacheOptions());
         RecordingLogger logger = new();
@@ -37,6 +38,7 @@ public sealed class IdempotencyResponseSizeTests
             async context =>
             {
                 executions++;
+                context.Response.StatusCode = StatusCodes.Status201Created;
 
                 // Several writes, so the spill happens mid-body rather than on the first write.
                 for (var i = 0; i < 5; i++)
@@ -52,8 +54,102 @@ public sealed class IdempotencyResponseSizeTests
         await middleware.InvokeAsync(retry, store);
 
         Body(first).ShouldBe(string.Concat(Enumerable.Repeat("0123456789", 5)));
-        executions.ShouldBe(2, "an unstored response cannot be replayed, so the retry executes again");
-        logger.Entries.ShouldContain(e => e.Level == LogLevel.Information && e.Message.Contains("not stored"));
+        first.Response.StatusCode.ShouldBe(StatusCodes.Status201Created);
+        executions.ShouldBe(1, "a completed write must never run twice, replayable or not");
+        retry.Response.StatusCode.ShouldBe(StatusCodes.Status409Conflict);
+        retry.Response.ContentType.ShouldBe("application/problem+json");
+        retry.Response.Headers[IdempotencyMiddleware.OriginalStatusHeaderName].ToString().ShouldBe("201");
+        Body(retry).ShouldContain("too large");
+        logger.Entries.ShouldContain(e => e.Level == LogLevel.Information && e.Message.Contains("409"));
+    }
+
+    [Fact]
+    public async Task ConcurrentSameKeyRequest_OverTheCap_WaitsAndIsRefused_NotExecutedAgain()
+    {
+        using MemoryCache cache = new(new MemoryCacheOptions());
+        TaskCompletionSource inside = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var executions = 0;
+        var middleware = new IdempotencyMiddleware(
+            async context =>
+            {
+                Interlocked.Increment(ref executions);
+                inside.TrySetResult();
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+                await release.Task;
+#pragma warning restore VSTHRD003
+                await context.Response.WriteAsync(new string('x', 100));
+            },
+            new RecordingLogger(),
+            Options.Create(new IdempotencyOptions { MaxStoredResponseBytes = 10 }));
+        MemoryCacheIdempotencyStore store = new(cache);
+
+        var first = PostContext();
+        var firstRun = middleware.InvokeAsync(first, store);
+        await inside.Task;
+        var second = PostContext();
+        var secondRun = middleware.InvokeAsync(second, store);
+        release.SetResult();
+        await Task.WhenAll(firstRun, secondRun);
+
+        executions.ShouldBe(1);
+        Body(first).Length.ShouldBe(100);
+        second.Response.StatusCode.ShouldBe(StatusCodes.Status409Conflict);
+    }
+
+    [Fact]
+    public async Task SynchronousWritesOverTheCap_StillReachTheClientWhole()
+    {
+        using MemoryCache cache = new(new MemoryCacheOptions());
+        var middleware = new IdempotencyMiddleware(
+            context =>
+            {
+                for (var i = 0; i < 5; i++)
+                    context.Response.Body.Write("0123456789"u8);
+
+                return Task.CompletedTask;
+            },
+            new RecordingLogger(),
+            Options.Create(new IdempotencyOptions { MaxStoredResponseBytes = 25 }));
+
+        var context = PostContext();
+        await middleware.InvokeAsync(context, new MemoryCacheIdempotencyStore(cache));
+
+        Body(context).ShouldBe(string.Concat(Enumerable.Repeat("0123456789", 5)));
+    }
+
+    [Fact]
+    public async Task Flush_WhileBuffering_DoesNotReachTheClient_ButDoesOnceStreaming()
+    {
+        using MemoryCache cache = new(new MemoryCacheOptions());
+        FlushCountingStream client = new();
+        var flushesWhileBuffering = -1;
+        var middleware = new IdempotencyMiddleware(
+            async context =>
+            {
+                await context.Response.Body.WriteAsync("0123"u8.ToArray());
+                await context.Response.Body.FlushAsync();
+#pragma warning disable VSTHRD103 // the synchronous Flush override is what is under test
+                context.Response.Body.Flush();
+#pragma warning restore VSTHRD103
+                flushesWhileBuffering = client.Flushes;
+
+                await context.Response.Body.WriteAsync(new byte[50]);
+                await context.Response.Body.FlushAsync();
+#pragma warning disable VSTHRD103 // the synchronous Flush override is what is under test
+                context.Response.Body.Flush();
+#pragma warning restore VSTHRD103
+            },
+            new RecordingLogger(),
+            Options.Create(new IdempotencyOptions { MaxStoredResponseBytes = 10 }));
+
+        var context = PostContext();
+        context.Response.Body = client;
+        await middleware.InvokeAsync(context, new MemoryCacheIdempotencyStore(cache));
+
+        flushesWhileBuffering.ShouldBe(0, "a flush while buffering would start the response early");
+        client.Flushes.ShouldBeGreaterThan(0, "once streaming, a flush must reach the client");
+        client.Length.ShouldBe(54);
     }
 
     [Fact]
@@ -93,7 +189,9 @@ public sealed class IdempotencyResponseSizeTests
         await middleware.InvokeAsync(context, store);
 
         context.Response.Body.Length.ShouldBe(big.Length);
-        cache.Count.ShouldBe(0);
+        var stored = await store.TryGetAsync($"idempotency:user-1:{Key:N}", TestContext.Current.CancellationToken);
+        stored.ShouldNotBeNull().BodyNotStored.ShouldBeTrue();
+        stored.Body.ShouldBeEmpty();
     }
 
     [Fact]
@@ -110,7 +208,9 @@ public sealed class IdempotencyResponseSizeTests
         var middleware = ActivatorUtilities.CreateInstance<IdempotencyMiddleware>(provider, next);
         await middleware.InvokeAsync(PostContext(), scope.ServiceProvider.GetRequiredService<IIdempotencyStore>());
 
-        provider.GetRequiredService<IMemoryCache>().ShouldBeOfType<MemoryCache>().Count.ShouldBe(0);
+        var stored = await scope.ServiceProvider.GetRequiredService<IIdempotencyStore>()
+                                .TryGetAsync($"idempotency:user-1:{Key:N}", TestContext.Current.CancellationToken);
+        stored.ShouldNotBeNull().BodyNotStored.ShouldBeTrue("the configured 4-byte cap applies, not the 1 MiB default");
     }
 
     [Fact]
@@ -147,6 +247,24 @@ public sealed class IdempotencyResponseSizeTests
         using StreamReader reader = new(context.Response.Body, leaveOpen: true);
 
         return reader.ReadToEnd();
+    }
+
+    private sealed class FlushCountingStream : MemoryStream
+    {
+        public int Flushes { get; private set; }
+
+        public override void Flush()
+        {
+            Flushes++;
+            base.Flush();
+        }
+
+        public override Task FlushAsync(CancellationToken cancellationToken)
+        {
+            Flushes++;
+
+            return base.FlushAsync(cancellationToken);
+        }
     }
 
     private sealed class RecordingLogger : ILogger<IdempotencyMiddleware>

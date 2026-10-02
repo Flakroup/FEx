@@ -8,6 +8,8 @@ namespace FEx.Logging.Tests;
 /// <summary>
 /// Tests to verify Serilog is correctly configured via IFExLoggingConfigurator.
 /// </summary>
+// Configure() replaces the process-wide Log.Logger, so this must not run beside the other tests that swap it.
+[Collection(FExStaticLoggerCollection.Name)]
 public sealed class SerilogConfigurationTests
 {
     [Fact]

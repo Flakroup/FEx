@@ -4,6 +4,8 @@ using Xunit;
 
 namespace FEx.Logging.Tests;
 
+// Configure() replaces the process-wide Log.Logger, so this must not run beside the other tests that swap it.
+[Collection(FExStaticLoggerCollection.Name)]
 public sealed class LoggingConfigurationTests
 {
     [Fact]

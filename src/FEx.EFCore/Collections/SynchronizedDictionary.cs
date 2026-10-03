@@ -8,7 +8,6 @@ using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -34,10 +33,10 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 {
     protected readonly IEFCoreDatabaseBackedService<TDbCtx> _dbSrv;
     private readonly Func<TValue, IObservable<object>>[]? _observables;
-    // The cached instance this thread is copying database values into; the subscription drops the Refresh changes
-    // that copy raises. Thread-scoped, so a concurrent edit of the same key on another thread is still saved.
+    // The instance ReloadAsync is putting into (or taking out of) the cache on this thread; SourceCache publishes the
+    // edit before it returns, so the subscription sees that change here and drops it instead of saving it.
     [ThreadStatic]
-    private static TValue? t_writeBackTarget;
+    private static TValue? t_reloadTarget;
     private bool _isDisposed;
     private string[] _observedProperties;
     private IDisposable? _cacheSubscription;
@@ -47,6 +46,14 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     public bool UseIndex { get; protected set; }
 
     public int Count => Cache.Count;
+
+    /// <summary>
+    /// Raised once per cached change that was not saved because another writer changed the same row. The cached value
+    /// keeps the rejected values and its stale concurrency token, so later edits of the key are rejected too until
+    /// <see cref="ReloadAsync" /> replaces it. Raised on the save thread (a thread-pool thread); an exception from a
+    /// handler is logged and does not affect the save or the other handlers.
+    /// </summary>
+    public event EventHandler<CacheConflict<TKey, TValue>>? ConflictDetected;
 
     public TValue this[TKey key] => Cache.Lookup(key).Value;
 
@@ -148,6 +155,57 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     public void AddOrUpdateValue(TValue value) => Cache.AddOrUpdate(value);
 
+    /// <summary>
+    /// Replaces the cached value of <paramref name="key" /> with the row as it is in the database, loaded with the
+    /// dictionary's normal query (<see cref="IncludeInEntity" /> and <see cref="LoadEntityAsync" />), or removes the
+    /// entry when the row no longer exists. The replacement is not saved back. Call it when a
+    /// <see cref="ConflictDetected" /> conflict is resolved, from the thread that owns the cached values.
+    /// </summary>
+    /// <returns>The new cached value, or <c>null</c> when the row no longer exists.</returns>
+    public async Task<TValue?> ReloadAsync(TKey key, CancellationToken cancellationToken = default)
+    {
+        var fresh = await _dbSrv.RunTaskInDbContextAsync(async ctx =>
+            {
+                var entity = await IncludeInEntity(DbSetAccessor(ctx).Where(HasKey(key)))
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                return entity is null ? null : await LoadEntityAsync(ctx, entity);
+            },
+            $"Failed to reload entry matching key {key}",
+            false,
+            false);
+
+        var current = Cache.Lookup(key);
+        t_reloadTarget = fresh ?? (current.HasValue ? current.Value : null);
+
+        try
+        {
+            if (fresh is not null)
+            {
+                Cache.AddOrUpdate(fresh);
+                OnRetrievedNew(fresh);
+            }
+            else if (current.HasValue)
+            {
+                Cache.Remove(key);
+            }
+        }
+        finally
+        {
+            t_reloadTarget = null;
+        }
+
+        if (UseIndex)
+        {
+            if (fresh is null)
+                RemoveKeyFromIndex(key);
+            else
+                AddKeyToIndex(key);
+        }
+
+        return fresh;
+    }
+
     public async Task EnsureKeysIndexAsync() => await _dbSrv.RunTaskInDbContextAsync(EnsureKeysIndexAsync);
 
     public async Task WaitForCacheTasksAsync()
@@ -213,7 +271,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         _cacheSubscription?.Dispose();
 
-        _cacheSubscription = cacheObservable.Select(WithoutWriteBacks)
+        _cacheSubscription = cacheObservable.Select(WithoutReloads)
             .Buffer(TimeSpan.FromMilliseconds(100))
             .Where(x => x.Count > 0 && x.Any(c => c.Count > 0))
             .Select(x =>
@@ -255,12 +313,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             }
             else if (entityInfo.Reason is ChangeReason.Refresh or ChangeReason.Update or ChangeReason.Add)
             {
-                if (entityInfo.Snapshot is null
-                    && dbContext.Model.FindEntityType(entityInfo.Value.GetType()) is { } entityType)
-                    entityInfo.Snapshot = EntityRefresh.Snapshot(entityType, entityInfo.Value);
-
                 if (entityInfo.ExistsInDb)
-                    set.Update(entityInfo.Value);
+                    AttachAsModified(dbContext, entityInfo.Value);
                 else
                     await set.AddAsync(entityInfo.Value);
             }
@@ -403,8 +457,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     /// reloaded against the database and the rest of it is retried:
     /// <list type="bullet">
     /// <item>
-    /// a row another writer changed is surfaced: its change is logged at error level and not saved, and the row
-    /// from the database is copied into the cached instance, so a later edit of the key is saved;
+    /// a row another writer changed is surfaced: its change is logged at error level, not saved, and raised through
+    /// <see cref="ConflictDetected" />; the cached value is left as it is until <see cref="ReloadAsync" />;
     /// </item>
     /// <item>a row another writer deleted is re-added only while its key is still cached.</item>
     /// </list>
@@ -451,7 +505,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 allSaved &= rejected.Count == 0;
 
                 if (rejected.Count > 0)
-                    await WriteBackWinningValuesAsync(rejected);
+                    await NotifyConflictsAsync(rejected);
             }
         }
 
@@ -499,112 +553,74 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     }
 
     /// <summary>
-    /// Refreshes the cached instances of rejected changes in place from a no-tracking reload of the rows that won in
-    /// the database, so the next edit of those keys is saved instead of conflicting again. References callers hold,
-    /// the property-change subscription and unmapped state are kept.
-    /// <para>
-    /// Deliberately narrow (see <see cref="EntityRefresh" />): scalar properties and owned references of the runtime
-    /// type are copied, related entities are never replaced. The concurrency token is refreshed only together with the
-    /// whole graph. The instance is left untouched, keeping its stale token so the next save is rejected and logged
-    /// again, when the key is no longer cached under it, when it was edited since it was sent to the database, when its
-    /// runtime type is unmapped or no longer matches the row, or when <see cref="EntityRefresh.TryPlan" /> refuses.
-    /// </para>
-    /// <para>
-    /// Like the rest of the save pipeline this runs on a thread-pool thread, so the instance raises PropertyChanged
-    /// there. An exception from a setter or a subscriber is logged and does not stop the rest of the batch.
-    /// </para>
+    /// Attaches a cached entity to be saved. <c>DbSet.Update</c> marks every reachable entity Modified, which writes a
+    /// stale cached principal (a loaded reference navigation, say) over another writer's committed changes. Only the
+    /// root and the owned entities it carries are Modified; other reachable entities attach Unchanged, or Added when
+    /// their key is not set yet.
     /// </summary>
-    private async Task WriteBackWinningValuesAsync(List<ChangeInfo<TKey, TValue>> rejected)
-    {
-        var candidates = rejected.Where(c => c.Snapshot is not null
-                                             && Cache.Lookup(c.Key) is { HasValue: true } cached
-                                             && ReferenceEquals(cached.Value, c.Value))
-            .ToDictionary(c => c.Key);
+    private static void AttachAsModified(TDbCtx dbContext, TValue root) =>
+        dbContext.ChangeTracker.TrackGraph(root, node =>
+            node.Entry.State = ReferenceEquals(node.Entry.Entity, root)
+                ? EntityState.Modified
+                : node.Entry.Metadata.IsOwned()
+                    ? node.SourceEntry?.State ?? EntityState.Unchanged
+                    : node.Entry.IsKeySet
+                        ? EntityState.Unchanged
+                        : EntityState.Added);
 
-        if (candidates.Count == 0)
+    private async Task NotifyConflictsAsync(List<ChangeInfo<TKey, TValue>> rejected)
+    {
+        if (ConflictDetected is null)
             return;
 
-        var keys = new HashSet<TKey>(candidates.Keys);
-        List<TValue> winners;
-        IModel model;
+        var keys = new HashSet<TKey>(rejected.Select(c => c.Key));
+        var rows = new Dictionary<TKey, TValue>();
 
         try
         {
-            (winners, model) = await _dbSrv.RunTaskInDbContextAsync(async ctx =>
-                {
-                    var rows = await DbSetAccessor(ctx).AsNoTracking().Where(KeyIsIn(keys)).ToListAsync();
-
-                    return (rows, ctx.Model);
-                },
-                null,
-                false,
-                false);
+            foreach (var row in await _dbSrv.RunTaskInDbContextAsync(
+                         ctx => IncludeInEntity(DbSetAccessor(ctx).AsNoTracking().Where(KeyIsIn(keys))).ToListAsync(),
+                         null,
+                         false,
+                         false))
+                rows[KeyRetriver(row)] = row;
         }
         catch (Exception ex)
         {
             _logger.Error(ex,
-                $"{TypeName}: could not reload the rows of rejected changes, keys [{string.Join(", ", keys)}] keep stale cached values");
-
-            return;
+                $"{TypeName}: could not read the database values of rejected changes, keys [{string.Join(", ", keys)}]");
         }
 
-        foreach (var winner in winners)
+        foreach (var change in rejected)
+            RaiseConflict(new(change.Key, change.Value, rows.TryGetValue(change.Key, out var row) ? row : null));
+    }
+
+    // Each handler in isolation: a throwing one must not stop the others or the save loop.
+    private void RaiseConflict(CacheConflict<TKey, TValue> conflict)
+    {
+        if (ConflictDetected is not { } handlers)
+            return;
+
+        foreach (var handler in handlers.GetInvocationList().Cast<EventHandler<CacheConflict<TKey, TValue>>>())
         {
-            var change = candidates[KeyRetriver(winner)];
-            var cached = change.Value;
-            var entityType = winner.GetType() == cached.GetType() ? model.FindEntityType(cached.GetType()) : null;
-
-            if (entityType is null)
-            {
-                _logger.Warning(
-                    $"{TypeName}: the cached value for key {change.Key} does not match a mapped type of the reloaded row, it keeps the stale values");
-
-                continue;
-            }
-
-            if (!EntityRefresh.Matches(entityType, cached, change.Snapshot!))
-            {
-                _logger.Warning(
-                    $"{TypeName}: the cached value for key {change.Key} was edited after its rejected save, it keeps the stale values so that edit is rejected too");
-
-                continue;
-            }
-
-            var plan = EntityRefresh.TryPlan(entityType, winner, cached);
-
-            if (plan is null)
-            {
-                _logger.Warning(
-                    $"{TypeName}: the cached value for key {change.Key} cannot be fully refreshed from the database, it keeps the stale values");
-
-                continue;
-            }
-
-            t_writeBackTarget = cached;
-
             try
             {
-                plan.Apply();
+                handler(this, conflict);
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, $"{TypeName}: refreshing the cached value for key {change.Key} failed");
-            }
-            finally
-            {
-                t_writeBackTarget = null;
+                _logger.Error(ex, $"{TypeName}: a ConflictDetected handler failed for key {conflict.Key}");
             }
         }
     }
 
-    private static IChangeSet<TValue, TKey> WithoutWriteBacks(IChangeSet<TValue, TKey> changeSet)
+    private static IChangeSet<TValue, TKey> WithoutReloads(IChangeSet<TValue, TKey> changeSet)
     {
-        var target = t_writeBackTarget;
+        var target = t_reloadTarget;
 
         return target is null
             ? changeSet
-            : new ChangeSet<TValue, TKey>(changeSet.Where(c =>
-                c.Reason != ChangeReason.Refresh || !ReferenceEquals(c.Current, target)));
+            : new ChangeSet<TValue, TKey>(changeSet.Where(c => !ReferenceEquals(c.Current, target)));
     }
 
     private void UpdateIndex(List<ChangeInfo<TKey, TValue>> changes)

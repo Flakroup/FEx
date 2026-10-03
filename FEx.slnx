@@ -112,6 +112,9 @@
     <Project Path="test/FEx.FTPx.Tests/FEx.FTPx.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.MSBuildx.Tests/FEx.MSBuildx.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.Json.Tests/FEx.Json.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>

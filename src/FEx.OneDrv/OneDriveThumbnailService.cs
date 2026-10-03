@@ -88,21 +88,8 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
         var cachePath = Path.Combine(_cacheDir, $"{cacheStem}.{GetExtension(mediaType)}");
         Directory.CreateDirectory(_cacheDir);
 
-        // Write to a temp file first and move it into place, so a cancelled or crashed write can never leave a
-        // truncated file that later passes for a cache hit.
-        var tempPath = cachePath + ".tmp";
+        await TryWriteCacheAsync(cachePath, bytes, cancellationToken);
 
-#if NETSTANDARD
-        await Task.Run(() => File.WriteAllBytes(tempPath, bytes), cancellationToken);
-
-        if (File.Exists(cachePath))
-            File.Delete(cachePath);
-
-        File.Move(tempPath, cachePath);
-#else
-        await File.WriteAllBytesAsync(tempPath, bytes, cancellationToken);
-        File.Move(tempPath, cachePath, true);
-#endif
         _logger.Information($"Cached thumbnail for item {itemId}");
 
         return bytes;
@@ -149,6 +136,43 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
             "image/jpeg" or "image/jpg" => "jpg",
             _ => "bin"
         };
+
+    // Best effort: the bytes are already downloaded, so a failed cache write must not fail the call. Each write uses its
+    // own temp file (concurrent callers for the same item must not share a handle) and moves it into place, so a
+    // cancelled or crashed write can never leave a truncated file that later passes for a cache hit.
+    private async Task TryWriteCacheAsync(string cachePath, byte[] bytes, CancellationToken cancellationToken)
+    {
+        var tempPath = $"{cachePath}.{Guid.NewGuid():N}.tmp";
+
+        try
+        {
+#if NETSTANDARD
+            await Task.Run(() => File.WriteAllBytes(tempPath, bytes), cancellationToken);
+
+            if (File.Exists(cachePath))
+                File.Delete(cachePath);
+
+            File.Move(tempPath, cachePath);
+#else
+            await File.WriteAllBytesAsync(tempPath, bytes, cancellationToken);
+            File.Move(tempPath, cachePath, true);
+#endif
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _logger.Warning($"Could not cache thumbnail at {cachePath}: {ex.Message}");
+
+            try
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+            catch (Exception cleanup) when (cleanup is IOException or UnauthorizedAccessException)
+            {
+                // Nothing more to do; a stray .tmp file is never served.
+            }
+        }
+    }
 
     // An empty file or one that is locked by a concurrent writer counts as a miss, never as data or an error.
     private async Task<byte[]?> TryReadCachedAsync(string cacheStem, CancellationToken cancellationToken)

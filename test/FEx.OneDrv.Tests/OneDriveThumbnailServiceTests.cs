@@ -144,6 +144,31 @@ public sealed class OneDriveThumbnailServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task GetThumbnailAsync_CacheWriteFails_StillReturnsBytesAndLeavesNoTempFile()
+    {
+        // A directory at the final cache path makes the move fail on every OS.
+        var blocked = Path.Combine(_dir, "thumbnails", OneDriveThumbnailService.GetCacheStem("item", ThumbnailSize.Medium) + ".png");
+        Directory.CreateDirectory(blocked);
+
+        var bytes = await Create().GetThumbnailAsync("item", TestContext.Current.CancellationToken);
+
+        bytes.ShouldBe([1, 2, 3]);
+        Directory.GetFiles(Path.Combine(_dir, "thumbnails")).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetThumbnailAsync_ConcurrentCallsForSameItem_BothSucceed()
+    {
+        var service = Create();
+
+        var results = await Task.WhenAll(Enumerable.Range(0, 8)
+            .Select(_ => service.GetThumbnailAsync("item", TestContext.Current.CancellationToken)));
+
+        results.ShouldAllBe(r => r != null && r.Length == 3);
+        CachedFiles().ShouldAllBe(f => !f.EndsWith(".tmp"));
+    }
+
+    [Fact]
     public async Task GetThumbnailAsync_SizeMissingInGraphResponse_ReturnsNullWithoutDownload()
     {
         var graph = new FakeGraph(_ => FakeGraph.Json("""{"value":[{"id":"0","medium":{"url":"https://t/medium"}}]}"""));

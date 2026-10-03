@@ -10,8 +10,12 @@ using System.Runtime.CompilerServices;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Extensions available on any object, covering emptiness checks, range and set membership tests and property helpers.</summary>
 public static class ObjectExtensions
 {
+    /// <summary>Determines whether an object is null, an empty string, an empty collection or an empty sequence</summary>
+    /// <param name="data">The object to test.</param>
+    /// <returns><c>true</c> if the object is null or empty.</returns>
     [ContractAnnotation("null => true")]
     public static bool IsNullOrEmpty(this object data) =>
         data switch
@@ -151,15 +155,30 @@ public static class ObjectExtensions
         // Reflection boundary: the retrieved property value is cast back to T (null when the property is absent/null).
         (T)obj.GetType().GetProperty(name)?.GetValue(obj, index)!;
 
+    /// <summary>Casts an object to a type</summary>
+    /// <typeparam name="T">The target type.</typeparam>
+    /// <param name="value">The object to cast.</param>
+    /// <returns>The cast value, or the default of <typeparamref name="T" /> when <paramref name="value" /> is null.</returns>
     [return: MaybeNull]
     public static T GetObject<T>(this object value) =>
         value is not null
             ? (T)value
             : default;
 
+    /// <summary>Gets the description from the <see cref="DescriptionAttribute" /> declared on the type of an object</summary>
+    /// <param name="value">The object whose type is inspected.</param>
+    /// <returns>The description, or null when the attribute is missing.</returns>
     public static string? GetTypeInstanceDescription(this object value) =>
         value.GetType().GetTypeCustomAttribute<DescriptionAttribute>()?.FindInEnumerable()?.Description;
 
+    /// <summary>Determines whether an item lies between two bounds using the default comparer</summary>
+    /// <typeparam name="T">The item type.</typeparam>
+    /// <param name="item">The item to test.</param>
+    /// <param name="start">The lower bound.</param>
+    /// <param name="end">The upper bound.</param>
+    /// <param name="inclusive">When true the bounds are included.</param>
+    /// <returns><c>true</c> if the item is within the range.</returns>
+    /// <exception cref="ArgumentException"><paramref name="start" /> is greater than <paramref name="end" />.</exception>
     public static bool IsBetween<T>(this T item, T start, T end, bool inclusive = false) =>
         Comparer<T>.Default.Compare(start, end) > 0 ? throw new ArgumentException("Given parameters create no range") :
         inclusive ? Comparer<T>.Default.Compare(item, start) >= 0 && Comparer<T>.Default.Compare(item, end) <= 0 :
@@ -176,6 +195,11 @@ public static class ObjectExtensions
     /// </returns>
     public static bool IsIn<T>(this T item, params T[] items) => item.IsIn((IEnumerable<T>)items);
 
+    /// <summary>Determines whether an item is contained in a sequence</summary>
+    /// <typeparam name="T">The item type.</typeparam>
+    /// <param name="item">The item to look for.</param>
+    /// <param name="items">The sequence to search.</param>
+    /// <returns><c>true</c> if the sequence contains the item.</returns>
     public static bool IsIn<T>(this T item, IEnumerable<T> items) =>
         items switch
         {
@@ -184,8 +208,18 @@ public static class ObjectExtensions
             _ => items.Contains(item)
         };
 
+    /// <summary>Determines whether an item is not one of the given items</summary>
+    /// <typeparam name="T">The item type.</typeparam>
+    /// <param name="item">The item to look for.</param>
+    /// <param name="items">The items to search.</param>
+    /// <returns><c>true</c> if none of the items equals <paramref name="item" />.</returns>
     public static bool IsNotIn<T>(this T item, params T[] items) => item.IsNotIn((IEnumerable<T>)items);
 
+    /// <summary>Determines whether an item is not contained in a sequence</summary>
+    /// <typeparam name="T">The item type.</typeparam>
+    /// <param name="item">The item to look for.</param>
+    /// <param name="items">The sequence to search.</param>
+    /// <returns><c>true</c> if the sequence does not contain the item.</returns>
     public static bool IsNotIn<T>(this T item, IEnumerable<T> items) => !item.IsIn(items);
 
     /// <summary>
@@ -200,10 +234,29 @@ public static class ObjectExtensions
         yield return item;
     }
 
+    /// <summary>Determines whether a field already holds a value</summary>
+    /// <typeparam name="T">The field type.</typeparam>
+    /// <param name="field">The field to compare.</param>
+    /// <param name="value">The value to compare with.</param>
+    /// <returns><c>true</c> if the field equals the value.</returns>
     public static bool IsEqual<T>(ref T field, T value) => EqualityHelper.IsEqual(ref field, value);
 
+    /// <summary>Determines whether a field differs from a value</summary>
+    /// <typeparam name="T">The field type.</typeparam>
+    /// <param name="field">The field to compare.</param>
+    /// <param name="value">The value to compare with.</param>
+    /// <returns><c>true</c> if the field differs from the value.</returns>
     public static bool IsNotEqual<T>(ref T field, T value) => EqualityHelper.IsNotEqual(ref field, value);
 
+    /// <summary>Sets a backing field when the value changed and then calls a notification callback</summary>
+    /// <typeparam name="TSender">The sender type.</typeparam>
+    /// <typeparam name="T">The field type.</typeparam>
+    /// <param name="sender">The object that owns the field.</param>
+    /// <param name="backingField">The backing field to update.</param>
+    /// <param name="newValue">The new value.</param>
+    /// <param name="onPropertyChanged">Called with the sender, property name and new value after a change.</param>
+    /// <param name="propertyName">The property name; the caller member name by default.</param>
+    /// <returns><c>true</c> if the field was changed.</returns>
     public static bool SetObjectProperty<TSender, T>(this TSender sender,
                                                      ref T backingField,
                                                      T newValue,
@@ -218,6 +271,15 @@ public static class ObjectExtensions
         return true;
     }
 
+    /// <summary>Sets a backing field when the value changed and then calls an optional notification callback</summary>
+    /// <typeparam name="TSender">The type that implements <see cref="System.ComponentModel.INotifyPropertyChanged" />.</typeparam>
+    /// <typeparam name="TRet">The field type.</typeparam>
+    /// <param name="_">The object that owns the field.</param>
+    /// <param name="backingField">The backing field to update.</param>
+    /// <param name="newValue">The new value.</param>
+    /// <param name="onPropertyChanged">Called with the property name and new value after a change.</param>
+    /// <param name="propertyName">The property name; the caller member name by default.</param>
+    /// <returns><c>true</c> if the field was changed; <c>false</c> when it is unchanged or no property name is available.</returns>
     public static bool SetProperty<TSender, TRet>(this TSender _,
                                                   ref TRet backingField,
                                                   TRet newValue,

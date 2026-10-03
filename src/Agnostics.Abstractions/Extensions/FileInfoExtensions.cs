@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Extensions for zipping, hashing and buffering files.</summary>
 public static class FileInfoExtensions
 {
     private static readonly int _defBufferSize =
@@ -48,6 +49,12 @@ public static class FileInfoExtensions
             deleteTempDirectory,
             overwrite);
 
+    /// <summary>Compresses a file into a zip archive containing only that file.</summary>
+    /// <param name="file">The file to compress.</param>
+    /// <param name="zipFile">The archive to create; <c>&lt;file name&gt;.zip</c> next to the file when null.</param>
+    /// <param name="deleteTempDirectory">Whether an existing temporary working directory is deleted first.</param>
+    /// <param name="overwrite">Whether an existing archive is replaced.</param>
+    /// <returns>The created archive.</returns>
     public static async Task<FileInfo> ZipAsync(this FileInfo file,
                                                 FileInfo? zipFile = null,
                                                 bool deleteTempDirectory = false,
@@ -98,6 +105,12 @@ public static class FileInfoExtensions
         return zipFile;
     }
 
+    /// <summary>Computes the MD5 hash of a file's content.</summary>
+    /// <param name="file">The file to hash.</param>
+    /// <param name="removeDashes">Whether to remove the dashes between hex bytes.</param>
+    /// <param name="toLower">Whether to lower-case the hex text.</param>
+    /// <param name="asBase64String">Whether to return Base64 instead of hex.</param>
+    /// <returns>The formatted hash, or null when the file does not exist.</returns>
     public static string? GenerateMd5OfFile(this FileInfo file,
                                            bool removeDashes = true,
                                            bool toLower = true,
@@ -119,6 +132,9 @@ public static class FileInfoExtensions
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }
 
+    /// <summary>Determines whether a file is on an NTFS volume.</summary>
+    /// <param name="file">The file to test.</param>
+    /// <returns><c>true</c> if the volume uses NTFS.</returns>
     public static bool IsNtfs(this FileInfo file) => FileSystemHelper.IsPathNtfs(file.FullName);
 
     /// <summary>
@@ -143,6 +159,9 @@ public static class FileInfoExtensions
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }
 
+    /// <summary>Reads a file into a memory stream.</summary>
+    /// <param name="file">The file to read.</param>
+    /// <returns>A memory stream positioned at the start, or null when the file does not exist.</returns>
     public static async Task<MemoryStream?> ToMemoryStreamAsync(this FileInfo file)
     {
         file.Refresh();

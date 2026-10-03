@@ -2,8 +2,10 @@ using System.ComponentModel;
 
 namespace FEx.Agnostics.Abstractions.Utilities.OS.Enums;
 
+/// <summary>Windows operating system editions.</summary>
 public enum OSEdition
 {
+    /// <summary>The edition could not be determined.</summary>
     Unknown = 0,
 
     /// <summary>

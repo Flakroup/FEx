@@ -11,6 +11,7 @@ using Conversion = FEx.Agnostics.Abstractions.Utilities.FExConversion;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Extensions for comparing, converting and formatting dates and times.</summary>
 public static class DateTimeExtensions
 {
     /// <summary>
@@ -71,8 +72,15 @@ public static class DateTimeExtensions
     /// True if the specified date is after target; otherwise False.
     public static bool IsAfterOrEqual(this DateTime current, DateTime target) => current >= target;
 
+    /// <summary>Determines whether a date is before or equal to a target date</summary>
+    /// <param name="current">The date to check.</param>
+    /// <param name="target">The date to check against.</param>
+    /// <returns><c>true</c> if <paramref name="current" /> is less than or equal to <paramref name="target" />.</returns>
     public static bool IsBeforeOrEqual(this DateTime current, DateTime target) => current <= target;
 
+    /// <summary>Gets the English ordinal suffix for a day of the month</summary>
+    /// <param name="day">The day of the month.</param>
+    /// <returns><c>st</c>, <c>nd</c>, <c>rd</c> or <c>th</c>.</returns>
     public static string ToDaySuffix(this int day) =>
         day switch
         {
@@ -82,6 +90,9 @@ public static class DateTimeExtensions
             _ => "th"
         };
 
+    /// <summary>Gets the Monday of the week that contains a date</summary>
+    /// <param name="date">The date.</param>
+    /// <returns>Midnight of the preceding (or same) Monday.</returns>
     public static DateTime GetStartOfWeek(this DateTime date)
     {
         var difference = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
@@ -89,11 +100,20 @@ public static class DateTimeExtensions
         return date.AddDays(-1 * difference).Date;
     }
 
+    /// <summary>Converts a date from one time zone to another</summary>
+    /// <param name="date">The date to convert.</param>
+    /// <param name="timeZoneFrom">The source time zone.</param>
+    /// <param name="timeZoneTo">The destination time zone.</param>
+    /// <returns>The converted date.</returns>
     public static DateTime ConvertDateBetweenTimeZones(this DateTime date,
                                                        TimeZoneInfo timeZoneFrom,
                                                        TimeZoneInfo timeZoneTo) =>
         TimeZoneInfo.ConvertTime(date, timeZoneFrom, timeZoneTo);
 
+    /// <summary>Treats a date as local system time and converts it to another time zone</summary>
+    /// <param name="dateTime">The date, interpreted as local time regardless of its kind.</param>
+    /// <param name="timeZone">The destination time zone.</param>
+    /// <returns>The date in the destination time zone.</returns>
     public static DateTime ConvertLocalToTimeZone(this DateTime dateTime, TimeZoneInfo timeZone)
     {
         var unspecifiedDateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
@@ -172,6 +192,9 @@ public static class DateTimeExtensions
     public static string ToA4DTimeString(this DateTime current) =>
         current.ToString(DateTimeDefaults.A4DtimeMask, DateTimeDefaults.DefaultCulture);
 
+    /// <summary>Formats a date and time using the <c>yyyy-MM-dd HH:mm</c> mask and the default culture</summary>
+    /// <param name="current">The date to format.</param>
+    /// <returns>The formatted date and time.</returns>
     public static string ToA4DDateTimeString(this DateTime current) =>
         current.ToString(DateTimeDefaults.A4DatetimeMask, DateTimeDefaults.DefaultCulture);
 
@@ -183,44 +206,91 @@ public static class DateTimeExtensions
     public static DateTime ClearMilliseconds(this DateTime dateTime) =>
         new(dateTime.Ticks - dateTime.Ticks % TimeSpan.TicksPerSecond, dateTime.Kind);
 
+    /// <summary>Determines whether a date is earlier than another</summary>
+    /// <param name="firstDateTime">The date to check.</param>
+    /// <param name="secondDateTime">The date to compare to.</param>
+    /// <returns><c>true</c> if <paramref name="firstDateTime" /> is earlier.</returns>
     public static bool IsEarlierThan(this DateTime firstDateTime, DateTime secondDateTime) =>
         DateTime.Compare(firstDateTime, secondDateTime) < 0;
 
+    /// <summary>Determines whether two dates represent the same moment</summary>
+    /// <param name="firstDateTime">The first date.</param>
+    /// <param name="secondDateTime">The second date.</param>
+    /// <returns><c>true</c> if <see cref="DateTime.Compare(DateTime, DateTime)" /> reports equality.</returns>
     public static bool IsTheSameTimeAs(this DateTime firstDateTime, DateTime secondDateTime) =>
         DateTime.Compare(firstDateTime, secondDateTime) == 0;
 
+    /// <summary>Determines whether a date is later than another</summary>
+    /// <param name="firstDateTime">The date to check.</param>
+    /// <param name="secondDateTime">The date to compare to.</param>
+    /// <returns><c>true</c> if <paramref name="firstDateTime" /> is later.</returns>
     public static bool IsLaterThan(this DateTime firstDateTime, DateTime secondDateTime) =>
         DateTime.Compare(firstDateTime, secondDateTime) > 0;
 
+    /// <summary>Gets the current UTC time as milliseconds since the Unix epoch</summary>
+    /// <returns>The Unix timestamp in milliseconds.</returns>
     public static long GetCurrentUnixTimestampMillis() =>
         (long)(DateTime.UtcNow - DateTimeDefaults.UnixEpoch).TotalMilliseconds;
 
+    /// <summary>Converts milliseconds since the Unix epoch to a UTC date</summary>
+    /// <param name="millis">The Unix timestamp in milliseconds.</param>
+    /// <returns>The corresponding UTC date.</returns>
     public static DateTime DateTimeFromUnixTimestampMillis(this long millis) =>
         DateTimeDefaults.UnixEpoch.AddMilliseconds(millis);
 
+    /// <summary>Gets the current UTC time as seconds since the Unix epoch</summary>
+    /// <returns>The Unix timestamp in seconds.</returns>
     public static long GetCurrentUnixTimestampSeconds() =>
         (long)(DateTime.UtcNow - DateTimeDefaults.UnixEpoch).TotalSeconds;
 
+    /// <summary>Converts seconds since the Unix epoch to a UTC date</summary>
+    /// <param name="seconds">The Unix timestamp in seconds.</param>
+    /// <returns>The corresponding UTC date.</returns>
     public static DateTime DateTimeFromUnixTimestampSeconds(this long seconds) =>
         DateTimeDefaults.UnixEpoch.AddSeconds(seconds);
 
+    /// <summary>Converts a date to milliseconds since the Unix epoch</summary>
+    /// <param name="theTime">The date to convert.</param>
+    /// <returns>The Unix timestamp in milliseconds.</returns>
     public static long GetUnixTimeFromDate(this DateTime theTime) =>
         (long)(theTime - DateTimeDefaults.UnixEpoch).TotalMilliseconds;
 
+    /// <summary>Converts a date to whole seconds since the Unix epoch</summary>
+    /// <param name="theTime">The date to convert.</param>
+    /// <returns>The Unix timestamp in seconds, rounded down.</returns>
     public static long GetUnixTimeFromDateSeconds(this DateTime theTime) =>
         (long)Math.Floor((theTime - DateTimeDefaults.UnixEpoch).TotalSeconds);
 
+    /// <summary>Converts a tick count to a date by adding it to <see cref="DateTime.MinValue" /></summary>
+    /// <param name="ticks">The number of 100-nanosecond ticks.</param>
+    /// <returns>The resulting date.</returns>
     public static DateTime FromTicks(this long ticks) => DateTime.MinValue.Add(TimeSpan.FromTicks(ticks));
 
+    /// <summary>Formats the time of day using the short time pattern of a culture</summary>
+    /// <param name="date">The date to format.</param>
+    /// <param name="culture">The culture providing the pattern.</param>
+    /// <returns>The formatted time.</returns>
     public static string GetLocalizedShortTimeString(this DateTime date, CultureInfo culture) =>
         date.ToString(culture.DateTimeFormat.ShortTimePattern);
 
+    /// <summary>Formats a date and time with a custom format</summary>
+    /// <param name="date">The date to format.</param>
+    /// <param name="format">The format string.</param>
+    /// <returns>The formatted date and time.</returns>
     public static string GetLocalizedFullDateTimeString(this DateTime date, string format = "dd.MM.yyyy HH:mm") =>
         date.ToString(format);
 
+    /// <summary>Formats a date with a custom format</summary>
+    /// <param name="date">The date to format.</param>
+    /// <param name="format">The format string.</param>
+    /// <returns>The formatted date.</returns>
     public static string GetLocalizedDateString(this DateTime date, string format = "dd.MM.yyyy") =>
         date.ToString(format);
 
+    /// <summary>Gets the culture-specific day name with its first letter upper-cased</summary>
+    /// <param name="dayOfWeek">The day of the week.</param>
+    /// <param name="culture">The culture providing the name.</param>
+    /// <returns>The localized day name.</returns>
     public static string GetLocalizedDayOfWeek(this DayOfWeek dayOfWeek, CultureInfo culture) =>
         culture.DateTimeFormat.GetDayName(dayOfWeek).FirstCharToUpper();
 
@@ -233,6 +303,7 @@ public static class DateTimeExtensions
     /// <param name="interval">Required. Date interval enumeration value or string expression.</param>
     /// <param name="min">Required. <see langword="Double" />. The minimum allowed difference.</param>
     /// <param name="max">Required. <see langword="Double" />. The maximum allowed difference.</param>
+    /// <param name="dayOfWeek">The first day of the week used when <paramref name="interval" /> is a week interval; null uses the default.</param>
     /// <returns><see langword="Boolean" />. True if the difference is between the bounds; False otherwise.</returns>
     public static bool DateDiffIsBetween(this DateTime date1,
                                          DateTime date2,
@@ -326,11 +397,19 @@ public static class DateTimeExtensions
         }
     }
 
+    /// <summary>Gets the zero-based index of a weekday in a week that starts on Monday</summary>
+    /// <param name="weekday">The weekday.</param>
+    /// <returns>0 for Monday through 6 for Sunday.</returns>
     public static double GetDay(this DayOfWeek weekday) =>
         weekday == DayOfWeek.Sunday
             ? 6
             : (double)weekday - 1;
 
+    /// <summary>Gets the position of a date's weekday within a week starting on the given day</summary>
+    /// <param name="dt">The date.</param>
+    /// <param name="weekdayFirst">The first day of the week; the current culture's first day plus one when null.</param>
+    /// <returns>The position from 1 to 7, expressed as a <see cref="DayOfWeek" /> value.</returns>
+    /// <exception cref="ArgumentException"><paramref name="weekdayFirst" /> is outside the <see cref="DayOfWeek" /> range.</exception>
     public static DayOfWeek GetDayOfWeek(this DateTime dt, DayOfWeek? weekdayFirst = null)
     {
         if (weekdayFirst is < 0 or > DayOfWeek.Saturday)

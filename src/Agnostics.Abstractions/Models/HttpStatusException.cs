@@ -10,11 +10,17 @@ namespace FEx.Agnostics.Abstractions.Models;
 /// </summary>
 public sealed class HttpStatusException : HttpRequestException
 {
+    /// <summary>Gets the HTTP status code of the failed response.</summary>
     public HttpStatusCode ResponseStatusCode { get; }
 
     /// <summary>The delay the server asked for with a <c>Retry-After</c> header, if any.</summary>
     public TimeSpan? RetryAfter { get; }
 
+    /// <summary>Initializes the exception for a failed response; only the scheme, server and path of the URL are put in the message</summary>
+    /// <param name="statusCode">The HTTP status code.</param>
+    /// <param name="url">The requested URL.</param>
+    /// <param name="reasonPhrase">The reason phrase of the response.</param>
+    /// <param name="retryAfter">The delay requested by the server, if any.</param>
     public HttpStatusException(HttpStatusCode statusCode, Uri? url, string? reasonPhrase, TimeSpan? retryAfter = null)
         : base(
             $"Response status code does not indicate success: {(int)statusCode} ({reasonPhrase}) for {Redact(url)}")

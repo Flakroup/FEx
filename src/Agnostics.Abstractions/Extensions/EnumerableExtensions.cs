@@ -9,8 +9,12 @@ using System.Linq;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Extensions for querying and transforming sequences.</summary>
 public static class EnumerableExtensions
 {
+    /// <summary>Determines whether a non-generic sequence contains any element</summary>
+    /// <param name="source">The sequence to test.</param>
+    /// <returns><c>true</c> if the sequence has at least one element.</returns>
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public static bool Any(this IEnumerable source)
     {
@@ -33,6 +37,9 @@ public static class EnumerableExtensions
         return result;
     }
 
+    /// <summary>Determines whether a non-generic sequence is not null and contains any element</summary>
+    /// <param name="enumerable">The sequence to test.</param>
+    /// <returns><c>true</c> if the sequence has elements; <c>false</c> when it is null or empty.</returns>
     [ContractAnnotation("enumerable: null => stop")]
     public static bool HasAny(this IEnumerable? enumerable) =>
         enumerable switch
@@ -43,6 +50,10 @@ public static class EnumerableExtensions
             _ => HasElements(enumerable)
         };
 
+    /// <summary>Determines whether a sequence is not null and contains any element</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="enumerable">The sequence to test.</param>
+    /// <returns><c>true</c> if the sequence has elements; <c>false</c> when it is null or empty.</returns>
     [ContractAnnotation("enumerable: null => stop")]
     public static bool HasAny<T>(this IEnumerable<T> enumerable) =>
         enumerable switch
@@ -75,6 +86,11 @@ public static class EnumerableExtensions
         bool Predicate(T i) => predicate?.Invoke(i) ?? true;
     }
 
+    /// <summary>Determines whether no element matches a predicate</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="source">The sequence to test.</param>
+    /// <param name="predicate">The condition; when null, tests that the sequence is empty.</param>
+    /// <returns><c>true</c> if no element matches.</returns>
     public static bool None<T>(this IEnumerable<T> source, Func<T, bool>? predicate = null) =>
         predicate is null
             ? !source.Any()
@@ -89,6 +105,10 @@ public static class EnumerableExtensions
     [ContractAnnotation("null => true")]
     public static bool IsNullOrEmptyEnumerable<T>(this IEnumerable<T> source) => source?.Any() != true;
 
+    /// <summary>Determines whether a sequence is not null and has at least one element</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="source">The sequence to test.</param>
+    /// <returns><c>true</c> if the sequence has elements.</returns>
     [ContractAnnotation("null => false")]
     public static bool IsNotNullOrEmptyEnumerable<T>(this IEnumerable<T> source) => source?.Any() == true;
 
@@ -302,6 +322,11 @@ public static class EnumerableExtensions
     /// </returns>
     public static Collection<T> ToCollection<T>(this IEnumerable<T> source) => new([.. source]);
 
+    /// <summary>Returns the last elements of a sequence</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="source">The sequence.</param>
+    /// <param name="n">The number of elements to take.</param>
+    /// <returns>The last <paramref name="n" /> elements, or all of them when there are fewer.</returns>
     public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int n) =>
         source.Skip(Math.Max(0, source.Count() - n));
 
@@ -331,6 +356,11 @@ public static class EnumerableExtensions
         ];
     }
 
+    /// <summary>Counts the elements of two sequences that have an equal counterpart, matching each element at most once</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="sourceA">The first sequence.</param>
+    /// <param name="sourceB">The second sequence.</param>
+    /// <returns>The number of matched pairs.</returns>
     public static int CountEqualItems<T>(this IEnumerable<T> sourceA, IEnumerable<T> sourceB) where T : IEquatable<T>
     {
         var listA = sourceA.ToList();
@@ -376,10 +406,20 @@ public static class EnumerableExtensions
         return count;
     }
 
+    /// <summary>Gets every item and all of its descendants</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="items">The top-level items.</param>
+    /// <param name="getChildrenFunc">Gets the children of an item.</param>
+    /// <returns>Each item followed by its descendants, or null when <paramref name="items" /> is null.</returns>
     public static IEnumerable<T>? GetAllItemsChildren<T>(this IEnumerable<T> items,
                                                         Func<T, IEnumerable<T>> getChildrenFunc) =>
         items?.SelectMany(item => item.Yield().Concat(item.GetAllItemChildren(getChildrenFunc)));
 
+    /// <summary>Gets all descendants of an item</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="item">The item whose descendants are returned.</param>
+    /// <param name="getChildrenFunc">Gets the children of an item.</param>
+    /// <returns>The children followed by their descendants.</returns>
     public static IEnumerable<T> GetAllItemChildren<T>(this T item, Func<T, IEnumerable<T>> getChildrenFunc)
     {
         var children = getChildrenFunc(item);
@@ -389,6 +429,14 @@ public static class EnumerableExtensions
             : [];
     }
 
+    /// <summary>Orders a sequence by a key</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <typeparam name="TKey">The key type.</typeparam>
+    /// <param name="items">The sequence to order.</param>
+    /// <param name="selector">Selects the sort key.</param>
+    /// <param name="order">The sort direction.</param>
+    /// <param name="comparer">Compares keys; the default comparer when null.</param>
+    /// <returns>The ordered sequence.</returns>
     public static IOrderedEnumerable<T> SortBy<T, TKey>(this IEnumerable<T> items,
                                                         Func<T, TKey> selector,
                                                         ListSortDirection order = ListSortDirection.Ascending,
@@ -397,6 +445,11 @@ public static class EnumerableExtensions
             ? items.OrderBy(selector, comparer)
             : items.OrderByDescending(selector, comparer);
 
+    /// <summary>Gets the index of the first element equal to an item</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="items">The sequence to search.</param>
+    /// <param name="itemToFind">The item to look for.</param>
+    /// <returns>The zero-based index, or -1 when not found.</returns>
     public static int IndexOfEnumerable<T>(this IEnumerable<T> items, T itemToFind)
     {
         var index = -1;

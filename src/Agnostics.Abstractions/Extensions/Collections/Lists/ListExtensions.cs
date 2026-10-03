@@ -49,6 +49,11 @@ public static class ListExtensions
     /// <returns>A ReadOnlyCollection{T} instance.</returns>
     public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> source) => new(source);
 
+    /// <summary>Removes every element that matches a predicate.</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="source">The collection to modify.</param>
+    /// <param name="predicate">Returns true for the elements to remove.</param>
+    /// <returns><c>true</c> if at least one element was removed.</returns>
     public static bool RemoveFromListWhere<T>(this ICollection<T> source, Func<T, bool> predicate)
     {
         var anyItemHasMatched = false;
@@ -94,6 +99,12 @@ public static class ListExtensions
         bool Predicate(T i) => predicate(i);
     }
 
+    /// <summary>Copies a range of a list.</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="sourceList">The list to read.</param>
+    /// <param name="index">The index of the first element, which must be positive.</param>
+    /// <param name="count">The number of elements, which must be positive.</param>
+    /// <returns>The copied elements, or null when the arguments are out of range for the list.</returns>
     public static List<T>? GetRange<T>(this IList<T> sourceList, int index, int count)
     {
         if (index > 0
@@ -112,6 +123,11 @@ public static class ListExtensions
         return null;
     }
 
+    /// <summary>Splits a list into consecutive chunks.</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="sourceList">The list to split.</param>
+    /// <param name="chunkSize">The maximum number of elements per chunk.</param>
+    /// <returns>The chunks; the last one may be smaller.</returns>
     public static IList<IList<T>> SplitList<T>(this IList<T> sourceList, int chunkSize)
     {
         var list = new List<IList<T>>();
@@ -123,6 +139,11 @@ public static class ListExtensions
         return list;
     }
 
+    /// <summary>Updates the element equal to an item with a sync action, or adds the item when there is none.</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="sourceList">The list to update.</param>
+    /// <param name="item">The item to find or add.</param>
+    /// <param name="syncAction">Called with the existing element and the item for each equal element.</param>
     public static void SyncWithItem<T>(this IList<T> sourceList, T item, Action<T, T>? syncAction = null)
         where T : IEquatable<T>
     {
@@ -141,6 +162,11 @@ public static class ListExtensions
             sourceList.Add(item);
     }
 
+    /// <summary>Counts the elements of two lists that have an equal counterpart, matching each element at most once.</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="listA">The first list.</param>
+    /// <param name="listB">The second list.</param>
+    /// <returns>The number of matched pairs.</returns>
     public static int CountEqualItems<T>(this IList<T> listA, IList<T> listB) where T : IEquatable<T>
     {
         var shorter = listA.Count <= listB.Count
@@ -180,6 +206,11 @@ public static class ListExtensions
         return count;
     }
 
+    /// <summary>Adds a range of items, using <see cref="List{T}.AddRange(IEnumerable{T})" /> when the target is a <see cref="List{T}" />.</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <typeparam name="TColl">The list type.</typeparam>
+    /// <param name="source">The list to add to.</param>
+    /// <param name="items">The items to add.</param>
     public static void AddRangeToList<T, TColl>(this TColl source, IEnumerable<T> items) where TColl : IList<T>
     {
         if (source is List<T> list)
@@ -188,6 +219,11 @@ public static class ListExtensions
             source.AddRangeToCollection(items);
     }
 
+    /// <summary>Moves an element to a new index.</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="source">The list to modify.</param>
+    /// <param name="oldIndex">The current index of the element.</param>
+    /// <param name="newIndex">The index to insert the element at after removal.</param>
     public static void Move<T>(this IList<T> source, int oldIndex, int newIndex)
     {
         var item = source[oldIndex];
@@ -253,6 +289,13 @@ public static class ListExtensions
         return hasChanged;
     }
 
+    /// <summary>Synchronizes a list with another one using the element equality, removing, updating and adding elements.</summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="sourceList">The list to update.</param>
+    /// <param name="syncedList">The list whose state is reflected.</param>
+    /// <param name="syncAction">Called with the source and synced element for each equal pair.</param>
+    /// <returns><c>true</c> if the source list changed.</returns>
+    /// <exception cref="InvalidOperationException">A synced element matches more than one element of the source list.</exception>
     public static bool SyncWith<T>(this IList<T> sourceList, IList<T> syncedList, Action<T, T>? syncAction = null)
         where T : IEquatable<T>
     {

@@ -48,6 +48,12 @@ public static class DictionaryExtensions
         return fallback;
     }
 
+    /// <summary>Tries to get a value by key.</summary>
+    /// <typeparam name="TK">The key type.</typeparam>
+    /// <typeparam name="TV">The value type.</typeparam>
+    /// <param name="dictionary">The dictionary to read.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>A tuple of whether the key was found and the value (the default when not found).</returns>
     public static (bool isSuccess, TV value) GetValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key)
     {
         var res = dictionary.TryGetValue(key, out var v);
@@ -161,9 +167,9 @@ public static class DictionaryExtensions
     }
 
     /// <summary>
-    /// Adds a key/value pair to the <see cref="System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
+    /// Adds a key/value pair to the <see cref="System.Collections.Concurrent.ConcurrentDictionary{TKey,TValue}" /> if the key
     /// does not already exist, or updates a key/value pair in the
-    /// <see cref="System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
+    /// <see cref="System.Collections.Concurrent.ConcurrentDictionary{TKey,TValue}" /> by using the specified function.
     /// </summary>
     /// <param name="dictionary"></param>
     /// <param name="key">The key to be added or whose value should be updated</param>
@@ -174,9 +180,9 @@ public static class DictionaryExtensions
         dictionary.AddOrUpdateValue(key, () => valueToAddOrUpdate);
 
     /// <summary>
-    /// Adds a key/value pair to the <see cref="System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
+    /// Adds a key/value pair to the <see cref="System.Collections.Concurrent.ConcurrentDictionary{TKey,TValue}" /> if the key
     /// does not already exist, or updates a key/value pair in the
-    /// <see cref="System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
+    /// <see cref="System.Collections.Concurrent.ConcurrentDictionary{TKey,TValue}" /> by using the specified function.
     /// </summary>
     /// <param name="dictionary"></param>
     /// <param name="key">The key to be added or whose value should be updated</param>
@@ -197,9 +203,9 @@ public static class DictionaryExtensions
     }
 
     /// <summary>
-    /// Adds a key/value pair to the <see cref="System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
+    /// Adds a key/value pair to the <see cref="System.Collections.Concurrent.ConcurrentDictionary{TKey,TValue}" /> if the key
     /// does not already exist, or updates a key/value pair in the
-    /// <see cref="System.Collections.Concurrent.ConcurrentDictionary`2" /> by using the specified function.
+    /// <see cref="System.Collections.Concurrent.ConcurrentDictionary{TKey,TValue}" /> by using the specified function.
     /// </summary>
     /// <param name="dictionary"></param>
     /// <param name="key">The key to be added or whose value should be updated</param>
@@ -217,6 +223,13 @@ public static class DictionaryExtensions
         return (hadValue, oldValue, added);
     }
 
+    /// <summary>Adds a value created by a factory when the key is absent.</summary>
+    /// <typeparam name="TK">The key type.</typeparam>
+    /// <typeparam name="TV">The value type.</typeparam>
+    /// <param name="dictionary">The dictionary to modify.</param>
+    /// <param name="key">The key to add.</param>
+    /// <param name="createValueToAdd">Creates the value; only invoked when the key is absent.</param>
+    /// <returns><c>true</c> if the value was added.</returns>
     public static bool TryAddValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> createValueToAdd)
     {
         if (!dictionary.ContainsKey(key))
@@ -230,6 +243,12 @@ public static class DictionaryExtensions
         return false;
     }
 
+    /// <summary>Removes a key and returns the removed value, using <c>TryRemove</c> for a concurrent dictionary.</summary>
+    /// <typeparam name="TK">The key type.</typeparam>
+    /// <typeparam name="TV">The value type.</typeparam>
+    /// <param name="dictionary">The dictionary to modify.</param>
+    /// <param name="key">The key to remove.</param>
+    /// <returns>A tuple of whether the key was removed and the removed value (the default when not removed).</returns>
     public static (bool hasBeenRemoved, TV removedValue) RemoveValue<TK, TV>(
         this IDictionary<TK, TV> dictionary,
         TK key)
@@ -253,6 +272,13 @@ public static class DictionaryExtensions
         return (hasBeenRemoved, v!);
     }
 
+    /// <summary>Replaces the value of a key with a new one and disposes the old value.</summary>
+    /// <typeparam name="TK">The key type.</typeparam>
+    /// <typeparam name="TV">The disposable value type.</typeparam>
+    /// <param name="dictionary">The dictionary to modify.</param>
+    /// <param name="key">The key to set.</param>
+    /// <param name="func">Creates the new value.</param>
+    /// <returns><c>true</c> if an existing value was replaced and disposed.</returns>
     public static bool ReplaceAndDisposeOldValue<TK, TV>(this IDictionary<TK, TV> dictionary, TK key, Func<TV> func)
         where TK : notnull
         where TV : IDisposable
@@ -265,6 +291,12 @@ public static class DictionaryExtensions
         return hasBeenReplaced;
     }
 
+    /// <summary>Removes every entry that matches a predicate.</summary>
+    /// <typeparam name="TK">The key type.</typeparam>
+    /// <typeparam name="TV">The value type.</typeparam>
+    /// <param name="dictionary">The dictionary to modify.</param>
+    /// <param name="predicate">Receives the key and value and returns true for entries to remove.</param>
+    /// <returns>A tuple of whether any entry matched and the removed entries (null when none matched).</returns>
     public static (bool anyItemHasMatched, IDictionary<TK, TV>? removedEntries) RemoveFromDictionaryWhere<TK, TV>(
         this IDictionary<TK, TV> dictionary,
         Func<TK, TV, bool> predicate)
@@ -296,6 +328,11 @@ public static class DictionaryExtensions
         return (anyItemHasMatched, removedEntries);
     }
 
+    /// <summary>Makes a dictionary mirror another one by removing missing keys and adding or updating the rest.</summary>
+    /// <typeparam name="TKey">The key type.</typeparam>
+    /// <typeparam name="TValue">The value type.</typeparam>
+    /// <param name="sourceDictionary">The dictionary to update.</param>
+    /// <param name="syncedDictionary">The dictionary whose content is reflected.</param>
     public static void SyncWith<TKey, TValue>(this IDictionary<TKey, TValue> sourceDictionary,
                                               IDictionary<TKey, TValue> syncedDictionary)
         where TKey : notnull
@@ -310,9 +347,19 @@ public static class DictionaryExtensions
                 sourceDictionary.AddOrUpdateValue(key, () => syncedDictionary[key]);
     }
 
+    /// <summary>Determines whether a dictionary is not null and has entries.</summary>
+    /// <typeparam name="TKey">The key type.</typeparam>
+    /// <typeparam name="TValue">The value type.</typeparam>
+    /// <param name="dictionary">The dictionary to test.</param>
+    /// <returns><c>true</c> if the dictionary has entries.</returns>
     public static bool IsNotNullOrEmptyDictionary<TKey, TValue>(this IDictionary<TKey, TValue> dictionary) =>
         dictionary?.Count > 0;
 
+    /// <summary>Determines whether a dictionary is null or has no entries.</summary>
+    /// <typeparam name="TKey">The key type.</typeparam>
+    /// <typeparam name="TValue">The value type.</typeparam>
+    /// <param name="dictionary">The dictionary to test.</param>
+    /// <returns><c>true</c> if the dictionary is null or empty.</returns>
     public static bool IsNullOrEmptyDictionary<TKey, TValue>(this IDictionary<TKey, TValue> dictionary) =>
         dictionary is null || dictionary.Count == 0;
 }

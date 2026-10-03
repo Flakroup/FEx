@@ -94,14 +94,15 @@ public static class TimeSpanExtensions
 
     public static string GetTime(this double milliseconds) => TimeSpan.FromMilliseconds(milliseconds).GetTime();
 
-    /// <summary>
-    /// Gets the time from <see cref="TimeSpan" />.
-    /// </summary>
+    /// <summary>Formats a <see cref="TimeSpan" /> as a human-readable string without decimals.</summary>
     /// <param name="timespan">The timespan.</param>
-    /// <param name="decimals">The decimals.</param>
-    /// <returns>System.String.</returns>
+    /// <returns>The formatted time, in milliseconds, seconds, minutes or hours depending on magnitude.</returns>
     public static string GetTime(this TimeSpan timespan) => timespan.GetTime(0);
 
+    /// <summary>Formats a <see cref="TimeSpan" /> as a human-readable string with the given number of decimals.</summary>
+    /// <param name="timespan">The timespan.</param>
+    /// <param name="decimals">The number of decimal places to keep (rounded down).</param>
+    /// <returns>The formatted time, in milliseconds, seconds, minutes or hours depending on magnitude.</returns>
     public static string GetTime(this TimeSpan timespan, int decimals)
     {
         if (timespan.TotalMilliseconds < 1000)

@@ -4,6 +4,7 @@ using System.IO;
 
 namespace FEx.Agnostics.Abstractions.Utilities;
 
+/// <summary>Converts file sizes between byte-based units (powers of 1024) and formats them as text.</summary>
 public static class FileLengthConverter
 {
     /// <summary>
@@ -52,6 +53,12 @@ public static class FileLengthConverter
     public static double ConvertFileLength(FileInfo fi, LengthType output, int digits = 3) =>
         ConvertFileLength(fi.Length, LengthType.Bytes, output, digits);
 
+    /// <summary>Converts a size to a formatted string with a unit suffix</summary>
+    /// <param name="size">The size, expressed in <paramref name="input" /> units.</param>
+    /// <param name="input">The unit of <paramref name="size" />.</param>
+    /// <param name="output">The unit to convert to; <see cref="LengthType.AutoDetect" /> picks the best fitting one.</param>
+    /// <param name="digits">The number of fractional digits.</param>
+    /// <returns>The formatted size, for example <c>1.500 MB</c>.</returns>
     public static string ConvertFileLengthToString(double size, LengthType input, LengthType output, int digits = 3)
     {
         if (output == LengthType.AutoDetect)
@@ -66,8 +73,14 @@ public static class FileLengthConverter
         return $"{lenghtString} {GetUnitShortcut(output)}";
     }
 
+    /// <summary>Picks the unit that best fits a size in bytes</summary>
+    /// <param name="size">The size in bytes.</param>
+    /// <returns>The largest unit for which the size is at least one thousand of the previous unit.</returns>
     public static LengthType GetOutputLenghtType(long size) => GetOutputLenghtType(Convert.ToDouble(size));
 
+    /// <summary>Picks the unit that best fits a size in bytes</summary>
+    /// <param name="size">The size in bytes.</param>
+    /// <returns>The largest unit for which the size is at least one thousand of the previous unit.</returns>
     public static LengthType GetOutputLenghtType(double size)
     {
         var pow = Math.Log10(size);
@@ -78,8 +91,14 @@ public static class FileLengthConverter
             pow >= 3 ? LengthType.Kilobytes : LengthType.Bytes;
     }
 
+    /// <summary>Gets the number of bytes in one unit</summary>
+    /// <param name="lengthType">The unit.</param>
+    /// <returns>1024 raised to the power of the unit.</returns>
     public static double GetLength(LengthType lengthType) => Math.Pow(1024, (double)lengthType);
 
+    /// <summary>Parses a unit abbreviation</summary>
+    /// <param name="unitShortcut">One of <c>B</c>, <c>KB</c>, <c>MB</c>, <c>GB</c> or <c>TB</c>.</param>
+    /// <returns>The matching unit, or <see cref="LengthType.AutoDetect" /> when unrecognized.</returns>
     public static LengthType GetLengthType(string unitShortcut) =>
         unitShortcut switch
         {

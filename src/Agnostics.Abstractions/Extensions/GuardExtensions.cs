@@ -38,6 +38,17 @@ public static class GuardExtensions
         return value;
     }
 
+    /// <summary>Throws an <see cref="ArgumentNullException" /> with a default message when <paramref name="value" /> is null.</summary>
+    /// <typeparam name="T">Current type.</typeparam>
+    /// <param name="value">The value to check.</param>
+    /// <param name="paramName">Name of the parameter.</param>
+    /// <returns>The value itself.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value" /> is null.</exception>
+    [ContractAnnotation("value: null => stop")]
+    [return: SysNotNull]
+    public static T Guard<T>([SysNotNull] [CanBeNull] this T value, string? paramName) =>
+        value.Guard(paramName, null);
+
     /// <summary>
     /// Guards if provided value is not null, otherwise
     /// throws an exception of type <see cref="ArgumentNullException" /> with a specific
@@ -57,11 +68,6 @@ public static class GuardExtensions
     /// </remarks>
     [ContractAnnotation("value: null => stop")]
     [return: SysNotNull]
-    public static T Guard<T>([SysNotNull] [CanBeNull] this T value, string? paramName) =>
-        value.Guard(paramName, null);
-
-    [ContractAnnotation("value: null => stop")]
-    [return: SysNotNull]
     public static T Guard<T>([SysNotNull] [CanBeNull] this T value, string? paramName, string? message)
     {
         if (value is null)
@@ -69,6 +75,17 @@ public static class GuardExtensions
 
         return value;
     }
+
+    /// <summary>Throws an <see cref="ArgumentNullException" /> with a default message when <paramref name="predicate" /> returns false for <paramref name="value" />.</summary>
+    /// <typeparam name="T">Value type.</typeparam>
+    /// <param name="value">Value to check.</param>
+    /// <param name="predicate">The precondition that has to be met.</param>
+    /// <param name="paramName">Name of the parameter.</param>
+    /// <returns>The value itself.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="predicate" /> returns false.</exception>
+    [ContractAnnotation("value: null => stop")]
+    public static T Guard<T>([CanBeNull] this T value, Func<T, bool> predicate, string? paramName) =>
+        value.Guard(predicate, paramName, null);
 
     /// <summary>
     /// Guards the specified <paramref name="predicate" /> from being violated by
@@ -88,10 +105,6 @@ public static class GuardExtensions
     /// <remarks>
     /// Throws a <see cref="ArgumentNullException" /> if the condition is false.
     /// </remarks>
-    [ContractAnnotation("value: null => stop")]
-    public static T Guard<T>([CanBeNull] this T value, Func<T, bool> predicate, string? paramName) =>
-        value.Guard(predicate, paramName, null);
-
     [ContractAnnotation("value: null => stop")]
     public static T Guard<T>([CanBeNull] this T value, Func<T, bool> predicate, string? paramName, string? message)
     {

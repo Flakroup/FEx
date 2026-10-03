@@ -8,8 +8,6 @@ using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Metadata;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -305,16 +303,21 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     {
         await CheckWhichAlreadyExistsAsync(dbContext, changes);
 
-        // Only the attached entries are saved: SaveChanges must not discover related entities, or other cached
-        // values, through navigations.
-        dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+        var set = DbSetAccessor(dbContext);
 
         foreach (var entityInfo in changes)
         {
             if (entityInfo.ToDelete)
-                AttachShallow(dbContext, entityInfo.Value, EntityState.Deleted);
+            {
+                set.Remove(entityInfo.Value);
+            }
             else if (entityInfo.Reason is ChangeReason.Refresh or ChangeReason.Update or ChangeReason.Add)
-                AttachShallow(dbContext, entityInfo.Value, entityInfo.ExistsInDb ? EntityState.Modified : EntityState.Added);
+            {
+                if (entityInfo.ExistsInDb)
+                    set.Update(entityInfo.Value);
+                else
+                    await set.AddAsync(entityInfo.Value);
+            }
         }
     }
 
@@ -548,51 +551,6 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         return (retry, rejected);
     }
-
-    /// <summary>
-    /// Attaches a cached value to be saved, together with the owned entities it carries, and nothing else.
-    /// <c>DbSet.Update</c> walked the whole graph and marked every reachable entity Modified, which wrote a stale cached
-    /// principal over another writer's changes, could reach other cached values (leaving their own edits unsaved) and
-    /// failed on two instances of the same principal. Related entities, and links through many-to-many navigations,
-    /// are never saved through a cached value. A new owned collection item (key not set yet) is Added, an existing one
-    /// takes the owner's state; an item removed from an owned collection is not deleted.
-    /// </summary>
-    private static void AttachShallow(TDbCtx dbContext, TValue root, EntityState state) =>
-        dbContext.ChangeTracker.TrackGraph<object?>(root,
-            null,
-            node =>
-            {
-                var entry = node.Entry;
-
-                if (entry.State != EntityState.Detached)
-                    return false;
-
-                if (ReferenceEquals(entry.Entity, root))
-                {
-                    entry.State = state;
-
-                    return true;
-                }
-
-                if (!entry.Metadata.IsOwned())
-                    return false;
-
-                var isCollectionItem = node.InboundNavigation is INavigation { ForeignKey.IsUnique: false };
-                entry.State = state == EntityState.Modified && isCollectionItem && IsNewOwnedItem(entry)
-                    ? EntityState.Added
-                    : state;
-
-                return true;
-            });
-
-    // The owner's key is propagated on attach, so only the item's own key properties tell whether it is new.
-    private static bool IsNewOwnedItem(EntityEntry entry) =>
-        entry.Metadata.FindPrimaryKey()?.Properties
-            .Where(p => !p.IsForeignKey())
-            .Any(p => p.IsShadowProperty() || IsDefault(entry.Property(p.Name).CurrentValue, p.ClrType)) ?? true;
-
-    private static bool IsDefault(object? value, Type type) =>
-        value is null || (type.IsValueType && value.Equals(Activator.CreateInstance(type)));
 
     private async Task NotifyConflictsAsync(List<ChangeInfo<TKey, TValue>> rejected)
     {

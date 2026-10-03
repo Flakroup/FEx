@@ -51,7 +51,7 @@ public class NuGetLogger<T> : INuGetLogger
 
     public void LogSummary(string data) => Dump(LogLevel.Information, $"SUMMARY: {data}");
 
-    public void Dump(LogLevel logLevel, string content) => _logger.Log(logLevel, content);
+    public void Dump(LogLevel logLevel, string content) => _logger.Log(logLevel, "{Message}", content);
 
     private static LogLevel GetLogLevel(NuGetLogLevel level)
     {

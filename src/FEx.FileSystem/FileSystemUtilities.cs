@@ -864,6 +864,6 @@ public class FileSystemUtilities
                             Exception? exception = null)
     {
         if (printLog && (message.IsNotNullOrEmptyString() || exception is not null))
-            Logger.Log(level, exception, message);
+            Logger.Log(level, exception, "{Message}", message);
     }
 }

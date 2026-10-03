@@ -53,7 +53,7 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
                          .ToList())
                 sb.AppendLine(m);
 
-            _logger.LogError(sb.ToString());
+            _logger.LogError("{Message}", sb.ToString());
 
             throw;
         }

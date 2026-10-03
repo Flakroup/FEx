@@ -60,11 +60,11 @@ public sealed class TasksInfoSubject : FExBehaviorSubject<IList<Guid>>, ITasksIn
 
                 break;
             case 1:
-                _logger.LogInformation($"{_tasks.Count} task running");
+                _logger.LogInformation("{TaskCount} task running", _tasks.Count);
 
                 break;
             case > 1:
-                _logger.LogInformation($"{_tasks.Count} tasks running");
+                _logger.LogInformation("{TaskCount} tasks running", _tasks.Count);
 
                 break;
         }

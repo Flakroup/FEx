@@ -2,6 +2,7 @@
 # Usage: check-changelog.sh <base-sha> <head-sha>   (PR_LABELS: comma-separated label names)
 # Rules: shipped code changes need a NEW bullet under [Unreleased]; released history is append-only.
 # CHANGELOG content is compared against the merge base, so a PR branched before a release cut is judged fairly.
+# Pass the LIVE base ref (e.g. origin/develop), not the event's base.sha: that goes stale after "Update branch".
 set -euo pipefail
 base=$1 head=$2
 
@@ -13,8 +14,8 @@ fi
 files=$(git -c core.quotePath=false diff --no-renames --name-only "$base...$head")
 shipped=$(grep -E '^(src/|samples/|build/|DevConfigs$|Directory\.Build\.(props|targets)$|\.github/(workflows|scripts)/|build\.ps1$|FEx\.slnx$|GitVersion\.yml$|global\.json$|\.config/dotnet-tools\.json$|\.gitmodules$)' <<<"$files" || true)
 
-# Normalized views: no CR, no trailing whitespace.
-norm() { tr -d '\r' | sed 's/[[:space:]]*$//'; }
+# Normalized view: no trailing whitespace (this also drops a CR from CRLF files).
+norm() { sed 's/[[:space:]]*$//'; }
 unreleased() { awk 'tolower($0) ~ /^##[ \t]+\[unreleased\]/ { f = 1; next } /^## \[/ { f = 0 } f'; }
 released_from() { awk -v h="$1" '$0 == h { f = 1 } f'; }
 first_release() { grep -m1 -E '^## \[v?[0-9]' || true; }

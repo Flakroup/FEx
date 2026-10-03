@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Asserts exit code AND message of check-changelog.sh per scenario. Every case starts from a fresh copy
 # of one fixture repo, and each rule has a case only that rule can fail.
-set -uo pipefail
+set -euo pipefail
 script=$(cd "$(dirname "$0")" && pwd)/check-changelog.sh
-tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+tmp=$(mktemp -d) && [[ -d "$tmp" ]] || { echo "mktemp failed" >&2; exit 1; }
+trap 'rm -rf "$tmp"' EXIT
 tpl=$tmp/tpl
-mkdir "$tpl" && cd "$tpl"
+mkdir "$tpl"
+cd "$tpl"
 git init -q . && git config user.email t@t && git config user.name t && git config advice.addEmbeddedRepo false
 mkdir src test docs
 echo a > src/a.cs; echo a > test/a.cs
@@ -27,19 +29,20 @@ L
 git add -A && git commit -qm base && git branch -q base
 fail=0
 # case_ <name> <expected-exit> <expected-message-substring> <labels> <mutation-fn>
-# Mutation functions run inside the case repo; `on_base` mutations are applied to the base branch first.
+# Optional: <basemut> advances the base branch after the case's change (a develop that moved on),
+# <premut> changes base before the case branches off, <postmut> then runs on the case branch (e.g. "Update branch").
 case_() {
-  local name=$1 want=$2 msg=$3 labels=$4 mut=$5 basemut=${6:-} premut=${7:-}
+  local name=$1 want=$2 msg=$3 labels=$4 mut=$5 basemut=${6:-} premut=${7:-} postmut=${8:-}
   rm -rf "$tmp/r" && cp -a "$tpl" "$tmp/r" && cd "$tmp/r"
-  if [[ -n "$premut" ]]; then git checkout -q base; ( "$premut" ) >/dev/null 2>&1; git add -A; git commit -qm pre; fi
+  if [[ -n "$premut" ]]; then git checkout -q base; ( "$premut" ) >/dev/null 2>&1 || true; git add -A; git commit -qm pre; fi
   git checkout -q -B work base
-  ( "$mut" ) >/dev/null 2>&1
+  ( "$mut" ) >/dev/null 2>&1 || true
   git add -A; git commit -qm work --allow-empty
-  local b=base
   if [[ -n "$basemut" ]]; then
-    git checkout -q base; ( "$basemut" ) >/dev/null 2>&1; git add -A; git commit -qm advance; git checkout -q work
+    git checkout -q base; ( "$basemut" ) >/dev/null 2>&1 || true; git add -A; git commit -qm advance; git checkout -q work
   fi
-  PR_LABELS=$labels bash "$script" "$b" work >"$tmp/out" 2>&1; local got=$?
+  if [[ -n "$postmut" ]]; then ( "$postmut" ) >/dev/null 2>&1 || true; git add -A; git commit -qm post --allow-empty; fi
+  local got=0; PR_LABELS=$labels bash "$script" base work >"$tmp/out" 2>&1 || got=$?
   if [[ $got -eq $want ]] && grep -qF -- "$msg" "$tmp/out"; then echo "ok   $name (exit $got)"
   else echo "FAIL $name: want $want '$msg', got $got"; cat "$tmp/out"; fail=1; fi
 }
@@ -68,6 +71,10 @@ m_lower_heading()   { src; entry; sed -i 's/^## \[Unreleased\]/## [unreleased]/'
 m_no_unreleased()   { src; sed -i '/^## \[Unreleased\]/d' CHANGELOG.md; }
 p_vprefix()         { sed -i 's/^## \[0.3.0\]/## [v0.3.0]/' CHANGELOG.md; }
 m_cut()             { src; entry; sed -i 's/^## \[0.3.0\]/## [0.4.0] - 2026-02-01\n\n&/' CHANGELOG.md; }
+m_crlf_entry()      { src; entry; sed -i 's/$/\r/' CHANGELOG.md; }
+m_crlf_noentry()    { src; sed -i 's/$/\r/' CHANGELOG.md; }
+b_other_pr()        { echo y > src/b.cs; sed -i 's/^- existing entry$/&\n- entry X from another PR/' CHANGELOG.md; }
+p_merge_base()      { git merge -q --no-edit base; }
 b_cut()             { sed -i 's/^## \[0.3.0\]/## [0.4.0] - 2026-02-01\n\n- cut\n\n&/' CHANGELOG.md; }
 E="Add a new '- ' bullet"; A="append-only"; D="was deleted"; N="no '## [Unreleased]'"
 case_ src-no-changelog          1 "$E" ""             m_src_only
@@ -95,5 +102,8 @@ case_ lowercase-heading-entry   0 "entry found" ""    m_lower_heading
 case_ no-unreleased-section     1 "$N" ""             m_no_unreleased
 case_ v-prefixed-release-edit   1 "$A" ""             m_released_del "" p_vprefix
 case_ release-cut-above-history 0 "entry found" ""    m_cut
+case_ crlf-whole-file-entry      0 "entry found" ""    m_crlf_entry
+case_ crlf-without-entry         1 "$E" ""             m_crlf_noentry
+case_ update-branch-other-bullet 1 "$E" ""             m_src_only b_other_pr "" p_merge_base
 case_ branched-before-cut       0 "entry found" ""    m_src_entry b_cut
 exit $fail

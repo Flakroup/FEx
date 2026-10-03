@@ -22,7 +22,7 @@ jobs:
         run: bash .github/scripts/test-check-changelog.sh
       - name: Require a CHANGELOG.md entry
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_REF: ${{ github.base_ref }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
-        run: bash .github/scripts/check-changelog.sh "$BASE_SHA" "$HEAD_SHA"
+        run: bash .github/scripts/check-changelog.sh "origin/$BASE_REF" "$HEAD_SHA"

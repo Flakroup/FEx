@@ -38,12 +38,12 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     [ThreadStatic]
     private static TValue? _reloadTarget;
 
-    // Change sets published to the save pipeline and not yet saved or dropped: sequence number -> pipeline generation.
+    // Sequence numbers of the change sets published to the current save pipeline and not yet saved or dropped.
     // ReloadAsync waits until none is left at or below the last number published when it started. Replacing the
-    // pipeline releases every number of the old generation, since Rx disposes the old one asynchronously and its
+    // pipeline starts a new generation and clears the set, since Rx disposes the old one asynchronously and its
     // batches may run, or not, after that.
     private readonly object _pendingLock = new();
-    private readonly SortedDictionary<long, int> _pendingChanges = [];
+    private readonly SortedSet<long> _pendingChanges = [];
     private readonly List<PendingWaiter> _pendingWaiters = [];
     private long _lastChange;
     private int _generation;
@@ -295,10 +295,27 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         _cacheSubscription?.Dispose();
         var generation = StartGeneration();
+        var subscribed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        _cacheSubscription = cacheObservable.Select(WithoutReloads)
+        // SubscribeTask subscribes on the thread pool; signal once the cache is listened to, so an edit made after
+        // InitializeAsync returns reaches this subscription.
+        var source = Observable.Create<IChangeSet<TValue, TKey>>(observer =>
+        {
+            try
+            {
+                return cacheObservable.Subscribe(observer);
+            }
+            finally
+            {
+                subscribed.TrySetResult(true);
+            }
+        });
+
+        _cacheSubscription = source.Select(WithoutReloads)
             .Where(changeSet => changeSet.Count > 0)
             .Select(changeSet => (Sequence: Publish(generation), ChangeSet: changeSet))
+            // The replaced subscription, until its asynchronous disposal, sees edits the new one saves: drop them.
+            .Where(c => c.Sequence != 0)
             .Buffer(TimeSpan.FromMilliseconds(100))
             .Where(x => x.Count > 0)
             .Select(x =>
@@ -315,6 +332,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                     ChangeSet: changes.Count == 0 ? null : new ChangeSet<TValue, TKey>(DistinctChanges(changes)));
             })
             .SubscribeTask((batch, _) => HandleBatchAsync(batch.Sequences, batch.ChangeSet));
+
+        await subscribed.Task;
     }
 
     protected TKey KeyRetriver(TValue value) => (_keyRetriver ??= RetriveKey().Compile()).Invoke(value);
@@ -681,6 +700,15 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     internal int Generation => Volatile.Read(ref _generation);
 
+    internal long LastChange
+    {
+        get
+        {
+            lock (_pendingLock)
+                return _lastChange;
+        }
+    }
+
     internal int PendingChangeCount
     {
         get
@@ -699,10 +727,10 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         }
     }
 
-    internal int PendingChangesOf(int generation)
+    internal bool IsPending(long sequence)
     {
         lock (_pendingLock)
-            return _pendingChanges.Count(c => c.Value == generation);
+            return _pendingChanges.Contains(sequence);
     }
 
     // A change set of a closed generation is not tracked; 0 is never pending.
@@ -714,7 +742,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 return 0;
 
             var sequence = ++_lastChange;
-            _pendingChanges.Add(sequence, generation);
+            _pendingChanges.Add(sequence);
 
             return sequence;
         }
@@ -728,11 +756,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         lock (_pendingLock)
         {
-            var closed = _generation;
             generation = ++_generation;
-
-            foreach (var sequence in _pendingChanges.Where(c => c.Value == closed).Select(c => c.Key).ToList())
-                _pendingChanges.Remove(sequence);
+            _pendingChanges.Clear();
 
             released = TakeReleasedWaiters();
         }
@@ -789,7 +814,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             waiter.Signal.TrySetException(new ObjectDisposedException(TypeName));
     }
 
-    private bool NothingPendingUpTo(long target) => _pendingChanges.Count == 0 || _pendingChanges.Keys.First() > target;
+    private bool NothingPendingUpTo(long target) => _pendingChanges.Count == 0 || _pendingChanges.Min > target;
 
     // Waits until every change set published to the save pipeline so far has been saved or dropped.
     private async Task WaitForPendingChangesAsync(CancellationToken cancellationToken)

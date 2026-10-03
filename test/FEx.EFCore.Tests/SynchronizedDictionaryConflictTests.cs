@@ -615,12 +615,13 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
         await selected.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 #pragma warning restore VSTHRD003
-        var generation = sut.Generation;
+        var edit = sut.LastChange;
+        sut.IsPending(edit).ShouldBeTrue();
         await sut.ResetAsync();
         await sut.InitializeAsync();
         resume.SetResult(true);
 
-        sut.PendingChangesOf(generation).ShouldBe(0);
+        sut.IsPending(edit).ShouldBeFalse();
         (await sut.ReloadAsync(1, TestContext.Current.CancellationToken)
                 .WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken))
             .ShouldNotBeNull();
@@ -637,12 +638,13 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         var generation = sut.Generation;
 
         doc.Name = "buffered";
-        sut.PendingChangesOf(generation).ShouldBe(1);
+        var edit = sut.LastChange;
+        sut.IsPending(edit).ShouldBeTrue();
         await sut.ResetAsync();
         await sut.InitializeAsync();
 
         sut.Generation.ShouldNotBe(generation);
-        sut.PendingChangesOf(generation).ShouldBe(0);
+        sut.IsPending(edit).ShouldBeFalse();
     }
 
     [Fact]
@@ -654,9 +656,11 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         await sut.ResetAsync();
         await sut.InitializeAsync();
 
+        var last = sut.LastChange;
+
         sut.Publish(generation).ShouldBe(0);
 
-        sut.PendingChangesOf(generation).ShouldBe(0);
+        sut.LastChange.ShouldBe(last);
     }
 
     /// <summary>The reload's own cache edit is filtered to an empty change set, which must not wait for a buffer tick.</summary>
@@ -698,6 +702,31 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
             reload.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
         sut.PendingWaiterCount.ShouldBe(0);
         gate.SetResult(true);
+    }
+
+    /// <summary>
+    /// InitializeAsync returns once the new subscription listens, so an edit made right after it is saved, and
+    /// ReloadAsync waits for it.
+    /// </summary>
+    [Fact]
+    public async Task EditRightAfterResetAndInitialize_IsSaved_EveryTime()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        sut.AddOrUpdateValue(await LoadAsync(1));
+        await FlushThroughPipelineAsync(sut, 9);
+
+        for (var i = 0; i < 10; i++)
+        {
+            await sut.ResetAsync();
+            await sut.InitializeAsync();
+            sut[1].Name = $"v{i}";
+
+            var fresh = (await sut.ReloadAsync(1, TestContext.Current.CancellationToken)).ShouldNotBeNull();
+
+            fresh.Name.ShouldBe($"v{i}");
+            (await NamesInDbAsync())[0].ShouldBe($"v{i}");
+        }
     }
 
     private async Task InsertDocAsync(int id)

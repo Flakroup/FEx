@@ -36,7 +36,13 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     // The instance ReloadAsync is putting into (or taking out of) the cache on this thread; SourceCache publishes the
     // edit before it returns, so the subscription sees that change here and drops it instead of saving it.
     [ThreadStatic]
-    private static TValue? t_reloadTarget;
+    private static TValue? _reloadTarget;
+
+    // Cache changes published to the save pipeline, and those it has saved or dropped since; ReloadAsync waits until
+    // the second catches up with what the first was when it started.
+    private long _changesSeen;
+    private long _changesHandled;
+    private TaskCompletionSource<bool> _changesProgress = NewProgressSignal();
     private bool _isDisposed;
     private string[] _observedProperties;
     private IDisposable? _cacheSubscription;
@@ -48,11 +54,18 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     public int Count => Cache.Count;
 
     /// <summary>
-    /// Raised once per cached change that was not saved because another writer changed the same row, while the
-    /// rejected instance is still the cached value for its key (not after it was reloaded or removed). The cached value
-    /// keeps the rejected values and its stale concurrency token, so later edits of the key are rejected too until
-    /// <see cref="ReloadAsync" /> replaces it. Raised on the save thread (a thread-pool thread); an exception from a
+    /// Raised once per cached change that was not saved because another writer changed the same row. An update is
+    /// reported while the rejected instance is still the cached value for its key (not after it was reloaded or
+    /// removed); a removal (<see cref="CacheConflict{TKey, TValue}.IsRemoval" />) while the key is still not cached. The
+    /// rejected value keeps its stale concurrency token, so later edits of the key are rejected too until
+    /// <see cref="ReloadAsync" /> replaces it.
+    /// <para>
+    /// Raised after the batch save has finished, outside the save lock and after the save left
+    /// <see cref="CacheTasks" />, so a handler may wait on the cache (call <see cref="ReloadAsync" />, say). For the
+    /// buffered save pipeline that is a thread-pool thread; for a direct
+    /// <see cref="SaveChangesResolvingConflictsAsync" /> call it is the caller's continuation. An exception from a
     /// handler is logged and does not affect the save or the other handlers.
+    /// </para>
     /// </summary>
     public event EventHandler<CacheConflict<TKey, TValue>>? ConflictDetected;
 
@@ -159,12 +172,17 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     /// <summary>
     /// Replaces the cached value of <paramref name="key" /> with the row as it is in the database, loaded with the
     /// dictionary's normal query (<see cref="IncludeInEntity" /> and <see cref="LoadEntityAsync" />), or removes the
-    /// entry when the row no longer exists. The replacement is not saved back. Call it when a
+    /// entry when the row no longer exists. Cache changes already published to the save pipeline (buffered or being
+    /// saved) are saved first. The replacement is not saved back. Call it when a
     /// <see cref="ConflictDetected" /> conflict is resolved, from the thread that owns the cached values.
     /// </summary>
     /// <returns>The new cached value, or <c>null</c> when the row no longer exists.</returns>
     public async Task<TValue?> ReloadAsync(TKey key, CancellationToken cancellationToken = default)
     {
+        // An edit still buffered or being saved is written first, so the row read below includes it and the cache
+        // matches the database afterwards.
+        await WaitForPendingChangesAsync(cancellationToken);
+
         var fresh = await _dbSrv.RunTaskInDbContextAsync(async ctx =>
             {
                 var entity = await IncludeInEntity(DbSetAccessor(ctx).Where(HasKey(key)))
@@ -177,7 +195,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             false);
 
         var current = Cache.Lookup(key);
-        t_reloadTarget = fresh ?? (current.HasValue ? current.Value : null);
+        _reloadTarget = fresh ?? (current.HasValue ? current.Value : null);
 
         try
         {
@@ -188,7 +206,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         }
         finally
         {
-            t_reloadTarget = null;
+            _reloadTarget = null;
         }
 
         // Outside the marker: edits the hook makes to the new value are saved, as for any other retrieved value.
@@ -270,26 +288,26 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 _observables.Aggregate(cacheObservable, (current, o) => current.AutoRefreshOnObservable(o));
 
         _cacheSubscription?.Dispose();
+        // Changes buffered in a replaced subscription are never handled; do not let ReloadAsync wait for them.
+        MarkHandled(Interlocked.Read(ref _changesSeen) - Interlocked.Read(ref _changesHandled));
 
         _cacheSubscription = cacheObservable.Select(WithoutReloads)
+            .Do(changeSet => Interlocked.Add(ref _changesSeen, changeSet.Count))
             .Buffer(TimeSpan.FromMilliseconds(100))
-            .Where(x => x.Count > 0 && x.Any(c => c.Count > 0))
+            .Where(x => x.Count > 0)
             .Select(x =>
             {
+                long total = x.Sum(c => c.Count);
+
                 var changes = x.SelectMany(c => c)
                     .Where(c => c.Reason is not ChangeReason.Moved
                                 && (c.Reason != ChangeReason.Add || !Index.Contains(c.Key)))
                     .ToList();
 
-                if (changes.Count == 0)
-                    return [];
-
-                var distinctChanges = DistinctChanges(changes);
-
-                return new ChangeSet<TValue, TKey>(distinctChanges);
+                return (Total: total,
+                    ChangeSet: changes.Count == 0 ? null : new ChangeSet<TValue, TKey>(DistinctChanges(changes)));
             })
-            .NotEmpty()
-            .SubscribeTask((x, _) => HandleCacheAsync(x));
+            .SubscribeTask((batch, _) => HandleBatchAsync(batch.Total, batch.ChangeSet));
     }
 
     protected TKey KeyRetriver(TValue value) => (_keyRetriver ??= RetriveKey().Compile()).Invoke(value);
@@ -410,13 +428,32 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         OnRetrievedNew(value);
     }
 
-    private async Task HandleCacheAsync(IChangeSet<TValue, TKey> obj)
+    private async Task HandleBatchAsync(long total, IChangeSet<TValue, TKey>? changeSet)
+    {
+        var conflicts = new List<(ChangeInfo<TKey, TValue> Change, TValue? DatabaseValue)>();
+
+        try
+        {
+            if (changeSet is not null)
+                await HandleCacheAsync(changeSet, conflicts);
+        }
+        finally
+        {
+            MarkHandled(total);
+        }
+
+        // After the save released CacheHandlerSemaphore and left CacheTasks, so a handler may wait on the cache.
+        RaiseConflicts(conflicts);
+    }
+
+    private async Task HandleCacheAsync(IChangeSet<TValue, TKey> obj,
+                                        List<(ChangeInfo<TKey, TValue> Change, TValue? DatabaseValue)> conflicts)
     {
         var key = Guid.NewGuid().ToString();
 
         try
         {
-            var task = Task.Run(() => HandleCacheChangesAsync(obj));
+            var task = Task.Run(() => HandleCacheChangesAsync(obj, conflicts));
             CacheTasks.TryAdd(key, task);
             await task;
         }
@@ -430,7 +467,9 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         }
     }
 
-    private async Task<bool> HandleCacheChangesAsync(IChangeSet<TValue, TKey> changeSet)
+    private async Task<bool> HandleCacheChangesAsync(IChangeSet<TValue, TKey> changeSet,
+                                                     List<(ChangeInfo<TKey, TValue> Change, TValue? DatabaseValue)>
+                                                         conflicts)
     {
         await CacheHandlerSemaphore.WaitAsync();
 
@@ -438,7 +477,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         {
             var changes = changeSet.Select(x => new ChangeInfo<TKey, TValue>(x)).ToList();
 
-            return changes.Count == 0 || await SaveChangesResolvingConflictsAsync(changes);
+            return changes.Count == 0 || await SaveChangesCollectingConflictsAsync(changes, conflicts);
         }
         catch (Exception ex)
         {
@@ -467,7 +506,37 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     /// <returns><c>true</c> if every change was saved; <c>false</c> if any change was rejected.</returns>
     protected async Task<bool> SaveChangesResolvingConflictsAsync(List<ChangeInfo<TKey, TValue>> changes)
     {
+        var conflicts = new List<(ChangeInfo<TKey, TValue> Change, TValue? DatabaseValue)>();
+        var allSaved = await SaveChangesCollectingConflictsAsync(changes, conflicts);
+        RaiseConflicts(conflicts);
+
+        return allSaved;
+    }
+
+    // The save itself; rejected changes are collected so the caller raises ConflictDetected once the save is over.
+    private async Task<bool> SaveChangesCollectingConflictsAsync(List<ChangeInfo<TKey, TValue>> changes,
+                                                                 List<(ChangeInfo<TKey, TValue> Change, TValue?
+                                                                     DatabaseValue)> conflicts)
+    {
         var maxAttempts = changes.Count + 1;
+        var allRejected = new List<ChangeInfo<TKey, TValue>>();
+
+        try
+        {
+            return await SaveChangesRejectingConflictsAsync(changes, maxAttempts, allRejected);
+        }
+        finally
+        {
+            // One read of the database rows for every change rejected in any attempt of this save.
+            if (allRejected.Count > 0)
+                await CollectConflictsAsync(allRejected, conflicts);
+        }
+    }
+
+    private async Task<bool> SaveChangesRejectingConflictsAsync(List<ChangeInfo<TKey, TValue>> changes,
+                                                                int maxAttempts,
+                                                                List<ChangeInfo<TKey, TValue>> allRejected)
+    {
         var allSaved = true;
 
         for (var attempt = 1; changes.Count > 0; attempt++)
@@ -503,9 +572,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 }
 
                 allSaved &= rejected.Count == 0;
-
-                if (rejected.Count > 0)
-                    await NotifyConflictsAsync(rejected);
+                allRejected.AddRange(rejected);
             }
         }
 
@@ -552,7 +619,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         return (retry, rejected);
     }
 
-    private async Task NotifyConflictsAsync(List<ChangeInfo<TKey, TValue>> rejected)
+    private async Task CollectConflictsAsync(List<ChangeInfo<TKey, TValue>> rejected,
+                                             List<(ChangeInfo<TKey, TValue> Change, TValue? DatabaseValue)> conflicts)
     {
         if (ConflictDetected is null)
             return;
@@ -575,16 +643,51 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 $"{TypeName}: could not read the database values of rejected changes, keys [{string.Join(", ", keys)}]");
         }
 
-        foreach (var change in rejected)
+        conflicts.AddRange(rejected.Select(change =>
+            (change, rows.TryGetValue(change.Key, out var row) ? row : null)));
+    }
+
+    private void RaiseConflicts(List<(ChangeInfo<TKey, TValue> Change, TValue? DatabaseValue)> conflicts)
+    {
+        foreach (var (change, databaseValue) in conflicts)
         {
-            // Only while the rejected instance is still what the cache holds for the key: a value reloaded or removed
-            // since then is not in conflict.
-            if (Cache.Lookup(change.Key) is not { HasValue: true } cached || !ReferenceEquals(cached.Value, change.Value))
+            var isRemoval = change.Reason == ChangeReason.Remove;
+            var cached = Cache.Lookup(change.Key);
+
+            // An update only while the rejected instance is still what the cache holds for the key, a removal only
+            // while the key is still not cached: a value reloaded, removed or re-added since then is not in conflict.
+            if (isRemoval ? cached.HasValue : !cached.HasValue || !ReferenceEquals(cached.Value, change.Value))
                 continue;
 
-            RaiseConflict(new(change.Key, change.Value, rows.TryGetValue(change.Key, out var row) ? row : null));
+            RaiseConflict(new(change.Key, change.Value, databaseValue, isRemoval));
         }
     }
+
+    private void MarkHandled(long count)
+    {
+        Interlocked.Add(ref _changesHandled, count);
+        Interlocked.Exchange(ref _changesProgress, NewProgressSignal()).TrySetResult(true);
+    }
+
+    // Waits until every cache change published to the save pipeline so far has been saved or dropped.
+    private async Task WaitForPendingChangesAsync(CancellationToken cancellationToken)
+    {
+        var target = Interlocked.Read(ref _changesSeen);
+
+        while (true)
+        {
+            var progress = Volatile.Read(ref _changesProgress);
+
+            if (Interlocked.Read(ref _changesHandled) >= target)
+                return;
+
+            await Task.WhenAny(progress.Task, Task.Delay(Timeout.Infinite, cancellationToken));
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+    }
+
+    private static TaskCompletionSource<bool> NewProgressSignal() =>
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     // Each handler in isolation: a throwing one must not stop the others or the save loop.
     private void RaiseConflict(CacheConflict<TKey, TValue> conflict)
@@ -607,7 +710,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     private static IChangeSet<TValue, TKey> WithoutReloads(IChangeSet<TValue, TKey> changeSet)
     {
-        var target = t_reloadTarget;
+        var target = _reloadTarget;
 
         return target is null
             ? changeSet

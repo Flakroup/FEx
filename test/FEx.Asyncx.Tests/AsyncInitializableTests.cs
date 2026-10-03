@@ -1,6 +1,7 @@
 using FEx.Asyncx.Abstractions;
 using FEx.Core.Abstractions.Interfaces;
 using Shouldly;
+using StrongInject;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -201,6 +202,35 @@ public sealed class AsyncInitializableTests
         }
 
         public void Dispose() => _queue.Dispose();
+    }
+
+    [Fact]
+    public async Task AsyncAutoInitializable_Initialize_StartsInitialization()
+    {
+        using var sut = new AutoInitializable();
+
+        ((IRequiresInitialization)sut).Initialize();
+
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+        await sut.HookRan.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
+#pragma warning restore VSTHRD003
+    }
+
+    private sealed class AutoInitializable : AsyncAutoInitializable
+    {
+        public TaskCompletionSource<bool> HookRan { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public AutoInitializable()
+            : base([])
+        {
+        }
+
+        protected override Task OnInitializeAsync()
+        {
+            HookRan.TrySetResult(true);
+
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class HookOnlyInitializable : AsyncInitializable

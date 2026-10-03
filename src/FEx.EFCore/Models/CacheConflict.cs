@@ -13,8 +13,14 @@ public sealed class CacheConflict<TKey, TValue>
 {
     public TKey Key { get; }
 
-    /// <summary>The cached instance whose change was rejected; it still holds the rejected values.</summary>
+    /// <summary>
+    /// The instance whose change was rejected; it still holds the rejected values. For a rejected removal it is the
+    /// removed value, which is no longer cached.
+    /// </summary>
     public TValue CachedValue { get; }
+
+    /// <summary><c>true</c> when the rejected change was a removal: the row was not deleted.</summary>
+    public bool IsRemoval { get; }
 
     /// <summary>
     /// A detached copy of the row as the other writer left it, or <c>null</c> when the row no longer exists or could
@@ -22,10 +28,11 @@ public sealed class CacheConflict<TKey, TValue>
     /// </summary>
     public TValue? DatabaseValue { get; }
 
-    public CacheConflict(TKey key, TValue cachedValue, TValue? databaseValue)
+    public CacheConflict(TKey key, TValue cachedValue, TValue? databaseValue, bool isRemoval)
     {
         Key = key;
         CachedValue = cachedValue;
         DatabaseValue = databaseValue;
+        IsRemoval = isRemoval;
     }
 }

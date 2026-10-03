@@ -335,6 +335,115 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         conflicts.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task RejectedChangesOfTwoKeysInOneBatch_RaiseOneConflictEach_WithTheirOwnRows()
+    {
+        await InsertDocAsync(3);
+        using var sut = CreateDictionary(false);
+        var first = await LoadAsync(1);
+        var third = await LoadAsync(3);
+        sut.AddOrUpdateValue(first);
+        sut.AddOrUpdateValue(third);
+        await UpdateByOtherWriterAsync(1);
+        await UpdateByOtherWriterAsync(3);
+        var conflicts = new ConcurrentQueue<CacheConflict<int, CachedDoc>>();
+        sut.ConflictDetected += (_, conflict) => conflicts.Enqueue(conflict);
+
+        first.Name = "first from A";
+        third.Name = "third from A";
+        (await sut.SaveAsync(new(ChangeReason.Refresh, 1, first), new(ChangeReason.Refresh, 3, third))).ShouldBeFalse();
+
+        conflicts.Select(c => c.Key).OrderBy(k => k).ShouldBe([1, 3]);
+        conflicts.ShouldAllBe(c => c.DatabaseValue != null && c.DatabaseValue.Id == c.Key);
+        conflicts.Single(c => c.Key == 1).CachedValue.ShouldBeSameAs(first);
+        conflicts.Single(c => c.Key == 3).CachedValue.ShouldBeSameAs(third);
+    }
+
+    [Fact]
+    public async Task RejectedRemoval_RaisesAConflictMarkedAsRemoval()
+    {
+        using var sut = CreateDictionary(true);
+        var doc = await LoadAsync(1);
+        await UpdateByOtherWriterAsync(1);
+        var conflicts = new ConcurrentQueue<CacheConflict<int, CachedDoc>>();
+        sut.ConflictDetected += (_, conflict) => conflicts.Enqueue(conflict);
+
+        (await sut.SaveAsync(new Change<CachedDoc, int>(ChangeReason.Remove, 1, doc))).ShouldBeFalse();
+
+        var raised = conflicts.ShouldHaveSingleItem();
+        raised.IsRemoval.ShouldBeTrue();
+        raised.CachedValue.ShouldBeSameAs(doc);
+        raised.DatabaseValue.ShouldNotBeNull().Name.ShouldBe("from B");
+        (await NamesInDbAsync()).ShouldBe(["from B"]);
+    }
+
+    /// <summary>
+    /// The handler runs after the save left the save lock and CacheTasks, so it can wait for the cache and reload the
+    /// key it was told about; the cache then matches the database.
+    /// </summary>
+    [Fact]
+    public async Task ConflictHandler_CanWaitForTheCache_AndReloadTheKey()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await FlushThroughPipelineAsync(sut, 9);
+        await UpdateByOtherWriterAsync(1);
+        var handled = new TaskCompletionSource<(bool CacheIdle, CachedDoc? Fresh)>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+#pragma warning disable VSTHRD101, VSTHRD002 // An async handler that blocks on purpose: it must not be inside the save
+        sut.ConflictDetected += async (_, conflict) =>
+        {
+            try
+            {
+                var idle = sut.WaitForCacheTasksAsync().Wait(TimeSpan.FromSeconds(10));
+                var reloaded = await sut.ReloadAsync(conflict.Key, TestContext.Current.CancellationToken);
+                handled.TrySetResult((idle, reloaded));
+            }
+            catch (Exception ex)
+            {
+                handled.TrySetException(ex);
+            }
+        };
+#pragma warning restore VSTHRD101, VSTHRD002
+
+        doc.Name = "from A";
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+        var (cacheIdle, fresh) = await handled.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+#pragma warning restore VSTHRD003
+
+        cacheIdle.ShouldBeTrue();
+        sut[1].ShouldBeSameAs(fresh.ShouldNotBeNull());
+        fresh.Name.ShouldBe("from B");
+        (await NamesInDbAsync())[0].ShouldBe("from B");
+    }
+
+    [Fact]
+    public async Task ReloadAsync_WithAnEditStillBuffered_SavesItFirst_SoTheCacheMatchesTheDatabase()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await FlushThroughPipelineAsync(sut, 9);
+
+        doc.Name = "pending";
+        var fresh = (await sut.ReloadAsync(1, TestContext.Current.CancellationToken)).ShouldNotBeNull();
+
+        fresh.Name.ShouldBe("pending");
+        await FlushThroughPipelineAsync(sut, 10);
+        (await NamesInDbAsync())[0].ShouldBe("pending");
+        sut[1].Name.ShouldBe("pending");
+    }
+
+    private async Task InsertDocAsync(int id)
+    {
+        using var ctx = CreateContext();
+        await ctx.Docs.AddAsync(new() { Id = id, Name = "original", Version = 1 }, TestContext.Current.CancellationToken);
+        await ctx.SaveChangesAsync(TestContext.Current.CancellationToken);
+    }
+
     private static async Task FlushThroughPipelineAsync(CacheDictionary sut, int probeId)
     {
         sut.AddOrUpdateValue(new() { Id = probeId, Name = "probe", Version = 1 });

@@ -77,8 +77,6 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
     /// </summary>
     /// <param name="sampleTimeSpan">The time span interval to sample progress updates.</param>
     /// <param name="handler">The progress update handler that updates the UI.</param>
-    /// <param name="predicate">This predicate will be used to limit subscription triggering by Where statement.</param>
-    /// <param name="limitToCurrentThread">Subscription triggering will be limited to current thread by ObserveOn statement.</param>
     /// <returns></returns>
     public static IDisposableProgress<T> CreateForUiWithBuffer(TimeSpan sampleTimeSpan, Action<IList<T>> handler) =>
         CreateForUiWithBuffer(sampleTimeSpan, handler, null, false);
@@ -88,6 +86,15 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
                                                                Func<IList<T>, bool> predicate) =>
         CreateForUiWithBuffer(sampleTimeSpan, handler, predicate, false);
 
+    /// <summary>
+    /// Creates a progress handler with common UI options: updates are buffered in <paramref name="sampleTimeSpan" />
+    /// intervals, and the <paramref name="handler" /> is executed on the UI thread.
+    /// </summary>
+    /// <param name="sampleTimeSpan">The time span interval to sample progress updates.</param>
+    /// <param name="handler">The progress update handler that updates the UI.</param>
+    /// <param name="predicate">This predicate will be used to limit subscription triggering by Where statement.</param>
+    /// <param name="limitToCurrentThread">Subscription triggering will be limited to current thread by ObserveOn statement.</param>
+    /// <returns>A disposable progress handler.</returns>
     public static IDisposableProgress<T> CreateForUiWithBuffer(TimeSpan sampleTimeSpan,
                                                                Action<IList<T>> handler,
                                                                Func<IList<T>, bool>? predicate,
@@ -112,8 +119,6 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
     /// </summary>
     /// <param name="sampleTimeSpan">The time span interval to sample progress updates.</param>
     /// <param name="handler">The progress update handler that updates the UI.</param>
-    /// <param name="scheduler">The scheduler to inject into the <c>Sample</c> operator.</param>
-    /// <param name="limitToCurrentThread">Subscription triggering will be limited to current thread by ObserveOn statement.</param>
     public static IDisposableProgress<T> CreateForUiWithSample(TimeSpan sampleTimeSpan, Action<T> handler) =>
         CreateForUiWithSample(sampleTimeSpan, handler, null, false);
 
@@ -122,6 +127,15 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
                                                                IScheduler scheduler) =>
         CreateForUiWithSample(sampleTimeSpan, handler, scheduler, false);
 
+    /// <summary>
+    /// Creates a progress handler with common UI options: updates are sampled on <paramref name="sampleTimeSpan" />
+    /// intervals, and the <paramref name="handler" /> is executed on the UI thread.
+    /// </summary>
+    /// <param name="sampleTimeSpan">The time span interval to sample progress updates.</param>
+    /// <param name="handler">The progress update handler that updates the UI.</param>
+    /// <param name="scheduler">The scheduler to inject into the <c>Sample</c> operator.</param>
+    /// <param name="limitToCurrentThread">Subscription triggering will be limited to current thread by ObserveOn statement.</param>
+    /// <returns>A disposable progress handler.</returns>
     public static IDisposableProgress<T> CreateForUiWithSample(TimeSpan sampleTimeSpan,
                                                                Action<T> handler,
                                                                IScheduler? scheduler,

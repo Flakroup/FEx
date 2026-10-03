@@ -145,16 +145,31 @@ public static class BitmapExtensions
     /// Takes a bitmap and converts it to an image that can be handled by WPF ImageBrush
     /// </summary>
     /// <param name="image">A bitmap image</param>
-    /// <param name="imageFormat">The format.</param>
-    /// <param name="forceLoad">if set to <c>true</c> [force load].</param>
     /// <returns>
     /// The image as a BitmapImage for WPF
     /// </returns>
     public static Task<BitmapImage> ToBitmapImageAsync(this Image image) => image.ToBitmapImageAsync(null, false);
 
+    /// <summary>
+    /// Takes a bitmap and converts it to an image that can be handled by WPF ImageBrush
+    /// </summary>
+    /// <param name="image">A bitmap image</param>
+    /// <param name="imageFormat">The format.</param>
+    /// <returns>
+    /// The image as a BitmapImage for WPF
+    /// </returns>
     public static Task<BitmapImage> ToBitmapImageAsync(this Image image, ImageFormat? imageFormat) =>
         image.ToBitmapImageAsync(imageFormat, false);
 
+    /// <summary>
+    /// Takes a bitmap and converts it to an image that can be handled by WPF ImageBrush
+    /// </summary>
+    /// <param name="image">A bitmap image</param>
+    /// <param name="imageFormat">The format.</param>
+    /// <param name="forceLoad">if set to <c>true</c> [force load].</param>
+    /// <returns>
+    /// The image as a BitmapImage for WPF
+    /// </returns>
     public static async Task<BitmapImage> ToBitmapImageAsync(this Image image, ImageFormat? imageFormat, bool forceLoad)
     {
         //https://stackoverflow.com/questions/25326137/converting-bitmap-to-imagesource-made-my-images-background-black

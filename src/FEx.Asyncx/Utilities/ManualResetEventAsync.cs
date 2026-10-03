@@ -31,16 +31,19 @@ public sealed class ManualResetEventAsync
     /// <summary>
     /// Initializes a new instance of the <see cref="ManualResetEventAsync" /> class.
     /// </summary>
-    /// <param name="isSet">True to set the task completion source on creation.</param>
-    /// <param name="runSynchronousContinuationsOnSetThread">
-    /// If you have synchronous continuations, they will run on the thread
-    /// which invokes Set, unless you set this to false.
-    /// </param>
     public ManualResetEventAsync()
         : this(false, true)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ManualResetEventAsync" /> class.
+    /// </summary>
+    /// <param name="isSet">True to set the task completion source on creation.</param>
+    /// <param name="runSynchronousContinuationsOnSetThread">
+    /// If you have synchronous continuations, they will run on the thread
+    /// which invokes Set, unless you set this to false.
+    /// </param>
     public ManualResetEventAsync(bool isSet, bool runSynchronousContinuationsOnSetThread)
     {
         _runSynchronousContinuationsOnSetThread = runSynchronousContinuationsOnSetThread;
@@ -53,14 +56,18 @@ public sealed class ManualResetEventAsync
     /// <summary>
     /// Wait for the manual reset event.
     /// </summary>
+    /// <returns>A task which waits for the manual reset event.</returns>
+    public Task<bool> WaitAsync() => WaitAsync(null, CancellationToken.None);
+
+    /// <summary>
+    /// Wait for the manual reset event.
+    /// </summary>
     /// <param name="timeout">A timeout.</param>
     /// <param name="token">A cancellation token.</param>
     /// <returns>
     /// A task which waits for the manual reset event. Returns true if the timeout has not expired. Returns false if
     /// the timeout expired.
     /// </returns>
-    public Task<bool> WaitAsync() => WaitAsync(null, CancellationToken.None);
-
     public async Task<bool> WaitAsync(TimeSpan? timeout, CancellationToken token) =>
         await AwaitCompletionAsync(timeout.HasValue
                 ? (int)timeout.Value.TotalMilliseconds

@@ -17,14 +17,25 @@ public static class DispatcherService
     /// by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
-    /// <param name="sender">The sender object in context of which action should be executed.</param>
-    /// <param name="priority">The priority.</param>
     public static void InvokeOnDispatcherContext(Action action) =>
         InvokeOnDispatcherContext(action, null, DispatcherPriority.Send);
 
+    /// <summary>
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
+    /// </summary>
+    /// <param name="action">The action.</param>
+    /// <param name="sender">The sender object in context of which action should be executed.</param>
     public static void InvokeOnDispatcherContext(Action action, DispatcherObject? sender) =>
         InvokeOnDispatcherContext(action, sender, DispatcherPriority.Send);
 
+    /// <summary>
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
+    /// </summary>
+    /// <param name="action">The action.</param>
+    /// <param name="sender">The sender object in context of which action should be executed.</param>
+    /// <param name="priority">The priority.</param>
     public static void InvokeOnDispatcherContext(Action action, DispatcherObject? sender, DispatcherPriority priority)
     {
         var dispatcherObject = sender.GetDispatcherObject();
@@ -40,14 +51,25 @@ public static class DispatcherService
     /// by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
-    /// <param name="sender">The sender object in context of which action should be executed.</param>
-    /// <param name="priority">The priority.</param>
     public static Task InvokeOnDispatcherContextAsync(Action action) =>
         InvokeOnDispatcherContextAsync(action, null, DispatcherPriority.Send);
 
+    /// <summary>
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
+    /// </summary>
+    /// <param name="action">The action.</param>
+    /// <param name="sender">The sender object in context of which action should be executed.</param>
     public static Task InvokeOnDispatcherContextAsync(Action action, DispatcherObject? sender) =>
         InvokeOnDispatcherContextAsync(action, sender, DispatcherPriority.Send);
 
+    /// <summary>
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher asynchronously, or directly, and running it.
+    /// </summary>
+    /// <param name="action">The action.</param>
+    /// <param name="sender">The sender object in context of which action should be executed.</param>
+    /// <param name="priority">The priority.</param>
     public static async Task InvokeOnDispatcherContextAsync(Action action,
                                                             DispatcherObject? sender,
                                                             DispatcherPriority priority)
@@ -65,14 +87,25 @@ public static class DispatcherService
     /// by checking if action should be invoked by dispatcher, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
-    /// <param name="sender">The sender object in context of which action should be executed.</param>
-    /// <param name="priority">The priority.</param>
     public static T InvokeOnDispatcherContext<T>(Func<T> action) =>
         InvokeOnDispatcherContext(action, null, DispatcherPriority.Send);
 
+    /// <summary>
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher, or directly, and running it.
+    /// </summary>
+    /// <param name="action">The action.</param>
+    /// <param name="sender">The sender object in context of which action should be executed.</param>
     public static T InvokeOnDispatcherContext<T>(Func<T> action, DispatcherObject? sender) =>
         InvokeOnDispatcherContext(action, sender, DispatcherPriority.Send);
 
+    /// <summary>
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher, or directly, and running it.
+    /// </summary>
+    /// <param name="action">The action.</param>
+    /// <param name="sender">The sender object in context of which action should be executed.</param>
+    /// <param name="priority">The priority.</param>
     public static T InvokeOnDispatcherContext<T>(Func<T> action, DispatcherObject? sender, DispatcherPriority priority)
     {
         var dispatcherObject = sender.GetDispatcherObject();
@@ -87,20 +120,38 @@ public static class DispatcherService
     /// by checking if action should be invoked by dispatcher, or directly, and running it.
     /// </summary>
     /// <param name="action">The action.</param>
-    /// <param name="cancellationToken"></param>
-    /// <param name="sender">The sender object in context of which action should be executed.</param>
-    /// <param name="priority">The priority.</param>
     public static Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action) =>
         InvokeOnDispatcherContextAsync(action, null, DispatcherPriority.Send, CancellationToken.None);
 
+    /// <summary>
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher, or directly, and running it.
+    /// </summary>
+    /// <param name="action">The action.</param>
+    /// <param name="sender">The sender object in context of which action should be executed.</param>
     public static Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action, DispatcherObject? sender) =>
         InvokeOnDispatcherContextAsync(action, sender, DispatcherPriority.Send, CancellationToken.None);
 
+    /// <summary>
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher, or directly, and running it.
+    /// </summary>
+    /// <param name="action">The action.</param>
+    /// <param name="sender">The sender object in context of which action should be executed.</param>
+    /// <param name="priority">The priority.</param>
     public static Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action,
                                                             DispatcherObject? sender,
                                                             DispatcherPriority priority) =>
         InvokeOnDispatcherContextAsync(action, sender, priority, CancellationToken.None);
 
+    /// <summary>
+    /// Executes the action in dispatcher context
+    /// by checking if action should be invoked by dispatcher, or directly, and running it.
+    /// </summary>
+    /// <param name="action">The action.</param>
+    /// <param name="sender">The sender object in context of which action should be executed.</param>
+    /// <param name="priority">The priority.</param>
+    /// <param name="cancellationToken"></param>
     public static async Task<T> InvokeOnDispatcherContextAsync<T>(Func<T> action,
                                                                   DispatcherObject? sender,
                                                                   DispatcherPriority priority,
@@ -152,10 +203,14 @@ public static class DispatcherService
     /// Shows the view and waits until it's closed.
     /// </summary>
     /// <param name="viewFunc">The view function.</param>
-    /// <param name="isModal">if set to <c>true</c> [is modal].</param>
     public static TaskCompletionSource<bool> ShowView<T>(Func<T> viewFunc) where T : Window =>
         ShowView(viewFunc, false);
 
+    /// <summary>
+    /// Shows the view and waits until it's closed.
+    /// </summary>
+    /// <param name="viewFunc">The view function.</param>
+    /// <param name="isModal">if set to <c>true</c> [is modal].</param>
     public static TaskCompletionSource<bool> ShowView<T>(Func<T> viewFunc, bool isModal) where T : Window
     {
         var tcs = new TaskCompletionSource<bool>();

@@ -33,6 +33,11 @@ public static class FtpDownloader
     /// <summary>
     /// Downloads a file, resuming and retrying until it is complete.
     /// </summary>
+    /// <param name="fileName">The local file path to download to.</param>
+    /// <param name="serverUri">The URI of the file on the server.</param>
+    /// <param name="viewModel">The progress aggregator that receives progress updates.</param>
+    /// <param name="username">The username.</param>
+    /// <param name="password">The password.</param>
     /// <param name="maxAttempts">Maximum consecutive attempts without progress before giving up.</param>
     /// <param name="cancellationToken">Cancels the download, including the wait between attempts.</param>
     /// <returns><c>true</c> when the file is complete; <c>false</c> when attempts ran out without an error to report.</returns>
@@ -316,6 +321,8 @@ public static class FtpDownloader
     /// <param name="unit">The unit.</param>
     /// <param name="username">The username.</param>
     /// <param name="password">The password.</param>
+    /// <param name="client">The <see cref="HttpClient" /> used for http and https URIs; a default one is used when <see langword="null" />.</param>
+    /// <param name="cancellationToken">Cancels the operation.</param>
     /// <returns></returns>
     public static async Task<double> CalculateSizeAsync(Uri serverUri,
                                                         bool promptOnError = true,

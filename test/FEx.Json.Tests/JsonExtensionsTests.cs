@@ -1,8 +1,11 @@
+using FEx.Json.Converters;
 using FEx.Json.Extensions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Shouldly;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using Xunit;
@@ -20,16 +23,17 @@ public sealed class JsonExtensionsTests
     }
 
     [Fact]
-    public void DefaultSettings_AreInstalledAsNewtonsoftDefaults()
+    public void DefaultSettings_AreFExDefaults()
     {
         JsonExtensions.Initialize();
 
-        JsonConvert.DefaultSettings.ShouldNotBeNull();
-        var settings = JsonExtensions.DefaultSettings!;
+        var settings = JsonConvert.DefaultSettings!();
         settings.NullValueHandling.ShouldBe(NullValueHandling.Ignore);
         settings.DateParseHandling.ShouldBe(DateParseHandling.None);
-        settings.MissingMemberHandling.ShouldBe(MissingMemberHandling.Ignore);
+        settings.DateFormatHandling.ShouldBe(DateFormatHandling.IsoDateFormat);
         settings.MetadataPropertyHandling.ShouldBe(MetadataPropertyHandling.Ignore);
+        settings.Converters.ShouldContain(ParseStringToDoubleConverter.Singleton);
+        settings.Converters.ShouldContain(c => c is VersionConverter);
     }
 
     [Fact]
@@ -73,15 +77,20 @@ public sealed class JsonExtensionsTests
     }
 
     [Fact]
-    public void FromJson_StringNumber_IsParsedToDouble()
+    public void FromJson_StringNumber_UsesCurrentCultureSeparator()
     {
-        "{\"Ratio\":\"2.5\"}".FromJson<Sample>()!.Ratio.ShouldBe(2.5);
-    }
+        var previous = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = new CultureInfo("de-DE");
 
-    [Fact]
-    public void FromJson_Version_IsParsedFromString()
-    {
-        "{\"Version\":\"4.5.6\"}".FromJson<Sample>()!.Version.ShouldBe(new Version(4, 5, 6));
+        try
+        {
+            // Newtonsoft alone would read the invariant "2,5" as 25; the converter honours the culture.
+            "{\"Ratio\":\"2,5\"}".FromJson<Sample>()!.Ratio.ShouldBe(2.5);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Fact]

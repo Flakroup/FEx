@@ -2,6 +2,7 @@ using FEx.Json.Converters;
 using FEx.Json.Resolvers;
 using Newtonsoft.Json;
 using Shouldly;
+using System.IO;
 using System;
 using Xunit;
 
@@ -66,11 +67,26 @@ public sealed class ConverterAndResolverTests
     }
 
     [Fact]
+    public void ParseStringToLongConverter_CanConvert_OnlyLongAndNullableLong()
+    {
+        var converter = ParseStringToLongConverter.Singleton;
+
+        converter.CanConvert(typeof(long)).ShouldBeTrue();
+        converter.CanConvert(typeof(long?)).ShouldBeTrue();
+        converter.CanConvert(typeof(int)).ShouldBeFalse();
+    }
+
+    [Fact]
     public void ParseStringToLongConverter_ReadsQuotedNumber()
     {
-        var settings = new JsonSerializerSettings { Converters = { ParseStringToLongConverter.Singleton } };
+        using var stringReader = new StringReader("\"123\"");
+        using var reader = new JsonTextReader(stringReader);
+        reader.Read();
 
-        JsonConvert.DeserializeObject<Money>("{\"Amount\":\"123\"}", settings)!.Amount.ShouldBe(123);
+        var value = ParseStringToLongConverter.Singleton
+            .ReadJson(reader, typeof(long), null, JsonSerializer.CreateDefault());
+
+        value.ShouldBe(123L);
     }
 
     [Fact]
@@ -82,17 +98,19 @@ public sealed class ConverterAndResolverTests
     }
 
     [Fact]
-    public void ParseStringToLongConverter_NonNumeric_Throws()
+    public void ParseStringToLongConverter_NonNumeric_ThrowsConverterMessage()
     {
         var settings = new JsonSerializerSettings { Converters = { ParseStringToLongConverter.Singleton } };
 
-        Should.Throw<Exception>(() => JsonConvert.DeserializeObject<Money>("{\"Amount\":\"abc\"}", settings));
+        var ex = Should.Throw<Exception>(() => JsonConvert.DeserializeObject<Money>("{\"Amount\":\"abc\"}", settings));
+
+        ex.Message.ShouldContain("Cannot unmarshal type long");
     }
 
     [Fact]
     public void JsonPathConverter_MapsNestedPathsToProperties()
     {
-        var settings = new JsonSerializerSettings { Converters = { new PathConverterFor<PathTarget>() } };
+        var settings = new JsonSerializerSettings { Converters = { new PathTargetConverter() } };
 
         var result = JsonConvert.DeserializeObject<PathTarget>("{\"a\":{\"b\":42},\"Flat\":\"f\"}", settings)!;
 
@@ -100,8 +118,8 @@ public sealed class ConverterAndResolverTests
         result.Flat.ShouldBe("f");
     }
 
-    private sealed class PathConverterFor<T> : JsonPathConverter
+    private sealed class PathTargetConverter : JsonPathConverter
     {
-        public override bool CanConvert(Type objectType) => objectType == typeof(T);
+        public override bool CanConvert(Type objectType) => objectType == typeof(PathTarget);
     }
 }

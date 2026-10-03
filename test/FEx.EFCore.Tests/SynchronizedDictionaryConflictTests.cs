@@ -264,6 +264,77 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         sut.SavedKeys.Skip(attemptsBefore).ShouldBe([[10]]);
     }
 
+    [Fact]
+    public async Task ReloadAsync_OfADeletedRow_ThroughTheInitializedPipeline_IsNotSavedBack()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        sut.AddOrUpdateValue(await LoadAsync(1));
+        await FlushThroughPipelineAsync(sut, 9);
+        await DeleteByOtherWriterAsync(1);
+        var attemptsBefore = sut.SavedKeys.Count;
+
+        (await sut.ReloadAsync(1, TestContext.Current.CancellationToken)).ShouldBeNull();
+
+        await FlushThroughPipelineAsync(sut, 10);
+        sut.SavedKeys.Skip(attemptsBefore).ShouldBe([[10]]);
+    }
+
+    /// <summary>Like a value retrieved by GetOrAddValueAsync, a reloaded value is saved when OnRetrievedNew edits it.</summary>
+    [Fact]
+    public async Task ReloadAsync_EditsMadeByOnRetrievedNew_AreSaved()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        sut.AddOrUpdateValue(await LoadAsync(1));
+        await FlushThroughPipelineAsync(sut, 9);
+        var attemptsBefore = sut.SavedKeys.Count;
+        sut.OnRetrieved = value => value.Name = "hydrated";
+
+        await sut.ReloadAsync(1, TestContext.Current.CancellationToken);
+
+        await FlushThroughPipelineAsync(sut, 10);
+        sut.SavedKeys.Skip(attemptsBefore).SelectMany(k => k).ShouldContain(1);
+        (await NamesInDbAsync())[0].ShouldBe("hydrated");
+    }
+
+    [Fact]
+    public async Task ConflictWhoseDatabaseValuesCannotBeRead_IsRaisedWithoutThem_AndTheBatchContinues()
+    {
+        using var sut = CreateDictionary(true);
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await UpdateByOtherWriterAsync(1);
+        var conflicts = new ConcurrentQueue<CacheConflict<int, CachedDoc>>();
+        sut.ConflictDetected += (_, conflict) => conflicts.Enqueue(conflict);
+        sut.FailIncludedQueries = true;
+
+        doc.Name = "from A";
+        (await sut.SaveAsync(new(ChangeReason.Refresh, 1, doc), NewDoc(2))).ShouldBeFalse();
+
+        var raised = conflicts.ShouldHaveSingleItem();
+        raised.CachedValue.ShouldBeSameAs(doc);
+        raised.DatabaseValue.ShouldBeNull();
+        (await NamesInDbAsync()).ShouldBe(["from B", "unrelated"]);
+    }
+
+    [Fact]
+    public async Task RejectedInstanceNoLongerCached_RaisesNoConflict()
+    {
+        using var sut = CreateDictionary(true);
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await UpdateByOtherWriterAsync(1);
+        var conflicts = new ConcurrentQueue<CacheConflict<int, CachedDoc>>();
+        sut.ConflictDetected += (_, conflict) => conflicts.Enqueue(conflict);
+        sut.OnConflict = () => sut.AddOrUpdateValue(new() { Id = 1, Name = "replacement", Version = 2 });
+
+        doc.Name = "from A";
+        (await sut.SaveAsync(new Change<CachedDoc, int>(ChangeReason.Refresh, 1, doc))).ShouldBeFalse();
+
+        conflicts.ShouldBeEmpty();
+    }
+
     private static async Task FlushThroughPipelineAsync(CacheDictionary sut, int probeId)
     {
         sut.AddOrUpdateValue(new() { Id = probeId, Name = "probe", Version = 1 });
@@ -332,16 +403,22 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     {
         public int Id { get; set; }
 
-        public string Name { get; set; } = "";
+        private string _name = "";
+
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                PropertyChanged?.Invoke(this, new(nameof(Name)));
+            }
+        }
 
         [ConcurrencyCheck]
         public int Version { get; set; }
 
-        public event PropertyChangedEventHandler? PropertyChanged
-        {
-            add { }
-            remove { }
-        }
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 
     public sealed class CacheDbContext : DbContext
@@ -398,12 +475,33 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
                     updater.AddOrUpdate(doc);
             });
 
+        public Action? OnConflict { get; set; }
+
+        public Action<CachedDoc>? OnRetrieved { get; set; }
+
+        public bool FailIncludedQueries { get; set; }
+
         protected override async Task OnChangesDetectedAsync(ICollection<ChangeInfo<int, CachedDoc>> changes)
         {
             SaveAttempts++;
             SavedKeys.Enqueue([.. changes.Select(c => c.Key).OrderBy(k => k)]);
-            await base.OnChangesDetectedAsync(changes);
+
+            try
+            {
+                await base.OnChangesDetectedAsync(changes);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                OnConflict?.Invoke();
+
+                throw;
+            }
         }
+
+        protected override void OnRetrievedNew(CachedDoc value) => OnRetrieved?.Invoke(value);
+
+        protected override IQueryable<CachedDoc> IncludeInEntity(IQueryable<CachedDoc> query) =>
+            FailIncludedQueries ? throw new InvalidOperationException("database unavailable") : query;
 
         protected override Expression<Func<CachedDoc, int>> RetriveKey() => d => d.Id;
 

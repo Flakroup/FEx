@@ -8,6 +8,8 @@ using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -48,7 +50,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     public int Count => Cache.Count;
 
     /// <summary>
-    /// Raised once per cached change that was not saved because another writer changed the same row. The cached value
+    /// Raised once per cached change that was not saved because another writer changed the same row, while the
+    /// rejected instance is still the cached value for its key (not after it was reloaded or removed). The cached value
     /// keeps the rejected values and its stale concurrency token, so later edits of the key are rejected too until
     /// <see cref="ReloadAsync" /> replaces it. Raised on the save thread (a thread-pool thread); an exception from a
     /// handler is logged and does not affect the save or the other handlers.
@@ -181,19 +184,18 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         try
         {
             if (fresh is not null)
-            {
                 Cache.AddOrUpdate(fresh);
-                OnRetrievedNew(fresh);
-            }
             else if (current.HasValue)
-            {
                 Cache.Remove(key);
-            }
         }
         finally
         {
             t_reloadTarget = null;
         }
+
+        // Outside the marker: edits the hook makes to the new value are saved, as for any other retrieved value.
+        if (fresh is not null)
+            OnRetrievedNew(fresh);
 
         if (UseIndex)
         {
@@ -303,21 +305,16 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     {
         await CheckWhichAlreadyExistsAsync(dbContext, changes);
 
-        var set = DbSetAccessor(dbContext);
+        // Only the attached entries are saved: SaveChanges must not discover related entities, or other cached
+        // values, through navigations.
+        dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
 
         foreach (var entityInfo in changes)
         {
             if (entityInfo.ToDelete)
-            {
-                set.Remove(entityInfo.Value);
-            }
+                AttachShallow(dbContext, entityInfo.Value, EntityState.Deleted);
             else if (entityInfo.Reason is ChangeReason.Refresh or ChangeReason.Update or ChangeReason.Add)
-            {
-                if (entityInfo.ExistsInDb)
-                    AttachAsModified(dbContext, entityInfo.Value);
-                else
-                    await set.AddAsync(entityInfo.Value);
-            }
+                AttachShallow(dbContext, entityInfo.Value, entityInfo.ExistsInDb ? EntityState.Modified : EntityState.Added);
         }
     }
 
@@ -553,20 +550,49 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     }
 
     /// <summary>
-    /// Attaches a cached entity to be saved. <c>DbSet.Update</c> marks every reachable entity Modified, which writes a
-    /// stale cached principal (a loaded reference navigation, say) over another writer's committed changes. Only the
-    /// root and the owned entities it carries are Modified; other reachable entities attach Unchanged, or Added when
-    /// their key is not set yet.
+    /// Attaches a cached value to be saved, together with the owned entities it carries, and nothing else.
+    /// <c>DbSet.Update</c> walked the whole graph and marked every reachable entity Modified, which wrote a stale cached
+    /// principal over another writer's changes, could reach other cached values (leaving their own edits unsaved) and
+    /// failed on two instances of the same principal. Related entities, and links through many-to-many navigations,
+    /// are never saved through a cached value. A new owned collection item (key not set yet) is Added, an existing one
+    /// takes the owner's state; an item removed from an owned collection is not deleted.
     /// </summary>
-    private static void AttachAsModified(TDbCtx dbContext, TValue root) =>
-        dbContext.ChangeTracker.TrackGraph(root, node =>
-            node.Entry.State = ReferenceEquals(node.Entry.Entity, root)
-                ? EntityState.Modified
-                : node.Entry.Metadata.IsOwned()
-                    ? node.SourceEntry?.State ?? EntityState.Unchanged
-                    : node.Entry.IsKeySet
-                        ? EntityState.Unchanged
-                        : EntityState.Added);
+    private static void AttachShallow(TDbCtx dbContext, TValue root, EntityState state) =>
+        dbContext.ChangeTracker.TrackGraph<object?>(root,
+            null,
+            node =>
+            {
+                var entry = node.Entry;
+
+                if (entry.State != EntityState.Detached)
+                    return false;
+
+                if (ReferenceEquals(entry.Entity, root))
+                {
+                    entry.State = state;
+
+                    return true;
+                }
+
+                if (!entry.Metadata.IsOwned())
+                    return false;
+
+                var isCollectionItem = node.InboundNavigation is INavigation { ForeignKey.IsUnique: false };
+                entry.State = state == EntityState.Modified && isCollectionItem && IsNewOwnedItem(entry)
+                    ? EntityState.Added
+                    : state;
+
+                return true;
+            });
+
+    // The owner's key is propagated on attach, so only the item's own key properties tell whether it is new.
+    private static bool IsNewOwnedItem(EntityEntry entry) =>
+        entry.Metadata.FindPrimaryKey()?.Properties
+            .Where(p => !p.IsForeignKey())
+            .Any(p => p.IsShadowProperty() || IsDefault(entry.Property(p.Name).CurrentValue, p.ClrType)) ?? true;
+
+    private static bool IsDefault(object? value, Type type) =>
+        value is null || (type.IsValueType && value.Equals(Activator.CreateInstance(type)));
 
     private async Task NotifyConflictsAsync(List<ChangeInfo<TKey, TValue>> rejected)
     {
@@ -592,7 +618,14 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         }
 
         foreach (var change in rejected)
+        {
+            // Only while the rejected instance is still what the cache holds for the key: a value reloaded or removed
+            // since then is not in conflict.
+            if (Cache.Lookup(change.Key) is not { HasValue: true } cached || !ReferenceEquals(cached.Value, change.Value))
+                continue;
+
             RaiseConflict(new(change.Key, change.Value, rows.TryGetValue(change.Key, out var row) ? row : null));
+        }
     }
 
     // Each handler in isolation: a throwing one must not stop the others or the save loop.

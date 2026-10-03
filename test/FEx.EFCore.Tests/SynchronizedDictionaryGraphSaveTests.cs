@@ -7,6 +7,7 @@ using FEx.EFCore.Models;
 using FEx.EFCore.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Shouldly;
@@ -39,10 +40,19 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         {
             setup.Database.EnsureCreated();
             setup.Categories.Add(new() { Id = 1, Title = "one" });
-            setup.Docs.Add(new()
+            setup.Labels.Add(new() { Id = 1, Text = "label" });
+            setup.Docs.AddRange(new GraphDoc
             {
                 Id = 1,
                 Name = "original",
+                Version = 1,
+                Address = new() { City = "A" },
+                CategoryId = 1,
+                Tags = [new() { Label = "t1" }]
+            }, new GraphDoc
+            {
+                Id = 2,
+                Name = "second",
                 Version = 1,
                 Address = new() { City = "A" },
                 CategoryId = 1
@@ -102,31 +112,144 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
     }
 
     [Fact]
-    public async Task SavingACachedEntity_StillInsertsANewPrincipalItReferences()
+    public async Task SavingACachedEntity_DoesNotInsertANewPrincipalItReferences()
     {
         using var sut = new GraphDictionary(_dbService);
         var doc = await LoadWithCategoryAsync();
         sut.AddOrUpdateValue(doc);
 
         doc.Category = new() { Title = "new" };
+        doc.Name = "from A";
         (await sut.SaveAsync(doc)).ShouldBeTrue();
 
         using var reader = CreateContext();
-        var saved = await reader.Docs.Include(d => d.Category)
-            .SingleAsync(d => d.Id == 1, TestContext.Current.CancellationToken);
-        saved.Category.ShouldNotBeNull().Title.ShouldBe("new");
-        (await reader.Categories.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(2);
+        (await reader.Categories.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
+        (await reader.Docs.SingleAsync(d => d.Id == 1, TestContext.Current.CancellationToken)).CategoryId.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// A navigation changed after the value is attached but before SaveChanges (a concurrent edit, say) must not be
+    /// discovered by change detection and saved.
+    /// </summary>
+    [Fact]
+    public async Task NavigationChangedWhileTheSaveIsInFlight_IsNotDiscovered()
+    {
+        using var sut = new GraphDictionary(_dbService);
+        var doc = await LoadWithCategoryAsync();
+        sut.AddOrUpdateValue(doc);
+        _dbService.BeforeSave = () => doc.Category = new() { Title = "late" };
+
+        doc.Name = "from A";
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+
+        using var reader = CreateContext();
+        (await reader.Categories.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
+    }
+
+    /// <summary>A tracking load fixes up the principal's inverse collection, so one root reaches the other.</summary>
+    [Fact]
+    public async Task BatchOfTwoValuesReachingEachOtherThroughAnInverseCollection_SavesBoth()
+    {
+        using var sut = new GraphDictionary(_dbService);
+        await sut.CacheAllAsync();
+        var first = sut[1];
+        var second = sut[2];
+        first.Category.ShouldNotBeNull().Docs.ShouldContain(second);
+
+        first.Name = "first edited";
+        second.Name = "second edited";
+        (await sut.SaveAsync(first, second)).ShouldBeTrue();
+
+        (await NamesAsync()).ShouldBe(["first edited", "second edited"]);
+    }
+
+    [Fact]
+    public async Task BatchOfTwoValuesHoldingDifferentInstancesOfOnePrincipal_SavesBoth()
+    {
+        using var sut = new GraphDictionary(_dbService);
+        var first = await LoadWithCategoryAsync(1);
+        var second = await LoadWithCategoryAsync(2);
+        first.Category.ShouldNotBeSameAs(second.Category);
+
+        first.Name = "first edited";
+        second.Name = "second edited";
+        (await sut.SaveAsync(first, second)).ShouldBeTrue();
+
+        (await NamesAsync()).ShouldBe(["first edited", "second edited"]);
+    }
+
+    [Fact]
+    public async Task OwnedCollection_NewItemAndEditedItem_AreSavedWithTheValue()
+    {
+        using var sut = new GraphDictionary(_dbService);
+        var doc = await LoadWithCategoryAsync();
+        sut.AddOrUpdateValue(doc);
+
+        doc.Tags[0].Label = "t1 edited";
+        doc.Tags.Add(new() { Label = "new" });
+        doc.Name = "edited";
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+
+        (await TagsAsync()).ShouldBe(["t1 edited", "new"]);
+        (await NamesAsync())[0].ShouldBe("edited");
+    }
+
+    /// <summary>Removing an item from an owned collection of a cached value does not delete it (documented).</summary>
+    [Fact]
+    public async Task OwnedCollection_RemovedItem_IsNotDeleted()
+    {
+        using var sut = new GraphDictionary(_dbService);
+        var doc = await LoadWithCategoryAsync();
+        sut.AddOrUpdateValue(doc);
+
+        doc.Tags.Clear();
+        doc.Name = "edited";
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+
+        (await TagsAsync()).ShouldBe(["t1"]);
+    }
+
+    /// <summary>A many-to-many link is a relationship edit of a related entity, which is not saved (documented).</summary>
+    [Fact]
+    public async Task ManyToManyLinkAddedToACachedValue_IsNotSaved()
+    {
+        using var sut = new GraphDictionary(_dbService);
+        var doc = await LoadWithCategoryAsync();
+        sut.AddOrUpdateValue(doc);
+
+        doc.Labels.Add(new() { Id = 1, Text = "label" });
+        doc.Name = "edited";
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+
+        using var reader = CreateContext();
+        (await reader.Docs.Include(d => d.Labels).SingleAsync(d => d.Id == 1, TestContext.Current.CancellationToken))
+            .Labels.ShouldBeEmpty();
+    }
+
+    private async Task<List<string>> NamesAsync()
+    {
+        using var reader = CreateContext();
+
+        return await reader.Docs.OrderBy(d => d.Id).Select(d => d.Name).ToListAsync(TestContext.Current.CancellationToken);
+    }
+
+    private async Task<List<string>> TagsAsync()
+    {
+        using var reader = CreateContext();
+        var doc = await reader.Docs.SingleAsync(d => d.Id == 1, TestContext.Current.CancellationToken);
+
+        return [.. doc.Tags.OrderBy(t => t.Id).Select(t => t.Label)];
     }
 
     private GraphDbContext CreateContext() => new(_connection);
 
-    private async Task<GraphDoc> LoadWithCategoryAsync()
+    private async Task<GraphDoc> LoadWithCategoryAsync(int id = 1)
     {
         using var ctx = CreateContext();
 
         return await ctx.Docs.AsNoTracking()
             .Include(d => d.Category)
-            .SingleAsync(d => d.Id == 1, TestContext.Current.CancellationToken);
+            .SingleAsync(d => d.Id == id, TestContext.Current.CancellationToken);
     }
 
     public sealed class Category
@@ -134,6 +257,24 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         public int Id { get; set; }
 
         public string Title { get; set; } = "";
+
+        public List<GraphDoc> Docs { get; set; } = [];
+    }
+
+    public sealed class Label
+    {
+        public int Id { get; set; }
+
+        public string Text { get; set; } = "";
+
+        public List<GraphDoc> Docs { get; set; } = [];
+    }
+
+    public sealed class Tag
+    {
+        public int Id { get; set; }
+
+        public string Label { get; set; } = "";
     }
 
     public sealed class Address
@@ -156,6 +297,10 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
 
         public Category? Category { get; set; }
 
+        public List<Tag> Tags { get; set; } = [];
+
+        public List<Label> Labels { get; set; } = [];
+
         public event PropertyChangedEventHandler? PropertyChanged
         {
             add { }
@@ -167,14 +312,21 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
     {
         public DbSet<GraphDoc> Docs => Set<GraphDoc>();
         public DbSet<Category> Categories => Set<Category>();
+        public DbSet<Label> Labels => Set<Label>();
 
         public GraphDbContext(SqliteConnection connection)
             : base(new DbContextOptionsBuilder<GraphDbContext>().UseSqlite(connection).Options)
         {
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder) =>
-            modelBuilder.Entity<GraphDoc>().OwnsOne(d => d.Address);
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            var doc = modelBuilder.Entity<GraphDoc>();
+            doc.OwnsOne(d => d.Address);
+            doc.OwnsMany(d => d.Tags, t => t.HasKey(x => x.Id));
+            doc.HasOne(d => d.Category).WithMany(c => c.Docs).HasForeignKey(d => d.CategoryId);
+            doc.HasMany(d => d.Labels).WithMany(l => l.Docs);
+        }
     }
 
     private sealed class ScopeProvider : IScopeProvider
@@ -190,9 +342,18 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
     {
         public string? DbKey => null;
 
+        // Runs between attaching the values and SaveChanges.
+        public Action? BeforeSave { get; set; }
+
         public GraphDbService(IScopeProvider scopeProvider)
             : base(scopeProvider, new(Substitute.For<IFExLogger>()), Substitute.For<IFExDbConfig>(), [])
         {
+        }
+
+        protected override void OnValidationStart(string id, IReadOnlyCollection<EntityEntry> entities)
+        {
+            BeforeSave?.Invoke();
+            BeforeSave = null;
         }
     }
 
@@ -203,9 +364,11 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         {
         }
 
-        public Task<bool> SaveAsync(GraphDoc doc) =>
+        public Task<bool> SaveAsync(params GraphDoc[] docs) =>
             SaveChangesResolvingConflictsAsync(
-                [new ChangeInfo<int, GraphDoc>(new Change<GraphDoc, int>(ChangeReason.Refresh, doc.Id, doc))]);
+            [
+                .. docs.Select(d => new ChangeInfo<int, GraphDoc>(new Change<GraphDoc, int>(ChangeReason.Refresh, d.Id, d)))
+            ]);
 
         protected override IQueryable<GraphDoc> IncludeInEntity(IQueryable<GraphDoc> query) =>
             query.Include(d => d.Category);

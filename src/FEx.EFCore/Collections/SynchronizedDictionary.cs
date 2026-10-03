@@ -31,8 +31,6 @@ namespace FEx.EFCore.Collections;
 public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitializable, IReadOnlyCollection<TValue>
     where TKey : notnull, IEquatable<TKey> where TValue : class, INotifyPropertyChanged where TDbCtx : DbContext
 {
-    protected const int MaxSaveAttempts = 3;
-
     protected readonly IEFCoreDatabaseBackedService<TDbCtx> _dbSrv;
     private readonly Func<TValue, IObservable<object>>[]? _observables;
     private bool _isDisposed;
@@ -394,14 +392,20 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     /// <summary>
     /// Saves <paramref name="changes" /> and updates <see cref="Index" />. On a concurrency conflict the batch is
-    /// reloaded against the database and retried, up to <see cref="MaxSaveAttempts" /> attempts: a row deleted
-    /// elsewhere is re-added only while its key is still cached, and a removal of a row deleted elsewhere is
-    /// dropped. If the conflict persists, the batch is not saved and an error is logged.
+    /// reloaded against the database and the rest of it is retried:
+    /// <list type="bullet">
+    /// <item>a row another writer changed is surfaced: its change is logged at error level and not saved;</item>
+    /// <item>a row another writer deleted is re-added only while its key is still cached.</item>
+    /// </list>
+    /// Every retry resolves or rejects at least one conflicting key, so attempts are bounded by the batch size.
     /// </summary>
-    /// <returns><c>true</c> if the batch was saved; <c>false</c> if the conflict could not be resolved.</returns>
+    /// <returns><c>true</c> if every change was saved; <c>false</c> if any change was rejected.</returns>
     protected async Task<bool> SaveChangesResolvingConflictsAsync(List<ChangeInfo<TKey, TValue>> changes)
     {
-        for (var attempt = 1;; attempt++)
+        var maxAttempts = changes.Count + 1;
+        var allSaved = true;
+
+        for (var attempt = 1; changes.Count > 0; attempt++)
         {
             try
             {
@@ -409,31 +413,42 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
                 break;
             }
-            catch (DbUpdateConcurrencyException ex) when (attempt < MaxSaveAttempts)
-            {
-                _logger.Warning(ex, $"{TypeName}: concurrency conflict on save attempt {attempt}, reloading the batch");
-                changes = await ReloadConflictingChangesAsync(changes);
-
-                if (changes.Count == 0)
-                    return true;
-            }
             catch (DbUpdateConcurrencyException ex)
             {
-                _logger.Error(ex,
-                    $"{TypeName}: concurrency conflict not resolved after {MaxSaveAttempts} attempts, changes for keys [{string.Join(", ", changes.Select(c => c.Key))}] were not saved");
+                var conflictingKeys = new HashSet<TKey>(ex.Entries.Select(e => e.Entity)
+                    .OfType<TValue>()
+                    .Select(KeyRetriver));
 
-                return false;
+                if (attempt >= maxAttempts || !changes.Exists(c => conflictingKeys.Contains(c.Key)))
+                {
+                    _logger.Error(ex,
+                        $"{TypeName}: concurrency conflict not resolved, changes for keys [{string.Join(", ", changes.Select(c => c.Key))}] were not saved");
+
+                    return false;
+                }
+
+                _logger.Warning(ex, $"{TypeName}: concurrency conflict on save attempt {attempt}, reloading the batch");
+                List<ChangeInfo<TKey, TValue>> rejected;
+                (changes, rejected) = await ReloadConflictingChangesAsync(changes, conflictingKeys);
+
+                foreach (var change in rejected)
+                {
+                    _logger.Error(
+                        $"{TypeName}: another writer changed the row with key {change.Key}, its cached change was not saved");
+                }
+
+                allSaved &= rejected.Count == 0;
             }
         }
 
         if (UseIndex)
             UpdateIndex(changes);
 
-        return true;
+        return allSaved;
     }
 
-    private async Task<List<ChangeInfo<TKey, TValue>>> ReloadConflictingChangesAsync(
-        List<ChangeInfo<TKey, TValue>> changes)
+    private async Task<(List<ChangeInfo<TKey, TValue>> retry, List<ChangeInfo<TKey, TValue>> rejected)>
+        ReloadConflictingChangesAsync(List<ChangeInfo<TKey, TValue>> changes, HashSet<TKey> conflictingKeys)
     {
         var keys = new HashSet<TKey>(changes.Select(c => c.Key));
 
@@ -443,12 +458,14 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             false,
             false));
 
-        List<ChangeInfo<TKey, TValue>> reloaded = [];
+        List<ChangeInfo<TKey, TValue>> retry = [];
+        List<ChangeInfo<TKey, TValue>> rejected = [];
 
         foreach (var change in changes)
         {
             var existsInDb = keysInDb.Contains(change.Key);
 
+            // Without an index, the next attempt re-checks existence in the database itself.
             if (UseIndex)
             {
                 if (existsInDb)
@@ -457,17 +474,14 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                     RemoveKeyFromIndex(change.Key);
             }
 
-            // A row deleted elsewhere: its removal is already done, and it is re-added only while still cached.
-            if (change.ExistsInDb
-                && !existsInDb
-                && (change.Reason == ChangeReason.Remove || !Cache.Lookup(change.Key).HasValue))
-                continue;
-
-            change.ExistsInDb = existsInDb;
-            reloaded.Add(change);
+            if (existsInDb && conflictingKeys.Contains(change.Key))
+                rejected.Add(change);
+            // A row deleted elsewhere is re-added only while its key is still cached.
+            else if (existsInDb || !change.ExistsInDb || Cache.Lookup(change.Key).HasValue)
+                retry.Add(change);
         }
 
-        return reloaded;
+        return (retry, rejected);
     }
 
     private void UpdateIndex(List<ChangeInfo<TKey, TValue>> changes)

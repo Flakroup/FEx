@@ -125,6 +125,36 @@ public sealed class ConcurrencyConflictTests : IDisposable
     [InlineData(SavePath.ServiceSync)]
     [InlineData(SavePath.ServiceAsync)]
     [InlineData(SavePath.Extension)]
+    public async Task DeleteOfTwoRowsDeletedByOtherWriter_InOneBatch_SavesRestOfBatch(SavePath path)
+    {
+        using (var setup = CreateContext())
+        {
+            await setup.Docs.AddAsync(new() { Id = 3, Name = "third", Version = 1 }, TestContext.Current.CancellationToken);
+            await setup.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var writerA = CreateContext();
+        var staleDocs = await writerA.Docs.ToListAsync(TestContext.Current.CancellationToken);
+
+        using (var writerB = CreateContext())
+        {
+            writerB.Docs.RemoveRange(await writerB.Docs.ToListAsync(TestContext.Current.CancellationToken));
+            await writerB.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        writerA.Docs.RemoveRange(staleDocs);
+        await writerA.Docs.AddAsync(new() { Id = 2, Name = "unrelated", Version = 1 }, TestContext.Current.CancellationToken);
+
+        await SaveAsync(writerA, path);
+
+        using var reader = CreateContext();
+        (await reader.Docs.Select(d => d.Id).ToListAsync(TestContext.Current.CancellationToken)).ShouldBe([2]);
+    }
+
+    [Theory]
+    [InlineData(SavePath.ServiceSync)]
+    [InlineData(SavePath.ServiceAsync)]
+    [InlineData(SavePath.Extension)]
     public async Task DeleteOfRowUpdatedByOtherWriter_Throws_AndOtherWritersRowSurvives(SavePath path)
     {
         using var writerA = CreateContext();

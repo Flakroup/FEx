@@ -12,7 +12,7 @@ public static class WebRequestParamsExtensions
     /// <summary>Creates an <see cref="HttpClientHandler" /> configured from the request parameters.</summary>
     /// <param name="pars">The parameters to apply; defaults are used when null.</param>
     /// <returns>A new handler with the credentials, cookies, proxy and certificate validation applied.</returns>
-    /// <exception cref="PlatformNotSupportedException">A certificate validation callback is set on netstandard2.0, where the handler does not support it.</exception>
+    /// <exception cref="System.PlatformNotSupportedException">A certificate validation callback is set on netstandard2.0, where the handler does not support it.</exception>
     public static HttpClientHandler GetHttpClientHandler(this WebRequestParams pars)
     {
         var handler = new HttpClientHandler();

@@ -29,7 +29,7 @@ public sealed class IdempotencyResponseSizeTests
     private static readonly Guid Key = Guid.Parse("0b0f4c55-0ad6-4bd2-9a8a-1d1d6a2a6b01");
 
     // Not inlined into the async handlers: the synchronous Flush override is what is under test there.
-#pragma warning disable VSTHRD103
+#pragma warning disable VSTHRD103 // the synchronous Stream.Flush override is the API under test
     private static void FlushSynchronously(Stream body) => body.Flush();
 #pragma warning restore VSTHRD103
 

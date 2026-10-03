@@ -2,7 +2,8 @@ name: CI
 
 # Branches other than main/develop are built by their pull_request run only: a push trigger on them ran
 # a second build of the same commit in parallel. Version tags pushed by the Tag target never match the
-# branch filter, so they trigger nothing.
+# branch filter, so they trigger nothing. The gitleaks scan lives in secret-scan.yml and still runs on
+# every branch push.
 on:
   push:
     branches:
@@ -23,16 +24,6 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
 
 jobs:
-  secret-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: gitleaks
-        run: >
-          docker run --rm -v "${{ github.workspace }}:/repo"
-          zricethezav/gitleaks:latest
-          detect --source /repo --no-git --no-banner -v
-
   # PR only: full test and inspection (both depend on one NUKE Compile). Push to main/develop runs the
   # same Test and Inspect in the `build` job below, which gates the packages `publish` ships, so they are
   # not duplicated across two jobs/checkouts.

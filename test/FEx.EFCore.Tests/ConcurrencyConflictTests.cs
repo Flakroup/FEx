@@ -199,6 +199,7 @@ public sealed class ConcurrencyConflictTests : IDisposable
 
     private ConcurrencyDbContext CreateContext() => new(_connection);
 
+    // The synchronous Save is a separate public path under test; kept out of the async SaveAsync body below.
     private void SaveSynchronously(ConcurrencyDbContext context) => _service.Save(context).IsSuccess.ShouldBeTrue();
 
     private async Task SaveAsync(ConcurrencyDbContext context, SavePath path)

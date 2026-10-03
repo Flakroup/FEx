@@ -22,10 +22,41 @@ public sealed class PolishMudLocalizerTests
     [Fact]
     public void KnownKey_ResolvesToThePolishTranslation()
     {
-        var value = _localizer["MudDataGrid.Filter"];
+        var value = _localizer["MudDataGrid_Filter"];
 
         value.Value.ShouldBe("Filtr");
         value.ResourceNotFound.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Keys exactly as MudBlazor 9.10.0 requests them (read from its embedded resources), resolved through its own
+    /// interceptor under a Polish UI culture. Three differ from a plain dot-to-underscore rewrite: Equals,
+    /// IsEmpty and IsNotEmpty.
+    /// </summary>
+    [Theory]
+    [InlineData("MudDataGrid_Filter", "Filtr")]
+    [InlineData("MudDataGrid_AddFilter", "Dodaj filtr")]
+    [InlineData("MudDataGrid_Contains", "zawiera")]
+    [InlineData("MudDataGrid_Equals", "równe")]
+    [InlineData("MudDataGrid_NotEquals", "różne od")]
+    [InlineData("MudDataGrid_IsEmpty", "jest puste")]
+    [InlineData("MudDataGrid_IsNotEmpty", "nie jest puste")]
+    [InlineData("MudDataGridPager_RowsPerPage", "Wierszy na stronie")]
+    [InlineData("MudTablePager_NextPage", "Następna strona")]
+    public void TheRealMudBlazorKeys_ReachMudBlazorsOwnResolution_InPolish(string key, string expected)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("pl-PL");
+        try
+        {
+            DefaultLocalizationInterceptor interceptor = new(NullLoggerFactory.Instance, _localizer);
+
+            interceptor.Handle(key).Value.ShouldBe(expected);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previous;
+        }
     }
 
     /// <summary>
@@ -83,9 +114,9 @@ public sealed class PolishMudLocalizerTests
     [Fact]
     public void UnknownKey_FallsThroughToTheKeyItself_AndIsFlaggedNotFound()
     {
-        var value = _localizer["MudDataGrid.SomeFutureKey"];
+        var value = _localizer["MudDataGrid_SomeFutureKey"];
 
-        value.Value.ShouldBe("MudDataGrid.SomeFutureKey");
+        value.Value.ShouldBe("MudDataGrid_SomeFutureKey");
         value.ResourceNotFound.ShouldBeTrue();
     }
 }

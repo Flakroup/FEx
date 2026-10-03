@@ -38,11 +38,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: packages
-          path: artifacts/packages/*.nupkg
+          path: |
+            artifacts/packages/*.nupkg
+            artifacts/packages/release-version.txt
           if-no-files-found: error
           retention-days: 7
 
-  # Part 2 of 2: short push of ALL packages from the artifact, then tag. Re-runnable on its own.
+  # Part 2 of 2: short push of ALL packages from the artifact, then tag the version the packages carry (release-version.txt, no second GitVersion run).
   publish:
     needs: build
     runs-on: windows-latest
@@ -67,4 +69,6 @@ jobs:
         env:
           NuGetApiKey: ${{ secrets.NUGET_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}   # for the Tag target to push the git version tag
-        run: pwsh ./build.ps1 Publish --skip Restore Compile Test Verify Pack --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"
+        run: |
+          $version = (Get-Content artifacts/packages/release-version.txt -Raw).Trim()
+          pwsh ./build.ps1 Publish --skip Restore Compile Test Verify Pack --configuration Release --release-version $version --nuget-source "https://api.nuget.org/v3/index.json"

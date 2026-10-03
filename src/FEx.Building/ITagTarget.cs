@@ -9,6 +9,13 @@ namespace FEx.Building;
 
 public interface ITagTarget : INuGetPublishTarget
 {
+    // The version the packages carry, as read from the file Pack wrote beside them. When given, the tag
+    // names exactly this and GitVersion is not run again: history can move between a build and a publish
+    // (another branch tagged, a release branch cut), and a re-resolved version would tag one the
+    // packages do not carry. Left empty on a single-process run, which resolves the version once anyway.
+    [Parameter("Version the packages were built with; the tag names it instead of re-resolving it")]
+    string? ReleaseVersion => TryGetValue(() => ReleaseVersion);
+
     Target Tag =>
         _ => _.Description("Creates and pushes a Git version tag (e.g. v1.2.3-alpha.4)")
             .TriggeredBy(Publish)
@@ -21,7 +28,7 @@ public interface ITagTarget : INuGetPublishTarget
             .Executes(() =>
             {
                 var remote = ResolveCiRemote()!.Value;
-                var tag = $"{TagPrefix}{SemVer}";
+                var tag = $"{TagPrefix}{TagVersion(ReleaseVersion, () => SemVer)}";
 
                 var skip = DescribeTagSkip(tag, GitTags.OnHead(TagPrefix), GitTags.All().Contains(tag));
 
@@ -85,6 +92,11 @@ public interface ITagTarget : INuGetPublishTarget
 
         return null;
     }
+
+    public static string TagVersion(string? releaseVersion, Func<string> resolve) =>
+        string.IsNullOrWhiteSpace(releaseVersion)
+            ? resolve()
+            : releaseVersion.Trim();
 
     static bool IsReleaseBranch(string? branch) => branch is "main" or "master" or "develop";
 

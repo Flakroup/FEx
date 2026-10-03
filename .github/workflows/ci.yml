@@ -8,9 +8,12 @@ on:
       - '**'   # version tags are pushed by publish.yml; the commit was already built
   pull_request:
 
+# Only pull_request runs are cancelled by a newer push. A push run may be in the middle of publishing,
+# and a job-level concurrency group cannot protect it from this workflow-level one: cancelling the run
+# cancels every job in it. Push runs on one ref queue instead.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
@@ -45,9 +48,9 @@ jobs:
       - name: Compile
         run: pwsh ./build.ps1 Compile
 
-  # PR only: full test (NUKE Test depends on Compile). Push to main/develop
-  # runs Test as part of the publish job below instead (Publish now depends
-  # on Test via Build.cs), so it isn't duplicated across two jobs/checkouts.
+  # PR only: full test and inspection (both depend on one NUKE Compile). Push to main/develop runs the
+  # same Test and Inspect in the `build` job below, which gates the packages `publish` ships, so they are
+  # not duplicated across two jobs/checkouts.
   test:
     if: github.event_name == 'pull_request'
     runs-on: windows-latest
@@ -102,7 +105,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: packages
-          path: artifacts/packages/*.nupkg
+          path: |
+            artifacts/packages/*.nupkg
+            artifacts/packages/release-version.txt
           if-no-files-found: error   # an empty release must fail here, not get tagged by `publish`
           retention-days: 7
       - name: Upload test results
@@ -116,8 +121,11 @@ jobs:
 
   # Part 2 of 2: a short job that only pushes the packages `build` produced, all in one go, then tags.
   # Re-running just this job (Actions -> Re-run failed jobs) re-pushes from the retained artifact;
-  # `--skip-duplicate` walks past what is already on the feed. Own concurrency group so a running
-  # publish is queued, never cancelled by ci's cancel-in-progress on a fast follow-up push.
+  # `--skip-duplicate` walks past what is already on the feed. The tag names the version Pack wrote
+  # next to the packages (release-version.txt), so GitVersion is not resolved a second time here and a
+  # re-run tags exactly what was packed. Own concurrency group so two publishes never push at once; a
+  # running one is not cancelled by a follow-up push because the workflow-level group above only
+  # cancels pull_request runs.
   publish:
     needs: build
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
@@ -147,4 +155,6 @@ jobs:
         env:
           NuGetApiKey: ${{ secrets.NUGET_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}   # for the Tag target to push the git version tag
-        run: pwsh ./build.ps1 Publish --skip Restore Compile Test Verify Pack --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"
+        run: |
+          $version = (Get-Content artifacts/packages/release-version.txt -Raw).Trim()
+          pwsh ./build.ps1 Publish --skip Restore Compile Test Verify Pack --configuration Release --release-version $version --nuget-source "https://api.nuget.org/v3/index.json"

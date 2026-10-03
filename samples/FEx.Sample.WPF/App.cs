@@ -1,3 +1,5 @@
+using FEx.DependencyInjection.Abstractions;
+using FEx.Samples.Shared;
 using FEx.WPFx.Abstractions;
 using System.Windows;
 using System.Windows.Controls;
@@ -5,8 +7,8 @@ using System.Windows.Controls;
 namespace FEx.Sample.WPF;
 
 /// <summary>
-/// Sample WPF application on the FEx bootstrapper. The container is built asynchronously (see
-/// <see cref="SlowStartupModule" />), a startup window is shown meanwhile, and the main window is created by
+/// Sample WPF application on the FEx bootstrapper. The container is built asynchronously (the demo database is
+/// read by <see cref="DemoDbStartupModule" />), a startup window is shown meanwhile, and the main window is created by
 /// <see cref="CreateMainWindow" /> once the container is ready. There is no App.xaml / StartupUri on purpose: the
 /// bootstrapper rejects <c>StartupUri</c>, since WPF would load it before the container exists.
 /// </summary>
@@ -38,5 +40,8 @@ public sealed class App : AppBootstrapper<AppContainer>
         }
     };
 
-    protected override Window CreateMainWindow() => new MainWindow();
+    protected override Window CreateMainWindow() => new MainWindow
+    {
+        DataContext = new MainWindowViewModel(FExServiceProvider.Get<DemoDataStore>())
+    };
 }

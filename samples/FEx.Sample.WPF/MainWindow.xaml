@@ -1,10 +1,10 @@
-﻿<Window x:Class="FEx.Sample.WPF.MainWindow"
+<Window x:Class="FEx.Sample.WPF.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="FEx Sample - Multi-DI Demo" Height="350" Width="525">
+        Title="FEx Sample - Multi-DI Demo" Height="520" Width="525">
     <Grid Margin="20">
         <StackPanel VerticalAlignment="Center">
             <TextBlock FontSize="24" FontWeight="Bold" TextAlignment="Center" Margin="0,0,0,20">
@@ -22,6 +22,19 @@
                 <LineBreak/>
                 🚀 Engine-Agnostic: Ready for any DI engine
             </TextBlock>
+
+            <TextBlock Text="{Binding Summary}" FontWeight="Bold" TextAlignment="Center" Margin="0,0,0,5"/>
+            <ListBox ItemsSource="{Binding Items}" Height="90" Margin="0,0,0,15">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock>
+                            <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold"/>
+                            <Run Text=" - "/>
+                            <Run Text="{Binding Description, Mode=OneWay}"/>
+                        </TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
 
             <Button x:Name="testButton" Content="Test FEx Logging" 
                     Click="TestButton_Click" 

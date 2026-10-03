@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Web;
 
+/// <summary>Extensions for sending requests to URLs and for probing them.</summary>
 public static class UriExtensions
 {
     private const string HttpScheme = "http";
@@ -103,6 +104,11 @@ public static class UriExtensions
         return response;
     }
 
+    /// <summary>Gets the response of a file request.</summary>
+    /// <param name="url">The file URL.</param>
+    /// <param name="pars">Request settings applied to the underlying request.</param>
+    /// <param name="stopwatch">Restarted before and stopped after the request, when given.</param>
+    /// <returns>The file response.</returns>
     public static async Task<FileWebResponse> GetUriFileResponseAsync(this Uri url,
                                                                       WebRequestParams? pars = null,
                                                                       Stopwatch? stopwatch = null) =>

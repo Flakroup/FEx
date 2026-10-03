@@ -8,7 +8,7 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 /// <summary>Extensions for <see cref="IConcurrentList{T}" /> that supply default arguments.</summary>
 public static class ConcurrentListExtensions
 {
-    /// <summary>Adds the items whose key is not already used, comparing keys with the default equality</summary>
+    /// <summary>Adds the items whose key is not already used, comparing keys with the default equality.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <typeparam name="TKey">The key type.</typeparam>
     /// <param name="list">The list to add to.</param>
@@ -19,7 +19,7 @@ public static class ConcurrentListExtensions
                                                Func<T, TKey> keySelector) =>
         list.AddUniqueRange(range, keySelector, null);
 
-    /// <summary>Sorts the list ascending by a key using the default key comparer</summary>
+    /// <summary>Sorts the list ascending by a key using the default key comparer.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <typeparam name="TKey">The key type.</typeparam>
     /// <param name="list">The list to sort.</param>
@@ -27,7 +27,7 @@ public static class ConcurrentListExtensions
     public static void SortBy<T, TKey>(this IConcurrentList<T> list, Func<T, TKey> selector) =>
         list.SortBy(selector, ListSortDirection.Ascending, null);
 
-    /// <summary>Sorts the list by a key using the default key comparer</summary>
+    /// <summary>Sorts the list by a key using the default key comparer.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <typeparam name="TKey">The key type.</typeparam>
     /// <param name="list">The list to sort.</param>
@@ -36,7 +36,7 @@ public static class ConcurrentListExtensions
     public static void SortBy<T, TKey>(this IConcurrentList<T> list, Func<T, TKey> selector, ListSortDirection order) =>
         list.SortBy(selector, order, null);
 
-    /// <summary>Runs an action with events suppressed and without raising a reset event afterwards</summary>
+    /// <summary>Runs an action with events suppressed and without raising a reset event afterwards.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="list">The list to operate on.</param>
     /// <param name="action">The action to run.</param>

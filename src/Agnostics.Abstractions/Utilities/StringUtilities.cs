@@ -8,10 +8,14 @@ namespace FEx.Agnostics.Abstractions.Utilities;
 /// </summary>
 public static class StringUtilities
 {
+    /// <summary>Gets the expression that matches Roman numerals up to 100 (case-insensitive), excluding the word <c>Xi</c>.</summary>
     public static Regex RomanNumeralsRegex { get; } = new(
         @"\b(?!Xi\b)(X|XX|XXX|XL|L|LX|LXX|LXXX|XC|C)?(I|II|III|IV|V|VI|VII|VIII|IX)?\b",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+    /// <summary>Converts a word to proper case, handling prefixes such as <c>Mc</c>, <c>Mac</c> and apostrophes, particles such as <c>van</c> or <c>de</c>, titles such as <c>HRH</c> and Roman numerals.</summary>
+    /// <param name="word">The word to convert.</param>
+    /// <returns>The word in proper case; null or empty input is returned unchanged.</returns>
     public static string WordToProperCase(string word)
     {
         if (string.IsNullOrEmpty(word))
@@ -45,6 +49,9 @@ public static class StringUtilities
         return ret;
     }
 
+    /// <summary>Upper-cases every Roman numeral found in a string.</summary>
+    /// <param name="word">The text to scan.</param>
+    /// <returns>The text with Roman numerals in upper case.</returns>
     public static string DealWithRomanNumerals(this string word) =>
         RomanNumeralsRegex.Replace(word, match => match.Value.ToUpperInvariant());
 

@@ -1,6 +1,6 @@
 namespace FEx.Agnostics.Abstractions.Utilities;
 
-/// <summary>Holds a value and the result of the first matching <c>When</c> branch in a fluent when/else chain</summary>
+/// <summary>Holds a value and the result of the first matching <c>When</c> branch in a fluent when/else chain.</summary>
 /// <typeparam name="T">The tested value type.</typeparam>
 /// <typeparam name="TResult">The result type.</typeparam>
 public class WhenResult<T, TResult>
@@ -24,7 +24,7 @@ public class WhenResult<T, TResult>
     /// <summary>Gets the value that the branches test.</summary>
     public T Value { get; }
 
-    /// <summary>Initializes the chain</summary>
+    /// <summary>Initializes the chain.</summary>
     /// <param name="value">The value to test.</param>
     public WhenResult(T value)
     {

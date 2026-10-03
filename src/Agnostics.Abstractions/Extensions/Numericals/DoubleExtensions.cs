@@ -3,6 +3,7 @@ using System.Threading;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Numericals;
 
+/// <summary>Extensions for comparing and parsing doubles.</summary>
 public static class DoubleExtensions
 {
     private const double D1 = 0.1;
@@ -13,6 +14,12 @@ public static class DoubleExtensions
     private const double D6 = 0.000001;
     private const double D7 = 0.0000001;
 
+    /// <summary>Determines whether two doubles differ by less than a tolerance of ten to the power of minus the given digits.</summary>
+    /// <param name="left">The first number.</param>
+    /// <param name="right">The second number.</param>
+    /// <param name="floatDigits">The number of fractional digits that must match, from 1 to 7.</param>
+    /// <returns><c>true</c> if the numbers are equal within the tolerance.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="floatDigits" /> is not between 1 and 7.</exception>
     public static bool PreciseEquals(this double left, double right, int floatDigits = 7)
     {
         if (floatDigits is < 1 or > 7)
@@ -25,6 +32,9 @@ public static class DoubleExtensions
         return Math.Abs(left - right) < floatComparison;
     }
 
+    /// <summary>Parses a string to a double, accepting either '.' or ',' as the decimal separator regardless of the current culture.</summary>
+    /// <param name="value">The text to parse.</param>
+    /// <returns>The parsed number.</returns>
     public static double ToDouble(this string value)
     {
         var numberDecimalSeparator = Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator;

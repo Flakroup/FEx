@@ -7,7 +7,7 @@ namespace FEx.Agnostics.Abstractions.Extensions.Web;
 /// <summary>Extensions for applying and combining <see cref="WebRequestParams" />.</summary>
 public static class WebRequestParamsExtensions
 {
-    /// <summary>Creates an <see cref="HttpClientHandler" /> configured from the request parameters</summary>
+    /// <summary>Creates an <see cref="HttpClientHandler" /> configured from the request parameters.</summary>
     /// <param name="pars">The parameters to apply; defaults are used when null.</param>
     /// <returns>A new handler with the credentials, cookies, proxy and certificate validation applied.</returns>
     /// <exception cref="PlatformNotSupportedException">A certificate validation callback is set on netstandard2.0, where the handler does not support it.</exception>
@@ -49,7 +49,7 @@ public static class WebRequestParamsExtensions
         return handler;
     }
 
-    /// <summary>Overlays the set values of one parameter object onto another</summary>
+    /// <summary>Overlays the set values of one parameter object onto another.</summary>
     /// <param name="pars">The parameters to update in place; <paramref name="other" /> is returned when null.</param>
     /// <param name="other">The parameters whose set values take precedence.</param>
     /// <returns>The updated <paramref name="pars" />.</returns>

@@ -24,7 +24,7 @@ public class ExceptionError : Error, IExceptionError
     {
     }
 
-    /// <summary>Initializes an error from an exception</summary>
+    /// <summary>Initializes an error from an exception.</summary>
     /// <param name="exception">The exception to wrap.</param>
     /// <param name="message">The error message; the exception message when null.</param>
     public ExceptionError(Exception exception, string? message = null)

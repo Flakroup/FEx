@@ -30,21 +30,21 @@ public class Error : IError
     {
     }
 
-    /// <summary>Initializes an error with a message</summary>
+    /// <summary>Initializes an error with a message.</summary>
     /// <param name="message">The error message.</param>
     public Error(string? message)
     {
         Message = message;
     }
 
-    /// <summary>Initializes an error caused by another error</summary>
+    /// <summary>Initializes an error caused by another error.</summary>
     /// <param name="innerError">The inner error.</param>
     public Error(IError innerError)
         : this(innerError, null)
     {
     }
 
-    /// <summary>Initializes an error with a message that was caused by another error</summary>
+    /// <summary>Initializes an error with a message that was caused by another error.</summary>
     /// <param name="innerError">The inner error.</param>
     /// <param name="message">The error message.</param>
     public Error(IError innerError, string? message)
@@ -62,26 +62,26 @@ public class Error : IError
         InnerError = innerError;
     }
 
-    /// <summary>Creates an error from a message</summary>
+    /// <summary>Creates an error from a message.</summary>
     /// <param name="message">The error message.</param>
     public static implicit operator Error(string message) => new(message);
 }
 
-/// <summary>An error that additionally carries a status value</summary>
+/// <summary>An error that additionally carries a status value.</summary>
 /// <typeparam name="TErrorStatus">The status type.</typeparam>
 public class Error<TErrorStatus> : Error
 {
     /// <summary>Gets the status describing the kind of error.</summary>
     public TErrorStatus Status { get; }
 
-    /// <summary>Initializes an error with a status</summary>
+    /// <summary>Initializes an error with a status.</summary>
     /// <param name="status">The error status.</param>
     public Error(TErrorStatus status)
         : this(status, (string?)null)
     {
     }
 
-    /// <summary>Initializes an error with a status and a message</summary>
+    /// <summary>Initializes an error with a status and a message.</summary>
     /// <param name="status">The error status.</param>
     /// <param name="message">The error message.</param>
     public Error(TErrorStatus status, string? message)
@@ -90,7 +90,7 @@ public class Error<TErrorStatus> : Error
         Status = status;
     }
 
-    /// <summary>Initializes an error with a status that was caused by another error</summary>
+    /// <summary>Initializes an error with a status that was caused by another error.</summary>
     /// <param name="status">The error status.</param>
     /// <param name="innerError">The inner error.</param>
     public Error(TErrorStatus status, IError innerError)
@@ -98,7 +98,7 @@ public class Error<TErrorStatus> : Error
     {
     }
 
-    /// <summary>Initializes an error with a status and a message that was caused by another error</summary>
+    /// <summary>Initializes an error with a status and a message that was caused by another error.</summary>
     /// <param name="status">The error status.</param>
     /// <param name="innerError">The inner error.</param>
     /// <param name="message">The error message.</param>

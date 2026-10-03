@@ -25,7 +25,7 @@ public class SpecialDirectory
     /// <summary>Gets the full path of the directory.</summary>
     public string FullName => Directory.FullName;
 
-    /// <summary>Initializes the instance</summary>
+    /// <summary>Initializes the instance.</summary>
     /// <param name="directoryType">The special folder type.</param>
     /// <param name="directory">The directory of the folder.</param>
     public SpecialDirectory(Environment.SpecialFolder directoryType, DirectoryInfo directory)
@@ -34,7 +34,7 @@ public class SpecialDirectory
         Directory = directory;
     }
 
-    /// <summary>Initializes the instance from a path</summary>
+    /// <summary>Initializes the instance from a path.</summary>
     /// <param name="directoryType">The special folder type.</param>
     /// <param name="directory">The path of the folder.</param>
     public SpecialDirectory(Environment.SpecialFolder directoryType, string directory)
@@ -47,14 +47,14 @@ public class SpecialDirectory
         EnsureSpecialDirectories();
     }
 
-    /// <summary>Gets the special directories that exist on disk, ordered by path</summary>
+    /// <summary>Gets the special directories that exist on disk, ordered by path.</summary>
     /// <returns>The existing special directories keyed by folder type.</returns>
     public static IDictionary<Environment.SpecialFolder, SpecialDirectory> GetExistingDirectories() =>
         SpecialDirectories.Where(x => x.Value is not null && x.Value.Directory.Exists)
             .OrderBy(x => x.Value.FullName)
             .ToDictionary(x => x.Key, x => x.Value);
 
-    /// <summary>Returns the full path of the directory</summary>
+    /// <summary>Returns the full path of the directory.</summary>
     /// <returns>The full path.</returns>
     public override string ToString() => FullName;
 

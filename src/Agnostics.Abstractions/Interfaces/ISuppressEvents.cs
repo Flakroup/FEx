@@ -10,7 +10,7 @@ public interface ISuppressEvents
     /// <summary>Gets or sets the number of active suppression scopes; events are suppressed while it is greater than zero.</summary>
     int SuppressedEvents { get; set; }
 
-    /// <summary>Starts suppressing events until the returned object is disposed</summary>
+    /// <summary>Starts suppressing events until the returned object is disposed.</summary>
     /// <returns>A disposable that ends the suppression.</returns>
     SuppressEventsDisposable SuppressEvents();
 }

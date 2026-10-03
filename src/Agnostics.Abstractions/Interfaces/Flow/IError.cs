@@ -10,7 +10,7 @@ public interface IError
     /// <summary>Gets the error that caused this one.</summary>
     IError? InnerError { get; }
 
-    /// <summary>Sets the error that caused this one</summary>
+    /// <summary>Sets the error that caused this one.</summary>
     /// <param name="innerError">The inner error.</param>
     void SetInnerError(IError innerError);
 }

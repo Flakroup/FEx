@@ -15,14 +15,14 @@ public class AggregatedError : Error
     {
     }
 
-    /// <summary>Initializes an aggregated error</summary>
+    /// <summary>Initializes an aggregated error.</summary>
     /// <param name="innerErrors">The errors to group.</param>
     public AggregatedError(IReadOnlyCollection<IError> innerErrors)
         : this(innerErrors, null)
     {
     }
 
-    /// <summary>Initializes an aggregated error with a message</summary>
+    /// <summary>Initializes an aggregated error with a message.</summary>
     /// <param name="innerErrors">The errors to group.</param>
     /// <param name="message">The error message.</param>
     public AggregatedError(IReadOnlyCollection<IError> innerErrors, string? message)

@@ -8,7 +8,7 @@ public interface ITaskWrapper : ITaskWrapperBase<Task, Result<ExceptionError>>
 {
 }
 
-/// <summary>Task wrapper for a task that returns a value</summary>
+/// <summary>Task wrapper for a task that returns a value.</summary>
 /// <typeparam name="T">The task result type.</typeparam>
 public interface ITaskWrapper<T> : ITaskWrapperBase<Task<T>, Result<T, ExceptionError>>
 {

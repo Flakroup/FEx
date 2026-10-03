@@ -5,6 +5,7 @@ using SysNotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Argument guard helpers that throw when a precondition is not met.</summary>
 public static class GuardExtensions
 {
     /// <summary>

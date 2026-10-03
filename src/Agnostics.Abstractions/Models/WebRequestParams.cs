@@ -36,7 +36,7 @@ public class WebRequestParams
     /// <summary>Gets or sets the callback that validates the server certificate.</summary>
     public RemoteCertificateValidationCallback? ServerCertificateValidationCallback { get; set; }
 
-    /// <summary>Initializes the parameters with every setting unset</summary>
+    /// <summary>Initializes the parameters with every setting unset.</summary>
     /// <param name="cookies">Cookies copied into a new container; no container is created when null.</param>
     public WebRequestParams(IEnumerable<Cookie>? cookies = null)
     {

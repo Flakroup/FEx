@@ -12,7 +12,7 @@ public class FExSemaphoreSlim : SemaphoreSlim
     /// <summary>Gets a value indicating whether no one currently holds the semaphore, that is the current count equals the initial count.</summary>
     public bool IsIdle => InitialCount == CurrentCount;
 
-    /// <summary>Initializes the semaphore</summary>
+    /// <summary>Initializes the semaphore.</summary>
     /// <param name="initialCount">The initial number of requests that can be granted concurrently.</param>
     /// <param name="maxCount">The maximum number of requests that can be granted concurrently.</param>
     public FExSemaphoreSlim(int initialCount = 1, int maxCount = 1)
@@ -22,7 +22,7 @@ public class FExSemaphoreSlim : SemaphoreSlim
     }
 
     #region IDisposable
-    /// <summary>Marks the semaphore as disposed and releases its resources</summary>
+    /// <summary>Marks the semaphore as disposed and releases its resources.</summary>
     /// <param name="disposing"><c>true</c> to release managed resources.</param>
     protected override void Dispose(bool disposing)
     {

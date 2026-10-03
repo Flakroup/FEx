@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace FEx.Agnostics.Abstractions.Collections;
 
-/// <summary>A dictionary view over an existing dictionary that is used as one direction of a <see cref="Map{TForwardKey, TReverseKey}" /></summary>
+/// <summary>A dictionary view over an existing dictionary that is used as one direction of a <see cref="Map{TForwardKey, TReverseKey}" />.</summary>
 /// <typeparam name="TKey">The key type.</typeparam>
 /// <typeparam name="TValue">The value type.</typeparam>
 public class Index<TKey, TValue> : IIndex<TKey, TValue>
@@ -30,7 +30,7 @@ public class Index<TKey, TValue> : IIndex<TKey, TValue>
     /// <inheritdoc />
     ICollection<TKey> IDictionary<TKey, TValue>.Keys => _dictionary.Keys;
 
-    /// <summary>Initializes the index over a dictionary</summary>
+    /// <summary>Initializes the index over a dictionary.</summary>
     /// <param name="dictionary">The dictionary to wrap.</param>
     public Index(IDictionary<TKey, TValue> dictionary)
     {

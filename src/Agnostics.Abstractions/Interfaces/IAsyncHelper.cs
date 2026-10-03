@@ -9,7 +9,7 @@ namespace FEx.Agnostics.Abstractions.Interfaces;
 /// <summary>Runs delegates on the main thread or the thread pool, including fire-and-forget execution tracked by task wrappers.</summary>
 public interface IAsyncHelper
 {
-    /// <summary>Starts an action without awaiting it</summary>
+    /// <summary>Starts an action without awaiting it.</summary>
     /// <param name="action">The action to run.</param>
     /// <param name="asyncMode">The thread context to run on.</param>
     /// <param name="options">How exceptions thrown by the action are handled; null uses the defaults.</param>
@@ -20,7 +20,7 @@ public interface IAsyncHelper
                                IExceptionHandlerOptions? options = null,
                                CancellationToken cancellationToken = default);
 
-    /// <summary>Starts a function without awaiting it</summary>
+    /// <summary>Starts a function without awaiting it.</summary>
     /// <typeparam name="T">The function result type.</typeparam>
     /// <param name="func">The function to run.</param>
     /// <param name="asyncMode">The thread context to run on.</param>
@@ -32,7 +32,7 @@ public interface IAsyncHelper
                                      IExceptionHandlerOptions? options = null,
                                      CancellationToken cancellationToken = default);
 
-    /// <summary>Starts an asynchronous delegate without awaiting it</summary>
+    /// <summary>Starts an asynchronous delegate without awaiting it.</summary>
     /// <param name="task">Factory of the task to run.</param>
     /// <param name="asyncMode">The thread context to run on.</param>
     /// <param name="options">How exceptions are handled; null uses the defaults.</param>
@@ -41,7 +41,7 @@ public interface IAsyncHelper
                                    AsyncMode asyncMode = AsyncMode.Default,
                                    IExceptionHandlerOptions? options = null);
 
-    /// <summary>Starts an asynchronous delegate that returns a value without awaiting it</summary>
+    /// <summary>Starts an asynchronous delegate that returns a value without awaiting it.</summary>
     /// <typeparam name="T">The task result type.</typeparam>
     /// <param name="task">Factory of the task to run.</param>
     /// <param name="asyncMode">The thread context to run on.</param>
@@ -51,7 +51,7 @@ public interface IAsyncHelper
                                          AsyncMode asyncMode = AsyncMode.Default,
                                          IExceptionHandlerOptions? options = null);
 
-    /// <summary>Starts several asynchronous delegates without awaiting them</summary>
+    /// <summary>Starts several asynchronous delegates without awaiting them.</summary>
     /// <param name="tasks">Factories of the tasks to run.</param>
     /// <param name="asyncMode">The thread context to run on.</param>
     /// <param name="options">How exceptions are handled; null uses the defaults.</param>
@@ -60,7 +60,7 @@ public interface IAsyncHelper
                                                    AsyncMode asyncMode = AsyncMode.Default,
                                                    IExceptionHandlerOptions? options = null);
 
-    /// <summary>Starts several asynchronous delegates that return values without awaiting them</summary>
+    /// <summary>Starts several asynchronous delegates that return values without awaiting them.</summary>
     /// <typeparam name="T">The task result type.</typeparam>
     /// <param name="tasks">Factories of the tasks to run.</param>
     /// <param name="asyncMode">The thread context to run on.</param>
@@ -70,26 +70,26 @@ public interface IAsyncHelper
                                                          AsyncMode asyncMode = AsyncMode.Default,
                                                          IExceptionHandlerOptions? options = null);
 
-    /// <summary>Runs an action on the main thread and returns a task that completes when it has finished</summary>
+    /// <summary>Runs an action on the main thread and returns a task that completes when it has finished.</summary>
     /// <param name="func">The action to run.</param>
     /// <param name="options">Whether the work is scheduled immediately.</param>
     /// <returns>A task that completes when the action has run.</returns>
     Task ExecuteDeferredTaskOnMainThreadAsync(Action func, AsyncOptions options = AsyncOptions.ImmediateStart);
 
-    /// <summary>Runs a function on the main thread and returns its result</summary>
+    /// <summary>Runs a function on the main thread and returns its result.</summary>
     /// <typeparam name="T">The function result type.</typeparam>
     /// <param name="func">The function to run.</param>
     /// <param name="options">Whether the work is scheduled immediately.</param>
     /// <returns>A task that yields the function result.</returns>
     Task<T> ExecuteDeferredTaskOnMainThreadAsync<T>(Func<T> func, AsyncOptions options = AsyncOptions.ImmediateStart);
 
-    /// <summary>Runs an asynchronous delegate on the main thread and returns a task that completes when it has finished</summary>
+    /// <summary>Runs an asynchronous delegate on the main thread and returns a task that completes when it has finished.</summary>
     /// <param name="func">Factory of the task to run.</param>
     /// <param name="options">Whether the work is scheduled immediately.</param>
     /// <returns>A task that completes when the delegate's task has completed.</returns>
     Task ExecuteDeferredTaskOnMainThreadAsync(Func<Task> func, AsyncOptions options = AsyncOptions.ImmediateStart);
 
-    /// <summary>Runs an asynchronous delegate on the main thread and returns its result</summary>
+    /// <summary>Runs an asynchronous delegate on the main thread and returns its result.</summary>
     /// <typeparam name="T">The task result type.</typeparam>
     /// <param name="func">Factory of the task to run.</param>
     /// <param name="options">Whether the work is scheduled immediately.</param>

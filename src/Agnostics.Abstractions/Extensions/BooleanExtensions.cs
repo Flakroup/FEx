@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Extensions for booleans.</summary>
 public static class BooleanExtensions
 {
     /// <summary>

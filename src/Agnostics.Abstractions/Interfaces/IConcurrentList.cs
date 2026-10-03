@@ -8,7 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.Agnostics.Abstractions.Interfaces;
 
-/// <summary>A thread-safe list that supports bulk operations, sorting and event suppression</summary>
+/// <summary>A thread-safe list that supports bulk operations, sorting and event suppression.</summary>
 /// <typeparam name="T">The element type.</typeparam>
 [SuppressMessage("ReSharper", "PossibleInterfaceMemberAmbiguity")]
 public interface IConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppressEvents
@@ -24,7 +24,7 @@ public interface IConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppre
     /// <param name="range">The items collection to add</param>
     void AddRange(IEnumerable<T> range);
 
-    /// <summary>Returns a read-only wrapper around the list</summary>
+    /// <summary>Returns a read-only wrapper around the list.</summary>
     /// <returns>A read-only view of the list.</returns>
     ReadOnlyCollection<T> AsReadOnly();
 
@@ -37,25 +37,25 @@ public interface IConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppre
     /// </param>
     bool AddUnique(T item);
 
-    /// <summary>Adds the items that are not already in the list, ignoring duplicates within the range</summary>
+    /// <summary>Adds the items that are not already in the list, ignoring duplicates within the range.</summary>
     /// <param name="range">The candidate items.</param>
     void AddUniqueRange(IEnumerable<T> range);
-    /// <summary>Adds the items whose key is not already used by an element of the list, ignoring duplicate keys within the range</summary>
+    /// <summary>Adds the items whose key is not already used by an element of the list, ignoring duplicate keys within the range.</summary>
     /// <typeparam name="TKey">The key type.</typeparam>
     /// <param name="range">The candidate items.</param>
     /// <param name="keySelector">Selects the key of an item.</param>
     /// <param name="comparer">Compares keys; the default equality is used when null.</param>
     void AddUniqueRange<TKey>(IEnumerable<T> range, Func<T, TKey> keySelector, IEqualityComparer<TKey>? comparer);
-    /// <summary>Removes all items that match a predicate</summary>
+    /// <summary>Removes all items that match a predicate.</summary>
     /// <param name="predicate">Returns true for the items to remove.</param>
     /// <param name="removedItems">Receives the removed items.</param>
     /// <returns><c>true</c> if at least one item was removed.</returns>
     bool RemoveWhere(Func<T, bool> predicate, out List<T> removedItems);
-    /// <summary>Replaces the item at an index</summary>
+    /// <summary>Replaces the item at an index.</summary>
     /// <param name="index">The zero-based index of the item to replace.</param>
     /// <param name="item">The new item.</param>
     void Replace(int index, T item);
-    /// <summary>Replaces the content of the list, doing nothing when the sequence is already equal to the current content</summary>
+    /// <summary>Replaces the content of the list, doing nothing when the sequence is already equal to the current content.</summary>
     /// <param name="collection">The new items.</param>
     void ReplaceWith(IEnumerable<T> collection);
 
@@ -127,7 +127,7 @@ public interface IConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppre
     /// </exception>
     void Sort(Comparison<T> comparison);
 
-    /// <summary>Sorts the list by a key</summary>
+    /// <summary>Sorts the list by a key.</summary>
     /// <typeparam name="TKey">The key type.</typeparam>
     /// <param name="selector">Selects the sort key of an item.</param>
     /// <param name="order">The sort direction.</param>
@@ -145,7 +145,7 @@ public interface IConcurrentList<T> : IList<T>, IReadOnlyList<T>, IList, ISuppre
     /// </param>
     void Combo(Action<IConcurrentList<T>> action, bool shouldTriggerCollectionReset);
 
-    /// <summary>Runs a function with events suppressed and raises a reset event when it asks for it</summary>
+    /// <summary>Runs a function with events suppressed and raises a reset event when it asks for it.</summary>
     /// <param name="shouldTriggerCollectionReset">Receives the list and returns true when a reset event should be raised.</param>
     /// <returns><c>true</c> if a reset event was raised.</returns>
     bool Combo(Func<IConcurrentList<T>, bool> shouldTriggerCollectionReset);

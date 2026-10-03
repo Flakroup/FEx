@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Predicate expressions that always evaluate to a constant.</summary>
+/// <typeparam name="T">The expression parameter type.</typeparam>
 public static class LambdaExtensions<T>
 {
     /// <summary>
@@ -25,6 +27,7 @@ public static class LambdaExtensions<T>
     }
 }
 
+/// <summary>Extensions for combining predicate expressions.</summary>
 public static class LambdaExtensions
 {
     /// <summary>

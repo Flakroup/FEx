@@ -108,7 +108,7 @@ public static class PlatformInfoProvider
     public static bool IsIOS => OperatingSystem.IsIOS();
     /// <summary>Gets a value indicating whether the code runs in a browser (WebAssembly).</summary>
     public static bool IsBrowser => OperatingSystem.IsBrowser();
-    /// <summary>Determines whether the current operating system matches a platform name</summary>
+    /// <summary>Determines whether the current operating system matches a platform name.</summary>
     /// <param name="platform">The platform name, for example <c>ANDROID</c>.</param>
     /// <returns><c>true</c> if the current platform matches.</returns>
     public static bool IsOSPlatform(string platform) => OperatingSystem.IsOSPlatform(platform);
@@ -125,7 +125,7 @@ public static class PlatformInfoProvider
     public static bool IsIOS => IsOSPlatform("IOS");
     /// <summary>Gets a value indicating whether the code runs in a browser (WebAssembly).</summary>
     public static bool IsBrowser => IsOSPlatform("BROWSER");
-    /// <summary>Determines whether the current operating system matches a platform name</summary>
+    /// <summary>Determines whether the current operating system matches a platform name.</summary>
     /// <param name="platform">The platform name, for example <c>ANDROID</c>.</param>
     /// <returns><c>true</c> if the current platform matches.</returns>
     public static bool IsOSPlatform(string platform) => RuntimeInformation.IsOSPlatform(OSPlatform.Create(platform));

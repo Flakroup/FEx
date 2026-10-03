@@ -13,7 +13,7 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 /// <summary>Extensions available on any object, covering emptiness checks, range and set membership tests and property helpers.</summary>
 public static class ObjectExtensions
 {
-    /// <summary>Determines whether an object is null, an empty string, an empty collection or an empty sequence</summary>
+    /// <summary>Determines whether an object is null, an empty string, an empty collection or an empty sequence.</summary>
     /// <param name="data">The object to test.</param>
     /// <returns><c>true</c> if the object is null or empty.</returns>
     [ContractAnnotation("null => true")]
@@ -155,7 +155,7 @@ public static class ObjectExtensions
         // Reflection boundary: the retrieved property value is cast back to T (null when the property is absent/null).
         (T)obj.GetType().GetProperty(name)?.GetValue(obj, index)!;
 
-    /// <summary>Casts an object to a type</summary>
+    /// <summary>Casts an object to a type.</summary>
     /// <typeparam name="T">The target type.</typeparam>
     /// <param name="value">The object to cast.</param>
     /// <returns>The cast value, or the default of <typeparamref name="T" /> when <paramref name="value" /> is null.</returns>
@@ -165,13 +165,13 @@ public static class ObjectExtensions
             ? (T)value
             : default;
 
-    /// <summary>Gets the description from the <see cref="DescriptionAttribute" /> declared on the type of an object</summary>
+    /// <summary>Gets the description from the <see cref="DescriptionAttribute" /> declared on the type of an object.</summary>
     /// <param name="value">The object whose type is inspected.</param>
     /// <returns>The description, or null when the attribute is missing.</returns>
     public static string? GetTypeInstanceDescription(this object value) =>
         value.GetType().GetTypeCustomAttribute<DescriptionAttribute>()?.FindInEnumerable()?.Description;
 
-    /// <summary>Determines whether an item lies between two bounds using the default comparer</summary>
+    /// <summary>Determines whether an item lies between two bounds using the default comparer.</summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="item">The item to test.</param>
     /// <param name="start">The lower bound.</param>
@@ -195,7 +195,7 @@ public static class ObjectExtensions
     /// </returns>
     public static bool IsIn<T>(this T item, params T[] items) => item.IsIn((IEnumerable<T>)items);
 
-    /// <summary>Determines whether an item is contained in a sequence</summary>
+    /// <summary>Determines whether an item is contained in a sequence.</summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="item">The item to look for.</param>
     /// <param name="items">The sequence to search.</param>
@@ -208,14 +208,14 @@ public static class ObjectExtensions
             _ => items.Contains(item)
         };
 
-    /// <summary>Determines whether an item is not one of the given items</summary>
+    /// <summary>Determines whether an item is not one of the given items.</summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="item">The item to look for.</param>
     /// <param name="items">The items to search.</param>
     /// <returns><c>true</c> if none of the items equals <paramref name="item" />.</returns>
     public static bool IsNotIn<T>(this T item, params T[] items) => item.IsNotIn((IEnumerable<T>)items);
 
-    /// <summary>Determines whether an item is not contained in a sequence</summary>
+    /// <summary>Determines whether an item is not contained in a sequence.</summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="item">The item to look for.</param>
     /// <param name="items">The sequence to search.</param>
@@ -234,21 +234,21 @@ public static class ObjectExtensions
         yield return item;
     }
 
-    /// <summary>Determines whether a field already holds a value</summary>
+    /// <summary>Determines whether a field already holds a value.</summary>
     /// <typeparam name="T">The field type.</typeparam>
     /// <param name="field">The field to compare.</param>
     /// <param name="value">The value to compare with.</param>
     /// <returns><c>true</c> if the field equals the value.</returns>
     public static bool IsEqual<T>(ref T field, T value) => EqualityHelper.IsEqual(ref field, value);
 
-    /// <summary>Determines whether a field differs from a value</summary>
+    /// <summary>Determines whether a field differs from a value.</summary>
     /// <typeparam name="T">The field type.</typeparam>
     /// <param name="field">The field to compare.</param>
     /// <param name="value">The value to compare with.</param>
     /// <returns><c>true</c> if the field differs from the value.</returns>
     public static bool IsNotEqual<T>(ref T field, T value) => EqualityHelper.IsNotEqual(ref field, value);
 
-    /// <summary>Sets a backing field when the value changed and then calls a notification callback</summary>
+    /// <summary>Sets a backing field when the value changed and then calls a notification callback.</summary>
     /// <typeparam name="TSender">The sender type.</typeparam>
     /// <typeparam name="T">The field type.</typeparam>
     /// <param name="sender">The object that owns the field.</param>
@@ -271,7 +271,7 @@ public static class ObjectExtensions
         return true;
     }
 
-    /// <summary>Sets a backing field when the value changed and then calls an optional notification callback</summary>
+    /// <summary>Sets a backing field when the value changed and then calls an optional notification callback.</summary>
     /// <typeparam name="TSender">The type that implements <see cref="System.ComponentModel.INotifyPropertyChanged" />.</typeparam>
     /// <typeparam name="TRet">The field type.</typeparam>
     /// <param name="_">The object that owns the field.</param>

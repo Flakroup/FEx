@@ -9,12 +9,12 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 /// <summary>Extensions for building paths below a directory and for resolving special folders.</summary>
 public static class DirectoryInfoExtensions
 {
-    /// <summary>Determines whether a directory is on an NTFS volume</summary>
+    /// <summary>Determines whether a directory is on an NTFS volume.</summary>
     /// <param name="dir">The directory to test.</param>
     /// <returns><c>true</c> if the volume uses NTFS.</returns>
     public static bool IsNtfs(this DirectoryInfo dir) => FileSystemHelper.IsPathNtfs(dir.FullName);
 
-    /// <summary>Combines a directory with descendant path segments, adding the <c>\\?\</c> long-path prefix when a path would exceed 260 characters</summary>
+    /// <summary>Combines a directory with descendant path segments, adding the <c>\\?\</c> long-path prefix when a path would exceed 260 characters.</summary>
     /// <param name="dir">The base directory.</param>
     /// <param name="descendants">The path segments to append.</param>
     /// <returns>The combined path.</returns>
@@ -34,7 +34,7 @@ public static class DirectoryInfoExtensions
         return path;
     }
 
-    /// <summary>Gets a file below a directory, creating its parent directory when missing</summary>
+    /// <summary>Gets a file below a directory, creating its parent directory when missing.</summary>
     /// <param name="dir">The base directory.</param>
     /// <param name="descendants">The path segments leading to the file.</param>
     /// <returns>The file.</returns>
@@ -48,7 +48,7 @@ public static class DirectoryInfoExtensions
             },
             descendants);
 
-    /// <summary>Gets a directory below another directory, creating it when missing</summary>
+    /// <summary>Gets a directory below another directory, creating it when missing.</summary>
     /// <param name="dir">The base directory.</param>
     /// <param name="descendants">The path segments leading to the directory.</param>
     /// <returns>The directory.</returns>
@@ -62,7 +62,7 @@ public static class DirectoryInfoExtensions
             },
             descendants);
 
-    /// <summary>Creates a file system object for a descendant path of a directory path</summary>
+    /// <summary>Creates a file system object for a descendant path of a directory path.</summary>
     /// <typeparam name="T">The type of object created.</typeparam>
     /// <param name="directoryPath">The base directory path.</param>
     /// <param name="activator">Creates the object from the combined path.</param>
@@ -73,7 +73,7 @@ public static class DirectoryInfoExtensions
                                                      params string[] descendants) =>
         new DirectoryInfo(directoryPath).GetDescendantFileSystemObject(activator, descendants);
 
-    /// <summary>Creates a file system object for a descendant path of a directory</summary>
+    /// <summary>Creates a file system object for a descendant path of a directory.</summary>
     /// <typeparam name="T">The type of object created.</typeparam>
     /// <param name="dir">The base directory.</param>
     /// <param name="activator">Creates the object from the combined path.</param>
@@ -84,7 +84,7 @@ public static class DirectoryInfoExtensions
                                                      params string[] descendants) =>
         activator(dir.GetDescendantPath(descendants));
 
-    /// <summary>Combines the path of a special folder with descendant path segments</summary>
+    /// <summary>Combines the path of a special folder with descendant path segments.</summary>
     /// <param name="folder">The special folder.</param>
     /// <param name="descendants">The path segments to append.</param>
     /// <returns>The combined path.</returns>
@@ -92,7 +92,7 @@ public static class DirectoryInfoExtensions
                                                             params string[] descendants) =>
         folder.GetSpecialDirectory().Directory.GetDescendantPath(descendants);
 
-    /// <summary>Gets the special directory for a special folder</summary>
+    /// <summary>Gets the special directory for a special folder.</summary>
     /// <param name="folder">The special folder.</param>
     /// <returns>The special directory.</returns>
     public static SpecialDirectory GetSpecialDirectory(this Environment.SpecialFolder folder) =>

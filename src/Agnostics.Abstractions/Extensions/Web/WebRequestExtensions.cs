@@ -3,8 +3,12 @@ using System.Net;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Web;
 
+/// <summary>Extensions for legacy <see cref="System.Net.WebRequest" /> instances.</summary>
 public static class WebRequestExtensions
 {
+    /// <summary>Applies the credentials, headers, method and timeout of the parameters to a request; unset values are skipped.</summary>
+    /// <param name="req">The request to configure.</param>
+    /// <param name="pars">The parameters to apply.</param>
     public static void PrepareRequest(this WebRequest req, WebRequestParams pars)
     {
         if (pars.Credentials is not null)

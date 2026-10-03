@@ -77,7 +77,7 @@ public static class StringExtensions
     /// <summary>Matches strings made only of ASCII letters, digits and underscores.</summary>
     public static Regex LettersNumbersAndUnderscoreRegex { get; } = new("^[a-zA-Z0-9_]+$", RegexOptions.Compiled);
 
-    /// <summary>Capitalizes the first character and lower-cases the rest</summary>
+    /// <summary>Capitalizes the first character and lower-cases the rest.</summary>
     /// <param name="text">The text to convert.</param>
     /// <returns>The converted text, or null when the text is null, empty or white space.</returns>
     public static string? ToCamel(this string text) =>
@@ -85,7 +85,7 @@ public static class StringExtensions
             ? $"{char.ToUpperInvariant(text[0])}{text.Substring(1).ToLowerInvariant()}"
             : null;
 
-    /// <summary>Strips every character that is not a letter, apostrophe or white space</summary>
+    /// <summary>Strips every character that is not a letter, apostrophe or white space.</summary>
     /// <param name="text">The text to clean.</param>
     /// <returns>The cleaned text, or null when the text is null, empty or white space.</returns>
     public static string? ToNiceString(this string text)
@@ -96,7 +96,7 @@ public static class StringExtensions
         return null;
     }
 
-    /// <summary>Removes every character other than digits and dots from a phone number, skipping the first two characters when it starts with '+'</summary>
+    /// <summary>Removes every character other than digits and dots from a phone number, skipping the first two characters when it starts with '+'.</summary>
     /// <param name="phoneNumber">The phone number to format.</param>
     /// <returns>The formatted number, or null when the input is null, empty or white space.</returns>
     public static string? ToFormattedPhoneNumber(this string phoneNumber)
@@ -109,7 +109,7 @@ public static class StringExtensions
         return null;
     }
 
-    /// <summary>Appends each element of a collection to the builder without a separator</summary>
+    /// <summary>Appends each element of a collection to the builder without a separator.</summary>
     /// <param name="stringBuilder">The builder to append to.</param>
     /// <param name="collection">The values to append.</param>
     public static void AppendJoin(this StringBuilder stringBuilder, IEnumerable collection)
@@ -205,7 +205,7 @@ public static class StringExtensions
             : throw new("Cannot unmarshal type decimal");
     }
 
-    /// <summary>Converts a string to a <see cref="Uri" /></summary>
+    /// <summary>Converts a string to a <see cref="Uri" />.</summary>
     /// <param name="source">The string to convert.</param>
     /// <param name="baseUri">When set, <paramref name="source" /> is resolved relative to this URI.</param>
     /// <param name="kind">The kind of URI to create when no base URI is given.</param>
@@ -300,13 +300,13 @@ public static class StringExtensions
         return input;
     }
 
-    /// <summary>Determines whether the string equals both its lower-case and upper-case form, or at least one of them</summary>
+    /// <summary>Determines whether the string equals both its lower-case and upper-case form, or at least one of them.</summary>
     /// <param name="input">The string to test.</param>
     /// <returns><c>true</c> if the string is entirely upper-case or entirely lower-case; otherwise <c>false</c>.</returns>
     public static bool IsAllUpperOrAllLower(this string input) =>
         input.ToLower().Equals(input) || input.ToUpper().Equals(input);
 
-    /// <summary>Compares two strings ignoring case with the ordinal comparer</summary>
+    /// <summary>Compares two strings ignoring case with the ordinal comparer.</summary>
     /// <param name="source">The first string.</param>
     /// <param name="value">The second string.</param>
     /// <returns><c>true</c> if the strings are equal ignoring case.</returns>
@@ -529,28 +529,28 @@ public static class StringExtensions
     [ContractAnnotation("null => false")]
     public static bool IsNotNullOrWhiteSpace(this string value) => !string.IsNullOrWhiteSpace(value);
 
-    /// <summary>Determines whether a string is neither null, empty nor white space</summary>
+    /// <summary>Determines whether a string is neither null, empty nor white space.</summary>
     /// <param name="value">The string to test.</param>
     /// <returns><c>true</c> if the string has at least one non-white-space character.</returns>
     [ContractAnnotation("null => false")]
     public static bool IsNotNullOrEmptyOrWhiteSpace(this string value) =>
         value.IsNotNullOrEmptyString() && value.IsNotNullOrWhiteSpace();
 
-    /// <summary>Determines whether a string is null, empty or consists only of white space</summary>
+    /// <summary>Determines whether a string is null, empty or consists only of white space.</summary>
     /// <param name="value">The string to test.</param>
     /// <returns><c>true</c> if the string is null, empty or white space.</returns>
     [ContractAnnotation("null => true")]
     public static bool IsNullOrEmptyOrWhiteSpace(this string value) =>
         value.IsNullOrEmptyString() || value.IsNullOrWhiteSpace();
 
-    /// <summary>Determines whether the whole text is matched by a regular expression pattern</summary>
+    /// <summary>Determines whether the whole text is matched by a regular expression pattern.</summary>
     /// <param name="text">The text to test.</param>
     /// <param name="regexPattern">The regular expression pattern.</param>
     /// <returns><c>true</c> if the first match spans the entire text.</returns>
     public static bool MatchesRegex(this string text, string regexPattern) =>
         text.MatchesRegex(new Regex(regexPattern));
 
-    /// <summary>Determines whether the whole text is matched by a regular expression</summary>
+    /// <summary>Determines whether the whole text is matched by a regular expression.</summary>
     /// <param name="text">The text to test.</param>
     /// <param name="regex">The regular expression.</param>
     /// <returns><c>true</c> if the first match spans the entire text.</returns>
@@ -561,28 +561,28 @@ public static class StringExtensions
         return match.Value.Equals(text);
     }
 
-    /// <summary>Determines whether the whole text is a single word made of word characters and apostrophes</summary>
+    /// <summary>Determines whether the whole text is a single word made of word characters and apostrophes.</summary>
     /// <param name="text">The text to test.</param>
     /// <returns><c>true</c> if the text is a word.</returns>
     public static bool IsAWord(this string text) => text.MatchesRegex(WordRegex);
 
-    /// <summary>Determines whether the whole text consists only of ASCII letters</summary>
+    /// <summary>Determines whether the whole text consists only of ASCII letters.</summary>
     /// <param name="text">The text to test.</param>
     /// <returns><c>true</c> if the text contains only letters.</returns>
     public static bool ContainsOnlyLetters(this string text) => text.MatchesRegex(LettersRegex);
 
-    /// <summary>Determines whether the whole text consists only of ASCII letters and digits</summary>
+    /// <summary>Determines whether the whole text consists only of ASCII letters and digits.</summary>
     /// <param name="text">The text to test.</param>
     /// <returns><c>true</c> if the text contains only letters and numbers.</returns>
     public static bool ContainsOnlyLettersAndNumbers(this string text) => text.MatchesRegex(LettersAndNumbersRegex);
 
-    /// <summary>Determines whether the whole text consists only of ASCII letters, digits and underscores</summary>
+    /// <summary>Determines whether the whole text consists only of ASCII letters, digits and underscores.</summary>
     /// <param name="text">The text to test.</param>
     /// <returns><c>true</c> if the text contains only letters, numbers and underscores.</returns>
     public static bool ContainsOnlyLettersNumbersAndUnderscore(this string text) =>
         text.MatchesRegex(LettersNumbersAndUnderscoreRegex);
 
-    /// <summary>Determines whether a string contains another string using the given comparison</summary>
+    /// <summary>Determines whether a string contains another string using the given comparison.</summary>
     /// <param name="source">The string to search.</param>
     /// <param name="toCheck">The string to look for.</param>
     /// <param name="comp">The string comparison to use.</param>
@@ -590,13 +590,13 @@ public static class StringExtensions
     public static bool Contains(this string source, string toCheck, StringComparison comp) =>
         source?.IndexOf(toCheck, comp) >= 0;
 
-    /// <summary>Splits a path into its segments on both directory separator characters</summary>
+    /// <summary>Splits a path into its segments on both directory separator characters.</summary>
     /// <param name="path">The path to split.</param>
     /// <returns>The path segments.</returns>
     public static IEnumerable<string> GetPathParts(this string path) =>
         path.Split(Path.DirectorySeparatorChar).SelectMany(x => x.Split(Path.AltDirectorySeparatorChar));
 
-    /// <summary>Upper-cases the first character of a string</summary>
+    /// <summary>Upper-cases the first character of a string.</summary>
     /// <param name="input">The string to convert.</param>
     /// <returns>The string with its first character upper-cased.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="input" /> is null.</exception>
@@ -613,7 +613,7 @@ public static class StringExtensions
 #endif
         };
 
-    /// <summary>Lower-cases the first character of a string</summary>
+    /// <summary>Lower-cases the first character of a string.</summary>
     /// <param name="input">The string to convert.</param>
     /// <returns>The string with its first character lower-cased.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="input" /> is null.</exception>
@@ -729,7 +729,7 @@ public static class StringExtensions
         return str.Substring(str.Length - length, length);
     }
 
-    /// <summary>Gets the length of a string, optionally ignoring leading and trailing white space</summary>
+    /// <summary>Gets the length of a string, optionally ignoring leading and trailing white space.</summary>
     /// <param name="value">The string to measure.</param>
     /// <param name="trim">When true, the string is trimmed before measuring.</param>
     /// <returns>The string length.</returns>
@@ -741,7 +741,7 @@ public static class StringExtensions
         return value.Length;
     }
 
-    /// <summary>Encodes a string as Base64</summary>
+    /// <summary>Encodes a string as Base64.</summary>
     /// <param name="str">The string to encode.</param>
     /// <param name="enc">The encoding used to get the bytes; UTF-8 when null.</param>
     /// <returns>The Base64 representation.</returns>
@@ -752,7 +752,7 @@ public static class StringExtensions
         return Convert.ToBase64String(enc.GetBytes(str));
     }
 
-    /// <summary>Decodes a Base64 string</summary>
+    /// <summary>Decodes a Base64 string.</summary>
     /// <param name="base64EncodedData">The Base64 text to decode.</param>
     /// <param name="enc">The encoding used to read the bytes; UTF-8 when null.</param>
     /// <returns>The decoded string.</returns>
@@ -763,7 +763,7 @@ public static class StringExtensions
         return enc.GetString(Convert.FromBase64String(base64EncodedData));
     }
 
-    /// <summary>Copies all remaining bytes from one stream to another using a 4 KB buffer</summary>
+    /// <summary>Copies all remaining bytes from one stream to another using a 4 KB buffer.</summary>
     /// <param name="src">The stream to read from.</param>
     /// <param name="dest">The stream to write to.</param>
     public static void CopyTo(this Stream src, Stream dest)
@@ -775,7 +775,7 @@ public static class StringExtensions
             dest.Write(bytes, 0, cnt);
     }
 
-    /// <summary>Compresses a string with GZip</summary>
+    /// <summary>Compresses a string with GZip.</summary>
     /// <param name="str">The string to compress, encoded as UTF-8.</param>
     /// <returns>The compressed bytes as a Base64 string.</returns>
     public static string Zip(this string str)
@@ -790,7 +790,7 @@ public static class StringExtensions
         return Convert.ToBase64String(mso.ToArray());
     }
 
-    /// <summary>Decompresses a Base64 GZip string produced by <see cref="Zip(string)" /></summary>
+    /// <summary>Decompresses a Base64 GZip string produced by <see cref="Zip(string)" />.</summary>
     /// <param name="bytes">The Base64 compressed data.</param>
     /// <returns>The decompressed UTF-8 string.</returns>
     public static string Unzip(this string bytes)
@@ -803,7 +803,7 @@ public static class StringExtensions
         return Encoding.UTF8.GetString(mso.ToArray());
     }
 
-    /// <summary>Compares two strings, treating two nulls as equal</summary>
+    /// <summary>Compares two strings, treating two nulls as equal.</summary>
     /// <param name="source">The first string.</param>
     /// <param name="value">The second string.</param>
     /// <param name="comparisonType">The comparison to use.</param>
@@ -813,6 +813,9 @@ public static class StringExtensions
                                          StringComparison comparisonType = StringComparison.Ordinal) =>
         source is null && value is null || source?.Equals(value, comparisonType) == true;
 
+    /// <summary>Converts bytes to a lower-case hexadecimal string without separators.</summary>
+    /// <param name="ba">The bytes to convert.</param>
+    /// <returns>The hexadecimal text.</returns>
     public static string ByteArrayToString(this byte[] ba)
     {
         var hex = new StringBuilder(ba.Length * 2);
@@ -823,7 +826,7 @@ public static class StringExtensions
         return hex.ToString();
     }
 
-    /// <summary>Converts a hexadecimal string to a byte array</summary>
+    /// <summary>Converts a hexadecimal string to a byte array.</summary>
     /// <param name="hex">A string of hexadecimal digit pairs.</param>
     /// <returns>The decoded bytes.</returns>
     public static byte[] StringToByteArray(this string hex)
@@ -837,7 +840,7 @@ public static class StringExtensions
         return bytes;
     }
 
-    /// <summary>Formats a nullable GUID as an upper-case string in braces</summary>
+    /// <summary>Formats a nullable GUID as an upper-case string in braces.</summary>
     /// <param name="guid">The GUID to format.</param>
     /// <returns>The formatted GUID, or null when it has no value.</returns>
     public static string? GetGuidString(this Guid? guid) =>
@@ -845,12 +848,12 @@ public static class StringExtensions
             ? guid.Value.GetGuidString()
             : null;
 
-    /// <summary>Formats a GUID as an upper-case string in braces</summary>
+    /// <summary>Formats a GUID as an upper-case string in braces.</summary>
     /// <param name="guid">The GUID to format.</param>
     /// <returns>The formatted GUID, for example <c>{3F2504E0-...}</c>.</returns>
     public static string GetGuidString(this Guid guid) => $"{{{guid.ToString().ToUpper()}}}";
 
-    /// <summary>Converts every line break (<c>\n</c>, <c>\r</c> or <c>\r\n</c>) to <c>\r\n</c></summary>
+    /// <summary>Converts every line break (<c>\n</c>, <c>\r</c> or <c>\r\n</c>) to <c>\r\n</c>.</summary>
     /// <param name="input">The text to normalize.</param>
     /// <returns>The text with consistent CRLF line breaks.</returns>
     public static string NormalizeLineBreaks(this string input)
@@ -893,7 +896,7 @@ public static class StringExtensions
         return builder.ToString();
     }
 
-    /// <summary>Computes the SHA-256 hash of the UTF-8 bytes of a string</summary>
+    /// <summary>Computes the SHA-256 hash of the UTF-8 bytes of a string.</summary>
     /// <param name="rawData">The string to hash.</param>
     /// <returns>The hash as a lower-case hexadecimal string.</returns>
     public static string ComputeSha256Hash(this string rawData)
@@ -908,7 +911,7 @@ public static class StringExtensions
         return hash.ByteArrayToString();
     }
 
-    /// <summary>Truncates a string to a maximum length</summary>
+    /// <summary>Truncates a string to a maximum length.</summary>
     /// <param name="value">The string to truncate.</param>
     /// <param name="length">The maximum number of characters to keep.</param>
     /// <param name="trim">When true, the string is trimmed before truncating.</param>
@@ -949,7 +952,7 @@ public static class StringExtensions
         return BitConverter.ToString(hash).Replace("-", string.Empty).ToLower();
     }
 
-    /// <summary>Removes diacritical marks (accents) from a string</summary>
+    /// <summary>Removes diacritical marks (accents) from a string.</summary>
     /// <param name="text">The text to convert.</param>
     /// <returns>The text with combining marks removed, in normalization form C.</returns>
     public static string RemoveDiacritics(this string text)

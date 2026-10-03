@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Agnostics.Abstractions.Interfaces;
 
-/// <summary>Wraps a task together with its outcome expressed as a result object</summary>
+/// <summary>Wraps a task together with its outcome expressed as a result object.</summary>
 /// <typeparam name="TTask">The wrapped task type.</typeparam>
 /// <typeparam name="TResult">The result type describing success or the captured exception.</typeparam>
 public interface ITaskWrapperBase<TTask, out TResult> : ITaskWrapperBase
@@ -16,7 +16,7 @@ public interface ITaskWrapperBase<TTask, out TResult> : ITaskWrapperBase
     TResult Result { get; }
     /// <summary>Gets the wrapped task.</summary>
     TTask Task { get; }
-    /// <summary>Sets the wrapped task from a factory</summary>
+    /// <summary>Sets the wrapped task from a factory.</summary>
     /// <param name="task">The factory that creates the task.</param>
     void SetTask(Func<TTask> task);
 }
@@ -31,7 +31,7 @@ public interface ITaskWrapperBase
     /// <summary>Gets the stack trace captured when the task was created.</summary>
     StackTrace TaskCreationStackTrace { get; }
 
-    /// <summary>Marks the wrapper as failed with the given exception</summary>
+    /// <summary>Marks the wrapper as failed with the given exception.</summary>
     /// <param name="exception">The exception to record.</param>
     void SetException(Exception exception);
 }

@@ -6,6 +6,7 @@ using System.Linq;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Interop;
 
+/// <summary>Polyfills of newer LINQ operators for older target frameworks.</summary>
 public static class EnumerableExtensions
 {
     /// <summary>Returns distinct elements from a sequence according to a specified key selector function, comparing keys with the default equality comparer.</summary>

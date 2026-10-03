@@ -11,7 +11,7 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 /// <summary>Extensions for counting, batching, flattening and modifying collections.</summary>
 public static class CollectionExtensions
 {
-    /// <summary>Counts the elements of a non-generic sequence, using <see cref="System.Collections.ICollection.Count" /> when available</summary>
+    /// <summary>Counts the elements of a non-generic sequence, using <see cref="System.Collections.ICollection.Count" /> when available.</summary>
     /// <param name="source">The sequence to count.</param>
     /// <returns>The number of elements.</returns>
     public static int Count(this IEnumerable source)
@@ -22,28 +22,28 @@ public static class CollectionExtensions
         return Enumerable.Count(source.Cast<object>());
     }
 
-    /// <summary>Determines whether a collection is not null and has at least one element</summary>
+    /// <summary>Determines whether a collection is not null and has at least one element.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="source">The collection to test.</param>
     /// <returns><c>true</c> if the collection has elements.</returns>
     [ContractAnnotation("null => false")]
     public static bool IsNotNullOrEmptyCollection<T>(this ICollection<T> source) => source?.Count > 0;
 
-    /// <summary>Determines whether a collection is null or has no elements</summary>
+    /// <summary>Determines whether a collection is null or has no elements.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="source">The collection to test.</param>
     /// <returns><c>true</c> if the collection is null or empty.</returns>
     [ContractAnnotation("null => true")]
     public static bool IsNullOrEmptyCollection<T>(this ICollection<T> source) => source is null || source.Count == 0;
 
-    /// <summary>Determines whether a read-only collection is not null and has at least one element</summary>
+    /// <summary>Determines whether a read-only collection is not null and has at least one element.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="source">The collection to test.</param>
     /// <returns><c>true</c> if the collection has elements.</returns>
     [ContractAnnotation("null => false")]
     public static bool IsNotNullOrEmptyReadOnlyCollection<T>(this IReadOnlyCollection<T> source) => source?.Count > 0;
 
-    /// <summary>Determines whether a read-only collection is null or has no elements</summary>
+    /// <summary>Determines whether a read-only collection is null or has no elements.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="source">The collection to test.</param>
     /// <returns><c>true</c> if the collection is null or empty.</returns>
@@ -51,7 +51,7 @@ public static class CollectionExtensions
     public static bool IsNullOrEmptyReadOnlyCollection<T>(this IReadOnlyCollection<T> source) =>
         source is null || source.Count == 0;
 
-    /// <summary>Splits a sequence into consecutive batches</summary>
+    /// <summary>Splits a sequence into consecutive batches.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="source">The sequence to split.</param>
     /// <param name="batchSize">The maximum number of elements per batch.</param>
@@ -103,7 +103,7 @@ public static class CollectionExtensions
                 source.Add(item);
     }
 
-    /// <summary>Removes every element that matches a predicate</summary>
+    /// <summary>Removes every element that matches a predicate.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="source">The collection to modify.</param>
     /// <param name="predicate">Returns true for the elements to remove.</param>
@@ -113,7 +113,7 @@ public static class CollectionExtensions
             source.Remove(item);
     }
 
-    /// <summary>Removes an item from a collection</summary>
+    /// <summary>Removes an item from a collection.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="items">The collection to modify.</param>
     /// <param name="item">The item to remove.</param>
@@ -138,7 +138,7 @@ public static class CollectionExtensions
         }
     }
 
-    /// <summary>Flattens a hierarchy into a single sequence of descendants followed by the root items</summary>
+    /// <summary>Flattens a hierarchy into a single sequence of descendants followed by the root items.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="root">The top-level items.</param>
     /// <param name="predicate">Gets the children of an item.</param>
@@ -150,7 +150,7 @@ public static class CollectionExtensions
         return deferralList.SelectMany(x => predicate(x).Flatten(predicate)).Concat(deferralList);
     }
 
-    /// <summary>Copies a sequence into a new <see cref="ObservableCollection{T}" /></summary>
+    /// <summary>Copies a sequence into a new <see cref="ObservableCollection{T}" />.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="source">The sequence to copy.</param>
     /// <returns>The new collection.</returns>
@@ -163,14 +163,14 @@ public static class CollectionExtensions
         return [.. source];
     }
 
-    /// <summary>Copies a sequence into a read-only list</summary>
+    /// <summary>Copies a sequence into a read-only list.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="collection">The sequence to copy.</param>
     /// <returns>A read-only list with the elements.</returns>
     public static IReadOnlyList<T> ToReadOnlyList<T>(this IEnumerable<T> collection) =>
         collection.ToList().AsReadOnly();
 
-    /// <summary>Converts each element and returns the results as a read-only collection</summary>
+    /// <summary>Converts each element and returns the results as a read-only collection.</summary>
     /// <typeparam name="T">The source element type.</typeparam>
     /// <typeparam name="TOut">The converted element type.</typeparam>
     /// <param name="items">The sequence to convert.</param>
@@ -182,7 +182,7 @@ public static class CollectionExtensions
         IReadOnlyCollection<TOut>? defaultValue = null) =>
         items?.Select(converter).ToReadOnlyList() ?? defaultValue;
 
-    /// <summary>Moves an item to a new index within a list</summary>
+    /// <summary>Moves an item to a new index within a list.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="list">The list to modify.</param>
     /// <param name="item">The item to move.</param>

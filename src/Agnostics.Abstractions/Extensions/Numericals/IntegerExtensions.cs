@@ -2,6 +2,7 @@ using System;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Numericals;
 
+/// <summary>Extensions for converting integers.</summary>
 public static class IntegerExtensions
 {
     /// <summary>
@@ -91,6 +92,10 @@ public static class IntegerExtensions
             ? (byte)value.Value
             : defaultValue;
 
+    /// <summary>Converts an integer to a short.</summary>
+    /// <param name="value">The value to convert.</param>
+    /// <returns>The value as a short.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="value" /> does not fit in a short.</exception>
     public static short ToShort(this int value) =>
         value is > short.MaxValue or < short.MinValue
             ? throw new ArgumentOutOfRangeException(nameof(value),

@@ -7,6 +7,7 @@ using FEx.Avaloniax.Abstractions.Interfaces;
 using FEx.Core.Abstractions.Extensions;
 using FEx.DependencyInjection.Abstractions;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace FEx.Avaloniax;
@@ -16,8 +17,6 @@ public abstract class FExAvaloniaApp<TContainer> : Application
 {
     private readonly Host _host;
     private TContainer? _container;
-    private Window? _startupWindow;
-    private ShutdownMode _configuredShutdownMode;
 
     /// <summary>
     /// The service container. It is built asynchronously in <see cref="OnFrameworkInitializationCompleted" />, so it is
@@ -67,62 +66,66 @@ public abstract class FExAvaloniaApp<TContainer> : Application
 
     private void RaiseInitializationCompleted() => base.OnFrameworkInitializationCompleted();
 
-    /// <summary>Adapts the Avalonia <see cref="Application" /> to the shared <see cref="StartupHost" /> flow.</summary>
-    private sealed class Host(FExAvaloniaApp<TContainer> app) : StartupHost
+    /// <summary>Forwards the shared <see cref="DesktopStartupHost{TWindow,TShutdownMode}" /> primitives to the Avalonia desktop lifetime.</summary>
+    private sealed class Host(FExAvaloniaApp<TContainer> app) : DesktopStartupHost<Window, ShutdownMode>
     {
         private IClassicDesktopStyleApplicationLifetime? Desktop => app.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
 
-        protected override void SuspendShutdown()
+        // Non-desktop lifetimes (single view) have no shutdown mode and no windows: these primitives become no-ops.
+        protected override ShutdownMode ShutdownMode
         {
-            if (Desktop is not { } desktop)
-                return;
-
-            app._configuredShutdownMode = desktop.ShutdownMode;
-            desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            get => Desktop?.ShutdownMode ?? default;
+            set
+            {
+                if (Desktop is { } desktop)
+                    desktop.ShutdownMode = value;
+            }
         }
 
-        protected override void ShowStartupWindow()
-        {
-            if (Desktop is null)
-                return;
+        protected override ShutdownMode ExplicitShutdownMode => ShutdownMode.OnExplicitShutdown;
 
-            app._startupWindow = app.CreateStartupWindow();
-            app._startupWindow?.Show();
+        protected override Window? MainWindow
+        {
+            get => Desktop?.MainWindow;
+            set
+            {
+                if (Desktop is { } desktop)
+                    desktop.MainWindow = value;
+            }
         }
+
+        protected override Window? CreateStartupWindow() => Desktop is null ? null : app.CreateStartupWindow();
+
+        protected override Window? CreateMainWindow() => Desktop is null ? null : app.CreateMainWindow();
+
+        protected override void Show(Window window) => window.Show();
+
+        protected override void Close(Window window) => window.Close();
+
+        protected override void OnMainWindowShown() => app.RaiseInitializationCompleted();
 
         protected override async Task InitializeContainerAsync() =>
             app._container = await FExServiceProvider.InitializeAsync<TContainer>();
-
-        protected override void CloseStartupWindow()
-        {
-            app._startupWindow?.Close();
-            app._startupWindow = null;
-        }
-
-        protected override void RestoreShutdown()
-        {
-            if (Desktop is { } desktop)
-                desktop.ShutdownMode = app._configuredShutdownMode;
-        }
 
         protected override void OnActivation() => app.OnActivation();
 
         protected override void AfterServicesContainerBuild() => app.AfterServicesContainerBuild();
 
-        protected override void ShowMainWindow()
-        {
-            if (Desktop is { } desktop && app.CreateMainWindow() is { } mainWindow)
-            {
-                desktop.MainWindow = mainWindow;
-                mainWindow.Show();
-            }
-
-            app.RaiseInitializationCompleted();
-        }
-
         protected override void HandleException(Exception exception) => app.HandleCriticalException(exception);
 
+        protected override void HandleEarlyException(Exception exception) => app.HandleEarlyException(exception);
+
         protected override void RequestExit(int exitCode) => app.ExitApp(exitCode);
+    }
+
+    /// <summary>
+    /// Handles a startup failure before the service container exists, when <see cref="HandleCriticalException" /> cannot
+    /// rely on the container's exception handling. Writes to the trace output and standard error.
+    /// </summary>
+    protected virtual void HandleEarlyException(Exception exception)
+    {
+        Trace.TraceError(exception.ToString());
+        Console.Error.WriteLine(exception);
     }
 
     protected virtual void ExitApp(int exitCode) => Environment.Exit(exitCode);

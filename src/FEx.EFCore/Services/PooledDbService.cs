@@ -268,11 +268,13 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     /// Validates the changed entities and, if valid, saves them once.
     /// </summary>
     /// <remarks>
-    /// An optimistic-concurrency conflict is never resolved here: if another writer changed or deleted a row
-    /// this context modifies, <see cref="DbUpdateConcurrencyException" /> propagates to the caller, exactly like
+    /// Optimistic-concurrency conflicts are surfaced: if another writer changed a row this context modifies or
+    /// deletes, or deleted a row this context modifies, <see cref="DbUpdateConcurrencyException" /> propagates to
+    /// the caller. Deleting a row another writer already deleted is not a conflict: those entries are detached
+    /// and the save is retried once. Behaves exactly like
     /// <see cref="DbContextExtensions.ValidateAndSaveChangesAsync{TDbContext}(TDbContext)" />.
     /// </remarks>
-    /// <exception cref="DbUpdateConcurrencyException">Another writer changed or deleted an affected row.</exception>
+    /// <exception cref="DbUpdateConcurrencyException">Another writer changed an affected row, or deleted a row this context modifies.</exception>
     protected Result<Error> ValidateAndSaveChanges(TDbContext dbContext,
                                                    string id,
                                                    bool validateAllProperties,
@@ -284,7 +286,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
             return result;
 
         _logger.Information($"[{id}]\tSaving changes to database");
-        var res = dbContext.SaveChanges(acceptAllChangesOnSuccess);
+        var res = dbContext.SaveChangesSkippingRowsDeletedElsewhere(acceptAllChangesOnSuccess);
         _logger.Information($"[{id}]\t{res} rows affected");
 
         return result;
@@ -302,7 +304,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
             return result;
 
         _logger.Information($"[{id}]\tSaving changes to database");
-        var res = await dbContext.SaveChangesAsync(acceptAllChangesOnSuccess);
+        var res = await dbContext.SaveChangesSkippingRowsDeletedElsewhereAsync(acceptAllChangesOnSuccess);
         _logger.Information($"[{id}]\t{res} rows affected");
 
         return result;

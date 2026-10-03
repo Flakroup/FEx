@@ -64,12 +64,13 @@ public static class DbContextExtensions
     /// Validates the changed entities and, if valid, saves them once.
     /// </summary>
     /// <remarks>
-    /// An optimistic-concurrency conflict is never resolved here: if another writer changed or deleted a row
-    /// this context modifies, <see cref="DbUpdateConcurrencyException" /> propagates to the caller.
-    /// <c>PooledDbService.ValidateAndSaveChanges</c> and <c>PooledDbService.ValidateAndSaveChangesAsync</c>
-    /// behave identically.
+    /// Optimistic-concurrency conflicts are surfaced: if another writer changed a row this context modifies or
+    /// deletes, or deleted a row this context modifies, <see cref="DbUpdateConcurrencyException" /> propagates to
+    /// the caller. Deleting a row another writer already deleted is not a conflict: those entries are detached
+    /// and the save is retried once. <c>PooledDbService.ValidateAndSaveChanges</c> and
+    /// <c>PooledDbService.ValidateAndSaveChangesAsync</c> behave identically.
     /// </remarks>
-    /// <exception cref="DbUpdateConcurrencyException">Another writer changed or deleted an affected row.</exception>
+    /// <exception cref="DbUpdateConcurrencyException">Another writer changed an affected row, or deleted a row this context modifies.</exception>
     public static async Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext,
                                                                      string? id,
                                                                      bool validateAllProperties,
@@ -97,8 +98,74 @@ public static class DbContextExtensions
             return;
 
         Information($"[{id}]\tSaving changes to database");
-        var res = await dbContext.SaveChangesAsync(acceptAllChangesOnSuccess);
+        var res = await dbContext.SaveChangesSkippingRowsDeletedElsewhereAsync(acceptAllChangesOnSuccess);
         Information($"[{id}]\t{res} rows affected");
+    }
+
+    /// <summary>
+    /// Saves once. If every conflicting entry deletes a row another writer already deleted, detaches those
+    /// entries and saves once more; any other concurrency conflict is rethrown.
+    /// </summary>
+    internal static int SaveChangesSkippingRowsDeletedElsewhere(this DbContext dbContext,
+                                                                bool acceptAllChangesOnSuccess)
+    {
+        try
+        {
+            return dbContext.SaveChanges(acceptAllChangesOnSuccess);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            var deletedElsewhere = PendingDeletes(dbContext, ex).Where(e => e.GetDatabaseValues() is null).ToList();
+
+            if (!TryDetachDeletedElsewhere(ex, deletedElsewhere))
+                throw;
+
+            return dbContext.SaveChanges(acceptAllChangesOnSuccess);
+        }
+    }
+
+    /// <inheritdoc cref="SaveChangesSkippingRowsDeletedElsewhere" />
+    internal static async Task<int> SaveChangesSkippingRowsDeletedElsewhereAsync(this DbContext dbContext,
+                                                                                 bool acceptAllChangesOnSuccess)
+    {
+        try
+        {
+            return await dbContext.SaveChangesAsync(acceptAllChangesOnSuccess);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            List<EntityEntry> deletedElsewhere = [];
+
+            foreach (var entry in PendingDeletes(dbContext, ex))
+            {
+                if (await entry.GetDatabaseValuesAsync() is null)
+                    deletedElsewhere.Add(entry);
+            }
+
+            if (!TryDetachDeletedElsewhere(ex, deletedElsewhere))
+                throw;
+
+            return await dbContext.SaveChangesAsync(acceptAllChangesOnSuccess);
+        }
+    }
+
+    // All pending deletes, not only the reported ones, so one retry covers every row already deleted elsewhere.
+    private static List<EntityEntry> PendingDeletes(DbContext dbContext, DbUpdateConcurrencyException ex) =>
+        ex.Entries.Count > 0 && ex.Entries.All(e => e.State == EntityState.Deleted)
+            ? [.. dbContext.ChangeTracker.Entries().Where(e => e.State == EntityState.Deleted)]
+            : [];
+
+    private static bool TryDetachDeletedElsewhere(DbUpdateConcurrencyException ex,
+                                                  List<EntityEntry> deletedElsewhere)
+    {
+        if (deletedElsewhere.Count == 0
+            || !ex.Entries.All(e => deletedElsewhere.Exists(d => ReferenceEquals(d.Entity, e.Entity))))
+            return false;
+
+        foreach (var entry in deletedElsewhere)
+            entry.State = EntityState.Detached;
+
+        return true;
     }
 
     public static Result<Error> ValidateChangedEntities<TDbContext>(this TDbContext dbContext)

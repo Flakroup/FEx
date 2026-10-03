@@ -31,6 +31,8 @@ namespace FEx.EFCore.Collections;
 public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitializable, IReadOnlyCollection<TValue>
     where TKey : notnull, IEquatable<TKey> where TValue : class, INotifyPropertyChanged where TDbCtx : DbContext
 {
+    protected const int MaxSaveAttempts = 3;
+
     protected readonly IEFCoreDatabaseBackedService<TDbCtx> _dbSrv;
     private readonly Func<TValue, IObservable<object>>[]? _observables;
     private bool _isDisposed;
@@ -376,32 +378,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         {
             var changes = changeSet.Select(x => new ChangeInfo<TKey, TValue>(x)).ToList();
 
-            if (changes.Count > 0)
-            {
-                await OnChangesDetectedAsync(changes);
-
-                if (UseIndex)
-                    foreach (var e in changes)
-                    {
-                        switch (e.Reason)
-                        {
-                            case ChangeReason.Remove:
-                                if (Index.Contains(e.Key))
-                                    RemoveKeyFromIndex(e.Key);
-
-                                break;
-                            case ChangeReason.Refresh:
-                            case ChangeReason.Update:
-                            case ChangeReason.Add:
-                                if (!Index.Contains(e.Key))
-                                    AddKeyToIndex(e.Key);
-
-                                break;
-                        }
-                    }
-            }
-
-            return true;
+            return changes.Count == 0 || await SaveChangesResolvingConflictsAsync(changes);
         }
         catch (Exception ex)
         {
@@ -413,6 +390,106 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Saves <paramref name="changes" /> and updates <see cref="Index" />. On a concurrency conflict the batch is
+    /// reloaded against the database and retried, up to <see cref="MaxSaveAttempts" /> attempts: a row deleted
+    /// elsewhere is re-added only while its key is still cached, and a removal of a row deleted elsewhere is
+    /// dropped. If the conflict persists, the batch is not saved and an error is logged.
+    /// </summary>
+    /// <returns><c>true</c> if the batch was saved; <c>false</c> if the conflict could not be resolved.</returns>
+    protected async Task<bool> SaveChangesResolvingConflictsAsync(List<ChangeInfo<TKey, TValue>> changes)
+    {
+        for (var attempt = 1;; attempt++)
+        {
+            try
+            {
+                await OnChangesDetectedAsync(changes);
+
+                break;
+            }
+            catch (DbUpdateConcurrencyException ex) when (attempt < MaxSaveAttempts)
+            {
+                _logger.Warning(ex, $"{TypeName}: concurrency conflict on save attempt {attempt}, reloading the batch");
+                changes = await ReloadConflictingChangesAsync(changes);
+
+                if (changes.Count == 0)
+                    return true;
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.Error(ex,
+                    $"{TypeName}: concurrency conflict not resolved after {MaxSaveAttempts} attempts, changes for keys [{string.Join(", ", changes.Select(c => c.Key))}] were not saved");
+
+                return false;
+            }
+        }
+
+        if (UseIndex)
+            UpdateIndex(changes);
+
+        return true;
+    }
+
+    private async Task<List<ChangeInfo<TKey, TValue>>> ReloadConflictingChangesAsync(
+        List<ChangeInfo<TKey, TValue>> changes)
+    {
+        var keys = new HashSet<TKey>(changes.Select(c => c.Key));
+
+        var keysInDb = new HashSet<TKey>(await _dbSrv.RunTaskInDbContextAsync(
+            ctx => DbSetAccessor(ctx).AsNoTracking().Where(KeyIsIn(keys)).Select(RetriveKey()).ToListAsync(),
+            null,
+            false,
+            false));
+
+        List<ChangeInfo<TKey, TValue>> reloaded = [];
+
+        foreach (var change in changes)
+        {
+            var existsInDb = keysInDb.Contains(change.Key);
+
+            if (UseIndex)
+            {
+                if (existsInDb)
+                    AddKeyToIndex(change.Key);
+                else
+                    RemoveKeyFromIndex(change.Key);
+            }
+
+            // A row deleted elsewhere: its removal is already done, and it is re-added only while still cached.
+            if (change.ExistsInDb
+                && !existsInDb
+                && (change.Reason == ChangeReason.Remove || !Cache.Lookup(change.Key).HasValue))
+                continue;
+
+            change.ExistsInDb = existsInDb;
+            reloaded.Add(change);
+        }
+
+        return reloaded;
+    }
+
+    private void UpdateIndex(List<ChangeInfo<TKey, TValue>> changes)
+    {
+        foreach (var e in changes)
+        {
+            switch (e.Reason)
+            {
+                case ChangeReason.Remove:
+                    if (Index.Contains(e.Key))
+                        RemoveKeyFromIndex(e.Key);
+
+                    break;
+                case ChangeReason.Refresh:
+                case ChangeReason.Update:
+                case ChangeReason.Add:
+                    if (!Index.Contains(e.Key))
+                        AddKeyToIndex(e.Key);
+
+                    break;
+            }
+        }
     }
 
     private async Task CheckWhichAlreadyExistsAsync(TDbCtx dbContext, ICollection<ChangeInfo<TKey, TValue>> changeInfos)

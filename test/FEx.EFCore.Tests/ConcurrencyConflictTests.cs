@@ -101,6 +101,56 @@ public sealed class ConcurrencyConflictTests : IDisposable
     [InlineData(SavePath.ServiceSync)]
     [InlineData(SavePath.ServiceAsync)]
     [InlineData(SavePath.Extension)]
+    public async Task DeleteOfRowDeletedByOtherWriter_InMixedBatch_SavesRestOfBatch(SavePath path)
+    {
+        using var writerA = CreateContext();
+        var staleDoc = writerA.Docs.Single(d => d.Id == 1);
+
+        using (var writerB = CreateContext())
+        {
+            writerB.Docs.Remove(writerB.Docs.Single(d => d.Id == 1));
+            await writerB.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        writerA.Docs.Remove(staleDoc);
+        await writerA.Docs.AddAsync(new() { Id = 2, Name = "unrelated", Version = 1 }, TestContext.Current.CancellationToken);
+
+        await SaveAsync(writerA, path);
+
+        using var reader = CreateContext();
+        (await reader.Docs.Select(d => d.Id).ToListAsync(TestContext.Current.CancellationToken)).ShouldBe([2]);
+    }
+
+    [Theory]
+    [InlineData(SavePath.ServiceSync)]
+    [InlineData(SavePath.ServiceAsync)]
+    [InlineData(SavePath.Extension)]
+    public async Task DeleteOfRowUpdatedByOtherWriter_Throws_AndOtherWritersRowSurvives(SavePath path)
+    {
+        using var writerA = CreateContext();
+        var staleDoc = writerA.Docs.Single(d => d.Id == 1);
+
+        using (var writerB = CreateContext())
+        {
+            var doc = writerB.Docs.Single(d => d.Id == 1);
+            doc.Name = "from B";
+            doc.Version = 2;
+            await writerB.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        writerA.Docs.Remove(staleDoc);
+        await writerA.Docs.AddAsync(new() { Id = 2, Name = "unrelated", Version = 1 }, TestContext.Current.CancellationToken);
+
+        await Should.ThrowAsync<DbUpdateConcurrencyException>(() => SaveAsync(writerA, path));
+
+        using var reader = CreateContext();
+        (await reader.Docs.Select(d => d.Name).ToListAsync(TestContext.Current.CancellationToken)).ShouldBe(["from B"]);
+    }
+
+    [Theory]
+    [InlineData(SavePath.ServiceSync)]
+    [InlineData(SavePath.ServiceAsync)]
+    [InlineData(SavePath.Extension)]
     public async Task NonConflictingUpdate_IsSaved(SavePath path)
     {
         using (var writer = CreateContext())

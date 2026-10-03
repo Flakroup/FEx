@@ -11,6 +11,9 @@ namespace FEx.Asyncx.Tests;
 
 public sealed class AsyncInitializableTests
 {
+    // Bounds every gated wait, so a regression fails the test instead of hanging the run.
+    private static readonly TimeSpan Bound = TimeSpan.FromSeconds(10);
+
     [Fact]
     public async Task HookWithoutBaseCall_StillInitializesDependencies_AndCompletes()
     {
@@ -63,7 +66,7 @@ public sealed class AsyncInitializableTests
 
         var initialization = callerContext.Start(sut.InitializeAsync);
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
-        await sut.HookEntered.Task;
+        await sut.HookEntered.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
 #pragma warning restore VSTHRD003
 
         // The hook holds the initialization lock, so the reset cannot clear the state under it.
@@ -71,13 +74,13 @@ public sealed class AsyncInitializableTests
         reset.IsCompleted.ShouldBeFalse();
 
         sut.HookGate.SetResult(true);
-        await reset;
+        await reset.WaitAsync(Bound, TestContext.Current.CancellationToken);
         sut.IsInitialized.ShouldBeFalse();
         sut.CurrentInitializationTask.ShouldBeNull();
 
         // The caller now finds its run reset and initializes again.
         callerContext.RunUntilCompleted(initialization);
-        await initialization;
+        await initialization.WaitAsync(Bound, TestContext.Current.CancellationToken);
 
         sut.IsInitialized.ShouldBeTrue();
         (sut.CurrentInitializationTask is not null).ShouldBeTrue();
@@ -115,7 +118,7 @@ public sealed class AsyncInitializableTests
         // The first reset holds the initialization lock in OnResetAsync.
         var firstReset = sut.ResetAsync();
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
-        await sut.ResetEntered.Task;
+        await sut.ResetEntered.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
 #pragma warning restore VSTHRD003
 
         // Queued on the lock first, so it runs after the first reset and before the initialization run.
@@ -126,9 +129,9 @@ public sealed class AsyncInitializableTests
         var initialization = sut.InitializeAsync();
 
         sut.ResetGate.SetResult(true);
-        await firstReset;
-        await secondReset;
-        await initialization;
+        await firstReset.WaitAsync(Bound, TestContext.Current.CancellationToken);
+        await secondReset.WaitAsync(Bound, TestContext.Current.CancellationToken);
+        await initialization.WaitAsync(Bound, TestContext.Current.CancellationToken);
 
         sut.IsInitialized.ShouldBeTrue();
         (sut.CurrentInitializationTask is not null).ShouldBeTrue();
@@ -278,7 +281,7 @@ public sealed class AsyncInitializableTests
             HookRuns++;
             HookEntered.TrySetResult(true);
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
-            await HookGate.Task;
+            await HookGate.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
 #pragma warning restore VSTHRD003
 
             if (!FailNextRun)
@@ -296,7 +299,7 @@ public sealed class AsyncInitializableTests
 
             ResetEntered.SetResult(true);
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
-            await ResetGate.Task;
+            await ResetGate.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
 #pragma warning restore VSTHRD003
         }
 

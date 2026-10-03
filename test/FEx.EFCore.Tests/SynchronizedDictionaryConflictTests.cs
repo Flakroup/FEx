@@ -194,6 +194,26 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     }
 
     [Fact]
+    public async Task KeyReCachedUnderANewInstanceBeforeTheWriteBack_LeavesBothInstancesUntouched()
+    {
+        using var sut = CreateDictionary(true);
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await UpdateByOtherWriterAsync(1);
+        var replacement = new CachedDoc { Id = 1, Name = "replacement", Version = 1 };
+        sut.OnConflict = () => sut.AddOrUpdateValue(replacement);
+
+        doc.Name = "from A";
+        (await sut.SaveAsync(new Change<CachedDoc, int>(ChangeReason.Refresh, 1, doc))).ShouldBeFalse();
+
+        sut[1].ShouldBeSameAs(replacement);
+        replacement.Version.ShouldBe(1);
+        replacement.Name.ShouldBe("replacement");
+        doc.Version.ShouldBe(1);
+        doc.Name.ShouldBe("from A");
+    }
+
+    [Fact]
     public async Task SubscriberThrowingDuringWriteBack_DoesNotStopTheBatch_AndKeepsTheStaleToken()
     {
         using var sut = CreateDictionary(true);

@@ -15,6 +15,9 @@ namespace FEx.Legacy.Tests;
 [Collection("FExServiceProvider")] // Static state
 public sealed partial class ThreadingAwareViewModelResetTests : IAsyncLifetime
 {
+    // Bounds every gated wait, so a regression fails the test instead of hanging the run.
+    private static readonly TimeSpan Bound = TimeSpan.FromSeconds(10);
+
     public async ValueTask InitializeAsync()
     {
         FExServiceProvider.Release();
@@ -37,7 +40,7 @@ public sealed partial class ThreadingAwareViewModelResetTests : IAsyncLifetime
 
         var initialization = sut.InitializeAsync();
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
-        await sut.HookEntered.Task;
+        await sut.HookEntered.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
 #pragma warning restore VSTHRD003
 
         // The hook holds the initialization lock, so the reset cannot clear the state under it.
@@ -45,8 +48,8 @@ public sealed partial class ThreadingAwareViewModelResetTests : IAsyncLifetime
         reset.IsCompleted.ShouldBeFalse();
 
         sut.HookGate.SetResult(true);
-        await initialization;
-        await reset;
+        await initialization.WaitAsync(Bound, TestContext.Current.CancellationToken);
+        await reset.WaitAsync(Bound, TestContext.Current.CancellationToken);
 
         sut.IsInitialized.ShouldBeFalse();
         sut.CurrentInitializationTask.ShouldBeNull();
@@ -63,7 +66,7 @@ public sealed partial class ThreadingAwareViewModelResetTests : IAsyncLifetime
         {
             HookEntered.TrySetResult(true);
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
-            await HookGate.Task;
+            await HookGate.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
 #pragma warning restore VSTHRD003
         }
     }

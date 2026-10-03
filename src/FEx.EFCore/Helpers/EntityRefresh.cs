@@ -10,15 +10,17 @@ using System.Runtime.CompilerServices;
 namespace FEx.EFCore.Helpers;
 
 /// <summary>
-/// Refreshes a detached, cached entity in place from a freshly loaded copy of the same row, driven by EF metadata:
-/// scalar properties, owned types (recursively), complex properties and the navigations the reload carries. A
-/// refresh is all or nothing: <see cref="TryPlan" /> refuses when any member cannot be brought to the reloaded state,
-/// because a current concurrency token over stale data would turn the next conflict into a silent overwrite.
+/// Refreshes a detached, cached entity in place from a no-tracking reload of the same row, driven by the EF metadata of
+/// its runtime type. Deliberately narrow: it copies scalar properties and owned references (recursively) and never puts
+/// an instance from the reload into the cached graph. A refresh is all or nothing: <see cref="TryPlan" /> refuses
+/// whenever any part of the graph could stay stale, because a current concurrency token over stale data would turn the
+/// next conflict into a silent overwrite.
 /// </summary>
 internal static class EntityRefresh
 {
     /// <summary>
-    /// Captures the values <see cref="TryPlan" /> would overwrite, to tell later whether the instance was edited.
+    /// Captures what <see cref="TryPlan" /> could overwrite or relies on: scalar values, owned references by value
+    /// (recursively) and every other navigation by identity.
     /// </summary>
     public static List<object?> Snapshot(IEntityType entityType, object entity)
     {
@@ -28,17 +30,16 @@ internal static class EntityRefresh
         return values;
     }
 
-    public static bool Matches(IEntityType entityType, object entity, List<object?> snapshot)
-    {
-        var current = Snapshot(entityType, entity);
-
-        return current.Count == snapshot.Count && current.SequenceEqual(snapshot);
-    }
+    public static bool Matches(IEntityType entityType, object entity, List<object?> snapshot) =>
+        Snapshot(entityType, entity).SequenceEqual(snapshot);
 
     /// <summary>
-    /// Plans copying <paramref name="from" /> into <paramref name="to" />. Returns <c>null</c> when the copy would not
-    /// be faithful: a shadow or inaccessible member, a skip navigation, or a navigation the reload did not carry
-    /// while the cached instance holds one.
+    /// Plans copying <paramref name="from" /> into <paramref name="to" />, or returns <c>null</c> when the copy would
+    /// leave part of the cached graph stale. Refused: a shadow value other than a key or the discriminator, a skip
+    /// navigation, an owned collection, a complex property, an owned reference present on only one side, a
+    /// principal-side navigation (collection or inverse reference) the cached instance holds, and a reference
+    /// navigation whose foreign key changed. A reference navigation with an unchanged foreign key keeps the cached
+    /// principal instance, so instances shared across the cache stay shared.
     /// </summary>
     public static Plan? TryPlan(IEntityType entityType, object from, object to)
     {
@@ -49,6 +50,8 @@ internal static class EntityRefresh
 
     private static bool TryPlan(IEntityType entityType, object from, object to, Plan plan)
     {
+        var discriminator = GetDiscriminator(entityType);
+
         foreach (var property in entityType.GetProperties())
         {
             if (property.IsKey())
@@ -56,11 +59,12 @@ internal static class EntityRefresh
 
             if (property.IsShadowProperty())
             {
-                // A shadow foreign key follows the navigation assigned below; any other shadow value cannot be copied.
-                if (property.GetContainingForeignKeys().Any(fk => fk.DependentToPrincipal is null))
-                    return false;
+                // The runtime types match, so the discriminator does too; any other shadow value cannot be compared
+                // or copied (a shadow foreign key or token, for example).
+                if (ReferenceEquals(property, discriminator))
+                    continue;
 
-                continue;
+                return false;
             }
 
             if (!Accessor.TryCreate(property, out var accessor))
@@ -74,14 +78,10 @@ internal static class EntityRefresh
         if (entityType.GetSkipNavigations().Any())
             return false;
 
-        foreach (var complexProperty in entityType.GetComplexProperties())
-        {
-            if (!Accessor.TryCreate(complexProperty, out var accessor))
-                return false;
-
-            var value = accessor.Get(from);
-            plan.Add(() => accessor.Set(to, value), false);
-        }
+        // ponytail: complex properties are refused, not copied: a mutable complex object edited in place between the
+        // rejected save and the write-back could not be told apart from the reloaded one.
+        if (entityType.GetComplexProperties().Any())
+            return false;
 #endif
 
         foreach (var navigation in entityType.GetNavigations())
@@ -98,45 +98,38 @@ internal static class EntityRefresh
 
             var reloaded = accessor.Get(from);
             var cached = accessor.Get(to);
-            var isCollection = !onDependent && !fk.IsUnique;
 
             if (fk.IsOwnership)
             {
-                // Owned types always load with their owner, so the reload is complete.
-                if (!isCollection && reloaded is not null && cached is not null)
-                {
-                    if (!TryPlan(fk.DeclaringEntityType, reloaded, cached, plan))
-                        return false;
-                }
-                else
-                {
-                    plan.Add(() => accessor.Set(to, reloaded), false);
-                }
+                // ponytail: owned collections are refused, not copied: their items carry no key of their own to match a
+                // racing in-place edit against.
+                if (!fk.IsUnique)
+                    return false;
 
-                continue;
-            }
+                if (reloaded is null && cached is null)
+                    continue;
 
-            if (isCollection)
-            {
-                // An empty or missing collection may just not be included; it cannot replace cached items.
-                if (!IsEmpty(reloaded))
-                    plan.Add(() => accessor.Set(to, reloaded), false);
-                else if (!IsEmpty(cached))
+                if (reloaded is null || cached is null
+                                     || !TryPlan(fk.DeclaringEntityType, reloaded, cached, plan))
                     return false;
 
                 continue;
             }
 
-            if (reloaded is not null)
-                plan.Add(() => accessor.Set(to, reloaded), false);
-            else if (cached is not null)
+            // A collection, or the inverse side of a one-to-one: refreshing it would mean putting reloaded instances
+            // into the cached graph. Only an empty one is safe to leave as is.
+            if (!onDependent)
             {
-                // Missing from the reload: only a dependent whose reloaded foreign key is null has no related row.
-                if (!onDependent || !ForeignKeyIsNull(fk, from))
+                if (!IsNullOrEmpty(cached))
                     return false;
 
-                plan.Add(() => accessor.Set(to, null), false);
+                continue;
             }
+
+            // A reference to a principal: keep the cached instance (possibly shared with other cached entities) while
+            // the row still points at the same principal; the foreign key value itself is copied as a scalar above.
+            if (!ForeignKeyEquals(fk, from, to))
+                return false;
         }
 
         return true;
@@ -150,46 +143,36 @@ internal static class EntityRefresh
                 values.Add(accessor.Get(entity));
         }
 
-#if NET
-        foreach (var complexProperty in entityType.GetComplexProperties())
-        {
-            if (Accessor.TryCreate(complexProperty, out var accessor))
-                values.Add(accessor.Get(entity));
-        }
-#endif
-
         foreach (var navigation in entityType.GetNavigations())
         {
             var fk = navigation.ForeignKey;
-            var onDependent = ReferenceEquals(fk.DependentToPrincipal, navigation);
 
-            if ((fk.IsOwnership && onDependent) || !Accessor.TryCreate(navigation, out var accessor))
+            if ((fk.IsOwnership && ReferenceEquals(fk.DependentToPrincipal, navigation))
+                || !Accessor.TryCreate(navigation, out var accessor))
                 continue;
 
             var value = accessor.Get(entity);
+            values.Add(new Reference(value));
 
             if (fk.IsOwnership && fk.IsUnique && value is not null)
-            {
-                values.Add(new Reference(value));
                 AddSnapshot(fk.DeclaringEntityType, value, values);
-            }
-            else if (value is IEnumerable items and not string)
-            {
-                values.Add(new Reference(value));
-                values.AddRange(items.Cast<object?>().Select(item => (object?)new Reference(item)));
-            }
-            else
-            {
-                values.Add(new Reference(value));
-            }
         }
     }
 
-    private static bool ForeignKeyIsNull(IForeignKey fk, object entity) =>
-        fk.Properties.All(p => !p.IsShadowProperty() && Accessor.TryCreate(p, out var a) && a.Get(entity) is null);
+    // Shadow foreign key properties are refused before navigations are looked at, so only CLR values are compared.
+    private static bool ForeignKeyEquals(IForeignKey fk, object from, object to) =>
+        fk.Properties.Where(p => !p.IsShadowProperty())
+            .All(p => Accessor.TryCreate(p, out var accessor) && Equals(accessor.Get(from), accessor.Get(to)));
 
-    private static bool IsEmpty(object? collection) =>
-        collection is not IEnumerable items || !items.Cast<object?>().Any();
+    private static bool IsNullOrEmpty(object? value) =>
+        value is null || (value is IEnumerable items && !items.Cast<object?>().Any());
+
+    private static IProperty? GetDiscriminator(IEntityType entityType) =>
+#if NET
+        entityType.FindDiscriminatorProperty();
+#else
+        entityType.GetDiscriminatorProperty();
+#endif
 
     /// <summary>
     /// Assignments to apply; concurrency tokens go last, so a failure part-way leaves the stale token in place and
@@ -213,7 +196,7 @@ internal static class EntityRefresh
         }
     }
 
-    // Compared by identity: a navigation or collection item counts as changed only when it was replaced.
+    // Compared by identity: a navigation counts as changed only when it was replaced.
     private sealed class Reference
     {
         private readonly object? _target;

@@ -246,7 +246,6 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         await CheckWhichAlreadyExistsAsync(dbContext, changes);
 
         var set = DbSetAccessor(dbContext);
-        var entityType = dbContext.Model.FindEntityType(typeof(TValue));
 
         foreach (var entityInfo in changes)
         {
@@ -256,8 +255,9 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             }
             else if (entityInfo.Reason is ChangeReason.Refresh or ChangeReason.Update or ChangeReason.Add)
             {
-                if (entityType is not null)
-                    entityInfo.Snapshot ??= EntityRefresh.Snapshot(entityType, entityInfo.Value);
+                if (entityInfo.Snapshot is null
+                    && dbContext.Model.FindEntityType(entityInfo.Value.GetType()) is { } entityType)
+                    entityInfo.Snapshot = EntityRefresh.Snapshot(entityType, entityInfo.Value);
 
                 if (entityInfo.ExistsInDb)
                     set.Update(entityInfo.Value);
@@ -499,14 +499,15 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     }
 
     /// <summary>
-    /// Refreshes the cached instances of rejected changes in place from the rows that won in the database, through
-    /// <see cref="IncludeInEntity" />, so the next edit of those keys is saved instead of conflicting again. References
-    /// callers hold, the property-change subscription and unmapped state are kept.
+    /// Refreshes the cached instances of rejected changes in place from a no-tracking reload of the rows that won in
+    /// the database, so the next edit of those keys is saved instead of conflicting again. References callers hold,
+    /// the property-change subscription and unmapped state are kept.
     /// <para>
-    /// The concurrency token is refreshed only together with the whole graph. The instance is left untouched, keeping
-    /// its stale token so the next save is rejected and logged again, when the key is no longer cached under it, when
-    /// it was edited since it was sent to the database, or when <see cref="EntityRefresh" /> cannot bring every member
-    /// to the reloaded state (for example a navigation the reload did not include).
+    /// Deliberately narrow (see <see cref="EntityRefresh" />): scalar properties and owned references of the runtime
+    /// type are copied, related entities are never replaced. The concurrency token is refreshed only together with the
+    /// whole graph. The instance is left untouched, keeping its stale token so the next save is rejected and logged
+    /// again, when the key is no longer cached under it, when it was edited since it was sent to the database, when its
+    /// runtime type is unmapped or no longer matches the row, or when <see cref="EntityRefresh.TryPlan" /> refuses.
     /// </para>
     /// <para>
     /// Like the rest of the save pipeline this runs on a thread-pool thread, so the instance raises PropertyChanged
@@ -525,16 +526,15 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         var keys = new HashSet<TKey>(candidates.Keys);
         List<TValue> winners;
-        IEntityType? entityType;
+        IModel model;
 
         try
         {
-            (winners, entityType) = await _dbSrv.RunTaskInDbContextAsync(async ctx =>
+            (winners, model) = await _dbSrv.RunTaskInDbContextAsync(async ctx =>
                 {
-                    var rows = await IncludeInEntity(DbSetAccessor(ctx).AsNoTracking().Where(KeyIsIn(keys)))
-                        .ToListAsync();
+                    var rows = await DbSetAccessor(ctx).AsNoTracking().Where(KeyIsIn(keys)).ToListAsync();
 
-                    return (rows, ctx.Model.FindEntityType(typeof(TValue)));
+                    return (rows, ctx.Model);
                 },
                 null,
                 false,
@@ -548,13 +548,19 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             return;
         }
 
-        if (entityType is null)
-            return;
-
         foreach (var winner in winners)
         {
             var change = candidates[KeyRetriver(winner)];
             var cached = change.Value;
+            var entityType = winner.GetType() == cached.GetType() ? model.FindEntityType(cached.GetType()) : null;
+
+            if (entityType is null)
+            {
+                _logger.Warning(
+                    $"{TypeName}: the cached value for key {change.Key} does not match a mapped type of the reloaded row, it keeps the stale values");
+
+                continue;
+            }
 
             if (!EntityRefresh.Matches(entityType, cached, change.Snapshot!))
             {

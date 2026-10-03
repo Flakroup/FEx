@@ -22,6 +22,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,6 +37,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     private double _totalPrg;
     private bool _isDownloaded;
     private int _openConnections;
+    private int _retryAttempts;
     private string? _filePath;
     private string? _elapsedTime;
     private long _elapsedMilliseconds;
@@ -55,6 +58,14 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     public bool ReportProgress { get; }
     public Stopwatch DownloadStopwatch { get; }
     public WebRequestParams? Pars { get; }
+
+    /// <summary>
+    /// The client used for all requests of this item. When null (the default), a long-lived shared client matching
+    /// <see cref="Pars" /> is used. Set it before starting the download to supply your own (e.g. from an
+    /// <c>IHttpClientFactory</c>).
+    /// </summary>
+    public HttpClient? HttpClient { get; set; }
+
     // Borrowed from the shared ISynchronizedAccessService (keyed by file path); its lifetime is owned by LockSrv,
     // so this item must NOT dispose it (doing so corrupted the cached lock - see Dispose). Hence IDISP002 suppressed.
 #pragma warning disable IDISP002
@@ -65,10 +76,19 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     public Task? DownloadFileTask { get; set; }
     public bool IsSpeededUp { get; protected set; }
 
+    /// <summary>Upper bound for <see cref="ParallelRanges" />: the number of simultaneous ranged connections.</summary>
+    public const int MaxParallelRanges = 8;
+
     public int ParallelRanges { get; private set; }
 
+    /// <summary>How often a transient failure (408, 429, 5xx) is retried before the download fails.</summary>
+    public int MaxRetries { get; set; } = RetryPolicy.DefaultMaxRetries;
+
+    /// <summary>Delay before the first retry; it doubles per attempt unless the server sends <c>Retry-After</c>.</summary>
+    public TimeSpan RetryBaseDelay { get; set; } = RetryPolicy.DefaultBaseDelay;
+
 #pragma warning disable IDISP008 // semaphore from LockSrv, ownership managed externally
-    public WebResponse? Response { get; protected set; }
+    public HttpResponseMessage? Response { get; protected set; }
 #pragma warning restore IDISP008
 
     public DirectoryInfo? TempDirectory { get; protected set; }
@@ -333,6 +353,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     public async Task<bool> DownloadFileAsync()
     {
         var retry = true;
+        _retryAttempts = 0;
         DownloadStopwatch.Start();
 
         if (File is { Exists: true }
@@ -362,7 +383,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
                     if (Response is not null)
                     {
-                        DataLength = Response.ContentLength;
+                        DataLength = Response.Content.Headers.ContentLength ?? -1;
 
                         if (DataLength < BufferLength)
                         {
@@ -380,9 +401,15 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                             {
                                 DState = DownloadState.Connecting;
 
-                                using var client = new FlakWebClient(Pars, (_, e) => this.SetCurrentDownloadState(e));
+                                using var response = await Url.SendHttpAsync(Pars,
+                                    HttpClient,
+                                    cancellationToken: CancellationToken);
+
                                 DState = DownloadState.InProgress;
-                                await client.DownloadFileWithProgressAsync(Url, FilePath.Guard(nameof(FilePath)));
+
+                                await response.DownloadToFileAsync(FilePath.Guard(nameof(FilePath)),
+                                    (received, total) => this.SetCurrentDownloadState(received, total),
+                                    CancellationToken);
                             }
 
                             DState = DownloadState.Finished;
@@ -399,13 +426,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                 }
                 catch (Exception ex)
                 {
-                    if (ex is WebException
-                        {
-                            Status: WebExceptionStatus.ProtocolError, Response: HttpWebResponse response
-                        }
-                        && (int)response.StatusCode == 429)
+                    if (ex is HttpStatusException status
+                        && RetryPolicy.IsTransient(status.ResponseStatusCode)
+                        && _retryAttempts++ < MaxRetries)
                     {
-                        await Task.Delay(100, CancellationToken);
+                        await Task.Delay(RetryPolicy.GetDelay(status, _retryAttempts, RetryBaseDelay), CancellationToken);
                         retry = !CancellationToken.IsCancellationRequested;
                     }
                     else
@@ -453,7 +478,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         if (downloadItem.FilePath is null
             && downloadItem.DirPath is not null
             && downloadItem is DownloadStub ds)
-            await ds.LoadTargetFileNameAsync();
+            await ds.LoadTargetFileNameAsync(null, null, cancellationToken);
 
         return await CreateAsync(downloadItem.Url.Guard(nameof(downloadItem.Url)),
             downloadItem.FilePath,
@@ -512,10 +537,10 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         return res;
     }
 
-    public static DownloadItem CreateFromResponse(HttpWebResponse response, string? filePath, bool reportProgress) =>
+    public static DownloadItem CreateFromResponse(HttpResponseMessage response, string? filePath, bool reportProgress) =>
         CreateFromResponse(response, filePath, reportProgress, null, 0, 50, null, CancellationToken.None);
 
-    public static DownloadItem CreateFromResponse(HttpWebResponse response,
+    public static DownloadItem CreateFromResponse(HttpResponseMessage response,
                                                   string? filePath,
                                                   bool reportProgress,
                                                   WebRequestParams? pars,
@@ -524,12 +549,13 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                                                   string? md5Checksum,
                                                   CancellationToken cancellationToken)
     {
-        var res = new DownloadItem(response.ResponseUri,
+        var res = new DownloadItem(
+            response.RequestMessage?.RequestUri ?? throw new ArgumentException("The response has no request URI.", nameof(response)),
             filePath,
             reportProgress,
             pars,
             parallelChunks,
-            response.ContentLength,
+            response.Content.Headers.ContentLength ?? -1,
             md5Checksum,
             cancellationToken);
 
@@ -554,9 +580,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     protected async Task GetResponseAsync()
     {
-        var req = Url.GetHttpRequest(Pars);
         var sw = Stopwatch.StartNew();
-        var response = await req.GetResponseAsync();
+        var response = await Url.SendHttpAsync(Pars, HttpClient, cancellationToken: CancellationToken);
         sw.Stop();
         SetResponse(response);
         Ping = sw.ElapsedMilliseconds;
@@ -635,15 +660,15 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     private async Task SetDataLengthAsync()
     {
         var sw = new Stopwatch();
-        DataLength = await Url.GetHttpFileSizeAsync(Pars, sw);
+        DataLength = await Url.GetHttpFileSizeAsync(Pars, sw, HttpClient);
         Ping = sw.ElapsedMilliseconds;
     }
 
-    private void SetResponse(WebResponse response) => Response = response;
+    private void SetResponse(HttpResponseMessage response) => Response = response;
 
     private async Task DownloadSmallItemAsync()
     {
-        using var streamResponse = Response.Guard(nameof(Response)).GetResponseStream();
+        using var streamResponse = await Response.Guard(nameof(Response)).ReadContentStreamAsync(CancellationToken);
         var file = File.Guard(nameof(File));
 
         if (streamResponse is not null)
@@ -690,18 +715,14 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         if (Response is null)
             await GetResponseAsync();
 
-        var response = Response.Guard(nameof(Response));
-        var resultHeaders = response.GetAllHeaders();
-        var responseUri = response.ResponseUri;
+        using var response = Response.Guard(nameof(Response));
+        var responseUri = response.RequestMessage?.RequestUri ?? Url;
 
-        if (Response is not null)
-        {
-            Response?.Dispose();
-            Response = null;
-        }
+        // Ownership moves to this method: the response is disposed when the probe is done.
+        Response = null;
 
         var (canBeSpeedUp, _) =
-            await responseUri.TryGetRangeAsync(resultHeaders, 0, Convert.ToInt32(BufferLength), Pars);
+            await responseUri.TryGetRangeAsync(response, 0, BufferLength, Pars, HttpClient, CancellationToken);
 
         if (canBeSpeedUp)
         {
@@ -711,14 +732,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             {
                 var (length, _) = FileLengthConverter.ConvertFileLength(speed, LengthType.Bytes, LengthType.Megabytes);
 
-                // SYSLIB0014: ServicePointManager.DefaultConnectionLimit is obsolete on net5+
-                // (no-op for HttpClient); the value is still read here to cap parallel ranges and
-                // remains meaningful on legacy TFMs.
-#pragma warning disable SYSLIB0014
-                ParallelRanges = Convert.ToInt32(Math.Max(Math.Min(Math.Ceiling(ParallelRanges * length),
-                        ServicePointManager.DefaultConnectionLimit / 2D),
-                    1));
-#pragma warning restore SYSLIB0014
+                ParallelRanges = Convert.ToInt32(Math.Min(Math.Max(Math.Ceiling(ParallelRanges * length), 1),
+                    MaxParallelRanges));
             }
             else
             {
@@ -742,30 +757,21 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
     private async Task<bool> DownloadBufferAsync()
     {
-        var myHttpWebRequest = Url.GetHttpRequest(Pars);
-        myHttpWebRequest.AddRange(0, BufferLength);
+        using var response = await Url.SendHttpAsync(Pars,
+            HttpClient,
+            new(0, BufferLength),
+            cancellationToken: CancellationToken);
 
-        using var res = await myHttpWebRequest.GetResponseAsync();
-        using var response = (HttpWebResponse)res;
         var retrievedContentRange = response.GetContentRange();
 
         if (retrievedContentRange?.From is null
             || retrievedContentRange.To is null
             || retrievedContentRange.From.Value != 0
             || retrievedContentRange.To.Value != BufferLength
-            || response.ContentLength != BufferLength + 1)
+            || response.Content.Headers.ContentLength != BufferLength + 1)
             return false;
 
-#if NETSTANDARD
-        using var streamResponse = response.GetResponseStream();
-#else
-        await using var streamResponse = response.GetResponseStream();
-#endif
-
-#if NETSTANDARD
-        if (streamResponse is null)
-            return false;
-#endif
+        using var streamResponse = await response.ReadContentStreamAsync(CancellationToken);
 
         using var ms = await streamResponse.CopyToMemoryStreamAsync(cancellationToken: CancellationToken);
 
@@ -809,7 +815,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             var end = (long)Math.Min(offset + operatingSize - 1, DataLength - 1);
 
             Ranges.Add(rangeNo,
-                new(offset, end, dir, Url, Pars, BufferLength, filePath, DataLength, Prg, ConnPrg, CancellationToken));
+                new(offset, end, dir, Url, Pars, BufferLength, filePath, DataLength, Prg, ConnPrg, CancellationToken, HttpClient));
 
             offset = end + 1;
         }
@@ -827,6 +833,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             else
                 foreach (var x in unfinishedRanges)
                     await Ranges[x].DoDownloadAsync();
+
+            CancellationToken.ThrowIfCancellationRequested();
+            await HandleRangeErrorsAsync();
 
             unfinishedRanges = Ranges.Where(x => x.Value?.DState != DownloadState.Finished)
                 .Select(x => x.Key)
@@ -876,6 +885,28 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         DState = DownloadState.Finished;
         TotalPrg = DataLength;
         PrgSetEnd();
+    }
+
+    // A range that failed with an HTTP status is not re-run at once: a fatal status (e.g. 403) fails the download, a
+    // transient one (408, 429, 5xx) is retried after a backoff, at most MaxRetries times.
+    private async Task HandleRangeErrorsAsync()
+    {
+        var errors = Ranges.Values.Select(x => x?.StatusError).OfType<HttpStatusException>().ToList();
+
+        if (errors.Count == 0)
+        {
+            _retryAttempts = 0;
+
+            return;
+        }
+
+        var error = errors.Find(x => !RetryPolicy.IsTransient(x.ResponseStatusCode)) ?? errors[0];
+
+        if (!RetryPolicy.IsTransient(error.ResponseStatusCode)
+            || _retryAttempts++ >= MaxRetries)
+            ExceptionDispatchInfo.Capture(error).Throw();
+
+        await Task.Delay(RetryPolicy.GetDelay(error, _retryAttempts, RetryBaseDelay), CancellationToken);
     }
 
     private bool CompareChecksum(bool setChecksumMismatchStatus = true)

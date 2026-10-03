@@ -7,6 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="FEx.Downloader.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
         <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
         <PackageReference Condition="'$(TargetFramework)' == '$(StandardTargetFrameworkId)'" Include="System.Threading.Tasks.Extensions" Version="4.6.3" />

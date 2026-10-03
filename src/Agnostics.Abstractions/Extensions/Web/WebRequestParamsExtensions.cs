@@ -1,4 +1,5 @@
 using FEx.Agnostics.Abstractions.Models;
+using System;
 using System.Net.Http;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Web;
@@ -20,11 +21,25 @@ public static class WebRequestParamsExtensions
             if (pars.Proxy is not null)
                 handler.Proxy = pars.Proxy;
 
+            // HttpWebRequest.Proxy = null meant "no proxy"; on a handler that is UseProxy = false (a null Proxy would
+            // still fall back to the system proxy).
             if (pars.IsProxyNull)
+            {
                 handler.Proxy = null;
+                handler.UseProxy = false;
+            }
+
+            if (pars.ServerCertificateValidationCallback is { } validate)
+#if NETSTANDARD2_0
+                throw new PlatformNotSupportedException(
+                    "ServerCertificateValidationCallback is not supported by HttpClientHandler on netstandard2.0.");
+#else
+                handler.ServerCertificateCustomValidationCallback =
+                    (message, cert, chain, errors) => validate(message, cert, chain, errors);
+#endif
         }
 
-        handler.ClientCertificateOptions = ClientCertificateOption.Automatic;
+        // Client certificates stay Manual: nothing in WebRequestParams carries one, so none may be offered to a server.
 
         return handler;
     }

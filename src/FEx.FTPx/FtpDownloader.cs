@@ -3,7 +3,6 @@ using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Core.Abstractions.Extensions;
-using FEx.Downloader.Clients;
 using FEx.MVVM;
 using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Extensions;
@@ -16,6 +15,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -322,7 +322,9 @@ public static class FtpDownloader
                                                         bool promptOnError = true,
                                                         LengthType unit = LengthType.Megabytes,
                                                         string username = "",
-                                                        string password = "")
+                                                        string password = "",
+                                                        HttpClient? client = null,
+                                                        CancellationToken cancellationToken = default)
     {
         double bytesTotal = 0;
 
@@ -331,11 +333,7 @@ public static class FtpDownloader
             if (serverUri.Scheme == Uri.UriSchemeHttp
                 || serverUri.Scheme == Uri.UriSchemeHttps)
             {
-                using var wc = new FlakWebClient();
-#pragma warning disable IDISP004 // false positive, stream unused - only reading headers
-                wc.OpenRead(serverUri);
-#pragma warning restore IDISP004
-                bytesTotal = Convert.ToInt64(wc.ResponseHeaders?["Content-Length"]);
+                bytesTotal = Math.Max(await serverUri.GetHttpFileSizeAsync(client: client, cancellationToken: cancellationToken), 0);
             }
             else if (serverUri.Scheme == Uri.UriSchemeFtp)
             {

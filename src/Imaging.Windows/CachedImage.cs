@@ -13,7 +13,6 @@ using FEx.MVVM.Rx.Legacy.BaseObjects;
 using FEx.Webx.Extensions;
 using System;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +24,8 @@ namespace FEx.Imaging.Windows;
 public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
 #pragma warning restore IDISP025
 {
+    private const int MaxTimeoutRetries = 3;
+
     private readonly bool _ownCTS;
 
     protected internal FileInfo? Cache => ParentIndexEntry.Cache;
@@ -82,7 +83,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
                                                  bool forceLoad = false,
                                                  bool forceMemoryStream = true,
                                                  bool useHttpClientService = false,
-                                                 HttpWebResponse? response = null)
+                                                 HttpResponseMessage? response = null)
     {
         var res = EnsureSize(size);
 
@@ -120,7 +121,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
     public async Task<bool> PrepareCacheAsync(WebRequestParams? pars = null,
                                               bool refresh = false,
                                               bool useHttpClientService = false,
-                                              HttpWebResponse? response = null,
+                                              HttpResponseMessage? response = null,
                                               string? checksum = null,
                                               Func<Uri, Uri>? urlModifier = null)
     {
@@ -191,10 +192,12 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
     /// <returns></returns>
     private async Task<bool> InternalPrepareCacheAsync(WebRequestParams? pars,
                                                        bool refresh = false,
-                                                       HttpWebResponse? response = null,
+                                                       HttpResponseMessage? response = null,
                                                        string? checksum = null,
                                                        Func<Uri, Uri>? urlModifier = null)
     {
+        var timeouts = 0;
+
         try
         {
             do
@@ -205,7 +208,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
                         ? urlModifier(Url)
                         : Url;
 
-                    response ??= await calledUrl.GetUriHttpResponseAsync(pars);
+                    response ??= await calledUrl.SendHttpAsync(pars, cancellationToken: CancellationToken);
 
                     var filePath = ResetCacheFile(response);
 
@@ -216,7 +219,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
                         return true;
                     }
 
-                    var hasInvalidContentLength = response.ContentLength == -1;
+                    var hasInvalidContentLength = response.Content.Headers.ContentLength is null or -1;
 
                     using var file =
                         DownloadItem.CreateFromResponse(response, filePath, false, pars, 0, 50, checksum, CancellationToken.None);
@@ -235,24 +238,26 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
                     response?.Dispose();
                     response = null;
                 }
-                catch (WebException ex)
+                catch (OperationCanceledException)
                 {
-                    if (ex.Status == WebExceptionStatus.RequestCanceled)
-                    {
-                        await Task.Delay(100, CancellationToken);
+                    response?.Dispose();
+                    response = null;
 
-                        if (CancellationToken.IsCancellationRequested)
-                            return false;
+                    // Only the caller's token ends the loop; a request timeout is a failed attempt and counts
+                    // towards the retry limit.
+                    if (CancellationToken.IsCancellationRequested)
+                        return false;
 
-                        response?.Dispose();
-                        response = null;
-                    }
-                    else
-                    {
-                        response?.Dispose();
-
+                    if (++timeouts > MaxTimeoutRetries)
                         throw;
-                    }
+
+                    await Task.Delay(100, CancellationToken);
+                }
+                catch
+                {
+                    response?.Dispose();
+
+                    throw;
                 }
             } while (CacheIsInvalid(refresh));
 
@@ -265,9 +270,6 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
             return false;
         }
     }
-
-    private string ResetCacheFile(HttpWebResponse response) =>
-        ResetCacheFile(response.GetDefaultExtension(), response.ContentLength);
 
     private string ResetCacheFile(HttpResponseMessage response) =>
         ResetCacheFile(response.GetDefaultExtension(), response.Content.Headers.ContentLength ?? -1L);

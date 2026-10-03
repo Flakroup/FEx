@@ -24,12 +24,7 @@ public sealed class HttpClientExTests : IDisposable
     public HttpClientExTests()
     {
         Directory.CreateDirectory(_dir);
-
-        // No UI main thread exists in a test host; run property-change notifications inline.
-        var dispatcher = Substitute.For<IFExDispatcher>();
-        dispatcher.When(d => d.InvokeOnMainThread(Arg.Any<Action>(), Arg.Any<object?>()))
-            .Do(call => call.Arg<Action>()());
-        FExCoreStatics.Configure(dispatcherFactory: () => dispatcher);
+        TestHost.ConfigureInlineDispatcher();
     }
 
     public void Dispose() => Directory.Delete(_dir, true);

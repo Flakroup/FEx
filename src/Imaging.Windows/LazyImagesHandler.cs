@@ -5,7 +5,6 @@ using FEx.Core.Collections.Concurrent;
 using FEx.MVVM.Abstractions;
 using System;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
@@ -77,10 +76,9 @@ public class LazyImagesHandler
 
             return true;
         }
-        catch (WebException ex)
+        catch (HttpStatusException)
         {
-            if (ex.Status != WebExceptionStatus.ProtocolError)
-                ex.HandleException(false);
+            // the server answered with a non-success status: the image is simply not there
         }
         catch (Exception ex)
         {

@@ -7,11 +7,12 @@ using FEx.Agnostics.BaseObjects;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Downloader.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
+using FEx.Downloader.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
@@ -55,6 +56,10 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
         private set => SetProperty(ref _isConnected, value, x => ConnPrg?.Report(x));
     }
 
+    /// <summary>The last HTTP status error of this range; the caller decides whether and when to retry it.</summary>
+    public HttpStatusException? StatusError { get; private set; }
+
+    private HttpClient? HttpClient { get; }
     private byte[] Buffer { get; }
 
     private long ReadenBytes { get; set; }
@@ -82,8 +87,10 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
                          long dataLength,
                          IProgress<double>? progress,
                          IProgress<bool>? connPrg,
-                         CancellationToken token)
+                         CancellationToken token,
+                         HttpClient? httpClient = null)
     {
+        HttpClient = httpClient;
         From = from;
         To = to;
 
@@ -119,11 +126,13 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
 
     public async Task DoDownloadAsync(int retryCount)
     {
+        StatusError = null;
         var from = From;
         var to = To;
 
         while (retryCount >= 0
-               && DState != DownloadState.Finished)
+               && DState != DownloadState.Finished
+               && StatusError is null)
         {
             var unfinishedChunks = Chunks.Where(x => x.Value.State != DownloadState.Finished)
                 .OrderBy(x => x.Value.From)
@@ -200,66 +209,63 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
             ReadenBytes = 0;
 
             DState = DownloadState.None;
-            var myHttpWebRequest = Url.GetHttpRequest(Pars);
-            myHttpWebRequest.AddRange(From, To);
-
+            StatusError = null;
             DState = DownloadState.Connecting;
-            using var res = await myHttpWebRequest.GetResponseAsync();
-            using var response = (HttpWebResponse)res;
+            using var response = await Url.SendHttpAsync(Pars, HttpClient, new(From, To), cancellationToken: CancellationToken);
             var retrievedContentRange = response.GetContentRange();
 
             if (retrievedContentRange?.From is null
                 || retrievedContentRange.To is null
                 || retrievedContentRange.From.Value != From
                 || retrievedContentRange.To.Value != To
-                || response.ContentLength != To - From + 1)
+                || response.Content.Headers.ContentLength != To - From + 1)
             {
-                DState = DownloadState.Failed;
+                // Retrying a server that ignores the range would only repeat the same answer.
+                throw new HttpStatusException(response.StatusCode,
+                    Url,
+                    "The server did not honour the requested range");
             }
             else
             {
-                using var streamResponse = response.GetResponseStream();
+                using var streamResponse = await response.ReadContentStreamAsync(CancellationToken);
 
-                if (streamResponse is null)
-                    DState = DownloadState.Failed;
-                else
-                    try
+                try
+                {
+                    DState = DownloadState.InProgress;
+                    OpenedConnection();
+
+                    var isReading = true;
+                    int bytesRead;
+                    int receivedBytes;
+
+                    while (isReading)
                     {
-                        DState = DownloadState.InProgress;
-                        OpenedConnection();
+                        bytesRead = 0;
+                        receivedBytes = -1;
+                        Array.Clear(Buffer, 0, Buffer.Length);
 
-                        var isReading = true;
-                        int bytesRead;
-                        int receivedBytes;
-
-                        while (isReading)
+                        while (bytesRead < Buffer.Length
+                               && receivedBytes != 0
+                               && !CancellationToken.IsCancellationRequested)
                         {
-                            bytesRead = 0;
-                            receivedBytes = -1;
-                            Array.Clear(Buffer, 0, Buffer.Length);
+                            receivedBytes = await streamResponse.ReadAsync(Buffer,
+                                bytesRead,
+                                Buffer.Length - bytesRead,
+                                CancellationToken);
 
-                            while (bytesRead < Buffer.Length
-                                   && receivedBytes != 0
-                                   && !CancellationToken.IsCancellationRequested)
-                            {
-                                receivedBytes = await streamResponse.ReadAsync(Buffer,
-                                    bytesRead,
-                                    Buffer.Length - bytesRead,
-                                    CancellationToken);
-
-                                bytesRead += receivedBytes;
-                            }
-
-                            isReading = bytesRead > 0;
-
-                            if (isReading)
-                                await DumpBufferToChunksAsync(bytesRead);
+                            bytesRead += receivedBytes;
                         }
+
+                        isReading = bytesRead > 0;
+
+                        if (isReading)
+                            await DumpBufferToChunksAsync(bytesRead);
                     }
-                    finally
-                    {
-                        ClosedConnection();
-                    }
+                }
+                finally
+                {
+                    ClosedConnection();
+                }
             }
         }
         catch (Exception ex)
@@ -273,7 +279,12 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
                 ClearChunks();
                 ex.HandleException(false);
 
-                await WaitForInternetConnectionAsync();
+                // A status error means the server answered, so waiting for connectivity would never end: it is handed
+                // to the caller, which owns the retry policy (backoff, attempt limit).
+                if (ex is HttpStatusException statusError)
+                    StatusError = statusError;
+                else
+                    await WaitForInternetConnectionAsync();
             }
         }
         finally
@@ -290,7 +301,7 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
 
         do
         {
-            isAvailable = await Url.CheckForInternetConnectionAsync();
+            isAvailable = await Url.CheckForInternetConnectionAsync(HttpClient, CancellationToken);
 
             if (!isAvailable)
                 await Task.Delay(1000, CancellationToken);

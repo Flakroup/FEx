@@ -6,6 +6,7 @@ using FEx.Downloader.Enums;
 using FEx.Webx.Extensions;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.Downloader;
@@ -101,9 +102,11 @@ public class DownloadStub : NotifyPropertyChanged, IDownloadStub
 
     public Task LoadTargetFileNameAsync() => LoadTargetFileNameAsync(null, null);
 
-    public async Task LoadTargetFileNameAsync(string? dirPath, string? fallback)
+    public async Task LoadTargetFileNameAsync(string? dirPath,
+                                              string? fallback,
+                                              CancellationToken cancellationToken = default)
     {
-        string fileName = (await Url.Guard(nameof(Url)).GetFileNameAsync() ?? fallback).Guard(nameof(fileName));
+        string fileName = (await Url.Guard(nameof(Url)).GetFileNameAsync(cancellationToken) ?? fallback).Guard(nameof(fileName));
 
         FilePath = Path.Combine((dirPath ?? DirPath).Guard(nameof(dirPath)), fileName);
     }

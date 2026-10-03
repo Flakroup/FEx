@@ -3,9 +3,9 @@ using FEx.Agnostics.Abstractions.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Web;
@@ -14,43 +14,33 @@ public static class WebResponseExtensions
 {
     public const string ContentRangeHeaderName = "Content-Range";
     public const string AcceptRangesHeaderName = "Accept-Ranges";
+    private const string BytesRangeUnit = "bytes";
 
-    public static Dictionary<string, string> GetAllHeaders(this WebResponse resp) =>
-        // Keys come from AllKeys, so the indexer never returns null for them.
-        resp.Headers.AllKeys.ToDictionary(x => x, x => resp.Headers[x]!);
-
-    public static async Task<(bool, LengthType)> TryGetRangeAsync(this WebResponse response,
-                                                                  int rangeFrom,
-                                                                  int rangeTo,
-                                                                  WebRequestParams? pars = null) =>
-        await response.ResponseUri.TryGetRangeAsync(response.GetAllHeaders(), rangeFrom, rangeTo, pars);
-
+    /// <summary>
+    /// Probes whether the server honours byte ranges: <paramref name="response" /> must advertise
+    /// <c>Accept-Ranges: bytes</c> and a ranged request must come back with a <c>Content-Range</c>.
+    /// </summary>
     public static async Task<(bool, LengthType)> TryGetRangeAsync(this Uri responseUri,
-                                                                  Dictionary<string, string> responseHeaders,
-                                                                  int rangeFrom,
-                                                                  int rangeTo,
-                                                                  WebRequestParams? pars = null)
+                                                                  HttpResponseMessage response,
+                                                                  long rangeFrom,
+                                                                  long rangeTo,
+                                                                  WebRequestParams? pars = null,
+                                                                  HttpClient? client = null,
+                                                                  CancellationToken cancellationToken = default)
     {
-        if (!responseHeaders.ContainsKey(AcceptRangesHeaderName))
+        if (!response.Headers.AcceptRanges.Any(x => string.Equals(x, BytesRangeUnit, StringComparison.OrdinalIgnoreCase)))
             return (false, LengthType.AutoDetect);
 
-        var myHttpWebRequest = responseUri.GetHttpRequest(pars);
-        myHttpWebRequest.AddRange(rangeFrom, rangeTo);
+        using var rangeResponse = await responseUri.SendHttpAsync(pars,
+            client,
+            new(rangeFrom, rangeTo),
+            cancellationToken: cancellationToken);
 
-        using var res = await myHttpWebRequest.GetResponseAsync();
-        using var resp = (HttpWebResponse)res;
-        responseHeaders = resp.GetAllHeaders();
-
-        return (responseHeaders.ContainsKey(ContentRangeHeaderName), LengthType.Bytes);
+        return (rangeResponse.Content.Headers.ContentRange is not null, LengthType.Bytes);
     }
 
-    public static ContentRangeHeaderValue? GetContentRange(this HttpWebResponse response)
-    {
-        var resultHeaders = response.GetAllHeaders();
-        var rangeHeader = resultHeaders.TryGetKeyValue<string, string>(ContentRangeHeaderName);
-
-        return rangeHeader.GetContentRange();
-    }
+    public static ContentRangeHeaderValue? GetContentRange(this HttpResponseMessage response) =>
+        response.Content.Headers.ContentRange;
 
     public static ContentRangeHeaderValue? GetContentRange(this string? rangeHeader)
     {
@@ -64,9 +54,10 @@ public static class WebResponseExtensions
         return new(from, to);
     }
 
+    /// <summary>Gets the response headers together with the content headers (Content-Length, Content-Disposition, ...).</summary>
     public static Dictionary<string, string[]> GetAllHeaders(this HttpResponseMessage resp)
     {
-        KeyValuePair<string, IEnumerable<string>>[] headers = [.. resp.Headers];
+        KeyValuePair<string, IEnumerable<string>>[] headers = [.. resp.Headers, .. resp.Content.Headers];
 
         return headers.ToDictionary(x => x.Key, x => x.Value.ToArray());
     }

@@ -16,7 +16,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
@@ -91,7 +91,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     public async Task<bool> PrepareCacheEntryAsync(IIndexEntryBase entry,
                                                    WebRequestParams? pars = null,
                                                    bool refresh = false,
-                                                   HttpWebResponse? response = null,
+                                                   HttpResponseMessage? response = null,
                                                    string? checksum = null,
                                                    Func<Uri, Uri>? urlModifier = null) =>
         await PrepareCacheEntryAsync(pars, refresh, response, (IndexEntry)entry, checksum, urlModifier);
@@ -102,7 +102,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                                                  bool refresh = false,
                                                  bool forceLoad = true,
                                                  bool forceMemoryStream = false,
-                                                 HttpWebResponse? response = null)
+                                                 HttpResponseMessage? response = null)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         var entry = await GetEntryAsync(fileUrl);
@@ -171,7 +171,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     public async Task<Uri?> PrepareAndGetFileLocalUriAsync(Uri fileUrl,
                                                           WebRequestParams? pars = null,
                                                           bool refresh = false,
-                                                          HttpWebResponse? response = null)
+                                                          HttpResponseMessage? response = null)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
         var entry = await PrepareCacheAndGetEntryAsync(fileUrl, pars, refresh, response);
@@ -274,7 +274,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     public async Task<bool> PrepareCacheAsync(Uri fileUrl,
                                               WebRequestParams? pars = null,
                                               bool refresh = false,
-                                              HttpWebResponse? response = null,
+                                              HttpResponseMessage? response = null,
                                               Func<Uri, Uri>? urlModifier = null)
     {
 #pragma warning disable IDISP001 // cached entry, lifetime managed by FilesCacheIndex
@@ -287,7 +287,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     public async Task<IndexEntry> PrepareCacheAndGetEntryAsync(Uri fileUrl,
                                                                WebRequestParams? pars = null,
                                                                bool refresh = false,
-                                                               HttpWebResponse? response = null,
+                                                               HttpResponseMessage? response = null,
                                                                Func<Uri, Uri>? urlModifier = null)
     {
         var entry = await GetEntryAsync(fileUrl);
@@ -299,7 +299,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
 
     public async Task<bool> PrepareCacheEntryAsync(WebRequestParams? pars,
                                                    bool refresh,
-                                                   HttpWebResponse? response,
+                                                   HttpResponseMessage? response,
                                                    IndexEntry entry,
                                                    string? checksum = null,
                                                    Func<Uri, Uri>? urlModifier = null)

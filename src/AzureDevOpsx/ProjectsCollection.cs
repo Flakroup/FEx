@@ -1,13 +1,15 @@
 using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Extensions.Collections.Lists;
+using FEx.Agnostics.Abstractions.Extensions.Web;
+using FEx.Agnostics.Abstractions.Models;
 using FEx.Agnostics.BaseObjects;
 using FEx.AzureDevOpsx.Entities;
 using FEx.AzureDevOpsx.Extensions;
 using FEx.AzureDevOpsx.Responses;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Core.Collections.Concurrent;
-using FEx.Downloader.Clients;
+using FEx.Downloader.Extensions;
 using FEx.Flurlx.Models;
 using FEx.Json.Extensions;
 using FEx.Legacy.Web;
@@ -45,6 +47,7 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
     private bool _isEnabled;
     private ConcurrentObservableList<ShelvesetContent> _shelvesets = [];
     private bool _isIdle;
+    private WebRequestParams? _downloadPars;
 
     public bool IsChecked
     {
@@ -354,11 +357,12 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
                                                  ICredentials credentials,
                                                  IProgressAggregator? viewModel)
     {
-        using var fwc = new FlakWebClient(new()
-        {
-            Credentials = credentials
-        },
-            (_, e) => viewModel?.SetCurrentDownloadState(e));
+        // One params instance per credentials keeps the underlying HttpClient (and its connections) long-lived.
+        if (_downloadPars?.Credentials != credentials)
+            _downloadPars = new()
+            {
+                Credentials = credentials
+            };
 
         var localPath = serverPath.Replace("$/", $"{rootDirectory}/").Replace("/", "\\");
         var dirPath = Path.GetDirectoryName(localPath);
@@ -369,7 +373,8 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
         if (File.Exists(localPath))
             File.Delete(localPath);
 
-        await fwc.DownloadFileTaskAsync(url, localPath);
+        using var response = await url.SendHttpAsync(_downloadPars);
+        await response.DownloadToFileAsync(localPath, (received, total) => viewModel?.SetCurrentDownloadState(received, total));
     }
 
     /// <summary>

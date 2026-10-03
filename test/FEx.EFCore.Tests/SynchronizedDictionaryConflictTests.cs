@@ -17,6 +17,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -355,6 +356,9 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
 
         conflicts.Select(c => c.Key).OrderBy(k => k).ShouldBe([1, 3]);
         conflicts.ShouldAllBe(c => c.DatabaseValue != null && c.DatabaseValue.Id == c.Key);
+        // SQLite reports one conflicting row per attempt, so the two rejections come from two attempts: one read.
+        sut.SaveAttempts.ShouldBe(2);
+        sut.IncludedQueries.ShouldBe(1);
         conflicts.Single(c => c.Key == 1).CachedValue.ShouldBeSameAs(first);
         conflicts.Single(c => c.Key == 3).CachedValue.ShouldBeSameAs(third);
     }
@@ -435,6 +439,153 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         await FlushThroughPipelineAsync(sut, 10);
         (await NamesInDbAsync())[0].ShouldBe("pending");
         sut[1].Name.ShouldBe("pending");
+    }
+
+    [Fact]
+    public async Task RejectedRemoval_OfAKeyCachedAgainSince_RaisesNoConflict()
+    {
+        using var sut = CreateDictionary(true);
+        var doc = await LoadAsync(1);
+        await UpdateByOtherWriterAsync(1);
+        var conflicts = new ConcurrentQueue<CacheConflict<int, CachedDoc>>();
+        sut.ConflictDetected += (_, conflict) => conflicts.Enqueue(conflict);
+        sut.OnConflict = () => sut.AddOrUpdateValue(new() { Id = 1, Name = "re-added", Version = 2 });
+
+        (await sut.SaveAsync(new Change<CachedDoc, int>(ChangeReason.Remove, 1, doc))).ShouldBeFalse();
+
+        conflicts.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task DirectSave_ThrowingAfterARejection_StillRaisesTheEarlierConflict()
+    {
+        using var sut = CreateDictionary(true);
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await UpdateByOtherWriterAsync(1);
+        var conflicts = new ConcurrentQueue<CacheConflict<int, CachedDoc>>();
+        sut.ConflictDetected += (_, conflict) => conflicts.Enqueue(conflict);
+        sut.ThrowOnAttempt = 2;
+
+        doc.Name = "from A";
+        await Should.ThrowAsync<InvalidOperationException>(() =>
+            sut.SaveAsync(new(ChangeReason.Refresh, 1, doc), NewDoc(2)));
+
+        conflicts.ShouldHaveSingleItem().Key.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// The batch releases its changes before it raises the conflict, so a handler that blocks on a reload of the key
+    /// it was told about does not wait for its own batch.
+    /// </summary>
+    [Fact]
+    public async Task SynchronousConflictHandler_BlockingOnAReloadOfItsKey_Completes()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await FlushThroughPipelineAsync(sut, 9);
+        await UpdateByOtherWriterAsync(1);
+        var reloaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+#pragma warning disable VSTHRD002 // A handler that blocks on purpose
+        sut.ConflictDetected += (_, conflict) =>
+            reloaded.TrySetResult(sut.ReloadAsync(conflict.Key, TestContext.Current.CancellationToken)
+                .Wait(TimeSpan.FromSeconds(5)));
+#pragma warning restore VSTHRD002
+
+        doc.Name = "from A";
+
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+        (await reloaded.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken)).ShouldBeTrue();
+#pragma warning restore VSTHRD003
+        sut[1].Name.ShouldBe("from B");
+    }
+
+    /// <summary>
+    /// The replaced subscription's batch still being saved releases only its own changes, so a reload after the
+    /// reset still waits for the edit buffered in the new subscription.
+    /// </summary>
+    [Fact]
+    public async Task ReloadAsync_AfterAResetWithABatchInFlight_StillSavesTheBufferedEditFirst()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await FlushThroughPipelineAsync(sut, 9);
+        var gate = sut.HoldSaves();
+
+        doc.Name = "in flight";
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+        await sut.SaveHeld.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+#pragma warning restore VSTHRD003
+        await sut.ResetAsync();
+        await sut.InitializeAsync();
+        gate.SetResult(true);
+        await sut.WaitForCacheTasksAsync();
+        (await NamesInDbAsync())[0].ShouldBe("in flight");
+
+        doc.Name = "pending";
+        var fresh = (await sut.ReloadAsync(1, TestContext.Current.CancellationToken)).ShouldNotBeNull();
+
+        fresh.Name.ShouldBe("pending");
+        await FlushThroughPipelineAsync(sut, 10);
+        (await NamesInDbAsync())[0].ShouldBe("pending");
+        sut[1].Name.ShouldBe("pending");
+    }
+
+    /// <summary>A later batch that saves nothing (an Add of an indexed key) is not the change the reload waits for.</summary>
+    [Fact]
+    public async Task ReloadAsync_WaitsForASlowEarlierBatch_EvenWhenAFilteredLaterOneFinishesFirst()
+    {
+        await InsertDocAsync(5);
+        using var sut = CreateDictionary(true);
+        sut.Index.Add(5);
+        await sut.InitializeAsync();
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await FlushThroughPipelineAsync(sut, 9);
+        var gate = sut.HoldSaves();
+
+        doc.Name = "pending";
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+        await sut.SaveHeld.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+#pragma warning restore VSTHRD003
+        var reload = sut.ReloadAsync(1, TestContext.Current.CancellationToken);
+        sut.AddOrUpdateValue(await LoadAsync(5));
+        // Several buffer windows: the filtered batch of key 5 has been handled by now.
+        await Task.Delay(500, TestContext.Current.CancellationToken);
+        reload.IsCompleted.ShouldBeFalse();
+
+        gate.SetResult(true);
+        var fresh = (await reload.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken))
+            .ShouldNotBeNull();
+
+        fresh.Name.ShouldBe("pending");
+        sut[1].ShouldBeSameAs(fresh);
+        (await NamesInDbAsync())[0].ShouldBe("pending");
+    }
+
+    [Fact]
+    public async Task Dispose_WithAReloadWaitingForBufferedChanges_FailsTheReload()
+    {
+        Task<CachedDoc?> reload;
+
+        using (var sut = CreateDictionary(true))
+        {
+            await sut.InitializeAsync();
+            var doc = await LoadAsync(1);
+            sut.AddOrUpdateValue(doc);
+            await FlushThroughPipelineAsync(sut, 9);
+
+            doc.Name = "buffered";
+            reload = sut.ReloadAsync(1, TestContext.Current.CancellationToken);
+            reload.IsCompleted.ShouldBeFalse();
+        }
+
+        await Should.ThrowAsync<ObjectDisposedException>(() =>
+            reload.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
     }
 
     private async Task InsertDocAsync(int id)
@@ -590,10 +741,34 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
 
         public bool FailIncludedQueries { get; set; }
 
+        public int IncludedQueries => _includedQueries;
+
+        public int? ThrowOnAttempt { get; set; }
+
+        public TaskCompletionSource<bool> SaveHeld { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        private int _includedQueries;
+        private TaskCompletionSource<bool>? _saveGate;
+
+        /// <summary>Holds the next save attempt until the returned gate is set.</summary>
+        public TaskCompletionSource<bool> HoldSaves() =>
+            _saveGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
         protected override async Task OnChangesDetectedAsync(ICollection<ChangeInfo<int, CachedDoc>> changes)
         {
             SaveAttempts++;
             SavedKeys.Enqueue([.. changes.Select(c => c.Key).OrderBy(k => k)]);
+
+            if (SaveAttempts == ThrowOnAttempt)
+                throw new InvalidOperationException("transient failure");
+
+            if (Interlocked.Exchange(ref _saveGate, null) is { } gate)
+            {
+                SaveHeld.TrySetResult(true);
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+                await gate.Task.WaitAsync(TimeSpan.FromSeconds(30));
+#pragma warning restore VSTHRD003
+            }
 
             try
             {
@@ -609,8 +784,12 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
 
         protected override void OnRetrievedNew(CachedDoc value) => OnRetrieved?.Invoke(value);
 
-        protected override IQueryable<CachedDoc> IncludeInEntity(IQueryable<CachedDoc> query) =>
-            FailIncludedQueries ? throw new InvalidOperationException("database unavailable") : query;
+        protected override IQueryable<CachedDoc> IncludeInEntity(IQueryable<CachedDoc> query)
+        {
+            Interlocked.Increment(ref _includedQueries);
+
+            return FailIncludedQueries ? throw new InvalidOperationException("database unavailable") : query;
+        }
 
         protected override Expression<Func<CachedDoc, int>> RetriveKey() => d => d.Id;
 

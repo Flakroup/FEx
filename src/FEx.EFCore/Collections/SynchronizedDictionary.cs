@@ -38,11 +38,13 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     [ThreadStatic]
     private static TValue? _reloadTarget;
 
-    // Cache changes published to the save pipeline, and those it has saved or dropped since; ReloadAsync waits until
-    // the second catches up with what the first was when it started.
-    private long _changesSeen;
-    private long _changesHandled;
-    private TaskCompletionSource<bool> _changesProgress = NewProgressSignal();
+    // Change sets published to the save pipeline and not yet saved or dropped, by sequence number. ReloadAsync waits
+    // until none is left at or below the last number published when it started.
+    private readonly object _pendingLock = new();
+    private readonly SortedSet<long> _pendingChanges = [];
+    private readonly List<PendingWaiter> _pendingWaiters = [];
+    private long _lastChange;
+    private ChangePipeline? _pipeline;
     private bool _isDisposed;
     private string[] _observedProperties;
     private IDisposable? _cacheSubscription;
@@ -177,6 +179,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     /// <see cref="ConflictDetected" /> conflict is resolved, from the thread that owns the cached values.
     /// </summary>
     /// <returns>The new cached value, or <c>null</c> when the row no longer exists.</returns>
+    /// <exception cref="ObjectDisposedException">The dictionary was disposed before the pending changes were saved.</exception>
     public async Task<TValue?> ReloadAsync(TKey key, CancellationToken cancellationToken = default)
     {
         // An edit still buffered or being saved is written first, so the row read below includes it and the cache
@@ -288,26 +291,27 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 _observables.Aggregate(cacheObservable, (current, o) => current.AutoRefreshOnObservable(o));
 
         _cacheSubscription?.Dispose();
-        // Changes buffered in a replaced subscription are never handled; do not let ReloadAsync wait for them.
-        MarkHandled(Interlocked.Read(ref _changesSeen) - Interlocked.Read(ref _changesHandled));
+        var pipeline = new ChangePipeline();
+        // The replaced subscription dropped what it still buffered; its batches being saved release their own numbers.
+        ClosePipeline(Interlocked.Exchange(ref _pipeline, pipeline));
 
         _cacheSubscription = cacheObservable.Select(WithoutReloads)
-            .Do(changeSet => Interlocked.Add(ref _changesSeen, changeSet.Count))
+            .Select(changeSet => (Sequence: Publish(pipeline), ChangeSet: changeSet))
             .Buffer(TimeSpan.FromMilliseconds(100))
             .Where(x => x.Count > 0)
             .Select(x =>
             {
-                long total = x.Sum(c => c.Count);
+                var sequences = TakeFromBuffer(pipeline, x.Select(c => c.Sequence));
 
-                var changes = x.SelectMany(c => c)
+                var changes = x.SelectMany(c => c.ChangeSet)
                     .Where(c => c.Reason is not ChangeReason.Moved
                                 && (c.Reason != ChangeReason.Add || !Index.Contains(c.Key)))
                     .ToList();
 
-                return (Total: total,
+                return (Sequences: sequences,
                     ChangeSet: changes.Count == 0 ? null : new ChangeSet<TValue, TKey>(DistinctChanges(changes)));
             })
-            .SubscribeTask((batch, _) => HandleBatchAsync(batch.Total, batch.ChangeSet));
+            .SubscribeTask((batch, _) => HandleBatchAsync(batch.Sequences, batch.ChangeSet));
     }
 
     protected TKey KeyRetriver(TValue value) => (_keyRetriver ??= RetriveKey().Compile()).Invoke(value);
@@ -428,7 +432,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         OnRetrievedNew(value);
     }
 
-    private async Task HandleBatchAsync(long total, IChangeSet<TValue, TKey>? changeSet)
+    private async Task HandleBatchAsync(List<long> sequences, IChangeSet<TValue, TKey>? changeSet)
     {
         var conflicts = new List<(ChangeInfo<TKey, TValue> Change, TValue? DatabaseValue)>();
 
@@ -439,7 +443,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         }
         finally
         {
-            MarkHandled(total);
+            ReleaseChanges(sequences);
         }
 
         // After the save released CacheHandlerSemaphore and left CacheTasks, so a handler may wait on the cache.
@@ -507,10 +511,16 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     protected async Task<bool> SaveChangesResolvingConflictsAsync(List<ChangeInfo<TKey, TValue>> changes)
     {
         var conflicts = new List<(ChangeInfo<TKey, TValue> Change, TValue? DatabaseValue)>();
-        var allSaved = await SaveChangesCollectingConflictsAsync(changes, conflicts);
-        RaiseConflicts(conflicts);
 
-        return allSaved;
+        try
+        {
+            return await SaveChangesCollectingConflictsAsync(changes, conflicts);
+        }
+        finally
+        {
+            // Also when a later attempt throws: the changes rejected before it are still reported.
+            RaiseConflicts(conflicts);
+        }
     }
 
     // The save itself; rejected changes are collected so the caller raises ConflictDetected once the save is over.
@@ -663,31 +673,118 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         }
     }
 
-    private void MarkHandled(long count)
+    private long Publish(ChangePipeline pipeline)
     {
-        Interlocked.Add(ref _changesHandled, count);
-        Interlocked.Exchange(ref _changesProgress, NewProgressSignal()).TrySetResult(true);
-    }
-
-    // Waits until every cache change published to the save pipeline so far has been saved or dropped.
-    private async Task WaitForPendingChangesAsync(CancellationToken cancellationToken)
-    {
-        var target = Interlocked.Read(ref _changesSeen);
-
-        while (true)
+        lock (_pendingLock)
         {
-            var progress = Volatile.Read(ref _changesProgress);
+            // A change racing the subscription's disposal is dropped with it; 0 is never pending.
+            if (pipeline.IsClosed)
+                return 0;
 
-            if (Interlocked.Read(ref _changesHandled) >= target)
-                return;
+            var sequence = ++_lastChange;
+            _pendingChanges.Add(sequence);
+            pipeline.Buffered.Add(sequence);
 
-            await Task.WhenAny(progress.Task, Task.Delay(Timeout.Infinite, cancellationToken));
-            cancellationToken.ThrowIfCancellationRequested();
+            return sequence;
         }
     }
 
-    private static TaskCompletionSource<bool> NewProgressSignal() =>
-        new(TaskCreationOptions.RunContinuationsAsynchronously);
+    // The batch owns these numbers from now on and releases them when it has been saved, filtered or failed.
+    private List<long> TakeFromBuffer(ChangePipeline pipeline, IEnumerable<long> sequences)
+    {
+        List<long> taken = [.. sequences];
+
+        lock (_pendingLock)
+        {
+            foreach (var sequence in taken)
+                pipeline.Buffered.Remove(sequence);
+        }
+
+        return taken;
+    }
+
+    private void ClosePipeline(ChangePipeline? pipeline)
+    {
+        if (pipeline is null)
+            return;
+
+        List<long> dropped;
+
+        lock (_pendingLock)
+        {
+            pipeline.IsClosed = true;
+            dropped = [.. pipeline.Buffered];
+            pipeline.Buffered.Clear();
+        }
+
+        ReleaseChanges(dropped);
+    }
+
+    // Removing a number twice is harmless, so a batch racing its subscription's disposal cannot release others.
+    private void ReleaseChanges(List<long> sequences)
+    {
+        List<PendingWaiter> released;
+
+        lock (_pendingLock)
+        {
+            foreach (var sequence in sequences)
+                _pendingChanges.Remove(sequence);
+
+            released = _pendingWaiters.FindAll(w => NothingPendingUpTo(w.Target));
+            _pendingWaiters.RemoveAll(released.Contains);
+        }
+
+        foreach (var waiter in released)
+            waiter.Signal.TrySetResult(true);
+    }
+
+    private void ReleaseWaitersOnDispose()
+    {
+        List<PendingWaiter> waiters;
+
+        lock (_pendingLock)
+        {
+            _isDisposed = true;
+            _pendingChanges.Clear();
+            waiters = [.. _pendingWaiters];
+            _pendingWaiters.Clear();
+        }
+
+        foreach (var waiter in waiters)
+            waiter.Signal.TrySetException(new ObjectDisposedException(TypeName));
+    }
+
+    private bool NothingPendingUpTo(long target) => _pendingChanges.Count == 0 || _pendingChanges.Min > target;
+
+    // Waits until every change set published to the save pipeline so far has been saved or dropped.
+    private async Task WaitForPendingChangesAsync(CancellationToken cancellationToken)
+    {
+        PendingWaiter waiter;
+        var signal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        lock (_pendingLock)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(TypeName);
+
+            if (NothingPendingUpTo(_lastChange))
+                return;
+
+            waiter = new(_lastChange, signal);
+            _pendingWaiters.Add(waiter);
+        }
+
+        try
+        {
+            using (cancellationToken.Register(() => signal.TrySetCanceled(cancellationToken)))
+                await signal.Task;
+        }
+        finally
+        {
+            lock (_pendingLock)
+                _pendingWaiters.Remove(waiter);
+        }
+    }
 
     // Each handler in isolation: a throwing one must not stop the others or the save loop.
     private void RaiseConflict(CacheConflict<TKey, TValue> conflict)
@@ -811,6 +908,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         {
             Cache?.Dispose();
             _cacheSubscription?.Dispose();
+            // A ReloadAsync still waiting for changes the subscription will never save fails instead of hanging.
+            ReleaseWaitersOnDispose();
             CacheHandlerSemaphore.Dispose();
         }
 
@@ -818,4 +917,24 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         base.Dispose(disposing);
     }
     #endregion
+
+    private sealed class ChangePipeline
+    {
+        public HashSet<long> Buffered { get; } = [];
+
+        public bool IsClosed { get; set; }
+    }
+
+    private sealed class PendingWaiter
+    {
+        public long Target { get; }
+
+        public TaskCompletionSource<bool> Signal { get; }
+
+        public PendingWaiter(long target, TaskCompletionSource<bool> signal)
+        {
+            Target = target;
+            Signal = signal;
+        }
+    }
 }

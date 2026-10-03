@@ -6,6 +6,7 @@ using System.Text;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Extensions for exceptions, including replacing their stack trace.</summary>
 public static class ExceptionExtensions
 {
     // Private runtime field; its name is not guaranteed on every runtime. When it is missing the stack trace

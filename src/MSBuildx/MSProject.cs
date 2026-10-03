@@ -3,7 +3,6 @@ using FEx.Agnostics.Abstractions.Extensions.Collections.Lists;
 using FEx.Agnostics.Collections.Concurrent;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
-using NuGet;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;
@@ -222,11 +221,8 @@ public class MSProject
         if (isPackagesConfig)
         {
             var pkgsConf = new FileInfo(Path.Combine(ProjectDir, PkgsConfStr));
-            var file = new PackageReferenceFile(pkgsConf.FullName);
 
-            NuGetPackages.AddRangeToCollection(file.GetPackageReferences()
-                .Select(x => new PackageIdentity(x.Id, NuGetVersion.Parse(x.Version.ToString())))
-                .ToArray());
+            NuGetPackages.AddRangeToCollection(PackagesConfigFile.Read(pkgsConf).ToArray());
         }
 
         // Defensive removal of any null entries left by the parallel population above.

@@ -96,20 +96,38 @@ public static class PlatformInfoProvider
         IsWindows ? OSPlatformInfo.Windows : OSPlatformInfo.Unknown;
 
 #if NET6_0_OR_GREATER
+    /// <summary>Gets a value indicating whether the current operating system is Windows.</summary>
     public static bool IsWindows => OperatingSystem.IsWindows();
+    /// <summary>Gets a value indicating whether the current operating system is macOS.</summary>
     public static bool IsMacOS => OperatingSystem.IsMacOS();
+    /// <summary>Gets a value indicating whether the current operating system is Linux.</summary>
     public static bool IsLinux => OperatingSystem.IsLinux();
+    /// <summary>Gets a value indicating whether the current operating system is Android.</summary>
     public static bool IsAndroid => OperatingSystem.IsAndroid();
+    /// <summary>Gets a value indicating whether the current operating system is iOS.</summary>
     public static bool IsIOS => OperatingSystem.IsIOS();
+    /// <summary>Gets a value indicating whether the code runs in a browser (WebAssembly).</summary>
     public static bool IsBrowser => OperatingSystem.IsBrowser();
+    /// <summary>Determines whether the current operating system matches a platform name.</summary>
+    /// <param name="platform">The platform name, for example <c>ANDROID</c>.</param>
+    /// <returns><c>true</c> if the current platform matches.</returns>
     public static bool IsOSPlatform(string platform) => OperatingSystem.IsOSPlatform(platform);
 #else
+    /// <summary>Gets a value indicating whether the current operating system is Windows.</summary>
     public static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+    /// <summary>Gets a value indicating whether the current operating system is macOS.</summary>
     public static bool IsMacOS => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+    /// <summary>Gets a value indicating whether the current operating system is Linux.</summary>
     public static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+    /// <summary>Gets a value indicating whether the current operating system is Android.</summary>
     public static bool IsAndroid => IsOSPlatform("ANDROID");
+    /// <summary>Gets a value indicating whether the current operating system is iOS.</summary>
     public static bool IsIOS => IsOSPlatform("IOS");
+    /// <summary>Gets a value indicating whether the code runs in a browser (WebAssembly).</summary>
     public static bool IsBrowser => IsOSPlatform("BROWSER");
+    /// <summary>Determines whether the current operating system matches a platform name.</summary>
+    /// <param name="platform">The platform name, for example <c>ANDROID</c>.</param>
+    /// <returns><c>true</c> if the current platform matches.</returns>
     public static bool IsOSPlatform(string platform) => RuntimeInformation.IsOSPlatform(OSPlatform.Create(platform));
 #endif
 
@@ -118,8 +136,10 @@ public static class PlatformInfoProvider
     /// </summary>
     public static SoftwareArchitecture ProgramBits { get; }
 
+    /// <summary>Gets the bitness of the operating system, also when running as a 32-bit process on a 64-bit OS.</summary>
     public static SoftwareArchitecture OSBits { get; }
 
+    /// <summary>Gets a value indicating whether the operating system is 64-bit.</summary>
     public static bool Is64BitOperatingSystem => OSBits == SoftwareArchitecture.Bit64;
 
     /// <summary>
@@ -127,6 +147,7 @@ public static class PlatformInfoProvider
     /// </summary>
     public static OSProcessorArchitecture ProcessorBits { get; }
 
+    /// <summary>Gets the Windows edition of the operating system, or <see cref="OSEdition.Unknown" /> on other platforms.</summary>
     public static OSEdition Edition { get; }
 
     /// <summary>
@@ -157,6 +178,7 @@ public static class PlatformInfoProvider
     /// </summary>
     public static Version? Version { get; }
 
+    /// <summary>Gets a summary of the operating system name, edition, version and process bitness.</summary>
     public static string InfoString { get; }
 
     private static Dictionary<OSProduct, OSEdition> ProductToEdition { get; } = new()

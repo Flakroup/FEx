@@ -3,11 +3,15 @@
 		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
 		<Description>NuGet package management utilities with package discovery and installation tracking</Description>
 	</PropertyGroup>
+	<!-- NuGet client 7.x dropped netstandard2.0; 6.14.x is the last line that ships it. -->
+	<PropertyGroup>
+		<NuGetClientVersion>6.14.3</NuGetClientVersion>
+		<NuGetClientVersion Condition="'$(TargetFramework)' == '$(TargetFrameworkId)'">7.6.0</NuGetClientVersion>
+	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="NuGet.Core" Version="2.14.0" />
-		<PackageReference Include="NuGet.Protocol" Version="7.6.0" />
-		<PackageReference Include="NuGet.Packaging" Version="7.6.0" />
-		<PackageReference Include="NuGet.Common" Version="7.6.0" />
+		<PackageReference Include="NuGet.Protocol" Version="$(NuGetClientVersion)" />
+		<PackageReference Include="NuGet.Packaging" Version="$(NuGetClientVersion)" />
+		<PackageReference Include="NuGet.Common" Version="$(NuGetClientVersion)" />
 	</ItemGroup>
 	<ItemGroup>
 		<InternalsVisibleTo Include="FEx.NuGetx.Tests" />

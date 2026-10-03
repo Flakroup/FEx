@@ -5,8 +5,13 @@ using System.Net.Http;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Web;
 
+/// <summary>Extensions for configuring <see cref="System.Net.Http.HttpClient" /> instances.</summary>
 public static class WebClientExtensions
 {
+    /// <summary>Creates an <see cref="System.Net.Http.HttpClient" /> configured from the request parameters.</summary>
+    /// <param name="client">Receives the new client, which owns its handler.</param>
+    /// <param name="pars">The parameters supplying handler settings, timeout, user agent, headers and keep-alive.</param>
+    /// <param name="resultAsJson">Whether to add an <c>Accept: application/json</c> header.</param>
     public static void PrepareHttpClient(out HttpClient client, WebRequestParams pars, bool resultAsJson = false)
     {
 #pragma warning disable IDISP001 // handler ownership transferred to HttpClient

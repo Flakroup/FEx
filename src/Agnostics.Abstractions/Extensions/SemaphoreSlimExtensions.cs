@@ -4,6 +4,7 @@ using System.Threading;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Extensions for <see cref="System.Threading.SemaphoreSlim" />.</summary>
 public static class SemaphoreSlimExtensions
 {
     /// <summary>

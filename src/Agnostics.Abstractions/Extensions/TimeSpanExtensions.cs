@@ -92,16 +92,20 @@ public static class TimeSpanExtensions
     /// <returns>System.String.</returns>
     public static string GetTime(this long milliseconds) => TimeSpan.FromMilliseconds(milliseconds).GetTime();
 
+    /// <summary>Formats a duration given in milliseconds as a human-readable string.</summary>
+    /// <param name="milliseconds">The duration in milliseconds.</param>
+    /// <returns>The formatted time, in milliseconds, seconds, minutes or hours depending on magnitude.</returns>
     public static string GetTime(this double milliseconds) => TimeSpan.FromMilliseconds(milliseconds).GetTime();
 
-    /// <summary>
-    /// Gets the time from <see cref="TimeSpan" />.
-    /// </summary>
+    /// <summary>Formats a <see cref="TimeSpan" /> as a human-readable string without decimals.</summary>
     /// <param name="timespan">The timespan.</param>
-    /// <param name="decimals">The decimals.</param>
-    /// <returns>System.String.</returns>
+    /// <returns>The formatted time, in milliseconds, seconds, minutes or hours depending on magnitude.</returns>
     public static string GetTime(this TimeSpan timespan) => timespan.GetTime(0);
 
+    /// <summary>Formats a <see cref="TimeSpan" /> as a human-readable string with the given number of decimals.</summary>
+    /// <param name="timespan">The timespan.</param>
+    /// <param name="decimals">The number of decimal places to keep (rounded down).</param>
+    /// <returns>The formatted time, in milliseconds, seconds, minutes or hours depending on magnitude.</returns>
     public static string GetTime(this TimeSpan timespan, int decimals)
     {
         if (timespan.TotalMilliseconds < 1000)
@@ -115,6 +119,10 @@ public static class TimeSpanExtensions
                 : $"{timespan.Hours} h. {FillZeros((timespan.TotalMinutes - timespan.Hours * 60).RoundDown(decimals), decimals)} min.";
     }
 
+    /// <summary>Rounds a number down to a number of decimal places.</summary>
+    /// <param name="i">The number to round.</param>
+    /// <param name="decimalPlaces">The number of decimal places to keep.</param>
+    /// <returns>The rounded-down number.</returns>
     public static double RoundDown(this double i, double decimalPlaces)
     {
         var power = Math.Pow(10, decimalPlaces);
@@ -122,6 +130,10 @@ public static class TimeSpanExtensions
         return Math.Floor(i * power) / power;
     }
 
+    /// <summary>Rounds a time span up to a multiple of minutes, dropping seconds.</summary>
+    /// <param name="timeSpan">The time span to round.</param>
+    /// <param name="roundToMinutes">The multiple of minutes to round up to.</param>
+    /// <returns>The rounded time span.</returns>
     public static TimeSpan RoundUp(this TimeSpan timeSpan, int roundToMinutes)
     {
         var totalMinutes = (int)timeSpan.TotalMinutes;
@@ -134,6 +146,9 @@ public static class TimeSpanExtensions
         return TimeSpan.FromMinutes(totalMinutes);
     }
 
+    /// <summary>Determines whether the hours component of a time span is before noon.</summary>
+    /// <param name="timeSpan">The time span to test.</param>
+    /// <returns><c>true</c> if the hours component is below 12.</returns>
     public static bool IsAm(this TimeSpan timeSpan) => timeSpan.Hours < 12;
 
     /// <summary>

@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Extensions for reading values, descriptions and attributes of enumerations.</summary>
 public static class EnumExtensions
 {
     /// <summary>
@@ -42,11 +43,20 @@ public static class EnumExtensions
                 .GetCustomAttributes(typeof(TAttributeType), true)
             : null;
 
+    /// <summary>Parses a string to an enumeration value.</summary>
+    /// <typeparam name="TEnum">The enumeration type.</typeparam>
+    /// <param name="value">The text to parse.</param>
+    /// <param name="ignoreCase">Whether to ignore case.</param>
+    /// <returns>The parsed value, or null when the text cannot be parsed.</returns>
     public static TEnum? TryParse<TEnum>(this string value, bool ignoreCase = false) where TEnum : struct =>
         Enum.TryParse(value, ignoreCase, out TEnum result)
             ? result
             : null;
 
+    /// <summary>Gets all distinct values of an enumeration type.</summary>
+    /// <typeparam name="TEnum">The enumeration type.</typeparam>
+    /// <param name="_">An enum value used only to infer the type.</param>
+    /// <returns>The enumeration values.</returns>
     public static IReadOnlyCollection<TEnum> GetEnumValues<TEnum>(this TEnum _) where TEnum : struct, Enum =>
         GetEnumValues<TEnum>();
 
@@ -65,12 +75,23 @@ public static class EnumExtensions
             .ToList()
             .AsReadOnly();
 
+    /// <summary>Creates a read-only two-way map between enumeration values and their names or descriptions.</summary>
+    /// <typeparam name="TEnum">The enumeration type.</typeparam>
+    /// <param name="useValueDescription">When true the keys are the value descriptions; otherwise the value names.</param>
+    /// <returns>A read-only map from text to enumeration value.</returns>
     public static IMap<string, TEnum> GetEnumMap<TEnum>(bool useValueDescription = false) where TEnum : struct, Enum =>
         GetEnumCustomMap<TEnum, string, TEnum>(enumValue => useValueDescription
                 ? enumValue.GetEnumValueDescription()!
                 : enumValue.ToString(),
             enumValue => enumValue);
 
+    /// <summary>Creates a read-only two-way map from the values of an enumeration using custom selectors.</summary>
+    /// <typeparam name="TEnum">The enumeration type.</typeparam>
+    /// <typeparam name="TKey">The forward key type.</typeparam>
+    /// <typeparam name="TValue">The reverse key type.</typeparam>
+    /// <param name="keyGetter">Selects the forward key of an enumeration value.</param>
+    /// <param name="valueGetter">Selects the reverse key of an enumeration value.</param>
+    /// <returns>A read-only map built from all enumeration values.</returns>
     public static IMap<TKey, TValue>
         GetEnumCustomMap<TEnum, TKey, TValue>(Func<TEnum, TKey> keyGetter, Func<TEnum, TValue> valueGetter)
         where TEnum : struct, Enum

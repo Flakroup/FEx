@@ -2,6 +2,7 @@ using System;
 
 namespace FEx.Agnostics.Abstractions.Utilities;
 
+/// <summary>Numeric conversion helpers ported from the Visual Basic runtime for target frameworks that lack it.</summary>
 public static class FExConversion
 {
     /// <summary>Return the integer portion of a number.</summary>

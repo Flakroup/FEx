@@ -6,6 +6,7 @@ using System.Xml.XPath;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Extensions for converting between XML element types.</summary>
 public static class XElementExtensions
 {
     /// <summary>

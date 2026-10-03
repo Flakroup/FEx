@@ -22,27 +22,27 @@ public static class LoggerExtensions
         switch (logLevel)
         {
             case LogLevel.Trace:
-                logger.LogTrace(message, exception);
+                logger.LogTrace(exception, "{Message}", message);
 
                 break;
             case LogLevel.Debug:
-                logger.LogDebug(message, exception);
+                logger.LogDebug(exception, "{Message}", message);
 
                 break;
             case LogLevel.Information:
-                logger.LogInformation(message, exception);
+                logger.LogInformation(exception, "{Message}", message);
 
                 break;
             case LogLevel.Warning:
-                logger.LogWarning(message, exception);
+                logger.LogWarning(exception, "{Message}", message);
 
                 break;
             case LogLevel.Error:
-                logger.LogError(message, exception);
+                logger.LogError(exception, "{Message}", message);
 
                 break;
             case LogLevel.Critical:
-                logger.LogCritical(message, exception);
+                logger.LogCritical(exception, "{Message}", message);
 
                 break;
             case LogLevel.None:
@@ -53,7 +53,7 @@ public static class LoggerExtensions
     }
 
     public static void LogError<T>(this ILogger logger, T exception) where T : Exception =>
-        logger.LogError(exception, exception.ToString());
+        logger.LogError(exception, "{Exception}", exception.ToString());
 
     public static ILogger GetMicrosoftLogger(this object sender) =>
         FExLoggingStatics.LoggerFactory.CreateLogger(sender.GetType());

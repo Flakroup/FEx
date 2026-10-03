@@ -10,9 +10,12 @@ using System.Threading.Tasks;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Web;
 
+/// <summary>Extensions for reading range and header information from HTTP responses.</summary>
 public static class WebResponseExtensions
 {
+    /// <summary>The name of the <c>Content-Range</c> response header.</summary>
     public const string ContentRangeHeaderName = "Content-Range";
+    /// <summary>The name of the <c>Accept-Ranges</c> response header.</summary>
     public const string AcceptRangesHeaderName = "Accept-Ranges";
     private const string BytesRangeUnit = "bytes";
 
@@ -39,9 +42,15 @@ public static class WebResponseExtensions
         return (rangeResponse.Content.Headers.ContentRange is not null, LengthType.Bytes);
     }
 
+    /// <summary>Gets the <c>Content-Range</c> header of a response.</summary>
+    /// <param name="response">The response.</param>
+    /// <returns>The header value, or null when absent.</returns>
     public static ContentRangeHeaderValue? GetContentRange(this HttpResponseMessage response) =>
         response.Content.Headers.ContentRange;
 
+    /// <summary>Parses a <c>Content-Range</c> header text such as <c>bytes 0-99/1000</c>.</summary>
+    /// <param name="rangeHeader">The header text.</param>
+    /// <returns>The parsed range, or null when the text is null or blank.</returns>
     public static ContentRangeHeaderValue? GetContentRange(this string? rangeHeader)
     {
         if (rangeHeader?.Trim().IsNullOrEmptyString() ?? true)

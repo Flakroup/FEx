@@ -7,7 +7,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="ReactiveUI" Version="23.2.28" />
+		<!-- ReactiveUI 23 ships no netstandard2.0 asset and 22.x lacks the RxAppBuilder API this module is written against,
+		     so netstandard2.0 consumers get the net462 asset. Suppressed for ReactiveUI and its Splat dependencies only (NoWarn flows to dependents). -->
+		<PackageReference Include="ReactiveUI" Version="23.2.28" NoWarn="NU1701" />
+		<PackageReference Include="Splat" Version="19.4.1" NoWarn="NU1701" />
+		<PackageReference Include="Splat.Builder" Version="19.4.1" NoWarn="NU1701" />
+		<PackageReference Include="Splat.Core" Version="19.4.1" NoWarn="NU1701" />
+		<PackageReference Include="Splat.Logging" Version="19.4.1" NoWarn="NU1701" />
 		<PackageReference Include="StrongInject.Extensions.DependencyInjection" Version="1.4.4" />
 		<PackageReference Include="System.Text.Json" Version="$(DotNetNugetsVersion)" />
 	</ItemGroup>

@@ -37,6 +37,9 @@ public static class DynamicExtensions
         return eo;
     }
 
+    /// <summary>Converts the public instance properties of an object to a dictionary.</summary>
+    /// <param name="src">The object to convert.</param>
+    /// <returns>The property names and values, or an empty dictionary when <paramref name="src" /> is null.</returns>
     public static IDictionary<string, object> DynamicObjectToDictionary(dynamic src) =>
         src is not null
             ? ((PropertyInfo[])src.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)).ToDictionary(

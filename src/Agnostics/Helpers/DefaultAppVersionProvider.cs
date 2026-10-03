@@ -6,8 +6,11 @@ using System.Reflection;
 
 namespace FEx.Agnostics.Helpers;
 
+/// <summary>Default <see cref="IAppVersionProvider"/> that reads the product version of the entry assembly or, failing that, of the main process module.</summary>
 public class DefaultAppVersionProvider : IAppVersionProvider
 {
+    /// <summary>Resolves the application version from the file version info of the entry assembly or main module.</summary>
+    /// <returns>The product version, falling back to the assembly version, or an empty string if none can be determined.</returns>
     public virtual string GetAppVersion()
     {
         try

@@ -2,6 +2,7 @@ using System;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Collections.Arrays;
 
+/// <summary>Extensions for arrays.</summary>
 public static class ArrayExtensions
 {
     /// <summary>

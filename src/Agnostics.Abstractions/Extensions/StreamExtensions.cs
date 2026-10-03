@@ -7,10 +7,18 @@ using System.Threading.Tasks;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
 
+/// <summary>Extensions for copying, buffering and hashing streams.</summary>
 public static class StreamExtensions
 {
     private static int BufferSize { get; } = 81920;
 
+    /// <summary>Copies a stream to another stream asynchronously and disposes the source when done.</summary>
+    /// <param name="sourceStream">The stream to read from.</param>
+    /// <param name="destStream">The stream to write to.</param>
+    /// <param name="progressMaximumSet">Called once with the length of the source stream.</param>
+    /// <param name="progressValueSet">Called after each chunk with the total number of bytes written.</param>
+    /// <param name="length">When set, copying stops once this many bytes have been written.</param>
+    /// <param name="cancellationToken">Token used to cancel the copy.</param>
     public static async Task CopyStreamToStreamAsync(this Stream sourceStream,
                                                      Stream destStream,
                                                      Action<double>? progressMaximumSet = null,
@@ -69,6 +77,12 @@ public static class StreamExtensions
         }
     }
 
+    /// <summary>Copies a stream to another stream and disposes the source when done.</summary>
+    /// <param name="sourceStream">The stream to read from.</param>
+    /// <param name="destStream">The stream to write to.</param>
+    /// <param name="progressMaximumSet">Called once with the length of the source stream.</param>
+    /// <param name="progressValueSet">Called after each chunk with the total number of bytes written.</param>
+    /// <param name="length">When set, copying stops once this many bytes have been written.</param>
     public static void CopyStreamToStream(this Stream sourceStream,
                                           Stream destStream,
                                           Action<double>? progressMaximumSet = null,
@@ -107,6 +121,9 @@ public static class StreamExtensions
         }
     }
 
+    /// <summary>Reads a stream to the end and disposes it.</summary>
+    /// <param name="input">The stream to read.</param>
+    /// <returns>All bytes of the stream.</returns>
     public static async Task<byte[]> ReadFullyAsync(this Stream input)
     {
         //todo refactor it
@@ -125,6 +142,11 @@ public static class StreamExtensions
             return ms!.ToArray();
     }
 
+    /// <summary>Copies a stream into a new memory stream positioned at the start.</summary>
+    /// <param name="streamToCopy">The stream to copy; rewound first when it supports seeking.</param>
+    /// <param name="disposeSource">Whether to dispose the source after copying.</param>
+    /// <param name="cancellationToken">Token used to cancel the copy.</param>
+    /// <returns>The memory stream, or null when the source is null or the copy was canceled.</returns>
     public static async Task<MemoryStream?> CopyToMemoryStreamAsync(this Stream streamToCopy,
                                                                    bool disposeSource = false,
                                                                    CancellationToken cancellationToken = default)
@@ -160,6 +182,10 @@ public static class StreamExtensions
         }
     }
 
+    /// <summary>Copies a stream into a new memory stream positioned at the start.</summary>
+    /// <param name="streamToCopy">The stream to copy; rewound first when it supports seeking.</param>
+    /// <param name="disposeSource">Whether to dispose the source after copying.</param>
+    /// <returns>The memory stream, or null when the source is null.</returns>
     public static MemoryStream? CopyToMemoryStream(this Stream streamToCopy, bool disposeSource = false)
     {
         const int defaultBufferSize = 81920;
@@ -182,10 +208,20 @@ public static class StreamExtensions
         return stream;
     }
 
+    /// <summary>Copies a stream into a new memory stream without disposing the source.</summary>
+    /// <param name="streamToCopy">The stream to copy.</param>
+    /// <param name="cancellationToken">Token used to cancel the copy.</param>
+    /// <returns>The memory stream, or null when the source is null or the copy was canceled.</returns>
     public static async Task<Stream?> CopyToStreamAsync(this Stream streamToCopy,
                                                        CancellationToken cancellationToken = default) =>
         await streamToCopy.CopyToMemoryStreamAsync(false, cancellationToken);
 
+    /// <summary>Computes the MD5 hash of a stream.</summary>
+    /// <param name="data">The stream to hash.</param>
+    /// <param name="removeDashes">Whether to remove the dashes between hex bytes.</param>
+    /// <param name="toLower">Whether to lower-case the hex text.</param>
+    /// <param name="asBase64String">Whether to return the hash as Base64 instead of hex.</param>
+    /// <returns>The formatted hash.</returns>
     public static string ComputeMd5Hash(this Stream data,
                                         bool removeDashes = true,
                                         bool toLower = true,

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Web;
 
+/// <summary>Extensions for sending requests to URLs and for probing them.</summary>
 public static class UriExtensions
 {
     private const string HttpScheme = "http";
@@ -103,12 +104,17 @@ public static class UriExtensions
         return response;
     }
 
+    /// <summary>Gets the response of a file request.</summary>
+    /// <param name="url">The file URL.</param>
+    /// <param name="pars">Request settings applied to the underlying request.</param>
+    /// <param name="stopwatch">Restarted before and stopped after the request, when given.</param>
+    /// <returns>The file response.</returns>
     public static async Task<FileWebResponse> GetUriFileResponseAsync(this Uri url,
                                                                       WebRequestParams? pars = null,
                                                                       Stopwatch? stopwatch = null) =>
         (FileWebResponse)await url.GetUriResponseAsync(pars, stopwatch);
 
-    /// <summary>Gets the response of a non-HTTP request (FTP, file). HTTP(S) goes through <see cref="SendHttpAsync" />.</summary>
+    /// <summary>Gets the response of a non-HTTP request (FTP, file). HTTP(S) goes through <see cref="SendHttpAsync(Uri, WebRequestParams, HttpClient, RangeHeaderValue, bool, HttpMethod, CancellationToken)" />.</summary>
     public static async Task<WebResponse> GetUriResponseAsync(this Uri url,
                                                               WebRequestParams? pars = null,
                                                               Stopwatch? stopwatch = null)
@@ -123,7 +129,7 @@ public static class UriExtensions
 
     /// <summary>
     /// Creates a <see cref="WebRequest" /> for non-HTTP schemes only (ftp, file): <c>FtpWebRequest</c> has no
-    /// HttpClient equivalent. HTTP(S) URLs are rejected, use <see cref="SendHttpAsync" />.
+    /// HttpClient equivalent. HTTP(S) URLs are rejected, use <see cref="SendHttpAsync(Uri, WebRequestParams, HttpClient, RangeHeaderValue, bool, HttpMethod, CancellationToken)" />.
     /// </summary>
     public static WebRequest GetWebRequest(this Uri url, WebRequestParams? pars = null)
     {

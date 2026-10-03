@@ -6,8 +6,12 @@ using Xunit.Abstractions;
 
 namespace FEx.Agnostics.TestMocks.Logging;
 
+/// <summary>Creates substitute <see cref="IFExLogger"/> instances that write their output to xUnit test output.</summary>
 public static class XUnitFExLoggerHelper
 {
+    /// <summary>Creates a substitute <see cref="IFExLogger"/> that forwards error, information and debug messages to the test output.</summary>
+    /// <param name="output">The xUnit output helper that receives the log lines.</param>
+    /// <returns>A mocked logger bound to <paramref name="output"/>.</returns>
     public static IFExLogger CreateMockLogger(ITestOutputHelper output)
     {
         var logger = Substitute.For<IFExLogger>();

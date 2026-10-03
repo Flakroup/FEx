@@ -2,8 +2,12 @@ using System.IO;
 
 namespace FEx.Agnostics.Helpers;
 
+/// <summary>Contains helpers for processing text data.</summary>
 public static class StringHelpers
 {
+    /// <summary>Estimates the number of lines in a stream by counting occurrences of the first line terminator found, treating a final unterminated line as a line.</summary>
+    /// <param name="stream">The stream to read to the end; bytes are interpreted as single-byte characters.</param>
+    /// <returns>The detected line count, which is only reliable for single-byte encodings.</returns>
     public static long CountLinesMaybe(Stream stream)
     {
         var lineCount = 0L;

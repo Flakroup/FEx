@@ -7,15 +7,19 @@ using System.Text;
 
 namespace FEx.Agnostics.Abstractions.Helpers;
 
+/// <summary>Helpers for validating, sanitizing and inspecting file system paths.</summary>
 public static class FileSystemHelper
 {
     private const string Ntfs = "NTFS";
     private static char[]? _invalidPathChars;
     private static char[]? _invalidFileOrDirNameChars;
+    /// <summary>Gets the characters that are not allowed in a path.</summary>
     public static char[] InvalidPathChars => _invalidPathChars ??= Path.GetInvalidPathChars();
 
+    /// <summary>Gets the characters that are not allowed in a file or directory name.</summary>
     public static char[] InvalidFileOrDirNameChars => _invalidFileOrDirNameChars ??= Path.GetInvalidFileNameChars();
 
+    /// <summary>Gets the union of the characters that are invalid in paths and in file or directory names.</summary>
     public static HashSet<char> InvalidFileNameChars { get; } =
     [
         ..InvalidFileOrDirNameChars.Concat(InvalidPathChars).Distinct()
@@ -51,6 +55,11 @@ public static class FileSystemHelper
     /// <returns></returns>
     public static string? GenerateMd5OfFile(string filePath) => new FileInfo(filePath).GenerateMd5OfFile();
 
+    /// <summary>Gets the part of a path before its last segment.</summary>
+    /// <param name="path">The path to shorten.</param>
+    /// <param name="pathSeparator">The separator that delimits the segments.</param>
+    /// <param name="includeSeparatorAtEnd">Whether the result keeps the trailing separator.</param>
+    /// <returns>The path without its last segment.</returns>
     public static string GetParentFolderFromPath(string path, char pathSeparator, bool includeSeparatorAtEnd)
     {
         var pos = path.TrimEnd(pathSeparator).LastIndexOf(pathSeparator.ToString(), StringComparison.Ordinal);
@@ -65,6 +74,9 @@ public static class FileSystemHelper
 #endif
     }
 
+    /// <summary>Replaces characters that are invalid in paths or in path segments with an underscore.</summary>
+    /// <param name="path">The path to sanitize.</param>
+    /// <returns>The sanitized path.</returns>
     public static string FixPath(string path)
     {
         char[] toReplace = [.. path.Distinct().Where(x => InvalidPathChars.Contains(x))];

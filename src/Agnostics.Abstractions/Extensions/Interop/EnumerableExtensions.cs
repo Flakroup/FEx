@@ -6,8 +6,20 @@ using System.Linq;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Interop;
 
+/// <summary>Polyfills of newer LINQ operators for older target frameworks.</summary>
 public static class EnumerableExtensions
 {
+    /// <summary>Returns distinct elements from a sequence according to a specified key selector function, comparing keys with the default equality comparer.</summary>
+    /// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
+    /// <typeparam name="TKey">The type of key to distinguish elements by.</typeparam>
+    /// <param name="source">The sequence to remove duplicate elements from.</param>
+    /// <param name="keySelector">A function to extract the key for each element.</param>
+    /// <returns>An <see cref="IEnumerable{T}" /> that contains distinct elements from the source sequence.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source" /> or <paramref name="keySelector" /> is <see langword="null" />.</exception>
+    public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
+                                                                 Func<TSource, TKey> keySelector) =>
+        source.DistinctBy(keySelector, null);
+
     /// <summary>Returns distinct elements from a sequence according to a specified key selector function.</summary>
     /// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
     /// <typeparam name="TKey">The type of key to distinguish elements by.</typeparam>
@@ -34,10 +46,6 @@ public static class EnumerableExtensions
     ///     values.
     ///     </para>
     /// </remarks>
-    public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
-                                                                 Func<TSource, TKey> keySelector) =>
-        source.DistinctBy(keySelector, null);
-
     public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
                                                                  Func<TSource, TKey> keySelector,
                                                                  IEqualityComparer<TKey>? comparer)

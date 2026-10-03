@@ -80,7 +80,7 @@ public class AzureStorageService : IAzureStorageService
         string downloadDir,
         string path)
     {
-        Log.LogInformation($"Preparing blob for container {containerName} and path {path}");
+        Log.LogInformation("Preparing blob for container {ContainerName} and path {Path}", containerName, path);
 
         var blob = await containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, path, CancellationToken.None)
             .OrderByDescending(x => x.Properties.LastModified)
@@ -177,7 +177,7 @@ public class AzureStorageService : IAzureStorageService
     {
         container ??= GetCloudBlobContainer(containerName.Guard(nameof(containerName)));
         var blobName = GetBlobName(path, fileName);
-        Log.LogInformation($"Preparing blob for container {containerName} and path {blobName}");
+        Log.LogInformation("Preparing blob for container {ContainerName} and path {BlobName}", containerName, blobName);
         var destBlob = container.GetBlockBlobReference(blobName);
         var state = GetBlobProgressState(blobName, StorageOperation.Upload);
         state.Reset(blobName, Convert.ToDouble(stream.Length), null);
@@ -343,7 +343,7 @@ public class AzureStorageService : IAzureStorageService
     {
         container ??= GetCloudBlobContainer(containerName.Guard(nameof(containerName)));
         var blobName = GetBlobName(path, file.Name);
-        Log.LogInformation($"Preparing blob for container {containerName} and path {blobName}");
+        Log.LogInformation("Preparing blob for container {ContainerName} and path {BlobName}", containerName, blobName);
         var destBlob = container.GetBlockBlobReference(blobName);
         var state = GetBlobProgressState(blobName, StorageOperation.Upload);
         state.Reset(blobName, Convert.ToDouble(file.Length), null);
@@ -461,7 +461,7 @@ public class AzureStorageService : IAzureStorageService
 
             if (!noDownload)
             {
-                Log.LogInformation($"Preparing download of blob {sourceBlob.Name} to: {localFile.FullName}");
+                Log.LogInformation("Preparing download of blob {BlobName} to: {LocalFile}", sourceBlob.Name, localFile.FullName);
                 state.Restart();
 
                 if (!localFile.Exists
@@ -473,7 +473,7 @@ public class AzureStorageService : IAzureStorageService
         }
         catch (Exception ex)
         {
-            Log.LogError(ex, ex.Message);
+            Log.LogError(ex, "{Message}", ex.Message);
         }
 
         return (localFile, sourceBlob, shouldBeDownloaded);
@@ -491,8 +491,10 @@ public class AzureStorageService : IAzureStorageService
         {
             var totalSize = Convert.ToDouble(sourceBlob.Properties.Length);
 
-            Log.LogInformation(
-                $"Downloading blob {sourceBlob.Name} to: {localFile.FullName} {ProgressState.GetProgress(totalSize)}");
+            Log.LogInformation("Downloading blob {BlobName} to: {LocalFile} {Progress}",
+                sourceBlob.Name,
+                localFile.FullName,
+                ProgressState.GetProgress(totalSize));
 
             state.Reset(sourceBlob.Name, totalSize, null);
 
@@ -515,11 +517,13 @@ public class AzureStorageService : IAzureStorageService
                 context);
         }
 
-        Log.LogInformation(
-            $"Finished download of blob {sourceBlob.Name} in {state.ElapsedTime} to: {localFile.FullName}");
+        Log.LogInformation("Finished download of blob {BlobName} in {Elapsed} to: {LocalFile}",
+            sourceBlob.Name,
+            state.ElapsedTime,
+            localFile.FullName);
     }
 
-    private void ReportProgress(string prgInfo) => Log.LogInformation(prgInfo);
+    private void ReportProgress(string prgInfo) => Log.LogInformation("{Progress}", prgInfo);
 
     private async Task<bool> CheckMD5Async(FileInfo localFile, CloudBlockBlob sourceBlob)
     {
@@ -541,7 +545,7 @@ public class AzureStorageService : IAzureStorageService
                 string? localMD5;
                 await _md5Semaphore.WaitAsync();
 
-                Log.LogInformation($"Checking MD5 of {localFile.FullName}");
+                Log.LogInformation("Checking MD5 of {LocalFile}", localFile.FullName);
 
                 try
                 {
@@ -553,7 +557,7 @@ public class AzureStorageService : IAzureStorageService
                     _md5Semaphore.Release();
                 }
 
-                Log.LogInformation($"Generated MD5 of {localFile.FullName} in {state.ElapsedTime}");
+                Log.LogInformation("Generated MD5 of {LocalFile} in {Elapsed}", localFile.FullName, state.ElapsedTime);
 
                 result = localMD5.Guard(nameof(localMD5)).IsEqual(remoteMD5);
 
@@ -562,7 +566,7 @@ public class AzureStorageService : IAzureStorageService
                     : $"but its checksum differs\n{remoteMD5}\texpected, got:\n{localMD5}";
             }
 
-            Log.LogInformation(log);
+            Log.LogInformation("{Message}", log);
         }
         else
         {
@@ -576,6 +580,6 @@ public class AzureStorageService : IAzureStorageService
     {
         var resultJson = resDictionary.ToJson(Formatting.Indented);
         File.WriteAllText("result.json", resultJson);
-        Log.LogInformation(resultJson);
+        Log.LogInformation("{Result}", resultJson);
     }
 }

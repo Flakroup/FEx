@@ -19,36 +19,47 @@ public class FExDebugLogger : IFExLogger
     private const string ErrorLevel = "Error";
     private const string CriticalLevel = "Critical";
 
+    /// <summary>Occurs when an error or critical message is logged.</summary>
     public event EventHandler<FExErrorEventArgs>? ErrorLogged;
 
     // Trace level
+    /// <inheritdoc />
     public void Trace(string message) => WriteFormattedMessage(TraceLevel, message);
 
+    /// <inheritdoc />
     public void Trace(Exception exception, string? message) => WriteFormattedMessage(TraceLevel, message, exception);
 
     // Debug level
+    /// <inheritdoc />
     public void Debug(string message) => WriteFormattedMessage(DebugLevel, message);
 
+    /// <inheritdoc />
     public void Debug(Exception exception, string? message) => WriteFormattedMessage(DebugLevel, message, exception);
 
     // Information level
+    /// <inheritdoc />
     public void Information(string message) => WriteFormattedMessage(InformationLevel, message);
 
+    /// <inheritdoc />
     public void Information(Exception exception, string? message) =>
         WriteFormattedMessage(InformationLevel, message, exception);
 
     // Warning level
+    /// <inheritdoc />
     public void Warning(string message) => WriteFormattedMessage(WarningLevel, message);
 
+    /// <inheritdoc />
     public void Warning(Exception exception, string? message) => WriteFormattedMessage(WarningLevel, message, exception);
 
     // Error level
+    /// <inheritdoc />
     public void Error(string message)
     {
         WriteFormattedMessage(ErrorLevel, message);
         ErrorLogged?.Invoke(this, new(message));
     }
 
+    /// <inheritdoc />
     public void Error(Exception exception, string? message)
     {
         WriteFormattedMessage(ErrorLevel, message, exception);
@@ -56,12 +67,14 @@ public class FExDebugLogger : IFExLogger
     }
 
     // Critical level
+    /// <inheritdoc />
     public void Critical(string message)
     {
         WriteFormattedMessage(CriticalLevel, message);
         ErrorLogged?.Invoke(this, new(message));
     }
 
+    /// <inheritdoc />
     public void Critical(Exception exception, string? message)
     {
         WriteFormattedMessage(CriticalLevel, message, exception);
@@ -69,20 +82,27 @@ public class FExDebugLogger : IFExLogger
     }
 
     // Structured logging: Scopes (no-op for debug logger)
+    /// <inheritdoc />
     public IDisposable BeginScope<TState>(TState state) => NullScope.Instance;
+    /// <inheritdoc />
     public IDisposable BeginLabeledScope(params (string, object)[] state) => NullScope.Instance;
+    /// <inheritdoc />
     public IDisposable BeginLabeledScope(IDictionary<string, object> argsCustom) => NullScope.Instance;
+    /// <inheritdoc />
     public IDisposable BeginLabeledScope(ILoggerState state) => NullScope.Instance;
 
+    /// <inheritdoc />
     public void EndScope()
     {
     }
 
     // Structured logging: Labels (no-op for debug logger)
+    /// <inheritdoc />
     public void AddOrUpdateLabel(string key, object value)
     {
     }
 
+    /// <inheritdoc />
     public void RemoveLabel(string key)
     {
     }

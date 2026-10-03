@@ -9,16 +9,30 @@ using System.Runtime.Versioning;
 
 namespace FEx.Agnostics.Abstractions;
 
+/// <summary>Helpers for running work on the thread pool and for delaying, polling and waiting asynchronously.</summary>
 public static class AsyncStatics
 {
+    /// <summary>Gets or sets the polling delay used when no valid delay is supplied.</summary>
     public static TimeSpan DefaultDelay { get; set; } = TimeSpan.FromMilliseconds(25); //todo move to conf class
 
+    /// <summary>Runs an action on the thread pool, starting it immediately.</summary>
+    /// <param name="action">The action to run.</param>
+    /// <returns>A task that completes when the action has run.</returns>
     public static Task ExecuteOnThreadPoolAsync(Action action) =>
         ExecuteOnThreadPoolAsync(action, AsyncOptions.ImmediateStart);
 
+    /// <summary>Runs an action on the thread pool.</summary>
+    /// <param name="action">The action to run.</param>
+    /// <param name="options">How the work is started.</param>
+    /// <returns>A task that completes when the action has run.</returns>
     public static Task ExecuteOnThreadPoolAsync(Action action, AsyncOptions options) =>
         ExecuteOnThreadPoolAsync(action, options, CancellationToken.None);
 
+    /// <summary>Runs an action on the thread pool; when not starting immediately and already on a pool thread, the action is invoked inline first.</summary>
+    /// <param name="action">The action to run.</param>
+    /// <param name="options">How the work is started.</param>
+    /// <param name="cancellationToken">Token used to cancel the work before it starts.</param>
+    /// <returns>A task that completes when the action has run.</returns>
     public static async Task ExecuteOnThreadPoolAsync(Action action,
                                                       AsyncOptions options,
                                                       CancellationToken cancellationToken)
@@ -36,12 +50,28 @@ public static class AsyncStatics
         await new TaskFactory(TaskScheduler.Default).StartNew(action, cancellationToken);
     }
 
+    /// <summary>Runs a function on the thread pool, starting it immediately.</summary>
+    /// <typeparam name="T">The function result type.</typeparam>
+    /// <param name="func">The function to run.</param>
+    /// <returns>A task that yields the function result.</returns>
     public static Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func) =>
         ExecuteOnThreadPoolAsync(func, AsyncOptions.ImmediateStart);
 
+    /// <summary>Runs a function on the thread pool.</summary>
+    /// <typeparam name="T">The function result type.</typeparam>
+    /// <param name="func">The function to run.</param>
+    /// <param name="options">How the work is started.</param>
+    /// <returns>A task that yields the function result.</returns>
     public static Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func, AsyncOptions options) =>
         ExecuteOnThreadPoolAsync(func, options, CancellationToken.None);
 
+    /// <summary>Runs a function on the thread pool.</summary>
+    /// <typeparam name="T">The function result type, which must not be a task type.</typeparam>
+    /// <param name="func">The function to run.</param>
+    /// <param name="options">How the work is started.</param>
+    /// <param name="cancellationToken">Token used to cancel the work before it starts.</param>
+    /// <returns>A task that yields the function result.</returns>
+    /// <exception cref="ArgumentException"><typeparamref name="T" /> is <see cref="System.Threading.Tasks.Task" /> or <see cref="System.Threading.Tasks.Task{TResult}" />.</exception>
     public static async Task<T> ExecuteOnThreadPoolAsync<T>(Func<T> func,
                                                             AsyncOptions options,
                                                             CancellationToken cancellationToken)
@@ -61,9 +91,16 @@ public static class AsyncStatics
         return await new TaskFactory(TaskScheduler.Default).StartNew(func, cancellationToken);
     }
 
+    /// <summary>Runs an asynchronous delegate on the thread pool, starting it immediately.</summary>
+    /// <param name="func">Factory of the task to run.</param>
+    /// <returns>A task that completes when the delegate's task has completed.</returns>
     public static Task ExecuteTaskOnThreadPoolAsync(Func<Task> func) =>
         ExecuteTaskOnThreadPoolAsync(func, AsyncOptions.ImmediateStart);
 
+    /// <summary>Runs an asynchronous delegate on the thread pool, running inline when already on a pool thread.</summary>
+    /// <param name="func">Factory of the task to run.</param>
+    /// <param name="options">How the work is started.</param>
+    /// <returns>A task that completes when the delegate's task has completed.</returns>
     public static async Task ExecuteTaskOnThreadPoolAsync(Func<Task> func, AsyncOptions options)
     {
         var effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
@@ -80,9 +117,18 @@ public static class AsyncStatics
         await await new TaskFactory(TaskScheduler.Default).StartNew(effectiveFunc);
     }
 
+    /// <summary>Runs an asynchronous delegate on the thread pool, starting it immediately.</summary>
+    /// <typeparam name="T">The task result type.</typeparam>
+    /// <param name="func">Factory of the task to run.</param>
+    /// <returns>A task that yields the delegate's result.</returns>
     public static Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> func) =>
         ExecuteTaskOnThreadPoolAsync(func, AsyncOptions.ImmediateStart);
 
+    /// <summary>Runs an asynchronous delegate on the thread pool, running inline when already on a pool thread.</summary>
+    /// <typeparam name="T">The task result type.</typeparam>
+    /// <param name="func">Factory of the task to run.</param>
+    /// <param name="options">How the work is started.</param>
+    /// <returns>A task that yields the delegate's result.</returns>
     public static async Task<T> ExecuteTaskOnThreadPoolAsync<T>(Func<Task<T>> func, AsyncOptions options)
     {
         var effectiveFunc = options.HasFlagFast(AsyncOptions.ImmediateStart)
@@ -94,6 +140,11 @@ public static class AsyncStatics
 
         return await await new TaskFactory(TaskScheduler.Default).StartNew(effectiveFunc);
     }
+
+    /// <summary>Creates a task that completes after a time delay and cannot be cancelled.</summary>
+    /// <param name="millisecondsDelay">The number of milliseconds to wait, or -1 to wait indefinitely.</param>
+    /// <returns>A task that represents the time delay.</returns>
+    public static Task DelayAsync(int millisecondsDelay) => DelayAsync(millisecondsDelay, CancellationToken.None);
 
     /// <summary>Creates a cancellable task that completes after a time delay.</summary>
     /// <param name="millisecondsDelay">
@@ -111,10 +162,13 @@ public static class AsyncStatics
     /// The provided
     /// <paramref name="cancellationToken">cancellationToken</paramref> has already been disposed.
     /// </exception>
-    public static Task DelayAsync(int millisecondsDelay) => DelayAsync(millisecondsDelay, CancellationToken.None);
-
     public static async Task DelayAsync(int millisecondsDelay, CancellationToken cancellationToken) =>
         await ExecuteTaskOnThreadPoolAsync(() => Task.Delay(millisecondsDelay, cancellationToken));
+
+    /// <summary>Creates a task that completes after a specified time interval and cannot be cancelled.</summary>
+    /// <param name="delay">The time span to wait, or <c>TimeSpan.FromMilliseconds(-1)</c> to wait indefinitely.</param>
+    /// <returns>A task that represents the time delay.</returns>
+    public static Task DelayAsync(TimeSpan delay) => DelayAsync(delay, CancellationToken.None);
 
     /// <summary>Creates a cancellable task that completes after a specified time interval.</summary>
     /// <param name="delay">
@@ -136,8 +190,6 @@ public static class AsyncStatics
     /// disposed.
     /// </exception>
     /// <returns>A task that represents the time delay.</returns>
-    public static Task DelayAsync(TimeSpan delay) => DelayAsync(delay, CancellationToken.None);
-
     public static async Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken) =>
         await ExecuteTaskOnThreadPoolAsync(() => SafeDelayAsync(delay, cancellationToken));
 
@@ -164,6 +216,12 @@ public static class AsyncStatics
             DelayUntilCoreAsync(predicate, action, GetDelayTimeSpan(milliseconds), cancellationToken));
     }
 
+    /// <summary>Polls an asynchronous predicate until it returns false, invoking an optional action after each interval.</summary>
+    /// <param name="predicate">The asynchronous condition; polling continues while it returns true.</param>
+    /// <param name="action">The action invoked after each polling interval.</param>
+    /// <param name="milliseconds">The polling interval in milliseconds; <see cref="DefaultDelay" /> when below 1.</param>
+    /// <param name="cancellationToken">Token used to cancel the wait.</param>
+    /// <returns>A task that completes when the condition is no longer met.</returns>
     public static async Task DelayUntilAsync(Func<Task<bool>> predicate,
                                              Action? action = null,
                                              double milliseconds = 0,
@@ -171,6 +229,12 @@ public static class AsyncStatics
         await ExecuteTaskOnThreadPoolAsync(() =>
             DelayUntilCoreAsync(predicate, action, GetDelayTimeSpan(milliseconds), cancellationToken));
 
+    /// <summary>Polls a predicate at a time-span interval until it returns false, invoking an optional action after each interval.</summary>
+    /// <param name="predicate">The condition; polling continues while it returns true.</param>
+    /// <param name="action">The action invoked after each polling interval.</param>
+    /// <param name="timeSpan">The polling interval; <see cref="DefaultDelay" /> when null or not positive.</param>
+    /// <param name="cancellationToken">Token used to cancel the wait.</param>
+    /// <returns>A task that completes when the condition is no longer met.</returns>
     public static async Task DelayWithTimespanUntilAsync(Func<bool> predicate,
                                                          Action? action = null,
                                                          TimeSpan? timeSpan = null,
@@ -184,6 +248,12 @@ public static class AsyncStatics
             DelayUntilCoreAsync(predicate, action, GetDelayTimeSpan(timeSpan), cancellationToken));
     }
 
+    /// <summary>Polls an asynchronous predicate at a time-span interval until it returns false, invoking an optional action after each interval.</summary>
+    /// <param name="predicate">The asynchronous condition; polling continues while it returns true.</param>
+    /// <param name="action">The action invoked after each polling interval.</param>
+    /// <param name="timeSpan">The polling interval; <see cref="DefaultDelay" /> when null or not positive.</param>
+    /// <param name="cancellationToken">Token used to cancel the wait.</param>
+    /// <returns>A task that completes when the condition is no longer met.</returns>
     public static async Task DelayWithTimespanUntilAsync(Func<Task<bool>> predicate,
                                                          Action? action = null,
                                                          TimeSpan? timeSpan = null,
@@ -216,6 +286,11 @@ public static class AsyncStatics
         action?.Invoke();
     }
 
+    /// <summary>Waits for a time span and then invokes an action.</summary>
+    /// <param name="delayTimeSpan">The delay; <see cref="DefaultDelay" /> when null or not positive.</param>
+    /// <param name="action">The action to invoke after the delay.</param>
+    /// <param name="cancellationToken">Token used to cancel the delay.</param>
+    /// <returns>A task that completes after the action has been invoked.</returns>
     public static async Task WaitAndInvokeActionAsync(TimeSpan? delayTimeSpan = null,
                                                       Action? action = null,
                                                       CancellationToken cancellationToken = default)
@@ -226,6 +301,10 @@ public static class AsyncStatics
         action?.Invoke();
     }
 
+    /// <summary>Runs an action on a new thread and blocks until the thread ends.</summary>
+    /// <param name="action">The action to run.</param>
+    /// <param name="state">The apartment state to set before starting; the default when null.</param>
+    /// <param name="isBackground">Whether the thread is a background thread; unchanged when null.</param>
 #if NET5_0_OR_GREATER
     [SupportedOSPlatform("windows")]
 #endif

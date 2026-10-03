@@ -8,12 +8,14 @@ namespace FEx.Building;
 
 public interface INuGetPublishTarget : IPackTarget
 {
+    // A private feed URL can embed its credential (https://user:TOKEN@host/...). SecretRedactor strips URL
+    // user-info and credential query values from every log line, however this value was supplied.
     [Parameter("NuGet source URL for pushing packages (default: nuget.org)")]
     string NuGetSource => TryGetValue(() => NuGetSource) ?? "https://api.nuget.org/v3/index.json";
 
     [Parameter("NuGet API key for pushing packages")]
-    // FExBuild.MaskSecrets keeps this out of the build log - both the parameter listing and the command
-    // line echo, matched by value so the option's spelling does not matter.
+    // SecretRedactor keeps this out of the build log - by option name, so every occurrence on the command line
+    // is redacted including repeated ones, and by value, so an environment variable or parameters file is too.
     [Secret]
     string? NuGetApiKey => TryGetValue(() => NuGetApiKey);
 

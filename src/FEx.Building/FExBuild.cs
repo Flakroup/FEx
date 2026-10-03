@@ -91,7 +91,9 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     protected virtual void LogBuildInfo()
     {
         Log.Information("═══════════════════════════════════════════════════════════════");
-        Log.Information("Command Line: {CommandLine}", MaskSecrets(Environment.CommandLine));
+        // Redacted here as well as by the log pipeline: an override of LogBuildInfo, or a build that never ran
+        // OnBuildInitialized, still must not echo a secret.
+        Log.Information("Command Line: {CommandLine}", Redactor.Redact(Environment.CommandLine));
         Log.Information("═══════════════════════════════════════════════════════════════");
         Log.Information("Build Parameters:");
 
@@ -110,7 +112,7 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
         var pad = entries.Max(static e => e.Name.Length) + 1;
 
         foreach (var (name, value) in entries)
-            Log.Information("  {Name} {Value}", $"{name}:".PadRight(pad), FormatParameterValue(name, value));
+            Log.Information("  {Name} {Value}", $"{name}:".PadRight(pad), Redactor.Redact(FormatParameterValue(name, value)));
 
         Log.Information("═══════════════════════════════════════════════════════════════");
         Log.Information("Build Plan");
@@ -125,17 +127,30 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
         }
     }
 
-    /// <summary>What a secret's value is replaced by everywhere this build logs.</summary>
-    public const string SecretMask = "***";
+    /// <summary>
+    /// The redactor every line this build logs goes through: the option names and resolved values of every
+    /// <see cref="SecretAttribute" />-marked parameter, plus URL credentials. Built on first use - collecting the
+    /// values runs the secret getters, and only those.
+    /// </summary>
+    protected SecretRedactor Redactor => _redactor ??= new(SecretParameterNames(), GetSecretValues());
+
+    private SecretRedactor? _redactor;
 
     /// <summary>
-    /// Replaces every <see cref="SecretAttribute" />-marked parameter's value wherever it appears in
-    /// <paramref name="text" />. Matched by VALUE rather than by option name, so it holds however the
-    /// secret reached the process - <c>--nuget-api-key x</c>, <c>--nuget-api-key=x</c>, an environment
-    /// variable or a parameters file - and does not depend on reproducing NUKE's option-name casing.
+    /// Routes the global Serilog pipeline through <see cref="Redactor" />, so NUKE's own output, the tool
+    /// invocations it echoes and every line a target logs are redacted in one place rather than per call.
+    /// Called from <see cref="OnBuildInitialized" /> before anything is listed; idempotent.
     /// </summary>
-    protected string MaskSecrets(string text) =>
-        GetSecretValues().Aggregate(text, static (masked, secret) => masked.Replace(secret, SecretMask));
+    protected void InstallLogRedaction()
+    {
+        if (_logRedactionInstalled)
+            return;
+
+        Log.Logger = RedactingLogSink.Wrap(Log.Logger, Redactor);
+        _logRedactionInstalled = true;
+    }
+
+    private bool _logRedactionInstalled;
 
     /// <summary>
     /// The NAMES of every secret parameter. Keyed on the name rather than on a single <see cref="PropertyInfo" />
@@ -151,7 +166,7 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
             StringComparer.OrdinalIgnoreCase);
 
     // Reads ONLY the properties marked [Secret], so that collecting them cannot run the other parameters'
-    // getters a second time.
+    // getters a second time. A getter that throws contributes no value; its option is still redacted by name.
     private IEnumerable<string> GetSecretValues()
     {
         foreach (var prop in GetParameterProperties())
@@ -167,8 +182,6 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
             }
             catch (Exception)
             {
-                // Nothing to add to the mask: this getter refused to hand over a value. The listing prints
-                // SecretMask for it either way, since the mask decision there is keyed on the name.
                 continue;
             }
 
@@ -196,6 +209,7 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     protected override void OnBuildInitialized()
     {
         base.OnBuildInitialized();
+        InstallLogRedaction();
         LogBuildInfo();
     }
 
@@ -230,7 +244,7 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     }
 
     /// <summary>
-    /// Every [Parameter] with its value, secrets already replaced by <see cref="SecretMask" />, skipping
+    /// Every [Parameter] with its value, secrets already replaced by <see cref="SecretRedactor.Mask" />, skipping
     /// any name already in <paramref name="seen" />. Protected rather than private so a derived build can
     /// reuse the listing - and so the masking is reachable from a test without reproducing it.
     /// </summary>
@@ -261,7 +275,7 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
             // "(not set)" still distinguishes an unconfigured secret, which is why publish steps skip.
             if (value is not null
                 && secretNames.Contains(name))
-                value = SecretMask;
+                value = SecretRedactor.Mask;
 
             yield return (name, value);
         }

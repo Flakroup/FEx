@@ -1,6 +1,7 @@
 using Nuke.Common.IO;
 using Shouldly;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace FEx.Building.Tests;
@@ -42,7 +43,7 @@ public sealed class BuildSettingsTests
     {
         // The disable used to hang off `noRestore`, so both branches have to be pinned: with an implicit
         // restore, that branch set the property; without one, the restore step set it instead.
-        var settings = ((ICompileTarget)Build).GetBuildSettings(new(), Solution, noRestore);
+        var settings = ((ICompileTarget)Build).GetBuildSettings(new(), Solution, noRestore: noRestore);
 
         ShouldLeaveTheAuditAlone(settings.Properties);
     }
@@ -53,7 +54,40 @@ public sealed class BuildSettingsTests
         var settings = ((ICompileTarget)Build).GetBuildSettings(new(), Solution);
 
         settings.NoRestore.ShouldBe(true);
-        settings.ProcessAdditionalArguments.ShouldBe(["-m", "-bl"]);
+        settings.ProcessAdditionalArguments.ShouldNotBeNull().ShouldContain("-m");
+        settings.ProcessAdditionalArguments.ShouldContain(static a => a.StartsWith("-bl:") && a.EndsWith("FEx.slnx.binlog"));
+    }
+
+    /// <summary>
+    /// A RID publish builds the solution and then every publish project again. With a bare <c>-bl</c> every
+    /// one of those invocations wrote the same <c>msbuild.binlog</c>, so a green two-project publish kept only
+    /// the last project's log (#56). Drives the real scope and the real settings, so it fails on either.
+    /// </summary>
+    [Fact]
+    public void ARuntimePublishOfTwoProjects_WritesADistinctBinaryLogPerInvocation()
+    {
+        AbsolutePath app = "/repo/src/Sample.App/Sample.App.csproj";
+        AbsolutePath worker = "/repo/src/Sample.Worker/Sample.Worker.csproj";
+
+        var binlogs = ICompileTarget.Scope(Solution,
+                runtimeSpecific: true,
+                [new(app, (AbsolutePath)"/repo/artifacts/publish/a"), new(worker, (AbsolutePath)"/repo/artifacts/publish/w")])
+            .Select(step => ((ICompileTarget)Build).GetBuildSettings(new(), step.Project, step.WithRuntime ? "linux-x64" : null))
+            .Select(static s => s.ProcessAdditionalArguments!.Single(static a => a.StartsWith("-bl")))
+            .ToList();
+
+        binlogs.Count.ShouldBe(3);
+        binlogs.Distinct().Count().ShouldBe(3, string.Join(", ", binlogs));
+        binlogs.ShouldContain(static a => a.EndsWith("Sample.App.csproj.linux-x64.binlog"));
+        binlogs.ShouldContain(static a => a.EndsWith("Sample.Worker.csproj.linux-x64.binlog"));
+    }
+
+    [Fact]
+    public void BuildSettings_CarryTheRuntimeTheyAreGiven()
+    {
+        // The runtime moved into GetBuildSettings together with the binary log name that depends on it.
+        ((ICompileTarget)Build).GetBuildSettings(new(), Solution, "linux-arm64").Runtime.ShouldBe("linux-arm64");
+        ((ICompileTarget)Build).GetBuildSettings(new(), Solution).Runtime.ShouldBeNull();
     }
 
     // Properties is null - not an empty dictionary - until something sets one, so the check has to survive

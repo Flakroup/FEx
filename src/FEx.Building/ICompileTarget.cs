@@ -3,6 +3,7 @@ using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -136,19 +137,43 @@ public interface ICompileTarget : INukeBuild
     virtual IReadOnlyCollection<Output> OnCompile() =>
     [
         .. Scope().SelectMany(step => DotNetBuild(s =>
-            GetBuildSettings(s, step.Project).WithRuntime(step.WithRuntime ? PublishRuntime : null)))
+            GetBuildSettings(s, step.Project, step.WithRuntime ? PublishRuntime : null)))
     ];
 
     /// <summary>Whether this run needs the extra RID-specific pass over the publish projects.</summary>
     protected bool RuntimeSpecificPublishPass => PublishRuntime is not null && IsPublishScheduled;
 
+    /// <summary>
+    /// Settings for one <c>dotnet build</c> of <paramref name="project" /> (a solution or a project file), for
+    /// <paramref name="runtime" /> when given. Each invocation writes its own binary log - see
+    /// <see cref="BinaryLogPath" />.
+    /// </summary>
     virtual DotNetBuildSettings GetBuildSettings(DotNetBuildSettings settings,
-                                                 AbsolutePath solution,
+                                                 AbsolutePath project,
+                                                 string? runtime = null,
                                                  bool noRestore = true,
                                                  DotNetVerbosity? verbosity = null) =>
         settings.SetConfiguration(Configuration)
             .SetNoRestore(noRestore)
-            .SetProjectFile(solution)
-            .SetProcessAdditionalArguments("-m", "-bl")
+            .SetProjectFile(project)
+            .WithRuntime(runtime)
+            .SetProcessAdditionalArguments("-m", $"-bl:{BinaryLogPath(BinaryLogDirectory, project, runtime).ToString().DoubleQuoteIfNeeded()}")
             .When(_ => verbosity is not null, s => s.SetVerbosity(verbosity));
+
+    /// <summary>Where Compile's binary logs go, one file per <c>dotnet build</c> invocation.</summary>
+    sealed AbsolutePath BinaryLogDirectory => NukeBuild.RootDirectory / "artifacts" / "logs";
+
+    /// <summary>
+    /// The binary log of one build invocation, named after the project FILE and the runtime it was built for.
+    /// </summary>
+    /// <remarks>
+    /// A bare <c>-bl</c> writes <c>msbuild.binlog</c> into the working directory, so a RID publish - which
+    /// builds the solution and then every publish project again - kept only the LAST project's log (#56).
+    /// The file name, extension included, keeps the solution and a same-named project apart; publish
+    /// project names are unique, since <see cref="ResolvePublishProject" /> refuses an ambiguous one.
+    /// </remarks>
+    public static AbsolutePath BinaryLogPath(AbsolutePath directory, AbsolutePath project, string? runtime) =>
+        directory / (string.IsNullOrEmpty(runtime)
+            ? $"{project.Name}.binlog"
+            : $"{project.Name}.{runtime}.binlog");
 }

@@ -182,6 +182,26 @@ public class StartupHostTests
         _app.Events.ShouldNotContain("CreateMainWindow");
     }
 
+    [Fact]
+    public async Task Main_window_is_assigned_by_the_flow_because_showing_a_window_does_not_assign_it()
+    {
+        await Host.RunAsync();
+
+        _app.MainWindow.ShouldBe(_app.MainWindowInstance);
+    }
+
+    [Fact]
+    public async Task A_handler_that_throws_neither_escapes_nor_hides_the_failure_from_the_other_handler()
+    {
+        _app.InitGate = Task.FromException(new InvalidOperationException("boom"));
+        _app.ThrowInHandlers = true;
+
+        await Host.RunAsync();
+
+        _app.Handlers.ShouldBe(["Early:boom", "Handle:boom"]);
+        _app.ExitCodes.ShouldBe([1]);
+    }
+
     private enum FakeMode
     {
         OnLastWindowClose,
@@ -194,7 +214,7 @@ public class StartupHostTests
         public override string ToString() => name;
     }
 
-    // Behaves like WPF: the first window shown takes the main window slot.
+    // Windows are not main windows until the app assigns them, except that the first one created takes the slot (WPF).
     private sealed class FakeApp : IDesktopApp<FakeWindow, FakeMode>
     {
         private bool _mainThreadSet;
@@ -212,6 +232,7 @@ public class StartupHostTests
         public Task InitGate { get; set; } = Task.CompletedTask;
         public string? FailAt { get; set; }
         public string LastMessage { get; private set; } = "";
+        public bool ThrowInHandlers { get; set; }
 
         public Uri? StartupUri { get; set; }
         public FakeMode ShutdownMode { get; set; } = FakeMode.OnLastWindowClose;
@@ -226,6 +247,8 @@ public class StartupHostTests
             if (StartupWindowNeedsMainThread && !_mainThreadSet)
                 throw new ArgumentNullException("mainThread");
 
+            // Like WPF: the first window created becomes the main window; Show does not assign it (nor does Avalonia's).
+            MainWindow ??= StartupWindowInstance;
             return StartupWindowInstance;
         }
 
@@ -238,7 +261,6 @@ public class StartupHostTests
         public void Show(FakeWindow window)
         {
             Shown.Add(window);
-            MainWindow ??= window;
         }
 
         public void Close(FakeWindow window) => Closed.Add(window);
@@ -280,12 +302,18 @@ public class StartupHostTests
         {
             LastMessage = exception.Message;
             Handlers.Add("Early:" + exception.Message);
+
+            if (ThrowInHandlers)
+                throw new InvalidOperationException("handler failed");
         }
 
         public void HandleException(Exception exception)
         {
             LastMessage = exception.Message;
             Handlers.Add("Handle:" + exception.Message);
+
+            if (ThrowInHandlers)
+                throw new InvalidOperationException("handler failed");
         }
 
         public void RequestExit(int exitCode) => ExitCodes.Add(exitCode);

@@ -17,7 +17,8 @@ namespace FEx.Common.Startup;
 /// </para>
 /// <para>
 /// An exception first goes to <see cref="HandleEarlyException" /> if it happened before the services were published,
-/// then always to <see cref="HandleException" />, and finally <see cref="RequestExit" /> is called with
+/// then always to <see cref="HandleException" /> (which therefore must not rely on services before
+/// <see cref="PublishServices" />); an exception thrown by a handler is traced and never escapes. Finally <see cref="RequestExit" /> is called with
 /// <see cref="FailureExitCode" />.
 /// </para>
 /// </summary>
@@ -68,15 +69,29 @@ public abstract class StartupHost
         {
             failed = true;
 
+            // A handler is app code and may touch services that are not ready yet; whatever it throws must not hide the
+            // original failure, skip the other handler or escape this method (it usually runs inside an async void).
             if (!servicesReady)
-                HandleEarlyException(ex);
+                Guard(HandleEarlyException, ex);
 
-            HandleException(ex);
+            Guard(HandleException, ex);
         }
         finally
         {
             if (failed)
                 RequestExit(FailureExitCode);
+        }
+    }
+
+    private static void Guard(Action<Exception> handler, Exception exception)
+    {
+        try
+        {
+            handler(exception);
+        }
+        catch (Exception handlerException)
+        {
+            System.Diagnostics.Trace.TraceError(handlerException.ToString());
         }
     }
 

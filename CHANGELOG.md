@@ -79,6 +79,7 @@ All notable changes to FEx are documented in this file. The format follows [Keep
 ### Removed
 
 - **Build**: the repo-wide `NU1701` suppression in `Directory.Build.props`, and the `CA2254` and `CS1591` suppressions in the shared `DevConfigs` build config ([Flakroup/DevConfigs#12](https://github.com/Flakroup/DevConfigs/pull/12)); the `DevConfigs` submodule points at the change ([#195](https://github.com/Flakroup/FEx/pull/195), closes [#122](https://github.com/Flakroup/FEx/issues/122), closes [#123](https://github.com/Flakroup/FEx/issues/123), part of [#126](https://github.com/Flakroup/FEx/issues/126)).
+- **Samples**: `FEx.Sample.WPF` now derives from `AppBootstrapper` (no App.xaml/`StartupUri`; startup window plus `CreateMainWindow()`), and both samples register `FExMicrosoftDIServiceProvider` and a module that awaits about a second, so a launch exercises the async startup path. Migrate: nothing for library consumers; use the samples as the reference for the new contract ([#192](https://github.com/Flakroup/FEx/pull/192)).
 
 ### Fixed
 

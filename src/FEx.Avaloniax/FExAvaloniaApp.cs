@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data;
 using FEx.Common.Startup;
 using FEx.Avaloniax.Abstractions.Interfaces;
+using FEx.Core.Abstractions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.DependencyInjection.Abstractions;
 using System;
@@ -109,9 +110,7 @@ public abstract class FExAvaloniaApp<TContainer> : Application
         public async Task InitializeContainerAsync() =>
             app._container = await FExServiceProvider.InitializeAsync<TContainer>();
 
-        public void SetMainThread()
-        {
-        }
+        public void SetMainThread() => FExCoreStatics.MainThreadContextProvider.SetMainThread();
 
         public void PublishServices()
         {

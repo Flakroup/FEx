@@ -46,6 +46,27 @@ public class EFCoreDatabaseBackedServiceTests
         ex.ToString().ShouldContain("boom");
     }
 
+    /// <summary>
+    /// A failure is kept and rethrown by InitializeAsync; EnsureIsInitializedAsync must start over, so a service whose
+    /// first initialization failed transiently recovers on the next call.
+    /// </summary>
+    [Fact]
+    public async Task EnsureIsInitializedAsync_AfterATransientFailure_RecoversOnTheNextCall()
+    {
+        var dbHelper = Substitute.For<ISqlDbHelper>();
+        dbHelper.InitializeAsync()
+            .Returns(Task.FromException(new InvalidOperationException("boom")), Task.CompletedTask);
+        dbHelper.SQLInstance.Returns("instance");
+        using var sut = CreateService(dbHelper);
+
+        (await Should.ThrowAsync<Exception>(sut.Ensure)).ToString().ShouldContain("boom");
+
+        await sut.Ensure();
+
+        sut.IsInitialized.ShouldBeTrue();
+        sut.HookRuns.ShouldBe(1);
+    }
+
     private static async Task WaitUntilFinishedAsync(TestService sut)
     {
         var deadline = DateTime.UtcNow.AddSeconds(30);
@@ -61,6 +82,11 @@ public class EFCoreDatabaseBackedServiceTests
         var dbHelper = Substitute.For<ISqlDbHelper>();
         dbHelper.InitializeAsync().Returns(Task.FromException(new InvalidOperationException("boom")));
 
+        return CreateService(dbHelper);
+    }
+
+    private static TestService CreateService(ISqlDbHelper dbHelper)
+    {
         var config = Substitute.For<IDbServiceConfig>();
         config.DbConfig.Returns(Substitute.For<IFExDbConfig>());
 
@@ -80,6 +106,16 @@ public class EFCoreDatabaseBackedServiceTests
         {
         }
 
+        public int HookRuns { get; private set; }
+
         public Task Ensure() => EnsureIsInitializedAsync();
+
+        // Skips the SQL server probe and migrations of PooledDbService; only the pre-dependency step is under test.
+        protected override Task OnInitializeAsync()
+        {
+            HookRuns++;
+
+            return Task.CompletedTask;
+        }
     }
 }

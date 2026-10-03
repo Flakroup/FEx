@@ -172,6 +172,53 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     }
 
     [Fact]
+    public async Task EditLandingBetweenRejectionAndWriteBack_IsNotOverwritten_AndIsRejectedToo()
+    {
+        using var sut = CreateDictionary(true);
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await UpdateByOtherWriterAsync(1);
+
+        // Lands after the save attempt was sent and before the write-back runs.
+        sut.OnConflict = () => doc.Name = "second";
+        doc.Name = "from A";
+        (await sut.SaveAsync(new Change<CachedDoc, int>(ChangeReason.Refresh, 1, doc))).ShouldBeFalse();
+
+        doc.Name.ShouldBe("second");
+        doc.Version.ShouldBe(1);
+
+        // The edit keeps the stale token, so its own save is rejected and logged instead of reverting the row.
+        sut.OnConflict = null;
+        (await sut.SaveAsync(new Change<CachedDoc, int>(ChangeReason.Refresh, 1, doc))).ShouldBeFalse();
+        (await NamesInDbAsync()).ShouldBe(["from B"]);
+    }
+
+    [Fact]
+    public async Task SubscriberThrowingDuringWriteBack_DoesNotStopTheBatch_AndKeepsTheStaleToken()
+    {
+        using var sut = CreateDictionary(true);
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await UpdateByOtherWriterAsync(1);
+
+        // Zone is copied after Name but sorts after the Version token, so a token copied in metadata order would
+        // already be current when this throws.
+        doc.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(CachedDoc.Zone))
+                throw new InvalidOperationException("Call from invalid thread");
+        };
+
+        doc.Name = "from A";
+        var saved = await sut.SaveAsync(new(ChangeReason.Refresh, 1, doc), NewDoc(2));
+
+        saved.ShouldBeFalse();
+        (await NamesInDbAsync()).ShouldBe(["from B", "unrelated"]);
+        // The token is copied last, so the failed refresh leaves it stale and the next save is rejected.
+        doc.Version.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task RejectedChange_OfAKeyNoLongerCached_IsNotReAddedToTheCache()
     {
         using var sut = CreateDictionary(true);
@@ -320,6 +367,7 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
 
         private string _name = "";
         private int _version;
+        private string _zone = "";
 
         public string Name
         {
@@ -339,6 +387,16 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
             {
                 _version = value;
                 PropertyChanged?.Invoke(this, new(nameof(Version)));
+            }
+        }
+
+        public string Zone
+        {
+            get => _zone;
+            set
+            {
+                _zone = value;
+                PropertyChanged?.Invoke(this, new(nameof(Zone)));
             }
         }
 
@@ -387,6 +445,8 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
 
         public ConcurrentQueue<int[]> SavedKeys { get; } = new();
 
+        public Action? OnConflict { get; set; }
+
         public CacheDictionary(IEFCoreDatabaseBackedService<CacheDbContext> dbService, bool useIndex)
             : base(dbService, nameof(CachedDoc.Id)) =>
             UseIndex = useIndex;
@@ -407,7 +467,17 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         {
             SaveAttempts++;
             SavedKeys.Enqueue([.. changes.Select(c => c.Key).OrderBy(k => k)]);
-            await base.OnChangesDetectedAsync(changes);
+
+            try
+            {
+                await base.OnChangesDetectedAsync(changes);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                OnConflict?.Invoke();
+
+                throw;
+            }
         }
 
         protected override Expression<Func<CachedDoc, int>> RetriveKey() => d => d.Id;

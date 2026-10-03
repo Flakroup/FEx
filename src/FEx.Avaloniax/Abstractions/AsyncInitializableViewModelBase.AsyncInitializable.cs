@@ -43,26 +43,48 @@ public abstract partial class AsyncInitializableViewModelBase
         if (HasFinishedInitialization)
             return;
 
+        Task initializationTask;
         await _taskSemaphore.WaitAsync();
 
         try
         {
-            _initializationTask ??= AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeCoreAsync);
+            initializationTask = _initializationTask ??= AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeCoreAsync);
         }
         finally
         {
             _taskSemaphore.SafeRelease();
         }
 
-        await _initializationTask;
+        // The local copy: a concurrent reset may clear the field once the lock is released.
+        await initializationTask;
     }
 
-    public Task ResetAsync()
+    /// <summary>
+    /// Waits for an in-flight initialization to finish, then clears the initialization state, so a reset is never
+    /// observed mid-initialization. Must not be awaited from inside an initialization hook.
+    /// </summary>
+    public async Task ResetAsync()
     {
-        _initializationTask = null;
-        IsInitialized = false;
+        await _initializationSemaphore.WaitAsync();
 
-        return Task.CompletedTask;
+        try
+        {
+            await _taskSemaphore.WaitAsync();
+
+            try
+            {
+                _initializationTask = null;
+                IsInitialized = false;
+            }
+            finally
+            {
+                _taskSemaphore.SafeRelease();
+            }
+        }
+        finally
+        {
+            _initializationSemaphore.SafeRelease();
+        }
     }
 
     public void BeginInitialization(bool waitSynchronouslyForInitialization)

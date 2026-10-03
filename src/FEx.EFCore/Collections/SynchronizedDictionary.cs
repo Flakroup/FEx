@@ -246,6 +246,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         await CheckWhichAlreadyExistsAsync(dbContext, changes);
 
         var set = DbSetAccessor(dbContext);
+        var entityType = dbContext.Model.FindEntityType(typeof(TValue));
 
         foreach (var entityInfo in changes)
         {
@@ -255,6 +256,9 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             }
             else if (entityInfo.Reason is ChangeReason.Refresh or ChangeReason.Update or ChangeReason.Add)
             {
+                if (entityType is not null)
+                    entityInfo.Snapshot ??= EntityRefresh.Snapshot(entityType, entityInfo.Value);
+
                 if (entityInfo.ExistsInDb)
                     set.Update(entityInfo.Value);
                 else
@@ -495,24 +499,42 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     }
 
     /// <summary>
-    /// Copies the rows that won in the database, concurrency token included, into the cached instances of rejected
-    /// changes, so the next edit of those keys is saved instead of conflicting again. The cached instance is updated in
-    /// place: references callers hold, its property-change subscription and its unmapped state are kept. A key that is
-    /// no longer cached is left alone.
+    /// Refreshes the cached instances of rejected changes in place from the rows that won in the database, through
+    /// <see cref="IncludeInEntity" />, so the next edit of those keys is saved instead of conflicting again. References
+    /// callers hold, the property-change subscription and unmapped state are kept.
+    /// <para>
+    /// The concurrency token is refreshed only together with the whole graph. The instance is left untouched, keeping
+    /// its stale token so the next save is rejected and logged again, when the key is no longer cached under it, when
+    /// it was edited since it was sent to the database, or when <see cref="EntityRefresh" /> cannot bring every member
+    /// to the reloaded state (for example a navigation the reload did not include).
+    /// </para>
+    /// <para>
+    /// Like the rest of the save pipeline this runs on a thread-pool thread, so the instance raises PropertyChanged
+    /// there. An exception from a setter or a subscriber is logged and does not stop the rest of the batch.
+    /// </para>
     /// </summary>
     private async Task WriteBackWinningValuesAsync(List<ChangeInfo<TKey, TValue>> rejected)
     {
-        var keys = new HashSet<TKey>(rejected.Select(c => c.Key));
+        var candidates = rejected.Where(c => c.Snapshot is not null
+                                             && Cache.Lookup(c.Key) is { HasValue: true } cached
+                                             && ReferenceEquals(cached.Value, c.Value))
+            .ToDictionary(c => c.Key);
+
+        if (candidates.Count == 0)
+            return;
+
+        var keys = new HashSet<TKey>(candidates.Keys);
         List<TValue> winners;
-        IProperty[] properties;
+        IEntityType? entityType;
 
         try
         {
-            (winners, properties) = await _dbSrv.RunTaskInDbContextAsync(async ctx =>
+            (winners, entityType) = await _dbSrv.RunTaskInDbContextAsync(async ctx =>
                 {
-                    var rows = await DbSetAccessor(ctx).AsNoTracking().Where(KeyIsIn(keys)).ToListAsync();
+                    var rows = await IncludeInEntity(DbSetAccessor(ctx).AsNoTracking().Where(KeyIsIn(keys)))
+                        .ToListAsync();
 
-                    return (rows, GetWritableScalarProperties(ctx));
+                    return (rows, ctx.Model.FindEntityType(typeof(TValue)));
                 },
                 null,
                 false,
@@ -526,46 +548,47 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             return;
         }
 
+        if (entityType is null)
+            return;
+
         foreach (var winner in winners)
         {
-            var cached = Cache.Lookup(KeyRetriver(winner));
+            var change = candidates[KeyRetriver(winner)];
+            var cached = change.Value;
 
-            if (!cached.HasValue)
+            if (!EntityRefresh.Matches(entityType, cached, change.Snapshot!))
+            {
+                _logger.Warning(
+                    $"{TypeName}: the cached value for key {change.Key} was edited after its rejected save, it keeps the stale values so that edit is rejected too");
+
                 continue;
+            }
 
-            t_writeBackTarget = cached.Value;
+            var plan = EntityRefresh.TryPlan(entityType, winner, cached);
+
+            if (plan is null)
+            {
+                _logger.Warning(
+                    $"{TypeName}: the cached value for key {change.Key} cannot be fully refreshed from the database, it keeps the stale values");
+
+                continue;
+            }
+
+            t_writeBackTarget = cached;
 
             try
             {
-                foreach (var property in properties)
-                    CopyValue(property, winner, cached.Value);
+                plan.Apply();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"{TypeName}: refreshing the cached value for key {change.Key} failed");
             }
             finally
             {
                 t_writeBackTarget = null;
             }
         }
-    }
-
-    private static IProperty[] GetWritableScalarProperties(TDbCtx ctx)
-    {
-        var entityType = ctx.Model.FindEntityType(typeof(TValue)).Guard(nameof(TValue));
-        var key = entityType.FindPrimaryKey();
-
-        return
-        [
-            .. entityType.GetProperties()
-                .Where(p => !p.IsShadowProperty() && key?.Properties.Contains(p) != true)
-        ];
-    }
-
-    // Through the property setter where there is one, so the cached instance raises PropertyChanged for bindings.
-    private static void CopyValue(IProperty property, TValue from, TValue to)
-    {
-        if (property.PropertyInfo is { GetMethod: not null, SetMethod: not null } propertyInfo)
-            propertyInfo.SetValue(to, propertyInfo.GetValue(from));
-        else if (property.FieldInfo is { } fieldInfo)
-            fieldInfo.SetValue(to, fieldInfo.GetValue(from));
     }
 
     private static IChangeSet<TValue, TKey> WithoutWriteBacks(IChangeSet<TValue, TKey> changeSet)

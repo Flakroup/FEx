@@ -3,6 +3,7 @@ using FEx.Core.Abstractions.Interfaces;
 using Shouldly;
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -50,12 +51,17 @@ public sealed class AsyncInitializableTests
         order.ToArray()[5].ShouldBe("sut");
     }
 
+    /// <summary>
+    /// The initializing caller resumes only through a queue the test drains, so the reset clears the state before
+    /// the caller sees it: the reset waits for the in-flight run, and InitializeAsync still completes initialized.
+    /// </summary>
     [Fact]
-    public async Task ResetAsync_DuringInitialization_WaitsForIt_AndLeavesAConsistentState()
+    public async Task ResetAsync_DuringInitialization_WaitsForIt_AndInitializeAsyncStillCompletesInitialized()
     {
         using var sut = new GatedInitializable();
+        using var callerContext = new QueueSynchronizationContext();
 
-        var initialization = sut.InitializeAsync();
+        var initialization = callerContext.Start(sut.InitializeAsync);
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
         await sut.HookEntered.Task;
 #pragma warning restore VSTHRD003
@@ -65,11 +71,17 @@ public sealed class AsyncInitializableTests
         reset.IsCompleted.ShouldBeFalse();
 
         sut.HookGate.SetResult(true);
-        await initialization;
         await reset;
-
         sut.IsInitialized.ShouldBeFalse();
         sut.CurrentInitializationTask.ShouldBeNull();
+
+        // The caller now finds its run reset and initializes again.
+        callerContext.RunUntilCompleted(initialization);
+        await initialization;
+
+        sut.IsInitialized.ShouldBeTrue();
+        (sut.CurrentInitializationTask is not null).ShouldBeTrue();
+        sut.HookRuns.ShouldBe(2);
     }
 
     [Fact]
@@ -139,6 +151,53 @@ public sealed class AsyncInitializableTests
 
         sut.IsInitialized.ShouldBeTrue();
         sut.HookRuns.ShouldBe(2);
+    }
+
+    /// <summary>Queues continuations until <see cref="RunUntilCompleted" /> drains them on the calling thread.</summary>
+    private sealed class QueueSynchronizationContext : SynchronizationContext, IDisposable
+    {
+        private readonly BlockingCollection<(SendOrPostCallback Callback, object? State)> _queue = new();
+
+        public override void Post(SendOrPostCallback d, object? state) => _queue.Add((d, state));
+
+        public Task Start(Func<Task> action)
+        {
+            var previous = Current;
+            SetSynchronizationContext(this);
+
+            try
+            {
+                return action();
+            }
+            finally
+            {
+                SetSynchronizationContext(previous);
+            }
+        }
+
+        public void RunUntilCompleted(Task task)
+        {
+            var previous = Current;
+            SetSynchronizationContext(this);
+
+            try
+            {
+                while (!task.IsCompleted)
+                {
+                    // The timeout only bounds a broken run; ordering never depends on it.
+                    if (!_queue.TryTake(out var item, TimeSpan.FromSeconds(30)))
+                        throw new TimeoutException("The caller never resumed");
+
+                    item.Callback(item.State);
+                }
+            }
+            finally
+            {
+                SetSynchronizationContext(previous);
+            }
+        }
+
+        public void Dispose() => _queue.Dispose();
     }
 
     private sealed class HookOnlyInitializable : AsyncInitializable

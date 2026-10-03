@@ -1,8 +1,9 @@
 using HtmlAgilityPack;
 using System;
 using System.IO;
-// ReSharper disable once RedundantUsingDirective - needed on the TFMs without implicit usings
+#if NET7_0_OR_GREATER
 using System.Text;
+#endif
 
 namespace FEx.WebScraping.Extensions;
 

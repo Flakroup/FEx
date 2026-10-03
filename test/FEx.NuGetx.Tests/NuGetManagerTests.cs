@@ -1,7 +1,6 @@
 using NSubstitute;
 using NuGet.Common;
 using NuGet.Packaging.Core;
-using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 using Shouldly;
@@ -31,8 +30,8 @@ public sealed class NuGetManagerTests
 
     public NuGetManagerTests()
     {
-        _source.Register<PackageMetadataResource>(_metadata);
-        _source.Register<DownloadResource>(_download);
+        _source.Register(_metadata);
+        _source.Register(_download);
         _source.Register<PackageUpdateResource>(_update);
     }
 

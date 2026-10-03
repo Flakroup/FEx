@@ -4,7 +4,9 @@ using NuGet.Configuration;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
+#if NETSTANDARD2_0
 using NuGet.Protocol;
+#endif
 using NuGet.Protocol.Core.Types;
 using System;
 using System.Collections.Generic;

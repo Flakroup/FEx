@@ -37,7 +37,7 @@ public sealed class RegistryUninstallWrapperTests
             cleanup.DeleteSubKeyTree(TestRoot, false);
         }
 
-        Should.Throw<ObjectDisposedException>(() => key.GetSubKeyNames());
+        Should.Throw<ObjectDisposedException>(key.GetSubKeyNames);
         // The base hive is a system key: .NET never closes it on Dispose, so only the subkey handle can be asserted.
     }
 

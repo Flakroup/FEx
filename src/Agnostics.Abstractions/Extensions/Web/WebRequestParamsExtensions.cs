@@ -1,6 +1,7 @@
 using FEx.Agnostics.Abstractions.Models;
-// ReSharper disable once RedundantUsingDirective - needed on the TFMs without implicit usings
+#if NETSTANDARD2_0
 using System;
+#endif
 using System.Net.Http;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Web;

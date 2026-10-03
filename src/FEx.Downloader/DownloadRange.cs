@@ -219,12 +219,10 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
                 || retrievedContentRange.From.Value != From
                 || retrievedContentRange.To.Value != To
                 || response.Content.Headers.ContentLength != To - From + 1)
-            {
                 // Retrying a server that ignores the range would only repeat the same answer.
                 throw new HttpStatusException(response.StatusCode,
                     Url,
                     "The server did not honour the requested range");
-            }
 
             using var streamResponse = await response.ReadContentStreamAsync(CancellationToken);
 

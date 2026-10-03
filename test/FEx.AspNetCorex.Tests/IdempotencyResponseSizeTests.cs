@@ -28,6 +28,11 @@ public sealed class IdempotencyResponseSizeTests
 {
     private static readonly Guid Key = Guid.Parse("0b0f4c55-0ad6-4bd2-9a8a-1d1d6a2a6b01");
 
+    // Not inlined into the async handlers: the synchronous Flush override is what is under test there.
+#pragma warning disable VSTHRD103
+    private static void FlushSynchronously(Stream body) => body.Flush();
+#pragma warning restore VSTHRD103
+
     [Fact]
     public async Task ResponseOverTheCap_ReachesTheClientWhole_AndARetryIsRefused_NotExecutedAgain()
     {
@@ -129,18 +134,12 @@ public sealed class IdempotencyResponseSizeTests
             {
                 await context.Response.Body.WriteAsync("0123"u8.ToArray());
                 await context.Response.Body.FlushAsync();
-#pragma warning disable VSTHRD103 // the synchronous Flush override is what is under test
-                // ReSharper disable once MethodHasAsyncOverload
-                context.Response.Body.Flush();
-#pragma warning restore VSTHRD103
+                FlushSynchronously(context.Response.Body);
                 flushesWhileBuffering = client.Flushes;
 
                 await context.Response.Body.WriteAsync(new byte[50]);
                 await context.Response.Body.FlushAsync();
-#pragma warning disable VSTHRD103 // the synchronous Flush override is what is under test
-                // ReSharper disable once MethodHasAsyncOverload
-                context.Response.Body.Flush();
-#pragma warning restore VSTHRD103
+                FlushSynchronously(context.Response.Body);
             },
             new RecordingLogger(),
             Options.Create(new IdempotencyOptions { MaxStoredResponseBytes = 10 }));

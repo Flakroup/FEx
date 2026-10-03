@@ -251,6 +251,7 @@ public sealed class GitWorktreeExtensionsTests
         const int attempts = 5;
 
         for (var attempt = 1; attempt <= attempts; attempt++)
+        {
             try
             {
                 dir.Refresh();
@@ -267,6 +268,7 @@ public sealed class GitWorktreeExtensionsTests
 
                 Thread.Sleep(100 * attempt);
             }
+        }
     }
 
     private static void WriteGitFile(DirectoryInfo dir, string content) =>

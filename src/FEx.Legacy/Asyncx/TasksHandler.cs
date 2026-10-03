@@ -39,8 +39,7 @@ public class TasksHandler : ITasksHandler
     {
         var taskId = Guid.NewGuid();
         _tasksInfoSubject.AddTask(taskId);
-        // default!: unconstrained T; always overwritten before it is returned, a failure rethrows.
-        T result = default!;
+        T result;
         var isSuccess = true;
 
         try
@@ -80,8 +79,7 @@ public class TasksHandler : ITasksHandler
     {
         var taskId = Guid.NewGuid();
         _tasksInfoSubject.AddTask(taskId);
-        // default!: unconstrained T; always overwritten before it is returned, a failure rethrows.
-        T result = default!;
+        T result;
         var isSuccess = true;
 
         try

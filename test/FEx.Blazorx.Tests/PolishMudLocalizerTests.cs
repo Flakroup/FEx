@@ -36,7 +36,7 @@ public sealed class PolishMudLocalizerTests
 
     private static IReadOnlyDictionary<string, string> Translations { get; } =
         (IReadOnlyDictionary<string, string>)typeof(PolishMudLocalizer)
-            .GetField("Translations", BindingFlags.NonPublic | BindingFlags.Static)!
+            .GetField("Translations", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!
             .GetValue(null)!;
 
     /// <summary>

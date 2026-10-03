@@ -51,7 +51,7 @@ public sealed class JsonExtensionsTests
     [Fact]
     public void ToJson_SerializesDoubleAsString()
     {
-        new Sample { Ratio = 1.5 }.ToJson().ShouldContain("\"Ratio\":\"" + 1.5.ToString() + "\"");
+        new Sample { Ratio = 1.5 }.ToJson().ShouldContain("\"Ratio\":\"" + 1.5 + "\"");
     }
 
     [Fact]

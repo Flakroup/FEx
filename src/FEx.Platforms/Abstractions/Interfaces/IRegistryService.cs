@@ -1,4 +1,5 @@
 using FEx.Agnostics.Abstractions.Enums;
+using FEx.Platforms.Abstractions.Models;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ namespace FEx.Platforms.Abstractions.Interfaces;
 
 public interface IRegistryService
 {
-    List<RegistryKey> GetInstalledApplications();
+    IReadOnlyList<InstalledApplication> GetInstalledApplications();
     List<Version> GetVersionFromRegistry();
     List<Version>? Get45PlusFromRegistry();
     RegistryKey? GetClassesRootSubKey(string subKey, bool writable);

@@ -2,6 +2,7 @@ using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Platforms.Abstractions.Interfaces;
+using FEx.Platforms.Abstractions.Models;
 using FEx.Platforms.Extensions;
 using Microsoft.Win32;
 using System;
@@ -21,30 +22,8 @@ public class RegistryService : IRegistryService
 
     private static bool Is64BitOperatingSystem => PlatformInfoProvider.Is64BitOperatingSystem;
 
-    public List<RegistryKey> GetInstalledApplications()
-    {
-        const string registryKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall";
-        const string registry64Key = @"SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall";
-        var keys = new List<RegistryKey>();
-
-        using (var lm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-        {
-            using var key = lm.OpenSubKey(registryKey);
-
-            if (key is not null)
-                keys.AddRange(key.GetSubKeyNames().Select(key.OpenSubKey).OfType<RegistryKey>());
-        }
-
-        using (var lm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
-        {
-            using var key = lm.OpenSubKey(registry64Key);
-
-            if (key is not null)
-                keys.AddRange(key.GetSubKeyNames().Select(key.OpenSubKey).OfType<RegistryKey>());
-        }
-
-        return keys;
-    }
+    public IReadOnlyList<InstalledApplication> GetInstalledApplications() =>
+        InstalledApplicationReader.ReadAll(RegistryUninstallRoot.Open);
 
     public List<Version> GetVersionFromRegistry()
     {

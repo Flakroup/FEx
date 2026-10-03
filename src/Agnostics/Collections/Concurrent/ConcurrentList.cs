@@ -14,32 +14,44 @@ using FEx.Agnostics.Abstractions.Extensions.Interop;
 
 namespace FEx.Agnostics.Collections.Concurrent;
 
+/// <summary>A thread-safe list that guards all access with a reader-writer lock and raises collection and property change notifications.</summary>
+/// <typeparam name="T">The type of the list elements.</typeparam>
 [DebuggerDisplay("Count={" + nameof(Count) + "}")]
 [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
 [Serializable]
 public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<T>
 {
+    /// <summary>The lock that serializes writes and allows concurrent reads of <see cref="Items"/>.</summary>
     [NonSerialized]
     protected readonly ExtendedReaderWriterLockSlim _lock;
 
+    /// <summary>Gets the number of elements in the list, read under the read lock.</summary>
     public int Count => Read(() => Items.Count);
 
+    /// <summary>Gets a value indicating whether the list contains no elements.</summary>
     public bool IsEmpty => Count == 0;
 
+    /// <summary>Gets or sets the element at the given index under the appropriate lock; setting raises replace notifications.</summary>
+    /// <param name="index">The zero-based index of the element.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is out of range.</exception>
     public T this[int index]
     {
         get => Read(() => Items[index]);
         set => SetItem(index, value);
     }
 
+    /// <summary>Gets the underlying list; callers must hold the appropriate lock when using it.</summary>
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     protected List<T> Items { get; }
 
+    /// <summary>Initializes an empty list.</summary>
     public ConcurrentList()
         : this(null)
     {
     }
 
+    /// <summary>Initializes the list with a snapshot of the given elements.</summary>
+    /// <param name="collection">The initial elements, or <see langword="null"/> for an empty list.</param>
     public ConcurrentList(IEnumerable<T>? collection)
     {
         Items = [];
@@ -299,11 +311,18 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
     /// <inheritdoc />
     public void SortBy<TKey>(Func<T, TKey> selector) => SortBy(selector, ListSortDirection.Ascending, null);
 
+    /// <summary>Sorts the list in place by the selected key using the default key comparer.</summary>
+    /// <typeparam name="TKey">The type of the sort key.</typeparam>
+    /// <param name="selector">Selects the sort key from each element.</param>
+    /// <param name="order">Whether to sort ascending or descending.</param>
     public void SortBy<TKey>(Func<T, TKey> selector, ListSortDirection order) => SortBy(selector, order, null);
 
     /// <inheritdoc />
     public void Combo(Action<IConcurrentList<T>> action) => Combo(action, false);
 
+    /// <summary>Moves an element to a new position under the write lock and raises move notifications.</summary>
+    /// <param name="oldIndex">The current index of the element.</param>
+    /// <param name="newIndex">The index to move the element to.</param>
     protected virtual void MoveItem(int oldIndex, int newIndex)
     {
         var movedItem = Write(() =>
@@ -322,6 +341,10 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
         WhenItemIsMoved(oldIndex, newIndex, movedItem);
     }
 
+    /// <summary>Replaces the element at the index under the write lock and raises replace notifications.</summary>
+    /// <param name="index">The zero-based index of the element to replace.</param>
+    /// <param name="item">The new element.</param>
+    /// <returns>The element that was replaced.</returns>
     protected T SetItem(int index, T item)
     {
         var replacedItem = Write(() =>
@@ -337,6 +360,7 @@ public partial class ConcurrentList<T> : BaseConcurrentList<T>, IConcurrentList<
         return replacedItem;
     }
 
+    /// <summary>Raises the indexer and collection-reset notifications after the elements have been reordered.</summary>
     protected void WhenCollectionHasBeenReordered()
     {
         OnIndexerPropertyChanged();

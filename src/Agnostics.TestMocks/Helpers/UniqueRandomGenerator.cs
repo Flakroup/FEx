@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace FEx.Agnostics.TestMocks.Helpers;
 
+/// <summary>Generates random integers from an inclusive range without repeating a value until the pool is exhausted.</summary>
 public class UniqueRandomGenerator
 {
     private readonly int _minValue;
@@ -11,11 +12,16 @@ public class UniqueRandomGenerator
     private readonly HashSet<int> _generatedNumbers = [];
     private readonly int _totalCount;
 
+    /// <summary>Initializes a generator that draws from the range 1 to 500 inclusive.</summary>
     public UniqueRandomGenerator()
         : this(1, 500)
     {
     }
 
+    /// <summary>Initializes a generator that draws from the given inclusive range.</summary>
+    /// <param name="minValue">The smallest value that can be generated.</param>
+    /// <param name="maxValue">The largest value that can be generated.</param>
+    /// <exception cref="ArgumentException"><paramref name="minValue"/> is greater than <paramref name="maxValue"/>.</exception>
     public UniqueRandomGenerator(int minValue, int maxValue)
     {
         _minValue = minValue;
@@ -27,6 +33,9 @@ public class UniqueRandomGenerator
         _totalCount = _maxValue - _minValue + 1;
     }
 
+    /// <summary>Returns a random integer from the configured range that has not been returned before.</summary>
+    /// <returns>A previously unreturned integer within the range.</returns>
+    /// <exception cref="Exception">Every value in the range has already been generated.</exception>
     public int GenerateUniqueRandomInteger()
     {
         if (_generatedNumbers.Count == _totalCount)

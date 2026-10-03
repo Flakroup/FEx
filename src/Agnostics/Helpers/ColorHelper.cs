@@ -3,6 +3,7 @@ using System.Globalization;
 
 namespace FEx.Agnostics.Helpers;
 
+/// <summary>Creates <see cref="Color"/> values from hexadecimal color strings.</summary>
 public static class ColorHelper
 {
     /// <summary>

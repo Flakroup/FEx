@@ -6,6 +6,7 @@ using System.Linq;
 
 namespace FEx.Agnostics.Utilities;
 
+/// <summary>A dynamic object that stores members in a dictionary, supports access by name or position, and raises change notifications.</summary>
 public class FlakDynamicObject : DynamicObject, INotifyPropertyChanged
 {
     /// <summary>

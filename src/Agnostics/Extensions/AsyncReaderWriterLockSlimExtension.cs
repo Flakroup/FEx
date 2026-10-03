@@ -226,6 +226,7 @@ public static class AsyncReaderWriterLockSlimExtension
         myReadLock.IsWriteLock = false;
     }
 
+    /// <summary>A handle for a held reader-writer lock that releases the lock when disposed.</summary>
     public interface IDisposableLock : IDisposable
     {
     }

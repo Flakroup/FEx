@@ -20,8 +20,11 @@ dotnet run --project samples/FEx.Sample.WPF/FEx.Sample.WPF.csproj
 
 **Key Files**:
 - `AppContainer.cs` - Minimal StrongInject container using `[RegisterModule]` and `TestBase`
-- `App.xaml.cs` - Application startup with FEx initialization
-- `MainWindow.xaml.cs` - UI demonstrating service resolution
+- `App.cs` - `AppBootstrapper<AppContainer>`: startup window, `CreateMainWindow()`, no `StartupUri`
+- `MainWindow.xaml(.cs)` / `MainWindowViewModel.cs` - UI listing the rows loaded from the demo database
+- `../Shared/` - the demo database (EF Core + SQLite) shared with the Avalonia sample
+
+**Async startup demo**: while the container is built, `DemoDbStartupModule` awaits `EnsureCreatedAsync`, seeds a few rows on the first run and loads them from `FExSampleDemo.db` in the app data folder (`IAppInfoProvider.AppData`). The startup window shows meanwhile; the main window lists the rows.
 
 **Container Pattern**:
 ```csharp

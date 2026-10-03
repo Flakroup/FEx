@@ -9,7 +9,8 @@ Cross-platform desktop application demonstrating **FEx framework** integration w
 ✅ **ReactiveUI** - Reactive MVVM pattern with commands  
 ✅ **StrongInject DI** - Compile-time dependency injection  
 ✅ **Proper Thread Marshalling** - UI updates on main thread using `Dispatcher.UIThread`  
-✅ **JSONPlaceholder API** - Real REST API integration
+✅ **JSONPlaceholder API** - Real REST API integration  
+✅ **Async startup with a real database** - `DemoDbStartupModule` awaits an EF Core SQLite demo database (`FExSampleDemo.db` in the app data folder, seeded on first run) while the container is built; the main window lists the rows
 
 ## 🏗️ Architecture
 
@@ -83,11 +84,13 @@ FEx.Sample.Avalonia/
 ├── App.axaml(.cs)                    # Application entry + FEx initialization
 ├── AppContainer.cs                    # StrongInject DI container
 ├── MainWindow.axaml(.cs)              # Main window XAML + code-behind
-├── MainWindowViewModel.cs             # ViewModel with ReactiveUI commands
+├── MainWindowViewModel.cs             # ViewModel with ReactiveUI commands + demo database rows
 ├── Configuration/
 │   └── JsonPlaceholderApiConfiguration.cs  # Flurlx + Polly config
 └── Services/
     └── JsonPlaceholderApi.cs          # API client (extends FlurlApiBase)
+
+samples/Shared/                        # linked into both samples: DemoDatabase.cs, DemoDbStartupModule.cs
 ```
 
 ## 🔧 Key Implementation Details

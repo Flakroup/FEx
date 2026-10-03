@@ -40,7 +40,10 @@ public sealed class StatusService : IStatusService
 
     public void RemoveMainLog(Guid statusKey) => MainHub?.RemoveStatus(statusKey);
 
-    public DisposableAction Log(string status, IStatusHub? hub, bool unique) => (hub ?? MainHub).Log(status, unique);
+    // Before any hub is registered (an app that has no splash or main view yet) there is nothing to log to: a no-op scope
+    // keeps startup code that wraps its steps in Log(...) working.
+    public DisposableAction Log(string status, IStatusHub? hub, bool unique) =>
+        (hub ?? MainHub)?.Log(status, unique) ?? new DisposableAction(static () => { });
 
     public IStatusHub GetOrAdd() => GetOrAdd(null, null, null, null, false);
 

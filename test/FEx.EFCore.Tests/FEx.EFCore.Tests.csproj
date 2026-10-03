@@ -9,4 +9,9 @@
 		<ProjectReference Include="..\..\src\FEx.EFCore\FEx.EFCore.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<!-- The seed/load logic the samples share, linked here because it is the only test project that can reference it. -->
+		<Compile Include="..\..\samples\Shared\DemoDatabase.cs" Link="Samples\DemoDatabase.cs" />
+	</ItemGroup>
+
 </Project>

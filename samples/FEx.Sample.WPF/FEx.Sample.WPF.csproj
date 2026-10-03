@@ -3,7 +3,6 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
@@ -13,9 +12,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Core\FEx.Core.csproj" />
+    <ProjectReference Include="..\..\src\FEx.EFCore\FEx.EFCore.csproj" />
     <ProjectReference Include="..\..\src\DependencyInjection\FEx.DependencyInjection.csproj" />
     <ProjectReference Include="..\..\src\FEx.WPFx\FEx.WPFx.csproj" />
     <ProjectReference Include="..\..\src\Logging\FEx.Logging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Seed/load logic shared by both samples (no extra project). -->
+    <Compile Include="..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

@@ -19,8 +19,14 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\Common\FEx.Common.csproj" />
         <ProjectReference Include="..\..\src\FEx.Avaloniax\FEx.Avaloniax.csproj" />
+        <ProjectReference Include="..\..\src\FEx.EFCore\FEx.EFCore.csproj" />
         <ProjectReference Include="..\..\src\FEx.Flurlx\FEx.Flurlx.csproj" />
         <ProjectReference Include="..\..\src\FEx.MVVM.Rx\FEx.MVVM.Rx.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Seed/load logic shared by both samples (no extra project). -->
+        <Compile Include="..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
     </ItemGroup>
 
 </Project>

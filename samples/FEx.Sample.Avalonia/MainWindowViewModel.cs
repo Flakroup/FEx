@@ -3,7 +3,9 @@ using FEx.DependencyInjection.Abstractions;
 using FEx.MVVM.Rx.BaseObjects;
 using FEx.Sample.Avalonia.Services;
 using ReactiveUI;
+using FEx.Samples.Shared;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
@@ -32,6 +34,11 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
         set => this.RaiseAndSetIfChanged(ref _isBusy, value);
     }
 
+    /// <summary>The rows the startup module loaded from the demo database while the container was built.</summary>
+    public IReadOnlyList<DemoItem> DemoItems { get; }
+
+    public string DemoSummary => $"{DemoItems.Count} rows loaded from the demo database during startup";
+
     public ObservableCollection<User> Users { get; } = new();
     public ObservableCollection<Post> Posts { get; } = new();
 
@@ -48,6 +55,7 @@ public class MainWindowViewModel : ReactiveNotifyPropertyChanged
             ReactiveCommand.CreateFromTask(TestResilienceAsync, outputScheduler: RxSchedulers.MainThreadScheduler);
 
         _api = FExServiceProvider.Get<JsonPlaceholderApi>();
+        DemoItems = FExServiceProvider.Get<DemoDataStore>().Items;
     }
 
     private async Task LoadUsersAsync()

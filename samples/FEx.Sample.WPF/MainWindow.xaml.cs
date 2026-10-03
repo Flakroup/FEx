@@ -1,4 +1,5 @@
 ﻿using FEx.DependencyInjection.Abstractions;
+using System;
 using System.Windows;
 
 namespace FEx.Sample.WPF;

@@ -16,6 +16,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -293,7 +294,11 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             cacheObservable =
                 _observables.Aggregate(cacheObservable, (current, o) => current.AutoRefreshOnObservable(o));
 
-        _cacheSubscription?.Dispose();
+        if (ReplacedSubscription is { } keep)
+            keep(_cacheSubscription);
+        else
+            _cacheSubscription?.Dispose();
+
         var generation = StartGeneration();
         var subscribed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -301,6 +306,12 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         // InitializeAsync returns reaches this subscription.
         var source = Observable.Create<IChangeSet<TValue, TKey>>(observer =>
         {
+            BeforeSubscribe?.Invoke();
+
+            // Disposed already: InitializeAsync has failed, do not listen to a cache that may be disposed too.
+            if (subscribed.Task.IsCompleted)
+                return Disposable.Empty;
+
             try
             {
                 return cacheObservable.Subscribe(observer);
@@ -311,7 +322,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             }
         });
 
-        _cacheSubscription = source.Select(WithoutReloads)
+        var pipelineSubscription = source.Select(WithoutReloads)
             .Where(changeSet => changeSet.Count > 0)
             .Select(changeSet => (Sequence: Publish(generation), ChangeSet: changeSet))
             // The replaced subscription, until its asynchronous disposal, sees edits the new one saves: drop them.
@@ -332,6 +343,10 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                     ChangeSet: changes.Count == 0 ? null : new ChangeSet<TValue, TKey>(DistinctChanges(changes)));
             })
             .SubscribeTask((batch, _) => HandleBatchAsync(batch.Sequences, batch.ChangeSet));
+
+        // Disposed before SubscribeOn ran the subscribe (Rx then skips it): fail InitializeAsync instead of hanging.
+        _cacheSubscription = new CompositeDisposable(pipelineSubscription,
+            Disposable.Create(() => subscribed.TrySetException(new ObjectDisposedException(TypeName))));
 
         await subscribed.Task;
     }
@@ -697,6 +712,12 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     /// <summary>Test seam: runs after a batch left the buffer and before it is handled.</summary>
     internal Action? BatchSelected { get; set; }
+
+    /// <summary>Test seam: runs on the thread-pool subscribe of the save pipeline, before it listens to the cache.</summary>
+    internal Action? BeforeSubscribe { get; set; }
+
+    /// <summary>Test seam: receives the replaced subscription instead of disposing it, as if its disposal were late.</summary>
+    internal Action<IDisposable?>? ReplacedSubscription { get; set; }
 
     internal int Generation => Volatile.Read(ref _generation);
 

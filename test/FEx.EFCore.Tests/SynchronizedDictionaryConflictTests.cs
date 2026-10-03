@@ -729,6 +729,79 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         }
     }
 
+    /// <summary>
+    /// Disposing the dictionary before the save pipeline listens to the cache fails InitializeAsync instead of leaving it
+    /// waiting for a subscribe Rx will skip.
+    /// </summary>
+    [Fact]
+    public async Task Dispose_BeforeTheSavePipelineListens_FailsInitializeAsync()
+    {
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var resume = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task initialization;
+
+        using (var sut = CreateDictionary(true))
+        {
+            await sut.InitializeAsync();
+            await sut.ResetAsync();
+#pragma warning disable VSTHRD002 // Holds the subscribe on purpose
+            sut.BeforeSubscribe = () =>
+            {
+                entered.TrySetResult(true);
+                resume.Task.Wait(TimeSpan.FromSeconds(30));
+            };
+#pragma warning restore VSTHRD002
+
+            initialization = sut.InitializeAsync();
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+#pragma warning restore VSTHRD003
+        }
+
+        resume.SetResult(true);
+
+        await Should.ThrowAsync<ObjectDisposedException>(() =>
+            initialization.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+    }
+
+    /// <summary>
+    /// A replaced subscription whose disposal has not run yet still sees edits made after InitializeAsync; only the new
+    /// one saves them.
+    /// </summary>
+    [Fact]
+    public async Task EditSeenByAReplacedSubscriptionStillListening_IsSavedOnce()
+    {
+        var replaced = new List<IDisposable?>();
+        using var sut = CreateDictionary(true);
+
+        try
+        {
+            await sut.InitializeAsync();
+            var doc = await LoadAsync(1);
+            sut.AddOrUpdateValue(doc);
+            await FlushThroughPipelineAsync(sut, 9);
+            var conflicts = new ConcurrentQueue<CacheConflict<int, CachedDoc>>();
+            sut.ConflictDetected += (_, conflict) => conflicts.Enqueue(conflict);
+            sut.ReplacedSubscription = replaced.Add;
+
+            await sut.ResetAsync();
+            await sut.InitializeAsync();
+            var savesBefore = sut.SavedKeys.Count;
+            doc.Name = "edited";
+
+            (await sut.ReloadAsync(1, TestContext.Current.CancellationToken)).ShouldNotBeNull().Name.ShouldBe("edited");
+            await FlushThroughPipelineAsync(sut, 10);
+
+            sut.SavedKeys.Skip(savesBefore).SelectMany(k => k).Count(k => k == 1).ShouldBe(1);
+            conflicts.ShouldBeEmpty();
+        }
+        finally
+        {
+            foreach (var subscription in replaced)
+                subscription?.Dispose();
+        }
+    }
+
     private async Task InsertDocAsync(int id)
     {
         using var ctx = CreateContext();

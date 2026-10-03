@@ -281,6 +281,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     protected override async Task OnInitializeAsync()
     {
+        ThrowIfDisposed();
+
         var mappedProperties = _dbSrv.Mappings[typeof(TValue).FullName.Guard(nameof(TValue))].Properties;
 
         _observedProperties = _observedProperties is null
@@ -310,7 +312,13 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
             // Disposed already: InitializeAsync has failed, do not listen to a cache that may be disposed too.
             if (subscribed.Task.IsCompleted)
+            {
+                SubscribeDecided?.Invoke(false);
+
                 return Disposable.Empty;
+            }
+
+            SubscribeDecided?.Invoke(true);
 
             try
             {
@@ -344,9 +352,27 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             })
             .SubscribeTask((batch, _) => HandleBatchAsync(batch.Sequences, batch.ChangeSet));
 
+        BeforePipelineAssigned?.Invoke();
+
         // Disposed before SubscribeOn ran the subscribe (Rx then skips it): fail InitializeAsync instead of hanging.
-        _cacheSubscription = new CompositeDisposable(pipelineSubscription,
+        var subscription = new CompositeDisposable(pipelineSubscription,
             Disposable.Create(() => subscribed.TrySetException(new ObjectDisposedException(TypeName))));
+        bool disposed;
+
+        // With Dispose, which sets _isDisposed and then reads _cacheSubscription under the same lock: either Dispose
+        // disposes this subscription, or this sees _isDisposed and disposes it.
+        lock (_pendingLock)
+        {
+            _cacheSubscription = subscription;
+            disposed = _isDisposed;
+        }
+
+        if (disposed)
+        {
+            subscription.Dispose();
+
+            throw new ObjectDisposedException(TypeName);
+        }
 
         await subscribed.Task;
     }
@@ -716,6 +742,12 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     /// <summary>Test seam: runs on the thread-pool subscribe of the save pipeline, before it listens to the cache.</summary>
     internal Action? BeforeSubscribe { get; set; }
 
+    /// <summary>Test seam: told whether the thread-pool subscribe listens to the cache (<c>false</c> once disposed).</summary>
+    internal Action<bool>? SubscribeDecided { get; set; }
+
+    /// <summary>Test seam: runs after the save pipeline is built and before it becomes the dictionary's subscription.</summary>
+    internal Action? BeforePipelineAssigned { get; set; }
+
     /// <summary>Test seam: receives the replaced subscription instead of disposing it, as if its disposal were late.</summary>
     internal Action<IDisposable?>? ReplacedSubscription { get; set; }
 
@@ -817,6 +849,15 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     {
         foreach (var waiter in released)
             waiter.Signal.TrySetResult(true);
+    }
+
+    private void ThrowIfDisposed()
+    {
+        lock (_pendingLock)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(TypeName);
+        }
     }
 
     private void ReleaseWaitersOnDispose()
@@ -988,7 +1029,16 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         if (disposing)
         {
             Cache?.Dispose();
-            _cacheSubscription?.Dispose();
+            IDisposable? subscription;
+
+            // See OnInitializeAsync: a subscription assigned after this is disposed there.
+            lock (_pendingLock)
+            {
+                _isDisposed = true;
+                subscription = _cacheSubscription;
+            }
+
+            subscription?.Dispose();
             // A ReloadAsync still waiting for changes the subscription will never save fails instead of hanging.
             ReleaseWaitersOnDispose();
             CacheHandlerSemaphore.Dispose();

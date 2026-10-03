@@ -738,6 +738,7 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     {
         var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var resume = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var listened = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         Task initialization;
 
         using (var sut = CreateDictionary(true))
@@ -751,6 +752,7 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
                 resume.Task.Wait(TimeSpan.FromSeconds(30));
             };
 #pragma warning restore VSTHRD002
+            sut.SubscribeDecided = listens => listened.TrySetResult(listens);
 
             initialization = sut.InitializeAsync();
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
@@ -762,6 +764,48 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
 
         await Should.ThrowAsync<ObjectDisposedException>(() =>
             initialization.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+        // The held subscribe, once released, does not listen to the disposed cache.
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+        (await listened.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken))
+            .ShouldBeFalse();
+#pragma warning restore VSTHRD003
+    }
+
+    /// <summary>
+    /// A Dispose that lands before InitializeAsync assigns the new subscription still fails InitializeAsync, instead of
+    /// letting it report success on a disposed dictionary.
+    /// </summary>
+    [Fact]
+    public async Task Dispose_BeforeTheNewSubscriptionIsAssigned_FailsInitializeAsync()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        await sut.ResetAsync();
+        sut.BeforePipelineAssigned = () =>
+        {
+            sut.BeforePipelineAssigned = null;
+            sut.Dispose();
+        };
+
+        await Should.ThrowAsync<ObjectDisposedException>(() =>
+            sut.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+        sut.IsInitialized.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task InitializeAsync_AfterDispose_Throws()
+    {
+        using var sut = CreateDictionary(true);
+        var pipelineBuilt = false;
+        sut.BeforePipelineAssigned = () => pipelineBuilt = true;
+#pragma warning disable IDISP016, IDISP017 // Using the disposed instance is the point
+        sut.Dispose();
+
+        await Should.ThrowAsync<ObjectDisposedException>(() =>
+            sut.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+#pragma warning restore IDISP016, IDISP017
+        // It fails before building a pipeline on the disposed cache.
+        pipelineBuilt.ShouldBeFalse();
     }
 
     /// <summary>

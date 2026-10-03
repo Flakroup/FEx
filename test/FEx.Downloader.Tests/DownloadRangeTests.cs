@@ -1,14 +1,10 @@
-using FEx.Core.Abstractions;
-using FEx.Core.Abstractions.Interfaces;
 using FEx.Downloader.Enums;
-using NSubstitute;
 using Shouldly;
 using System;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -21,17 +17,10 @@ public sealed class DownloadRangeTests : IDisposable
     private readonly string _dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
     private readonly byte[] _data = [.. Enumerable.Range(0, 100).Select(x => (byte)x)];
 
-    private static CancellationToken Ct => TestContext.Current.CancellationToken;
-
     public DownloadRangeTests()
     {
         Directory.CreateDirectory(_dir);
-
-        // No UI main thread exists in a test host; run property-change notifications inline.
-        var dispatcher = Substitute.For<IFExDispatcher>();
-        dispatcher.When(d => d.InvokeOnMainThread(Arg.Any<Action>(), Arg.Any<object?>()))
-            .Do(call => call.Arg<Action>()());
-        FExCoreStatics.Configure(dispatcherFactory: () => dispatcher);
+        TestHost.ConfigureInlineDispatcher();
     }
 
     public void Dispose() => Directory.Delete(_dir, true);

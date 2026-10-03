@@ -31,7 +31,7 @@ public static class JsonExtensions
 
         if (!checkNetAvailability
             // CheckForInternetConnectionAsync null-coalesces url to a default internally, so null is safe here.
-            || await FExUriExtensions.CheckForInternetConnectionAsync(null!))
+            || await FExUriExtensions.CheckForInternetConnectionAsync(null!, cancellationToken: cancellationToken))
         {
             if (url.Scheme is "http" or "https")
             {

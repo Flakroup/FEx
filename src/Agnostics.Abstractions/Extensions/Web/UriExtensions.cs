@@ -13,6 +13,9 @@ public static class UriExtensions
 {
     private const string HttpScheme = "http";
     private const string HttpsScheme = "https";
+    /// <summary>The time to wait for response headers when <see cref="WebRequestParams.Timeout" /> is not set, like <c>HttpWebRequest</c>.</summary>
+    internal const int DefaultTimeoutMilliseconds = 100_000;
+
     private static Uri DefaultUri { get; } = new("http://clients3.google.com/generate_204");
 
     /// <summary>
@@ -52,21 +55,36 @@ public static class UriExtensions
     /// </param>
     /// <param name="range">Optional byte range, sent as a <c>Range</c> header.</param>
     /// <param name="ensureSuccess">When true, a non-success status throws <see cref="HttpStatusException" />.</param>
+    /// <param name="method">Overrides <see cref="WebRequestParams.Method" /> for this request only, leaving <paramref name="pars" /> untouched.</param>
     /// <param name="cancellationToken">Cancels the request.</param>
     public static async Task<HttpResponseMessage> SendHttpAsync(this Uri url,
                                                                 WebRequestParams? pars = null,
                                                                 HttpClient? client = null,
                                                                 RangeHeaderValue? range = null,
                                                                 bool ensureSuccess = true,
-                                                                CancellationToken cancellationToken = default)
+                                                                HttpMethod? method = null,
+                                                                CancellationToken cancellationToken = default) =>
+        await url.SendHttpAsync(pars, client, range, ensureSuccess, DefaultTimeoutMilliseconds, method, cancellationToken);
+
+    internal static async Task<HttpResponseMessage> SendHttpAsync(this Uri url,
+                                                                  WebRequestParams? pars,
+                                                                  HttpClient? client,
+                                                                  RangeHeaderValue? range,
+                                                                  bool ensureSuccess,
+                                                                  int defaultTimeoutMilliseconds,
+                                                                  HttpMethod? method,
+                                                                  CancellationToken cancellationToken)
     {
         client ??= HttpClientProvider.Get(pars);
 
-        using var request = CreateHttpRequest(url, pars, range);
+        using var request = CreateHttpRequest(url, pars, range, method);
         using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        // Like HttpWebRequest.Timeout, the timeout covers waiting for the response headers only.
-        if (pars?.Timeout is > 0 and var timeout)
+        // Like HttpWebRequest.Timeout (default 100 s, -1 = infinite), the timeout covers waiting for the response
+        // headers only.
+        var timeout = pars?.Timeout ?? defaultTimeoutMilliseconds;
+
+        if (timeout > 0)
             timeoutSource.CancelAfter(timeout);
 
         var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutSource.Token);
@@ -76,9 +94,10 @@ public static class UriExtensions
         {
             var status = response.StatusCode;
             var reason = response.ReasonPhrase;
+            var retryAfter = GetRetryAfter(response);
             response.Dispose();
 
-            throw new HttpStatusException(status, url, reason);
+            throw new HttpStatusException(status, url, reason, retryAfter);
         }
 
         return response;
@@ -126,11 +145,26 @@ public static class UriExtensions
         return myWebRequest;
     }
 
-    private static HttpRequestMessage CreateHttpRequest(Uri url, WebRequestParams? pars, RangeHeaderValue? range)
+    private static TimeSpan? GetRetryAfter(HttpResponseMessage response)
     {
-        var request = new HttpRequestMessage(pars?.Method is { } method
-                ? new(method)
-                : HttpMethod.Get,
+        var retryAfter = response.Headers.RetryAfter;
+
+        if (retryAfter?.Delta is { } delta)
+            return delta;
+
+        return retryAfter?.Date is { } date
+            ? date - DateTimeOffset.UtcNow
+            : null;
+    }
+
+    private static HttpRequestMessage CreateHttpRequest(Uri url,
+                                                        WebRequestParams? pars,
+                                                        RangeHeaderValue? range,
+                                                        HttpMethod? method)
+    {
+        var request = new HttpRequestMessage(method ?? (pars?.Method is { } name
+                ? new(name)
+                : HttpMethod.Get),
             url);
 
         if (pars?.UserAgent is not null)

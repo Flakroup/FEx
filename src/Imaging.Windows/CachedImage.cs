@@ -24,6 +24,8 @@ namespace FEx.Imaging.Windows;
 public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
 #pragma warning restore IDISP025
 {
+    private const int MaxTimeoutRetries = 3;
+
     private readonly bool _ownCTS;
 
     protected internal FileInfo? Cache => ParentIndexEntry.Cache;
@@ -194,6 +196,8 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
                                                        string? checksum = null,
                                                        Func<Uri, Uri>? urlModifier = null)
     {
+        var timeouts = 0;
+
         try
         {
             do
@@ -236,13 +240,18 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
                 }
                 catch (OperationCanceledException)
                 {
-                    await Task.Delay(100, CancellationToken);
+                    response?.Dispose();
+                    response = null;
 
+                    // Only the caller's token ends the loop; a request timeout is a failed attempt and counts
+                    // towards the retry limit.
                     if (CancellationToken.IsCancellationRequested)
                         return false;
 
-                    response?.Dispose();
-                    response = null;
+                    if (++timeouts > MaxTimeoutRetries)
+                        throw;
+
+                    await Task.Delay(100, CancellationToken);
                 }
                 catch
                 {

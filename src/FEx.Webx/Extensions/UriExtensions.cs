@@ -10,16 +10,22 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.Webx.Extensions;
 
 public static class UriExtensions
 {
-    public static Task<string> GetFileNameAsync(this Uri url) => url.GetFileNameAsync(null);
+    public static Task<string> GetFileNameAsync(this Uri url, CancellationToken cancellationToken = default) =>
+        url.GetFileNameAsync(null, cancellationToken);
 
-    public static async Task<string> GetFileNameAsync(this Uri url, WebRequestParams? pars) =>
-        await url.DoHttpResponseFuncAsync(response => response.GetFileName(), pars);
+    public static async Task<string> GetFileNameAsync(this Uri url,
+                                                      WebRequestParams? pars,
+                                                      CancellationToken cancellationToken = default) =>
+        await url.DoHttpResponseFuncAsync(response => response.GetFileName(),
+            pars,
+            cancellationToken: cancellationToken);
 
     public static string GetFileName(this HttpResponseMessage response)
     {

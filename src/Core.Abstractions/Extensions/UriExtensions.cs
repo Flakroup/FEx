@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.Core.Abstractions.Extensions;
@@ -88,11 +89,13 @@ public static class UriExtensions
     public static async Task<long> GetHttpFileSizeAsync(this Uri url,
                                                         WebRequestParams? pars = null,
                                                         Stopwatch? stopwatch = null,
-                                                        HttpClient? client = null) =>
+                                                        HttpClient? client = null,
+                                                        CancellationToken cancellationToken = default) =>
         await url.DoHttpResponseFuncAsync(response => response.Content.Headers.ContentLength ?? -1,
             pars,
             stopwatch,
-            client);
+            client,
+            cancellationToken);
 
     public static async Task<Dictionary<string, string[]>> GetResponseHeadersAsync(this Uri url,
                                                                                     WebRequestParams? pars = null,
@@ -103,10 +106,11 @@ public static class UriExtensions
                                                                Func<HttpResponseMessage, Task<T>> func,
                                                                WebRequestParams? pars = null,
                                                                Stopwatch? stopwatch = null,
-                                                               HttpClient? client = null)
+                                                               HttpClient? client = null,
+                                                               CancellationToken cancellationToken = default)
     {
         stopwatch?.Restart();
-        using var response = await url.SendHttpAsync(pars, client);
+        using var response = await url.SendHttpAsync(pars, client, cancellationToken: cancellationToken);
         stopwatch?.Stop();
 
         return await func(response);
@@ -116,14 +120,20 @@ public static class UriExtensions
                                                            Func<HttpResponseMessage, T> func,
                                                            WebRequestParams? pars = null,
                                                            Stopwatch? stopwatch = null,
-                                                           HttpClient? client = null) =>
-        await url.DoHttpResponseFuncTaskAsync(response => Task.FromResult(func(response)), pars, stopwatch, client);
+                                                           HttpClient? client = null,
+                                                           CancellationToken cancellationToken = default) =>
+        await url.DoHttpResponseFuncTaskAsync(response => Task.FromResult(func(response)),
+            pars,
+            stopwatch,
+            client,
+            cancellationToken);
 
     public static async Task DoHttpResponseActionAsync(this Uri url,
                                                        Action<HttpResponseMessage> action,
                                                        WebRequestParams? pars = null,
                                                        Stopwatch? stopwatch = null,
-                                                       HttpClient? client = null) =>
+                                                       HttpClient? client = null,
+                                                       CancellationToken cancellationToken = default) =>
         await url.DoHttpResponseFuncAsync(response =>
             {
                 action(response);
@@ -132,7 +142,8 @@ public static class UriExtensions
             },
             pars,
             stopwatch,
-            client);
+            client,
+            cancellationToken);
 
     public static async Task<T> DoHttpClientResponseFuncTaskAsync<T>(this Uri url,
                                                                      Func<HttpResponseMessage, HttpClient, Task<T>>
@@ -180,10 +191,9 @@ public static class UriExtensions
     {
         try
         {
-            pars ??= new();
-            pars.Method = HeadMethod; //Get only the header information -- no need to download any content
-
-            using var response = await url.SendHttpAsync(pars, client);
+            // Get only the header information -- no need to download any content. The method is set on this request
+            // only: the caller's params may be reused for a download afterwards.
+            using var response = await url.SendHttpAsync(pars, client, method: HttpMethod.Head);
             var statusCode = (int)response.StatusCode;
 
             return statusCode switch

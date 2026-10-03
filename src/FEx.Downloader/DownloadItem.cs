@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,6 +37,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     private double _totalPrg;
     private bool _isDownloaded;
     private int _openConnections;
+    private int _retryAttempts;
     private string? _filePath;
     private string? _elapsedTime;
     private long _elapsedMilliseconds;
@@ -74,7 +76,16 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     public Task? DownloadFileTask { get; set; }
     public bool IsSpeededUp { get; protected set; }
 
+    /// <summary>Upper bound for <see cref="ParallelRanges" />: the number of simultaneous ranged connections.</summary>
+    public const int MaxParallelRanges = 8;
+
     public int ParallelRanges { get; private set; }
+
+    /// <summary>How often a transient failure (408, 429, 5xx) is retried before the download fails.</summary>
+    public int MaxRetries { get; set; } = RetryPolicy.DefaultMaxRetries;
+
+    /// <summary>Delay before the first retry; it doubles per attempt unless the server sends <c>Retry-After</c>.</summary>
+    public TimeSpan RetryBaseDelay { get; set; } = RetryPolicy.DefaultBaseDelay;
 
 #pragma warning disable IDISP008 // semaphore from LockSrv, ownership managed externally
     public HttpResponseMessage? Response { get; protected set; }
@@ -342,6 +353,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     public async Task<bool> DownloadFileAsync()
     {
         var retry = true;
+        _retryAttempts = 0;
         DownloadStopwatch.Start();
 
         if (File is { Exists: true }
@@ -414,9 +426,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                 }
                 catch (Exception ex)
                 {
-                    if (ex is HttpStatusException { ResponseStatusCode: (HttpStatusCode)429 })
+                    if (ex is HttpStatusException status
+                        && RetryPolicy.IsTransient(status.ResponseStatusCode)
+                        && _retryAttempts++ < MaxRetries)
                     {
-                        await Task.Delay(100, CancellationToken);
+                        await Task.Delay(RetryPolicy.GetDelay(status, _retryAttempts, RetryBaseDelay), CancellationToken);
                         retry = !CancellationToken.IsCancellationRequested;
                     }
                     else
@@ -464,7 +478,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         if (downloadItem.FilePath is null
             && downloadItem.DirPath is not null
             && downloadItem is DownloadStub ds)
-            await ds.LoadTargetFileNameAsync();
+            await ds.LoadTargetFileNameAsync(null, null, cancellationToken);
 
         return await CreateAsync(downloadItem.Url.Guard(nameof(downloadItem.Url)),
             downloadItem.FilePath,
@@ -718,8 +732,8 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             {
                 var (length, _) = FileLengthConverter.ConvertFileLength(speed, LengthType.Bytes, LengthType.Megabytes);
 
-                // HttpClient has no per-host connection limit to cap on: .NET Core's default was unlimited too.
-                ParallelRanges = Convert.ToInt32(Math.Max(Math.Ceiling(ParallelRanges * length), 1));
+                ParallelRanges = Convert.ToInt32(Math.Min(Math.Max(Math.Ceiling(ParallelRanges * length), 1),
+                    MaxParallelRanges));
             }
             else
             {
@@ -820,6 +834,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                 foreach (var x in unfinishedRanges)
                     await Ranges[x].DoDownloadAsync();
 
+            CancellationToken.ThrowIfCancellationRequested();
+            await HandleRangeErrorsAsync();
+
             unfinishedRanges = Ranges.Where(x => x.Value?.DState != DownloadState.Finished)
                 .Select(x => x.Key)
                 .OrderBy(x => x)
@@ -868,6 +885,28 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         DState = DownloadState.Finished;
         TotalPrg = DataLength;
         PrgSetEnd();
+    }
+
+    // A range that failed with an HTTP status is not re-run at once: a fatal status (e.g. 403) fails the download, a
+    // transient one (408, 429, 5xx) is retried after a backoff, at most MaxRetries times.
+    private async Task HandleRangeErrorsAsync()
+    {
+        var errors = Ranges.Values.Select(x => x?.StatusError).OfType<HttpStatusException>().ToList();
+
+        if (errors.Count == 0)
+        {
+            _retryAttempts = 0;
+
+            return;
+        }
+
+        var error = errors.Find(x => !RetryPolicy.IsTransient(x.ResponseStatusCode)) ?? errors[0];
+
+        if (!RetryPolicy.IsTransient(error.ResponseStatusCode)
+            || _retryAttempts++ >= MaxRetries)
+            ExceptionDispatchInfo.Capture(error).Throw();
+
+        await Task.Delay(RetryPolicy.GetDelay(error, _retryAttempts, RetryBaseDelay), CancellationToken);
     }
 
     private bool CompareChecksum(bool setChecksumMismatchStatus = true)

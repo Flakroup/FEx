@@ -1,12 +1,12 @@
 using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Agnostics.Abstractions.Models;
 using FEx.Core.Abstractions.Extensions;
+using FEx.Webx.Extensions;
 using Shouldly;
 using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -156,7 +156,7 @@ public sealed class SendHttpTests
             Content = new ByteArrayContent(new byte[7])
         }));
 
-        (await Url.GetHttpFileSizeAsync(client: client)).ShouldBe(7);
+        (await Url.GetHttpFileSizeAsync(client: client, cancellationToken: Ct)).ShouldBe(7);
     }
 
     [Fact]
@@ -167,6 +167,109 @@ public sealed class SendHttpTests
         var result = await Url.UrlIsValidAsync(null, client);
 
         result.IsSuccess.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task SendHttpAsync_MethodOverride_DoesNotChangeTheCallersParams()
+    {
+        var handler = new FakeHttpHandler(_ => new(HttpStatusCode.OK));
+        using var client = new HttpClient(handler);
+        var pars = new WebRequestParams { Method = "GET" };
+
+        using var _ = await Url.SendHttpAsync(pars, client, method: HttpMethod.Head, cancellationToken: Ct);
+
+        handler.Requests.Single().Method.ShouldBe(HttpMethod.Head);
+        pars.Method.ShouldBe("GET");
+    }
+
+    [Fact]
+    public async Task UrlIsValidAsync_DoesNotWriteHeadIntoTheCallersParams()
+    {
+        var handler = new FakeHttpHandler(_ => new(HttpStatusCode.OK));
+        using var client = new HttpClient(handler);
+        var pars = new WebRequestParams();
+
+        (await Url.UrlIsValidAsync(pars, client)).IsSuccess.ShouldBeTrue();
+
+        handler.Requests.Single().Method.ShouldBe(HttpMethod.Head);
+        pars.Method.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task SendHttpAsync_KeepAlive_MapsToTheConnectionHeader(bool keepAlive, bool expectedClose)
+    {
+        var handler = new FakeHttpHandler(_ => new(HttpStatusCode.OK));
+        using var client = new HttpClient(handler);
+
+        using var _ = await Url.SendHttpAsync(new() { KeepAlive = keepAlive }, client, cancellationToken: Ct);
+
+        handler.Requests.Single().Headers.ConnectionClose.ShouldBe(expectedClose);
+    }
+
+    [Fact]
+    public async Task SendHttpAsync_RetryAfterHeader_IsExposedOnTheException()
+    {
+        using var client = new HttpClient(new FakeHttpHandler(_ =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+            response.Headers.RetryAfter = new(TimeSpan.FromSeconds(7));
+
+            return response;
+        }));
+
+        var ex = await Should.ThrowAsync<HttpStatusException>(async () =>
+        {
+            using var _ = await Url.SendHttpAsync(client: client, cancellationToken: Ct);
+        });
+
+        ex.RetryAfter.ShouldBe(TimeSpan.FromSeconds(7));
+    }
+
+    [Fact]
+    public async Task SendHttpAsync_FailingUrlWithSecrets_DoesNotLeakThemIntoTheMessage()
+    {
+        using var client = new HttpClient(new FakeHttpHandler(_ => new(HttpStatusCode.Forbidden)));
+        var secretUrl = new Uri("https://user:pa55word@host.example/path/f.bin?token=SECRET");
+
+        var ex = await Should.ThrowAsync<HttpStatusException>(async () =>
+        {
+            using var _ = await secretUrl.SendHttpAsync(client: client, cancellationToken: Ct);
+        });
+
+        ex.Message.ShouldContain("https://host.example/path/f.bin");
+        ex.Message.ShouldNotContain("SECRET");
+        ex.Message.ShouldNotContain("pa55word");
+    }
+
+    [Fact]
+    public void GetAllHeaders_IncludesTheContentHeaders()
+    {
+        using var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent([1, 2, 3])
+        };
+
+        response.Content.Headers.ContentLength = 3;
+        response.Content.Headers.ContentDisposition = new("attachment") { FileName = "a.bin" };
+        response.Headers.Add("X-Server", "s");
+
+        var headers = response.GetAllHeaders();
+
+        headers.ShouldContainKey("Content-Disposition");
+        headers.ShouldContainKey("Content-Length");
+        headers.ShouldContainKey("X-Server");
+    }
+
+    [Fact]
+    public async Task DeserializeRemoteJsonAsync_CancelledToken_StopsTheConnectivityCheck()
+    {
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            Url.DeserializeRemoteJsonAsync<object>(null, true, cts.Token));
     }
 
     [Fact]

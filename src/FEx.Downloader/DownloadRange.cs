@@ -56,6 +56,9 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
         private set => SetProperty(ref _isConnected, value, x => ConnPrg?.Report(x));
     }
 
+    /// <summary>The last HTTP status error of this range; the caller decides whether and when to retry it.</summary>
+    public HttpStatusException? StatusError { get; private set; }
+
     private HttpClient? HttpClient { get; }
     private byte[] Buffer { get; }
 
@@ -123,11 +126,13 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
 
     public async Task DoDownloadAsync(int retryCount)
     {
+        StatusError = null;
         var from = From;
         var to = To;
 
         while (retryCount >= 0
-               && DState != DownloadState.Finished)
+               && DState != DownloadState.Finished
+               && StatusError is null)
         {
             var unfinishedChunks = Chunks.Where(x => x.Value.State != DownloadState.Finished)
                 .OrderBy(x => x.Value.From)
@@ -204,6 +209,7 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
             ReadenBytes = 0;
 
             DState = DownloadState.None;
+            StatusError = null;
             DState = DownloadState.Connecting;
             using var response = await Url.SendHttpAsync(Pars, HttpClient, new(From, To), cancellationToken: CancellationToken);
             var retrievedContentRange = response.GetContentRange();
@@ -214,7 +220,10 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
                 || retrievedContentRange.To.Value != To
                 || response.Content.Headers.ContentLength != To - From + 1)
             {
-                DState = DownloadState.Failed;
+                // Retrying a server that ignores the range would only repeat the same answer.
+                throw new HttpStatusException(response.StatusCode,
+                    Url,
+                    "The server did not honour the requested range");
             }
             else
             {
@@ -270,8 +279,11 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
                 ClearChunks();
                 ex.HandleException(false);
 
-                // A status error means the server answered, so waiting for connectivity would never end.
-                if (ex is not HttpStatusException)
+                // A status error means the server answered, so waiting for connectivity would never end: it is handed
+                // to the caller, which owns the retry policy (backoff, attempt limit).
+                if (ex is HttpStatusException statusError)
+                    StatusError = statusError;
+                else
                     await WaitForInternetConnectionAsync();
             }
         }

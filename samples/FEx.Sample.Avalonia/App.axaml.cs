@@ -13,14 +13,12 @@ public partial class App : FExAvaloniaApp<AppContainer>
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override void OnFrameworkInitializationCompleted()
+    protected override void AfterServicesContainerBuild()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             desktop.MainWindow = new MainWindow
             {
                 DataContext = new MainWindowViewModel()
             };
-
-        base.OnFrameworkInitializationCompleted();
     }
 }

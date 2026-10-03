@@ -281,8 +281,6 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     protected override async Task OnInitializeAsync()
     {
-        ThrowIfDisposed();
-
         var mappedProperties = _dbSrv.Mappings[typeof(TValue).FullName.Guard(nameof(TValue))].Properties;
 
         _observedProperties = _observedProperties is null
@@ -370,6 +368,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         if (disposed)
         {
             subscription.Dispose();
+            // Disposing faulted the signal; observe it, the exception thrown below is the one reported.
+            _ = subscribed.Task.Exception;
 
             throw new ObjectDisposedException(TypeName);
         }
@@ -849,15 +849,6 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     {
         foreach (var waiter in released)
             waiter.Signal.TrySetResult(true);
-    }
-
-    private void ThrowIfDisposed()
-    {
-        lock (_pendingLock)
-        {
-            if (_isDisposed)
-                throw new ObjectDisposedException(TypeName);
-        }
     }
 
     private void ReleaseWaitersOnDispose()

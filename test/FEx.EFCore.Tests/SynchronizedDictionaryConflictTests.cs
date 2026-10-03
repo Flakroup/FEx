@@ -17,6 +17,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -776,20 +777,39 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     /// letting it report success on a disposed dictionary.
     /// </summary>
     [Fact]
-    public async Task Dispose_BeforeTheNewSubscriptionIsAssigned_FailsInitializeAsync()
-    {
-        using var sut = CreateDictionary(true);
-        await sut.InitializeAsync();
-        await sut.ResetAsync();
-        sut.BeforePipelineAssigned = () =>
-        {
-            sut.BeforePipelineAssigned = null;
-            sut.Dispose();
-        };
+    public async Task Dispose_BeforeTheNewSubscriptionIsAssigned_FailsInitializeAsync() =>
+        await DisposeBeforeTheNewSubscriptionIsAssignedAsync();
 
-        await Should.ThrowAsync<ObjectDisposedException>(() =>
-            sut.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
-        sut.IsInitialized.ShouldBeFalse();
+    /// <summary>The subscribe signal faulted by that disposal is observed, so it raises no UnobservedTaskException.</summary>
+    [Fact]
+    public async Task Dispose_BeforeTheNewSubscriptionIsAssigned_LeavesNoUnobservedTaskException()
+    {
+        var unobserved = new ConcurrentQueue<Exception>();
+
+        void OnUnobserved(object? sender, UnobservedTaskExceptionEventArgs e)
+        {
+            foreach (var exception in e.Exception.InnerExceptions)
+            {
+                if (exception is ObjectDisposedException { ObjectName: nameof(CacheDictionary) })
+                    unobserved.Enqueue(exception);
+            }
+        }
+
+        TaskScheduler.UnobservedTaskException += OnUnobserved;
+
+        try
+        {
+            await DisposeBeforeTheNewSubscriptionIsAssignedAsync();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
+            unobserved.ShouldBeEmpty();
+        }
+        finally
+        {
+            TaskScheduler.UnobservedTaskException -= OnUnobserved;
+        }
     }
 
     [Fact]
@@ -804,7 +824,7 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         await Should.ThrowAsync<ObjectDisposedException>(() =>
             sut.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
 #pragma warning restore IDISP016, IDISP017
-        // It fails before building a pipeline on the disposed cache.
+        // The base class fails it before OnInitializeAsync builds a pipeline on the disposed cache.
         pipelineBuilt.ShouldBeFalse();
     }
 
@@ -844,6 +864,37 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
             foreach (var subscription in replaced)
                 subscription?.Dispose();
         }
+    }
+
+    // Not inlined, so nothing of the dictionary stays reachable from the caller's frame once it returns.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private async Task DisposeBeforeTheNewSubscriptionIsAssignedAsync()
+    {
+        var resume = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var decided = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        await sut.ResetAsync();
+        // The subscribe is held until the dispose has run, so the signal is still pending when the dispose faults it.
+#pragma warning disable VSTHRD002 // Holds the subscribe on purpose
+        sut.BeforeSubscribe = () => resume.Task.Wait(TimeSpan.FromSeconds(30));
+#pragma warning restore VSTHRD002
+        sut.SubscribeDecided = listens => decided.TrySetResult(listens);
+        sut.BeforePipelineAssigned = () =>
+        {
+            sut.BeforePipelineAssigned = null;
+            sut.Dispose();
+        };
+
+        await Should.ThrowAsync<ObjectDisposedException>(() =>
+            sut.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+        sut.IsInitialized.ShouldBeFalse();
+
+        resume.SetResult(true);
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+        (await decided.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken))
+            .ShouldBeFalse();
+#pragma warning restore VSTHRD003
     }
 
     private async Task InsertDocAsync(int id)

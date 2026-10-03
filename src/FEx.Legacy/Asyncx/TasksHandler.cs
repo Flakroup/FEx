@@ -39,7 +39,7 @@ public class TasksHandler : ITasksHandler
     {
         var taskId = Guid.NewGuid();
         _tasksInfoSubject.AddTask(taskId);
-        // default!: unconstrained T; result is overwritten on success and intentionally returned as default(T) on failure (may be null for reference T) - behavior unchanged.
+        // default!: unconstrained T; always overwritten before it is returned, a failure rethrows.
         T result = default!;
         var isSuccess = true;
 
@@ -58,6 +58,9 @@ public class TasksHandler : ITasksHandler
         {
             isSuccess = false;
             ex.HandleException(specs.HasFlagFast(JobSpecs.InformUserOnExceptionInMain));
+
+            // The handler reports it; the awaiter must still learn the call failed instead of receiving default(T).
+            throw;
         }
         finally
         {
@@ -77,7 +80,7 @@ public class TasksHandler : ITasksHandler
     {
         var taskId = Guid.NewGuid();
         _tasksInfoSubject.AddTask(taskId);
-        // default!: unconstrained T; result is overwritten on success and intentionally returned as default(T) on failure (may be null for reference T) - behavior unchanged.
+        // default!: unconstrained T; always overwritten before it is returned, a failure rethrows.
         T result = default!;
         var isSuccess = true;
 
@@ -98,6 +101,9 @@ public class TasksHandler : ITasksHandler
         {
             isSuccess = false;
             ex.HandleException(specs.HasFlagFast(JobSpecs.InformUserOnExceptionInMain));
+
+            // The handler reports it; the awaiter must still learn the call failed instead of receiving default(T).
+            throw;
         }
         finally
         {

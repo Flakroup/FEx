@@ -47,10 +47,9 @@ public static class UriExtensions
     {
         if (url is not null)
         {
-            pars ??= new();
-
+            // Defaults go on a copy: the caller may reuse its params for a later request.
+            pars = Copy(pars);
             pars.Method ??= GetMethod;
-
             pars.Timeout ??= DefaultTimeout;
 
             var sw = new Stopwatch();
@@ -172,7 +171,7 @@ public static class UriExtensions
         if (link is not null)
             try
             {
-                pars ??= new();
+                pars = Copy(pars);
                 pars.Method = HeadMethod;
 
                 return await link.DoHttpResponseFuncAsync(response => (response.Content.Headers.ContentLength ?? -1) <= 0, pars);
@@ -215,6 +214,23 @@ public static class UriExtensions
             return new ExceptionError(ex, $"Could not test url {url}.");
         }
     }
+
+    internal static WebRequestParams Copy(WebRequestParams? pars) =>
+        new()
+        {
+            Credentials = pars?.Credentials,
+            UserAgent = pars?.UserAgent,
+            Headers = pars?.Headers,
+            Cookies = pars?.Cookies,
+            Method = pars?.Method,
+            Timeout = pars?.Timeout,
+            Pipelined = pars?.Pipelined,
+            KeepAlive = pars?.KeepAlive,
+            ReadWriteTimeout = pars?.ReadWriteTimeout,
+            Proxy = pars?.Proxy,
+            IsProxyNull = pars?.IsProxyNull ?? false,
+            ServerCertificateValidationCallback = pars?.ServerCertificateValidationCallback
+        };
 
     private static async Task<T> InternalDoHttpClientResponseFuncTaskAsync<T>(
         this Uri url,

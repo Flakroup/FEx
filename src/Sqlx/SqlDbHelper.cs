@@ -28,6 +28,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
     public string? SQLInstance => SQLInstanceInfo?.SQLInstance;
 
     public SqlDbHelper()
+        : base([])
     {
         BeginInitialization();
     }
@@ -50,8 +51,6 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
 
     protected override async Task OnInitializeAsync()
     {
-        await base.OnInitializeAsync();
-
         _logger?.Information("DB Lookup");
 
         try

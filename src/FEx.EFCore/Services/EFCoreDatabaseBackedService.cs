@@ -44,20 +44,20 @@ public abstract class EFCoreDatabaseBackedService<TDbContext> : BulkDbServiceBas
 
         // InitializeAsync returns without throwing when an earlier initialization attempt already faulted;
         // run it again so the real failure reaches the caller instead of a half-initialized service.
-        Reset();
+        await ResetAsync();
         await InitializeAsync();
 
         if (!IsInitialized)
             throw new InvalidOperationException($"{TypeName} failed to initialize.");
     }
 
-    protected override async Task OnInitializeAsync()
+    // The SQL instance is resolved before the dependencies are initialized, as it was before the template method;
+    // sealed so a further subclass cannot skip it.
+    protected sealed override async Task OnBeforeDependenciesInitializationAsync()
     {
         if (!_dbHelper.IsInitialized)
             await JoinableAsyncHelper.AwaitWithoutDeadlockAsync(_dbHelper.InitializeAsync);
 
         _dbConfig.SqlInstance = _dbHelper.SQLInstance.Guard(nameof(_dbHelper.SQLInstance));
-
-        await base.OnInitializeAsync();
     }
 }

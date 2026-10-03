@@ -40,6 +40,7 @@ public class NuGetManager : AsyncInitializable
     }
 
     internal NuGetManager(NuGetLogger<NuGetManager> logger, INuGetResourceSource resourceSource)
+        : base([])
     {
         Logger = logger;
         PackageMetadataResource = new(resourceSource.GetResourceAsync<PackageMetadataResource>);
@@ -311,7 +312,6 @@ public class NuGetManager : AsyncInitializable
 
     protected override async Task OnInitializeAsync()
     {
-        await base.OnInitializeAsync();
         Providers.AddRange(NuGetRepository.Provider.GetCoreV3());
     }
 

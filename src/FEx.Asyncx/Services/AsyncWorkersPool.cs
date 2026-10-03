@@ -23,6 +23,7 @@ public abstract class AsyncWorkersPool<TWorker, TResult> : AsyncInitializable
     private SemaphoreSlim Semaphore { get; }
 
     protected AsyncWorkersPool(uint poolSize)
+        : base([])
     {
         ProcessingQueue = new(poolSize);
         Workers = [];
@@ -48,7 +49,6 @@ public abstract class AsyncWorkersPool<TWorker, TResult> : AsyncInitializable
 
     protected override async Task OnInitializeAsync()
     {
-        await base.OnInitializeAsync();
         InitializePool((int)ProcessingQueue.ConcurrencyLimit);
         await Task.WhenAll([.. Workers.Select(x => x.InitializeAsync())]);
     }

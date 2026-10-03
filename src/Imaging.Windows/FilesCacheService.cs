@@ -39,7 +39,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     public FilesCacheService(IFilesCacheServiceConfig config,
                              IndexEntriesCache cache,
                              ISynchronizedAccessService lockService)
-        : base(cache)
+        : base([cache])
     {
         LockSrv = lockService;
         Config = config;
@@ -317,8 +317,6 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
 
     protected override async Task OnInitializeAsync()
     {
-        await base.OnInitializeAsync();
-
         if (await InitializationSemaphore.WaitAsync(TimeSpan.Zero))
             try
             {

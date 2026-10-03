@@ -248,7 +248,8 @@ public sealed class ConcurrencyConflictTests : IDisposable
         public ConcurrencyService()
             : base(Substitute.For<IScopeProvider>(),
                 new(Substitute.For<IFExLogger>()),
-                Substitute.For<IFExDbConfig>())
+                Substitute.For<IFExDbConfig>(),
+                [])
         {
         }
 

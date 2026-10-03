@@ -55,7 +55,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                                      string keyPropertyName,
                                      Func<TValue, IObservable<object>>[]? observables = null,
                                      params string[] observedProperties)
-        : base(dbService)
+        : base([dbService])
     {
         KeyPropertyName = keyPropertyName;
         _dbSrv = dbService;
@@ -193,8 +193,6 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     protected override async Task OnInitializeAsync()
     {
-        await base.OnInitializeAsync();
-
         var mappedProperties = _dbSrv.Mappings[typeof(TValue).FullName.Guard(nameof(TValue))].Properties;
 
         _observedProperties = _observedProperties is null

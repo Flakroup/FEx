@@ -37,6 +37,7 @@ public abstract class AsyncWorker<T, TResult> : AsyncInitializable where T : cla
     private T Self => (this as T)!;
 
     protected AsyncWorker(int id)
+        : base([])
     {
         Id = id;
 
@@ -59,8 +60,6 @@ public abstract class AsyncWorker<T, TResult> : AsyncInitializable where T : cla
 
     protected override async Task OnInitializeAsync()
     {
-        await base.OnInitializeAsync();
-
         StartCurrentTask();
         EndCurrentTask();
     }

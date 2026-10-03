@@ -15,6 +15,11 @@ using System.Threading.Tasks;
 
 namespace FEx.Asyncx.Abstractions;
 
+/// <summary>
+/// Template for asynchronous one-time initialization. The base owns the whole sequence (lock, dependencies,
+/// <see cref="OnInitializeAsync" />, <see cref="IsInitialized" />); subclasses only fill in the hooks, whose base
+/// implementations do nothing, so there is no base call to forget.
+/// </summary>
 public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitializable
 {
     protected readonly IFExLogger _logger;
@@ -40,7 +45,11 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
     /// </summary>
     protected bool SkipDependenciesInitialization { get; set; }
 
-    protected AsyncInitializable(params IAsyncInitializable[] dependencies)
+    /// <param name="dependencies">
+    /// Initialized before <see cref="OnInitializeAsync" />. Deliberately not <c>params</c>: every subclass must state
+    /// its dependencies (<c>: base([])</c> when it has none), so forgetting to forward them does not compile.
+    /// </param>
+    protected AsyncInitializable(IAsyncInitializable[] dependencies)
     {
         _logger = FExStaticLogger.Instance;
         _initializationSemaphore = new();
@@ -58,24 +67,74 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         if (HasFinishedInitialization)
             return;
 
+        Task initializationTask;
         await _taskSemaphore.WaitAsync();
 
         try
         {
-            _initializationTask ??= AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeCoreAsync);
+            initializationTask = _initializationTask ??= AsyncStatics.ExecuteTaskOnThreadPoolAsync(InitializeCoreAsync);
         }
         finally
         {
             _taskSemaphore.SafeRelease();
         }
 
-        await _initializationTask;
+        // The local copy: a concurrent reset may clear the field once the lock is released.
+        await initializationTask;
     }
 
+    /// <summary>
+    /// Blocks until an in-flight initialization has finished, then clears the initialization state. Prefer
+    /// <see cref="ResetAsync" /> on asynchronous paths. Must not be called from inside an initialization hook.
+    /// </summary>
     public void Reset()
     {
-        _initializationTask = null;
-        IsInitialized = false;
+        _initializationSemaphore.Wait();
+
+        try
+        {
+            _taskSemaphore.Wait();
+
+            try
+            {
+                ClearInitializationState();
+            }
+            finally
+            {
+                _taskSemaphore.SafeRelease();
+            }
+        }
+        finally
+        {
+            _initializationSemaphore.SafeRelease();
+        }
+    }
+
+    /// <summary>
+    /// Waits for an in-flight initialization to finish, then clears the initialization state, so a reset is never
+    /// observed mid-initialization. Must not be awaited from inside an initialization hook.
+    /// </summary>
+    public async Task ResetAsync()
+    {
+        await _initializationSemaphore.WaitAsync();
+
+        try
+        {
+            await _taskSemaphore.WaitAsync();
+
+            try
+            {
+                ClearInitializationState();
+            }
+            finally
+            {
+                _taskSemaphore.SafeRelease();
+            }
+        }
+        finally
+        {
+            _initializationSemaphore.SafeRelease();
+        }
     }
 
     public void BeginInitialization(bool waitSynchronouslyForInitialization)
@@ -110,15 +169,19 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         }
     }
 
-    protected virtual async Task OnInitializeAsync()
-    {
-        if (!SkipDependenciesInitialization)
-            await InitializeDependenciesAsync();
+    /// <summary>
+    /// Initialization work of the subclass. Runs once, under the initialization lock, after the dependencies are
+    /// initialized (unless <see cref="SkipDependenciesInitialization" />). The base implementation does nothing.
+    /// </summary>
+    protected virtual Task OnInitializeAsync() => Task.CompletedTask;
 
-        _logger.Debug($"Initializing {TypeName}");
-    }
+    /// <summary>
+    /// Runs under the initialization lock before the dependencies are initialized. Only for work the dependencies
+    /// rely on; everything else belongs in <see cref="OnInitializeAsync" />. The base implementation does nothing.
+    /// </summary>
+    protected virtual Task OnBeforeDependenciesInitializationAsync() => Task.CompletedTask;
 
-    protected virtual async Task InitializeDependenciesAsync()
+    private async Task InitializeDependenciesAsync()
     {
         var results = await _dependencies.Values.Where(static dependency => !dependency.IsInitialized)
             .WithWhenAllTasksAsync(SafeInitializeAsync, AsyncMode.ThreadPool);
@@ -134,7 +197,7 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         throw new AggregateException(failed.Select(static fail => fail.Error?.Exception).OfType<Exception>());
     }
 
-    protected virtual async Task InitializeCoreAsync()
+    private async Task InitializeCoreAsync()
     {
         await _initializationSemaphore.WaitAsync();
 
@@ -147,7 +210,19 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
                 return;
             }
 
-            IsInitialized = false;
+            if (await WasResetBeforeStartAsync())
+            {
+                _logger.Debug($"{TypeName} was reset before its initialization started");
+
+                return;
+            }
+
+            await OnBeforeDependenciesInitializationAsync();
+
+            if (!SkipDependenciesInitialization)
+                await InitializeDependenciesAsync();
+
+            _logger.Debug($"Initializing {TypeName}");
 
             await OnInitializeAsync();
 
@@ -165,6 +240,29 @@ public abstract class AsyncInitializable : NotifyPropertyChanged, IAsyncInitiali
         {
             _initializationSemaphore.SafeRelease();
         }
+    }
+
+    // A reset that lands between InitializeAsync publishing the task and this run taking the lock has cleared the
+    // task; initializing anyway would leave IsInitialized true with no task.
+    private async Task<bool> WasResetBeforeStartAsync()
+    {
+        await _taskSemaphore.WaitAsync();
+
+        try
+        {
+            return _initializationTask is null;
+        }
+        finally
+        {
+            _taskSemaphore.SafeRelease();
+        }
+    }
+
+    // Callers hold both _initializationSemaphore and _taskSemaphore.
+    private void ClearInitializationState()
+    {
+        _initializationTask = null;
+        IsInitialized = false;
     }
 
     protected void ThrowIfNotInitialized()

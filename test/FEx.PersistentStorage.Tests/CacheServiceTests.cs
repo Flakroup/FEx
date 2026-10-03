@@ -46,9 +46,9 @@ public sealed class CacheServiceTests
     public void Upsert_Collection_WhenStorageThrows_RethrowsAndDeletesNothing()
     {
         var items = new[] { new Item(), new Item() };
-        _storage.When(s => s.Upsert<Item>(items, null)).Do(_ => throw new IOException("disk busy"));
+        _storage.When(s => s.Upsert(items, null)).Do(_ => throw new IOException("disk busy"));
 
-        Should.Throw<IOException>(() => _sut.Upsert<Item>(items, null));
+        Should.Throw<IOException>(() => _sut.Upsert(items, null));
 
         AssertNothingDeleted();
     }
@@ -76,7 +76,7 @@ public sealed class CacheServiceTests
     private void AssertNothingDeleted()
     {
         _logger.Received(1).Error(Arg.Any<IOException>(), Arg.Any<string?>());
-        _storage.DidNotReceiveWithAnyArgs().DeleteAll<Item>(default(Expression<Func<Item, bool>>));
+        _storage.DidNotReceiveWithAnyArgs().DeleteAll(default(Expression<Func<Item, bool>>));
         _storage.DidNotReceiveWithAnyArgs().Insert(default(Item)!);
         _storage.DidNotReceiveWithAnyArgs().Insert(default(IEnumerable<Item>)!);
     }

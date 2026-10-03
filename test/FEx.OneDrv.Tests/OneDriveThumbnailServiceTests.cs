@@ -6,8 +6,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -23,7 +21,7 @@ public sealed class OneDriveThumbnailServiceTests : IDisposable
 
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "FEx.OneDrv.Tests", Guid.NewGuid().ToString("N"));
     private readonly FakeGraph _graph = new(_ => FakeGraph.Json(ThumbsJson));
-    private readonly FakeGraph _cdn = new(request =>
+    private readonly FakeGraph _cdn = new(_ =>
     {
         var response = new HttpResponseMessage
         {

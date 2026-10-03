@@ -2,7 +2,6 @@ using FEx.Agnostics.Abstractions.Flow;
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.EFCore.Extensions;
-using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Services;
 using Microsoft.Data.Sqlite;
@@ -200,12 +199,15 @@ public sealed class ConcurrencyConflictTests : IDisposable
 
     private ConcurrencyDbContext CreateContext() => new(_connection);
 
+    // The synchronous Save is a separate public path under test; kept out of the async SaveAsync body below.
+    private void SaveSynchronously(ConcurrencyDbContext context) => _service.Save(context).IsSuccess.ShouldBeTrue();
+
     private async Task SaveAsync(ConcurrencyDbContext context, SavePath path)
     {
         switch (path)
         {
             case SavePath.ServiceSync:
-                _service.Save(context).IsSuccess.ShouldBeTrue();
+                SaveSynchronously(context);
 
                 break;
             case SavePath.ServiceAsync:

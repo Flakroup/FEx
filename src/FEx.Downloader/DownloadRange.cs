@@ -219,53 +219,49 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
                 || retrievedContentRange.From.Value != From
                 || retrievedContentRange.To.Value != To
                 || response.Content.Headers.ContentLength != To - From + 1)
-            {
                 // Retrying a server that ignores the range would only repeat the same answer.
                 throw new HttpStatusException(response.StatusCode,
                     Url,
                     "The server did not honour the requested range");
-            }
-            else
+
+            using var streamResponse = await response.ReadContentStreamAsync(CancellationToken);
+
+            try
             {
-                using var streamResponse = await response.ReadContentStreamAsync(CancellationToken);
+                DState = DownloadState.InProgress;
+                OpenedConnection();
 
-                try
+                var isReading = true;
+                int bytesRead;
+                int receivedBytes;
+
+                while (isReading)
                 {
-                    DState = DownloadState.InProgress;
-                    OpenedConnection();
+                    bytesRead = 0;
+                    receivedBytes = -1;
+                    Array.Clear(Buffer, 0, Buffer.Length);
 
-                    var isReading = true;
-                    int bytesRead;
-                    int receivedBytes;
-
-                    while (isReading)
+                    while (bytesRead < Buffer.Length
+                           && receivedBytes != 0
+                           && !CancellationToken.IsCancellationRequested)
                     {
-                        bytesRead = 0;
-                        receivedBytes = -1;
-                        Array.Clear(Buffer, 0, Buffer.Length);
+                        receivedBytes = await streamResponse.ReadAsync(Buffer,
+                            bytesRead,
+                            Buffer.Length - bytesRead,
+                            CancellationToken);
 
-                        while (bytesRead < Buffer.Length
-                               && receivedBytes != 0
-                               && !CancellationToken.IsCancellationRequested)
-                        {
-                            receivedBytes = await streamResponse.ReadAsync(Buffer,
-                                bytesRead,
-                                Buffer.Length - bytesRead,
-                                CancellationToken);
-
-                            bytesRead += receivedBytes;
-                        }
-
-                        isReading = bytesRead > 0;
-
-                        if (isReading)
-                            await DumpBufferToChunksAsync(bytesRead);
+                        bytesRead += receivedBytes;
                     }
+
+                    isReading = bytesRead > 0;
+
+                    if (isReading)
+                        await DumpBufferToChunksAsync(bytesRead);
                 }
-                finally
-                {
-                    ClosedConnection();
-                }
+            }
+            finally
+            {
+                ClosedConnection();
             }
         }
         catch (Exception ex)

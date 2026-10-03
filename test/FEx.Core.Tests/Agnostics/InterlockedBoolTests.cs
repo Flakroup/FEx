@@ -21,7 +21,7 @@ public sealed class InterlockedBoolTests
     public void InequalityOperator_DetectsDifferentValues()
     {
         var a = new InterlockedBool(true);
-        var b = new InterlockedBool(false);
+        var b = new InterlockedBool();
 
         (a == b).ShouldBeFalse();
         (a != b).ShouldBeTrue();

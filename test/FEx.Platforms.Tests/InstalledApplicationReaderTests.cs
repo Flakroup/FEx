@@ -26,7 +26,7 @@ public sealed class InstalledApplicationReaderTests
         };
 
         var app = InstalledApplicationReader.Map("{GUID}",
-            name => values.GetValueOrDefault(name),
+            values.GetValueOrDefault,
             RegistryHive.LocalMachine,
             RegistryView.Registry64);
 

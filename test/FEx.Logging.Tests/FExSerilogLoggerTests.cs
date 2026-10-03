@@ -296,12 +296,12 @@ public sealed class FExSerilogLoggerTests
             LoggerState endScopeState = new();
             LoggerState disposeState = new();
 
-            var endScopeFlow = await RunWithScopeDisposedByParent(logger, endScopeState, flow =>
+            var endScopeFlow = await RunWithScopeDisposedByParent(logger, endScopeState, _ =>
             {
                 logger.EndScope();
                 logger.AddOrUpdateLabel("probe", 1); // the scope was popped: reaches no state
             });
-            var disposeFlow = await RunWithScopeDisposedByParent(logger, disposeState, flow => logger.Dispose());
+            var disposeFlow = await RunWithScopeDisposedByParent(logger, disposeState, _ => logger.Dispose());
 
             await Task.WhenAll(endScopeFlow, disposeFlow).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             endScopeState.ShouldBeEmpty();

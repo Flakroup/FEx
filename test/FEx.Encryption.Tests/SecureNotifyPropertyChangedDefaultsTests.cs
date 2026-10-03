@@ -58,7 +58,7 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
     {
         // Authentic, decryptable JSON whose shape does not fit: a string where an int belongs. The
         // deserializer's own message quotes the offending value - the decrypted secret.
-        var secrets = new RecordingSecrets(_cipher) { RawPayload = _cipher.Encrypt($"{{\"Count\":\"{Plaintext}\"}}") };
+        var secrets = new RecordingSecrets(_cipher) { RawPayload = _cipher.Encrypt($"{{\"{nameof(Payload.Count)}\":\"{Plaintext}\"}}") };
 
         secrets.Data.ShouldBeNull();
 
@@ -66,7 +66,7 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
         reported.ShouldBeOfType<FExDecryptionException>();
         reported.InnerException.ShouldBeNull();
         reported.ToString().ShouldNotContain(Plaintext);
-        reported.Message.ShouldContain("Count", Case.Sensitive, "the JSON path is still reported");
+        reported.Message.ShouldContain(nameof(Payload.Count), Case.Sensitive, "the JSON path is still reported");
 
         var logged = LoggedText().ToList();
         logged.ShouldNotBeEmpty();
@@ -104,13 +104,11 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
 
         internal string? RawSecret
         {
-            get => _secret;
             set => _secret = value;
         }
 
         internal string? RawPayload
         {
-            get => _payload;
             set => _payload = value;
         }
 
@@ -120,11 +118,7 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
             set => EncryptSource(ref _secret, value);
         }
 
-        public Payload? Data
-        {
-            get => DecryptFromJsonSource<Payload>(_payload);
-            set => EncryptJsonSource(ref _payload, value);
-        }
+        public Payload? Data => DecryptFromJsonSource<Payload>(_payload);
 
         protected override FExStringCipher Cipher => _instanceCipher;
     }

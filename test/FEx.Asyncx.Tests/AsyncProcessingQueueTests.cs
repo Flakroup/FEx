@@ -66,7 +66,7 @@ public sealed class AsyncProcessingQueueTests
         var first = queue.EnqueueAsync(async () =>
         {
             firstStarted.SetResult(true);
-            await releaseFirst.Task.WaitAsync(_timeout);
+            await releaseFirst.Task.WaitAsync(_timeout, ct);
         }, ct);
         await firstStarted.Task.WaitAsync(_timeout, ct);
 
@@ -100,7 +100,7 @@ public sealed class AsyncProcessingQueueTests
         _ = queue.EnqueueAsync(async () =>
         {
             firstStarted.SetResult(true);
-            await releaseFirst.Task.WaitAsync(_timeout);
+            await releaseFirst.Task.WaitAsync(_timeout, ct);
         }, ct);
         await firstStarted.Task.WaitAsync(_timeout, ct);
 

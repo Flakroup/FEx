@@ -16,7 +16,37 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
 
 jobs:
+  # Part 1 of 2: the long part. Pushes nothing; the packages go up as an artifact for `publish`.
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          lfs: true
+          fetch-depth: 0   # GitVersion needs full history + tags
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore workloads (MAUI for FEx.Maui)
+        run: dotnet workload restore FEx.slnx
+      - name: Restore local tools (pinned ReSharper CLT for Inspect)
+        run: dotnet tool restore
+      - name: Test, inspect and pack
+        run: pwsh ./build.ps1 Test Inspect Pack --configuration Release
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: |
+            artifacts/packages/*.nupkg
+            artifacts/packages/release-version.txt
+          if-no-files-found: error
+          retention-days: 7
+
+  # Part 2 of 2: short push of ALL packages from the artifact, then tag the version the packages carry (release-version.txt, no second GitVersion run).
   publish:
+    needs: build
     runs-on: windows-latest
     environment: production
     permissions:
@@ -30,10 +60,15 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Restore workloads (MAUI for FEx.Maui)
-        run: dotnet workload restore FEx.slnx
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: artifacts/packages
       - name: Publish to nuget.org
         env:
           NuGetApiKey: ${{ secrets.NUGET_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}   # for the Tag target to push the git version tag
-        run: pwsh ./build.ps1 Publish --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"
+        run: |
+          $version = (Get-Content artifacts/packages/release-version.txt -Raw).Trim()
+          pwsh ./build.ps1 Publish --skip Restore Compile Test Verify Pack --configuration Release --release-version $version --nuget-source "https://api.nuget.org/v3/index.json"

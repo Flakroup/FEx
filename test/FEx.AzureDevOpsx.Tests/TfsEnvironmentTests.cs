@@ -1,4 +1,3 @@
-using FEx.AzureDevOpsx;
 using FEx.MVVM.Abstractions.Interfaces;
 using Microsoft.TeamFoundation.Client;
 using NSubstitute;

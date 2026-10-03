@@ -101,7 +101,7 @@ public sealed class FtpDownloaderTests : IDisposable
     {
         var transport = new FakeTransport { OpenThrows = new InvalidOperationException("down") };
         using var cts = new CancellationTokenSource();
-        transport.OnOpen = () => cts.Cancel();
+        transport.OnOpen = cts.Cancel;
 
         await Should.ThrowAsync<OperationCanceledException>(() => Download(transport, NewPath(), 1000, cts.Token));
 

@@ -139,7 +139,6 @@ public sealed class AsyncProcessingQueue : IDisposable
         if (_disposed)
             FailPendingGates();
         else
-        {
             try
             {
                 _queuedSignal.Release();
@@ -148,7 +147,6 @@ public sealed class AsyncProcessingQueue : IDisposable
             {
                 FailPendingGates();
             }
-        }
 
         await gate.Task;
     }

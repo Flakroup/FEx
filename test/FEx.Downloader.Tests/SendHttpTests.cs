@@ -102,7 +102,7 @@ public sealed class SendHttpTests
     [Fact]
     public async Task TryGetRangeAsync_ServerAcceptingRanges_ReturnsTrue()
     {
-        var handler = new FakeHttpHandler(request =>
+        var handler = new FakeHttpHandler(_ =>
         {
             var response = new HttpResponseMessage(HttpStatusCode.PartialContent)
             {

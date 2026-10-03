@@ -16,7 +16,7 @@ public sealed class AccessCheckCommandTests
     [Fact]
     public void Script_ListsTheRootAndReadsEveryValueFromTheEnvironment()
     {
-        var script = FileSystemExtensions.AccessCheckScript;
+        const string script = FileSystemExtensions.AccessCheckScript;
 
         script.ShouldContain($"(@(Get-Item -LiteralPath $env:{FileSystemExtensions.AccessCheckPathVariable})");
         script.ShouldContain($"Get-ChildItem -LiteralPath $env:{FileSystemExtensions.AccessCheckPathVariable} -Recurse");

@@ -41,7 +41,7 @@ public sealed class SecretRedactor
     // The WHOLE parameter name, or its last segment after - _ or . (x-api-key, client_secret) - never a substring,
     // so author=, design= and assign= stay readable.
     private static readonly Regex CredentialQueryName =
-        new(@"^(?:.*[-_.])?(?:api[-_]?key|key|token|access[-_]?token|auth|password|passwd|pwd|secret|sig|signature|credentials?)$",
+        new("^(?:.*[-_.])?(?:api[-_]?key|key|token|access[-_]?token|auth|password|passwd|pwd|secret|sig|signature|credentials?)$",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
             MatchTimeout);
 

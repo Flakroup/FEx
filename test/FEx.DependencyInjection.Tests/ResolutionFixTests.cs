@@ -46,7 +46,7 @@ public sealed class ResolutionFixTests : IDisposable
         using var provider = new FExStrongInjectServiceProvider();
         provider.SetServiceProvider(container);
 
-        Should.Throw<InvalidOperationException>(() => provider.TryResolveService<IFoo>()).Message.ShouldBe("boom");
+        Should.Throw<InvalidOperationException>(provider.TryResolveService<IFoo>).Message.ShouldBe("boom");
     }
 
     [Fact]
@@ -129,7 +129,7 @@ public sealed class ResolutionFixTests : IDisposable
     private sealed class ProviderScope : IDisposable
     {
         private static readonly FieldInfo _field =
-            typeof(StaticsBase).GetField("_serviceProvider", BindingFlags.NonPublic | BindingFlags.Static)!;
+            typeof(StaticsBase).GetField("_serviceProvider", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
 
         private readonly object? _previous;
 

@@ -45,7 +45,13 @@ internal sealed class AsyncOnce<T>(Func<CancellationToken, Task<T>> factory) whe
 
         try
         {
-            return _value ??= await factory(token);
+            if (_value is { } existing)
+                return existing;
+
+            var created = await factory(token);
+            _value = created;
+
+            return created;
         }
         finally
         {

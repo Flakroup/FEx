@@ -121,7 +121,7 @@ public class AzureStorageService : IAzureStorageService
     {
         Directory.CreateDirectory(downloadDir);
 
-        (string fileName, FileInfo localFile)[] blobsInfo =
+        var blobsInfo =
             await ProcessBlobsAsync(containerName, downloadDir, paths);
 
         if (deleteOldFiles)

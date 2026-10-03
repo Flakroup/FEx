@@ -230,7 +230,6 @@ public class TfsEnvironment : NotifyPropertyChanged
             // GetServerAsync skips LoginAsync (and its load) for an already authenticated server.
             if (res
                 && Server?.HasAuthenticated == true)
-            {
                 try
                 {
                     await GetProjectsCollectionsAsync();
@@ -240,7 +239,6 @@ public class TfsEnvironment : NotifyPropertyChanged
                     ex.HandleException();
                     res = false;
                 }
-            }
 
             return res;
         }

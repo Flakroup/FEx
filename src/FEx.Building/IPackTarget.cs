@@ -19,6 +19,10 @@ public interface IPackTarget : ICompileTarget, IGitVersionComponent
 
     sealed AbsolutePath PackagesDirectory => RootDirectory / "artifacts" / "packages";
 
+    // The version Pack stamped on the packages, written beside them. A later job that tags the release
+    // reads it instead of resolving GitVersion again, so the tag cannot name a version no package carries.
+    sealed AbsolutePath ReleaseVersionFile => PackagesDirectory / "release-version.txt";
+
     Target Pack =>
         _ => _.Description("Creates NuGet packages with GitVersion-derived version")
             .DependsOn(Compile)
@@ -44,6 +48,8 @@ public interface IPackTarget : ICompileTarget, IGitVersionComponent
                         .SetProperty("PackageVersion", version)
                         .SetProperty("NoWarn", "CS1591"));
                 }
+
+                ReleaseVersionFile.WriteAllText(version);
 
                 var packages = PackagesDirectory.GlobFiles("*.nupkg");
                 Log.Information("Created {Count} package(s):", packages.Count);

@@ -270,7 +270,7 @@ See complete working sample: [`samples/FEx.Sample.WebAPI`](samples/FEx.Sample.We
 ## 🧪 Testing
 
 Tests are written with **xUnit v3** and run through the NUKE build. They
-execute automatically in CI (GitHub Actions) on every push and pull request.
+execute automatically in CI (GitHub Actions) on every pull request and on every push to `main` and `develop`.
 
 ```bash
 # Run the full test suite (NUKE - builds then tests)
@@ -376,9 +376,10 @@ dotnet build -c Release
 
 ### Continuous Integration (GitHub Actions)
 
-- **`ci.yml`** - runs on every push and pull request:
-  - `secret-scan` (gitleaks) on `ubuntu-latest`
-  - `compile` / `test` via NUKE `build.ps1` on `windows-latest` (required for the WPF + .NET Framework 4.8.1 projects)
+- **`secret-scan.yml`** - runs on every push to any branch and on every pull request: `secret-scan` (gitleaks) on `ubuntu-latest`. It is the repository's only secret detection and a required check, so it is deliberately not part of `ci.yml`.
+- **`ci.yml`** - runs on pull requests and on pushes to `main` and `develop` (a branch with a pull request is built by its pull request run only; a branch without one is scanned for secrets but not built):
+  - pull requests: `test` - NUKE `build.ps1 Test Inspect` on `windows-latest` (required for the WPF + .NET Framework 4.8.1 projects); `Inspect` fails on any ReSharper ERROR
+  - pushes to `main`/`develop`: `build` (`Test Inspect Pack`, uploads the packages) and then `publish` (pushes those packages to nuget.org and tags the release)
   - Checkout uses `submodules: recursive` + `lfs: true`; the MAUI workload is restored for `FEx.Maui`
 - **`publish.yml`** - manual `workflow_dispatch` only. Packs and pushes all FEx packages to **nuget.org** at the GitVersion-derived (pre-release) version and tags the release. Requires the `NUGET_API_KEY` repository secret; the NUKE `Publish` target is skipped when it is absent.
 

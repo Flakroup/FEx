@@ -82,7 +82,7 @@ public class ResilientTransaction
         try
         {
             res = await action();
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(CancellationToken.None);
         }
         catch
         {
@@ -109,7 +109,7 @@ public class ResilientTransaction
         try
         {
             res = action();
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(CancellationToken.None);
         }
         catch
         {

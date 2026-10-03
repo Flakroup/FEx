@@ -1,4 +1,3 @@
-using FEx.FTPx;
 using Shouldly;
 using System;
 using System.IO;

@@ -1,8 +1,5 @@
-using FEx.Core.Abstractions;
-using FEx.Core.Abstractions.Interfaces;
 using FEx.Downloader.Clients;
 using FEx.Downloader.Enums;
-using NSubstitute;
 using Shouldly;
 using System;
 using System.IO;

@@ -1,6 +1,4 @@
-using FEx.Core.Abstractions.Extensions;
 using FEx.WPFx.Extensions;
-using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;

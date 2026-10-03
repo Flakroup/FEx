@@ -26,11 +26,12 @@ public sealed class JsonExtensionsTests
 
             Should.NotThrow(() => json = new Faulty().SafeSerializeObject());
 
-            json.ShouldContain("Name");
+            json.ShouldContain(nameof(Faulty.Name));
             json.ShouldContain("ok");
+            json.ShouldNotContain(nameof(Faulty.Boom));
 
             shared.Error.ShouldBeNull();
-            Should.Throw<JsonReaderException>(() => JsonConvert.DeserializeObject<Dto>("{\"Id\":\"not-an-int\"}"));
+            Should.Throw<JsonReaderException>(() => JsonConvert.DeserializeObject<Dto>($"{{\"{nameof(Dto.Id)}\":\"not-an-int\"}}"));
         }
         finally
         {

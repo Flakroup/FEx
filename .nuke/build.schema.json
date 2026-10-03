@@ -26,12 +26,14 @@
       "enum": [
         "Clean",
         "Compile",
+        "Inspect",
         "Pack",
         "Publish",
         "PublishApp",
         "Restore",
         "Tag",
         "Test",
+        "TriggerInspect",
         "Verify"
       ]
     },
@@ -113,6 +115,10 @@
             "Debug",
             "Release"
           ]
+        },
+        "InspectAlongsideTests": {
+          "type": "boolean",
+          "description": "Start the ReSharper inspection alongside the tests rather than after them"
         },
         "NuGetApiKey": {
           "type": "string",

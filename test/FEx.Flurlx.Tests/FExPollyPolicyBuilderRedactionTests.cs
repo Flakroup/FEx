@@ -1,5 +1,4 @@
 using FEx.Agnostics.Abstractions.Interfaces;
-using FEx.Flurlx.Configuration;
 using FEx.Flurlx.Services;
 using Flurl.Http;
 using NSubstitute;

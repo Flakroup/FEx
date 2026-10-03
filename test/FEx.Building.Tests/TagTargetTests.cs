@@ -14,6 +14,24 @@ namespace FEx.Building.Tests;
 public sealed class TagTargetTests
 {
     [Fact]
+    public void AGivenReleaseVersion_IsTaggedWithoutResolvingGitVersionAgain()
+    {
+        // The regression: a publish job that re-resolved the version after history moved tagged
+        // 0.4.0-alpha.2 over packages stamped 0.3.0-alpha.2.
+        ITagTarget.TagVersion("0.3.0-alpha.2\n", static () => throw new InvalidOperationException("resolved"))
+            .ShouldBe("0.3.0-alpha.2");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void NoReleaseVersion_FallsBackToTheResolvedOne(string? given)
+    {
+        ITagTarget.TagVersion(given, static () => "0.1.0").ShouldBe("0.1.0");
+    }
+
+    [Fact]
     public void NoCollidingTag_IsAvailable()
     {
         Should.NotThrow(() => IGitVersionComponent.AssertVersionAvailable(Version(), "v", Tags(), Tags()));

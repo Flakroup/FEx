@@ -1,4 +1,3 @@
-using FEx.AzureDevOpsx;
 using Shouldly;
 using System;
 using System.Net;

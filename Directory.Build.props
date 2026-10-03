@@ -1,5 +1,11 @@
 <Project>
 
+    <PropertyGroup>
+        <!-- Opt in to the DevConfigs NuGet package defaults (XML docs, embedded sources, symbol packages, SourceLink,
+             license metadata). Must be set before the DevConfigs props import below. -->
+        <DevConfigsPackageDefaults>true</DevConfigsPackageDefaults>
+    </PropertyGroup>
+
     <Import Project="$(MSBuildThisFileDirectory)\DevConfigs\Directory.Build.props"/>
 
 	<PropertyGroup>

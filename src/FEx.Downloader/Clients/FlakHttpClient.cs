@@ -33,12 +33,6 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     /// <summary>
     /// Initializes a new instance of the <see cref="FlakHttpClient" /> class with a specific handler.
     /// </summary>
-    /// <param name="pars">The <see cref="WebRequestParams" /> parameters for processing HTTP response messages.</param>
-    /// <param name="disposeHandler">
-    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
-    /// <see langword="false" /> if you intend to reuse the inner handler.
-    /// </param>
-    /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public FlakHttpClient()
         : this(new WebRequestParams(), true, null)
     {
@@ -54,8 +48,34 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FlakHttpClient" /> class with a specific handler.
+    /// </summary>
+    /// <param name="pars">The <see cref="WebRequestParams" /> parameters for processing HTTP response messages.</param>
+    /// <param name="disposeHandler">
+    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
+    /// <see langword="false" /> if you intend to reuse the inner handler.
+    /// </param>
+    /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public FlakHttpClient(WebRequestParams pars, bool disposeHandler, CancellationTokenSource? cancellationTokenSource)
         : this(pars.GetHttpClientHandler(), disposeHandler, cancellationTokenSource)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FlakHttpClient" /> class with a specific handler.
+    /// </summary>
+    /// <param name="handler">
+    /// The <see cref="HttpMessageHandler" /> responsible for processing the HTTP
+    /// response messages.
+    /// </param>
+    public FlakHttpClient(HttpClientHandler handler)
+        : this(handler, true, null)
+    {
+    }
+
+    public FlakHttpClient(HttpClientHandler handler, bool disposeHandler)
+        : this(handler, disposeHandler, null)
     {
     }
 
@@ -71,16 +91,6 @@ public class FlakHttpClient : ProgressAggregator, IDownloadBase
     /// <see langword="false" /> if you intend to reuse the inner handler.
     /// </param>
     /// <param name="cancellationTokenSource">The cancellation token source.</param>
-    public FlakHttpClient(HttpClientHandler handler)
-        : this(handler, true, null)
-    {
-    }
-
-    public FlakHttpClient(HttpClientHandler handler, bool disposeHandler)
-        : this(handler, disposeHandler, null)
-    {
-    }
-
     public FlakHttpClient(HttpClientHandler handler,
                           bool disposeHandler,
                           CancellationTokenSource? cancellationTokenSource)

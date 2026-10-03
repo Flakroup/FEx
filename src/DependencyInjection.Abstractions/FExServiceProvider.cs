@@ -66,7 +66,7 @@ public class FExServiceProvider : IFExServiceProvider
     }
 
     /// <summary>
-    /// Retrieves the <see cref="T" /> instance.
+    /// Retrieves the <typeparamref name="T" /> instance.
     /// <br />
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>
@@ -146,7 +146,7 @@ public class FExServiceProvider : IFExServiceProvider
     public object? GetService(Type serviceType) => ServiceContainer is null ? null : ResolveByType(serviceType, false);
 
     /// <summary>
-    /// Retrieves the <see cref="T" /> instance.
+    /// Retrieves the <typeparamref name="T" /> instance.
     /// <br />
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>
@@ -161,7 +161,7 @@ public class FExServiceProvider : IFExServiceProvider
     }
 
     /// <summary>
-    /// Retrieves the <see cref="T" /> instance asynchronously.
+    /// Retrieves the <typeparamref name="T" /> instance asynchronously.
     /// <br />
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>
@@ -176,7 +176,7 @@ public class FExServiceProvider : IFExServiceProvider
     }
 
     /// <summary>
-    /// Retrieves the <see cref="T" /> instances.
+    /// Retrieves the <typeparamref name="T" /> instances.
     /// <br />
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>
@@ -191,7 +191,7 @@ public class FExServiceProvider : IFExServiceProvider
     }
 
     /// <summary>
-    /// Retrieves the <see cref="T" /> instances or returns empty enumerable if none found.
+    /// Retrieves the <typeparamref name="T" /> instances or returns empty enumerable if none found.
     /// <br />
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>
@@ -206,7 +206,7 @@ public class FExServiceProvider : IFExServiceProvider
     }
 
     /// <summary>
-    /// Retrieves the <see cref="T" /> instances asynchronously.
+    /// Retrieves the <typeparamref name="T" /> instances asynchronously.
     /// <br />
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>
@@ -221,7 +221,7 @@ public class FExServiceProvider : IFExServiceProvider
     }
 
     /// <summary>
-    /// Retrieves the <see cref="T" /> instance or returns default value.
+    /// Retrieves the <typeparamref name="T" /> instance or returns default value.
     /// <br />
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>

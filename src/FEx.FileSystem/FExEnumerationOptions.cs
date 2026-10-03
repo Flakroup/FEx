@@ -31,7 +31,7 @@ public class FExEnumerationOptions
     };
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="EnumerationOptions" /> class with the recommended default
+    /// Initializes a new instance of the <c>System.IO.EnumerationOptions</c> class with the recommended default
     /// options.
     /// </summary>
     public FExEnumerationOptions()

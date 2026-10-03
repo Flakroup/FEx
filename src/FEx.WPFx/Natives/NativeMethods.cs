@@ -54,13 +54,19 @@ public static class NativeMethods
     /// <summary>
     /// Gets the root windows of process.
     /// </summary>
-    /// <param name="process">The process.</param>
     /// <returns>
     /// List{Window}
     /// </returns>
     public static List<KeyValuePair<uint, Window>> GetRootWindowsOfProcess() =>
         GetRootWindowsOfProcess(Process.GetCurrentProcess());
 
+    /// <summary>
+    /// Gets the root windows of process.
+    /// </summary>
+    /// <param name="process">The process.</param>
+    /// <returns>
+    /// List{Window}
+    /// </returns>
     public static List<KeyValuePair<uint, Window>> GetRootWindowsOfProcess(Process process)
     {
         var rootWindows = GetChildWindows(IntPtr.Zero);

@@ -5,7 +5,7 @@ using System.IO;
 namespace FEx.FileSystem;
 
 /// <summary>
-/// Shim extension methods that allow the rest of the codebase (which expects <see cref="EnumerationOptions" />)
+/// Shim extension methods that allow the rest of the codebase (which expects <c>System.IO.EnumerationOptions</c>)
 /// to compile and work on older frameworks where that type does not exist (e.g. netstandard2.0/2.1).
 /// The implementation maps the subset of functionality that is possible to emulate via the existing
 /// <see cref="SearchOption" />

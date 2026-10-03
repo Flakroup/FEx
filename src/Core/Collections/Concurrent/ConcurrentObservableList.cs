@@ -39,16 +39,19 @@ public class ConcurrentObservableList<T> : ConcurrentList<T>, IObservableCollect
             ev => CollectionChanged -= ev);
 
     /// <summary>
-    /// Initializes a new instance of the ConcurrentObservableList class that contains
-    /// elements copied from the specified collection and has sufficient capacity
-    /// to accommodate the number of elements copied.
+    /// Initializes a new empty instance of the ConcurrentObservableList class.
     /// </summary>
-    /// <param name="collection">The collection whose elements are copied to the new list.</param>
     public ConcurrentObservableList()
         : this(null)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the ConcurrentObservableList class that contains
+    /// elements copied from the specified collection and has sufficient capacity
+    /// to accommodate the number of elements copied.
+    /// </summary>
+    /// <param name="collection">The collection whose elements are copied to the new list.</param>
     public ConcurrentObservableList(IEnumerable<T>? collection)
         : base(collection)
     {

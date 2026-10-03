@@ -31,7 +31,7 @@ public abstract class FolderBrowserDialogOptionsBase<TDialog> : DialogOptionsBas
     public Environment.SpecialFolder RootFolder { get; set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="FolderBrowserDialogOptionsBase" /> class.
+    /// Initializes a new instance of the <see cref="FolderBrowserDialogOptionsBase{TDialog}" /> class.
     /// </summary>
     protected FolderBrowserDialogOptionsBase()
     {

@@ -189,6 +189,7 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
     /// <param name="refresh">if set to <c>true</c> [refresh].</param>
     /// <param name="response">The response.</param>
     /// <param name="checksum">The checksum.</param>
+    /// <param name="urlModifier">Optional function that rewrites the URL before it is requested.</param>
     /// <returns></returns>
     private async Task<bool> InternalPrepareCacheAsync(WebRequestParams? pars,
                                                        bool refresh = false,

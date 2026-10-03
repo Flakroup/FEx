@@ -588,6 +588,118 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
             reload.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
     }
 
+    /// <summary>
+    /// Rx drops a batch whose subscription is disposed between the buffer and the save; the reset releases its numbers
+    /// with the rest of the old generation, so a later reload does not wait for them.
+    /// </summary>
+    [Fact]
+    public async Task ResetWhileABatchIsBetweenTheBufferAndItsSave_ReloadAsyncStillCompletes()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await FlushThroughPipelineAsync(sut, 9);
+        var selected = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var resume = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+#pragma warning disable VSTHRD002 // Holds the buffer's thread on purpose
+        sut.BatchSelected = () =>
+        {
+            sut.BatchSelected = null;
+            selected.TrySetResult(true);
+            resume.Task.Wait(TimeSpan.FromSeconds(30));
+        };
+#pragma warning restore VSTHRD002
+
+        doc.Name = "edited";
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+        await selected.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+#pragma warning restore VSTHRD003
+        var generation = sut.Generation;
+        await sut.ResetAsync();
+        await sut.InitializeAsync();
+        resume.SetResult(true);
+
+        sut.PendingChangesOf(generation).ShouldBe(0);
+        (await sut.ReloadAsync(1, TestContext.Current.CancellationToken)
+                .WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken))
+            .ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task ResetWithChangesStillBuffered_LeavesNothingOfTheOldGenerationPending()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await FlushThroughPipelineAsync(sut, 9);
+        var generation = sut.Generation;
+
+        doc.Name = "buffered";
+        sut.PendingChangesOf(generation).ShouldBe(1);
+        await sut.ResetAsync();
+        await sut.InitializeAsync();
+
+        sut.Generation.ShouldNotBe(generation);
+        sut.PendingChangesOf(generation).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Publish_ForAClosedGeneration_TracksNothing()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        var generation = sut.Generation;
+        await sut.ResetAsync();
+        await sut.InitializeAsync();
+
+        sut.Publish(generation).ShouldBe(0);
+
+        sut.PendingChangesOf(generation).ShouldBe(0);
+    }
+
+    /// <summary>The reload's own cache edit is filtered to an empty change set, which must not wait for a buffer tick.</summary>
+    [Fact]
+    public async Task ReloadAsync_LeavesNoEmptyChangeSetPending()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        sut.AddOrUpdateValue(await LoadAsync(1));
+        await FlushThroughPipelineAsync(sut, 9);
+        await WaitUntilAsync(() => sut.PendingChangeCount == 0);
+
+        await sut.ReloadAsync(1, TestContext.Current.CancellationToken);
+
+        sut.PendingChangeCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ReloadAsync_CancelledWhileWaiting_ThrowsAndRemovesItsWaiter()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await FlushThroughPipelineAsync(sut, 9);
+        var gate = sut.HoldSaves();
+
+        doc.Name = "held";
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+        await sut.SaveHeld.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+#pragma warning restore VSTHRD003
+        using var cancellation = new CancellationTokenSource();
+        var reload = sut.ReloadAsync(1, cancellation.Token);
+        sut.PendingWaiterCount.ShouldBe(1);
+
+        await cancellation.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            reload.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+        sut.PendingWaiterCount.ShouldBe(0);
+        gate.SetResult(true);
+    }
+
     private async Task InsertDocAsync(int id)
     {
         using var ctx = CreateContext();

@@ -38,13 +38,15 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     [ThreadStatic]
     private static TValue? _reloadTarget;
 
-    // Change sets published to the save pipeline and not yet saved or dropped, by sequence number. ReloadAsync waits
-    // until none is left at or below the last number published when it started.
+    // Change sets published to the save pipeline and not yet saved or dropped: sequence number -> pipeline generation.
+    // ReloadAsync waits until none is left at or below the last number published when it started. Replacing the
+    // pipeline releases every number of the old generation, since Rx disposes the old one asynchronously and its
+    // batches may run, or not, after that.
     private readonly object _pendingLock = new();
-    private readonly SortedSet<long> _pendingChanges = [];
+    private readonly SortedDictionary<long, int> _pendingChanges = [];
     private readonly List<PendingWaiter> _pendingWaiters = [];
     private long _lastChange;
-    private ChangePipeline? _pipeline;
+    private int _generation;
     private bool _isDisposed;
     private string[] _observedProperties;
     private IDisposable? _cacheSubscription;
@@ -174,8 +176,9 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     /// <summary>
     /// Replaces the cached value of <paramref name="key" /> with the row as it is in the database, loaded with the
     /// dictionary's normal query (<see cref="IncludeInEntity" /> and <see cref="LoadEntityAsync" />), or removes the
-    /// entry when the row no longer exists. Cache changes already published to the save pipeline (buffered or being
-    /// saved) are saved first. The replacement is not saved back. Call it when a
+    /// entry when the row no longer exists. Cache changes already published to the current save pipeline (buffered or
+    /// being saved) are saved first; changes a pipeline replaced by <c>ResetAsync</c> + <c>InitializeAsync</c> still held
+    /// may be dropped or saved late, and are not waited for. The replacement is not saved back. Call it when a
     /// <see cref="ConflictDetected" /> conflict is resolved, from the thread that owns the cached values.
     /// </summary>
     /// <returns>The new cached value, or <c>null</c> when the row no longer exists.</returns>
@@ -291,17 +294,17 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 _observables.Aggregate(cacheObservable, (current, o) => current.AutoRefreshOnObservable(o));
 
         _cacheSubscription?.Dispose();
-        var pipeline = new ChangePipeline();
-        // The replaced subscription dropped what it still buffered; its batches being saved release their own numbers.
-        ClosePipeline(Interlocked.Exchange(ref _pipeline, pipeline));
+        var generation = StartGeneration();
 
         _cacheSubscription = cacheObservable.Select(WithoutReloads)
-            .Select(changeSet => (Sequence: Publish(pipeline), ChangeSet: changeSet))
+            .Where(changeSet => changeSet.Count > 0)
+            .Select(changeSet => (Sequence: Publish(generation), ChangeSet: changeSet))
             .Buffer(TimeSpan.FromMilliseconds(100))
             .Where(x => x.Count > 0)
             .Select(x =>
             {
-                var sequences = TakeFromBuffer(pipeline, x.Select(c => c.Sequence));
+                List<long> sequences = [.. x.Select(c => c.Sequence)];
+                BatchSelected?.Invoke();
 
                 var changes = x.SelectMany(c => c.ChangeSet)
                     .Where(c => c.Reason is not ChangeReason.Moved
@@ -673,54 +676,73 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         }
     }
 
-    private long Publish(ChangePipeline pipeline)
+    /// <summary>Test seam: runs after a batch left the buffer and before it is handled.</summary>
+    internal Action? BatchSelected { get; set; }
+
+    internal int Generation => Volatile.Read(ref _generation);
+
+    internal int PendingChangeCount
+    {
+        get
+        {
+            lock (_pendingLock)
+                return _pendingChanges.Count;
+        }
+    }
+
+    internal int PendingWaiterCount
+    {
+        get
+        {
+            lock (_pendingLock)
+                return _pendingWaiters.Count;
+        }
+    }
+
+    internal int PendingChangesOf(int generation)
+    {
+        lock (_pendingLock)
+            return _pendingChanges.Count(c => c.Value == generation);
+    }
+
+    // A change set of a closed generation is not tracked; 0 is never pending.
+    internal long Publish(int generation)
     {
         lock (_pendingLock)
         {
-            // A change racing the subscription's disposal is dropped with it; 0 is never pending.
-            if (pipeline.IsClosed)
+            if (generation != _generation || _isDisposed)
                 return 0;
 
             var sequence = ++_lastChange;
-            _pendingChanges.Add(sequence);
-            pipeline.Buffered.Add(sequence);
+            _pendingChanges.Add(sequence, generation);
 
             return sequence;
         }
     }
 
-    // The batch owns these numbers from now on and releases them when it has been saved, filtered or failed.
-    private List<long> TakeFromBuffer(ChangePipeline pipeline, IEnumerable<long> sequences)
+    // Closes the current generation, releasing all its numbers (buffered, taken from the buffer or being saved).
+    private int StartGeneration()
     {
-        List<long> taken = [.. sequences];
+        List<PendingWaiter> released;
+        int generation;
 
         lock (_pendingLock)
         {
-            foreach (var sequence in taken)
-                pipeline.Buffered.Remove(sequence);
+            var closed = _generation;
+            generation = ++_generation;
+
+            foreach (var sequence in _pendingChanges.Where(c => c.Value == closed).Select(c => c.Key).ToList())
+                _pendingChanges.Remove(sequence);
+
+            released = TakeReleasedWaiters();
         }
 
-        return taken;
+        SignalReleased(released);
+
+        return generation;
     }
 
-    private void ClosePipeline(ChangePipeline? pipeline)
-    {
-        if (pipeline is null)
-            return;
-
-        List<long> dropped;
-
-        lock (_pendingLock)
-        {
-            pipeline.IsClosed = true;
-            dropped = [.. pipeline.Buffered];
-            pipeline.Buffered.Clear();
-        }
-
-        ReleaseChanges(dropped);
-    }
-
-    // Removing a number twice is harmless, so a batch racing its subscription's disposal cannot release others.
+    // Removing a number twice is harmless, so a batch of a closed generation that still finishes changes nothing.
     private void ReleaseChanges(List<long> sequences)
     {
         List<PendingWaiter> released;
@@ -730,10 +752,23 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             foreach (var sequence in sequences)
                 _pendingChanges.Remove(sequence);
 
-            released = _pendingWaiters.FindAll(w => NothingPendingUpTo(w.Target));
-            _pendingWaiters.RemoveAll(released.Contains);
+            released = TakeReleasedWaiters();
         }
 
+        SignalReleased(released);
+    }
+
+    // Under _pendingLock.
+    private List<PendingWaiter> TakeReleasedWaiters()
+    {
+        var released = _pendingWaiters.FindAll(w => NothingPendingUpTo(w.Target));
+        _pendingWaiters.RemoveAll(released.Contains);
+
+        return released;
+    }
+
+    private static void SignalReleased(List<PendingWaiter> released)
+    {
         foreach (var waiter in released)
             waiter.Signal.TrySetResult(true);
     }
@@ -754,7 +789,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             waiter.Signal.TrySetException(new ObjectDisposedException(TypeName));
     }
 
-    private bool NothingPendingUpTo(long target) => _pendingChanges.Count == 0 || _pendingChanges.Min > target;
+    private bool NothingPendingUpTo(long target) => _pendingChanges.Count == 0 || _pendingChanges.Keys.First() > target;
 
     // Waits until every change set published to the save pipeline so far has been saved or dropped.
     private async Task WaitForPendingChangesAsync(CancellationToken cancellationToken)
@@ -917,13 +952,6 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         base.Dispose(disposing);
     }
     #endregion
-
-    private sealed class ChangePipeline
-    {
-        public HashSet<long> Buffered { get; } = [];
-
-        public bool IsClosed { get; set; }
-    }
 
     private sealed class PendingWaiter
     {

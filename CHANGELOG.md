@@ -60,6 +60,7 @@ All notable changes to FEx are documented in this file. The format follows [Keep
 
 ### Changed
 
+- **Build/CI**: new `changelog.yml` workflow (job `changelog`) fails a pull request that changes `src/`, `samples/`, `build/`, the `DevConfigs` pointer, the root MSBuild props/targets, workflows, `build.ps1` or `FEx.slnx` without a `CHANGELOG.md` entry under `[Unreleased]`; the `no-changelog` label exempts a PR ([#PR](https://github.com/Flakroup/FEx/pull/PR)).
 - **FEx.Telemetry.Sentry.Web**: an unusable `Sentry:TracesSampleRate` (unparsable, NaN, infinite or outside 0 to 1) logs one warning naming the key and keeps the SDK default instead of being dropped silently, crashing the host build or being applied ([#155](https://github.com/Flakroup/FEx/pull/155), [#180](https://github.com/Flakroup/FEx/pull/180), closes [#157](https://github.com/Flakroup/FEx/issues/157)).
 - **FEx.Logging.Web**: `AddFExSerilog()` also points `FExStaticLogger` at Serilog, so `FExStaticLogger` messages reach the sinks in a Release host wired only through `AddFExSerilog()` ([#158](https://github.com/Flakroup/FEx/pull/158)).
 - **FEx.Encryption**: `FExEncryption.Priority` is -1 instead of 0, so the cipher initializes after the splash screen and before default-priority initializers ([#180](https://github.com/Flakroup/FEx/pull/180), closes [#132](https://github.com/Flakroup/FEx/issues/132)).

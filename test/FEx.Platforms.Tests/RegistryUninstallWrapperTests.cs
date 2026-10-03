@@ -19,7 +19,7 @@ public sealed class RegistryUninstallWrapperTests
     private const string TestRoot = @"Software\FExPlatformsTests";
 
     [Fact]
-    public void Disposing_The_Root_Releases_The_Hive_And_The_Key()
+    public void Disposing_The_Root_Releases_The_Uninstall_Key()
     {
         Assert.SkipUnless(OperatingSystem.IsWindows(), "Windows registry only");
 
@@ -38,7 +38,7 @@ public sealed class RegistryUninstallWrapperTests
         }
 
         Should.Throw<ObjectDisposedException>(() => key.GetSubKeyNames());
-        Should.Throw<ObjectDisposedException>(() => hive.GetSubKeyNames());
+        // The base hive is a system key: .NET never closes it on Dispose, so only the subkey handle can be asserted.
     }
 
     [Fact]

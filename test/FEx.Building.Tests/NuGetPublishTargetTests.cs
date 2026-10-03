@@ -31,6 +31,15 @@ public sealed class NuGetPublishTargetTests
         settings.ApiKey.ShouldBe(ApiKey);
     }
 
+    /// <summary>
+    /// A feed URL can embed its credential, and NUKE does not treat the source as a secret argument - so a
+    /// failed push's ProcessException message repeated it in full (#190 review). The source is handed to NUKE's
+    /// own redaction, so the echo and that message carry [REDACTED] before the log pipeline ever sees them.
+    /// </summary>
+    [Fact]
+    public void TheSource_IsRedactedByNukeItself() =>
+        Settings().ProcessRedactedSecrets.ShouldNotBeNull().ShouldContain(Source);
+
     private const string Package = "C:/repo/artifacts/packages/FEx.Core.0.3.0.nupkg";
 
     private const string Source = "https://api.nuget.org/v3/index.json";

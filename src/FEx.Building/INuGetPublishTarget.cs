@@ -1,5 +1,6 @@
 using Nuke.Common;
 using Nuke.Common.IO;
+using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
 using Serilog;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
@@ -8,12 +9,14 @@ namespace FEx.Building;
 
 public interface INuGetPublishTarget : IPackTarget
 {
+    // A private feed URL can embed its credential (https://user:TOKEN@host/...). SecretRedactor strips URL
+    // user-info and credential query values from every log line, however this value was supplied.
     [Parameter("NuGet source URL for pushing packages (default: nuget.org)")]
     string NuGetSource => TryGetValue(() => NuGetSource) ?? "https://api.nuget.org/v3/index.json";
 
     [Parameter("NuGet API key for pushing packages")]
-    // FExBuild.MaskSecrets keeps this out of the build log - both the parameter listing and the command
-    // line echo, matched by value so the option's spelling does not matter.
+    // SecretRedactor keeps this out of the build log - by option name, so every occurrence on the command line
+    // is redacted including repeated ones, and by value, so an environment variable or parameters file is too.
     [Secret]
     string? NuGetApiKey => TryGetValue(() => NuGetApiKey);
 
@@ -76,5 +79,12 @@ public interface INuGetPublishTarget : IPackTarget
                                                 string package,
                                                 string source,
                                                 string apiKey) =>
-        settings.SetTargetPath(package).SetSource(source).SetApiKey(apiKey).EnableSkipDuplicate();
+        settings.SetTargetPath(package)
+            .SetSource(source)
+            .SetApiKey(apiKey)
+            .EnableSkipDuplicate()
+            // The source can embed its own credential (https://user:TOKEN@host/...) and, unlike the API key, is not
+            // a secret argument to NUKE - so its invocation echo and a failed push's ProcessException message
+            // printed it in full. Redacted at the source too, not only by SecretRedactor downstream.
+            .AddProcessRedactedSecrets(source);
 }

@@ -28,7 +28,7 @@ public sealed class SecretMaskingTests
         var masked = build.Mask($"_build.dll Publish --nuget-api-key {SecretCarryingBuild.Key} --configuration Release");
 
         masked.ShouldNotContain(SecretCarryingBuild.Key);
-        masked.ShouldContain(FExBuild.SecretMask);
+        masked.ShouldContain(SecretRedactor.Mask);
     }
 
     [Theory]
@@ -51,7 +51,7 @@ public sealed class SecretMaskingTests
 
         var masked = build.Mask($"{SecretCarryingBuild.Key} middle {SecretCarryingBuild.Key}");
 
-        masked.ShouldBe($"{FExBuild.SecretMask} middle {FExBuild.SecretMask}");
+        masked.ShouldBe($"{SecretRedactor.Mask} middle {SecretRedactor.Mask}");
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public sealed class SecretMaskingTests
         build.LogAndCapture();
 
         build.FormattedValues.ShouldNotContain(SecretCarryingBuild.Key);
-        build.FormattedValues.ShouldContain(FExBuild.SecretMask);
+        build.FormattedValues.ShouldContain(SecretRedactor.Mask);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public sealed class SecretMaskingTests
 
     /// <summary>
     /// The call site, not just the helper. `ASecretsValueIsNeverPrintedInTheCommandLineEcho` exercises
-    /// MaskSecrets directly, so reverting LogBuildInfo's echo to the raw Environment.CommandLine left the
+    /// the redactor directly, so reverting LogBuildInfo's echo to the raw Environment.CommandLine left the
     /// suite fully green while the key went back into the log in full (measured). This drives LogBuildInfo
     /// itself: the echo is its FIRST line, so everything that needs a running build - Solution.Path,
     /// ExecutionPlan - throws afterwards and the assertion still has what it came for.
@@ -132,7 +132,7 @@ public sealed class SecretMaskingTests
         var echo = sink.Messages.Single(static m => m.Contains("Command Line:"));
 
         echo.ShouldNotContain(CommandLineSecretBuild.Key);
-        echo.ShouldContain(FExBuild.SecretMask);
+        echo.ShouldContain(SecretRedactor.Mask);
     }
 
     /// <summary>
@@ -149,7 +149,7 @@ public sealed class SecretMaskingTests
         build.LogAndCapture();
 
         build.FormattedValues.ShouldNotContain(ShadowingSecretBuild.ShadowedKey);
-        build.FormattedValues.ShouldContain(FExBuild.SecretMask);
+        build.FormattedValues.ShouldContain(SecretRedactor.Mask);
     }
 
     private class SecretCarryingBuild : FExBuild, INuGetPublishTarget
@@ -162,7 +162,7 @@ public sealed class SecretMaskingTests
 
         string? INuGetPublishTarget.NuGetApiKey => Key;
 
-        public string Mask(string text) => MaskSecrets(text);
+        public string Mask(string text) => Redactor.Redact(text);
 
         // Runs the REAL collecting path - the one LogBuildInfo uses - rather than a copy of it, so the
         // test cannot stay green while the production masking is removed. LogBuildInfo itself is out of

@@ -181,9 +181,10 @@ public sealed class HttpOutbox
                 }
 
                 // 401 means the session is not enough - once the user signs in again the unchanged write can
-                // land, so it stays queued like a 5xx. Every other 4xx, 403 included, is the server refusing this
-                // request itself (validation, permission, conflict): a retry cannot succeed, so drop and report it.
-                if ((int)response.StatusCode is >= 400 and < 500 && response.StatusCode != HttpStatusCode.Unauthorized)
+                // land, and 408/429 are transient by definition (timeout, rate limit), so these stay queued like a
+                // 5xx. Every other 4xx, 403 included, is the server refusing this request itself (validation,
+                // permission, conflict): a retry cannot succeed, so drop and report it.
+                if ((int)response.StatusCode is >= 400 and < 500 && !IsTransientClientError(response.StatusCode))
                 {
                     var body = await response.Content.ReadAsStringAsync();
                     await RemoveAsync(entry);
@@ -193,7 +194,8 @@ public sealed class HttpOutbox
                     continue;
                 }
 
-                // Server-side trouble (5xx) or a session to renew (401): worth retrying later, not worth hammering now.
+                // Server-side trouble (5xx), a session to renew (401) or throttling (408/429): worth retrying later,
+                // not worth hammering now - stopping the flush here also spares a rate-limited server the rest of the queue.
                 var error = $"HTTP {(int)response.StatusCode}";
 
                 await SaveAsync(entry with
@@ -224,6 +226,9 @@ public sealed class HttpOutbox
 
         return new(sent, rejected, await CountAsync(), lastError);
     }
+
+    private static bool IsTransientClientError(HttpStatusCode status) =>
+        status is HttpStatusCode.Unauthorized or HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests;
 
     private static string KeyFor(OutboxEntry entry) => $"{KeyPrefix}{entry.CreatedAtUtc.UtcTicks:D19}:{entry.Id:N}";
 

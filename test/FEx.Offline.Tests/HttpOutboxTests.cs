@@ -174,6 +174,39 @@ public sealed class HttpOutboxTests
         kept.JsonBody.ShouldBe("""{"n":1}""");
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.RequestTimeout)]
+    [InlineData(HttpStatusCode.TooManyRequests)]
+    public async Task TransientClientError_KeepsTheEntryWithTheError_AndStopsTheFlush(HttpStatusCode status)
+    {
+        // 408 and 429 are timeouts and throttling: the unchanged write can land later, so it must not be dropped.
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(status);
+
+        using HttpClient http = new(handler)
+        {
+            BaseAddress = new("http://localhost/")
+        };
+
+        var result = await outbox.FlushAsync(http);
+
+        result.Sent.ShouldBe(0);
+        result.Rejected.ShouldBe(0);
+        result.Remaining.ShouldBe(2);
+        result.LastError.ShouldBe($"HTTP {(int)status}");
+        handler.Requests.Count.ShouldBe(1);
+
+        var kept = (await outbox.ListAsync())[0];
+        kept.Attempts.ShouldBe(1);
+        kept.JsonBody.ShouldBe("""{"n":1}""");
+    }
+
     [Fact]
     public async Task NetworkFailure_KeepsTheEntryWithTheError_AndStopsTheFlush()
     {

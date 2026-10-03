@@ -3,7 +3,6 @@ using FEx.Agnostics.Abstractions.Extensions;
 using Shouldly;
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;

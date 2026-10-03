@@ -53,10 +53,12 @@ public sealed class ModuleInitializationAwaitTests : IDisposable
         ThrowOnceModule.Calls = 0;
 
         await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await FExServiceProvider.InitializeAsync<ThrowOnceContainer>());
+        {
+            using var failed = await FExServiceProvider.InitializeAsync<ThrowOnceContainer>();
+        });
 
         // The retry must not be served the container of the failed attempt through the idempotency check.
-        await FExServiceProvider.InitializeAsync<ThrowOnceContainer>();
+        using var retried = await FExServiceProvider.InitializeAsync<ThrowOnceContainer>();
 
         ThrowOnceModule.Calls.ShouldBe(2);
     }

@@ -1,14 +1,16 @@
 name: CI
 
+# Branches other than main/develop are built by their pull_request run only: a push trigger on them ran
+# a second build of the same commit in parallel. Version tags pushed by the Tag target never match the
+# branch filter, so they trigger nothing.
 on:
   push:
     branches:
-      - '**'   # all branch pushes; without this, a tags-only push filter never fires on branches
-    tags-ignore:
-      - '**'   # version tags are pushed by publish.yml; the commit was already built
+      - main
+      - develop
   pull_request:
 
-# Only pull_request runs are cancelled by a newer push. A push run may be in the middle of publishing,
+# Only pull_request runs are cancelled by a newer push. A push run (main/develop only) may be in the middle of publishing,
 # and a job-level concurrency group cannot protect it from this workflow-level one: cancelling the run
 # cancels every job in it. Push runs on one ref queue instead.
 concurrency:
@@ -30,23 +32,6 @@ jobs:
           docker run --rm -v "${{ github.workspace }}:/repo"
           zricethezav/gitleaks:latest
           detect --source /repo --no-git --no-banner -v
-
-  # Feature-branch push (not main/develop, not a PR): compile only.
-  compile:
-    if: github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop'
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          submodules: recursive
-          lfs: true
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-      - name: Restore workloads (MAUI for FEx.Maui)
-        run: dotnet workload restore FEx.slnx
-      - name: Compile
-        run: pwsh ./build.ps1 Compile
 
   # PR only: full test and inspection (both depend on one NUKE Compile). Push to main/develop runs the
   # same Test and Inspect in the `build` job below, which gates the packages `publish` ships, so they are

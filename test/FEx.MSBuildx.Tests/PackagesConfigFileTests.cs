@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml;
-using FEx.MSBuildx;
 using Xunit;
 
 namespace FEx.MSBuildx.Tests;

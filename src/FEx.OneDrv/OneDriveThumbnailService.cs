@@ -1,36 +1,59 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.OneDrv.Abstractions;
 using System;
+using Microsoft.Graph.Models;
+using Polly;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.OneDrv;
 
+/// <summary>Graph thumbnail downloader with an on-disk cache keyed by item ID and size.</summary>
 public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
 {
     private static readonly HttpClient SharedHttpClient = new();
 
     private readonly IGraphServiceClientCache _graphCache;
-    private readonly OneDriveOptions _options;
     private readonly IFExLogger _logger;
+    private readonly ResiliencePipeline _pipeline;
+    private readonly HttpClient _httpClient;
+    private readonly string _cacheDir;
 
     public OneDriveThumbnailService(IGraphServiceClientCache graphCache, OneDriveOptions options, IFExLogger logger)
+        : this(graphCache, options, logger, SharedHttpClient)
     {
-        _graphCache = graphCache ?? throw new ArgumentNullException(nameof(graphCache));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<byte[]?> GetThumbnailAsync(string itemId, CancellationToken cancellationToken)
+    internal OneDriveThumbnailService(IGraphServiceClientCache graphCache,
+                                      OneDriveOptions options,
+                                      IFExLogger logger,
+                                      HttpClient httpClient)
+    {
+        _graphCache = graphCache ?? throw new ArgumentNullException(nameof(graphCache));
+        _ = options ?? throw new ArgumentNullException(nameof(options));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _pipeline = GraphResiliencePipeline.Create(_logger);
+        _cacheDir = string.IsNullOrWhiteSpace(options.TokenCachePath)
+            ? Path.Combine(Path.GetTempPath(), "FEx.OneDrv", "thumbnails")
+            : Path.Combine(Path.GetDirectoryName(options.TokenCachePath) ?? string.Empty, "thumbnails");
+    }
+
+    public Task<byte[]?> GetThumbnailAsync(string itemId, CancellationToken cancellationToken) =>
+        GetThumbnailAsync(itemId, ThumbnailSize.Medium, cancellationToken);
+
+    public async Task<byte[]?> GetThumbnailAsync(string itemId, ThumbnailSize size, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(itemId))
             throw new ArgumentNullException(nameof(itemId));
 
-        var cachePath = GetCachePath(itemId);
+        var cacheStem = GetCacheStem(itemId, size);
+        var cachePath = FindCachedFile(cacheStem);
 
-        if (File.Exists(cachePath))
+        if (cachePath != null)
         {
 #if NETSTANDARD
             return await Task.Run(() => File.ReadAllBytes(cachePath), cancellationToken);
@@ -40,36 +63,36 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
         }
 
         var (client, driveId) = await _graphCache.GetAsync(cancellationToken);
-        var pipeline = GraphResiliencePipeline.Create(_logger);
+        var pipeline = _pipeline;
 
         var thumbnails = await pipeline.ExecuteAsync(async cancelToken =>
                 await client.Drives[driveId].Items[itemId].Thumbnails.GetAsync(cancellationToken: cancelToken),
             cancellationToken);
 
         var url = thumbnails?.Value?.Count > 0
-            ? thumbnails.Value[0].Medium?.Url
+            ? SelectSize(thumbnails.Value[0], size)?.Url
             : null;
 
         if (url == null)
             return null;
 
-        var bytes = await pipeline.ExecuteAsync(async cancelToken =>
+        var (bytes, mediaType) = await pipeline.ExecuteAsync(async cancelToken =>
             {
-                using var resp = await SharedHttpClient.GetAsync(url, cancelToken);
+                using var resp = await _httpClient.GetAsync(url, cancelToken);
                 resp.EnsureSuccessStatusCode();
 
 #if NETSTANDARD
-                return await resp.Content.ReadAsByteArrayAsync();
+                var content = await resp.Content.ReadAsByteArrayAsync();
 #else
-                return await resp.Content.ReadAsByteArrayAsync(cancelToken);
+                var content = await resp.Content.ReadAsByteArrayAsync(cancelToken);
 #endif
+
+                return (content, resp.Content.Headers.ContentType?.MediaType);
             },
             cancellationToken);
 
-        var cacheDir = Path.GetDirectoryName(cachePath);
-
-        if (!string.IsNullOrEmpty(cacheDir))
-            Directory.CreateDirectory(cacheDir);
+        cachePath = Path.Combine(_cacheDir, $"{cacheStem}.{GetExtension(mediaType)}");
+        Directory.CreateDirectory(_cacheDir);
 
 #if NETSTANDARD
         await Task.Run(() => File.WriteAllBytes(cachePath, bytes), cancellationToken);
@@ -81,12 +104,36 @@ public sealed class OneDriveThumbnailService : IOneDriveThumbnailService
         return bytes;
     }
 
-    private string GetCachePath(string itemId)
-    {
-        var baseDir = string.IsNullOrWhiteSpace(_options.TokenCachePath)
-            ? Path.Combine(Path.GetTempPath(), "FEx.OneDrv", "thumbnails")
-            : Path.Combine(Path.GetDirectoryName(_options.TokenCachePath) ?? string.Empty, "thumbnails");
+    private static Thumbnail? SelectSize(ThumbnailSet set, ThumbnailSize size) =>
+        size switch
+        {
+            ThumbnailSize.Small => set.Small,
+            ThumbnailSize.Large => set.Large,
+            _ => set.Medium
+        };
 
-        return Path.Combine(baseDir, $"{itemId}.jpg");
+    // Graph IDs can contain characters that are illegal in file names (e.g. '/'), so they are never used verbatim.
+    internal static string GetCacheStem(string itemId, ThumbnailSize size)
+    {
+        var invalid = Path.GetInvalidFileNameChars().Concat(['/', '\\']).ToArray();
+        var safeId = new string(itemId.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
+
+        return $"{safeId}.{size.ToString().ToLowerInvariant()}";
     }
+
+    internal static string GetExtension(string? mediaType) =>
+        mediaType?.ToLowerInvariant() switch
+        {
+            "image/png" => "png",
+            "image/gif" => "gif",
+            "image/webp" => "webp",
+            "image/bmp" => "bmp",
+            "image/jpeg" or "image/jpg" => "jpg",
+            _ => "bin"
+        };
+
+    private string? FindCachedFile(string cacheStem) =>
+        Directory.Exists(_cacheDir)
+            ? Directory.EnumerateFiles(_cacheDir, $"{cacheStem}.*").FirstOrDefault()
+            : null;
 }

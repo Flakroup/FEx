@@ -3,6 +3,7 @@ using FEx.OneDrv.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Shouldly;
+using System;
 using Xunit;
 
 namespace FEx.OneDrv.Tests;
@@ -48,4 +49,8 @@ public sealed class OneDrvServiceCollectionExtensionsTests
         var client2 = provider.GetService<IOneDriveClient>();
         client1.ShouldBeSameAs(client2);
     }
+
+    [Fact]
+    public void AddOneDrv_MissingClientId_ThrowsAtRegistration() =>
+        Should.Throw<ArgumentException>(() => new ServiceCollection().AddOneDrv(new()));
 }

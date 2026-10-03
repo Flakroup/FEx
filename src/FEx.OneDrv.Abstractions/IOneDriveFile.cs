@@ -2,6 +2,7 @@ using System;
 
 namespace FEx.OneDrv.Abstractions;
 
+/// <summary>A file stored in OneDrive.</summary>
 public interface IOneDriveFile
 {
     string Id { get; }

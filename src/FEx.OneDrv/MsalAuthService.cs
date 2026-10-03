@@ -10,23 +10,34 @@ using System.Threading.Tasks;
 
 namespace FEx.OneDrv;
 
+/// <summary>MSAL-based <see cref="IOneDriveAuthService"/>. Options are validated and copied at construction.</summary>
 public sealed class MsalAuthService : IOneDriveAuthService
 {
-    private readonly OneDriveOptions _options;
+    private readonly string _clientId;
+    private readonly string _tenantId;
+    private readonly string? _tokenCachePath;
+    private readonly string[] _scopes;
     private readonly IFExLogger _logger;
     private readonly SemaphoreSlim _appLock = new(1, 1);
     private IPublicClientApplication? _app;
 
     public MsalAuthService(OneDriveOptions options, IFExLogger logger)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _ = options ?? throw new ArgumentNullException(nameof(options));
+        options.Validate();
+
+        // Snapshot so later edits to the (mutable) options cannot diverge from the app built from them.
+        _clientId = options.ClientId;
+        _tenantId = options.TenantId;
+        _tokenCachePath = options.TokenCachePath;
+        _scopes = options.Scopes.ToArray();
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken)
     {
         var app = await GetOrBuildAppAsync(cancellationToken);
-        var scopes = _options.Scopes.ToArray();
+        var scopes = _scopes;
 
         var accounts = await app.GetAccountsAsync();
         var firstAccount = accounts.FirstOrDefault();
@@ -71,13 +82,13 @@ public sealed class MsalAuthService : IOneDriveAuthService
             if (_app != null)
                 return _app;
 
-            var builder = PublicClientApplicationBuilder.Create(_options.ClientId)
-                .WithAuthority($"https://login.microsoftonline.com/{_options.TenantId}")
+            var builder = PublicClientApplicationBuilder.Create(_clientId)
+                .WithAuthority($"https://login.microsoftonline.com/{_tenantId}")
                 .WithDefaultRedirectUri();
 
             var app = builder.Build();
 
-            if (!string.IsNullOrWhiteSpace(_options.TokenCachePath))
+            if (!string.IsNullOrWhiteSpace(_tokenCachePath))
                 await RegisterTokenCacheAsync(app.UserTokenCache);
 
             _app = app;
@@ -92,8 +103,8 @@ public sealed class MsalAuthService : IOneDriveAuthService
 
     private async Task RegisterTokenCacheAsync(ITokenCache tokenCache)
     {
-        var cacheDir = Path.GetDirectoryName(_options.TokenCachePath) ?? string.Empty;
-        var cacheFileName = Path.GetFileName(_options.TokenCachePath);
+        var cacheDir = Path.GetDirectoryName(_tokenCachePath) ?? string.Empty;
+        var cacheFileName = Path.GetFileName(_tokenCachePath);
 
         var storageProperties = new StorageCreationPropertiesBuilder(cacheFileName, cacheDir).Build();
 

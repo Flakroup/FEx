@@ -17,7 +17,9 @@ public abstract class FExAvaloniaApp<TContainer> : Application
     where TContainer : class, IFExContainer, IDisposable, new()
 {
     private readonly DesktopStartupHost<Window, ShutdownMode> _host;
+#pragma warning disable IDISP008 // the container lifetime is owned by FExServiceProvider, not by this app
     private TContainer? _container;
+#pragma warning restore IDISP008
 
     /// <summary>
     /// The service container. It is built asynchronously in <see cref="OnFrameworkInitializationCompleted" />, so it is

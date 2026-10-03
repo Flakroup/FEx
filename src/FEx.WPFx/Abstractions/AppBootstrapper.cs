@@ -28,7 +28,9 @@ namespace FEx.WPFx.Abstractions;
 public abstract class AppBootstrapper<TContainer> : Application
     where TContainer : class, IFExContainer, IDisposable, new()
 {
+#pragma warning disable IDISP008 // the container lifetime is owned by FExServiceProvider, not by this app
     private TContainer? _container;
+#pragma warning restore IDISP008
     private IAppInfoProvider? _appInfoProvider;
     private IExceptionHandler? _exceptionHandler;
     private IStatusService? _statusService;

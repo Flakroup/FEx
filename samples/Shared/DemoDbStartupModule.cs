@@ -1,3 +1,4 @@
+// ReSharper disable RedundantUsingDirective - needed where implicit usings are off (Avalonia sample, EFCore tests)
 using FEx.DependencyInjection.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;

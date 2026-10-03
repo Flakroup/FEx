@@ -16,6 +16,8 @@ namespace FEx.Telemetry.Sentry.Web;
 
 public static class FExSentryWebExtensions
 {
+    private const string SampleRateKey = "Sentry:TracesSampleRate";
+
     public static WebApplicationBuilder AddFExSentry(this WebApplicationBuilder builder,
                                                      string envVarOverride = "SENTRY_DSN")
     {
@@ -29,6 +31,10 @@ public static class FExSentryWebExtensions
         if (string.IsNullOrWhiteSpace(dsn))
             return builder;
 
+        // Sentry's own options setup binds the "Sentry" section before the UseSentry callback runs, so an unusable
+        // rate has to be neutralised in configuration first or the binder throws (or applies NaN) during Build().
+        NeutraliseUnusableSampleRate(builder.Configuration);
+
         IConfiguration configuration = builder.Configuration;
         // Registered ahead of UseSentry, so it runs ahead of Sentry's own middleware.
         builder.Services.AddTransient<IStartupFilter, CallerTraceHeaderStripper>();
@@ -37,20 +43,46 @@ public static class FExSentryWebExtensions
         return builder;
     }
 
+    // The SDK's setter throws for anything outside [0, 1] (which also covers the infinities), and NaN slips past
+    // its range check, so only a parsable number inside the range is usable.
+    private static bool TryParseSampleRate(string raw, out double rate) =>
+        double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out rate) && rate is >= 0 and <= 1;
+
+    private static void NeutraliseUnusableSampleRate(ConfigurationManager configuration)
+    {
+        var raw = configuration[SampleRateKey];
+
+        if (string.IsNullOrWhiteSpace(raw) || TryParseSampleRate(raw, out _))
+            return;
+
+        WarnUnusableSampleRate(raw);
+        // A later source wins; the null leaves the key unset for Sentry's binder, so the SDK default stays.
+        configuration.AddInMemoryCollection(new Dictionary<string, string?> { [SampleRateKey] = null });
+    }
+
+    private static void WarnUnusableSampleRate(string raw)
+    {
+        // Rejected silently otherwise - most plausibly a locale-formatted decimal such as "0,5" (this parses
+        // InvariantCulture) or a percentage such as "10" - and the SDK default stays in effect with no other signal.
+        // The raw value is deploy configuration, not caller input, but a newline in it would still forge
+        // a second line in a plain-text sink - stripped before it reaches the message.
+        var sanitizedRaw = raw.Replace("\r", string.Empty).Replace("\n", string.Empty);
+        FExStaticLogger.Warning(
+            $"{SampleRateKey} value '{sanitizedRaw}' is not a number between 0 and 1; " +
+            "keeping the Sentry SDK's default sample rate.");
+    }
+
     // UseSentry defers invoking its callback to Sentry's own host startup, so it is not exercised by a
     // plain AddFExSentry() call in a test - split out so the option-mapping logic is directly testable.
     public static void ConfigureOptions(SentryAspNetCoreOptions opt, IConfiguration configuration, string dsn)
     {
         opt.Dsn = dsn;
         opt.Environment = configuration["Sentry:Environment"] ?? "Production";
-        var sampleRateRaw = configuration["Sentry:TracesSampleRate"];
+        var sampleRateRaw = configuration[SampleRateKey];
 
         if (!string.IsNullOrWhiteSpace(sampleRateRaw))
         {
-            // The SDK's setter throws for anything outside [0, 1] (which also covers the infinities), and NaN slips
-            // past its range check, so both are treated like a malformed value: warn and keep the SDK default.
-            if (double.TryParse(sampleRateRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var rate)
-                && rate is >= 0 and <= 1)
+            if (TryParseSampleRate(sampleRateRaw, out var rate))
             {
                 opt.TracesSampleRate = rate;
                 // Only where tracing is on: a sampler alone switches performance monitoring on, even at a rate of 0.
@@ -61,15 +93,7 @@ public static class FExSentryWebExtensions
             }
             else
             {
-                // Rejected silently otherwise - most plausibly a locale-formatted decimal such as "0,5" (this
-                // parses InvariantCulture) or a percentage such as "10" - and the SDK default stays in effect with
-                // no other signal.
-                // The raw value is deploy configuration, not caller input, but a newline in it would still forge
-                // a second line in a plain-text sink - stripped before it reaches the message.
-                var sanitizedRaw = sampleRateRaw.Replace("\r", string.Empty).Replace("\n", string.Empty);
-                FExStaticLogger.Warning(
-                    $"Sentry:TracesSampleRate value '{sanitizedRaw}' is not a number between 0 and 1; " +
-                    "keeping the Sentry SDK's default sample rate.");
+                WarnUnusableSampleRate(sampleRateRaw);
             }
         }
 

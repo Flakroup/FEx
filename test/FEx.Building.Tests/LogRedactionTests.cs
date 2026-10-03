@@ -1,9 +1,11 @@
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using Serilog.Formatting.Display;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -78,6 +80,22 @@ public sealed class LogRedactionTests
         line.ShouldContain(SecretRedactor.Mask);
     }
 
+    [Theory]
+    [InlineData("https://user:pa'ss@feed.example/index.json", "pa'ss")]
+    [InlineData("https://ghp_PATASUSER@github.com/org/repo.git", "ghp_PATASUSER")]
+    [InlineData("https://feed.example/index.json?x-api-key=HDRKEY1", "HDRKEY1")]
+    [InlineData("https://feed.example/index.json?client_secret=CS1&a=1", "CS1")]
+    [InlineData("ssh://git:SSHPW1@host/repo.git", "SSHPW1")]
+    public void EveryShapeOfUrlCredential_IsRedacted(string url, string credential) =>
+        new SecretRedactor([], []).Redact($"fetching {url} failed").ShouldNotContain(credential);
+
+    [Theory]
+    [InlineData("see https://example.com/page?author=bob&design=3&assign=x")]
+    [InlineData("cmd /c a&key=1 and tokenizer=bar?auth=1")]
+    [InlineData("error: unable to reach ssh://git@github.com/org/repo.git")]
+    public void TextThatOnlyLooksLikeACredential_IsLeftReadable(string text) =>
+        new SecretRedactor([], []).Redact(text).ShouldBe(text);
+
     [Fact]
     public void APlainUrl_IsLeftAlone()
     {
@@ -103,7 +121,17 @@ public sealed class LogRedactionTests
             // Proves the value genuinely came from the environment, so the listing has it to print.
             ((INuGetPublishTarget)build).NuGetSource.ShouldBe(CredentialFeed);
 
-            var messages = Capture(build.PrintBuildInfo);
+            var messages = Capture(() =>
+            {
+                try
+                {
+                    build.PrintBuildInfo();
+                }
+                catch (Exception)
+                {
+                    // LogBuildInfo throws once it reaches NUKE's execution plan; the listing is already emitted.
+                }
+            });
 
             var listing = messages.Single(static m => m.Contains("NuGetSource:"));
             listing.ShouldNotContain(FeedToken);
@@ -140,6 +168,153 @@ public sealed class LogRedactionTests
         all.ShouldContain("Pushing 2 package(s)");
     }
 
+    /// <summary>
+    /// The review's measured leak: a failed <c>dotnet nuget push</c> throws a ProcessException whose message
+    /// repeats the command line, and NUKE logs it as <c>Log.Error(exception, ...)</c>. Sinks render the exception
+    /// through its ToString(), so this renders the event exactly as NUKE's console template does.
+    /// </summary>
+    [Fact]
+    public void AnExceptionsText_IsRedactedAsNukeRendersIt()
+    {
+        var build = new ApiKeyBuild(LastKey);
+        var failure = new InvalidOperationException(
+            $"Process 'dotnet' exited with code 1.\n   > dotnet nuget push pkg.nupkg --source {CredentialFeed} --api-key {LastKey}");
+
+        var rendered = Render(() =>
+        {
+            build.Install();
+            Log.Error(failure, "Target {TargetName} has thrown an exception", "Publish");
+        });
+
+        rendered.ShouldContain("Target Publish has thrown an exception");
+        rendered.ShouldContain("nuget.pkg.github.com");
+        rendered.ShouldNotContain(FeedToken);
+        rendered.ShouldNotContain(LastKey);
+    }
+
+    /// <summary>
+    /// The install itself, through the hook NUKE calls - not the helper. Deleting the call from
+    /// OnBuildInitialized left every other test green while NUKE's own lines went out unredacted (review, measured).
+    /// </summary>
+    [Fact]
+    public void OnBuildInitialized_InstallsTheRedactingPipeline()
+    {
+        var build = new ApiKeyBuild(LastKey);
+
+        var messages = Capture(() =>
+        {
+            try
+            {
+                build.Initialize();
+            }
+            catch (Exception)
+            {
+                // LogBuildInfo throws at NUKE's execution plan; the pipeline is installed before it.
+            }
+
+            Log.Information("> dotnet nuget push --source {Source}", CredentialFeed);
+        });
+
+        messages.Last().ShouldNotContain(FeedToken);
+    }
+
+    /// <summary>
+    /// NUKE's errors-and-warnings summary assigns a fresh console logger to Log.Logger before it calls
+    /// OnBuildFinished, so whatever an override logs there skipped the wrapper installed at start.
+    /// </summary>
+    [Fact]
+    public void OnBuildFinished_ReinstallsTheRedactionNukeReplaced()
+    {
+        var build = new ApiKeyBuild(LastKey);
+
+        var messages = Capture(() =>
+        {
+            build.Install();
+
+            // What Host.WriteErrorsAndWarnings does: a brand-new logger, no redaction.
+            var sink = new CapturingSink();
+            Log.Logger = new LoggerConfiguration().WriteTo.Sink(sink).CreateLogger();
+
+            build.Finish();
+            Log.Information("Published to {Source}", CredentialFeed);
+
+            sink.Messages.ShouldHaveSingleItem().ShouldNotContain(FeedToken);
+        });
+
+        messages.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void InstallingTwice_WrapsTheLoggerOnce()
+    {
+        var build = new ApiKeyBuild(LastKey);
+
+        Capture(() =>
+        {
+            build.Install();
+            var first = Log.Logger;
+
+            build.Install();
+
+            Log.Logger.ShouldBeSameAs(first);
+        });
+    }
+
+    [Fact]
+    public void DisposingTheWrapper_DisposesTheLoggerItWraps()
+    {
+        // Log.CloseAndFlush() only reaches the wrapper; without this hand-off NUKE's buffered tail is lost.
+        using var sink = new DisposalSink();
+#pragma warning disable IDISP001 // Ownership passes to the wrapper; disposing it is what this test checks
+        var inner = new LoggerConfiguration().WriteTo.Sink(sink).CreateLogger();
+#pragma warning restore IDISP001
+
+        RedactingLogSink.Wrap(inner, new SecretRedactor([], [])).Dispose();
+
+        sink.Disposed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SecretsInsideStructuredProperties_AreRedacted()
+    {
+        var sink = new CapturingSink();
+
+#pragma warning disable IDISP001 // Ownership passes to the wrapper, which the using below disposes
+        var inner = new LoggerConfiguration().WriteTo.Sink(sink).CreateLogger();
+#pragma warning restore IDISP001
+
+        using (var logger = RedactingLogSink.Wrap(inner, new SecretRedactor([], [])))
+        {
+            logger.Information("{Args}", (object)new[] { "push", CredentialFeed });
+            logger.Information("{@Feed}", new { Source = CredentialFeed });
+            logger.Information("{Feeds}", new Dictionary<string, string> { ["private"] = CredentialFeed });
+            logger.Information("{Uri}", new Uri(CredentialFeed));
+        }
+
+        sink.Messages.Count.ShouldBe(4);
+        sink.Messages.ShouldAllBe(static m => !m.Contains(FeedToken) && m.Contains("nuget.pkg.github.com"));
+    }
+
+    private static string Render(Action action)
+    {
+        using var writer = new StringWriter();
+        var sink = new CapturingSink(new MessageTemplateTextFormatter("[{Level:u3}] {Message:l}{NewLine}{Exception}"), writer);
+        var previous = Log.Logger;
+
+        Log.Logger = new LoggerConfiguration().WriteTo.Sink(sink).CreateLogger();
+
+        try
+        {
+            action();
+        }
+        finally
+        {
+            Log.Logger = previous;
+        }
+
+        return writer.ToString();
+    }
+
     private static List<string> Capture(Action action)
     {
         var sink = new CapturingSink();
@@ -150,10 +325,6 @@ public sealed class LogRedactionTests
         try
         {
             action();
-        }
-        catch (Exception)
-        {
-            // LogBuildInfo throws once it reaches NUKE's execution plan; the lines before it are emitted.
         }
         finally
         {
@@ -172,6 +343,10 @@ public sealed class LogRedactionTests
         string? INuGetPublishTarget.NuGetApiKey => key;
 
         public void Install() => InstallLogRedaction();
+
+        public void Initialize() => OnBuildInitialized();
+
+        public void Finish() => OnBuildFinished();
     }
 
     private sealed class ThrowingKeyBuild : FExBuild, INuGetPublishTarget
@@ -191,10 +366,29 @@ public sealed class LogRedactionTests
         public void PrintBuildInfo() => LogBuildInfo();
     }
 
-    private sealed class CapturingSink : ILogEventSink
+    private sealed class CapturingSink(MessageTemplateTextFormatter? formatter = null, TextWriter? output = null)
+        : ILogEventSink
     {
         public List<string> Messages { get; } = [];
 
-        public void Emit(LogEvent logEvent) => Messages.Add(logEvent.RenderMessage());
+        public void Emit(LogEvent logEvent)
+        {
+            Messages.Add(logEvent.RenderMessage());
+
+            if (formatter is not null && output is not null)
+                formatter.Format(logEvent, output);
+        }
+
+    }
+
+    private sealed class DisposalSink : ILogEventSink, IDisposable
+    {
+        public bool Disposed { get; private set; }
+
+        public void Emit(LogEvent logEvent)
+        {
+        }
+
+        public void Dispose() => Disposed = true;
     }
 }

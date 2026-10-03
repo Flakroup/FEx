@@ -61,9 +61,26 @@ public sealed class RedactingLogSink : ILogEventSink, IDisposable
 
         return new(logEvent.Timestamp,
             logEvent.Level,
-            logEvent.Exception,
+            Redact(logEvent.Exception),
             template,
             logEvent.Properties.Select(p => new LogEventProperty(p.Key, Redact(p.Value))));
+    }
+
+    // Sinks render an exception through its ToString() - NUKE's {Exception} in the console and build.log, and
+    // the CI error annotation - so that text is what must not carry a secret. A failed `dotnet nuget push` throws
+    // a ProcessException whose message repeats the whole command line, --source URL included (measured). The
+    // original is dropped rather than kept as InnerException, which a sink could render in turn.
+    private Exception? Redact(Exception? exception)
+    {
+        if (exception is null)
+            return null;
+
+        var rendered = exception.ToString();
+        var redacted = _redactor.Redact(rendered);
+
+        return rendered == redacted
+            ? exception
+            : new RedactedException(_redactor.Redact(exception.Message), redacted);
     }
 
     private LogEventPropertyValue Redact(LogEventPropertyValue value) =>
@@ -91,5 +108,11 @@ public sealed class RedactingLogSink : ILogEventSink, IDisposable
         var redacted = _redactor.Redact(rendered);
 
         return rendered == redacted ? scalar : new ScalarValue(redacted);
+    }
+
+    /// <summary>Stands in for an exception whose text carried a secret: the same text, redacted.</summary>
+    private sealed class RedactedException(string message, string rendered) : Exception(message)
+    {
+        public override string ToString() => rendered;
     }
 }

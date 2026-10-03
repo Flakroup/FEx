@@ -32,13 +32,16 @@ public sealed class SecretRedactor
 
     private static readonly TimeSpan MatchTimeout = TimeSpan.FromSeconds(1);
 
-    // scheme://user[:password]@ - the user-info part goes, the scheme and host stay so the line still says where.
-    private static readonly Regex UrlUserInfo = new(@"(?<scheme>\b[a-z][a-z0-9+.\-]*://)[^/\s@?#""']+@",
+    // Only inside a URL: scheme://authority[/path][?query][#fragment]. A quote is legal in user-info and in a
+    // query value, so it does not end the match - over-redacting a trailing quote is harmless, stopping early is not.
+    private static readonly Regex Url = new(@"\b(?<scheme>[a-z][a-z0-9+.\-]*)://(?<rest>[^\s""<>]+)",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
         MatchTimeout);
 
-    private static readonly Regex CredentialQuery =
-        new(@"(?<key>[?&][^=&#\s""']*(?:key|token|password|passwd|pwd|secret|sig|signature|auth|credential)[^=&#\s""']*)=[^&#\s""']+",
+    // The WHOLE parameter name, or its last segment after - _ or . (x-api-key, client_secret) - never a substring,
+    // so author=, design= and assign= stay readable.
+    private static readonly Regex CredentialQueryName =
+        new(@"^(?:.*[-_.])?(?:api[-_]?key|key|token|access[-_]?token|auth|password|passwd|pwd|secret|sig|signature|credentials?)$",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
             MatchTimeout);
 
@@ -90,9 +93,49 @@ public sealed class SecretRedactor
         foreach (var value in _secretValues)
             text = text.Replace(value, Mask);
 
-        text = UrlUserInfo.Replace(text, $"${{scheme}}{Mask}@");
+        return Url.Replace(text, static m => $"{m.Groups["scheme"].Value}://{RedactUrl(m.Groups["scheme"].Value, m.Groups["rest"].Value)}");
+    }
 
-        return CredentialQuery.Replace(text, $"${{key}}={Mask}");
+    // scheme://user[:password]@host?name=value - the user-info and every credential-named query value go, the
+    // scheme, host and path stay so the line still says where. A bare SSH user (ssh://git@host) is an account
+    // name, not a credential, and a git remote diagnostic needs it; a user WITH a password is masked either way.
+    private static string RedactUrl(string scheme, string rest)
+    {
+        var authorityEnd = rest.IndexOfAny(['/', '?', '#']);
+        var authority = authorityEnd < 0 ? rest : rest[..authorityEnd];
+        var tail = authorityEnd < 0 ? string.Empty : rest[authorityEnd..];
+        var at = authority.LastIndexOf('@');
+
+        if (at >= 0)
+        {
+            var userInfo = authority[..at];
+            var bareSshUser = scheme.EndsWith("ssh", StringComparison.OrdinalIgnoreCase) && userInfo.IndexOf(':') < 0;
+
+            if (!bareSshUser)
+                authority = $"{Mask}{authority[at..]}";
+        }
+
+        var queryStart = tail.IndexOf('?');
+
+        if (queryStart < 0)
+            return authority + tail;
+
+        var fragmentStart = tail.IndexOf('#', queryStart);
+        var queryEnd = fragmentStart < 0 ? tail.Length : fragmentStart;
+
+        var query = string.Join("&",
+            tail[(queryStart + 1)..queryEnd]
+                .Split('&')
+                .Select(static pair =>
+                {
+                    var eq = pair.IndexOf('=');
+
+                    return eq > 0 && CredentialQueryName.IsMatch(pair[..eq])
+                        ? $"{pair[..(eq + 1)]}{Mask}"
+                        : pair;
+                }));
+
+        return $"{authority}{tail[..(queryStart + 1)]}{query}{tail[queryEnd..]}";
     }
 
     // NuGetApiKey -> N-*u-*G-*e-*t-*A-*p-*i-*K-*e-*y: NUKE compares option names with every dash removed and

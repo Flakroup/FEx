@@ -1,5 +1,6 @@
 using Nuke.Common;
 using Nuke.Common.IO;
+using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
 using Serilog;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
@@ -78,5 +79,12 @@ public interface INuGetPublishTarget : IPackTarget
                                                 string package,
                                                 string source,
                                                 string apiKey) =>
-        settings.SetTargetPath(package).SetSource(source).SetApiKey(apiKey).EnableSkipDuplicate();
+        settings.SetTargetPath(package)
+            .SetSource(source)
+            .SetApiKey(apiKey)
+            .EnableSkipDuplicate()
+            // The source can embed its own credential (https://user:TOKEN@host/...) and, unlike the API key, is not
+            // a secret argument to NUKE - so its invocation echo and a failed push's ProcessException message
+            // printed it in full. Redacted at the source too, not only by SecretRedactor downstream.
+            .AddProcessRedactedSecrets(source);
 }

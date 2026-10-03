@@ -139,18 +139,24 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     /// <summary>
     /// Routes the global Serilog pipeline through <see cref="Redactor" />, so NUKE's own output, the tool
     /// invocations it echoes and every line a target logs are redacted in one place rather than per call.
-    /// Called from <see cref="OnBuildInitialized" /> before anything is listed; idempotent.
+    /// Called from <see cref="OnBuildInitialized" /> before anything is listed, and again from
+    /// <see cref="OnBuildFinished" />: NUKE replaces <c>Log.Logger</c> with a plain console logger when it prints
+    /// its errors-and-warnings summary, so lines logged after that would otherwise skip redaction. A no-op while
+    /// <c>Log.Logger</c> is still the wrapper this build installed.
     /// </summary>
     protected void InstallLogRedaction()
     {
-        if (_logRedactionInstalled)
+        if (_installedLogger?.TryGetTarget(out var installed) == true
+            && ReferenceEquals(Log.Logger, installed))
             return;
 
         Log.Logger = RedactingLogSink.Wrap(Log.Logger, Redactor);
-        _logRedactionInstalled = true;
+        _installedLogger = new(Log.Logger);
     }
 
-    private bool _logRedactionInstalled;
+    // Identity only, never ownership: the wrapper IS Log.Logger, and Log.CloseAndFlush() disposes it - which
+    // disposes the logger it wraps.
+    private WeakReference<ILogger>? _installedLogger;
 
     /// <summary>
     /// The NAMES of every secret parameter. Keyed on the name rather than on a single <see cref="PropertyInfo" />
@@ -221,6 +227,9 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     /// </summary>
     protected override void OnBuildFinished()
     {
+        // First, so that base and every override that calls base before logging are redacted again - see
+        // InstallLogRedaction for why the logger installed at start no longer is.
+        InstallLogRedaction();
         base.OnBuildFinished();
         InspectionRun.DiscardPending();
     }

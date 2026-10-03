@@ -139,9 +139,16 @@ public sealed class FExSentryWebExtensionsTests
     // "abc" fails outright; "0,1" is the locale-formatted decimal an operator typing Polish habits into an
     // .env file would write - this parses InvariantCulture, so the comma form is rejected the same way.
     [Theory]
+    // Out-of-range values parse fine but make the SDK's setter throw (10 is a percentage mistaken for a fraction);
+    // NaN passes the SDK's range check silently.
     [InlineData("abc")]
     [InlineData("0,1")]
-    public void ConfigureOptions_UnparsableSampleRate_LogsOneWarningNamingTheKeyAndValue(string raw)
+    [InlineData("10")]
+    [InlineData("1.5")]
+    [InlineData("-0.1")]
+    [InlineData("Infinity")]
+    [InlineData("NaN")]
+    public void ConfigureOptions_UnusableSampleRate_LogsOneWarningNamingTheKeyAndValue(string raw)
     {
         var logger = Substitute.For<IFExLogger>();
         using var restore = ReplaceStaticLogger(logger);
@@ -150,6 +157,7 @@ public sealed class FExSentryWebExtensionsTests
         FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", raw)), Dsn);
 
         options.TracesSampleRate.ShouldBeNull();
+        options.TracesSampler.ShouldBeNull();
         logger.Received(1).Warning(Arg.Is<string>(message =>
             message.Contains("Sentry:TracesSampleRate", StringComparison.Ordinal)
             && message.Contains(raw, StringComparison.Ordinal)));

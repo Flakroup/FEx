@@ -47,7 +47,10 @@ public static class FExSentryWebExtensions
 
         if (!string.IsNullOrWhiteSpace(sampleRateRaw))
         {
-            if (double.TryParse(sampleRateRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var rate))
+            // The SDK's setter throws for anything outside [0, 1] (which also covers the infinities), and NaN slips
+            // past its range check, so both are treated like a malformed value: warn and keep the SDK default.
+            if (double.TryParse(sampleRateRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var rate)
+                && rate is >= 0 and <= 1)
             {
                 opt.TracesSampleRate = rate;
                 // Only where tracing is on: a sampler alone switches performance monitoring on, even at a rate of 0.
@@ -58,13 +61,14 @@ public static class FExSentryWebExtensions
             }
             else
             {
-                // TryParse rejects it silently otherwise - most plausibly a locale-formatted decimal such as
-                // "0,5" (this parses InvariantCulture) - and the SDK default stays in effect with no other signal.
+                // Rejected silently otherwise - most plausibly a locale-formatted decimal such as "0,5" (this
+                // parses InvariantCulture) or a percentage such as "10" - and the SDK default stays in effect with
+                // no other signal.
                 // The raw value is deploy configuration, not caller input, but a newline in it would still forge
                 // a second line in a plain-text sink - stripped before it reaches the message.
                 var sanitizedRaw = sampleRateRaw.Replace("\r", string.Empty).Replace("\n", string.Empty);
                 FExStaticLogger.Warning(
-                    $"Sentry:TracesSampleRate value '{sanitizedRaw}' could not be parsed as a number; " +
+                    $"Sentry:TracesSampleRate value '{sanitizedRaw}' is not a number between 0 and 1; " +
                     "keeping the Sentry SDK's default sample rate.");
             }
         }

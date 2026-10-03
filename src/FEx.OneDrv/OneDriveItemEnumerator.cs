@@ -1,24 +1,29 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.OneDrv.Abstractions;
 using FEx.OneDrv.Models;
-using Microsoft.Graph;
+using Microsoft.Graph.Drives.Item.Items.Item.Children;
 using Microsoft.Graph.Models;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace FEx.OneDrv;
 
+/// <summary>Microsoft Graph implementation of <see cref="IOneDriveItemEnumerator"/> that streams page by page.</summary>
 public sealed class OneDriveItemEnumerator : IOneDriveItemEnumerator
 {
     private readonly IGraphServiceClientCache _graphCache;
     private readonly IFExLogger _logger;
+    private readonly ResiliencePipeline _pipeline;
 
     public OneDriveItemEnumerator(IGraphServiceClientCache graphCache, IFExLogger logger)
     {
         _graphCache = graphCache ?? throw new ArgumentNullException(nameof(graphCache));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _pipeline = GraphResiliencePipeline.Create(_logger);
     }
 
     public async IAsyncEnumerable<IOneDriveFile> EnumerateFilesAsync(string folderId,
@@ -31,41 +36,49 @@ public sealed class OneDriveItemEnumerator : IOneDriveItemEnumerator
             ? "root"
             : folderId;
 
-        var files = new List<IOneDriveFile>();
-        var pipeline = GraphResiliencePipeline.Create(_logger);
+        var count = 0;
 
+        // Fetch one page at a time (each fetch retried on its own) and yield its files before requesting the next
+        // page, so memory stays bounded by the page size and a retry never re-yields items.
+        var request = client.Drives[driveId].Items[parentId].Children;
+        var response = await GetPageAsync(_pipeline, request, null, cancellationToken);
+
+        while (true)
+        {
+            foreach (var item in response.Value ?? [])
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (item.File is null)
+                    continue;
+
+                count++;
+
+                yield return DriveItemMapper.MapFile(item);
+            }
+
+            var nextLink = response.OdataNextLink;
+
+            if (string.IsNullOrEmpty(nextLink))
+                break;
+
+            response = await GetPageAsync(_pipeline, request, nextLink, cancellationToken);
+        }
+
+        _logger.Information($"Enumerated {count} items in folder {folderId ?? "root"}");
+    }
+
+    private static async Task<DriveItemCollectionResponse> GetPageAsync(ResiliencePipeline pipeline,
+                                                                          ChildrenRequestBuilder request,
+                                                                          string? nextLink,
+                                                                          CancellationToken cancellationToken) =>
         await pipeline.ExecuteAsync(async cancelToken =>
             {
-                files.Clear();
+                var page = nextLink is null
+                    ? await request.GetAsync(cancellationToken: cancelToken)
+                    : await request.WithUrl(nextLink).GetAsync(cancellationToken: cancelToken);
 
-                var response = await client.Drives[driveId]
-                    .Items[parentId]
-                    .Children.GetAsync(cancellationToken: cancelToken);
-
-                if (response is null)
-                    throw new InvalidOperationException("Graph returned no response for the folder listing.");
-
-                var iterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(client,
-                    response,
-                    item =>
-                    {
-                        if (item.File != null)
-                            files.Add(DriveItemMapper.MapFile(item));
-
-                        return true;
-                    });
-
-                await iterator.IterateAsync(cancelToken);
+                return page ?? throw new InvalidOperationException("Graph returned no response for the folder listing.");
             },
             cancellationToken);
-
-        _logger.Information($"Enumerated {files.Count} items in folder {folderId ?? "root"}");
-
-        foreach (var file in files)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            yield return file;
-        }
-    }
 }

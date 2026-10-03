@@ -118,8 +118,8 @@ public static class DirectoryWalker
     {
         var fullPath = folder.FullName + Path.DirectorySeparatorChar;
 
-        // One rule for the exact match and for descendants: ordinal, ignoring case like the rest of FEx.FileSystem.
-        return ErrorPaths.Any(errorPath => fullPath.StartsWith(errorPath, StringComparison.OrdinalIgnoreCase));
+        // One rule for the exact match and for descendants: ordinal and case-sensitive, like ErrorPaths itself.
+        return ErrorPaths.Any(errorPath => fullPath.StartsWith(errorPath, StringComparison.Ordinal));
     }
 
     public static void ClearErrorPaths() => ErrorPaths.Clear();

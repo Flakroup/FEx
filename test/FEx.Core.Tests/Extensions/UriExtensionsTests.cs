@@ -1,5 +1,8 @@
 using FEx.Agnostics.Abstractions.Models;
 using FEx.Core.Abstractions.Extensions;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using Shouldly;
 using System;
 using System.IO;
@@ -44,5 +47,42 @@ public sealed class UriExtensionsTests
 
         pars.Method.ShouldBe("GET");
         pars.Timeout.ShouldBe(1234);
+    }
+
+    /// <summary>
+    /// The probes send the copy, so a setting the copy drops (credentials, headers, user agent ...) silently turns
+    /// the probe anonymous. Every public property is populated by reflection, so a property added later without
+    /// being copied turns this red.
+    /// </summary>
+    [Fact]
+    public void Copy_CarriesEverySettingOfTheCallersParams()
+    {
+        var source = new WebRequestParams
+        {
+            Credentials = new NetworkCredential("user", "secret"),
+            UserAgent = "fex-tests",
+            Headers = new Dictionary<string, string> { ["X-Custom"] = "1" },
+            Cookies = new(),
+            Method = "POST",
+            Timeout = 1234,
+            Pipelined = true,
+            KeepAlive = true,
+            ReadWriteTimeout = 5678,
+            Proxy = new WebProxy("http://proxy.invalid"),
+            IsProxyNull = true,
+            ServerCertificateValidationCallback = (_, _, _, _) => true
+        };
+
+        var properties = typeof(WebRequestParams).GetProperties().Where(x => x.CanWrite).ToArray();
+
+        foreach (var property in properties)
+            property.GetValue(source).ShouldNotBeNull($"{property.Name} must be populated above");
+
+        var copy = UriExtensions.Copy(source);
+
+        copy.ShouldNotBeSameAs(source);
+
+        foreach (var property in properties)
+            property.GetValue(copy).ShouldBe(property.GetValue(source), property.Name);
     }
 }

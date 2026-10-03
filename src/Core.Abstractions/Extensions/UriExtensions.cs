@@ -215,7 +215,7 @@ public static class UriExtensions
         }
     }
 
-    private static WebRequestParams Copy(WebRequestParams? pars) =>
+    internal static WebRequestParams Copy(WebRequestParams? pars) =>
         new()
         {
             Credentials = pars?.Credentials,

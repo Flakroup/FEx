@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace FEx.FileSystem.Helpers;
@@ -53,16 +54,27 @@ public static class CompressionHelper
         if (!root.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
             root += Path.DirectorySeparatorChar;
 
-        // Resolved before anything is deleted: an entry such as "../x" must not reach outside the target, and the
-        // overwrite pre-delete below would otherwise remove a file there.
-        var destinations = ListZipEntries(fileToDecompress)
+        // Every entry, directories included, is resolved before anything is deleted: an entry such as "../x" must
+        // not reach outside the target, and the overwrite pre-delete below would otherwise remove files first.
+        var comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        var entries = ListZipEntries(fileToDecompress);
+
+        foreach (var entry in entries)
+        {
+            var destination = Path.GetFullPath(Path.Combine(root, entry.FullName));
+
+            // The target itself ("." / "./") resolves without the trailing separator.
+            if (!destination.StartsWith(root, comparison)
+                && !(destination + Path.DirectorySeparatorChar).Equals(root, comparison))
+                throw new InvalidDataException($"Zip entry resolves outside the target directory: {entry.FullName}");
+        }
+
+        var destinations = entries
             .Where(x => !x.FullName.EndsWith("/", StringComparison.Ordinal))
             .Select(x => Path.GetFullPath(Path.Combine(root, x.FullName)))
             .ToArray();
-
-        foreach (var destination in destinations)
-            if (!destination.StartsWith(root, StringComparison.Ordinal))
-                throw new InvalidDataException($"Zip entry resolves outside the target directory: {destination}");
 
         if (overwrite)
             //todo check if directories entries are also important

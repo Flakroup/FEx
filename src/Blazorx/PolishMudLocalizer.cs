@@ -57,7 +57,7 @@ public sealed class PolishMudLocalizer : MudLocalizer
         ["MudDataGridPager_LastPage"] = "Ostatnia strona",
         ["MudDataGridPager_NextPage"] = "Następna strona",
         ["MudDataGridPager_PreviousPage"] = "Poprzednia strona",
-        ["MudDataGridPager_RowsPerPage"] = "Wierszy na stronie",
+        ["MudDataGridPager_RowsPerPage"] = "Wierszy na stronie:",
         ["MudTablePager_FirstPage"] = "Pierwsza strona",
         ["MudTablePager_LastPage"] = "Ostatnia strona",
         ["MudTablePager_NextPage"] = "Następna strona",

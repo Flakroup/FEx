@@ -1,6 +1,10 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using MudBlazor;
 using Shouldly;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Globalization;
 using Xunit;
 
@@ -28,30 +32,34 @@ public sealed class PolishMudLocalizerTests
         value.ResourceNotFound.ShouldBeFalse();
     }
 
+    public static TheoryData<string> AllKeys => new(Translations.Keys.OrderBy(x => x, StringComparer.Ordinal));
+
+    private static IReadOnlyDictionary<string, string> Translations { get; } =
+        (IReadOnlyDictionary<string, string>)typeof(PolishMudLocalizer)
+            .GetField("Translations", BindingFlags.NonPublic | BindingFlags.Static)!
+            .GetValue(null)!;
+
     /// <summary>
-    /// Keys exactly as MudBlazor 9.10.0 requests them (read from its embedded resources), resolved through its own
-    /// interceptor under a Polish UI culture. Three differ from a plain dot-to-underscore rewrite: Equals,
-    /// IsEmpty and IsNotEmpty.
+    /// Every key the localizer carries, resolved through MudBlazor's own interceptor. Under pl-PL it must answer with
+    /// the Polish text; under en-GB the same key must be one MudBlazor has a built-in string for (some words, like
+    /// "Operator", read the same in both languages, so the text is not compared). A key MudBlazor never asks for - a typo, or the old dotted spelling - fails the second half.
     /// </summary>
     [Theory]
-    [InlineData("MudDataGrid_Filter", "Filtr")]
-    [InlineData("MudDataGrid_AddFilter", "Dodaj filtr")]
-    [InlineData("MudDataGrid_Contains", "zawiera")]
-    [InlineData("MudDataGrid_Equals", "równe")]
-    [InlineData("MudDataGrid_NotEquals", "różne od")]
-    [InlineData("MudDataGrid_IsEmpty", "jest puste")]
-    [InlineData("MudDataGrid_IsNotEmpty", "nie jest puste")]
-    [InlineData("MudDataGridPager_RowsPerPage", "Wierszy na stronie")]
-    [InlineData("MudTablePager_NextPage", "Następna strona")]
-    public void TheRealMudBlazorKeys_ReachMudBlazorsOwnResolution_InPolish(string key, string expected)
+    [MemberData(nameof(AllKeys))]
+    public void EveryKey_IsOneMudBlazorRequests_AndResolvesInPolish(string key)
     {
         var previous = CultureInfo.CurrentUICulture;
-        CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("pl-PL");
         try
         {
             DefaultLocalizationInterceptor interceptor = new(NullLoggerFactory.Instance, _localizer);
 
-            interceptor.Handle(key).Value.ShouldBe(expected);
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("pl-PL");
+            interceptor.Handle(key).Value.ShouldBe(Translations[key]);
+
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-GB");
+            var english = interceptor.Handle(key);
+
+            english.ResourceNotFound.ShouldBeFalse($"MudBlazor has no built-in string for '{key}'");
         }
         finally
         {
@@ -59,13 +67,15 @@ public sealed class PolishMudLocalizerTests
         }
     }
 
+    [Fact]
+    public void ThePagerRowsLabel_KeepsTheSeparatorMudBlazorsEnglishOneHas() =>
+        Translations["MudDataGridPager_RowsPerPage"].ShouldBe("Wierszy na stronie:");
+
     /// <summary>
     /// The converter error, asserted through MudBlazor rather than through this dictionary.
     /// <para>
     /// Indexing the localizer directly proves only that the dictionary contains what the same file wrote
-    /// three lines earlier - it passes for any key string whatsoever, including one MudBlazor never asks
-    /// for. That is not hypothetical here: the <c>MudDataGrid.*</c> entries are spelled with a dot, are
-    /// never requested, and this suite stayed green through all of it.
+    /// three lines earlier - it passes for any key string whatsoever, including one MudBlazor never asks for.
     /// </para>
     /// <para>
     /// So this goes through <see cref="DefaultLocalizationInterceptor"/>, which is the component MudBlazor

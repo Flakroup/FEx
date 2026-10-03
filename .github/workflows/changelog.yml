@@ -1,0 +1,28 @@
+name: Changelog
+
+# Separate from ci.yml on purpose: it must re-run when a label is added or removed,
+# and a label change must not rebuild the solution.
+on:
+  pull_request:
+    branches: [develop]   # release PRs (develop -> main) carry the whole changelog and are not judged
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Test the gate script
+        run: bash .github/scripts/test-check-changelog.sh
+      - name: Require a CHANGELOG.md entry
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: bash .github/scripts/check-changelog.sh "origin/$BASE_REF" "$HEAD_SHA"

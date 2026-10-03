@@ -319,7 +319,7 @@ FEx/
 │   ├── Directory.Build.props
 │   └── Directory.Build.targets
 │
-├── .github/workflows/            # GitHub Actions (ci.yml, publish.yml)
+├── .github/workflows/            # GitHub Actions (ci.yml, changelog.yml, secret-scan.yml, publish.yml)
 ├── Directory.Build.props         # Solution-wide settings
 ├── Directory.Build.targets
 ├── build.ps1                     # NUKE build entry point
@@ -381,6 +381,7 @@ dotnet build -c Release
   - pull requests: `test` - NUKE `build.ps1 Test Inspect` on `windows-latest` (required for the WPF + .NET Framework 4.8.1 projects); `Inspect` fails on any ReSharper ERROR
   - pushes to `main`/`develop`: `build` (`Test Inspect Pack`, uploads the packages) and then `publish` (pushes those packages to nuget.org and tags the release)
   - Checkout uses `submodules: recursive` + `lfs: true`; the MAUI workload is restored for `FEx.Maui`
+- **`changelog.yml`** - runs on pull requests into `develop` when opened, pushed to, reopened, labeled or unlabeled (a separate workflow so a label change does not rebuild the solution): first `test-check-changelog.sh` checks the gate itself, then job `changelog` on `ubuntu-latest` fails when the PR changes `src/`, `samples/`, `build/`, the `DevConfigs` pointer, the root MSBuild props/targets, `GitVersion.yml`, `global.json`, `.config/dotnet-tools.json`, `.gitmodules`, `.github/workflows/`, `.github/scripts/`, `build.ps1` or `FEx.slnx` without adding a new `- ` bullet under `## [Unreleased]` in `CHANGELOG.md` (compared against the merge base with the live `origin/<base>`). A bullet that repeats a released bullet word for word does not count as an entry (reword it). Released sections must stay identical from the first version heading on, for every PR. Changes only under `test/`, `docs/`, `.claude/` or other `*.md` files need no entry. Label a PR `no-changelog` to exempt it. Logic: `.github/scripts/check-changelog.sh`.
 - **`publish.yml`** - manual `workflow_dispatch` only. Packs and pushes all FEx packages to **nuget.org** at the GitVersion-derived (pre-release) version and tags the release. Requires the `NUGET_API_KEY` repository secret; the NUKE `Publish` target is skipped when it is absent.
 
 ---

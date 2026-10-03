@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Sentry;
 using Sentry.AspNetCore;
@@ -139,9 +140,16 @@ public sealed class FExSentryWebExtensionsTests
     // "abc" fails outright; "0,1" is the locale-formatted decimal an operator typing Polish habits into an
     // .env file would write - this parses InvariantCulture, so the comma form is rejected the same way.
     [Theory]
+    // Out-of-range values parse fine but make the SDK's setter throw (10 is a percentage mistaken for a fraction);
+    // NaN passes the SDK's range check silently.
     [InlineData("abc")]
     [InlineData("0,1")]
-    public void ConfigureOptions_UnparsableSampleRate_LogsOneWarningNamingTheKeyAndValue(string raw)
+    [InlineData("10")]
+    [InlineData("1.5")]
+    [InlineData("-0.1")]
+    [InlineData("Infinity")]
+    [InlineData("NaN")]
+    public void ConfigureOptions_UnusableSampleRate_LogsOneWarningNamingTheKeyAndValue(string raw)
     {
         var logger = Substitute.For<IFExLogger>();
         using var restore = ReplaceStaticLogger(logger);
@@ -150,6 +158,7 @@ public sealed class FExSentryWebExtensionsTests
         FExSentryWebExtensions.ConfigureOptions(options, Configuration(("Sentry:TracesSampleRate", raw)), Dsn);
 
         options.TracesSampleRate.ShouldBeNull();
+        options.TracesSampler.ShouldBeNull();
         logger.Received(1).Warning(Arg.Is<string>(message =>
             message.Contains("Sentry:TracesSampleRate", StringComparison.Ordinal)
             && message.Contains(raw, StringComparison.Ordinal)));
@@ -201,6 +210,56 @@ public sealed class FExSentryWebExtensionsTests
     // FExStaticLogger backs onto one process-wide field; this class is the only one in the assembly that
     // reads it, but a test still has to hand the original logger back so a later test in this same class
     // never observes another test's substitute.
+    // Sentry's own options setup binds the section during Build(), ahead of the UseSentry callback, so these go
+    // through the whole host rather than ConfigureOptions on a bare options object.
+    [Theory]
+    [InlineData("10")]
+    [InlineData("1.5")]
+    [InlineData("-0.1")]
+    [InlineData("NaN")]
+    [InlineData("abc")]
+    public void AddFExSentry_UnusableSampleRate_BuildsWithTheSdkDefault_AndWarnsOnce(string raw)
+    {
+        var logger = Substitute.For<IFExLogger>();
+        using var restore = ReplaceStaticLogger(logger);
+
+        var options = BuildAndResolveOptions(raw);
+
+        options.TracesSampleRate.ShouldBeNull();
+        logger.Received(1).Warning(Arg.Is<string>(message =>
+            message.Contains("Sentry:TracesSampleRate", StringComparison.Ordinal)
+            && message.Contains(raw, StringComparison.Ordinal)));
+    }
+
+    [Theory]
+    [InlineData("0", 0.0)]
+    [InlineData("1", 1.0)]
+    [InlineData("0.25", 0.25)]
+    public void AddFExSentry_UsableSampleRate_IsAssigned_WithoutAWarning(string raw, double expected)
+    {
+        var logger = Substitute.For<IFExLogger>();
+        using var restore = ReplaceStaticLogger(logger);
+
+        var options = BuildAndResolveOptions(raw);
+
+        options.TracesSampleRate.ShouldBe(expected);
+        logger.DidNotReceive().Warning(Arg.Any<string>());
+    }
+
+    private static SentryAspNetCoreOptions BuildAndResolveOptions(string rawSampleRate)
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Sentry:Dsn"] = Dsn, ["Sentry:TracesSampleRate"] = rawSampleRate,
+        });
+        builder.AddFExSentry("FEX_TESTS_NO_SUCH_VARIABLE");
+
+        using var app = builder.Build();
+
+        return app.Services.GetRequiredService<IOptions<SentryAspNetCoreOptions>>().Value;
+    }
+
     private static IDisposable ReplaceStaticLogger(IFExLogger logger)
     {
         var original = FExStaticLogger.Instance;

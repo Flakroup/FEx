@@ -14,6 +14,19 @@ namespace FEx.Encryption.Tests;
 /// </summary>
 public sealed class FExEncryptionTests
 {
+    // The splash screen (FEx.WPFx, not referenced here) initializes at -2 and everything unprioritised at 0.
+    [Fact]
+    public void Priority_RunsBehindTheSplash_AndAheadOfTheDefaultPriority()
+    {
+        const int splashPriority = -2;
+        const int defaultPriority = 0;
+
+        var priority = new FExEncryption(new FExEncryptionSettings { PassPhrase = "irrelevant-here" }).Priority;
+
+        priority.ShouldBeGreaterThan(splashPriority);
+        priority.ShouldBeLessThan(defaultPriority);
+    }
+
     [Fact]
     public void CreateCipher_WithoutSettings_Throws() =>
         Should.Throw<FExEncryptionNotConfiguredException>(() => FExEncryption.CreateCipher(null));

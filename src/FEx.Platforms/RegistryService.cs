@@ -22,17 +22,8 @@ public class RegistryService : IRegistryService
 
     private static bool Is64BitOperatingSystem => PlatformInfoProvider.Is64BitOperatingSystem;
 
-    public IReadOnlyList<InstalledApplication> GetInstalledApplications()
-    {
-        const string registryKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall";
-        const string registry64Key = @"SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall";
-        var applications = new List<InstalledApplication>();
-
-        ReadUninstallKey(RegistryView.Registry32, registryKey, applications);
-        ReadUninstallKey(RegistryView.Registry64, registry64Key, applications);
-
-        return applications;
-    }
+    public IReadOnlyList<InstalledApplication> GetInstalledApplications() =>
+        InstalledApplicationReader.ReadAll(RegistryUninstallRoot.Open);
 
     public List<Version> GetVersionFromRegistry()
     {
@@ -211,20 +202,6 @@ public class RegistryService : IRegistryService
         return reg.GetKeyValue<string>(keyName).Guard(nameof(keyName));
     }
 
-    private static void ReadUninstallKey(RegistryView view, string path, List<InstalledApplication> applications)
-    {
-        using var lm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
-        using var key = lm.OpenSubKey(path);
-
-        if (key is not null)
-            applications.AddRange(InstalledApplicationReader.ReadAll(key.GetSubKeyNames(),
-                name => key.OpenSubKey(name) is { } subKey
-                    ? new UninstallEntry(subKey)
-                    : null,
-                RegistryHive.LocalMachine,
-                view));
-    }
-
     // Checking the version using >= will enable forward compatibility.
     private static List<Version> CheckFor45PlusVersion(int releaseKey)
     {
@@ -305,15 +282,6 @@ public class RegistryService : IRegistryService
 #pragma warning disable IDISP004 // Guard returns the same instance; ownership passes to the caller
         return GetSubKey(root, subKey, writable).Guard(nameof(subKey));
 #pragma warning restore IDISP004
-    }
-
-    private sealed class UninstallEntry(RegistryKey key) : IUninstallEntry
-    {
-        public object? GetValue(string name) => key.GetValue(name);
-
-#pragma warning disable IDISP007 // The entry takes ownership of the key it wraps
-        public void Dispose() => key.Dispose();
-#pragma warning restore IDISP007
     }
 }
 #pragma warning restore CA1416

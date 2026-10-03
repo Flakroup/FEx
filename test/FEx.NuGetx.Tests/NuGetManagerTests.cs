@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NuGet.Common;
 using NuGet.Packaging.Core;
@@ -6,12 +5,17 @@ using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using EventId = Microsoft.Extensions.Logging.EventId;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using ManagerLogger = Microsoft.Extensions.Logging.ILogger<FEx.NuGetx.NuGetManager>;
 
 namespace FEx.NuGetx.Tests;
 
@@ -20,13 +24,16 @@ public sealed class NuGetManagerTests
     private const string PackageId = "Some.Package";
 
     private readonly FakeResourceSource _source = new();
+    private readonly ListLogger _log = new();
     private readonly PackageMetadataResource _metadata = Substitute.For<PackageMetadataResource>();
     private readonly DownloadResource _download = Substitute.For<DownloadResource>();
+    private readonly FakeUpdateResource _update = new();
 
     public NuGetManagerTests()
     {
         _source.Register<PackageMetadataResource>(_metadata);
         _source.Register<DownloadResource>(_download);
+        _source.Register<PackageUpdateResource>(_update);
     }
 
     [Fact]
@@ -60,7 +67,7 @@ public sealed class NuGetManagerTests
         ReturnDownload(DownloadResourceResultStatus.Available);
         _source.FailNextRequest = true;
 
-        await Should.ThrowAsync<System.InvalidOperationException>(() => manager.RestorePackageByIdAsync(PackageId, token: TestContext.Current.CancellationToken));
+        await Should.ThrowAsync<InvalidOperationException>(() => manager.RestorePackageByIdAsync(PackageId, token: TestContext.Current.CancellationToken));
 
         var (_, isSuccess) = await manager.RestorePackageByIdAsync(PackageId, token: TestContext.Current.CancellationToken);
 
@@ -77,6 +84,7 @@ public sealed class NuGetManagerTests
 
         result.ShouldBeNull();
         isSuccess.ShouldBeFalse();
+        _log.Entries.ShouldContain(x => x.Level == LogLevel.Warning && x.Message.Contains(PackageId));
         await _download.DidNotReceiveWithAnyArgs()
             .GetDownloadResourceResultAsync(default!, default!, default!, default!, TestContext.Current.CancellationToken);
     }
@@ -112,9 +120,100 @@ public sealed class NuGetManagerTests
                 Arg.Any<CancellationToken>());
     }
 
+    [Fact(Timeout = 10000)]
+    public async Task Cancelled_Caller_Returns_Promptly_And_Does_Not_Poison_Others()
+    {
+        using var manager = CreateManager();
+        ReturnVersions();
+        ReturnDownload(DownloadResourceResultStatus.Available);
+        _source.HangFor = Timeout.InfiniteTimeSpan;
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            manager.RestorePackageByIdAsync(PackageId, token: cts.Token));
+
+        _source.HangFor = null;
+        var (_, isSuccess) = await manager.RestorePackageByIdAsync(PackageId, token: TestContext.Current.CancellationToken);
+
+        isSuccess.ShouldBeTrue();
+    }
+
+    [Fact(Timeout = 10000)]
+    public async Task Waiter_Queued_On_A_Hanging_Creation_Can_Be_Cancelled()
+    {
+        using var manager = CreateManager();
+        ReturnVersions();
+        _source.HangFor = Timeout.InfiniteTimeSpan;
+        using var leaderCts = new CancellationTokenSource();
+        var leader = Task.Run(() => manager.RestorePackageByIdAsync(PackageId, token: leaderCts.Token),
+            TestContext.Current.CancellationToken);
+        await Task.Delay(50, TestContext.Current.CancellationToken); // let the leader take the creation lock
+        using var waiterCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            manager.RestorePackageByIdAsync(PackageId, token: waiterCts.Token));
+
+        await leaderCts.CancelAsync();
+#pragma warning disable VSTHRD003 // The leader was started by this test
+        await Should.ThrowAsync<OperationCanceledException>(() => leader);
+#pragma warning restore VSTHRD003
+    }
+
+    [Fact]
+    public async Task UnlistAll_Deletes_Each_Listed_Version_By_Id_And_Version()
+    {
+        using var manager = CreateManager();
+        ReturnMetadata(Metadata("1.0.0"), Metadata("2.0.0-beta"), Metadata("3.0.0", false));
+
+        using var cache = new SourceCacheContext();
+
+        await manager.UnlistAllPackageVersionsAsync(PackageId, _metadata, cache, "key");
+
+        manager.Deleted.ShouldBe([(PackageId, "1.0.0", "key"), (PackageId, "2.0.0-beta", "key")]);
+        _source.Requests.ShouldContain(typeof(PackageUpdateResource));
+    }
+
+    [Fact]
+    public async Task DeletePackage_Reports_Failure_When_Delete_Throws()
+    {
+        using var manager = CreateManager();
+        manager.Throw = true;
+
+        (await manager.DeletePackageAsync(Metadata("1.0.0"), "key")).ShouldBeFalse();
+        (await manager.DeletePackageAsync(null!, "key")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task GetNuGetsToPublish_Returns_Only_Packages_Whose_Version_Is_Not_On_The_Feed()
+    {
+        using var manager = CreateManager();
+        using var dir = new TempDirectory();
+        var published = dir.CreatePackage(PackageId, "1.0.0");
+        var fresh = dir.CreatePackage(PackageId, "2.0.0");
+        ReturnMetadata(Metadata("1.0.0"));
+
+        var result = await manager.GetNuGetsToPublishAsync(_metadata, [published, fresh]);
+
+        result.Select(x => x.Name).ShouldBe([fresh.Name]);
+    }
+
+    [Fact]
+    public async Task GetNuGetsToPublishOnNuGetOrg_Uses_The_Lazy_Resource_Source()
+    {
+        using var manager = CreateManager();
+        using var dir = new TempDirectory();
+        var fresh = dir.CreatePackage(PackageId, "2.0.0");
+        ReturnMetadata(Metadata("1.0.0"));
+
+        var result = await manager.GetNuGetsToPublishOnNuGetOrgAsync([fresh]);
+
+        result.Length.ShouldBe(1);
+        _source.Requests.Count(x => x == typeof(PackageMetadataResource)).ShouldBe(1);
+    }
+
     // Every test disposes the manager it creates via `using`
 #pragma warning disable IDISP004
-    private NuGetManager CreateManager() => new(new(NullLogger<NuGetManager>.Instance), _source);
+    private TestableManager CreateManager() => new(new(_log), _source);
 #pragma warning restore IDISP004
 
     private static IPackageSearchMetadata Metadata(string version, bool isListed = true)
@@ -140,14 +239,76 @@ public sealed class NuGetManagerTests
                 : new DownloadResourceResult(status)));
 #pragma warning restore IDISP004
 
+    private sealed class FakeUpdateResource() : PackageUpdateResource(null!, null!);
+
+    private sealed class TestableManager(NuGetLogger<NuGetManager> logger, INuGetResourceSource source)
+        : NuGetManager(logger, source)
+    {
+        public List<(string Id, string? Version, string ApiKey)> Deleted { get; } = [];
+
+        public bool Throw { get; set; }
+
+        internal override Task DeletePackageVersionAsync(PackageUpdateResource resource,
+                                                         string packageId,
+                                                         string? version,
+                                                         string apiKey)
+        {
+            if (Throw)
+                throw new InvalidOperationException("delete failed");
+
+            Deleted.Add((packageId, version, apiKey));
+
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class ListLogger : ManagerLogger
+    {
+        public List<(LogLevel Level, string Message)> Entries { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel,
+                                EventId eventId,
+                                TState state,
+                                Exception? exception,
+                                Func<TState, Exception?, string> formatter) =>
+            Entries.Add((logLevel, formatter(state, exception)));
+    }
+
+    private sealed class TempDirectory : IDisposable
+    {
+        private readonly string _path = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"))).FullName;
+
+        public FileInfo CreatePackage(string id, string version)
+        {
+            var file = new FileInfo(Path.Combine(_path, $"{id}.{version}.nupkg"));
+
+            using var stream = file.Create();
+            using var zip = new ZipArchive(stream, ZipArchiveMode.Create);
+            using var writer = new StreamWriter(zip.CreateEntry($"{id}.nuspec").Open());
+
+            writer.Write(
+                $"<?xml version=\"1.0\"?><package xmlns=\"http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd\"><metadata><id>{id}</id><version>{version}</version><authors>a</authors><description>d</description></metadata></package>");
+
+            return file;
+        }
+
+        public void Dispose() => Directory.Delete(_path, true);
+    }
+
     private sealed class FakeResourceSource : INuGetResourceSource
     {
-        private readonly Dictionary<System.Type, object> _resources = [];
-        private readonly List<System.Type> _requests = [];
+        private readonly Dictionary<Type, object> _resources = [];
+        private readonly List<Type> _requests = [];
 
         public bool FailNextRequest { get; set; }
 
-        public IReadOnlyList<System.Type> Requests
+        public TimeSpan? HangFor { get; set; }
+
+        public IReadOnlyList<Type> Requests
         {
             get
             {
@@ -158,18 +319,18 @@ public sealed class NuGetManagerTests
 
         public void Register<T>(T resource) where T : class => _resources[typeof(T)] = resource;
 
-        public async Task<T> GetResourceAsync<T>() where T : class, INuGetResource
+        public async Task<T> GetResourceAsync<T>(CancellationToken token) where T : class, INuGetResource
         {
             lock (_requests)
                 _requests.Add(typeof(T));
 
-            await Task.Delay(20); // widen the race window for the concurrency test
+            await Task.Delay(HangFor ?? TimeSpan.FromMilliseconds(20), token); // widens the race window
 
             if (FailNextRequest)
             {
                 FailNextRequest = false;
 
-                throw new System.InvalidOperationException("network down");
+                throw new InvalidOperationException("network down");
             }
 
             return (T)_resources[typeof(T)];

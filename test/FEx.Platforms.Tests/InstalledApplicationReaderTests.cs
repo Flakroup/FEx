@@ -3,12 +3,13 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Versioning;
 using Xunit;
+
+// These tests use fakes only; the registry enums are referenced as plain values.
+#pragma warning disable CA1416
 
 namespace FEx.Platforms.Tests;
 
-[SupportedOSPlatform("windows")]
 public sealed class InstalledApplicationReaderTests
 {
     [Fact]
@@ -104,6 +105,69 @@ public sealed class InstalledApplicationReaderTests
             RegistryView.Registry32);
 
         apps.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Sources_Read_The_Plain_Uninstall_Path_Under_Both_Views_Without_Wow6432Node()
+    {
+        const string path = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall";
+
+        InstalledApplicationReader.Sources.ShouldBe([
+            new UninstallSource(RegistryView.Registry64, path),
+            new UninstallSource(RegistryView.Registry32, path)
+        ]);
+    }
+
+    [Fact]
+    public void ReadAll_Reads_Each_Source_Tags_Its_View_And_Disposes_Roots_And_Entries()
+    {
+        var roots = new List<FakeRoot>();
+
+        var apps = InstalledApplicationReader.ReadAll(source =>
+        {
+            var root = new FakeRoot(source.View, "x", "y");
+            roots.Add(root);
+
+            return root;
+        });
+
+        apps.Select(x => (x.DisplayName, x.View))
+            .ShouldBe([
+                ("Registry64:x", RegistryView.Registry64),
+                ("Registry64:y", RegistryView.Registry64),
+                ("Registry32:x", RegistryView.Registry32),
+                ("Registry32:y", RegistryView.Registry32)
+            ]);
+        roots.Count.ShouldBe(2);
+        roots.ShouldAllBe(x => x.IsDisposed);
+        roots.SelectMany(x => x.Entries).ShouldAllBe(x => x.IsDisposed);
+    }
+
+    [Fact]
+    public void ReadAll_Skips_Sources_That_Do_Not_Exist()
+    {
+        InstalledApplicationReader.ReadAll(_ => null).ShouldBeEmpty();
+    }
+
+    private sealed class FakeRoot(RegistryView view, params string[] names) : IUninstallRoot
+    {
+        public List<FakeEntry> Entries { get; } = [];
+
+        public bool IsDisposed { get; private set; }
+
+        public IReadOnlyList<string> GetEntryNames() => names;
+
+        public IUninstallEntry? OpenEntry(string name)
+        {
+#pragma warning disable IDISP001 // Tracked in Entries, disposed by the reader under test
+            var entry = new FakeEntry($"{view}:{name}");
+#pragma warning restore IDISP001
+            Entries.Add(entry);
+
+            return entry;
+        }
+
+        public void Dispose() => IsDisposed = true;
     }
 
     private sealed class FakeEntry(string displayName, bool throwOnRead = false) : IUninstallEntry

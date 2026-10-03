@@ -12,38 +12,40 @@ namespace FEx.NuGetx;
 /// </summary>
 internal interface INuGetResourceSource
 {
-    Task<T> GetResourceAsync<T>() where T : class, INuGetResource;
+    Task<T> GetResourceAsync<T>(CancellationToken token) where T : class, INuGetResource;
 }
 
 internal sealed class NuGetOrgResourceSource : INuGetResourceSource
 {
-    private readonly SourceRepository _sourceRepository =
-        NuGetRepository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
+    // The single owner of the nuget.org endpoint inside FEx.NuGetx.
+    private const string ServiceIndexUrl = "https://api.nuget.org/v3/index.json";
 
-    public async Task<T> GetResourceAsync<T>() where T : class, INuGetResource =>
-        await _sourceRepository.GetResourceAsync<T>();
+    private readonly SourceRepository _sourceRepository = NuGetRepository.Factory.GetCoreV3(ServiceIndexUrl);
+
+    public async Task<T> GetResourceAsync<T>(CancellationToken token) where T : class, INuGetResource =>
+        await _sourceRepository.GetResourceAsync<T>(token);
 }
 
 /// <summary>
 /// Creates a value on first use, once, thread-safely. A failed creation is not cached, so a transient
-/// network failure does not poison the instance.
+/// network failure or a cancelled caller does not poison the instance.
 /// </summary>
-internal sealed class AsyncOnce<T>(Func<Task<T>> factory) where T : class
+internal sealed class AsyncOnce<T>(Func<CancellationToken, Task<T>> factory) where T : class
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
 
     private volatile T? _value;
 
-    public async Task<T> GetAsync()
+    public async Task<T> GetAsync(CancellationToken token = default)
     {
         if (_value is { } value)
             return value;
 
-        await _gate.WaitAsync();
+        await _gate.WaitAsync(token);
 
         try
         {
-            return _value ??= await factory();
+            return _value ??= await factory(token);
         }
         finally
         {

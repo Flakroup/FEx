@@ -51,12 +51,8 @@ public class NuGetManager : AsyncInitializable
         BeginInitialization();
     }
 
-    public static async Task<PackageMetadataResource> GetNuGetOrgPackageMetadataResourceAsync()
-    {
-        var sourceRepository = NuGetRepository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
-
-        return await sourceRepository.GetResourceAsync<PackageMetadataResource>();
-    }
+    public static async Task<PackageMetadataResource> GetNuGetOrgPackageMetadataResourceAsync() =>
+        await new NuGetOrgResourceSource().GetResourceAsync<PackageMetadataResource>(CancellationToken.None);
 
     public static async Task<PackageIdentity[]> GetIdentitiesAsync(
         PackageSearchMetadataBuilder.ClonedPackageSearchMetadata package) =>
@@ -196,9 +192,9 @@ public class NuGetManager : AsyncInitializable
         bool includeUnlisted = false,
         CancellationToken token = default) =>
         await RestorePackageByIdAsync(packageId,
-            await PackageMetadataResource.GetAsync(),
+            await PackageMetadataResource.GetAsync(token),
             SourceCacheContext,
-            await DownloadResource.GetAsync(),
+            await DownloadResource.GetAsync(token),
             includePrerelease,
             includeUnlisted,
             token);
@@ -228,12 +224,10 @@ public class NuGetManager : AsyncInitializable
             {
                 var packageUpdateResource = await PackageUpdateResource.GetAsync();
 
-                await packageUpdateResource.Delete(pkgToDel.Identity.Id,
+                await DeletePackageVersionAsync(packageUpdateResource,
+                    pkgToDel.Identity.Id,
                     pkgToDel.Identity.Version.OriginalVersion,
-                    _ => apiKey,
-                    _ => true,
-                    false,
-                    Logger);
+                    apiKey);
 
                 return true;
             }
@@ -244,6 +238,13 @@ public class NuGetManager : AsyncInitializable
 
         return false;
     }
+
+    // Seam over the non-virtual PackageUpdateResource.Delete so the id/version it is called with can be asserted.
+    internal virtual Task DeletePackageVersionAsync(PackageUpdateResource resource,
+                                                    string packageId,
+                                                    string? version,
+                                                    string apiKey) =>
+        resource.Delete(packageId, version, _ => apiKey, _ => true, false, Logger);
 
     public async Task<(DownloadResourceResult? result, bool isSuccess)> RestorePackageAsync(
         PackageIdentity pkgToRestore,
@@ -280,7 +281,7 @@ public class NuGetManager : AsyncInitializable
                                                                     HashSet<string>? excludedPackageNames = null,
                                                                     params string[] packagesToPublish)
     {
-        var packageMetadataResource = await GetNuGetOrgPackageMetadataResourceAsync();
+        var packageMetadataResource = await PackageMetadataResource.GetAsync();
 
         return await GetNuGetsToPublishAsync(packageMetadataResource,
             allNuGets,

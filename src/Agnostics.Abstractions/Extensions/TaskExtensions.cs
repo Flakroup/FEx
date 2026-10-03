@@ -105,6 +105,90 @@ public static class TaskExtensions
             .WhenAllAsync(mode, options, cancellationToken);
     }
 
+    /// <summary>
+    /// Runs an asynchronous delegate for every value and waits for all the returned tasks to complete. This overload
+    /// exists so a <see cref="Task" />-returning delegate is awaited: the generic overload would treat the task as a
+    /// plain result and finish before the work does.
+    /// </summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <param name="values">The values to process.</param>
+    /// <param name="asyncAction">The asynchronous delegate to run per value.</param>
+    /// <param name="mode">The thread context to run on.</param>
+    /// <param name="options">How the work is started.</param>
+    /// <param name="cancellationToken">Token used to cancel delegates that have not started.</param>
+    public static async Task WithWhenAllAsync<T>(this IEnumerable<T> values,
+                                                 Func<T, Task> asyncAction,
+                                                 AsyncMode mode = AsyncMode.Default,
+                                                 AsyncOptions options = AsyncOptions.ImmediateStart,
+                                                 CancellationToken cancellationToken = default)
+    {
+        if (options.HasFlagFast(AsyncOptions.ImmediateStart))
+        {
+            await values.Select<T, Func<Task>>(v => () => Task.Run(() => asyncAction(v), cancellationToken))
+                .WhenAllTasksAsync(mode);
+
+            return;
+        }
+
+        await values.Select<T, Func<Task>>(v => () => asyncAction(v)).WhenAllTasksAsync(mode, options);
+    }
+
+    /// <summary>
+    /// Runs an asynchronous delegate for every value and waits for all the returned tasks to complete, returning their
+    /// results. Awaits the tasks instead of returning them as results (see the <see cref="Task" /> overload).
+    /// </summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <typeparam name="TResult">The task result type.</typeparam>
+    /// <param name="values">The values to process.</param>
+    /// <param name="asyncAction">The asynchronous delegate to run per value.</param>
+    /// <param name="mode">The thread context to run on.</param>
+    /// <param name="options">How the work is started.</param>
+    /// <param name="cancellationToken">Token used to cancel delegates that have not started.</param>
+    /// <returns>The results in the order of <paramref name="values" />.</returns>
+    public static async Task<TResult[]> WithWhenAllAsync<T, TResult>(this IEnumerable<T> values,
+                                                                     Func<T, Task<TResult>> asyncAction,
+                                                                     AsyncMode mode = AsyncMode.Default,
+                                                                     AsyncOptions options = AsyncOptions.ImmediateStart,
+                                                                     CancellationToken cancellationToken = default)
+    {
+        if (options.HasFlagFast(AsyncOptions.ImmediateStart))
+            return await values
+                .Select<T, Func<Task<TResult>>>(v => () => Task.Run(() => asyncAction(v), cancellationToken))
+                .WhenAllTasksAsync(mode);
+
+        return await values.Select<T, Func<Task<TResult>>>(v => () => asyncAction(v)).WhenAllTasksAsync(mode, options);
+    }
+
+    /// <summary>Like the <see cref="Task" /> overload, for <see cref="ValueTask" />-returning delegates.</summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <param name="values">The values to process.</param>
+    /// <param name="asyncAction">The asynchronous delegate to run per value.</param>
+    /// <param name="mode">The thread context to run on.</param>
+    /// <param name="options">How the work is started.</param>
+    /// <param name="cancellationToken">Token used to cancel delegates that have not started.</param>
+    public static Task WithWhenAllAsync<T>(this IEnumerable<T> values,
+                                           Func<T, ValueTask> asyncAction,
+                                           AsyncMode mode = AsyncMode.Default,
+                                           AsyncOptions options = AsyncOptions.ImmediateStart,
+                                           CancellationToken cancellationToken = default) =>
+        values.WithWhenAllAsync(v => asyncAction(v).AsTask(), mode, options, cancellationToken);
+
+    /// <summary>Like the <see cref="Task{TResult}" /> overload, for <see cref="ValueTask{TResult}" />-returning delegates.</summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <typeparam name="TResult">The task result type.</typeparam>
+    /// <param name="values">The values to process.</param>
+    /// <param name="asyncAction">The asynchronous delegate to run per value.</param>
+    /// <param name="mode">The thread context to run on.</param>
+    /// <param name="options">How the work is started.</param>
+    /// <param name="cancellationToken">Token used to cancel delegates that have not started.</param>
+    /// <returns>The results in the order of <paramref name="values" />.</returns>
+    public static Task<TResult[]> WithWhenAllAsync<T, TResult>(this IEnumerable<T> values,
+                                                               Func<T, ValueTask<TResult>> asyncAction,
+                                                               AsyncMode mode = AsyncMode.Default,
+                                                               AsyncOptions options = AsyncOptions.ImmediateStart,
+                                                               CancellationToken cancellationToken = default) =>
+        values.WithWhenAllAsync(v => asyncAction(v).AsTask(), mode, options, cancellationToken);
+
     /// <summary>Runs an asynchronous delegate for every value and waits for all tasks to complete.</summary>
     /// <typeparam name="T">The value type.</typeparam>
     /// <param name="values">The values to process.</param>

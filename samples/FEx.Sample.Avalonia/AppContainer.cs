@@ -25,7 +25,8 @@ namespace FEx.Sample.Avalonia;
 [Register(typeof(JsonPlaceholderApiConfiguration), Scope.SingleInstance, typeof(IApiConfiguration))]
 [Register(typeof(JsonPlaceholderApi), Scope.SingleInstance, typeof(JsonPlaceholderApi))]
 [RegisterModule(typeof(FExModule))]
-public sealed partial class AppContainer : FExModule, IFExContainer, IFExFlurlxContainer, IContainer<JsonPlaceholderApi>, IContainer<DemoDataStore>
+public sealed partial class AppContainer : FExModule, IFExContainer, IFExFlurlxContainer, IContainer<JsonPlaceholderApi>, IContainer<DemoDataStore>,
+    IContainer<IInitializeModule<IServiceCollection>[]>
 {
     [Factory(Scope.SingleInstance)]
     public static DemoDbContext CreateDemoDbContext(IAppInfoProvider appInfoProvider) =>

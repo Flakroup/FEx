@@ -19,7 +19,8 @@ namespace FEx.Sample.WPF;
 [Register(typeof(DemoDbStartupModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 [Register(typeof(DemoDataStore), Scope.SingleInstance)]
 #pragma warning disable IDISP025, SI1105 // IDISP025: StrongInject generated container; SI1105: benign module-resolution warning
-public partial class AppContainer : FExModule, IFExContainer, IContainer<DemoDataStore>
+public partial class AppContainer : FExModule, IFExContainer, IContainer<DemoDataStore>,
+    IContainer<IInitializeModule<IServiceCollection>[]>
 #pragma warning restore IDISP025, SI1105
 {
     [Factory(Scope.SingleInstance)]

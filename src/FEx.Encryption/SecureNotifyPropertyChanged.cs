@@ -200,9 +200,13 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
             encrypted = pending.Ciphertext;
         }
         else if (newValue is null || IsOwnCiphertext(newValue))
+        {
             encrypted = newValue;
+        }
         else
+        {
             encrypted = Cipher.Encrypt(newValue);
+        }
 
         if (propertyName is not null)
             _storedCiphertext[propertyName] = encrypted;

@@ -185,7 +185,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
         using ManualResetEventSlim release = new();
         var settings = new SlowSettings(firstIsInside, release) { Secret = Plaintext };
 
-        var first = Task.Run(() => settings.ToJson(), ct);
+        var first = Task.Run(settings.ToJson, ct);
         firstIsInside.Wait(TimeSpan.FromSeconds(10), ct).ShouldBeTrue();
         var second = settings.ToJson();
         release.Set();
@@ -199,7 +199,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
     {
         var settings = new ThrowingCallbackSettings { Secret = Plaintext, Throw = true };
 
-        Should.Throw<Exception>(() => settings.ToJson());
+        Should.Throw<Exception>(settings.ToJson);
         settings.Secret.ShouldBe(Plaintext);
 
         settings.Throw = false;

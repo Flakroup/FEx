@@ -1,4 +1,3 @@
-using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Logging;
 using FEx.Logging.Web;
 using Microsoft.AspNetCore.Builder;
@@ -12,7 +11,6 @@ using Serilog.Extensions.Logging;
 using Shouldly;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Xunit;
 
 namespace FEx.Logging.Tests;

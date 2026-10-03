@@ -38,6 +38,7 @@ public sealed class JsonExtensionsTests
         }
     }
 
+    // ReSharper disable UnusedMember.Local - the members are read by the serializer under test
     private sealed class Dto
     {
         public int Id { get; set; }
@@ -49,4 +50,5 @@ public sealed class JsonExtensionsTests
 
         public string Boom => throw new InvalidOperationException("cannot read");
     }
+    // ReSharper restore UnusedMember.Local
 }

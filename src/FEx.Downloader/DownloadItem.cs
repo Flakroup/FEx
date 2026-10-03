@@ -8,7 +8,6 @@ using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Core.Abstractions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Downloader.Abstractions.Interfaces;
-using FEx.Downloader.Clients;
 using FEx.Downloader.Enums;
 using FEx.Downloader.Extensions;
 using FEx.FileSystem;
@@ -21,7 +20,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -660,7 +658,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     private async Task SetDataLengthAsync()
     {
         var sw = new Stopwatch();
-        DataLength = await Url.GetHttpFileSizeAsync(Pars, sw, HttpClient);
+        DataLength = await Url.GetHttpFileSizeAsync(Pars, sw, HttpClient, CancellationToken.None);
         Ping = sw.ElapsedMilliseconds;
     }
 

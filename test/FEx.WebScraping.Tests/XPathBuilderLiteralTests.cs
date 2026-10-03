@@ -19,7 +19,7 @@ public sealed class XPathBuilderLiteralTests
     public void EveryValueFilter_MatchesAValueContainingQuotes(string value)
     {
         HtmlDocument doc = new();
-        HtmlNode div = doc.CreateElement("div");
+        var div = doc.CreateElement("div");
         div.SetAttributeValue("class", value);
         div.SetAttributeValue("id", value);
         div.SetAttributeValue("data-x", value);
@@ -48,7 +48,7 @@ public sealed class XPathBuilderLiteralTests
     {
         // It used to emit [@text()=...], an attribute named "text()" that no node has - it never matched.
         HtmlDocument doc = new();
-        HtmlNode div = doc.CreateElement("div");
+        var div = doc.CreateElement("div");
         div.AppendChild(doc.CreateTextNode(value));
         doc.DocumentNode.AppendChild(div);
 

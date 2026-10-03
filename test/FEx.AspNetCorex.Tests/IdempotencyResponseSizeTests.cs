@@ -130,6 +130,7 @@ public sealed class IdempotencyResponseSizeTests
                 await context.Response.Body.WriteAsync("0123"u8.ToArray());
                 await context.Response.Body.FlushAsync();
 #pragma warning disable VSTHRD103 // the synchronous Flush override is what is under test
+                // ReSharper disable once MethodHasAsyncOverload
                 context.Response.Body.Flush();
 #pragma warning restore VSTHRD103
                 flushesWhileBuffering = client.Flushes;
@@ -137,6 +138,7 @@ public sealed class IdempotencyResponseSizeTests
                 await context.Response.Body.WriteAsync(new byte[50]);
                 await context.Response.Body.FlushAsync();
 #pragma warning disable VSTHRD103 // the synchronous Flush override is what is under test
+                // ReSharper disable once MethodHasAsyncOverload
                 context.Response.Body.Flush();
 #pragma warning restore VSTHRD103
             },

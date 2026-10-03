@@ -8,7 +8,6 @@ using FEx.MVVM.Abstractions.Enums;
 using FEx.MVVM.Abstractions.Extensions;
 using FEx.MVVM.Abstractions.Interfaces;
 using FEx.MVVM.Extensions;
-using FEx.Webx.Utilities;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -237,7 +236,7 @@ public static class FtpDownloader
                             viewModel?.IfNotNull(v => v.SetStatusInfo(ex.Message));
 
                             if (cache?.Count > 0)
-                                await fs.WriteAsync([.. cache], 0, cache.Count);
+                                await fs.WriteAsync([.. cache], 0, cache.Count, CancellationToken.None);
 
                             if (transport.IsLocalProcessingAbort(ex))
                             {
@@ -256,7 +255,7 @@ public static class FtpDownloader
                                     // Never zero-fill past the remote end: the probe steps in 512 KiB chunks.
                                     var newOffset = Math.Min(detectedOffset, fileSize);
                                     var buffer = new byte[Math.Max(0, newOffset - (offset + prg))];
-                                    await fs.WriteAsync(buffer, 0, buffer.Length);
+                                    await fs.WriteAsync(buffer, 0, buffer.Length, CancellationToken.None);
 
                                     state.RetryCount = 0;
 
@@ -281,7 +280,7 @@ public static class FtpDownloader
                             break;
                         }
 
-                        await fs.WriteAsync([.. cache], 0, cache.Count);
+                        await fs.WriteAsync([.. cache], 0, cache.Count, CancellationToken.None);
                         viewModel?.PrgSet(prg);
                         viewModel?.SetCurrentDownloadState(prg, fileSize - offset);
                         //viewModel?.ThreadsInfo = $"{(prg + offset) / (double)fileSize * 100}% {sw.GetTime()}";

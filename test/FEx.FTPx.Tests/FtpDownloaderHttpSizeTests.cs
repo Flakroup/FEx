@@ -1,5 +1,4 @@
 using FEx.Agnostics.Abstractions.Enums;
-using FEx.FTPx;
 using Shouldly;
 using System;
 using System.Net;

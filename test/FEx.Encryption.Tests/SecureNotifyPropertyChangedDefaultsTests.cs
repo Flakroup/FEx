@@ -85,6 +85,7 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
             })
             .OfType<string>();
 
+    // ReSharper disable UnusedMember.Local - read and written through the serializer and the base class
     private sealed class Payload
     {
         public int Count { get; set; }
@@ -128,6 +129,7 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
 
         protected override FExStringCipher Cipher => _instanceCipher;
     }
+    // ReSharper restore UnusedMember.Local
 
     /// <summary>Also keeps what was reported, then hands it to the default body so the log is exercised too.</summary>
     private sealed class RecordingSecrets : DefaultSecrets

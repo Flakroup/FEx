@@ -192,7 +192,7 @@ public sealed class IdempotencyMiddlewareConcurrencyTests
             {
                 executions++;
                 context.Response.StatusCode = StatusCodes.Status200OK;
-                await context.Response.WriteAsync("done");
+                await context.Response.WriteAsync("done", CancellationToken.None);
 
                 // The client that receives this response can disconnect the instant it lands - exactly
                 // the case a retry exists for - and that must not cancel recording the success.

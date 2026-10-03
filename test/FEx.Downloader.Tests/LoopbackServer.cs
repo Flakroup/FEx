@@ -27,6 +27,7 @@ internal sealed class LoopbackServer : IDisposable
         _ = Task.Run(async () =>
         {
             while (_listener.IsListening)
+            {
                 try
                 {
                     var context = await _listener.GetContextAsync();
@@ -41,6 +42,7 @@ internal sealed class LoopbackServer : IDisposable
                 {
                     // a failing request must not stop the server
                 }
+            }
         });
     }
 

@@ -46,7 +46,7 @@ public sealed class ResolutionFixTests : IDisposable
         using var provider = new FExStrongInjectServiceProvider();
         provider.SetServiceProvider(container);
 
-        Should.Throw<InvalidOperationException>(() => provider.TryResolveService<IFoo>()).Message.ShouldBe("boom");
+        Should.Throw<InvalidOperationException>(provider.TryResolveService<IFoo>).Message.ShouldBe("boom");
     }
 
     [Fact]

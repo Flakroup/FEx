@@ -26,7 +26,7 @@ public interface IPackTarget : ICompileTarget, IGitVersionComponent
     Target Pack =>
         _ => _.Description("Creates NuGet packages with GitVersion-derived version")
             .DependsOn(Compile)
-            .Produces(PackagesDirectory / "*.nupkg")
+            .Produces(PackagesDirectory / "*.nupkg", PackagesDirectory / "*.snupkg")
             .Executes(() =>
             {
                 PackagesDirectory.CreateOrCleanDirectory();

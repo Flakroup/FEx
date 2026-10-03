@@ -141,7 +141,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="FlakHttpClient" /> class with a specific handler.
+    /// Initializes a new instance of the <see cref="HttpClientEx" /> class from the specified request parameters.
     /// </summary>
     /// <param name="pars">The <see cref="WebRequestParams" /> parameters for processing HTTP response messages.</param>
     /// <param name="disposeHandler">
@@ -172,7 +172,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="FlakHttpClient" /> class with a specific handler.
+    /// Initializes a new instance of the <see cref="HttpClientEx" /> class with a specific handler.
     /// </summary>
     /// <param name="handler">
     /// The <see cref="HttpMessageHandler" /> responsible for processing the HTTP

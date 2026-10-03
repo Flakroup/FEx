@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Usage: check-changelog.sh <base-sha> <head-sha>   (PR_LABELS: comma-separated label names)
-# Fails when shipped code changes without a CHANGELOG.md entry under [Unreleased].
+# Rules: shipped code changes need a NEW line under [Unreleased]; released history is append-only.
 set -euo pipefail
 base=$1 head=$2
 
@@ -9,27 +9,39 @@ if [[ ",${PR_LABELS:-}," == *",no-changelog,"* ]]; then
   exit 0
 fi
 
-files=$(git diff --name-only "$base...$head")
-shipped=$(grep -E '^(src/|samples/|build/|DevConfigs$|Directory\.Build\.(props|targets)$|\.github/workflows/|build\.ps1$|FEx\.slnx$)' <<<"$files" || true)
+files=$(git -c core.quotePath=false diff --no-renames --name-only "$base...$head")
+shipped=$(grep -E '^(src/|samples/|build/|DevConfigs$|Directory\.Build\.(props|targets)$|\.github/(workflows|scripts)/|build\.ps1$|FEx\.slnx$|GitVersion\.yml$|global\.json$|\.config/dotnet-tools\.json$|\.gitmodules$)' <<<"$files" || true)
+changelog_changed=$(grep -cx 'CHANGELOG.md' <<<"$files" || true)
 
-if grep -qx 'CHANGELOG.md' <<<"$files"; then
-  # Added lines must sit above the first released "## [x.y.z]" heading.
-  first_release=$(git show "$head:CHANGELOG.md" | grep -n -m1 -E '^## \[[0-9]' | cut -d: -f1 || true)
-  if [[ -n "$first_release" ]]; then
-    below=$(git diff -U0 "$base...$head" -- CHANGELOG.md \
-      | awk -v r="$first_release" '/^@@/ { split($3, a, ","); s = substr(a[1], 2) + 0; n = (a[2] == "" ? 1 : a[2] + 0); if (n > 0 && s + n - 1 >= r) print }')
-    if [[ -n "$below" ]]; then
-      echo "::error::CHANGELOG.md was edited below the first released heading (line $first_release); add the entry under '## [Unreleased]'."
+unreleased() { awk '/^## \[Unreleased\]/ { f = 1; next } /^## \[/ { f = 0 } f'; }
+released() { awk '/^## \[[0-9]/ { f = 1 } f'; }
+
+if [[ "$changelog_changed" -gt 0 ]]; then
+  if ! head_log=$(git show "$head:CHANGELOG.md" 2>/dev/null); then
+    echo "::error::CHANGELOG.md was deleted; it must stay."
+    exit 1
+  fi
+  if base_log=$(git show "$base:CHANGELOG.md" 2>/dev/null); then
+    block=$(released <<<"$base_log")
+    if [[ -n "$block" && "$head_log" != *"$block"* ]]; then
+      echo "::error::Released sections of CHANGELOG.md are append-only; only edit under '## [Unreleased]'."
       exit 1
     fi
+  else
+    base_log=""
   fi
-  echo "CHANGELOG.md updated."
-  exit 0
+  added=$(grep -vxFf <(unreleased <<<"$base_log") <(unreleased <<<"$head_log") | grep -v '^[[:space:]]*$' || true)
+else
+  added=""
 fi
 
-if [[ -n "$shipped" ]]; then
+if [[ -z "$shipped" ]]; then
+  echo "No shipped paths changed: no entry needed."
+  exit 0
+fi
+if [[ -z "$added" ]]; then
   echo "$shipped"
-  echo "::error::Add a CHANGELOG.md entry under '## [Unreleased]', or label the PR 'no-changelog' if it needs none."
+  echo "::error::Add a new line under '## [Unreleased]' in CHANGELOG.md, or label the PR 'no-changelog' if it needs none."
   exit 1
 fi
-echo "No shipped paths changed: no entry needed."
+echo "CHANGELOG.md entry found."

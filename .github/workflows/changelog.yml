@@ -4,6 +4,7 @@ name: Changelog
 # and a label change must not rebuild the solution.
 on:
   pull_request:
+    branches: [develop]   # release PRs (develop -> main) carry the whole changelog and are not judged
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
@@ -17,6 +18,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+      - name: Test the gate script
+        run: bash .github/scripts/test-check-changelog.sh
       - name: Require a CHANGELOG.md entry
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}

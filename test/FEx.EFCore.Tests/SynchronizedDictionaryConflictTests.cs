@@ -15,6 +15,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -119,6 +120,7 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     {
         using var sut = CreateDictionary(useIndex);
         var doc = await LoadAsync(1);
+        doc.RuntimeState = "hydrated";
         sut.AddOrUpdateValue(doc);
         await UpdateByOtherWriterAsync(1);
 
@@ -128,8 +130,12 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         saved.ShouldBeFalse();
         sut.SaveAttempts.ShouldBe(2);
         (await NamesInDbAsync()).ShouldBe(["from B", "unrelated", "unrelated"]);
-        sut[1].Name.ShouldBe("from B");
-        sut[1].Version.ShouldBe(2);
+
+        // Updated in place: same instance, unmapped state kept, database values and token copied in.
+        sut[1].ShouldBeSameAs(doc);
+        doc.RuntimeState.ShouldBe("hydrated");
+        doc.Name.ShouldBe("from B");
+        doc.Version.ShouldBe(2);
 
         if (useIndex)
             sut.Index.OrderBy(k => k).ShouldBe([1, 2, 3]);
@@ -166,7 +172,57 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     }
 
     [Fact]
-    public async Task RejectedChange_CacheTakesOtherWritersRow_WithoutResaving_AndNextEditOfTheKeyIsSaved()
+    public async Task RejectedChange_OfAKeyNoLongerCached_IsNotReAddedToTheCache()
+    {
+        using var sut = CreateDictionary(true);
+        var doc = await LoadAsync(1);
+        await UpdateByOtherWriterAsync(1);
+
+        doc.Name = "from A";
+        var saved = await sut.SaveAsync(new Change<CachedDoc, int>(ChangeReason.Refresh, 1, doc));
+
+        saved.ShouldBeFalse();
+        sut.IsCached(1).ShouldBeFalse();
+        doc.Name.ShouldBe("from A");
+    }
+
+    [Fact]
+    public async Task RejectedChange_CachedInstanceTakesOtherWritersRow_WithoutResaving_AndItsNextEditIsSaved()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+
+        var doc = await LoadAsync(1);
+        doc.RuntimeState = "hydrated";
+        sut.AddOrUpdateValue(doc);
+        await FlushThroughPipelineAsync(sut, 9);
+        await UpdateByOtherWriterAsync(1);
+
+        // An in-place edit with the stale token: rejected, then the database row is copied into the same instance.
+        doc.Name = "from A";
+        await WaitUntilAsync(() => doc.Version == 2);
+        await sut.WaitForCacheTasksAsync();
+
+        sut[1].ShouldBeSameAs(doc);
+        doc.Name.ShouldBe("from B");
+        doc.RuntimeState.ShouldBe("hydrated");
+
+        // A change the write-back leaked into the subscription is buffered before this probe, so it is saved by the
+        // time the probe is.
+        var attemptsAfterRejection = sut.SavedKeys.Count;
+        await FlushThroughPipelineAsync(sut, 10);
+        sut.SavedKeys.Skip(attemptsAfterRejection).ShouldBe([[10]]);
+
+        // The instance the caller held all along is still observed and now carries the current token.
+        doc.Name = "edit of the held instance";
+        await FlushThroughPipelineAsync(sut, 11);
+
+        (await NamesInDbAsync()).ShouldBe(["edit of the held instance", "probe", "probe", "probe"]);
+        sut.SavedKeys.Skip(attemptsAfterRejection + 1).SelectMany(k => k).ShouldContain(1);
+    }
+
+    [Fact]
+    public async Task EditOfTheSameKey_LandingDuringTheWriteBack_IsSaved()
     {
         using var sut = CreateDictionary(true);
         await sut.InitializeAsync();
@@ -176,28 +232,22 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         await FlushThroughPipelineAsync(sut, 9);
         await UpdateByOtherWriterAsync(1);
 
-        // Key 1 carries the stale token and is rejected; key 2 marks the end of the batch.
-        sut.Edit(new() { Id = 1, Name = "from A", Version = doc.Version },
-            new() { Id = 2, Name = "unrelated", Version = 1 });
-        await WaitUntilAsync(() => sut.Index.Contains(2));
-        await sut.WaitForCacheTasksAsync();
+        // Lands inside the write-back: as soon as the winning token is copied in, the key gets a genuine new value.
+        var userEdit = new CachedDoc { Id = 1, Name = "user edit" };
+        doc.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName != nameof(CachedDoc.Version) || doc.Version != 2 || userEdit.Version != 0)
+                return;
 
-        sut[1].Name.ShouldBe("from B");
-        sut[1].Version.ShouldBe(2);
+            userEdit.Version = doc.Version;
+            sut.AddOrUpdateValue(userEdit);
+        };
 
-        // Any change the write-back leaked into the subscription is buffered before this probe, so it is saved by
-        // the time the probe is.
-        var attemptsAfterBatch = sut.SavedKeys.Count;
+        doc.Name = "from A";
+        await WaitUntilAsync(() => ReferenceEquals(sut[1], userEdit));
         await FlushThroughPipelineAsync(sut, 10);
-        sut.SavedKeys.Skip(attemptsAfterBatch).ShouldBe([[10]]);
 
-        sut.Edit(new() { Id = 1, Name = "from A again", Version = sut[1].Version },
-            new() { Id = 3, Name = "unrelated", Version = 1 });
-        await WaitUntilAsync(() => sut.Index.Contains(3));
-        await sut.WaitForCacheTasksAsync();
-
-        (await NamesInDbAsync()).ShouldBe(["from A again", "unrelated", "unrelated", "probe", "probe"]);
-        sut.SavedKeys.Skip(attemptsAfterBatch).ShouldBe([[10], [1, 3]]);
+        (await NamesInDbAsync()).ShouldBe(["user edit", "probe", "probe"]);
     }
 
     private static async Task FlushThroughPipelineAsync(CacheDictionary sut, int probeId)
@@ -268,16 +318,35 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     {
         public int Id { get; set; }
 
-        public string Name { get; set; } = "";
+        private string _name = "";
+        private int _version;
+
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                PropertyChanged?.Invoke(this, new(nameof(Name)));
+            }
+        }
 
         [ConcurrencyCheck]
-        public int Version { get; set; }
-
-        public event PropertyChangedEventHandler? PropertyChanged
+        public int Version
         {
-            add { }
-            remove { }
+            get => _version;
+            set
+            {
+                _version = value;
+                PropertyChanged?.Invoke(this, new(nameof(Version)));
+            }
         }
+
+        // Runtime state a consumer attaches to the cached instance; a write-back must not lose it.
+        [NotMapped]
+        public string? RuntimeState { get; set; }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 
     public sealed class CacheDbContext : DbContext
@@ -324,6 +393,8 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
 
         public Task<bool> SaveAsync(params Change<CachedDoc, int>[] changes) =>
             SaveChangesResolvingConflictsAsync([.. changes.Select(c => new ChangeInfo<int, CachedDoc>(c))]);
+
+        public bool IsCached(int key) => Cache.Lookup(key).HasValue;
 
         public void Edit(params CachedDoc[] docs) =>
             Cache.Edit(updater =>

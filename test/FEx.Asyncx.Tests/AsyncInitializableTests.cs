@@ -1,6 +1,7 @@
 using FEx.Asyncx.Abstractions;
 using FEx.Core.Abstractions.Interfaces;
 using Shouldly;
+using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Xunit;
@@ -23,7 +24,20 @@ public sealed class AsyncInitializableTests
     }
 
     [Fact]
-    public async Task Dependencies_AreInitializedBeforeTheHook()
+    public async Task Steps_RunInOrder_PreDependencyHook_Dependencies_ThenHook()
+    {
+        var order = new ConcurrentQueue<string>();
+        using var dependency = new RecordingInitializable("dependency", order);
+        using var sut = new RecordingInitializable("sut", order, [dependency]);
+
+        await sut.InitializeAsync();
+
+        order.ShouldBe(["sut:before", "dependency:before", "dependency", "sut"]);
+        sut.IsInitialized.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Dependencies_AreAllInitializedBeforeTheHook()
     {
         var order = new ConcurrentQueue<string>();
         using var first = new RecordingInitializable("first", order);
@@ -32,13 +46,12 @@ public sealed class AsyncInitializableTests
 
         await sut.InitializeAsync();
 
-        order.Count.ShouldBe(3);
-        order.ToArray()[2].ShouldBe("sut");
-        sut.IsInitialized.ShouldBeTrue();
+        order.Count.ShouldBe(6);
+        order.ToArray()[5].ShouldBe("sut");
     }
 
     [Fact]
-    public async Task Reset_DuringInitialization_WaitsForIt_AndLeavesAConsistentState()
+    public async Task ResetAsync_DuringInitialization_WaitsForIt_AndLeavesAConsistentState()
     {
         using var sut = new GatedInitializable();
 
@@ -51,7 +64,7 @@ public sealed class AsyncInitializableTests
         var reset = sut.ResetAsync();
         reset.IsCompleted.ShouldBeFalse();
 
-        sut.Gate.SetResult(true);
+        sut.HookGate.SetResult(true);
         await initialization;
         await reset;
 
@@ -60,10 +73,10 @@ public sealed class AsyncInitializableTests
     }
 
     [Fact]
-    public async Task Reset_AfterInitialization_AllowsInitializingAgain()
+    public async Task ResetAsync_AfterInitialization_AllowsInitializingAgain()
     {
         using var sut = new GatedInitializable();
-        sut.Gate.SetResult(true);
+        sut.HookGate.SetResult(true);
         await sut.InitializeAsync();
 
         await sut.ResetAsync();
@@ -74,6 +87,57 @@ public sealed class AsyncInitializableTests
 
         sut.IsInitialized.ShouldBeTrue();
         (sut.CurrentInitializationTask is not null).ShouldBeTrue();
+        sut.HookRuns.ShouldBe(2);
+    }
+
+    /// <summary>
+    /// A reset that clears the published task before its run takes the lock must not turn InitializeAsync into a
+    /// successful no-op.
+    /// </summary>
+    [Fact]
+    public async Task InitializeAsync_ResetBetweenPublishingAndRunning_StillCompletesInitialized()
+    {
+        using var sut = new GatedInitializable { GateFirstReset = true };
+        sut.HookGate.SetResult(true);
+
+        // The first reset holds the initialization lock in OnResetAsync.
+        var firstReset = sut.ResetAsync();
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+        await sut.ResetEntered.Task;
+#pragma warning restore VSTHRD003
+
+        // Queued on the lock first, so it runs after the first reset and before the initialization run.
+        var secondReset = sut.ResetAsync();
+        secondReset.IsCompleted.ShouldBeFalse();
+
+        // Publishes a task whose run queues on the lock behind the second reset, which then clears it.
+        var initialization = sut.InitializeAsync();
+
+        sut.ResetGate.SetResult(true);
+        await firstReset;
+        await secondReset;
+        await initialization;
+
+        sut.IsInitialized.ShouldBeTrue();
+        (sut.CurrentInitializationTask is not null).ShouldBeTrue();
+        sut.HookRuns.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_AfterFailure_RethrowsUntilReset()
+    {
+        using var sut = new GatedInitializable { FailNextRun = true };
+        sut.HookGate.SetResult(true);
+
+        await Should.ThrowAsync<InvalidOperationException>(sut.InitializeAsync);
+        await Should.ThrowAsync<InvalidOperationException>(sut.InitializeAsync);
+        sut.IsInitialized.ShouldBeFalse();
+        sut.HookRuns.ShouldBe(1);
+
+        await sut.ResetAsync();
+        await sut.InitializeAsync();
+
+        sut.IsInitialized.ShouldBeTrue();
         sut.HookRuns.ShouldBe(2);
     }
 
@@ -115,6 +179,13 @@ public sealed class AsyncInitializableTests
             TypeFullName = $"{TypeFullName}:{name}";
         }
 
+        protected override Task OnBeforeDependenciesInitializationAsync()
+        {
+            _order.Enqueue($"{_name}:before");
+
+            return Task.CompletedTask;
+        }
+
         protected override Task OnInitializeAsync()
         {
             _order.Enqueue(_name);
@@ -125,11 +196,15 @@ public sealed class AsyncInitializableTests
 
     private sealed class GatedInitializable : AsyncInitializable
     {
-        public TaskCompletionSource<bool> HookEntered { get; } =
-            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _resets;
 
-        public TaskCompletionSource<bool> Gate { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource<bool> HookEntered { get; } = NewSignal();
+        public TaskCompletionSource<bool> HookGate { get; } = NewSignal();
+        public TaskCompletionSource<bool> ResetEntered { get; } = NewSignal();
+        public TaskCompletionSource<bool> ResetGate { get; } = NewSignal();
 
+        public bool FailNextRun { get; set; }
+        public bool GateFirstReset { get; set; }
         public int HookRuns { get; private set; }
 
         public Task? CurrentInitializationTask => _initializationTask;
@@ -144,8 +219,29 @@ public sealed class AsyncInitializableTests
             HookRuns++;
             HookEntered.TrySetResult(true);
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
-            await Gate.Task;
+            await HookGate.Task;
+#pragma warning restore VSTHRD003
+
+            if (!FailNextRun)
+                return;
+
+            FailNextRun = false;
+
+            throw new InvalidOperationException("boom");
+        }
+
+        protected override async Task OnResetAsync()
+        {
+            if (!GateFirstReset || ++_resets > 1)
+                return;
+
+            ResetEntered.SetResult(true);
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+            await ResetGate.Task;
 #pragma warning restore VSTHRD003
         }
+
+        private static TaskCompletionSource<bool> NewSignal() =>
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 }

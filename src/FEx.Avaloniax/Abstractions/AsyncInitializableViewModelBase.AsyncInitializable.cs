@@ -57,10 +57,12 @@ public abstract partial class AsyncInitializableViewModelBase
         await _initializationTask;
     }
 
-    public void Reset()
+    public Task ResetAsync()
     {
         _initializationTask = null;
         IsInitialized = false;
+
+        return Task.CompletedTask;
     }
 
     public void BeginInitialization(bool waitSynchronouslyForInitialization)

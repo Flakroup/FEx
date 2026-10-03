@@ -8,6 +8,7 @@ using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -33,8 +34,10 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 {
     protected readonly IEFCoreDatabaseBackedService<TDbCtx> _dbSrv;
     private readonly Func<TValue, IObservable<object>>[]? _observables;
-    // Keys whose cache entries are being overwritten with database values; the subscription drops their changes.
-    private readonly ConcurrentDictionary<TKey, byte> _writeBackKeys = new();
+    // The cached instance this thread is copying database values into; the subscription drops the Refresh changes
+    // that copy raises. Thread-scoped, so a concurrent edit of the same key on another thread is still saved.
+    [ThreadStatic]
+    private static TValue? t_writeBackTarget;
     private bool _isDisposed;
     private string[] _observedProperties;
     private IDisposable? _cacheSubscription;
@@ -396,8 +399,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     /// reloaded against the database and the rest of it is retried:
     /// <list type="bullet">
     /// <item>
-    /// a row another writer changed is surfaced: its change is logged at error level and not saved, and the cached
-    /// value is replaced with the row from the database, so a later edit of the key is saved;
+    /// a row another writer changed is surfaced: its change is logged at error level and not saved, and the row
+    /// from the database is copied into the cached instance, so a later edit of the key is saved;
     /// </item>
     /// <item>a row another writer deleted is re-added only while its key is still cached.</item>
     /// </list>
@@ -492,18 +495,25 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     }
 
     /// <summary>
-    /// Replaces the cached values of rejected changes with the rows that won in the database, concurrency token
-    /// included, so the next edit of those keys is saved instead of conflicting again.
+    /// Copies the rows that won in the database, concurrency token included, into the cached instances of rejected
+    /// changes, so the next edit of those keys is saved instead of conflicting again. The cached instance is updated in
+    /// place: references callers hold, its property-change subscription and its unmapped state are kept. A key that is
+    /// no longer cached is left alone.
     /// </summary>
     private async Task WriteBackWinningValuesAsync(List<ChangeInfo<TKey, TValue>> rejected)
     {
         var keys = new HashSet<TKey>(rejected.Select(c => c.Key));
         List<TValue> winners;
+        IProperty[] properties;
 
         try
         {
-            winners = await _dbSrv.RunTaskInDbContextAsync(
-                ctx => IncludeInEntity(DbSetAccessor(ctx).AsNoTracking().Where(KeyIsIn(keys))).ToListAsync(),
+            (winners, properties) = await _dbSrv.RunTaskInDbContextAsync(async ctx =>
+                {
+                    var rows = await DbSetAccessor(ctx).AsNoTracking().Where(KeyIsIn(keys)).ToListAsync();
+
+                    return (rows, GetWritableScalarProperties(ctx));
+                },
                 null,
                 false,
                 false);
@@ -516,34 +526,57 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             return;
         }
 
-        foreach (var key in keys)
-            _writeBackKeys.TryAdd(key, 0);
+        foreach (var winner in winners)
+        {
+            var cached = Cache.Lookup(KeyRetriver(winner));
 
-        // SourceCache publishes an edit to its subscribers before Edit returns, so the write-back's own change is
-        // seen (and dropped by WithoutWriteBacks) while its keys are still registered.
-        try
-        {
-            Cache.Edit(updater =>
+            if (!cached.HasValue)
+                continue;
+
+            t_writeBackTarget = cached.Value;
+
+            try
             {
-                foreach (var winner in winners)
-                {
-                    // A key no longer cached has no stale value to replace.
-                    if (updater.Lookup(KeyRetriver(winner)).HasValue)
-                        updater.AddOrUpdate(winner);
-                }
-            });
-        }
-        finally
-        {
-            foreach (var key in keys)
-                _writeBackKeys.TryRemove(key, out _);
+                foreach (var property in properties)
+                    CopyValue(property, winner, cached.Value);
+            }
+            finally
+            {
+                t_writeBackTarget = null;
+            }
         }
     }
 
-    private IChangeSet<TValue, TKey> WithoutWriteBacks(IChangeSet<TValue, TKey> changeSet) =>
-        _writeBackKeys.IsEmpty
+    private static IProperty[] GetWritableScalarProperties(TDbCtx ctx)
+    {
+        var entityType = ctx.Model.FindEntityType(typeof(TValue)).Guard(nameof(TValue));
+        var key = entityType.FindPrimaryKey();
+
+        return
+        [
+            .. entityType.GetProperties()
+                .Where(p => !p.IsShadowProperty() && key?.Properties.Contains(p) != true)
+        ];
+    }
+
+    // Through the property setter where there is one, so the cached instance raises PropertyChanged for bindings.
+    private static void CopyValue(IProperty property, TValue from, TValue to)
+    {
+        if (property.PropertyInfo is { GetMethod: not null, SetMethod: not null } propertyInfo)
+            propertyInfo.SetValue(to, propertyInfo.GetValue(from));
+        else if (property.FieldInfo is { } fieldInfo)
+            fieldInfo.SetValue(to, fieldInfo.GetValue(from));
+    }
+
+    private static IChangeSet<TValue, TKey> WithoutWriteBacks(IChangeSet<TValue, TKey> changeSet)
+    {
+        var target = t_writeBackTarget;
+
+        return target is null
             ? changeSet
-            : new ChangeSet<TValue, TKey>(changeSet.Where(c => !_writeBackKeys.ContainsKey(c.Key)));
+            : new ChangeSet<TValue, TKey>(changeSet.Where(c =>
+                c.Reason != ChangeReason.Refresh || !ReferenceEquals(c.Current, target)));
+    }
 
     private void UpdateIndex(List<ChangeInfo<TKey, TValue>> changes)
     {

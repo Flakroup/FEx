@@ -1,26 +1,12 @@
 using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Models;
 using System;
-using System.Net;
 using System.Net.Http;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Web;
 
 public static class WebClientExtensions
 {
-    public static void PrepareWebClient(this WebClient client, WebRequestParams pars)
-    {
-        if (pars?.Credentials is not null)
-            client.Credentials = pars.Credentials;
-
-        if (pars?.UserAgent is not null)
-            client.Headers.Add("User-Agent", pars.UserAgent);
-
-        if (pars?.Headers is not null)
-            foreach (var header in pars.Headers)
-                client.Headers.Add(header.Key, header.Value);
-    }
-
     public static void PrepareHttpClient(out HttpClient client, WebRequestParams pars, bool resultAsJson = false)
     {
 #pragma warning disable IDISP001 // handler ownership transferred to HttpClient

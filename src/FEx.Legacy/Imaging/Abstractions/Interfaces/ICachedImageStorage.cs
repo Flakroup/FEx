@@ -1,7 +1,7 @@
 using FEx.Agnostics.Abstractions.Models;
 using System;
 using System.Collections.Generic;
-using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace FEx.Legacy.Imaging.Abstractions.Interfaces;
@@ -16,7 +16,7 @@ public interface ICachedImageStorage
     Task<bool> PrepareCacheEntryAsync(IIndexEntryBase entry,
                                       WebRequestParams? pars,
                                       bool refresh,
-                                      HttpWebResponse? response,
+                                      HttpResponseMessage? response,
                                       string? checksum,
                                       Func<Uri, Uri>? urlModifier);
 

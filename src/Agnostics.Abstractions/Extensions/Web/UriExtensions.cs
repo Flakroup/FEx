@@ -1,8 +1,10 @@
-using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Models;
 using System;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.Agnostics.Abstractions.Extensions.Web;
@@ -11,42 +13,75 @@ public static class UriExtensions
 {
     private const string HttpScheme = "http";
     private const string HttpsScheme = "https";
-    private const string FileScheme = "file";
     private static Uri DefaultUri { get; } = new("http://clients3.google.com/generate_204");
 
-    public static async Task<WebResponse> GetWebResponseAsync(this Uri url,
-                                                              WebRequestParams? pars = null,
-                                                              Stopwatch? stopwatch = null)
-    {
-        if (url.Scheme is HttpScheme or HttpsScheme)
-            return await url.GetUriHttpResponseAsync(pars, stopwatch);
-
-        return url.Scheme == FileScheme
-            ? await url.GetUriFileResponseAsync(pars, stopwatch)
-            : await url.GetUriResponseAsync(pars, stopwatch);
-    }
-
-    public static async Task<bool> CheckForInternetConnectionAsync(this Uri url)
+    /// <summary>
+    /// Checks connectivity by requesting <paramref name="url" /> (the default connectivity probe when it is null or not
+    /// an HTTP(S) URL).
+    /// </summary>
+    public static async Task<bool> CheckForInternetConnectionAsync(this Uri url,
+                                                                   HttpClient? client = null,
+                                                                   CancellationToken cancellationToken = default)
     {
         url ??= DefaultUri;
 
+        if (url.Scheme is not (HttpScheme or HttpsScheme))
+            url = DefaultUri;
+
         try
         {
-#if NET
-#pragma warning disable SYSLIB0014
-#endif
-            var request = WebRequest.Create(url);
-#if NET
-#pragma warning restore SYSLIB0014
-#endif
-            using var _ = await request.GetResponseAsync();
+            using var _ = await url.SendHttpAsync(client: client, cancellationToken: cancellationToken);
 
             return true;
         }
-        catch
+        catch when (!cancellationToken.IsCancellationRequested)
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Sends an HTTP(S) request with <see cref="HttpCompletionOption.ResponseHeadersRead" /> so the body is not
+    /// buffered. The caller owns (and must dispose) the returned response.
+    /// </summary>
+    /// <param name="url">The target URL.</param>
+    /// <param name="pars">Method, headers, user agent, timeout and handler-level settings (see <see cref="HttpClientProvider" />).</param>
+    /// <param name="client">
+    /// The client to use. When null, a long-lived shared client matching <paramref name="pars" /> is used; pass your own
+    /// (e.g. one from an <c>IHttpClientFactory</c>) to control the handler.
+    /// </param>
+    /// <param name="range">Optional byte range, sent as a <c>Range</c> header.</param>
+    /// <param name="ensureSuccess">When true, a non-success status throws <see cref="HttpStatusException" />.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    public static async Task<HttpResponseMessage> SendHttpAsync(this Uri url,
+                                                                WebRequestParams? pars = null,
+                                                                HttpClient? client = null,
+                                                                RangeHeaderValue? range = null,
+                                                                bool ensureSuccess = true,
+                                                                CancellationToken cancellationToken = default)
+    {
+        client ??= HttpClientProvider.Get(pars);
+
+        using var request = CreateHttpRequest(url, pars, range);
+        using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+        // Like HttpWebRequest.Timeout, the timeout covers waiting for the response headers only.
+        if (pars?.Timeout is > 0 and var timeout)
+            timeoutSource.CancelAfter(timeout);
+
+        var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutSource.Token);
+
+        if (ensureSuccess
+            && !response.IsSuccessStatusCode)
+        {
+            var status = response.StatusCode;
+            var reason = response.ReasonPhrase;
+            response.Dispose();
+
+            throw new HttpStatusException(status, url, reason);
+        }
+
+        return response;
     }
 
     public static async Task<FileWebResponse> GetUriFileResponseAsync(this Uri url,
@@ -54,18 +89,7 @@ public static class UriExtensions
                                                                       Stopwatch? stopwatch = null) =>
         (FileWebResponse)await url.GetUriResponseAsync(pars, stopwatch);
 
-    public static async Task<HttpWebResponse> GetUriHttpResponseAsync(this Uri url,
-                                                                      WebRequestParams? pars = null,
-                                                                      Stopwatch? stopwatch = null)
-    {
-        var req = url.GetHttpRequest(pars);
-        stopwatch?.Restart();
-        var response = (HttpWebResponse)await req.GetResponseAsync();
-        stopwatch?.Stop();
-
-        return response;
-    }
-
+    /// <summary>Gets the response of a non-HTTP request (FTP, file). HTTP(S) goes through <see cref="SendHttpAsync" />.</summary>
     public static async Task<WebResponse> GetUriResponseAsync(this Uri url,
                                                               WebRequestParams? pars = null,
                                                               Stopwatch? stopwatch = null)
@@ -78,25 +102,17 @@ public static class UriExtensions
         return response;
     }
 
-    public static HttpWebRequest GetHttpRequest(this Uri url, WebRequestParams? pars = null)
-    {
-#if NET
-#pragma warning disable SYSLIB0014
-#endif
-        var myWebRequest = WebRequest.CreateHttp(url);
-#if NET
-#pragma warning restore SYSLIB0014
-#endif
-
-        if (pars is not null)
-            myWebRequest.PrepareRequest(pars);
-
-        return myWebRequest;
-    }
-
+    /// <summary>
+    /// Creates a <see cref="WebRequest" /> for non-HTTP schemes only (ftp, file): <c>FtpWebRequest</c> has no
+    /// HttpClient equivalent. HTTP(S) URLs are rejected, use <see cref="SendHttpAsync" />.
+    /// </summary>
     public static WebRequest GetWebRequest(this Uri url, WebRequestParams? pars = null)
     {
+        if (url.Scheme is HttpScheme or HttpsScheme)
+            throw new ArgumentException("HTTP(S) requests must be sent with SendHttpAsync (HttpClient).", nameof(url));
+
 #if NET
+        // SYSLIB0014: FtpWebRequest has no HttpClient replacement; only ftp/file URLs reach this call.
 #pragma warning disable SYSLIB0014
 #endif
         var myWebRequest = WebRequest.Create(url);
@@ -110,13 +126,25 @@ public static class UriExtensions
         return myWebRequest;
     }
 
-    public static async Task<(bool, LengthType)> TryGetRangeAsync(this Uri url,
-                                                                  int rangeFrom,
-                                                                  int rangeTo,
-                                                                  WebRequestParams? pars = null)
+    private static HttpRequestMessage CreateHttpRequest(Uri url, WebRequestParams? pars, RangeHeaderValue? range)
     {
-        using var resp = await url.GetUriResponseAsync(pars);
+        var request = new HttpRequestMessage(pars?.Method is { } method
+                ? new(method)
+                : HttpMethod.Get,
+            url);
 
-        return await resp.TryGetRangeAsync(rangeFrom, rangeTo, pars);
+        if (pars?.UserAgent is not null)
+            request.Headers.TryAddWithoutValidation("User-Agent", pars.UserAgent);
+
+        if (pars?.Headers is not null)
+            foreach (var header in pars.Headers)
+                request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+
+        if (pars?.KeepAlive is { } keepAlive)
+            request.Headers.ConnectionClose = !keepAlive;
+
+        request.Headers.Range = range;
+
+        return request;
     }
 }

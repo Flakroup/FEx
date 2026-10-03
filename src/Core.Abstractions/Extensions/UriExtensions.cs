@@ -57,9 +57,9 @@ public static class UriExtensions
             try
             {
                 if (url.Scheme is HttpScheme or HttpsScheme)
-                    return await url.DoHttpResponseFuncAsync((response, _) =>
+                    return await url.DoHttpResponseFuncAsync(response =>
                         {
-                            var result = response?.StatusCode is HttpStatusCode.OK
+                            var result = response.StatusCode is HttpStatusCode.OK
                                 or HttpStatusCode.PartialContent
                                 or HttpStatusCode.NonAuthoritativeInformation;
 
@@ -87,33 +87,52 @@ public static class UriExtensions
 
     public static async Task<long> GetHttpFileSizeAsync(this Uri url,
                                                         WebRequestParams? pars = null,
-                                                        Stopwatch? stopwatch = null) =>
-        await url.DoHttpResponseFuncAsync((response, _) => response.ContentLength, pars, stopwatch);
+                                                        Stopwatch? stopwatch = null,
+                                                        HttpClient? client = null) =>
+        await url.DoHttpResponseFuncAsync(response => response.Content.Headers.ContentLength ?? -1,
+            pars,
+            stopwatch,
+            client);
 
-    public static async Task<Dictionary<string, string>>
-        GetResponseHeadersAsync(this Uri url, WebRequestParams? pars = null) =>
-        await url.DoHttpResponseFuncAsync((response, _) => response.GetAllHeaders(), pars);
+    public static async Task<Dictionary<string, string[]>> GetResponseHeadersAsync(this Uri url,
+                                                                                    WebRequestParams? pars = null,
+                                                                                    HttpClient? client = null) =>
+        await url.DoHttpResponseFuncAsync(response => response.GetAllHeaders(), pars, client: client);
 
     public static async Task<T> DoHttpResponseFuncTaskAsync<T>(this Uri url,
-                                                               Func<HttpWebResponse, HttpWebRequest, Task<T>> func,
+                                                               Func<HttpResponseMessage, Task<T>> func,
                                                                WebRequestParams? pars = null,
-                                                               Stopwatch? stopwatch = null) =>
-        await AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
-            InternalDoHttpResponseFuncTaskAsync(url, func, pars, stopwatch));
+                                                               Stopwatch? stopwatch = null,
+                                                               HttpClient? client = null)
+    {
+        stopwatch?.Restart();
+        using var response = await url.SendHttpAsync(pars, client);
+        stopwatch?.Stop();
+
+        return await func(response);
+    }
 
     public static async Task<T> DoHttpResponseFuncAsync<T>(this Uri url,
-                                                           Func<HttpWebResponse, HttpWebRequest, T> func,
+                                                           Func<HttpResponseMessage, T> func,
                                                            WebRequestParams? pars = null,
-                                                           Stopwatch? stopwatch = null) =>
-        await AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
-            InternalDoHttpResponseFuncAsync(url, func, pars, stopwatch));
+                                                           Stopwatch? stopwatch = null,
+                                                           HttpClient? client = null) =>
+        await url.DoHttpResponseFuncTaskAsync(response => Task.FromResult(func(response)), pars, stopwatch, client);
 
     public static async Task DoHttpResponseActionAsync(this Uri url,
-                                                       Action<HttpWebResponse, HttpWebRequest> action,
+                                                       Action<HttpResponseMessage> action,
                                                        WebRequestParams? pars = null,
-                                                       Stopwatch? stopwatch = null) =>
-        await AsyncStatics.ExecuteTaskOnThreadPoolAsync(() =>
-            InternalDoHttpResponseActionAsync(url, action, pars, stopwatch));
+                                                       Stopwatch? stopwatch = null,
+                                                       HttpClient? client = null) =>
+        await url.DoHttpResponseFuncAsync(response =>
+            {
+                action(response);
+
+                return true;
+            },
+            pars,
+            stopwatch,
+            client);
 
     public static async Task<T> DoHttpClientResponseFuncTaskAsync<T>(this Uri url,
                                                                      Func<HttpResponseMessage, HttpClient, Task<T>>
@@ -145,7 +164,7 @@ public static class UriExtensions
                 pars ??= new();
                 pars.Method = HeadMethod;
 
-                return await link.DoHttpResponseFuncAsync((response, _) => response.ContentLength <= 0, pars);
+                return await link.DoHttpResponseFuncAsync(response => (response.Content.Headers.ContentLength ?? -1) <= 0, pars);
             }
             catch
             {
@@ -155,26 +174,17 @@ public static class UriExtensions
         return true;
     }
 
-    public static async Task<Result<Error>> UrlIsValidAsync(this Uri url, WebRequestParams? pars = null)
+    public static async Task<Result<Error>> UrlIsValidAsync(this Uri url,
+                                                            WebRequestParams? pars = null,
+                                                            HttpClient? client = null)
     {
         try
         {
-#if NET
-#pragma warning disable SYSLIB0014
-#endif
-            var request = WebRequest.CreateHttp(url);
-#if NET
-#pragma warning restore SYSLIB0014
-#endif
+            pars ??= new();
+            pars.Method = HeadMethod; //Get only the header information -- no need to download any content
 
-            if (pars is not null)
-                request.PrepareRequest(pars);
-
-            request.Method = HeadMethod; //Get only the header information -- no need to download any content
-
-            using var response = await request.GetResponseAsync();
-            using var httpResponse = (HttpWebResponse)response;
-            var statusCode = (int)httpResponse.StatusCode;
+            using var response = await url.SendHttpAsync(pars, client);
+            var statusCode = (int)response.StatusCode;
 
             return statusCode switch
             {
@@ -186,62 +196,14 @@ public static class UriExtensions
                 _ => new StackError($"The remote server has thrown an unexpected code. Url is not valid: {url}")
             };
         }
-        catch (WebException ex)
+        catch (HttpStatusException ex)
         {
-            if (ex.Status == WebExceptionStatus.ProtocolError) //400 errors
-                return new ExceptionError(ex, $"Unhandled status [{ex.Status}] returned for url: {url}");
+            return new ExceptionError(ex, $"Unhandled status [{ex.ResponseStatusCode}] returned for url: {url}");
         }
         catch (Exception ex)
         {
             return new ExceptionError(ex, $"Could not test url {url}.");
         }
-
-        return new StackError($"Could not test url {url}.");
-    }
-
-    private static async Task<T> InternalDoHttpResponseFuncTaskAsync<T>(
-        Uri url,
-        Func<HttpWebResponse, HttpWebRequest, Task<T>> func,
-        WebRequestParams? pars = null,
-        Stopwatch? stopwatch = null)
-    {
-        var req = url.GetHttpRequest(pars);
-        stopwatch?.Restart();
-
-        using var response = await req.GetResponseAsync();
-        stopwatch?.Stop();
-        using var resp = (HttpWebResponse)response;
-
-        return await func(resp, req);
-    }
-
-    private static async Task<T> InternalDoHttpResponseFuncAsync<T>(Uri url,
-                                                                    Func<HttpWebResponse, HttpWebRequest, T> func,
-                                                                    WebRequestParams? pars = null,
-                                                                    Stopwatch? stopwatch = null)
-    {
-        var req = url.GetHttpRequest(pars);
-        stopwatch?.Restart();
-
-        using var response = await req.GetResponseAsync();
-        stopwatch?.Stop();
-        using var resp = (HttpWebResponse)response;
-
-        return func(resp, req);
-    }
-
-    private static async Task InternalDoHttpResponseActionAsync(Uri url,
-                                                                Action<HttpWebResponse, HttpWebRequest> action,
-                                                                WebRequestParams? pars = null,
-                                                                Stopwatch? stopwatch = null)
-    {
-        var req = url.GetHttpRequest(pars);
-        stopwatch?.Restart();
-
-        using var response = await req.GetResponseAsync();
-        stopwatch?.Stop();
-        using var resp = (HttpWebResponse)response;
-        action(resp, req);
     }
 
     private static async Task<T> InternalDoHttpClientResponseFuncTaskAsync<T>(

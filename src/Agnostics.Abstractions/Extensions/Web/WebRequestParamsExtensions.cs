@@ -22,6 +22,12 @@ public static class WebRequestParamsExtensions
 
             if (pars.IsProxyNull)
                 handler.Proxy = null;
+
+#if !NETSTANDARD2_0
+            if (pars.ServerCertificateValidationCallback is { } validate)
+                handler.ServerCertificateCustomValidationCallback =
+                    (message, cert, chain, errors) => validate(message, cert, chain, errors);
+#endif
         }
 
         handler.ClientCertificateOptions = ClientCertificateOption.Automatic;

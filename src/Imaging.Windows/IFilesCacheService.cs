@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
@@ -28,7 +28,7 @@ public interface IFilesCacheService : ICachedImageStorage, IAsyncInitializable
     Task<Uri?> PrepareAndGetFileLocalUriAsync(Uri fileUrl,
                                              WebRequestParams? pars = null,
                                              bool refresh = false,
-                                             HttpWebResponse? response = null);
+                                             HttpResponseMessage? response = null);
 
     Task<BitmapImage?> GetImageAsync(Uri fileUrl,
                                     WidthAndHeight? size = null,
@@ -36,7 +36,7 @@ public interface IFilesCacheService : ICachedImageStorage, IAsyncInitializable
                                     bool refresh = false,
                                     bool forceLoad = true,
                                     bool forceMemoryStream = false,
-                                    HttpWebResponse? response = null);
+                                    HttpResponseMessage? response = null);
 
     LazyImagesHandler GetLazyImagesHandler();
     Task<bool> IsFileBeingDownloadedAsync(Uri fileUrl);
@@ -46,18 +46,18 @@ public interface IFilesCacheService : ICachedImageStorage, IAsyncInitializable
     Task<bool> PrepareCacheAsync(Uri fileUrl,
                                  WebRequestParams? pars = null,
                                  bool refresh = false,
-                                 HttpWebResponse? response = null,
+                                 HttpResponseMessage? response = null,
                                  Func<Uri, Uri>? urlModifier = null);
 
     Task<IndexEntry> PrepareCacheAndGetEntryAsync(Uri fileUrl,
                                                   WebRequestParams? pars = null,
                                                   bool refresh = false,
-                                                  HttpWebResponse? response = null,
+                                                  HttpResponseMessage? response = null,
                                                   Func<Uri, Uri>? urlModifier = null);
 
     Task<bool> PrepareCacheEntryAsync(WebRequestParams? pars,
                                       bool refresh,
-                                      HttpWebResponse? response,
+                                      HttpResponseMessage? response,
                                       IndexEntry entry,
                                       string? checksum = null,
                                       Func<Uri, Uri>? urlModifier = null);

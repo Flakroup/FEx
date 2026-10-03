@@ -19,14 +19,7 @@ public static class UriExtensions
     public static Task<string> GetFileNameAsync(this Uri url) => url.GetFileNameAsync(null);
 
     public static async Task<string> GetFileNameAsync(this Uri url, WebRequestParams? pars) =>
-        await url.DoHttpResponseFuncAsync((response, _) => response.GetFileName(), pars);
-
-    public static string GetFileName(this HttpWebResponse response)
-    {
-        var responseHeaders = response.GetAllHeaders();
-
-        return GetFileName(response.ResponseUri, responseHeaders);
-    }
+        await url.DoHttpResponseFuncAsync(response => response.GetFileName(), pars);
 
     public static string GetFileName(this HttpResponseMessage response)
     {
@@ -40,17 +33,6 @@ public static class UriExtensions
         using var client = new HttpClient();
 
         return await client.GetStringAsync(url);
-    }
-
-    private static string GetFileName(Uri? responseUri, IDictionary<string, string> responseHeaders)
-    {
-        var contentDispositionHeader = responseHeaders.Keys.FindInEnumerable(x => x.IsEqual("content-disposition"));
-
-        return GetFileName(responseUri,
-            contentDispositionHeader is not null
-                ? responseHeaders[contentDispositionHeader]
-                : null,
-            responseHeaders.ToDictionary(x => x.Key, x => new[] { x.Value }));
     }
 
     private static string GetFileName(Uri? responseUri, IDictionary<string, string[]> responseHeaders)

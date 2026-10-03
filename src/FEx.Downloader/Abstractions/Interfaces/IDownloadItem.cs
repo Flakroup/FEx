@@ -1,7 +1,7 @@
 using FEx.MVVM.Abstractions.Interfaces;
 using System;
 using System.IO;
-using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +18,7 @@ public interface IDownloadItem : IDownloadStub, IDisposable, IProgressStatus
     bool IsRunning { get; }
     bool OmitQuery { get; set; }
     long Ping { get; }
-    WebResponse? Response { get; }
+    HttpResponseMessage? Response { get; }
     string? RunningTasks { get; set; }
     bool TargetIsNotCreated { get; }
     SemaphoreSlim? Semaphore { get; }

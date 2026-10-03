@@ -55,10 +55,21 @@ public static class DbContextExtensions
         };
     }
 
+    /// <inheritdoc cref="ValidateAndSaveChangesAsync{TDbContext}(TDbContext, string?, bool, bool, Action{string, IReadOnlyCollection{EntityEntry}}?, Action{string, EntityValidationFail}?, Action{string, IReadOnlyCollection{EntityValidationFail}}?, Action{string, IReadOnlyCollection{EntityEntry}}?)" />
     public static Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext)
         where TDbContext : DbContext =>
         dbContext.ValidateAndSaveChangesAsync(null, true, true, null, null, null, null);
 
+    /// <summary>
+    /// Validates the changed entities and, if valid, saves them once.
+    /// </summary>
+    /// <remarks>
+    /// An optimistic-concurrency conflict is never resolved here: if another writer changed or deleted a row
+    /// this context modifies, <see cref="DbUpdateConcurrencyException" /> propagates to the caller.
+    /// <c>PooledDbService.ValidateAndSaveChanges</c> and <c>PooledDbService.ValidateAndSaveChangesAsync</c>
+    /// behave identically.
+    /// </remarks>
+    /// <exception cref="DbUpdateConcurrencyException">Another writer changed or deleted an affected row.</exception>
     public static async Task ValidateAndSaveChangesAsync<TDbContext>(this TDbContext dbContext,
                                                                      string? id,
                                                                      bool validateAllProperties,

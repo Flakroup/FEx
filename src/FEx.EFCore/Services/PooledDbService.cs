@@ -260,130 +260,61 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
             true,
             true);
 
+    /// <inheritdoc cref="ValidateAndSaveChanges(TDbContext, string, bool, bool)" />
     protected Result<Error> ValidateAndSaveChanges(TDbContext dbContext, string id) =>
         ValidateAndSaveChanges(dbContext, id, true, true);
 
+    /// <summary>
+    /// Validates the changed entities and, if valid, saves them once.
+    /// </summary>
+    /// <remarks>
+    /// An optimistic-concurrency conflict is never resolved here: if another writer changed or deleted a row
+    /// this context modifies, <see cref="DbUpdateConcurrencyException" /> propagates to the caller, exactly like
+    /// <see cref="DbContextExtensions.ValidateAndSaveChangesAsync{TDbContext}(TDbContext)" />.
+    /// </remarks>
+    /// <exception cref="DbUpdateConcurrencyException">Another writer changed or deleted an affected row.</exception>
     protected Result<Error> ValidateAndSaveChanges(TDbContext dbContext,
                                                    string id,
                                                    bool validateAllProperties,
                                                    bool acceptAllChangesOnSuccess)
     {
-        var result = dbContext.ValidateChangedEntities(null,
-            validateAllProperties,
-            OnValidationStart,
-            OnFaultyEntity,
-            OnValidationFail,
-            OnValidationSuccess);
+        var result = Validate(dbContext, id, validateAllProperties);
 
         if (result.IsFailure)
             return result;
 
         _logger.Information($"[{id}]\tSaving changes to database");
-
-        var res = 0;
-        var saved = false;
-        var retries = 1;
-
-        while (!saved)
-        {
-            try
-            {
-                res = dbContext.SaveChanges(acceptAllChangesOnSuccess);
-                saved = true;
-            }
-            catch (DbUpdateConcurrencyException ex) when (retries > 0)
-            {
-                foreach (var entry in ex.Entries)
-                {
-                    var databaseValues = entry.GetDatabaseValues();
-
-                    if (databaseValues is not null)
-                        entry.OriginalValues.SetValues(databaseValues);
-                    else
-                        switch (entry.State)
-                        {
-                            case EntityState.Deleted:
-                                entry.State = EntityState.Detached;
-
-                                break;
-                            case EntityState.Modified:
-                                entry.State = EntityState.Added;
-
-                                break;
-                            default:
-                                throw;
-                        }
-                }
-
-                retries--;
-            }
-        }
-
+        var res = dbContext.SaveChanges(acceptAllChangesOnSuccess);
         _logger.Information($"[{id}]\t{res} rows affected");
 
         return result;
     }
 
+    /// <inheritdoc cref="ValidateAndSaveChanges(TDbContext, string, bool, bool)" />
     protected async Task<Result<Error>> ValidateAndSaveChangesAsync(TDbContext dbContext,
                                                                     string id,
                                                                     bool validateAllProperties = true,
                                                                     bool acceptAllChangesOnSuccess = true)
     {
-        var result = dbContext.ValidateChangedEntities(id,
-            validateAllProperties,
-            OnValidationStart,
-            OnFaultyEntity,
-            OnValidationFail,
-            OnValidationSuccess);
+        var result = Validate(dbContext, id, validateAllProperties);
 
         if (result.IsFailure)
             return result;
 
         _logger.Information($"[{id}]\tSaving changes to database");
-
-        var res = 0;
-        var saved = false;
-        var retries = 1;
-
-        while (!saved)
-        {
-            try
-            {
-                res = await dbContext.SaveChangesAsync(acceptAllChangesOnSuccess);
-                saved = true;
-            }
-            catch (DbUpdateConcurrencyException ex) when (retries > 0)
-            {
-                foreach (var entry in ex.Entries)
-                {
-                    var databaseValues = await entry.GetDatabaseValuesAsync();
-
-                    if (databaseValues is not null)
-                        entry.OriginalValues.SetValues(databaseValues);
-                    else
-                        switch (entry.State)
-                        {
-                            case EntityState.Deleted:
-                                entry.State = EntityState.Detached;
-
-                                break;
-                            case EntityState.Modified:
-                                entry.State = EntityState.Added;
-
-                                break;
-                            default:
-                                throw;
-                        }
-                }
-
-                retries--;
-            }
-        }
-
+        var res = await dbContext.SaveChangesAsync(acceptAllChangesOnSuccess);
         _logger.Information($"[{id}]\t{res} rows affected");
 
         return result;
     }
+
+    private Result<Error> Validate(TDbContext dbContext, string id, bool validateAllProperties) =>
+        dbContext.ValidateChangedEntities(id,
+            validateAllProperties,
+            OnValidationStart,
+            OnFaultyEntity,
+            OnValidationFail,
+            OnValidationSuccess);
 
     protected async Task ShrinkDbAsync() => await RunTaskInDbContextAsync(ShrinkDbAsync, null, false, false);
 

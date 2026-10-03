@@ -26,18 +26,23 @@ public class NuGetManager : AsyncInitializable
 
     private NuGetLogger<NuGetManager> Logger { get; }
     private List<Lazy<INuGetResourceProvider>> Providers { get; }
-    // Populated in OnInitializeAsync before any use (AsyncInitializable init-before-use invariant).
-    private SourceRepository SourceRepository { get; set; } = null!;
-    private PackageMetadataResource PackageMetadataResource { get; set; } = null!;
-    private PackageUpdateResource PackageUpdateResource { get; set; } = null!;
-    private DownloadResource DownloadResource { get; set; } = null!;
+    private AsyncOnce<PackageMetadataResource> PackageMetadataResource { get; }
+    private AsyncOnce<PackageUpdateResource> PackageUpdateResource { get; }
+    private AsyncOnce<DownloadResource> DownloadResource { get; }
     private SourceCacheContext SourceCacheContext { get; }
 
     private ISettings Settings { get; }
 
-    public NuGetManager(NuGetLogger<NuGetManager> logger)
+    public NuGetManager(NuGetLogger<NuGetManager> logger) : this(logger, new NuGetOrgResourceSource())
+    {
+    }
+
+    internal NuGetManager(NuGetLogger<NuGetManager> logger, INuGetResourceSource resourceSource)
     {
         Logger = logger;
+        PackageMetadataResource = new(resourceSource.GetResourceAsync<PackageMetadataResource>);
+        PackageUpdateResource = new(resourceSource.GetResourceAsync<PackageUpdateResource>);
+        DownloadResource = new(resourceSource.GetResourceAsync<DownloadResource>);
         Providers = [];
         SourceCacheContext = new();
         Settings = NuGetSettings.LoadDefaultSettings(null);
@@ -191,9 +196,9 @@ public class NuGetManager : AsyncInitializable
         bool includeUnlisted = false,
         CancellationToken token = default) =>
         await RestorePackageByIdAsync(packageId,
-            PackageMetadataResource,
+            await PackageMetadataResource.GetAsync(),
             SourceCacheContext,
-            DownloadResource,
+            await DownloadResource.GetAsync(),
             includePrerelease,
             includeUnlisted,
             token);
@@ -210,20 +215,21 @@ public class NuGetManager : AsyncInitializable
                 sourceCacheContext,
                 Logger,
                 CancellationToken.None)).Where(x => x.IsListed)
-            .Cast<PackageSearchMetadataRegistration>()
             .ToArray();
 
         foreach (var pkg in listedPackages)
             await DeletePackageAsync(pkg, apiKey);
     }
 
-    public async Task<bool> DeletePackageAsync(PackageSearchMetadataRegistration pkgToDel, string apiKey)
+    public async Task<bool> DeletePackageAsync(IPackageSearchMetadata pkgToDel, string apiKey)
     {
         if (pkgToDel is not null)
             try
             {
-                await PackageUpdateResource.Delete(pkgToDel.PackageId,
-                    pkgToDel.Version.OriginalVersion,
+                var packageUpdateResource = await PackageUpdateResource.GetAsync();
+
+                await packageUpdateResource.Delete(pkgToDel.Identity.Id,
+                    pkgToDel.Identity.Version.OriginalVersion,
                     _ => apiKey,
                     _ => true,
                     false,
@@ -304,12 +310,6 @@ public class NuGetManager : AsyncInitializable
     {
         await base.OnInitializeAsync();
         Providers.AddRange(NuGetRepository.Provider.GetCoreV3());
-        SourceRepository = NuGetRepository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
-        PackageMetadataResource = await SourceRepository.GetResourceAsync<PackageMetadataResource>();
-        PackageUpdateResource = await SourceRepository.GetResourceAsync<PackageUpdateResource>();
-        DownloadResource = await SourceRepository.GetResourceAsync<DownloadResource>();
-
-        await RestorePackageByIdAsync("NuGet.CommandLine");
     }
 
     private async Task<(DownloadResourceResult? result, bool isSuccess)> RestorePackageByIdAsync(
@@ -328,11 +328,17 @@ public class NuGetManager : AsyncInitializable
                 sourceCacheContext,
                 Logger,
                 token)).Where(x => x.IsListed)
-            .Cast<PackageSearchMetadataRegistration>()
             .ToArray();
 
-        var maxVer = listedPackages.Max(y => y.Version);
-        var latest = listedPackages.First(x => x.Version == maxVer);
+        if (listedPackages.Length == 0)
+        {
+            Logger.LogWarning(
+                $"No listed versions of package '{packageId}' were found (includePrerelease: {includePrerelease}, includeUnlisted: {includeUnlisted}); nothing to restore");
+
+            return (null, false);
+        }
+
+        var latest = listedPackages.OrderByDescending(x => x.Identity.Version).First();
 
         return await RestorePackageAsync(latest.Identity, downloadResource, sourceCacheContext, Settings);
     }
@@ -360,7 +366,7 @@ public class NuGetManager : AsyncInitializable
             && excludedPackageNames.Contains(identity.Id))
             return (file, false);
 
-        PackageSearchMetadataRegistration[]? listedPackages = null;
+        IPackageSearchMetadata[]? listedPackages = null;
 
         if (filterIds is null
             || filterIds.IsNullOrEmptyCollection()
@@ -371,9 +377,8 @@ public class NuGetManager : AsyncInitializable
                     includeUnlisted,
                     sourceCacheContext,
                     Logger,
-                    token)).Cast<PackageSearchMetadataRegistration>()
-                .ToArray();
+                    token)).ToArray();
 
-        return (file, listedPackages?.All(x => !x.Version.Equals(identity.Version)) ?? false);
+        return (file, listedPackages?.All(x => !x.Identity.Version.Equals(identity.Version)) ?? false);
     }
 }

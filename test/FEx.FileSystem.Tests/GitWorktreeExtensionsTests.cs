@@ -1,6 +1,7 @@
 using Shouldly;
 using System;
 using System.IO;
+using System.Threading;
 using Xunit;
 
 namespace FEx.FileSystem.Tests;
@@ -243,10 +244,29 @@ public sealed class GitWorktreeExtensionsTests
     private static DirectoryInfo CreateTempDir() =>
         Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), $"FExWorktreeTest_{Guid.NewGuid()}"));
 
+    // A scanner or indexer can briefly hold a handle on a fresh directory. Only the cleanup is retried, and a
+    // directory that stays locked is left behind: that is not a test failure. Assertions are never retried.
     private static void CleanupTempDir(DirectoryInfo dir)
     {
-        if (dir.Exists)
-            dir.Delete(true);
+        const int attempts = 5;
+
+        for (var attempt = 1; attempt <= attempts; attempt++)
+            try
+            {
+                dir.Refresh();
+
+                if (dir.Exists)
+                    dir.Delete(true);
+
+                return;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                if (attempt == attempts)
+                    return;
+
+                Thread.Sleep(100 * attempt);
+            }
     }
 
     private static void WriteGitFile(DirectoryInfo dir, string content) =>

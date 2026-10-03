@@ -3,6 +3,7 @@ using FEx.OneDrv.Abstractions;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -20,6 +21,10 @@ public sealed class MsalAuthService : IOneDriveAuthService
     private readonly IFExLogger _logger;
     private readonly SemaphoreSlim _appLock = new(1, 1);
     private IPublicClientApplication? _app;
+
+    internal string ClientId => _clientId;
+
+    internal IReadOnlyList<string> Scopes => _scopes;
 
     public MsalAuthService(OneDriveOptions options, IFExLogger logger)
     {

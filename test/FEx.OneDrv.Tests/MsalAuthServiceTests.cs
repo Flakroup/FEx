@@ -33,6 +33,25 @@ public sealed class MsalAuthServiceTests
             },
             Substitute.For<IFExLogger>()));
 
+    [Fact]
+    public void Constructor_SnapshotsOptions_LaterMutationDoesNotChangeTheService()
+    {
+        var options = new OneDriveOptions
+        {
+            ClientId = "original",
+            Scopes = ["Files.Read"]
+        };
+
+        var service = new MsalAuthService(options, Substitute.For<IFExLogger>());
+
+        options.Scopes.Add("Files.ReadWrite.All");
+        options.Scopes[0] = "Mail.Read";
+        options.ClientId = "changed";
+
+        service.Scopes.ShouldBe(["Files.Read"]);
+        service.ClientId.ShouldBe("original");
+    }
+
     [Fact(Skip = "TODO: token acquisition (silent -> interactive fallback, sign-out) needs a seam over IPublicClientApplication.")]
     public void GetAccessTokenAsync_SilentFailure_FallsBackToInteractive()
     {

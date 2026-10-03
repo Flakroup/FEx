@@ -31,4 +31,23 @@ public sealed class OneDriveOptionsTests
             ClientId = "x",
             Scopes = ["Files.Read", " "]
         }.Validate());
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    [InlineData(null)]
+    public void Validate_BlankTenantId_Throws(string? tenant) =>
+        Should.Throw<ArgumentException>(() => new OneDriveOptions
+        {
+            ClientId = "x",
+            TenantId = tenant!
+        }.Validate());
+
+    [Fact]
+    public void Validate_NullScopes_Throws() =>
+        Should.Throw<ArgumentException>(() => new OneDriveOptions
+        {
+            ClientId = "x",
+            Scopes = null!
+        }.Validate());
 }

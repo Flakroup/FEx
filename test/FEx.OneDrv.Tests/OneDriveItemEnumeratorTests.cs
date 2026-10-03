@@ -55,16 +55,22 @@ public sealed class OneDriveItemEnumeratorTests
     }
 
     [Fact]
-    public async Task EnumerateFilesAsync_CancelledMidStream_Throws()
+    public async Task EnumerateFilesAsync_CancelledBetweenItemsOfOnePage_StopsBeforeNextItem()
     {
-        var graph = new FakeGraph(request => TwoPages()(request));
+        var graph = new FakeGraph(_ => FakeGraph.Json(FakeGraph.Page([FakeGraph.File("a"), FakeGraph.File("b")])));
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var seen = new List<string>();
 
         await Should.ThrowAsync<OperationCanceledException>(async () =>
         {
-            await foreach (var _ in Create(graph).EnumerateFilesAsync("root", cts.Token))
+            await foreach (var file in Create(graph).EnumerateFilesAsync("root", cts.Token))
+            {
+                seen.Add(file.Id);
                 await cts.CancelAsync();
+            }
         });
+
+        seen.ShouldBe(["a"]);
     }
 
     [Fact]

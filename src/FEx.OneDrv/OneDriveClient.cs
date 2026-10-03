@@ -34,9 +34,8 @@ public sealed class OneDriveClient : IOneDriveClient
             : folderId;
 
         var result = new List<IOneDriveFile>();
-        var pipeline = _pipeline;
 
-        await pipeline.ExecuteAsync(async cancelToken =>
+        await _pipeline.ExecuteAsync(async cancelToken =>
             {
                 result.Clear();
 
@@ -72,9 +71,8 @@ public sealed class OneDriveClient : IOneDriveClient
             throw new ArgumentNullException(nameof(itemId));
 
         var (client, driveId) = await _graphCache.GetAsync(cancellationToken);
-        var pipeline = _pipeline;
 
-        var item = await pipeline.ExecuteAsync(async cancelToken =>
+        var item = await _pipeline.ExecuteAsync(async cancelToken =>
                 await client.Drives[driveId].Items[itemId].GetAsync(cancellationToken: cancelToken),
             cancellationToken);
 
@@ -95,9 +93,8 @@ public sealed class OneDriveClient : IOneDriveClient
             : folderId;
 
         var result = new List<IOneDriveFolder>();
-        var pipeline = _pipeline;
 
-        await pipeline.ExecuteAsync(async cancelToken =>
+        await _pipeline.ExecuteAsync(async cancelToken =>
             {
                 result.Clear();
 

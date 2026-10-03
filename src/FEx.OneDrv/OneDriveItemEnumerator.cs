@@ -36,13 +36,12 @@ public sealed class OneDriveItemEnumerator : IOneDriveItemEnumerator
             ? "root"
             : folderId;
 
-        var pipeline = _pipeline;
         var count = 0;
 
         // Fetch one page at a time (each fetch retried on its own) and yield its files before requesting the next
         // page, so memory stays bounded by the page size and a retry never re-yields items.
         var request = client.Drives[driveId].Items[parentId].Children;
-        var response = await GetPageAsync(pipeline, request, null, cancellationToken);
+        var response = await GetPageAsync(_pipeline, request, null, cancellationToken);
 
         while (true)
         {
@@ -63,7 +62,7 @@ public sealed class OneDriveItemEnumerator : IOneDriveItemEnumerator
             if (string.IsNullOrEmpty(nextLink))
                 break;
 
-            response = await GetPageAsync(pipeline, request, nextLink, cancellationToken);
+            response = await GetPageAsync(_pipeline, request, nextLink, cancellationToken);
         }
 
         _logger.Information($"Enumerated {count} items in folder {folderId ?? "root"}");

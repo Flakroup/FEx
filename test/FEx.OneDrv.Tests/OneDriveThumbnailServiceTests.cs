@@ -69,7 +69,8 @@ public sealed class OneDriveThumbnailServiceTests : IDisposable
         await Create().GetThumbnailAsync("ab/c+d==", TestContext.Current.CancellationToken);
 
         var name = Path.GetFileName(CachedFiles().Single());
-        name.ShouldBe("ab_c+d==.medium.png");
+        name.ShouldBe(OneDriveThumbnailService.GetCacheStem("ab/c+d==", ThumbnailSize.Medium) + ".png");
+        name.ShouldMatch("^[0-9a-f]{64}\\.medium\\.png$");
     }
 
     [Fact]
@@ -94,6 +95,92 @@ public sealed class OneDriveThumbnailServiceTests : IDisposable
         await service.GetThumbnailAsync("item", ThumbnailSize.Large, TestContext.Current.CancellationToken);
 
         CachedFiles().Length.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task GetThumbnailAsync_WildcardItemId_NeverMatchesAnotherItemsCache()
+    {
+        var service = Create();
+        await service.GetThumbnailAsync("other-item", TestContext.Current.CancellationToken);
+        _graph.Requests.Count.ShouldBe(1);
+
+        await service.GetThumbnailAsync("*", TestContext.Current.CancellationToken);
+
+        _graph.Requests.Count.ShouldBe(2);
+        CachedFiles().Length.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task GetThumbnailAsync_EmptyCacheFile_IsTreatedAsMissAndRedownloaded()
+    {
+        Directory.CreateDirectory(Path.Combine(_dir, "thumbnails"));
+        var stale = Path.Combine(_dir, "thumbnails", OneDriveThumbnailService.GetCacheStem("item", ThumbnailSize.Medium) + ".png");
+        await File.WriteAllBytesAsync(stale, [], TestContext.Current.CancellationToken);
+
+        var bytes = await Create().GetThumbnailAsync("item", TestContext.Current.CancellationToken);
+
+        bytes.ShouldBe([1, 2, 3]);
+        (await File.ReadAllBytesAsync(stale, TestContext.Current.CancellationToken)).ShouldBe([1, 2, 3]);
+    }
+
+    [Fact]
+    public async Task GetThumbnailAsync_LeftoverTempFile_IsNotServed()
+    {
+        Directory.CreateDirectory(Path.Combine(_dir, "thumbnails"));
+        var temp = Path.Combine(_dir, "thumbnails", OneDriveThumbnailService.GetCacheStem("item", ThumbnailSize.Medium) + ".png.tmp");
+        await File.WriteAllBytesAsync(temp, [9, 9], TestContext.Current.CancellationToken);
+
+        var bytes = await Create().GetThumbnailAsync("item", TestContext.Current.CancellationToken);
+
+        bytes.ShouldBe([1, 2, 3]);
+    }
+
+    [Fact]
+    public async Task GetThumbnailAsync_AfterDownload_LeavesNoTempFile()
+    {
+        await Create().GetThumbnailAsync("item", TestContext.Current.CancellationToken);
+
+        CachedFiles().ShouldAllBe(f => !f.EndsWith(".tmp"));
+    }
+
+    [Fact]
+    public async Task GetThumbnailAsync_SizeMissingInGraphResponse_ReturnsNullWithoutDownload()
+    {
+        var graph = new FakeGraph(_ => FakeGraph.Json("""{"value":[{"id":"0","medium":{"url":"https://t/medium"}}]}"""));
+        var service = new OneDriveThumbnailService(graph.CreateCache(),
+            new()
+            {
+                ClientId = "x",
+                TokenCachePath = Path.Combine(_dir, "token.bin")
+            },
+            Substitute.For<IFExLogger>(),
+            new(_cdn));
+
+        var bytes = await service.GetThumbnailAsync("item", ThumbnailSize.Small, TestContext.Current.CancellationToken);
+
+        bytes.ShouldBeNull();
+        _cdn.Requests.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("image/jpeg", "jpg")]
+    [InlineData("image/JPG", "jpg")]
+    [InlineData("image/png", "png")]
+    [InlineData("image/gif", "gif")]
+    [InlineData("image/webp", "webp")]
+    [InlineData("image/bmp", "bmp")]
+    [InlineData("application/octet-stream", "bin")]
+    [InlineData(null, "bin")]
+    public void GetExtension_MapsContentType(string? mediaType, string expected) =>
+        OneDriveThumbnailService.GetExtension(mediaType).ShouldBe(expected);
+
+    [Fact]
+    public void GetDefaultCacheDir_IsPerUser_NotTheSharedTempDirectory()
+    {
+        var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        Assert.SkipWhen(string.IsNullOrEmpty(local), "No per-user LocalApplicationData on this host.");
+
+        OneDriveThumbnailService.GetDefaultCacheDir().ShouldStartWith(local);
     }
 
     public void Dispose()

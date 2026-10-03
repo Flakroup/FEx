@@ -7,7 +7,7 @@ namespace FEx.OneDrv.Abstractions;
 /// <summary>Configuration of the OneDrive module.</summary>
 public sealed class OneDriveOptions
 {
-    /// <summary>Azure AD application (client) ID. Required; set by the consumer (e.g. via configuration binding).</summary>
+    /// <summary>Azure AD application (client) ID. Required: options must be fully populated (e.g. bound from configuration) before they are passed to <c>AddOneDrv</c>, which validates them.</summary>
     public string ClientId { get; set; } = null!;
 
     /// <summary>Azure AD tenant; <c>common</c> by default.</summary>

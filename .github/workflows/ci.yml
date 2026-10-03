@@ -61,8 +61,11 @@ jobs:
           dotnet-version: 10.0.x
       - name: Restore workloads (MAUI for FEx.Maui)
         run: dotnet workload restore FEx.slnx
-      - name: Test
-        run: pwsh ./build.ps1 Test
+      - name: Restore local tools (pinned ReSharper CLT for Inspect)
+        run: dotnet tool restore
+      # One Compile feeds both targets; Inspect fails the build on any ReSharper ERROR.
+      - name: Test and inspect
+        run: pwsh ./build.ps1 Test Inspect
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -72,13 +75,51 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-  # Push to main/develop: Publish (NUKE chain: Restore -> Compile -> Test ->
-  # Pack -> Publish -> Tag, single process/job - Test gates Publish via
-  # Build.cs's DependentFor, no separate test job needed here).
-  # Mirrors the old .gitlab-ci.yml publish job (push -> develop/main/master).
-  # Own concurrency group so a running publish is queued, never cancelled by
-  # ci's cancel-in-progress on a fast follow-up push.
+  # Push to main/develop, part 1 of 2: the long, flake-prone part (restore, compile, test, inspect, pack).
+  # It pushes nothing - the packages go up as an artifact and the `publish` job below ships them in one go,
+  # so a runner lost here leaves nothing on nuget.org. Mirrors the old .gitlab-ci.yml publish job
+  # (push -> develop/main/master).
+  build:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          lfs: true
+          fetch-depth: 0   # GitVersion needs full history + tags
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore workloads (MAUI for FEx.Maui)
+        run: dotnet workload restore FEx.slnx
+      - name: Restore local tools (pinned ReSharper CLT for Inspect)
+        run: dotnet tool restore
+      # One Compile feeds all three targets; Test and Inspect gate the Pack output.
+      - name: Test, inspect and pack
+        run: pwsh ./build.ps1 Test Inspect Pack --configuration Release
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error   # an empty release must fail here, not get tagged by `publish`
+          retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: artifacts/test-results/*.trx
+          if-no-files-found: ignore
+          retention-days: 30
+
+  # Part 2 of 2: a short job that only pushes the packages `build` produced, all in one go, then tags.
+  # Re-running just this job (Actions -> Re-run failed jobs) re-pushes from the retained artifact;
+  # `--skip-duplicate` walks past what is already on the feed. Own concurrency group so a running
+  # publish is queued, never cancelled by ci's cancel-in-progress on a fast follow-up push.
   publish:
+    needs: build
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     runs-on: windows-latest
     environment: production
@@ -96,18 +137,14 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Restore workloads (MAUI for FEx.Maui)
-        run: dotnet workload restore FEx.slnx
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: artifacts/packages
+      # Everything up to Pack already ran in `build`; skip it so this job only pushes and tags.
       - name: Publish to nuget.org
         env:
           NuGetApiKey: ${{ secrets.NUGET_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}   # for the Tag target to push the git version tag
-        run: pwsh ./build.ps1 Publish --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: artifacts/test-results/*.trx
-          if-no-files-found: ignore
-          retention-days: 30
+        run: pwsh ./build.ps1 Publish --skip Restore Compile Test Verify Pack --configuration Release --nuget-source "https://api.nuget.org/v3/index.json"

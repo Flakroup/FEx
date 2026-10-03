@@ -4,7 +4,7 @@ using Nuke.Common;
 using System.Collections.Generic;
 
 [DisableDefaultOutput(DefaultOutput.ErrorsAndWarnings)]
-class Build : FExBuild, ITagTarget, ITestTarget
+class Build : FExBuild, IInspectTarget, ITagTarget, ITestTarget
 {
     // FEx ships packages, not deployable applications - nothing here to PublishApp.
     public override IEnumerable<string> PublishProjects => [];
@@ -22,8 +22,9 @@ class Build : FExBuild, ITagTarget, ITestTarget
             });
 
     // Gates Publish on Test passing - one `Publish` invocation runs
-    // Restore -> Compile -> Test -> Pack -> Publish -> Tag in a single process,
-    // instead of CI needing separate test/publish jobs with their own checkout+restore.
+    // Restore -> Compile -> Test -> Pack -> Publish -> Tag in a single process.
+    // CI splits that chain across two jobs (build: `Test Inspect Pack`, publish: `Publish` with the
+    // earlier targets skipped over the uploaded packages), so the gate is the build job's Test there.
     // A new pass-through target (not an override of Test/Publish - overriding either
     // would replace its Executes body wholesale and silently drop it from the plan).
     [UsedImplicitly] // NUKE Target invoked by the build runner via reflection; R# cannot track it.

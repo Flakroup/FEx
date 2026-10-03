@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Shouldly;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -127,6 +128,8 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         saved.ShouldBeFalse();
         sut.SaveAttempts.ShouldBe(2);
         (await NamesInDbAsync()).ShouldBe(["from B", "unrelated", "unrelated"]);
+        sut[1].Name.ShouldBe("from B");
+        sut[1].Version.ShouldBe(2);
 
         if (useIndex)
             sut.Index.OrderBy(k => k).ShouldBe([1, 2, 3]);
@@ -160,6 +163,48 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         (await NamesInDbAsync()).ShouldBe(["from B", "unrelated", "probe"]);
         sut.Index.OrderBy(k => k).ShouldBe([1, 2, 9]);
         (sut.SaveAttempts - attemptsBefore).ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task RejectedChange_CacheTakesOtherWritersRow_WithoutResaving_AndNextEditOfTheKeyIsSaved()
+    {
+        using var sut = CreateDictionary(true);
+        await sut.InitializeAsync();
+
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+        await FlushThroughPipelineAsync(sut, 9);
+        await UpdateByOtherWriterAsync(1);
+
+        // Key 1 carries the stale token and is rejected; key 2 marks the end of the batch.
+        sut.Edit(new() { Id = 1, Name = "from A", Version = doc.Version },
+            new() { Id = 2, Name = "unrelated", Version = 1 });
+        await WaitUntilAsync(() => sut.Index.Contains(2));
+        await sut.WaitForCacheTasksAsync();
+
+        sut[1].Name.ShouldBe("from B");
+        sut[1].Version.ShouldBe(2);
+
+        // Any change the write-back leaked into the subscription is buffered before this probe, so it is saved by
+        // the time the probe is.
+        var attemptsAfterBatch = sut.SavedKeys.Count;
+        await FlushThroughPipelineAsync(sut, 10);
+        sut.SavedKeys.Skip(attemptsAfterBatch).ShouldBe([[10]]);
+
+        sut.Edit(new() { Id = 1, Name = "from A again", Version = sut[1].Version },
+            new() { Id = 3, Name = "unrelated", Version = 1 });
+        await WaitUntilAsync(() => sut.Index.Contains(3));
+        await sut.WaitForCacheTasksAsync();
+
+        (await NamesInDbAsync()).ShouldBe(["from A again", "unrelated", "unrelated", "probe", "probe"]);
+        sut.SavedKeys.Skip(attemptsAfterBatch).ShouldBe([[10], [1, 3]]);
+    }
+
+    private static async Task FlushThroughPipelineAsync(CacheDictionary sut, int probeId)
+    {
+        sut.AddOrUpdateValue(new() { Id = probeId, Name = "probe", Version = 1 });
+        await WaitUntilAsync(() => sut.Index.Contains(probeId));
+        await sut.WaitForCacheTasksAsync();
     }
 
     private static async Task WaitUntilAsync(Func<bool> condition)
@@ -271,6 +316,8 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     {
         public int SaveAttempts { get; private set; }
 
+        public ConcurrentQueue<int[]> SavedKeys { get; } = new();
+
         public CacheDictionary(IEFCoreDatabaseBackedService<CacheDbContext> dbService, bool useIndex)
             : base(dbService, nameof(CachedDoc.Id)) =>
             UseIndex = useIndex;
@@ -288,6 +335,7 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         protected override async Task OnChangesDetectedAsync(ICollection<ChangeInfo<int, CachedDoc>> changes)
         {
             SaveAttempts++;
+            SavedKeys.Enqueue([.. changes.Select(c => c.Key).OrderBy(k => k)]);
             await base.OnChangesDetectedAsync(changes);
         }
 

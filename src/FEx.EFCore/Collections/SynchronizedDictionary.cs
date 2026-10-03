@@ -33,6 +33,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 {
     protected readonly IEFCoreDatabaseBackedService<TDbCtx> _dbSrv;
     private readonly Func<TValue, IObservable<object>>[]? _observables;
+    // Keys whose cache entries are being overwritten with database values; the subscription drops their changes.
+    private readonly ConcurrentDictionary<TKey, byte> _writeBackKeys = new();
     private bool _isDisposed;
     private string[] _observedProperties;
     private IDisposable? _cacheSubscription;
@@ -208,7 +210,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         _cacheSubscription?.Dispose();
 
-        _cacheSubscription = cacheObservable.Buffer(TimeSpan.FromMilliseconds(100))
+        _cacheSubscription = cacheObservable.Select(WithoutWriteBacks)
+            .Buffer(TimeSpan.FromMilliseconds(100))
             .Where(x => x.Count > 0 && x.Any(c => c.Count > 0))
             .Select(x =>
             {
@@ -392,7 +395,10 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     /// Saves <paramref name="changes" /> and updates <see cref="Index" />. On a concurrency conflict the batch is
     /// reloaded against the database and the rest of it is retried:
     /// <list type="bullet">
-    /// <item>a row another writer changed is surfaced: its change is logged at error level and not saved;</item>
+    /// <item>
+    /// a row another writer changed is surfaced: its change is logged at error level and not saved, and the cached
+    /// value is replaced with the row from the database, so a later edit of the key is saved;
+    /// </item>
     /// <item>a row another writer deleted is re-added only while its key is still cached.</item>
     /// </list>
     /// Every retry resolves or rejects at least one conflicting key, so attempts are bounded by the batch size.
@@ -436,6 +442,9 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                 }
 
                 allSaved &= rejected.Count == 0;
+
+                if (rejected.Count > 0)
+                    await WriteBackWinningValuesAsync(rejected);
             }
         }
 
@@ -481,6 +490,60 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         return (retry, rejected);
     }
+
+    /// <summary>
+    /// Replaces the cached values of rejected changes with the rows that won in the database, concurrency token
+    /// included, so the next edit of those keys is saved instead of conflicting again.
+    /// </summary>
+    private async Task WriteBackWinningValuesAsync(List<ChangeInfo<TKey, TValue>> rejected)
+    {
+        var keys = new HashSet<TKey>(rejected.Select(c => c.Key));
+        List<TValue> winners;
+
+        try
+        {
+            winners = await _dbSrv.RunTaskInDbContextAsync(
+                ctx => IncludeInEntity(DbSetAccessor(ctx).AsNoTracking().Where(KeyIsIn(keys))).ToListAsync(),
+                null,
+                false,
+                false);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex,
+                $"{TypeName}: could not reload the rows of rejected changes, keys [{string.Join(", ", keys)}] keep stale cached values");
+
+            return;
+        }
+
+        foreach (var key in keys)
+            _writeBackKeys.TryAdd(key, 0);
+
+        // SourceCache publishes an edit to its subscribers before Edit returns, so the write-back's own change is
+        // seen (and dropped by WithoutWriteBacks) while its keys are still registered.
+        try
+        {
+            Cache.Edit(updater =>
+            {
+                foreach (var winner in winners)
+                {
+                    // A key no longer cached has no stale value to replace.
+                    if (updater.Lookup(KeyRetriver(winner)).HasValue)
+                        updater.AddOrUpdate(winner);
+                }
+            });
+        }
+        finally
+        {
+            foreach (var key in keys)
+                _writeBackKeys.TryRemove(key, out _);
+        }
+    }
+
+    private IChangeSet<TValue, TKey> WithoutWriteBacks(IChangeSet<TValue, TKey> changeSet) =>
+        _writeBackKeys.IsEmpty
+            ? changeSet
+            : new ChangeSet<TValue, TKey>(changeSet.Where(c => !_writeBackKeys.ContainsKey(c.Key)));
 
     private void UpdateIndex(List<ChangeInfo<TKey, TValue>> changes)
     {

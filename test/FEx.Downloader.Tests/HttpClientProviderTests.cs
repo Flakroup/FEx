@@ -116,7 +116,7 @@ public sealed class HttpClientProviderTests
         seenCookies.ToArray().ShouldBe([null, "session=kept"]);
     }
 
-    [Fact]
+    [Fact(Timeout = 10_000)]
     public async Task SendHttpAsync_ServerNeverAnswers_TimesOutWithTheDefaultTimeout()
     {
         using var listener = new TcpListener(IPAddress.Loopback, 0);

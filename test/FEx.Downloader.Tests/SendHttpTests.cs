@@ -1,7 +1,6 @@
 using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Agnostics.Abstractions.Models;
 using FEx.Core.Abstractions.Extensions;
-using FEx.Webx.Extensions;
 using Shouldly;
 using System;
 using System.Linq;
@@ -263,13 +262,19 @@ public sealed class SendHttpTests
     }
 
     [Fact]
-    public async Task DeserializeRemoteJsonAsync_CancelledToken_StopsTheConnectivityCheck()
+    public async Task CheckForInternetConnectionAsync_CancelledToken_Cancels()
     {
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
+        using var client = new HttpClient(new FakeHttpHandler((_, token) =>
+        {
+            token.ThrowIfCancellationRequested();
 
-        await Should.ThrowAsync<OperationCanceledException>(() =>
-            Url.DeserializeRemoteJsonAsync<object>(null, true, cts.Token));
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NoContent));
+        }));
+
+        // a cancelled caller must not be told "offline"
+        await Should.ThrowAsync<OperationCanceledException>(() => Url.CheckForInternetConnectionAsync(client, cts.Token));
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using System;
 using FEx.DependencyInjection.Abstractions;
 using FEx.Samples.Shared;
 using FEx.WPFx.Abstractions;

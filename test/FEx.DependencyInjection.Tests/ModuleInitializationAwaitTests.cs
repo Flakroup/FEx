@@ -45,6 +45,31 @@ public sealed class ModuleInitializationAwaitTests : IDisposable
 
         GatedModule.Finished.ShouldBeTrue();
     }
+
+    [Fact]
+    public async Task A_failed_initialization_leaves_no_half_built_container_and_a_retry_runs_the_module_again()
+    {
+        FExServiceProvider.Release();
+        ThrowOnceModule.Calls = 0;
+
+        await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await FExServiceProvider.InitializeAsync<ThrowOnceContainer>());
+
+        // The retry must not be served the container of the failed attempt through the idempotency check.
+        await FExServiceProvider.InitializeAsync<ThrowOnceContainer>();
+
+        ThrowOnceModule.Calls.ShouldBe(2);
+    }
+}
+
+public sealed class ThrowOnceModule : InitializeOnlyModule
+{
+    public static int Calls { get; set; }
+
+    public override ValueTask OnCompleteInitializationAsync(IServiceCollection services) =>
+        ++Calls == 1
+            ? throw new InvalidOperationException("db down")
+            : ValueTask.CompletedTask;
 }
 
 public sealed class GatedModule : InitializeOnlyModule
@@ -77,6 +102,18 @@ public sealed class GatedModule : InitializeOnlyModule
 [Register(typeof(FExMicrosoftDIServiceProvider), Scope.SingleInstance, typeof(IFExServiceProvider))]
 [Register(typeof(GatedModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
 public sealed partial class GatedContainer : TestBase, IFExDependencyInjectionContainer,
+    IContainer<IInitializeModule<IServiceCollection>[]>
+{
+    [Factory]
+    public static ILogger CreateLogger() => NullLogger.Instance;
+}
+
+[RegisterModule(typeof(CollectionsModule))]
+[RegisterModule(typeof(FExDependencyInjectionModule))]
+[Register(typeof(FExStrongInjectServiceProvider), Scope.SingleInstance, typeof(IFExServiceProvider))]
+[Register(typeof(FExMicrosoftDIServiceProvider), Scope.SingleInstance, typeof(IFExServiceProvider))]
+[Register(typeof(ThrowOnceModule), Scope.SingleInstance, typeof(IInitializeModule<IServiceCollection>))]
+public sealed partial class ThrowOnceContainer : TestBase, IFExDependencyInjectionContainer,
     IContainer<IInitializeModule<IServiceCollection>[]>
 {
     [Factory]

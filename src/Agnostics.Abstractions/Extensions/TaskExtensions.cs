@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace FEx.Agnostics.Abstractions.Extensions;
@@ -116,6 +117,7 @@ public static class TaskExtensions
     /// <param name="mode">The thread context to run on.</param>
     /// <param name="options">How the work is started.</param>
     /// <param name="cancellationToken">Token used to cancel delegates that have not started.</param>
+    [OverloadResolutionPriority(1)] // an async lambda without a result converts to both Task and ValueTask; prefer Task
     public static async Task WithWhenAllAsync<T>(this IEnumerable<T> values,
                                                  Func<T, Task> asyncAction,
                                                  AsyncMode mode = AsyncMode.Default,
@@ -130,7 +132,12 @@ public static class TaskExtensions
             return;
         }
 
-        await values.Select<T, Func<Task>>(v => () => asyncAction(v)).WhenAllTasksAsync(mode, options);
+        await values.Select<T, Func<Task>>(v => () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            return asyncAction(v);
+        }).WhenAllTasksAsync(mode, options);
     }
 
     /// <summary>
@@ -145,6 +152,7 @@ public static class TaskExtensions
     /// <param name="options">How the work is started.</param>
     /// <param name="cancellationToken">Token used to cancel delegates that have not started.</param>
     /// <returns>The results in the order of <paramref name="values" />.</returns>
+    [OverloadResolutionPriority(1)]
     public static async Task<TResult[]> WithWhenAllAsync<T, TResult>(this IEnumerable<T> values,
                                                                      Func<T, Task<TResult>> asyncAction,
                                                                      AsyncMode mode = AsyncMode.Default,
@@ -156,7 +164,12 @@ public static class TaskExtensions
                 .Select<T, Func<Task<TResult>>>(v => () => Task.Run(() => asyncAction(v), cancellationToken))
                 .WhenAllTasksAsync(mode);
 
-        return await values.Select<T, Func<Task<TResult>>>(v => () => asyncAction(v)).WhenAllTasksAsync(mode, options);
+        return await values.Select<T, Func<Task<TResult>>>(v => () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            return asyncAction(v);
+        }).WhenAllTasksAsync(mode, options);
     }
 
     /// <summary>Like the <see cref="Task" /> overload, for <see cref="ValueTask" />-returning delegates.</summary>

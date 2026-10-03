@@ -1,4 +1,3 @@
-// ReSharper disable RedundantUsingDirective - needed where implicit usings are off (Avalonia sample, EFCore tests)
 using FEx.EFCore.Configuration;
 using FEx.EFCore.Extensions;
 using Microsoft.EntityFrameworkCore;

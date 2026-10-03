@@ -274,32 +274,44 @@ public class FExServiceProvider : IFExServiceProvider
 
             // Dispose previously set multi-di provider if any
             Release();
-            var container = new TContainer();
-            configureContainer?.Invoke(container);
-            _containerInstance = container;
 
-            var serviceProvider = ((IContainer<IFExStrongInjectServiceProvider>)container)
-                .Resolve<IFExStrongInjectServiceProvider>()
-                .Value;
+            try
+            {
+                var container = new TContainer();
+                configureContainer?.Invoke(container);
+                _containerInstance = container;
 
-            serviceProvider.SetServiceProvider(container);
-            ServiceProvider = serviceProvider;
+                var serviceProvider = ((IContainer<IFExStrongInjectServiceProvider>)container)
+                    .Resolve<IFExStrongInjectServiceProvider>()
+                    .Value;
 
-            // Set ServiceContainer by resolving from the new container
+                serviceProvider.SetServiceProvider(container);
+                ServiceProvider = serviceProvider;
+
+                // Set ServiceContainer by resolving from the new container
 #pragma warning disable IDISP004 // Don't ignore created IDisposable
-            ServiceContainer = container is IContainer<IFExServiceContainer> containerResolver
-                ? containerResolver.Resolve<IFExServiceContainer>().Value
-                : throw new InvalidOperationException(
-                    $"{typeof(TContainer).Name} must implement IContainer<IFExServiceContainer>");
+                ServiceContainer = container is IContainer<IFExServiceContainer> containerResolver
+                    ? containerResolver.Resolve<IFExServiceContainer>().Value
+                    : throw new InvalidOperationException(
+                        $"{typeof(TContainer).Name} must implement IContainer<IFExServiceContainer>");
 #pragma warning restore IDISP004
 
-            // Register services with the container
-            ServiceContainer.RegisterServices(container, services);
+                // Register services with the container
+                ServiceContainer.RegisterServices(container, services);
 
-            var serviceProviders = (await GetAllAsync<IFExServiceProvider>()).Except([serviceProvider]).ToArray();
-            await serviceProviders.WithWhenAllAsync(static sp => sp.ConfigureServiceProviderAsync());
+                var serviceProviders = (await GetAllAsync<IFExServiceProvider>()).Except([serviceProvider]).ToArray();
+                await serviceProviders.WithWhenAllAsync(static sp => sp.ConfigureServiceProviderAsync());
 
-            return container;
+                return container;
+            }
+            catch
+            {
+                // A module or provider failed: do not leave a half-initialized container behind for the idempotency
+                // check above to hand out, so a retry runs the initialization again.
+                Release();
+
+                throw;
+            }
         }
         finally
         {

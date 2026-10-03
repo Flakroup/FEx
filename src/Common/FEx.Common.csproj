@@ -12,4 +12,10 @@
 		<ProjectReference Include="..\Logging\FEx.Logging.csproj"/>
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="FEx.WPFx" />
+		<InternalsVisibleTo Include="FEx.Avaloniax" />
+		<InternalsVisibleTo Include="FEx.Common.Tests" />
+	</ItemGroup>
+
 </Project>

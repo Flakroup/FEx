@@ -1,4 +1,4 @@
-using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using FEx.Avaloniax;
 using System.Diagnostics.CodeAnalysis;
@@ -13,12 +13,8 @@ public partial class App : FExAvaloniaApp<AppContainer>
         AvaloniaXamlLoader.Load(this);
     }
 
-    protected override void AfterServicesContainerBuild()
+    protected override Window CreateMainWindow() => new MainWindow
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new MainWindowViewModel()
-            };
-    }
+        DataContext = new MainWindowViewModel()
+    };
 }

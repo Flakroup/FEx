@@ -1,4 +1,4 @@
-using FEx.AppStartup;
+using FEx.Common.Startup;
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Common.Abstractions.Interfaces;
@@ -35,6 +35,7 @@ public abstract class AppBootstrapper<TContainer> : Application
     private IAppConfig? _appConfig;
     private Window? _startupWindow;
     private ShutdownMode _configuredShutdownMode;
+    private readonly Host _host;
 
     // The services below are resolved by the startup flow in OnStartup and are valid only after the container was
     // built, i.e. from OnActivation onwards. Reading them earlier (for example in a subclass constructor) throws.
@@ -51,6 +52,8 @@ public abstract class AppBootstrapper<TContainer> : Application
 
     protected AppBootstrapper()
     {
+        _host = new Host(this);
+
         AppDomain.CurrentDomain.UnhandledException += AppDomainUnhandledException;
         DispatcherUnhandledException += OnAppDispatcherUnhandledException;
 
@@ -173,99 +176,138 @@ public abstract class AppBootstrapper<TContainer> : Application
     protected virtual Window? CreateStartupWindow() => null;
 
     /// <summary>
+    /// Creates the main window once the container is built and all hooks ran; the base assigns it to
+    /// <see cref="Application.MainWindow" /> and shows it. Return <c>null</c> if the app shows its windows itself.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Application.StartupUri" /> is not supported: WPF would load it as soon as <see cref="OnStartup" />
+    /// first yields, before the container exists. Remove it from App.xaml and return the window from here.
+    /// </remarks>
+    protected virtual Window? CreateMainWindow() => null;
+
+    /// <summary>
     /// Starts the app: shows the optional startup window, awaits the container build without blocking the
     /// dispatcher, then runs the startup hooks in order. A failure goes through <see cref="HandleException" /> and
     /// exits with a non-zero code.
     /// </summary>
     /// <param name="e">A <see cref="StartupEventArgs" /> that contains the event data.</param>
-#pragma warning disable VSTHRD100 // async void is the only way to await inside the Application.OnStartup override; the sequencer catches everything.
-    protected sealed override async void OnStartup(StartupEventArgs e) =>
-        await StartupSequencer.RunAsync(ShowStartupWindow,
-                                        InitializeContainerAsync,
-                                        CloseStartupWindow,
-                                        GetStartupHooks(e),
-                                        HandleException,
-                                        ExitApp);
+#pragma warning disable VSTHRD100 // async void is the only way to await inside the Application.OnStartup override; the host catches everything.
+    protected sealed override async void OnStartup(StartupEventArgs e)
+    {
+        _host.StartupArgs = e;
+        await _host.RunAsync();
+    }
 #pragma warning restore VSTHRD100
 
-    private async Task InitializeContainerAsync()
+    private void RaiseStartup(StartupEventArgs e) => base.OnStartup(e);
+
+    /// <summary>Adapts the WPF <see cref="Application" /> to the shared <see cref="StartupHost" /> flow.</summary>
+    private sealed class Host(AppBootstrapper<TContainer> app) : StartupHost
     {
-        FExCoreStatics.MainThreadContextProvider.SetMainThread();
-        _container = await FExServiceProvider.InitializeAsync<TContainer>();
-    }
+        internal StartupEventArgs StartupArgs { get; set; } = null!;
 
-    // The startup window is the only window while the container builds; keep the app alive when it closes and give
-    // it back to the app's own setting afterwards.
-    private void ShowStartupWindow()
-    {
-        _configuredShutdownMode = ShutdownMode;
-        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        protected override void PrepareStartup()
+        {
+            if (app.StartupUri is not null)
+                throw new InvalidOperationException(
+                    "StartupUri is not supported by AppBootstrapper: WPF would load it before the service container is built. "
+                    + "Remove it from App.xaml and return the main window from CreateMainWindow().");
+        }
 
-        _startupWindow = CreateStartupWindow();
-        _startupWindow?.Show();
-    }
+        protected override void SuspendShutdown()
+        {
+            app._configuredShutdownMode = app.ShutdownMode;
+            app.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        }
 
-    private void CloseStartupWindow()
-    {
-        if (_startupWindow is null)
-            return;
+        protected override void ShowStartupWindow()
+        {
+            FExCoreStatics.MainThreadContextProvider.SetMainThread();
 
-        _startupWindow.Close();
+            app._startupWindow = app.CreateStartupWindow();
+            app._startupWindow?.Show();
+        }
 
-        // The first window created becomes MainWindow; the startup window must not.
-        if (ReferenceEquals(MainWindow, _startupWindow))
-            MainWindow = null;
+        protected override async Task InitializeContainerAsync() =>
+            app._container = await FExServiceProvider.InitializeAsync<TContainer>();
 
-        _startupWindow = null;
-    }
+        protected override void CloseStartupWindow()
+        {
+            if (app._startupWindow is null)
+                return;
 
-    private Action[] GetStartupHooks(StartupEventArgs e) =>
-    [
-        PublishServices,
-        OnActivation,
-        EnsureSingleInstance,
+            app._startupWindow.Close();
+
+            // The first window created becomes MainWindow; the startup window must not keep that slot.
+            if (ReferenceEquals(app.MainWindow, app._startupWindow))
+                app.MainWindow = null;
+
+            app._startupWindow = null;
+        }
+
+        protected override void RestoreShutdown() => app.ShutdownMode = app._configuredShutdownMode;
+
+        protected override void PublishServices()
+        {
+            app._appInfoProvider = FExServiceProvider.Get<IAppInfoProvider>();
+            app._appConfig = FExServiceProvider.Get<IAppConfig>();
+            app._exceptionHandler = FExServiceProvider.Get<IExceptionHandler>();
+            app._exceptionHandler.ExceptionOccured += (_, _) => app.ExitApp();
+            app._statusService = FExServiceProvider.Get<IStatusService>();
+        }
+
+        protected override void OnActivation() => app.OnActivation();
+
+        protected override void EnsureSingleInstance() => app.EnsureSingleInstance();
+
 #pragma warning disable IDISP004 // intentional using(_=LogToHub) pattern for scoped status logging
-        () =>
+        protected override void InitializeComponents()
         {
-            using (_ = LogToHub("Initializing app"))
+            using (_ = app.LogToHub("Initializing app"))
             {
-                OnConstruction(e);
-                BeforeInitializationCheck();
-                ComponentInitialize();
+                app.OnConstruction(StartupArgs);
+                app.BeforeInitializationCheck();
+                app.ComponentInitialize();
             }
-        },
-        () =>
-        {
-            using (_ = LogToHub("Preparing app"))
-                BeforeStartup(e);
-        },
-        () =>
-        {
-            using (_ = LogToHub("Initializing app components"))
-                AfterServicesContainerBuild();
-        },
-        () =>
-        {
-            _ = LogToHub("Showing window");
-            base.OnStartup(e);
-            ShutdownMode = _configuredShutdownMode;
-        },
-        () =>
-        {
-            using (_ = LogToHub("Finalizing startup"))
-                AfterStartup(e);
-        },
-#pragma warning restore IDISP004
-        ExitIfInitializationHasFailed
-    ];
+        }
 
-    private void PublishServices()
-    {
-        _appInfoProvider = FExServiceProvider.Get<IAppInfoProvider>();
-        _appConfig = FExServiceProvider.Get<IAppConfig>();
-        _exceptionHandler = FExServiceProvider.Get<IExceptionHandler>();
-        _exceptionHandler.ExceptionOccured += (_, _) => ExitApp();
-        _statusService = FExServiceProvider.Get<IStatusService>();
+        protected override void BeforeStartup()
+        {
+            using (_ = app.LogToHub("Preparing app"))
+                app.BeforeStartup(StartupArgs);
+        }
+
+        protected override void AfterServicesContainerBuild()
+        {
+            using (_ = app.LogToHub("Initializing app components"))
+                app.AfterServicesContainerBuild();
+        }
+
+        protected override void ShowMainWindow()
+        {
+            _ = app.LogToHub("Showing window");
+
+            if (app.CreateMainWindow() is { } mainWindow)
+            {
+                app.MainWindow = mainWindow;
+                mainWindow.Show();
+            }
+
+            app.RaiseStartup(StartupArgs);
+        }
+
+        protected override void AfterStartup()
+        {
+            using (_ = app.LogToHub("Finalizing startup"))
+                app.AfterStartup(StartupArgs);
+        }
+#pragma warning restore IDISP004
+
+        protected override void ExitIfInitializationHasFailed() => app.ExitIfInitializationHasFailed();
+
+        protected override void HandleException(Exception exception) => app.HandleException(exception);
+
+        protected override void RequestExit(int exitCode) => app.ExitApp(exitCode);
     }
 
     protected override void OnExit(ExitEventArgs e)

@@ -22,8 +22,8 @@ using Xunit;
 namespace FEx.EFCore.Tests;
 
 /// <summary>
-/// Graph shapes the save path (<c>DbSet.Update</c>) handles for a cached value. The shapes it does not handle yet (a
-/// loaded principal overwriting another writer's change, among others) are the acceptance cases of #197.
+/// Graph shapes of a cached value the save path (load the row, apply the cached state) handles; the acceptance cases of
+/// #197 are in <see cref="SynchronizedDictionaryLoadAndApplyTests" />.
 /// </summary>
 public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
 {
@@ -119,9 +119,8 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         (await NamesAsync())[0].ShouldBe("edited");
     }
 
-    /// <summary>Pins today's behaviour: an item removed from an owned collection is not deleted (#197 decides).</summary>
     [Fact]
-    public async Task OwnedCollection_RemovedItem_IsNotDeleted()
+    public async Task OwnedCollection_RemovedItem_IsDeleted()
     {
         using var sut = new GraphDictionary(_dbService);
         var doc = await LoadWithCategoryAsync();
@@ -131,7 +130,7 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         doc.Name = "edited";
         (await sut.SaveAsync(doc)).ShouldBeTrue();
 
-        (await TagsAsync()).ShouldBe(["t1"]);
+        (await TagsAsync()).ShouldBeEmpty();
     }
 
     private async Task<List<string>> NamesAsync()

@@ -15,6 +15,10 @@ namespace FEx.Encryption.Tests;
 public sealed class FExEncryptionTests
 {
     [Fact]
+    public void Priority_RunsAheadOfTheDefaultPriority() =>
+        new FExEncryption(new FExEncryptionSettings { PassPhrase = "irrelevant-here" }).Priority.ShouldBeLessThan(0);
+
+    [Fact]
     public void CreateCipher_WithoutSettings_Throws() =>
         Should.Throw<FExEncryptionNotConfiguredException>(() => FExEncryption.CreateCipher(null));
 

@@ -33,7 +33,11 @@ public class FExEncryption : InitializeOnlyModule, IFExPriorityInitialize
         private set => _cipher = value.Guard(nameof(value));
     }
 
-    public int Priority { get; }
+    /// <summary>
+    /// Lower runs first. Ahead of the default 0 so the cipher exists before any other priority initializer
+    /// touches a <see cref="SecureNotifyPropertyChanged" />, but behind the splash screen (-2).
+    /// </summary>
+    public int Priority => -1;
 
     public FExEncryption(IFExEncryptionSettings settings)
     {

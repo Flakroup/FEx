@@ -7,7 +7,6 @@ using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using FEx.Sqlx.Abstractions;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Threading.Tasks;
 
 namespace FEx.EFCore.Services;
@@ -37,27 +36,21 @@ public abstract class EFCoreDatabaseBackedService<TDbContext> : BulkDbServiceBas
         if (IsInitialized)
             return;
 
+        // InitializeAsync rethrows a failure kept from an earlier attempt (e.g. a background BeginInitialization);
+        // start over so the current outcome reaches the caller.
+        if (_initializationTask is { IsFaulted: true } or { IsCanceled: true })
+            await ResetAsync();
+
         await InitializeAsync();
-
-        if (IsInitialized)
-            return;
-
-        // InitializeAsync returns without throwing when an earlier initialization attempt already faulted;
-        // run it again so the real failure reaches the caller instead of a half-initialized service.
-        Reset();
-        await InitializeAsync();
-
-        if (!IsInitialized)
-            throw new InvalidOperationException($"{TypeName} failed to initialize.");
     }
 
-    protected override async Task OnInitializeAsync()
+    // The SQL instance is resolved before the dependencies are initialized, as it was before the template method;
+    // sealed so a further subclass cannot skip it.
+    protected sealed override async Task OnBeforeDependenciesInitializationAsync()
     {
         if (!_dbHelper.IsInitialized)
             await JoinableAsyncHelper.AwaitWithoutDeadlockAsync(_dbHelper.InitializeAsync);
 
         _dbConfig.SqlInstance = _dbHelper.SQLInstance.Guard(nameof(_dbHelper.SQLInstance));
-
-        await base.OnInitializeAsync();
     }
 }

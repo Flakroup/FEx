@@ -26,6 +26,7 @@ public class MSSolution : AsyncInitializable
     protected ConcurrentList<MSProject> ProjectsList => (ConcurrentList<MSProject>)Projects;
 
     public MSSolution(string solutionFile)
+        : base([])
     {
         SolutionFilePath = solutionFile;
         SolutionDir = Path.GetDirectoryName(solutionFile);
@@ -41,7 +42,6 @@ public class MSSolution : AsyncInitializable
 
     protected override async Task OnInitializeAsync()
     {
-        await base.OnInitializeAsync();
         await GetProjectsListAsync();
     }
 

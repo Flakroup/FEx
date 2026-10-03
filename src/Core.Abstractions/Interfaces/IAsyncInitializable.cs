@@ -14,5 +14,5 @@ public interface IAsyncInitializable : IDisposable, INotifyPropertyChanged
 
     Task InitializeAsync();
     void BeginInitialization(bool waitSynchronouslyForInitialization = false);
-    void Reset();
+    Task ResetAsync();
 }

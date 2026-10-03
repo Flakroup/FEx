@@ -40,7 +40,7 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
     protected PooledDbService(IScopeProvider scopeProvider,
                               ResilientTransaction transaction,
                               IFExDbConfig dbConfig,
-                              params IAsyncInitializable[] dependencies)
+                              IAsyncInitializable[] dependencies)
         : base(dependencies)
     {
         _scopeProvider = scopeProvider;
@@ -230,8 +230,6 @@ public abstract class PooledDbService<TDbContext> : AsyncInitializable, IPooledD
 
     protected override async Task OnInitializeAsync()
     {
-        await base.OnInitializeAsync();
-
         var result = await SQLConnectionHelper.CheckMasterDbConnectionAsync(_dbConfig);
 
         if (result && _dbConfig.RunMigrations)

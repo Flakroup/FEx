@@ -29,6 +29,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="FEx.EFCore.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />
 		<ProjectReference Include="..\Core\FEx.Core.csproj" />
 		<ProjectReference Include="..\FEx.Json\FEx.Json.csproj" />

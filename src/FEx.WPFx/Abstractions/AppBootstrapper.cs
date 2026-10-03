@@ -33,7 +33,8 @@ public abstract class AppBootstrapper<TContainer> : Application
     private IExceptionHandler? _exceptionHandler;
     private IStatusService? _statusService;
     private IAppConfig? _appConfig;
-    private readonly Host _host;
+    private readonly Surface _surface;
+    private readonly DesktopStartupHost<Window, ShutdownMode> _host;
 
     // The services below are resolved by the startup flow in OnStartup and are valid only after the container was
     // built, i.e. from OnActivation onwards. Reading them earlier (for example in a subclass constructor) throws.
@@ -50,7 +51,8 @@ public abstract class AppBootstrapper<TContainer> : Application
 
     protected AppBootstrapper()
     {
-        _host = new Host(this);
+        _surface = new Surface(this);
+        _host = new DesktopStartupHost<Window, ShutdownMode>(_surface);
 
         AppDomain.CurrentDomain.UnhandledException += AppDomainUnhandledException;
         DispatcherUnhandledException += OnAppDispatcherUnhandledException;
@@ -87,9 +89,10 @@ public abstract class AppBootstrapper<TContainer> : Application
     protected virtual void HandleException(Exception exception) => exception.HandleException(true, true);
 
     /// <summary>
-    /// Handles a startup failure before the service container exists (a rejected configuration such as
+    /// Reports a startup failure that happened before the service container exists (a rejected configuration such as
     /// <see cref="Application.StartupUri" />, or a failed container build), when <see cref="HandleException" /> cannot
-    /// rely on the container's exception handling. Writes to the trace output and shows a message box.
+    /// rely on the container's exception handling. Writes to the trace output and shows a message box. It runs first;
+    /// <see cref="HandleException" /> is then called as well, so crash reporting overridden there still sees the failure.
     /// </summary>
     protected virtual void HandleEarlyException(Exception exception)
     {
@@ -196,63 +199,63 @@ public abstract class AppBootstrapper<TContainer> : Application
 
     /// <summary>
     /// Starts the app: shows the optional startup window, awaits the container build without blocking the
-    /// dispatcher, then runs the startup hooks in order. A failure goes through <see cref="HandleException" /> and
-    /// exits with a non-zero code.
+    /// dispatcher, then runs the startup hooks in order. A failure goes through <see cref="HandleEarlyException" /> (only before the container exists),
+    /// then <see cref="HandleException" />, and exits with a non-zero code.
     /// </summary>
     /// <param name="e">A <see cref="StartupEventArgs" /> that contains the event data.</param>
 #pragma warning disable VSTHRD100 // async void is the only way to await inside the Application.OnStartup override; the host catches everything.
     protected sealed override async void OnStartup(StartupEventArgs e)
     {
-        _host.StartupArgs = e;
+        _surface.StartupArgs = e;
         await _host.RunAsync();
     }
 #pragma warning restore VSTHRD100
 
     private void RaiseStartup(StartupEventArgs e) => base.OnStartup(e);
 
-    /// <summary>Forwards the shared <see cref="DesktopStartupHost{TWindow,TShutdownMode}" /> primitives to the WPF <see cref="Application" />.</summary>
-    private sealed class Host(AppBootstrapper<TContainer> app) : DesktopStartupHost<Window, ShutdownMode>
+    /// <summary>One-line forwards from the shared startup flow to this WPF <see cref="Application" />.</summary>
+    private sealed class Surface(AppBootstrapper<TContainer> app) : IDesktopApp<Window, ShutdownMode>
     {
         internal StartupEventArgs StartupArgs { get; set; } = null!;
 
-        protected override ShutdownMode ShutdownMode
+        public Uri? StartupUri => app.StartupUri;
+
+        public ShutdownMode ShutdownMode
         {
             get => app.ShutdownMode;
             set => app.ShutdownMode = value;
         }
 
-        protected override ShutdownMode ExplicitShutdownMode => ShutdownMode.OnExplicitShutdown;
+        public ShutdownMode ExplicitShutdownMode => ShutdownMode.OnExplicitShutdown;
 
-        protected override Window? MainWindow
+        public Window? MainWindow
         {
             get => app.MainWindow;
             set => app.MainWindow = value;
         }
 
-        protected override bool HasStartupUri => app.StartupUri is not null;
-
-        protected override Window? CreateStartupWindow() => app.CreateStartupWindow();
+        public Window? CreateStartupWindow() => app.CreateStartupWindow();
 
 #pragma warning disable IDISP004 // intentional _=LogToHub pattern for scoped status logging
-        protected override Window? CreateMainWindow()
+        public Window? CreateMainWindow()
         {
             _ = app.LogToHub("Showing window");
             return app.CreateMainWindow();
         }
 #pragma warning restore IDISP004
 
-        protected override void Show(Window window) => window.Show();
+        public void Show(Window window) => window.Show();
 
-        protected override void Close(Window window) => window.Close();
+        public void Close(Window window) => window.Close();
 
-        protected override void OnMainWindowShown() => app.RaiseStartup(StartupArgs);
+        public void OnMainWindowShown() => app.RaiseStartup(StartupArgs);
 
-        protected override async Task InitializeContainerAsync() =>
+        public async Task InitializeContainerAsync() =>
             app._container = await FExServiceProvider.InitializeAsync<TContainer>();
 
-        protected override void SetMainThread() => FExCoreStatics.MainThreadContextProvider.SetMainThread();
+        public void SetMainThread() => FExCoreStatics.MainThreadContextProvider.SetMainThread();
 
-        protected override void PublishServices()
+        public void PublishServices()
         {
             app._appInfoProvider = FExServiceProvider.Get<IAppInfoProvider>();
             app._appConfig = FExServiceProvider.Get<IAppConfig>();
@@ -261,12 +264,12 @@ public abstract class AppBootstrapper<TContainer> : Application
             app._statusService = FExServiceProvider.Get<IStatusService>();
         }
 
-        protected override void OnActivation() => app.OnActivation();
+        public void OnActivation() => app.OnActivation();
 
-        protected override void EnsureSingleInstance() => app.EnsureSingleInstance();
+        public void EnsureSingleInstance() => app.EnsureSingleInstance();
 
 #pragma warning disable IDISP004 // intentional using(_=LogToHub) pattern for scoped status logging
-        protected override void InitializeComponents()
+        public void InitializeComponents()
         {
             using (_ = app.LogToHub("Initializing app"))
             {
@@ -276,32 +279,32 @@ public abstract class AppBootstrapper<TContainer> : Application
             }
         }
 
-        protected override void BeforeStartup()
+        public void BeforeStartup()
         {
             using (_ = app.LogToHub("Preparing app"))
                 app.BeforeStartup(StartupArgs);
         }
 
-        protected override void AfterServicesContainerBuild()
+        public void AfterServicesContainerBuild()
         {
             using (_ = app.LogToHub("Initializing app components"))
                 app.AfterServicesContainerBuild();
         }
 
-        protected override void AfterStartup()
+        public void AfterStartup()
         {
             using (_ = app.LogToHub("Finalizing startup"))
                 app.AfterStartup(StartupArgs);
         }
 #pragma warning restore IDISP004
 
-        protected override void ExitIfInitializationHasFailed() => app.ExitIfInitializationHasFailed();
+        public void ExitIfInitializationHasFailed() => app.ExitIfInitializationHasFailed();
 
-        protected override void HandleException(Exception exception) => app.HandleException(exception);
+        public void HandleEarlyException(Exception exception) => app.HandleEarlyException(exception);
 
-        protected override void HandleEarlyException(Exception exception) => app.HandleEarlyException(exception);
+        public void HandleException(Exception exception) => app.HandleException(exception);
 
-        protected override void RequestExit(int exitCode) => app.ExitApp(exitCode);
+        public void RequestExit(int exitCode) => app.ExitApp(exitCode);
     }
 
     protected override void OnExit(ExitEventArgs e)

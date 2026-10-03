@@ -4,17 +4,21 @@ using System.Threading.Tasks;
 namespace FEx.Common.Startup;
 
 /// <summary>
-/// UI-framework agnostic startup flow shared by the WPF and Avalonia bootstrap base classes. The bootstraps provide
-/// the framework primitives by overriding the steps; the order lives here, so it is testable without an <c>Application</c>.
+/// UI-framework agnostic startup flow shared by the WPF and Avalonia bootstrap base classes. The order lives here; the
+/// bootstraps provide the framework primitives by overriding the steps.
 /// <para>
-/// Order: <see cref="PrepareStartup" />, <see cref="SuspendShutdown" />, <see cref="ShowStartupWindow" />,
+/// Order: <see cref="PrepareStartup" />, <see cref="SetMainThread" /> (on whatever provider exists before the container,
+/// so a startup window can use the static dispatcher), <see cref="SuspendShutdown" />, <see cref="ShowStartupWindow" />,
 /// await <see cref="InitializeContainerAsync" />, <see cref="CloseStartupWindow" />, <see cref="RestoreShutdown" />
-/// (these two also run when the container build fails), then <see cref="SetMainThread" />, <see cref="PublishServices" />, <see cref="OnActivation" />,
-/// <see cref="EnsureSingleInstance" />, <see cref="InitializeComponents" />, <see cref="BeforeStartup" />,
-/// <see cref="AfterServicesContainerBuild" />, <see cref="ShowMainWindow" />, <see cref="AfterStartup" />,
-/// <see cref="ExitIfInitializationHasFailed" />. An exception goes to <see cref="HandleEarlyException" /> before the
-/// services are published and to <see cref="HandleException" /> afterwards; then
-/// <see cref="RequestExit" /> is called with <see cref="FailureExitCode" />.
+/// (these two also run when the container build fails), <see cref="SetMainThread" /> again (now on the container's own
+/// provider), <see cref="PublishServices" />, <see cref="OnActivation" />, <see cref="EnsureSingleInstance" />,
+/// <see cref="InitializeComponents" />, <see cref="BeforeStartup" />, <see cref="AfterServicesContainerBuild" />,
+/// <see cref="ShowMainWindow" />, <see cref="AfterStartup" />, <see cref="ExitIfInitializationHasFailed" />.
+/// </para>
+/// <para>
+/// An exception first goes to <see cref="HandleEarlyException" /> if it happened before the services were published,
+/// then always to <see cref="HandleException" />, and finally <see cref="RequestExit" /> is called with
+/// <see cref="FailureExitCode" />.
 /// </para>
 /// </summary>
 public abstract class StartupHost
@@ -31,6 +35,7 @@ public abstract class StartupHost
         try
         {
             PrepareStartup();
+            SetMainThread();
 
             SuspendShutdown();
             try
@@ -46,7 +51,7 @@ public abstract class StartupHost
                 RestoreShutdown();
             }
 
-            // First thing once the container exists, so it reaches the container's own provider and not the static fallback.
+            // Again, now that the container exists, so it reaches the container's own provider and not the static fallback.
             SetMainThread();
             PublishServices();
             servicesReady = true;
@@ -63,11 +68,10 @@ public abstract class StartupHost
         {
             failed = true;
 
-            // Before the services are published the container-based exception handling is not configured yet.
-            if (servicesReady)
-                HandleException(ex);
-            else
+            if (!servicesReady)
                 HandleEarlyException(ex);
+
+            HandleException(ex);
         }
         finally
         {
@@ -81,42 +85,42 @@ public abstract class StartupHost
     {
     }
 
-    /// <summary>Keeps the app alive while only the startup window exists.</summary>
+    /// <summary>Marks the current thread as the main thread; runs before the container (static fallback) and right after it.</summary>
+    protected virtual void SetMainThread()
+    {
+    }
+
     /// <summary>Keeps the app alive while only the startup window exists.</summary>
     protected abstract void SuspendShutdown();
 
     /// <summary>Shows the optional startup window; runs before the container exists.</summary>
     protected abstract void ShowStartupWindow();
+
     /// <summary>Builds the service container; awaited, never blocked on.</summary>
     protected abstract Task InitializeContainerAsync();
 
     /// <summary>Closes the startup window and releases the main-window slot it held.</summary>
-    /// <summary>Closes the startup window and releases the main-window slot it held.</summary>
     protected abstract void CloseStartupWindow();
 
-    /// <summary>Gives back the shutdown mode the app had before <see cref="SuspendShutdown" />.</summary>
     /// <summary>Gives back the shutdown mode the app had before <see cref="SuspendShutdown" />.</summary>
     protected abstract void RestoreShutdown();
 
     /// <summary>Creates and shows the main window after init (frameworks do not show a window assigned later).</summary>
-    /// <summary>Creates and shows the main window after init (frameworks do not show a window assigned later).</summary>
     protected abstract void ShowMainWindow();
 
-    /// <summary>Handles a failure once the services are published.</summary>
-    protected abstract void HandleException(Exception exception);
-    /// <summary>Requests process exit; called only on failure.</summary>
-    protected abstract void RequestExit(int exitCode);
-
     /// <summary>
-    /// Handles a failure before the services are published (for example a rejected configuration or a failed container
-    /// build). Must work without the container; the default forwards to <see cref="HandleException" />.
+    /// Reports a failure that happened before the services were published (a rejected configuration, a failed
+    /// container build). Must work without the container; runs before <see cref="HandleException" />.
     /// </summary>
-    protected virtual void HandleEarlyException(Exception exception) => HandleException(exception);
-
-    /// <summary>Marks the current thread as the main thread; runs right after the container is built.</summary>
-    protected virtual void SetMainThread()
+    protected virtual void HandleEarlyException(Exception exception)
     {
     }
+
+    /// <summary>Handles every startup failure; the app's overridable exception handling.</summary>
+    protected abstract void HandleException(Exception exception);
+
+    /// <summary>Requests process exit; called only on failure.</summary>
+    protected abstract void RequestExit(int exitCode);
 
     /// <summary>Resolves the services the app exposes to its subclasses.</summary>
     protected virtual void PublishServices()

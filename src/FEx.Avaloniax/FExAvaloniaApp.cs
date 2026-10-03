@@ -15,7 +15,7 @@ namespace FEx.Avaloniax;
 public abstract class FExAvaloniaApp<TContainer> : Application
     where TContainer : class, IFExContainer, IDisposable, new()
 {
-    private readonly Host _host;
+    private readonly DesktopStartupHost<Window, ShutdownMode> _host;
     private TContainer? _container;
 
     /// <summary>
@@ -27,7 +27,7 @@ public abstract class FExAvaloniaApp<TContainer> : Application
 
     protected FExAvaloniaApp()
     {
-        _host = new Host(this);
+        _host = new DesktopStartupHost<Window, ShutdownMode>(new Surface(this));
         AppDomain.CurrentDomain.UnhandledException += AppDomainUnhandledException;
     }
 
@@ -57,8 +57,8 @@ public abstract class FExAvaloniaApp<TContainer> : Application
     /// <summary>
     /// Shows the optional startup window, awaits the container build without blocking the UI thread, then runs
     /// <see cref="OnActivation" />, <see cref="AfterServicesContainerBuild" /> and shows the window from
-    /// <see cref="CreateMainWindow" />. A failure goes through <see cref="HandleCriticalException" /> and exits with a
-    /// non-zero code.
+    /// <see cref="CreateMainWindow" />. A failure goes through <see cref="HandleEarlyException" /> (only before the container exists),
+    /// then <see cref="HandleCriticalException" />, and exits with a non-zero code.
     /// </summary>
 #pragma warning disable VSTHRD100 // async void is the only way to await inside this override; the host catches everything.
     public sealed override async void OnFrameworkInitializationCompleted() => await _host.RunAsync();
@@ -66,13 +66,15 @@ public abstract class FExAvaloniaApp<TContainer> : Application
 
     private void RaiseInitializationCompleted() => base.OnFrameworkInitializationCompleted();
 
-    /// <summary>Forwards the shared <see cref="DesktopStartupHost{TWindow,TShutdownMode}" /> primitives to the Avalonia desktop lifetime.</summary>
-    private sealed class Host(FExAvaloniaApp<TContainer> app) : DesktopStartupHost<Window, ShutdownMode>
+    /// <summary>One-line forwards from the shared startup flow to the Avalonia desktop lifetime.</summary>
+    private sealed class Surface(FExAvaloniaApp<TContainer> app) : IDesktopApp<Window, ShutdownMode>
     {
         private IClassicDesktopStyleApplicationLifetime? Desktop => app.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
 
+        public Uri? StartupUri => null;
+
         // Non-desktop lifetimes (single view) have no shutdown mode and no windows: these primitives become no-ops.
-        protected override ShutdownMode ShutdownMode
+        public ShutdownMode ShutdownMode
         {
             get => Desktop?.ShutdownMode ?? default;
             set
@@ -82,9 +84,9 @@ public abstract class FExAvaloniaApp<TContainer> : Application
             }
         }
 
-        protected override ShutdownMode ExplicitShutdownMode => ShutdownMode.OnExplicitShutdown;
+        public ShutdownMode ExplicitShutdownMode => ShutdownMode.OnExplicitShutdown;
 
-        protected override Window? MainWindow
+        public Window? MainWindow
         {
             get => Desktop?.MainWindow;
             set
@@ -94,33 +96,63 @@ public abstract class FExAvaloniaApp<TContainer> : Application
             }
         }
 
-        protected override Window? CreateStartupWindow() => Desktop is null ? null : app.CreateStartupWindow();
+        public Window? CreateStartupWindow() => Desktop is null ? null : app.CreateStartupWindow();
 
-        protected override Window? CreateMainWindow() => Desktop is null ? null : app.CreateMainWindow();
+        public Window? CreateMainWindow() => Desktop is null ? null : app.CreateMainWindow();
 
-        protected override void Show(Window window) => window.Show();
+        public void Show(Window window) => window.Show();
 
-        protected override void Close(Window window) => window.Close();
+        public void Close(Window window) => window.Close();
 
-        protected override void OnMainWindowShown() => app.RaiseInitializationCompleted();
+        public void OnMainWindowShown() => app.RaiseInitializationCompleted();
 
-        protected override async Task InitializeContainerAsync() =>
+        public async Task InitializeContainerAsync() =>
             app._container = await FExServiceProvider.InitializeAsync<TContainer>();
 
-        protected override void OnActivation() => app.OnActivation();
+        public void SetMainThread()
+        {
+        }
 
-        protected override void AfterServicesContainerBuild() => app.AfterServicesContainerBuild();
+        public void PublishServices()
+        {
+        }
 
-        protected override void HandleException(Exception exception) => app.HandleCriticalException(exception);
+        public void OnActivation() => app.OnActivation();
 
-        protected override void HandleEarlyException(Exception exception) => app.HandleEarlyException(exception);
+        public void EnsureSingleInstance()
+        {
+        }
 
-        protected override void RequestExit(int exitCode) => app.ExitApp(exitCode);
+        public void InitializeComponents()
+        {
+        }
+
+        public void BeforeStartup()
+        {
+        }
+
+        public void AfterServicesContainerBuild() => app.AfterServicesContainerBuild();
+
+        public void AfterStartup()
+        {
+        }
+
+        public void ExitIfInitializationHasFailed()
+        {
+        }
+
+        public void HandleEarlyException(Exception exception) => app.HandleEarlyException(exception);
+
+        public void HandleException(Exception exception) => app.HandleCriticalException(exception);
+
+        public void RequestExit(int exitCode) => app.ExitApp(exitCode);
     }
 
     /// <summary>
-    /// Handles a startup failure before the service container exists, when <see cref="HandleCriticalException" /> cannot
-    /// rely on the container's exception handling. Writes to the trace output and standard error.
+    /// Reports a startup failure that happened before the service container exists, when
+    /// <see cref="HandleCriticalException" /> cannot rely on the container's exception handling. Writes to the trace
+    /// output and standard error. It runs first; <see cref="HandleCriticalException" /> is then called as well, so crash
+    /// reporting overridden there still sees the failure.
     /// </summary>
     protected virtual void HandleEarlyException(Exception exception)
     {

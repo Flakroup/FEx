@@ -9,155 +9,177 @@ namespace FEx.Common.Tests;
 
 public class StartupHostTests
 {
-    private readonly FakeDesktopHost _host = new();
+    private readonly FakeApp _app = new();
+
+    private DesktopStartupHost<FakeWindow, FakeMode> Host => new(_app);
 
     [Fact]
     public async Task Container_init_is_awaited_not_blocked_on()
     {
         var gate = new TaskCompletionSource<bool>();
-        _host.InitGate = gate.Task;
+        _app.InitGate = gate.Task;
 
-        var run = _host.RunAsync();
+        var run = Host.RunAsync();
 
         // Control returns to the caller while the container is still building; no hook ran yet.
         run.IsCompleted.ShouldBeFalse();
-        _host.Events.ShouldBe(["Suspend", "ShowStartupWindow", "Init"]);
+        _app.Events.ShouldBe(["SetMainThread", "CreateStartupWindow", "Init"]);
 
         gate.SetResult(true);
         await run;
 
-        _host.Events.ShouldContain("OnActivation");
+        _app.Events.ShouldContain("OnActivation");
     }
 
     [Fact]
     public async Task Steps_run_in_order_after_the_container_exists()
     {
-        await _host.RunAsync();
+        await Host.RunAsync();
 
-        _host.Events.ShouldBe(
+        _app.Events.ShouldBe(
         [
-            "Suspend", "ShowStartupWindow", "Init", "CloseStartupWindow", "Restore", "SetMainThread",
-            "PublishServices", "OnActivation", "EnsureSingleInstance", "InitializeComponents", "BeforeStartup",
-            "AfterServicesContainerBuild", "ShowMainWindow", "MainWindowShown", "AfterStartup", "ExitIfFailed"
+            "SetMainThread", "CreateStartupWindow", "Init", "SetMainThread", "PublishServices", "OnActivation",
+            "EnsureSingleInstance", "InitializeComponents", "BeforeStartup", "AfterServicesContainerBuild",
+            "CreateMainWindow", "OnMainWindowShown", "AfterStartup", "ExitIfFailed"
         ]);
-        _host.ExitCodes.ShouldBeEmpty();
+        _app.ExitCodes.ShouldBeEmpty();
     }
 
     [Fact]
-    public async Task Main_thread_is_set_right_after_the_container_and_before_any_hook()
+    public async Task Main_thread_is_set_before_the_startup_window_and_again_right_after_the_container()
     {
-        await _host.RunAsync();
+        await Host.RunAsync();
 
-        var setMainThread = _host.Events.IndexOf("SetMainThread");
-        setMainThread.ShouldBeGreaterThan(_host.Events.IndexOf("Init"));
-        setMainThread.ShouldBeLessThan(_host.Events.IndexOf("PublishServices"));
+        var calls = _app.Events.FindAll(e => e == "SetMainThread").Count;
+        calls.ShouldBe(2);
+        _app.Events.IndexOf("SetMainThread").ShouldBeLessThan(_app.Events.IndexOf("CreateStartupWindow"));
+        _app.Events.LastIndexOf("SetMainThread").ShouldBeGreaterThan(_app.Events.IndexOf("Init"));
+        _app.Events.LastIndexOf("SetMainThread").ShouldBeLessThan(_app.Events.IndexOf("PublishServices"));
+    }
+
+    [Fact]
+    public async Task Startup_window_can_use_main_thread_services_because_the_fallback_main_thread_is_set()
+    {
+        _app.StartupWindowNeedsMainThread = true;
+
+        await Host.RunAsync();
+
+        _app.ExitCodes.ShouldBeEmpty();
+        _app.Shown.ShouldContain(_app.StartupWindowInstance);
     }
 
     [Fact]
     public async Task Main_window_is_not_created_while_init_is_pending_and_is_shown_after_it()
     {
         var gate = new TaskCompletionSource<bool>();
-        _host.InitGate = gate.Task;
+        _app.InitGate = gate.Task;
 
-        var run = _host.RunAsync();
-        _host.Shown.ShouldNotContain(_host.MainWindowInstance);
+        var run = Host.RunAsync();
+        _app.Shown.ShouldNotContain(_app.MainWindowInstance);
+        _app.Events.ShouldNotContain("CreateMainWindow");
 
         gate.SetResult(true);
         await run;
 
-        _host.Shown.ShouldContain(_host.MainWindowInstance);
-        _host.MainWindowSlot.ShouldBe(_host.MainWindowInstance);
+        _app.Shown.ShouldContain(_app.MainWindowInstance);
+        _app.MainWindow.ShouldBe(_app.MainWindowInstance);
     }
 
     [Fact]
-    public async Task Startup_window_is_shown_before_init_closed_after_and_does_not_keep_the_main_window_slot()
+    public async Task Startup_window_is_shown_before_init_and_closed_after()
     {
         var gate = new TaskCompletionSource<bool>();
-        _host.InitGate = gate.Task;
+        _app.InitGate = gate.Task;
 
-        var run = _host.RunAsync();
+        var run = Host.RunAsync();
 
-        _host.Shown.ShouldBe([_host.StartupWindowInstance]);
-        _host.MainWindowSlot.ShouldBe(_host.StartupWindowInstance);
-        _host.Closed.ShouldBeEmpty();
+        _app.Shown.ShouldBe([_app.StartupWindowInstance]);
+        _app.Closed.ShouldBeEmpty();
 
         gate.SetResult(true);
         await run;
 
-        _host.Closed.ShouldBe([_host.StartupWindowInstance]);
-        _host.MainWindowSlot.ShouldBe(_host.MainWindowInstance);
+        _app.Closed.ShouldBe([_app.StartupWindowInstance]);
+    }
+
+    [Fact]
+    public async Task Startup_window_does_not_keep_the_main_window_slot_when_the_app_shows_no_main_window()
+    {
+        _app.CreateNoMainWindow = true;
+
+        await Host.RunAsync();
+
+        _app.Shown.ShouldBe([_app.StartupWindowInstance]);
+        _app.MainWindow.ShouldBeNull();
     }
 
     [Fact]
     public async Task Shutdown_is_explicit_while_init_runs_and_a_mode_set_by_a_hook_survives()
     {
         var gate = new TaskCompletionSource<bool>();
-        _host.InitGate = gate.Task;
-        _host.ModeSetByHook = FakeMode.OnMainWindowClose;
+        _app.InitGate = gate.Task;
+        _app.ModeSetByHook = FakeMode.OnMainWindowClose;
 
-        var run = _host.RunAsync();
-        _host.Mode.ShouldBe(FakeMode.Explicit);
+        var run = Host.RunAsync();
+        _app.ShutdownMode.ShouldBe(FakeMode.Explicit);
 
         gate.SetResult(true);
         await run;
 
-        _host.Mode.ShouldBe(FakeMode.OnMainWindowClose);
+        _app.ShutdownMode.ShouldBe(FakeMode.OnMainWindowClose);
     }
 
     [Fact]
     public async Task Configured_shutdown_mode_is_restored_when_no_hook_changes_it()
     {
-        _host.Mode = FakeMode.OnLastWindowClose;
+        _app.ShutdownMode = FakeMode.OnLastWindowClose;
 
-        await _host.RunAsync();
+        await Host.RunAsync();
 
-        _host.Mode.ShouldBe(FakeMode.OnLastWindowClose);
+        _app.ShutdownMode.ShouldBe(FakeMode.OnLastWindowClose);
     }
 
     [Fact]
-    public async Task Failed_init_closes_the_startup_window_restores_shutdown_and_exits_non_zero()
+    public async Task Failed_init_closes_the_startup_window_restores_shutdown_and_reaches_both_handlers_then_exits_non_zero()
     {
         var failure = new InvalidOperationException("boom");
-        _host.InitGate = Task.FromException(failure);
-        _host.Mode = FakeMode.OnLastWindowClose;
+        _app.InitGate = Task.FromException(failure);
+        _app.ShutdownMode = FakeMode.OnLastWindowClose;
 
-        await _host.RunAsync();
+        await Host.RunAsync();
 
-        _host.EarlyHandled.ShouldBe([failure]);
-        _host.Handled.ShouldBeEmpty();
-        _host.ExitCodes.ShouldBe([1]);
-        _host.Closed.ShouldBe([_host.StartupWindowInstance]);
-        _host.Mode.ShouldBe(FakeMode.OnLastWindowClose);
-        _host.Events.ShouldNotContain("PublishServices");
+        // Early sink first, then the overridable handler, so crash reporting there still sees the failure.
+        _app.Handlers.ShouldBe(["Early:boom", "Handle:boom"]);
+        _app.ExitCodes.ShouldBe([1]);
+        _app.Closed.ShouldBe([_app.StartupWindowInstance]);
+        _app.ShutdownMode.ShouldBe(FakeMode.OnLastWindowClose);
+        _app.Events.ShouldNotContain("PublishServices");
     }
 
     [Fact]
-    public async Task Startup_uri_is_rejected_before_any_window_or_container_and_reaches_the_container_free_handler()
+    public async Task Startup_uri_is_rejected_before_any_window_or_container()
     {
-        _host.StartupUri = true;
+        _app.StartupUri = new Uri("MainWindow.xaml", UriKind.Relative);
 
-        await _host.RunAsync();
+        await Host.RunAsync();
 
-        _host.EarlyHandled.ShouldHaveSingleItem().Message.ShouldContain("StartupUri");
-        _host.Handled.ShouldBeEmpty();
-        _host.ExitCodes.ShouldBe([1]);
-        _host.Events.ShouldBeEmpty();
-        _host.Shown.ShouldBeEmpty();
+        _app.Handlers.ShouldBe(["Early:" + _app.LastMessage, "Handle:" + _app.LastMessage]);
+        _app.LastMessage.ShouldContain("StartupUri");
+        _app.ExitCodes.ShouldBe([1]);
+        _app.Events.ShouldBeEmpty();
+        _app.Shown.ShouldBeEmpty();
     }
 
     [Fact]
-    public async Task Hook_failure_after_the_services_are_published_uses_the_regular_handler_and_exits_non_zero()
+    public async Task Hook_failure_after_the_services_are_published_skips_the_early_sink_and_exits_non_zero()
     {
-        var failure = new InvalidOperationException("boom");
-        _host.FailAt = "BeforeStartup";
-        _host.Failure = failure;
+        _app.FailAt = "BeforeStartup";
 
-        await _host.RunAsync();
+        await Host.RunAsync();
 
-        _host.Handled.ShouldBe([failure]);
-        _host.EarlyHandled.ShouldBeEmpty();
-        _host.ExitCodes.ShouldBe([1]);
-        _host.Events.ShouldNotContain("ShowMainWindow");
+        _app.Handlers.ShouldBe(["Handle:boom"]);
+        _app.ExitCodes.ShouldBe([1]);
+        _app.Events.ShouldNotContain("CreateMainWindow");
     }
 
     private enum FakeMode
@@ -173,75 +195,57 @@ public class StartupHostTests
     }
 
     // Behaves like WPF: the first window shown takes the main window slot.
-    private sealed class FakeDesktopHost : DesktopStartupHost<FakeWindow, FakeMode>
+    private sealed class FakeApp : IDesktopApp<FakeWindow, FakeMode>
     {
+        private bool _mainThreadSet;
+
         public List<string> Events { get; } = [];
-        public List<Exception> Handled { get; } = [];
-        public List<Exception> EarlyHandled { get; } = [];
+        public List<string> Handlers { get; } = [];
         public List<int> ExitCodes { get; } = [];
         public List<FakeWindow> Shown { get; } = [];
         public List<FakeWindow> Closed { get; } = [];
         public FakeWindow StartupWindowInstance { get; } = new("startup");
         public FakeWindow MainWindowInstance { get; } = new("main");
-        public FakeWindow? MainWindowSlot { get; private set; }
-        public FakeMode Mode { get; set; } = FakeMode.OnLastWindowClose;
         public FakeMode? ModeSetByHook { get; set; }
-        public bool StartupUri { get; set; }
+        public bool CreateNoMainWindow { get; set; }
+        public bool StartupWindowNeedsMainThread { get; set; }
         public Task InitGate { get; set; } = Task.CompletedTask;
         public string? FailAt { get; set; }
-        public Exception? Failure { get; set; }
+        public string LastMessage { get; private set; } = "";
 
-        protected override FakeMode ShutdownMode
+        public Uri? StartupUri { get; set; }
+        public FakeMode ShutdownMode { get; set; } = FakeMode.OnLastWindowClose;
+        public FakeMode ExplicitShutdownMode => FakeMode.Explicit;
+        public FakeWindow? MainWindow { get; set; }
+
+        public FakeWindow? CreateStartupWindow()
         {
-            get => Mode;
-            set => Mode = value;
+            Events.Add("CreateStartupWindow");
+
+            // Like an FExWindow touching the static dispatcher, which throws while no main thread is set.
+            if (StartupWindowNeedsMainThread && !_mainThreadSet)
+                throw new ArgumentNullException("mainThread");
+
+            return StartupWindowInstance;
         }
 
-        protected override FakeMode ExplicitShutdownMode => FakeMode.Explicit;
-
-        protected override FakeWindow? MainWindow
+        public FakeWindow? CreateMainWindow()
         {
-            get => MainWindowSlot;
-            set => MainWindowSlot = value;
+            Events.Add("CreateMainWindow");
+            return CreateNoMainWindow ? null : MainWindowInstance;
         }
 
-        protected override bool HasStartupUri => StartupUri;
-        protected override FakeWindow? CreateStartupWindow() => StartupWindowInstance;
-        protected override FakeWindow? CreateMainWindow()
-        {
-            Events.Add("ShowMainWindow");
-            return MainWindowInstance;
-        }
-
-        protected override void Show(FakeWindow window)
+        public void Show(FakeWindow window)
         {
             Shown.Add(window);
-            MainWindowSlot ??= window;
+            MainWindow ??= window;
         }
 
-        protected override void Close(FakeWindow window) => Closed.Add(window);
-        protected override void OnMainWindowShown() => Step("MainWindowShown");
+        public void Close(FakeWindow window) => Closed.Add(window);
 
-        private void Step(string name)
-        {
-            Events.Add(name);
-            if (name == FailAt)
-                throw Failure!;
-        }
+        public void OnMainWindowShown() => Step("OnMainWindowShown");
 
-        protected override void SuspendShutdown()
-        {
-            Events.Add("Suspend");
-            base.SuspendShutdown();
-        }
-
-        protected override void ShowStartupWindow()
-        {
-            Events.Add("ShowStartupWindow");
-            base.ShowStartupWindow();
-        }
-
-        protected override async Task InitializeContainerAsync()
+        public async Task InitializeContainerAsync()
         {
             Events.Add("Init");
 #pragma warning disable VSTHRD003 // the gate is owned by the test
@@ -249,37 +253,48 @@ public class StartupHostTests
 #pragma warning restore VSTHRD003
         }
 
-        protected override void CloseStartupWindow()
+        public void SetMainThread()
         {
-            Events.Add("CloseStartupWindow");
-            base.CloseStartupWindow();
+            Events.Add("SetMainThread");
+            _mainThreadSet = true;
         }
 
-        protected override void RestoreShutdown()
-        {
-            Events.Add("Restore");
-            base.RestoreShutdown();
-        }
+        public void PublishServices() => Step("PublishServices");
+        public void OnActivation() => Step("OnActivation");
+        public void EnsureSingleInstance() => Step("EnsureSingleInstance");
 
-        protected override void SetMainThread() => Step("SetMainThread");
-        protected override void PublishServices() => Step("PublishServices");
-        protected override void OnActivation() => Step("OnActivation");
-        protected override void EnsureSingleInstance() => Step("EnsureSingleInstance");
-
-        protected override void InitializeComponents()
+        public void InitializeComponents()
         {
             Step("InitializeComponents");
 
             if (ModeSetByHook is { } mode)
-                Mode = mode;
+                ShutdownMode = mode;
         }
 
-        protected override void BeforeStartup() => Step("BeforeStartup");
-        protected override void AfterServicesContainerBuild() => Step("AfterServicesContainerBuild");
-        protected override void AfterStartup() => Step("AfterStartup");
-        protected override void ExitIfInitializationHasFailed() => Step("ExitIfFailed");
-        protected override void HandleException(Exception exception) => Handled.Add(exception);
-        protected override void HandleEarlyException(Exception exception) => EarlyHandled.Add(exception);
-        protected override void RequestExit(int exitCode) => ExitCodes.Add(exitCode);
+        public void BeforeStartup() => Step("BeforeStartup");
+        public void AfterServicesContainerBuild() => Step("AfterServicesContainerBuild");
+        public void AfterStartup() => Step("AfterStartup");
+        public void ExitIfInitializationHasFailed() => Step("ExitIfFailed");
+
+        public void HandleEarlyException(Exception exception)
+        {
+            LastMessage = exception.Message;
+            Handlers.Add("Early:" + exception.Message);
+        }
+
+        public void HandleException(Exception exception)
+        {
+            LastMessage = exception.Message;
+            Handlers.Add("Handle:" + exception.Message);
+        }
+
+        public void RequestExit(int exitCode) => ExitCodes.Add(exitCode);
+
+        private void Step(string name)
+        {
+            Events.Add(name);
+            if (name == FailAt)
+                throw new InvalidOperationException("boom");
+        }
     }
 }

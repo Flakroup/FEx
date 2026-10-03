@@ -1,76 +1,52 @@
 using System;
+using System.Threading.Tasks;
 
 namespace FEx.Common.Startup;
 
 /// <summary>
-/// The window handling every desktop UI framework needs during startup, written once and driven through a few
-/// framework primitives: the startup window while the container builds, the shutdown mode while it is the only window,
+/// The startup flow for a desktop app, driven through an <see cref="IDesktopApp{TWindow,TShutdownMode}" />: the startup
+/// window while the container builds, the shutdown mode while it is the only window, the <c>StartupUri</c> rejection,
 /// and the main window created and shown after init.
 /// </summary>
 /// <typeparam name="TWindow">The framework's window type.</typeparam>
 /// <typeparam name="TShutdownMode">The framework's shutdown mode type.</typeparam>
-public abstract class DesktopStartupHost<TWindow, TShutdownMode> : StartupHost
+/// <param name="app">The app surface the flow drives.</param>
+public sealed class DesktopStartupHost<TWindow, TShutdownMode>(IDesktopApp<TWindow, TShutdownMode> app) : StartupHost
     where TWindow : class
 {
     private TWindow? _startupWindow;
     private TShutdownMode _configuredShutdownMode = default!;
 
-    /// <summary>The app's shutdown mode.</summary>
-    protected abstract TShutdownMode ShutdownMode { get; set; }
-
-    /// <summary>The shutdown mode that keeps the app alive when windows close.</summary>
-    protected abstract TShutdownMode ExplicitShutdownMode { get; }
-
-    /// <summary>The window the framework treats as the app's main window.</summary>
-    protected abstract TWindow? MainWindow { get; set; }
-
-    /// <summary>Creates the optional startup window; runs before the container exists.</summary>
-    protected abstract TWindow? CreateStartupWindow();
-
-    /// <summary>Creates the main window; runs after the container is built and all hooks ran.</summary>
-    protected abstract TWindow? CreateMainWindow();
-
-    /// <summary>Shows a window.</summary>
-    protected abstract void Show(TWindow window);
-
-    /// <summary>Closes a window.</summary>
-    protected abstract void Close(TWindow window);
-
-    /// <summary>
-    /// Whether the app declares a framework-loaded startup document (WPF <c>StartupUri</c>); such a document would be
-    /// loaded as soon as the async startup first yields, before the container exists, so it is rejected.
-    /// </summary>
-    protected virtual bool HasStartupUri => false;
-
-    /// <summary>Runs once the main window (if any) is shown, e.g. to raise the framework's startup event.</summary>
-    protected virtual void OnMainWindowShown()
-    {
-    }
-
     /// <inheritdoc />
     protected override void PrepareStartup()
     {
-        if (HasStartupUri)
+        if (app.StartupUri is not null)
             throw new InvalidOperationException(
                 "StartupUri is not supported: the framework would load it before the service container is built. "
                 + "Remove it from App.xaml and return the main window from CreateMainWindow().");
     }
 
     /// <inheritdoc />
+    protected override void SetMainThread() => app.SetMainThread();
+
+    /// <inheritdoc />
     protected override void SuspendShutdown()
     {
-        _configuredShutdownMode = ShutdownMode;
-        ShutdownMode = ExplicitShutdownMode;
+        _configuredShutdownMode = app.ShutdownMode;
+        app.ShutdownMode = app.ExplicitShutdownMode;
     }
 
     /// <inheritdoc />
     protected override void ShowStartupWindow()
     {
-        _startupWindow = CreateStartupWindow();
+        _startupWindow = app.CreateStartupWindow();
 
         if (_startupWindow is not null)
-            Show(_startupWindow);
+            app.Show(_startupWindow);
     }
+
+    /// <inheritdoc />
+    protected override Task InitializeContainerAsync() => app.InitializeContainerAsync();
 
     /// <inheritdoc />
     protected override void CloseStartupWindow()
@@ -78,27 +54,60 @@ public abstract class DesktopStartupHost<TWindow, TShutdownMode> : StartupHost
         if (_startupWindow is null)
             return;
 
-        Close(_startupWindow);
+        app.Close(_startupWindow);
 
         // The first window created becomes the main window; the startup window must not keep that slot.
-        if (ReferenceEquals(MainWindow, _startupWindow))
-            MainWindow = null;
+        if (ReferenceEquals(app.MainWindow, _startupWindow))
+            app.MainWindow = null;
 
         _startupWindow = null;
     }
 
     /// <inheritdoc />
-    protected override void RestoreShutdown() => ShutdownMode = _configuredShutdownMode;
+    protected override void RestoreShutdown() => app.ShutdownMode = _configuredShutdownMode;
 
     /// <inheritdoc />
     protected override void ShowMainWindow()
     {
-        if (CreateMainWindow() is { } mainWindow)
+        if (app.CreateMainWindow() is { } mainWindow)
         {
-            MainWindow = mainWindow;
-            Show(mainWindow);
+            app.MainWindow = mainWindow;
+            app.Show(mainWindow);
         }
 
-        OnMainWindowShown();
+        app.OnMainWindowShown();
     }
+
+    /// <inheritdoc />
+    protected override void PublishServices() => app.PublishServices();
+
+    /// <inheritdoc />
+    protected override void OnActivation() => app.OnActivation();
+
+    /// <inheritdoc />
+    protected override void EnsureSingleInstance() => app.EnsureSingleInstance();
+
+    /// <inheritdoc />
+    protected override void InitializeComponents() => app.InitializeComponents();
+
+    /// <inheritdoc />
+    protected override void BeforeStartup() => app.BeforeStartup();
+
+    /// <inheritdoc />
+    protected override void AfterServicesContainerBuild() => app.AfterServicesContainerBuild();
+
+    /// <inheritdoc />
+    protected override void AfterStartup() => app.AfterStartup();
+
+    /// <inheritdoc />
+    protected override void ExitIfInitializationHasFailed() => app.ExitIfInitializationHasFailed();
+
+    /// <inheritdoc />
+    protected override void HandleEarlyException(Exception exception) => app.HandleEarlyException(exception);
+
+    /// <inheritdoc />
+    protected override void HandleException(Exception exception) => app.HandleException(exception);
+
+    /// <inheritdoc />
+    protected override void RequestExit(int exitCode) => app.RequestExit(exitCode);
 }

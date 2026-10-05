@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace FEx.Json.Helpers;
+namespace FEx.Json.Abstractions.Helpers;
 
 public sealed class DIMeta : InitializeOnlyModule
 {

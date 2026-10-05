@@ -1,4 +1,4 @@
-using FEx.Json.Helpers;
+using FEx.Json.Abstractions.Helpers;
 using FEx.Json.Resolvers;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Serialization;
@@ -9,6 +9,7 @@ using Xunit;
 
 namespace FEx.Json.Tests;
 
+[Collection("FExServiceProvider")] // asserts on the uninitialized static provider
 public sealed class DIContractResolverTests
 {
     public interface IFoo

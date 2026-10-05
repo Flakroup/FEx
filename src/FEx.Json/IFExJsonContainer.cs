@@ -1,4 +1,5 @@
-using FEx.Json.Helpers;
+using FEx.Json.Abstractions;
+using FEx.Json.Abstractions.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using StrongInject;
@@ -6,6 +7,6 @@ using StrongInject;
 namespace FEx.Json;
 
 public interface IFExJsonContainer : IContainer<FExJson>, IContainer<DIMeta>, IContainer<IContractResolver>,
-    IContainer<JsonSerializerSettings>
+    IContainer<JsonSerializerSettings>, IContainer<IFExJsonSerializer>
 {
 }

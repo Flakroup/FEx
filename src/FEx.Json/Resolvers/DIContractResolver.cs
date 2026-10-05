@@ -1,5 +1,5 @@
 using FEx.DependencyInjection.Abstractions;
-using FEx.Json.Helpers;
+using FEx.Json.Abstractions.Helpers;
 using Newtonsoft.Json.Serialization;
 using System;
 

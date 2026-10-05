@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>Library-neutral JSON serializer abstraction (IFExJsonSerializer, FExJsonException) and the DI registration metadata shared by the Newtonsoft.Json and System.Text.Json implementations</Description>
+		<!-- The trim/AOT analyzers run on the net10.0 build so nothing here pulls reflection in unannounced. -->
+		<IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', '$(TargetFrameworkId)'))">true</IsAotCompatible>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

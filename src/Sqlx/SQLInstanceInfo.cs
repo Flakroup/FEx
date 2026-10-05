@@ -3,6 +3,7 @@ using FEx.Core.Abstractions.Extensions;
 using FEx.Sqlx.Abstractions;
 using FEx.Sqlx.Enums;
 using FEx.Sqlx.Extensions;
+using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using System;
 using System.Collections.Generic;
@@ -69,9 +70,26 @@ public class SQLInstanceInfo : ISqlInstanceInfo
     public string? SqlCharSetName { get; protected set; }
     public short? SqlSortOrder { get; protected set; }
     public string? SqlSortOrderName { get; protected set; }
-    public virtual SqlLoginMode LoginMode => Server is null ? SqlLoginMode.Unknown : Server.LoginMode.MapByValue(SqlLoginMode.Unknown);
+    /// <summary>
+    /// The authentication mode of the instance, or <see cref="SqlLoginMode.Unknown"/> when it cannot be read (no SMO
+    /// server, or the instance is unreachable). The outcome is cached so a dead instance is probed only once.
+    /// </summary>
+    public SqlLoginMode LoginMode => _loginMode ??= Server is { } server
+        ? ReadLoginMode(() => server.LoginMode)
+        : SqlLoginMode.Unknown;
 
-    protected Server? Server { get; set; }
+    private Server? _server;
+    private SqlLoginMode? _loginMode;
+
+    protected Server? Server
+    {
+        get => _server;
+        set
+        {
+            _server = value;
+            _loginMode = null;
+        }
+    }
 
 #if NETFRAMEWORK
     public SQLInstanceInfo(ServerInstance serverInstance, ManagedComputer comp)
@@ -87,6 +105,24 @@ public class SQLInstanceInfo : ISqlInstanceInfo
     public SQLInstanceInfo(string instanceName)
     {
         SQLInstance = instanceName;
+    }
+
+    // Already-resolved login mode, for tests that must not reach a server.
+    internal SQLInstanceInfo(string instanceName, SqlLoginMode loginMode)
+        : this(instanceName) =>
+        _loginMode = loginMode;
+
+    // An unreachable instance makes SMO throw on first access; report Unknown instead of faulting the caller.
+    internal static SqlLoginMode ReadLoginMode(Func<ServerLoginMode> read)
+    {
+        try
+        {
+            return read().MapByValue(SqlLoginMode.Unknown);
+        }
+        catch (ConnectionFailureException)
+        {
+            return SqlLoginMode.Unknown;
+        }
     }
 
     public async Task<bool> LoadInfoAsync()
@@ -295,19 +331,19 @@ public class SQLInstanceInfo : ISqlInstanceInfo
                 () => GetServerEngineEdition((int?)Server?.EngineEdition));
 
             SafePropertySet(x => FilestreamConfiguredLevel = x,
-                () => (SqlFileStreamLevel?)GetInt(props, ServerProp.FilestreamConfiguredLevel));
+                () => GetInt(props, ServerProp.FilestreamConfiguredLevel)?.MapByValue(SqlFileStreamLevel.Unknown));
 
             SafePropertySet(x => FilestreamEffectiveLevel = x,
-                () => (SqlFileStreamLevel?)GetInt(props, ServerProp.FilestreamEffectiveLevel),
-                () => Server?.FilestreamLevel.MapByValue(SqlFileStreamLevel.Disabled));
+                () => GetInt(props, ServerProp.FilestreamEffectiveLevel)?.MapByValue(SqlFileStreamLevel.Unknown),
+                () => Server?.FilestreamLevel.MapByValue(SqlFileStreamLevel.Unknown));
 
             SafePropertySet(x => FilestreamShareName = x,
                 () => props.TryGetKeyValue(ServerProp.FilestreamShareName),
                 () => Server?.FilestreamShareName);
 
             SafePropertySet(x => HadrManagerStatus = x,
-                () => (SqlHadrManagerStatus?)GetInt(props, ServerProp.HadrManagerStatus),
-                () => Server?.HadrManagerStatus.MapByValue(SqlHadrManagerStatus.PendingCommunication));
+                () => GetInt(props, ServerProp.HadrManagerStatus)?.MapByValue(SqlHadrManagerStatus.Unknown),
+                () => Server?.HadrManagerStatus.MapByValue(SqlHadrManagerStatus.Unknown));
 
             SafePropertySet(x => InstanceDefaultBackupPath = x,
                 () => props.TryGetKeyValue(ServerProp.InstanceDefaultBackupPath));
@@ -341,7 +377,7 @@ public class SQLInstanceInfo : ISqlInstanceInfo
 
             SafePropertySet(x => IsIntegratedSecurityOnly = x,
                 () => GetBoolFromInt(props, ServerProp.IsIntegratedSecurityOnly),
-                () => Server?.LoginMode == ServerLoginMode.Integrated);
+                () => LoginMode == SqlLoginMode.Unknown ? null : LoginMode == SqlLoginMode.Integrated);
 
             SafePropertySet(x => IsLocalDB = x ?? false, () => GetBoolFromInt(props, ServerProp.IsLocalDB));
 

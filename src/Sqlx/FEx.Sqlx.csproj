@@ -17,6 +17,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="FEx.Sqlx.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Agnostics\FEx.Agnostics.csproj" />
         <ProjectReference Include="..\Core\FEx.Core.csproj" />
         <ProjectReference Include="..\FEx.Asyncx\FEx.Asyncx.csproj" />

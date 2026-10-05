@@ -29,9 +29,18 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
 
     public string? SQLInstance => SQLInstanceInfo?.SQLInstance;
 
+    private readonly Func<Task<IList<SQLInstanceInfo>>> _discoverInstances;
+
     public SqlDbHelper()
+        : this(GetSqlInstancesAsync)
+    {
+    }
+
+    // Seam for tests: the discovery source is injected so no machine-wide (WMI/SSRP) lookup is needed.
+    internal SqlDbHelper(Func<Task<IList<SQLInstanceInfo>>> discoverInstances)
         : base([])
     {
+        _discoverInstances = discoverInstances;
         BeginInitialization();
     }
 
@@ -242,9 +251,9 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
             : serverName;
     }
 
-    private static async Task<SQLInstanceInfo?> GetLatestSqlInstanceAsync()
+    private async Task<SQLInstanceInfo?> GetLatestSqlInstanceAsync()
     {
-        var sqlInstances = await GetSqlInstancesAsync();
+        var sqlInstances = await _discoverInstances();
         SQLInstanceInfo? sqlInstance = null;
 
         if (sqlInstances?.Count > 0)

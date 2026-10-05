@@ -169,6 +169,9 @@
     <Project Path="test/FEx.Offline.Tests/FEx.Offline.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.Sqlx.Tests/FEx.Sqlx.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.SecureStorage.Tests/FEx.SecureStorage.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>

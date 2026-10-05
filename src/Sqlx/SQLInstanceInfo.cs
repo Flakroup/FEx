@@ -1,7 +1,9 @@
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Core.Abstractions.Extensions;
+using FEx.Sqlx.Abstractions;
 using FEx.Sqlx.Enums;
 using FEx.Sqlx.Extensions;
+using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using System;
 using System.Collections.Generic;
@@ -18,7 +20,7 @@ namespace FEx.Sqlx;
 // Retained for backward compatibility; full migration tracked as tech debt.
 #pragma warning disable CS0618
 
-public class SQLInstanceInfo
+public class SQLInstanceInfo : ISqlInstanceInfo
 {
     public string SQLInstance { get; }
     public Version? BuildClrVersion { get; protected set; }
@@ -29,10 +31,10 @@ public class SQLInstanceInfo
     public string? Edition { get; protected set; }
     public string? EditionID { get; protected set; }
     public string? EngineEdition { get; protected set; }
-    public FileStreamEffectiveLevel? FilestreamConfiguredLevel { get; protected set; }
-    public FileStreamEffectiveLevel? FilestreamEffectiveLevel { get; protected set; }
+    public SqlFileStreamLevel? FilestreamConfiguredLevel { get; protected set; }
+    public SqlFileStreamLevel? FilestreamEffectiveLevel { get; protected set; }
     public string? FilestreamShareName { get; protected set; }
-    public HadrManagerStatus? HadrManagerStatus { get; protected set; }
+    public SqlHadrManagerStatus? HadrManagerStatus { get; protected set; }
     public string? InstanceDefaultBackupPath { get; protected set; }
     public string? InstanceDefaultDataPath { get; protected set; }
     public string? InstanceDefaultLogPath { get; protected set; }
@@ -68,9 +70,26 @@ public class SQLInstanceInfo
     public string? SqlCharSetName { get; protected set; }
     public short? SqlSortOrder { get; protected set; }
     public string? SqlSortOrderName { get; protected set; }
-    public ServerLoginMode LoginMode => Server?.LoginMode ?? ServerLoginMode.Unknown;
+    /// <summary>
+    /// The authentication mode of the instance, or <see cref="SqlLoginMode.Unknown"/> when it cannot be read (no SMO
+    /// server, or the instance is unreachable). The outcome is cached so a dead instance is probed only once.
+    /// </summary>
+    public SqlLoginMode LoginMode => _loginMode ??= Server is { } server
+        ? ReadLoginMode(() => server.LoginMode)
+        : SqlLoginMode.Unknown;
 
-    protected Server? Server { get; set; }
+    private Server? _server;
+    private SqlLoginMode? _loginMode;
+
+    protected Server? Server
+    {
+        get => _server;
+        set
+        {
+            _server = value;
+            _loginMode = null;
+        }
+    }
 
 #if NETFRAMEWORK
     public SQLInstanceInfo(ServerInstance serverInstance, ManagedComputer comp)
@@ -86,6 +105,24 @@ public class SQLInstanceInfo
     public SQLInstanceInfo(string instanceName)
     {
         SQLInstance = instanceName;
+    }
+
+    // Already-resolved login mode, for tests that must not reach a server.
+    internal SQLInstanceInfo(string instanceName, SqlLoginMode loginMode)
+        : this(instanceName) =>
+        _loginMode = loginMode;
+
+    // An unreachable instance makes SMO throw on first access; report Unknown instead of faulting the caller.
+    internal static SqlLoginMode ReadLoginMode(Func<ServerLoginMode> read)
+    {
+        try
+        {
+            return read().MapByValue(SqlLoginMode.Unknown);
+        }
+        catch (ConnectionFailureException)
+        {
+            return SqlLoginMode.Unknown;
+        }
     }
 
     public async Task<bool> LoadInfoAsync()
@@ -294,19 +331,19 @@ public class SQLInstanceInfo
                 () => GetServerEngineEdition((int?)Server?.EngineEdition));
 
             SafePropertySet(x => FilestreamConfiguredLevel = x,
-                () => (FileStreamEffectiveLevel?)GetInt(props, ServerProp.FilestreamConfiguredLevel));
+                () => GetInt(props, ServerProp.FilestreamConfiguredLevel)?.MapByValue(SqlFileStreamLevel.Unknown));
 
             SafePropertySet(x => FilestreamEffectiveLevel = x,
-                () => (FileStreamEffectiveLevel?)GetInt(props, ServerProp.FilestreamEffectiveLevel),
-                () => Server?.FilestreamLevel);
+                () => GetInt(props, ServerProp.FilestreamEffectiveLevel)?.MapByValue(SqlFileStreamLevel.Unknown),
+                () => Server?.FilestreamLevel.MapByValue(SqlFileStreamLevel.Unknown));
 
             SafePropertySet(x => FilestreamShareName = x,
                 () => props.TryGetKeyValue(ServerProp.FilestreamShareName),
                 () => Server?.FilestreamShareName);
 
             SafePropertySet(x => HadrManagerStatus = x,
-                () => (HadrManagerStatus?)GetInt(props, ServerProp.HadrManagerStatus),
-                () => Server?.HadrManagerStatus);
+                () => GetInt(props, ServerProp.HadrManagerStatus)?.MapByValue(SqlHadrManagerStatus.Unknown),
+                () => Server?.HadrManagerStatus.MapByValue(SqlHadrManagerStatus.Unknown));
 
             SafePropertySet(x => InstanceDefaultBackupPath = x,
                 () => props.TryGetKeyValue(ServerProp.InstanceDefaultBackupPath));
@@ -340,7 +377,7 @@ public class SQLInstanceInfo
 
             SafePropertySet(x => IsIntegratedSecurityOnly = x,
                 () => GetBoolFromInt(props, ServerProp.IsIntegratedSecurityOnly),
-                () => Server?.LoginMode == ServerLoginMode.Integrated);
+                () => LoginMode == SqlLoginMode.Unknown ? null : LoginMode == SqlLoginMode.Integrated);
 
             SafePropertySet(x => IsLocalDB = x ?? false, () => GetBoolFromInt(props, ServerProp.IsLocalDB));
 

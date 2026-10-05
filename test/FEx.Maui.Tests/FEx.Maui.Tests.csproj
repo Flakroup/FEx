@@ -6,8 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\PersistentStorage/FEx.PersistentStorage.csproj" />
-		<ProjectReference Include="..\..\src\PersistentStorage.Rx\FEx.PersistentStorage.Rx.csproj" />
+		<ProjectReference Include="..\..\src\FEx.Maui\FEx.Maui.csproj" />
 	</ItemGroup>
 
 </Project>

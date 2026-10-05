@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\FEx.AppSettings\FEx.AppSettings.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- app.config is the entry-assembly config System.Configuration.ConfigurationManager reads for the test host (the SDK copies it as FEx.AppSettings.Tests.dll.config). -->
+		<!-- Config of the FEx.AppSettings assembly itself: what MergeAppSettings merges from. -->
+		<None Include="FEx.AppSettings.dll.config" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+</Project>

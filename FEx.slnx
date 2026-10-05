@@ -166,6 +166,30 @@
     <Project Path="test/FEx.Platforms.Tests/FEx.Platforms.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
+    <Project Path="test/FEx.AppSettings.Tests/FEx.AppSettings.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.CLI.Tests/FEx.CLI.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.KeyVault.Tests/FEx.KeyVault.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.Sqlx.Tests/FEx.Sqlx.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.Telemetry.Tests/FEx.Telemetry.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.Imaging.Windows.Tests/FEx.Imaging.Windows.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.Maui.Tests/FEx.Maui.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.RESXx.Tests/FEx.RESXx.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.Offline.Tests/FEx.Offline.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>

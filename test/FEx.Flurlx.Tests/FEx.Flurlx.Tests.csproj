@@ -13,6 +13,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\FEx.Flurlx\FEx.Flurlx.csproj" />
+		<ProjectReference Include="..\..\src\FEx.Flurlx.Newtonsoft\FEx.Flurlx.Newtonsoft.csproj" />
 		<ProjectReference Include="..\..\src\Logging.Abstractions\FEx.Logging.Abstractions.csproj" />
 	</ItemGroup>
 

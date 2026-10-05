@@ -77,6 +77,54 @@ public sealed class CoverageGateTests
     }
 
     [Fact]
+    public void ExactFileExclusion_OnAFullyCoveredFile_FailsAsPaidOffDebt()
+    {
+        var report = Analyze(
+            Options(exclusions: ["src/Acme.Core/Money.cs"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 3)));
+
+        report.Failed.ShouldBeTrue();
+        var stale = report.StaleExclusions.ShouldHaveSingleItem();
+        stale.Path.ShouldBe("src/Acme.Core/Money.cs");
+        stale.Reason.ShouldBe(StaleReason.FileIsFullyCovered);
+        report.Files.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ExactFileExclusion_OnAPartiallyCoveredFile_DoesNotFail()
+    {
+        var report = Analyze(
+            Options(exclusions: ["src/Acme.Core/Money.cs"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)));
+
+        report.Failed.ShouldBeFalse();
+        report.StaleExclusions.ShouldBeEmpty();
+        report.Files.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ExactFileExclusion_CoveredOnlyByTheUnionOfReports_FailsAsPaidOffDebt()
+    {
+        var report = Analyze(
+            Options(exclusions: ["src/Acme.Core/Money.cs"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1), (2, 0)),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 0), (2, 4)));
+
+        report.StaleExclusions.ShouldHaveSingleItem().Reason.ShouldBe(StaleReason.FileIsFullyCovered);
+    }
+
+    [Fact]
+    public void DirectoryExclusion_OverFullyCoveredFiles_IsNotJudged()
+    {
+        var report = Analyze(
+            Options(exclusions: ["src/Acme.Core/Migrations"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Migrations\Initial.cs", (1, 1)));
+
+        report.Failed.ShouldBeFalse();
+        report.StaleExclusions.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void ExclusionOfADirectory_DoesNotSwallowASiblingWithTheSamePrefix()
     {
         // "Migrations" must not also exempt "MigrationsHelper.cs" - a prefix match on the raw string

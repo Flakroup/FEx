@@ -2,12 +2,13 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>$(WindowsTargetFrameworkIds)</TargetFrameworks>
+		<UseWPF>true</UseWPF>
 		<EnableWindowsTargeting>true</EnableWindowsTargeting>
-		<IsTestProject>true</IsTestProject>
+		<UseWindowsForms>true</UseWindowsForms>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\MSBuildx\FEx.MSBuildx.csproj" />
+		<ProjectReference Include="..\..\src\Imaging.Windows\FEx.Imaging.Windows.csproj" />
 	</ItemGroup>
 
 </Project>

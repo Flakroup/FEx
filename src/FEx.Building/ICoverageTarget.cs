@@ -45,7 +45,11 @@ public interface ICoverageTarget : ITestTarget
     /// </remarks>
     IReadOnlyList<string> CoverageOwnedProjectPrefixes => ["src"];
 
-    /// <summary>Root-relative files or subtrees exempt from the threshold. Each one needs a reason on record.</summary>
+    /// <summary>
+    /// Root-relative files or subtrees exempt from the threshold. Each one needs a reason on record. An entry
+    /// naming one exact file fails the gate once that file reaches 100%, so a list of debt can only shrink;
+    /// directory entries are not checked that way.
+    /// </summary>
     IReadOnlyList<string> CoverageExclusions => [];
 
     /// <summary>
@@ -153,6 +157,7 @@ public interface ICoverageTarget : ITestTarget
     {
         StaleReason.LineIsCovered => "the line is covered, so the marker excuses nothing - delete it",
         StaleReason.NothingToExclude => "no instrumented code on that line in this configuration",
+        StaleReason.FileIsFullyCovered => "the excluded file is fully covered now - delete its entry from the exclusions",
         StaleReason.NoReasonGiven => "no reason after the marker - an exemption nobody can review is not one",
         _ => reason.ToString(),
     };

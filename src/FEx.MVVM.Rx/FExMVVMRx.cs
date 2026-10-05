@@ -30,12 +30,9 @@ public class FExMvvmRx : FExInitializable
             .WithCoreServices()
             .BuildApp();
 
-#if NETFRAMEWORK
-            RxSchedulers.MainThreadScheduler = DispatcherScheduler.Current;
-#else
         if (RxSchedulers.MainThreadScheduler is DefaultScheduler)
             RxSchedulers.MainThreadScheduler = CurrentThreadScheduler.Instance;
-#endif
+
         RxSchedulers.TaskpoolScheduler = TaskPoolScheduler.Default;
     }
 }

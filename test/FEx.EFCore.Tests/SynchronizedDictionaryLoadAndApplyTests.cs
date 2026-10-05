@@ -1,22 +1,22 @@
 using DynamicData;
-using FEx.Agnostics.Abstractions.Interfaces;
-using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.EFCore.Collections;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
-using FEx.EFCore.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
 using Shouldly;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -30,7 +30,8 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
 {
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
     private readonly ServiceProvider _services;
-    private readonly ApplyDbService _dbService;
+    private readonly SqliteDbService<ApplyDbContext> _dbService;
+    private readonly WriteCounter _writes = new();
     private Action<ApplyDbContext>? _configureSavingContext;
 
     public SynchronizedDictionaryLoadAndApplyTests()
@@ -53,7 +54,16 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
                 Lines = [new() { Id = Guid.NewGuid(), Text = "l1" }],
                 Tags = [new() { Label = "t1", Detail = new() { Value = "d1" } }]
             });
-            setup.NoteDocs.Add(new() { Id = 1, Name = "original", Notes = [new() { Text = "n1" }] });
+            setup.NoteDocs.AddRange(new NoteDoc { Id = 1, Name = "original", Notes = [new() { Text = "n1" }] },
+                new NoteDoc
+                {
+                    Id = 2,
+                    Name = "duplicates",
+                    Notes = [new() { Text = "a" }, new() { Text = "a" }, new() { Text = "b" }]
+                });
+            setup.Nodes.Add(new() { Id = 1, Name = "root" });
+            setup.Items.Add(new() { Id = 1, Name = "item", Price = 10 });
+            setup.Entry(setup.Badges.Add(new() { Title = "badge" }).Entity).Property<int>("Id").CurrentValue = 1;
             setup.Animals.Add(new Dog { Id = 1, Name = "rex", Breed = "collie" });
             setup.SaveChanges();
         }
@@ -69,7 +79,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         });
 
         _services = services.BuildServiceProvider();
-        _dbService = new(new ScopeProvider(_services));
+        _dbService = new(_services);
     }
 
     public void Dispose()
@@ -300,23 +310,282 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         saved.Tags.Select(t => t.Label).OrderBy(t => t).ShouldBe(["t1", "t2"]);
     }
 
-    /// <summary>A cached value with nothing to change writes nothing and leaves the row as it is.</summary>
+    /// <summary>A cached value with nothing to change issues no write command and leaves the row as it is.</summary>
     [Fact]
     public async Task UnchangedValue_SavesWithoutWriting()
     {
         using var sut = new DocDictionary(_dbService);
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
+        var writesBefore = _writes.Count;
 
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+
+        (_writes.Count - writesBefore).ShouldBe(0);
+        doc.Name = "edited";
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+        (_writes.Count - writesBefore).ShouldBe(1);
+    }
+
+    /// <summary>An edited owned item is updated in place: its database-generated key survives.</summary>
+    [Fact]
+    public async Task EditedOwnedItem_KeepsItsRow()
+    {
+        using var sut = new DocDictionary(_dbService);
+        var doc = await LoadDocAsync();
+        sut.AddOrUpdateValue(doc);
+        var tagId = doc.Tags.ShouldHaveSingleItem().Id;
+        var lineId = doc.Lines.ShouldHaveSingleItem().Id;
+
+        doc.Tags[0].Label = "t1 edited";
+        doc.Lines[0].Text = "l1 edited";
         (await sut.SaveAsync(doc)).ShouldBeTrue();
 
         using var reader = CreateContext();
         var saved = await reader.Docs.SingleAsync(d => d.Id == 1, TestContext.Current.CancellationToken);
-        saved.Lines.Select(l => l.Text).ShouldBe(["l1"]);
-        saved.Tags.Select(t => t.Label).ShouldBe(["t1"]);
+        saved.Tags.ShouldHaveSingleItem().Id.ShouldBe(tagId);
+        saved.Tags[0].Label.ShouldBe("t1 edited");
+        saved.Lines.ShouldHaveSingleItem().Id.ShouldBe(lineId);
     }
 
-    private ApplyDbContext CreateContext() => new(_connection);
+    /// <summary>Unchanged shadow-keyed items keep their rows (and shadow keys) when another item is added.</summary>
+    [Fact]
+    public async Task UnchangedShadowKeyedItems_KeepTheirRows()
+    {
+        var keysBefore = await NoteKeysAsync(1);
+        using var sut = new NoteDocDictionary(_dbService);
+        var doc = await LoadNoteDocAsync(1);
+        sut.AddOrUpdateValue(doc);
+
+        doc.Notes.Add(new() { Text = "n2" });
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+
+        var keysAfter = await NoteKeysAsync(1);
+        keysAfter.Count.ShouldBe(2);
+        keysAfter.ShouldContain(keysBefore.ShouldHaveSingleItem());
+    }
+
+    /// <summary>Equal and reordered shadow-keyed items are matched one to one: nothing is rewritten.</summary>
+    [Fact]
+    public async Task DuplicateAndReorderedShadowKeyedItems_KeepTheirRows()
+    {
+        var keysBefore = await NoteKeysAsync(2);
+        using var sut = new NoteDocDictionary(_dbService);
+        var doc = await LoadNoteDocAsync(2);
+        sut.AddOrUpdateValue(doc);
+
+        doc.Notes.Reverse();
+        doc.Name = "edited";
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+
+        (await NoteKeysAsync(2)).OrderBy(k => k).ShouldBe(keysBefore.OrderBy(k => k));
+        using var reader = CreateContext();
+        (await reader.NoteDocs.SingleAsync(d => d.Id == 2, TestContext.Current.CancellationToken)).Notes
+            .Select(n => n.Text)
+            .OrderBy(t => t)
+            .ShouldBe(["a", "a", "b"]);
+    }
+
+    /// <summary>A cleared owned reference is deleted and a newly set one inserted.</summary>
+    [Fact]
+    public async Task OwnedReference_ClearedIsDeleted_AndSetIsInserted()
+    {
+        using var sut = new DocDictionary(_dbService);
+        var doc = await LoadDocAsync();
+        sut.AddOrUpdateValue(doc);
+
+        doc.Tags[0].Detail = null;
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+        (await TagDetailCountAsync()).ShouldBe(0);
+
+        doc.Tags[0].Detail = new() { Value = "d new" };
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+
+        using var reader = CreateContext();
+        (await reader.Docs.SingleAsync(d => d.Id == 1, TestContext.Current.CancellationToken)).Tags
+            .ShouldHaveSingleItem()
+            .Detail.ShouldNotBeNull()
+            .Value.ShouldBe("d new");
+    }
+
+    /// <summary>
+    /// A principal whose key is a shadow property cannot be identified from a cached instance: the foreign key is left
+    /// as it is and the principal is not written.
+    /// </summary>
+    [Fact]
+    public async Task PrincipalWithShadowKey_LeavesTheForeignKey()
+    {
+        using var sut = new DocDictionary(_dbService);
+        var doc = await LoadDocAsync();
+        sut.AddOrUpdateValue(doc);
+
+        doc.Badge = new() { Title = "unknown" };
+        doc.Name = "edited";
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+
+        using var reader = CreateContext();
+        var saved = await reader.Docs.SingleAsync(d => d.Id == 1, TestContext.Current.CancellationToken);
+        saved.Name.ShouldBe("edited");
+        reader.Entry(saved).Property<int?>("BadgeId").CurrentValue.ShouldBeNull();
+        (await reader.Badges.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
+    }
+
+    /// <summary>A value added in the same batch as an edit of the cached value it references: both are saved.</summary>
+    [Fact]
+    public async Task AddedValueReachingASavedValue_SavesBoth()
+    {
+        using var sut = NodeDictionary();
+        var root = await LoadNodeAsync(1);
+        sut.AddOrUpdateValue(root);
+
+        root.Name = "root edited";
+        var child = new Node { Id = 2, Name = "child", Parent = root };
+
+        (await sut.SaveAsync(new(ChangeReason.Refresh, 1, root), new(ChangeReason.Add, 2, child))).ShouldBeTrue();
+
+        (await NodesAsync()).ShouldBe(["1:root edited:", "2:child:1"]);
+    }
+
+    /// <summary>A value removed in the same batch as an edit of the cached value it references: both are saved.</summary>
+    [Fact]
+    public async Task RemovedValueReachingASavedValue_SavesBoth()
+    {
+        using (var ctx = CreateContext())
+        {
+            await ctx.Nodes.AddAsync(new() { Id = 2, Name = "child", ParentId = 1 }, TestContext.Current.CancellationToken);
+            await ctx.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var sut = NodeDictionary();
+        var root = await LoadNodeAsync(1);
+        var child = await LoadNodeAsync(2);
+        child.Parent = root;
+        sut.AddOrUpdateValue(root);
+
+        root.Name = "root edited";
+
+        (await sut.SaveAsync(new(ChangeReason.Refresh, 1, root), new(ChangeReason.Remove, 2, child))).ShouldBeTrue();
+
+        (await NodesAsync()).ShouldBe(["1:root edited:"]);
+    }
+
+    /// <summary>A row hidden by a query filter still exists: it is updated, not inserted again.</summary>
+    [Fact]
+    public async Task RowHiddenByAQueryFilter_IsUpdated()
+    {
+        using var sut = ItemDictionary();
+        sut.UseIndexForTest();
+        sut.Index.Add(1);
+        var item = await LoadItemAsync();
+        sut.AddOrUpdateValue(item);
+
+        item.Archived = true;
+        (await sut.SaveAsync(new Change<Item, int>(ChangeReason.Refresh, 1, item))).ShouldBeTrue();
+        item.Name = "edited after archive";
+        (await sut.SaveAsync(new Change<Item, int>(ChangeReason.Refresh, 1, item))).ShouldBeTrue();
+
+        using var reader = CreateContext();
+        var saved = await reader.Items.IgnoreQueryFilters().SingleAsync(TestContext.Current.CancellationToken);
+        saved.Name.ShouldBe("edited after archive");
+        saved.Archived.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// A shadow concurrency token has no cached value; as with <c>DbSet.Update</c> the save expects its default, so a
+    /// token another writer moved is a conflict, not a silent overwrite.
+    /// </summary>
+    [Fact]
+    public async Task ShadowConcurrencyTokenMovedByAnotherWriter_RaisesConflict()
+    {
+        using var sut = ItemDictionary();
+        var item = await LoadItemAsync();
+        sut.AddOrUpdateValue(item);
+        var conflicts = new ConcurrentQueue<CacheConflict<int, Item>>();
+        sut.ConflictDetected += (_, conflict) => conflicts.Enqueue(conflict);
+
+        using (var writerB = CreateContext())
+        {
+            var other = await writerB.Items.SingleAsync(i => i.Id == 1, TestContext.Current.CancellationToken);
+            other.Name = "from B";
+            writerB.Entry(other).Property<int>("Rev").CurrentValue = 1;
+            await writerB.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        item.Price = 99;
+        (await sut.SaveAsync(new Change<Item, int>(ChangeReason.Refresh, 1, item))).ShouldBeFalse();
+
+        conflicts.ShouldHaveSingleItem();
+        using var reader = CreateContext();
+        var saved = await reader.Items.SingleAsync(i => i.Id == 1, TestContext.Current.CancellationToken);
+        saved.Name.ShouldBe("from B");
+        saved.Price.ShouldBe(10);
+    }
+
+    [Fact]
+    public async Task ShadowConcurrencyTokenAtItsDefault_Saves()
+    {
+        using var sut = ItemDictionary();
+        var item = await LoadItemAsync();
+        sut.AddOrUpdateValue(item);
+
+        item.Price = 99;
+        (await sut.SaveAsync(new Change<Item, int>(ChangeReason.Refresh, 1, item))).ShouldBeTrue();
+
+        using var reader = CreateContext();
+        (await reader.Items.SingleAsync(i => i.Id == 1, TestContext.Current.CancellationToken)).Price.ShouldBe(99);
+    }
+
+    private ApplyDbContext CreateContext() => new(_connection, _writes);
+
+    private IdDictionary<Node> NodeDictionary() => new(_dbService, n => n.Id, ctx => ctx.Nodes);
+
+    private IdDictionary<Item> ItemDictionary() => new(_dbService, i => i.Id, ctx => ctx.Items);
+
+    private async Task<Node> LoadNodeAsync(int id)
+    {
+        using var ctx = CreateContext();
+
+        return await ctx.Nodes.AsNoTracking().SingleAsync(n => n.Id == id, TestContext.Current.CancellationToken);
+    }
+
+    private async Task<Item> LoadItemAsync()
+    {
+        using var ctx = CreateContext();
+
+        return await ctx.Items.AsNoTracking().SingleAsync(i => i.Id == 1, TestContext.Current.CancellationToken);
+    }
+
+    private async Task<NoteDoc> LoadNoteDocAsync(int id)
+    {
+        using var ctx = CreateContext();
+
+        return await ctx.NoteDocs.AsNoTracking().SingleAsync(d => d.Id == id, TestContext.Current.CancellationToken);
+    }
+
+    private async Task<List<int>> NoteKeysAsync(int docId)
+    {
+        using var ctx = CreateContext();
+        var doc = await ctx.NoteDocs.SingleAsync(d => d.Id == docId, TestContext.Current.CancellationToken);
+
+        return [.. doc.Notes.Select(n => ctx.Entry(n).Property<int>("Id").CurrentValue)];
+    }
+
+    private async Task<List<string>> NodesAsync()
+    {
+        using var ctx = CreateContext();
+
+        return await ctx.Nodes.OrderBy(n => n.Id)
+            .Select(n => n.Id + ":" + n.Name + ":" + n.ParentId)
+            .ToListAsync(TestContext.Current.CancellationToken);
+    }
+
+    private async Task<int> TagDetailCountAsync()
+    {
+        using var ctx = CreateContext();
+
+        return await ctx.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM TagDetails")
+            .SingleAsync(TestContext.Current.CancellationToken);
+    }
 
     private async Task<ApplyDoc> LoadDocAsync()
     {
@@ -387,9 +656,52 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
 
         public List<string> Keywords { get; set; } = [];
 
+        public Badge? Badge { get; set; }
+
         public List<Line> Lines { get; set; } = [];
 
         public List<Tag> Tags { get; set; } = [];
+
+        public event PropertyChangedEventHandler? PropertyChanged
+        {
+            add { }
+            remove { }
+        }
+    }
+
+    /// <summary>A principal whose key is a shadow property.</summary>
+    public sealed class Badge
+    {
+        public string Title { get; set; } = "";
+    }
+
+    public sealed class Node : INotifyPropertyChanged
+    {
+        public int Id { get; set; }
+
+        public string Name { get; set; } = "";
+
+        public int? ParentId { get; set; }
+
+        public Node? Parent { get; set; }
+
+        public event PropertyChangedEventHandler? PropertyChanged
+        {
+            add { }
+            remove { }
+        }
+    }
+
+    /// <summary>Soft-deleted through a query filter, with a shadow concurrency token.</summary>
+    public sealed class Item : INotifyPropertyChanged
+    {
+        public int Id { get; set; }
+
+        public string Name { get; set; } = "";
+
+        public int Price { get; set; }
+
+        public bool Archived { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged
         {
@@ -437,9 +749,12 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         public DbSet<Person> People => Set<Person>();
         public DbSet<NoteDoc> NoteDocs => Set<NoteDoc>();
         public DbSet<Animal> Animals => Set<Animal>();
+        public DbSet<Node> Nodes => Set<Node>();
+        public DbSet<Item> Items => Set<Item>();
+        public DbSet<Badge> Badges => Set<Badge>();
 
-        public ApplyDbContext(SqliteConnection connection)
-            : base(new DbContextOptionsBuilder<ApplyDbContext>().UseSqlite(connection).Options)
+        public ApplyDbContext(SqliteConnection connection, WriteCounter writes)
+            : base(new DbContextOptionsBuilder<ApplyDbContext>().UseSqlite(connection).AddInterceptors(writes).Options)
         {
         }
 
@@ -448,6 +763,17 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
             var doc = modelBuilder.Entity<ApplyDoc>();
             doc.HasOne(d => d.Owner).WithMany().HasForeignKey("OwnerId");
             doc.HasOne(d => d.Editor).WithMany().HasForeignKey(d => d.EditorId);
+            doc.HasOne(d => d.Badge).WithMany().HasForeignKey("BadgeId");
+
+            var badge = modelBuilder.Entity<Badge>();
+            badge.Property<int>("Id").ValueGeneratedNever();
+            badge.HasKey("Id");
+
+            modelBuilder.Entity<Node>().HasOne(n => n.Parent).WithMany().HasForeignKey(n => n.ParentId);
+
+            var item = modelBuilder.Entity<Item>();
+            item.HasQueryFilter(i => !i.Archived);
+            item.Property<int>("Rev").IsConcurrencyToken();
 
             doc.OwnsMany(d => d.Lines, l => l.HasKey(x => x.Id));
 
@@ -470,23 +796,84 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         }
     }
 
-    private sealed class ScopeProvider : IScopeProvider
+    /// <summary>Counts the INSERT, UPDATE and DELETE commands sent to the database.</summary>
+    public sealed class WriteCounter : DbCommandInterceptor
     {
-        private readonly IServiceProvider _services;
+        private int _count;
 
-        public ScopeProvider(IServiceProvider services) => _services = services;
+        public int Count => Volatile.Read(ref _count);
 
-        public IServiceScope CreateScope() => _services.CreateScope();
+        public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command,
+                                                                          CommandEventData eventData,
+                                                                          InterceptionResult<DbDataReader> result)
+        {
+            CountWrite(command);
+
+            return result;
+        }
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<DbDataReader> result,
+            CancellationToken cancellationToken = default)
+        {
+            CountWrite(command);
+
+            return new(result);
+        }
+
+        public override InterceptionResult<int> NonQueryExecuting(DbCommand command,
+                                                                  CommandEventData eventData,
+                                                                  InterceptionResult<int> result)
+        {
+            CountWrite(command);
+
+            return result;
+        }
+
+        public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            CountWrite(command);
+
+            return new(result);
+        }
+
+        private void CountWrite(DbCommand command)
+        {
+            if (Regex.IsMatch(command.CommandText, @"\b(INSERT|UPDATE|DELETE)\b"))
+                Interlocked.Increment(ref _count);
+        }
     }
 
-    private sealed class ApplyDbService : DbServiceBase<ApplyDbContext>, IEFCoreDatabaseBackedService<ApplyDbContext>
+    private sealed class IdDictionary<TValue> : SynchronizedDictionary<int, TValue, ApplyDbContext>
+        where TValue : class, INotifyPropertyChanged
     {
-        public string? DbKey => null;
+        private readonly Expression<Func<TValue, int>> _key;
+        private readonly Func<ApplyDbContext, DbSet<TValue>> _set;
 
-        public ApplyDbService(IScopeProvider scopeProvider)
-            : base(scopeProvider, new(Substitute.For<IFExLogger>()), Substitute.For<IFExDbConfig>(), [])
+        public IdDictionary(IEFCoreDatabaseBackedService<ApplyDbContext> dbService,
+                            Expression<Func<TValue, int>> key,
+                            Func<ApplyDbContext, DbSet<TValue>> set)
+            : base(dbService, "Id")
         {
+            _key = key;
+            _set = set;
         }
+
+        public void UseIndexForTest() => UseIndex = true;
+
+        public Task<bool> SaveAsync(params Change<TValue, int>[] changes) =>
+            SaveChangesResolvingConflictsAsync([.. changes.Select(c => new ChangeInfo<int, TValue>(c))]);
+
+        protected override Expression<Func<TValue, int>> RetriveKey() => _key;
+
+        protected override DbSet<TValue> DbSetAccessor(ApplyDbContext ctx) => _set(ctx);
+
+        protected override TValue GetNew(int key, IDictionary<string, object>? param = null) =>
+            throw new NotSupportedException();
     }
 
     private sealed class DocDictionary : SynchronizedDictionary<int, ApplyDoc, ApplyDbContext>

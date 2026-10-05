@@ -1,14 +1,10 @@
 using DynamicData;
-using FEx.Agnostics.Abstractions.Interfaces;
-using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.EFCore.Collections;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
-using FEx.EFCore.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -29,7 +25,7 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
 {
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
     private readonly ServiceProvider _services;
-    private readonly GraphDbService _dbService;
+    private readonly SqliteDbService<GraphDbContext> _dbService;
 
     public SynchronizedDictionaryGraphSaveTests()
     {
@@ -61,7 +57,7 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         var services = new ServiceCollection();
         services.AddScoped(_ => CreateContext());
         _services = services.BuildServiceProvider();
-        _dbService = new(new ScopeProvider(_services));
+        _dbService = new(_services);
     }
 
     public void Dispose()
@@ -222,26 +218,6 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
             doc.OwnsMany(d => d.Tags, t => t.HasKey(x => x.Id));
             doc.HasOne(d => d.Category).WithMany(c => c.Docs).HasForeignKey(d => d.CategoryId);
         }
-    }
-
-    private sealed class ScopeProvider : IScopeProvider
-    {
-        private readonly IServiceProvider _services;
-
-        public ScopeProvider(IServiceProvider services) => _services = services;
-
-        public IServiceScope CreateScope() => _services.CreateScope();
-    }
-
-    private sealed class GraphDbService : DbServiceBase<GraphDbContext>, IEFCoreDatabaseBackedService<GraphDbContext>
-    {
-        public string? DbKey => null;
-
-        public GraphDbService(IScopeProvider scopeProvider)
-            : base(scopeProvider, new(Substitute.For<IFExLogger>()), Substitute.For<IFExDbConfig>(), [])
-        {
-        }
-
     }
 
     private sealed class GraphDictionary : SynchronizedDictionary<int, GraphDoc, GraphDbContext>

@@ -12,6 +12,8 @@ namespace FEx.EFCore.Helpers;
 /// Copies a detached (cached) entity's own state onto the tracked entity of its database row, so EF's change tracking
 /// writes only what differs: scalar properties, owned types (owned collection items added, updated or deleted) and the
 /// foreign keys of reference navigations. Related non-owned entities are never attached, so they are never written.
+/// Values added or removed in the same save are attached with <see cref="AttachGraph" />, which leaves the loaded rows in
+/// place of the cached instances their graphs reach.
 /// </summary>
 internal static class CachedValueApplier
 {
@@ -170,21 +172,84 @@ internal static class CachedValueApplier
             StructuralComparisons.StructuralEqualityComparer.Equals(GetClrValue(p, loaded), GetClrValue(p, cachedItem)));
     }
 
-    // SetValues copied the cached tokens as current values; they also become the original values the UPDATE checks.
-    // A token that differs from the row is marked modified, so the stale value is a conflict even when nothing else
-    // changed.
+    // SetValues copied the cached CLR tokens as current values (a token that differs from the row is then modified);
+    // they also become the original values the UPDATE checks. A shadow token has no value on the cached instance: as
+    // with DbSet.Update, its original value is the CLR default, and it is marked modified when the row differs, so a
+    // moved shadow token is a conflict rather than a silent overwrite.
     private static void KeepCachedConcurrencyTokens(EntityEntry row, object cached)
     {
-        foreach (var token in row.Metadata.GetProperties().Where(p => p.IsConcurrencyToken && !p.IsShadowProperty()))
+        foreach (var token in row.Metadata.GetProperties().Where(p => p.IsConcurrencyToken))
         {
             var entry = row.Property(token.Name);
-            var cachedToken = GetClrValue(token, cached);
-            var stale = !StructuralComparisons.StructuralEqualityComparer.Equals(entry.OriginalValue, cachedToken);
-            entry.OriginalValue = cachedToken;
+
+            if (!token.IsShadowProperty())
+            {
+                entry.OriginalValue = GetClrValue(token, cached);
+
+                continue;
+            }
+
+            var defaultValue = token.ClrType.IsValueType ? Activator.CreateInstance(token.ClrType) : null;
+            var stale = !StructuralComparisons.StructuralEqualityComparer.Equals(entry.OriginalValue, defaultValue);
+            entry.OriginalValue = defaultValue;
 
             if (stale && token.GetAfterSaveBehavior() == PropertySaveBehavior.Save)
                 entry.IsModified = true;
         }
+    }
+
+    /// <summary>
+    /// Returns the keys of the non-owned entities <paramref name="ctx" /> tracks, for <see cref="AttachGraph" />.
+    /// </summary>
+    public static Dictionary<EntityKey, EntityEntry> TrackedKeys(DbContext ctx)
+    {
+        var tracked = new Dictionary<EntityKey, EntityEntry>();
+
+        foreach (var entry in ctx.ChangeTracker.Entries())
+        {
+            if (EntityKey.Of(entry) is { } key)
+                tracked[key] = entry;
+        }
+
+        return tracked;
+    }
+
+    /// <summary>
+    /// Attaches <paramref name="root" /> and the untracked entities it reaches like <c>DbSet.Add</c> (every node
+    /// <see cref="EntityState.Added" />) or, with <paramref name="removing" />, like <c>DbSet.Remove</c> (nodes with a key
+    /// unchanged, the root deleted). A reached entity whose key <paramref name="tracked" /> already holds for another
+    /// instance (a row loaded for this save) is not attached: the tracked entry stands for it, and a foreign key that
+    /// points at it is set from its key.
+    /// </summary>
+    public static void AttachGraph(DbContext ctx, object root, bool removing, Dictionary<EntityKey, EntityEntry> tracked)
+    {
+        EntityEntry? trackedRoot = null;
+
+        ctx.ChangeTracker.TrackGraph(root, node =>
+        {
+            var entry = node.Entry;
+
+            if (EntityKey.Of(entry) is { } key)
+            {
+                if (tracked.TryGetValue(key, out var other))
+                {
+                    if (node.SourceEntry is null)
+                        trackedRoot = other;
+                    else if (node.InboundNavigation is INavigation navigation
+                             && ReferenceEquals(navigation, navigation.ForeignKey.DependentToPrincipal))
+                        ApplyForeignKey(node.SourceEntry, navigation.ForeignKey, entry.Entity);
+
+                    return;
+                }
+
+                tracked[key] = entry;
+            }
+
+            entry.State = removing && entry.IsKeySet ? EntityState.Unchanged : EntityState.Added;
+        });
+
+        if (removing)
+            (trackedRoot ?? ctx.Entry(root)).State = EntityState.Deleted;
     }
 
     private static void MarkAdded(EntityEntry entry)
@@ -205,4 +270,40 @@ internal static class CachedValueApplier
 
     private static object? GetClrValue(IPropertyBase property, object entity) =>
         property.GetGetter().GetClrValue(entity);
+
+    /// <summary>The key of a non-owned entity, unique within its hierarchy.</summary>
+    internal sealed class EntityKey : IEquatable<EntityKey>
+    {
+        private readonly IEntityType _rootType;
+        private readonly object?[] _values;
+
+        private EntityKey(IEntityType rootType, object?[] values)
+        {
+            _rootType = rootType;
+            _values = values;
+        }
+
+        // Null for an owned entity, a key with a shadow property (a detached instance has no value for it) or a key
+        // that is not set yet (it is generated when the entity is added).
+        public static EntityKey? Of(EntityEntry entry)
+        {
+            var entityType = entry.Metadata;
+            var key = entityType.FindPrimaryKey();
+
+            if (entityType.IsOwned() || key is null || key.Properties.Any(p => p.IsShadowProperty()) || !entry.IsKeySet)
+                return null;
+
+            return new(entityType.GetRootType(), [.. key.Properties.Select(p => GetClrValue(p, entry.Entity))]);
+        }
+
+        public bool Equals(EntityKey? other) =>
+            other is not null
+            && ReferenceEquals(_rootType, other._rootType)
+            && _values.SequenceEqual(other._values);
+
+        public override bool Equals(object? obj) => Equals(obj as EntityKey);
+
+        public override int GetHashCode() =>
+            _values.Aggregate(_rootType.GetHashCode(), (hash, value) => hash * 31 + (value?.GetHashCode() ?? 0));
+    }
 }

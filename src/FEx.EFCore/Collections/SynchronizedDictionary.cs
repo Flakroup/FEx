@@ -399,7 +399,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     /// exists is loaded (with its owned types) and the cached state is applied onto it, so only the value's own columns,
     /// its owned types and the foreign keys of its reference navigations are written, never a related entity; the cached
     /// concurrency tokens are the original values, so a row changed elsewhere is a conflict. A new value is added and a
-    /// removed one removed with its graph. With <see cref="UseIndex" />, a row the index lists but another writer deleted
+    /// removed one removed with its graph, as <c>DbSet.Add</c> and <c>DbSet.Remove</c> do, except that an entity of the
+    /// graph whose row is loaded for this save is not attached (the loaded row stands for it). With <see cref="UseIndex" />, a row the index lists but another writer deleted
     /// is re-added only while its key is still cached; otherwise its change is dropped from <paramref name="changes" />.
     /// </summary>
     protected async Task SaveCacheChangesAsync(TDbCtx dbContext, ICollection<ChangeInfo<TKey, TValue>> changes)
@@ -428,12 +429,14 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             changes.Remove(change);
         }
 
+        var tracked = CachedValueApplier.TrackedKeys(dbContext);
+
         foreach (var entityInfo in changes)
         {
             if (entityInfo.ToDelete)
-                set.Remove(entityInfo.Value);
+                CachedValueApplier.AttachGraph(dbContext, entityInfo.Value, true, tracked);
             else if (IsSave(entityInfo.Reason) && !entityInfo.ExistsInDb)
-                await set.AddAsync(entityInfo.Value);
+                CachedValueApplier.AttachGraph(dbContext, entityInfo.Value, false, tracked);
         }
     }
 
@@ -1017,7 +1020,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             e.ExistsInDb = IsSave(e.Reason) || keysInDb.Contains(e.Key);
     }
 
-    // One tracking query for every saved value of the batch; owned types are loaded with their owner.
+    // One tracking query for every saved value of the batch; owned types are loaded with their owner. Query filters are
+    // ignored: whether the row exists is decided by its key, not by a soft-delete or tenant filter.
     private async Task<Dictionary<TKey, TValue>> LoadRowsAsync(DbSet<TValue> set, List<ChangeInfo<TKey, TValue>> saves)
     {
         if (saves.Count == 0)
@@ -1025,7 +1029,7 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         var keys = new HashSet<TKey>(saves.Select(c => c.Key));
 
-        return (await set.AsTracking().Where(KeyIsIn(keys)).ToListAsync()).ToDictionary(KeyRetriver);
+        return (await set.IgnoreQueryFilters().AsTracking().Where(KeyIsIn(keys)).ToListAsync()).ToDictionary(KeyRetriver);
     }
 
     private async Task<TValue?> FindExistingAsync(TDbCtx ctx, TKey key)

@@ -746,13 +746,12 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         {
             await sut.InitializeAsync();
             await sut.ResetAsync();
-#pragma warning disable VSTHRD002 // Holds the subscribe on purpose
             sut.BeforeSubscribe = () =>
             {
                 entered.TrySetResult(true);
-                resume.Task.Wait(TimeSpan.FromSeconds(30));
+
+                return resume.Task.WaitAsync(TimeSpan.FromSeconds(30));
             };
-#pragma warning restore VSTHRD002
             sut.SubscribeDecided = listens => listened.TrySetResult(listens);
 
             initialization = sut.InitializeAsync();
@@ -817,7 +816,12 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     {
         using var sut = CreateDictionary(true);
         var pipelineBuilt = false;
-        sut.BeforePipelineAssigned = () => pipelineBuilt = true;
+        sut.BeforePipelineAssigned = () =>
+        {
+            pipelineBuilt = true;
+
+            return Task.CompletedTask;
+        };
 #pragma warning disable IDISP016, IDISP017 // Using the disposed instance is the point
         sut.Dispose();
 
@@ -871,18 +875,27 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     private async Task DisposeBeforeTheNewSubscriptionIsAssignedAsync()
     {
         var resume = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var decided = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var sut = CreateDictionary(true);
         await sut.InitializeAsync();
         await sut.ResetAsync();
         // The subscribe is held until the dispose has run, so the signal is still pending when the dispose faults it.
-#pragma warning disable VSTHRD002 // Holds the subscribe on purpose
-        sut.BeforeSubscribe = () => resume.Task.Wait(TimeSpan.FromSeconds(30));
-#pragma warning restore VSTHRD002
+        sut.BeforeSubscribe = () =>
+        {
+            entered.TrySetResult(true);
+
+            return resume.Task.WaitAsync(TimeSpan.FromSeconds(30));
+        };
         sut.SubscribeDecided = listens => decided.TrySetResult(listens);
-        sut.BeforePipelineAssigned = () =>
+        // The dispose waits for the pool to start the subscribe: one that is disposed before it ever ran is skipped by
+        // Rx and never decides, which a busy pool makes likely.
+        sut.BeforePipelineAssigned = async () =>
         {
             sut.BeforePipelineAssigned = null;
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+#pragma warning restore VSTHRD003
             sut.Dispose();
         };
 

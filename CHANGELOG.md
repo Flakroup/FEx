@@ -92,6 +92,7 @@ All notable changes to FEx are documented in this file. The format follows [Keep
 
 ### Fixed
 
+- **FEx.EFCore (tests)**: `SynchronizedDictionaryConflictTests.Dispose_BeforeTheNewSubscriptionIsAssigned_*` no longer time out intermittently: the test disposed the dictionary without waiting for the pool to start the held subscribe (Rx then skips a subscribe disposed before it ran, so it never reported), and the internal `BeforeSubscribe`/`BeforePipelineAssigned` seams are now awaited instead of blocking a pool thread; no public API change ([#PR](https://github.com/Flakroup/FEx/pull/PR), closes [#208](https://github.com/Flakroup/FEx/issues/208)).
 - **FEx.Building**: `InspectionRun.Discard()` swallows only the exited-tool races (`InvalidOperationException` and `ArgumentException`, and only when the process has exited), so it cannot replace the build failure you need to see ([#150](https://github.com/Flakroup/FEx/pull/150), closes [#147](https://github.com/Flakroup/FEx/issues/147), [#144](https://github.com/Flakroup/FEx/issues/144)).
 - **FEx.Core**: a single-file published app no longer crashes at startup when `Assembly.Location` is an empty string; the process main module is used instead ([#125](https://github.com/Flakroup/FEx/pull/125)).
 - **FEx.AspNetCorex**: two concurrent requests with the same `Idempotency-Key` run the handler once; the second waits on a per-key lock and replays the first response. Locks are released on success, exception and cancellation ([#161](https://github.com/Flakroup/FEx/pull/161)).

@@ -304,9 +304,10 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         // SubscribeTask subscribes on the thread pool; signal once the cache is listened to, so an edit made after
         // InitializeAsync returns reaches this subscription.
-        var source = Observable.Create<IChangeSet<TValue, TKey>>(observer =>
+        var source = Observable.Create<IChangeSet<TValue, TKey>>(async observer =>
         {
-            BeforeSubscribe?.Invoke();
+            if (BeforeSubscribe is { } hold)
+                await hold().ConfigureAwait(false);
 
             // Disposed already: InitializeAsync has failed, do not listen to a cache that may be disposed too.
             if (subscribed.Task.IsCompleted)
@@ -350,7 +351,8 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             })
             .SubscribeTask((batch, _) => HandleBatchAsync(batch.Sequences, batch.ChangeSet));
 
-        BeforePipelineAssigned?.Invoke();
+        if (BeforePipelineAssigned is { } beforeAssigned)
+            await beforeAssigned().ConfigureAwait(false);
 
         // Disposed before SubscribeOn ran the subscribe (Rx then skips it): fail InitializeAsync instead of hanging.
         var subscription = new CompositeDisposable(pipelineSubscription,
@@ -739,14 +741,17 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     /// <summary>Test seam: runs after a batch left the buffer and before it is handled.</summary>
     internal Action? BatchSelected { get; set; }
 
-    /// <summary>Test seam: runs on the thread-pool subscribe of the save pipeline, before it listens to the cache.</summary>
-    internal Action? BeforeSubscribe { get; set; }
+    /// <summary>
+    /// Test seam: awaited by the thread-pool subscribe of the save pipeline before it listens to the cache. A test holds
+    /// the subscribe by returning a pending task, which keeps the pool thread free.
+    /// </summary>
+    internal Func<Task>? BeforeSubscribe { get; set; }
 
     /// <summary>Test seam: told whether the thread-pool subscribe listens to the cache (<c>false</c> once disposed).</summary>
     internal Action<bool>? SubscribeDecided { get; set; }
 
-    /// <summary>Test seam: runs after the save pipeline is built and before it becomes the dictionary's subscription.</summary>
-    internal Action? BeforePipelineAssigned { get; set; }
+    /// <summary>Test seam: awaited after the save pipeline is built and before it becomes the dictionary's subscription.</summary>
+    internal Func<Task>? BeforePipelineAssigned { get; set; }
 
     /// <summary>Test seam: receives the replaced subscription instead of disposing it, as if its disposal were late.</summary>
     internal Action<IDisposable?>? ReplacedSubscription { get; set; }

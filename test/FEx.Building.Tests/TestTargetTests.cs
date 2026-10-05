@@ -151,6 +151,44 @@ public sealed class TestTargetTests
     }
 
     [Fact]
+    public void ABuildThatSetsNoTimeout_RunsUnbounded()
+    {
+        var invocation = ((ITestTarget)new UngatedBuild()).TestInvocation("C:/repo/Some.slnx", "Release", "C:/repo/results");
+
+        invocation.Timeout.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ATimeoutOverride_ReachesTheInvocationAlongsideTheCommandLine()
+    {
+        // What OnTest starts is this invocation as a whole, so the bound cannot be dropped without the
+        // command line going with it.
+        var invocation = ((ITestTarget)new ContributingBuild()).TestInvocation("C:/repo/Some.slnx", "Release", "C:/repo/results");
+
+        invocation.Timeout.ShouldBe(TimeSpan.FromMinutes(20));
+        invocation.Arguments.ShouldContain("--solution C:/repo/Some.slnx");
+    }
+
+    [Fact]
+    public void AnInfiniteTimeout_MeansNoTimeout()
+    {
+        var build = (ITestTarget)new InfiniteBuild();
+
+        build.TestInvocation("C:/repo/Some.slnx", "Release", "C:/repo/results").Timeout.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void AZeroOrNegativeTimeout_IsRejected(int seconds)
+    {
+        var build = (ITestTarget)new InvalidTimeoutBuild(TimeSpan.FromSeconds(seconds));
+
+        Should.Throw<ArgumentOutOfRangeException>(
+            () => build.TestInvocation("C:/repo/Some.slnx", "Release", "C:/repo/results"));
+    }
+
+    [Fact]
     public void ABuildThatContributesNothing_ContributesNothing()
     {
         ((ITestTarget)new UngatedBuild()).AdditionalTestArguments().ShouldBeEmpty();
@@ -361,6 +399,20 @@ public sealed class TestTargetTests
         public override IEnumerable<string> PublishProjects { get; } = [];
     }
 
+    private sealed class InfiniteBuild : FExBuild, ITestTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        public TimeSpan? TestTimeout => System.Threading.Timeout.InfiniteTimeSpan;
+    }
+
+    private sealed class InvalidTimeoutBuild(TimeSpan timeout) : FExBuild, ITestTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        public TimeSpan? TestTimeout => timeout;
+    }
+
     /// <summary>A repository that uses every seam at once - the shape the wiring test needs.</summary>
     private sealed class ContributingBuild : FExBuild, ITestTarget
     {
@@ -369,6 +421,8 @@ public sealed class TestTargetTests
         public override string? TestFilter => "*OrderTests";
 
         public bool ForgivesEmptyAssemblies => true;
+
+        public TimeSpan? TestTimeout => TimeSpan.FromMinutes(20);
 
         public IEnumerable<string> AdditionalTestArguments() => ["--filter-not-namespace", "Slow.Tests*"];
     }

@@ -136,9 +136,36 @@ public interface ICompileTarget : INukeBuild
     /// </summary>
     virtual IReadOnlyCollection<Output> OnCompile() =>
     [
-        .. Scope().SelectMany(step => DotNetBuild(s =>
-            GetBuildSettings(s, step.Project, step.WithRuntime ? PublishRuntime : null)))
+        .. Scope().SelectMany(step =>
+            BoundedProcess.Run(CompileInvocation(step.Project, step.WithRuntime ? PublishRuntime : null),
+                "The build"))
     ];
+
+    /// <summary>
+    /// What one pass of <see cref="OnCompile" /> starts: <see cref="GetBuildSettings" /> as a command line,
+    /// together with <see cref="CompileTimeout" />.
+    /// </summary>
+    sealed DotNetInvocation CompileInvocation(AbsolutePath project, string? runtime)
+    {
+        var settings = GetBuildSettings(new DotNetBuildSettings(), project, runtime);
+
+        return new DotNetInvocation(BoundedProcess.Render(settings),
+            BoundedProcess.Validate(CompileTimeout, nameof(CompileTimeout)),
+            settings.ProcessWorkingDirectory,
+            settings.ProcessEnvironmentVariables);
+    }
+
+    /// <summary>
+    /// Upper bound on each <c>dotnet build</c> Compile starts, so a build wedged on a shared compiler server
+    /// or a held file handle fails instead of waiting while holding the caller's build lock. Null, the
+    /// default, and <see cref="System.Threading.Timeout.InfiniteTimeSpan" /> leave the build unbounded; zero or
+    /// any other negative value throws <see cref="ArgumentOutOfRangeException" />.
+    /// </summary>
+    /// <remarks>
+    /// On expiry the whole process tree is killed and the target fails with a <see cref="TimeoutException" />.
+    /// Applies to every pass of <see cref="OnCompile" /> separately, not to the target as a whole.
+    /// </remarks>
+    TimeSpan? CompileTimeout => null;
 
     /// <summary>Whether this run needs the extra RID-specific pass over the publish projects.</summary>
     protected bool RuntimeSpecificPublishPass => PublishRuntime is not null && IsPublishScheduled;

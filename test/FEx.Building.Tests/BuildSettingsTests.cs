@@ -1,7 +1,9 @@
 using Nuke.Common.IO;
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Xunit;
 
 namespace FEx.Building.Tests;
@@ -46,6 +48,43 @@ public sealed class BuildSettingsTests
         var settings = ((ICompileTarget)Build).GetBuildSettings(new(), Solution, noRestore: noRestore);
 
         ShouldLeaveTheAuditAlone(settings.Properties);
+    }
+
+    [Fact]
+    public void CompileInvocation_IsUnboundedByDefault()
+    {
+        var invocation = ((ICompileTarget)Build).CompileInvocation(Solution, runtime: null);
+
+        invocation.Timeout.ShouldBeNull();
+        invocation.Arguments.ShouldStartWith("build ");
+        invocation.Arguments.ShouldContain("-bl:");
+    }
+
+    [Fact]
+    public void CompileInvocation_CarriesTheCompileTimeout_OnEveryPass()
+    {
+        var build = (ICompileTarget)new TimedBuild(TimeSpan.FromMinutes(7));
+
+        build.CompileInvocation(Solution, runtime: null).Timeout.ShouldBe(TimeSpan.FromMinutes(7));
+        build.CompileInvocation(Solution, "linux-x64").Timeout.ShouldBe(TimeSpan.FromMinutes(7));
+    }
+
+    [Fact]
+    public void CompileInvocation_TreatsAnInfiniteTimeoutAsNone()
+    {
+        var build = (ICompileTarget)new TimedBuild(Timeout.InfiniteTimeSpan);
+
+        build.CompileInvocation(Solution, runtime: null).Timeout.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void CompileInvocation_RejectsAZeroOrNegativeTimeout(int seconds)
+    {
+        var build = (ICompileTarget)new TimedBuild(TimeSpan.FromSeconds(seconds));
+
+        Should.Throw<ArgumentOutOfRangeException>(() => build.CompileInvocation(Solution, runtime: null));
     }
 
     [Fact]
@@ -100,5 +139,12 @@ public sealed class BuildSettingsTests
     private sealed class TestBuild : FExBuild
     {
         public override IEnumerable<string> PublishProjects { get; } = [];
+    }
+
+    private sealed class TimedBuild(TimeSpan timeout) : FExBuild, ICompileTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        public TimeSpan? CompileTimeout => timeout;
     }
 }

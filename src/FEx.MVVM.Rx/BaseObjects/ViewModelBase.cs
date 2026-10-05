@@ -32,9 +32,9 @@ public abstract class ViewModelBase : LinkableReactiveNotifyPropertyChanged, IVi
 
     public bool Equals(ViewModelBase? other) => Equals(other as IViewModelBase);
 
-    public static bool operator ==(ViewModelBase left, ViewModelBase right) => Equals(left, right);
+    public static bool operator ==(ViewModelBase? left, ViewModelBase? right) => Equals(left, right);
 
-    public static bool operator !=(ViewModelBase left, ViewModelBase right) => !Equals(left, right);
+    public static bool operator !=(ViewModelBase? left, ViewModelBase? right) => !Equals(left, right);
 
     public override bool Equals(object? obj) =>
         ReferenceEquals(this, obj) || obj is ViewModelBase other && Equals(other);

@@ -76,6 +76,28 @@ public sealed class ConverterAndResolverTests
         converter.CanConvert(typeof(int)).ShouldBeFalse();
     }
 
+    public static TheoryData<JsonConverter, Type> NumberConverters => new()
+    {
+        { ParseStringToLongConverter.Singleton, typeof(long) },
+        { ParseStringToDoubleConverter.Singleton, typeof(double) }
+    };
+
+    [Theory]
+    [MemberData(nameof(NumberConverters))]
+    public void NumberConverters_NullToken_ThrowsForNonNullable_AndReadsNullForNullable(JsonConverter converter,
+                                                                                         Type type)
+    {
+        using var stringReader = new StringReader("null");
+        using var reader = new JsonTextReader(stringReader);
+        reader.Read();
+        var nullable = typeof(Nullable<>).MakeGenericType(type);
+
+        // Returning null for the non-nullable type used to become 0, or a NullReferenceException at the root.
+        Should.Throw<JsonSerializationException>(() =>
+            converter.ReadJson(reader, type, null, JsonSerializer.CreateDefault()));
+        converter.ReadJson(reader, nullable, null, JsonSerializer.CreateDefault()).ShouldBeNull();
+    }
+
     [Fact]
     public void ParseStringToLongConverter_ReadsQuotedNumber()
     {

@@ -12,14 +12,21 @@ public class ParseStringToLongConverter : JsonConverter
     public override object? ReadJson(JsonReader reader, Type t, object? existingValue, JsonSerializer serializer)
     {
         if (reader.TokenType == JsonToken.Null)
-            return null;
+        {
+            // Returning null for a non-nullable long made Newtonsoft unbox it (NullReferenceException) or store 0.
+            if (t == typeof(long?))
+                return null;
+
+            throw new JsonSerializationException("Cannot unmarshal null to type long");
+        }
 
         var value = serializer.Deserialize<string>(reader);
 
         if (long.TryParse(value, out var l))
             return l;
 
-        throw new("Cannot unmarshal type long");
+        // A Newtonsoft exception, so the serializer reports it like any other unbindable payload.
+        throw new JsonSerializationException("Cannot unmarshal type long");
     }
 
     public override void WriteJson(JsonWriter writer, object? untypedValue, JsonSerializer serializer)

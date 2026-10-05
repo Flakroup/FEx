@@ -244,6 +244,12 @@
   <Project Path="src/FEx.Json/FEx.Json.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
+  <Project Path="src/Json.Abstractions/FEx.Json.Abstractions.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/Json.SystemTextJsonx/FEx.Json.SystemTextJsonx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
   <Project Path="src/FEx.KeyVault/FEx.KeyVault.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>

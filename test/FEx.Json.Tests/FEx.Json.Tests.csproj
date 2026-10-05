@@ -7,6 +7,9 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\FEx.Json\FEx.Json.csproj" />
+		<ProjectReference Include="..\..\src\Json.Abstractions\FEx.Json.Abstractions.csproj" />
+		<ProjectReference Include="..\..\src\Json.SystemTextJsonx\FEx.Json.SystemTextJsonx.csproj" />
+		<ProjectReference Include="..\..\src\DependencyInjection\FEx.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\src\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
 	</ItemGroup>
 

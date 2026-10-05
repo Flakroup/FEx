@@ -25,7 +25,7 @@ env:
 
 jobs:
   # PR only: full test and inspection (both depend on one NUKE Compile). Push to main/develop runs the
-  # same Test and Inspect in the `build` job below, which gates the packages `publish` ships, so they are
+  # same Coverage and Inspect in the `build` job below, which gates the packages `publish` ships, so they are
   # not duplicated across two jobs/checkouts.
   test:
     if: github.event_name == 'pull_request'
@@ -42,15 +42,18 @@ jobs:
         run: dotnet workload restore FEx.slnx
       - name: Restore local tools (pinned ReSharper CLT for Inspect)
         run: dotnet tool restore
-      # One Compile feeds both targets; Inspect fails the build on any ReSharper ERROR.
-      - name: Test and inspect
-        run: pwsh ./build.ps1 Test Inspect
+      # One Compile feeds both targets; Coverage runs the suite instrumented and fails below 100% outside
+      # build/CoverageDebt.cs, Inspect fails the build on any ReSharper ERROR.
+      - name: Cover and inspect
+        run: pwsh ./build.ps1 Coverage Inspect
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: artifacts/test-results/*.trx
+          path: |
+            artifacts/test-results/*.trx
+            artifacts/test-results/*.cobertura.xml
           if-no-files-found: ignore
           retention-days: 30
 
@@ -74,9 +77,9 @@ jobs:
         run: dotnet workload restore FEx.slnx
       - name: Restore local tools (pinned ReSharper CLT for Inspect)
         run: dotnet tool restore
-      # One Compile feeds all three targets; Test and Inspect gate the Pack output.
-      - name: Test, inspect and pack
-        run: pwsh ./build.ps1 Test Inspect Pack --configuration Release
+      # One Compile feeds all three targets; Coverage (which runs Test) and Inspect gate the Pack output.
+      - name: Cover, inspect and pack
+        run: pwsh ./build.ps1 Coverage Inspect Pack --configuration Release
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
@@ -92,7 +95,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: artifacts/test-results/*.trx
+          path: |
+            artifacts/test-results/*.trx
+            artifacts/test-results/*.cobertura.xml
           if-no-files-found: ignore
           retention-days: 30
 
@@ -134,4 +139,4 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}   # for the Tag target to push the git version tag
         run: |
           $version = (Get-Content artifacts/packages/release-version.txt -Raw).Trim()
-          pwsh ./build.ps1 Publish --skip Restore Compile Test Verify Pack --configuration Release --release-version $version --nuget-source "https://api.nuget.org/v3/index.json"
+          pwsh ./build.ps1 Publish --skip Restore Compile Test Coverage Verify Pack --configuration Release --release-version $version --nuget-source "https://api.nuget.org/v3/index.json"

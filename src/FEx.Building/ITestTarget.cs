@@ -78,6 +78,17 @@ public interface ITestTarget : ICompileTarget
     /// </remarks>
     bool ForgivesEmptyAssemblies => false;
 
+    /// <summary>
+    /// Upper bound on the whole <c>dotnet test</c> run, so a hung suite (a wedged database connection, a
+    /// looping test, a hung test host) fails instead of waiting while holding the caller's build lock.
+    /// Null, the default, leaves the run unbounded.
+    /// </summary>
+    /// <remarks>
+    /// A suite that legitimately runs long overrides this with a value above its real duration; replacing
+    /// <see cref="Test" /> to get a timeout forks the target, see <see cref="AdditionalTestArguments" />.
+    /// </remarks>
+    TimeSpan? TestTimeout => null;
+
     Target Test =>
         _ => _.Description("Runs tests via Microsoft.Testing.Platform (MTP)").DependsOn(Compile).Executes(OnTest);
 
@@ -161,7 +172,8 @@ public interface ITestTarget : ICompileTarget
     {
         TestResultsDirectory.CreateOrCleanDirectory();
 
-        var result = DotNet(TestCommandLine(Solution.Path, Configuration.ToString(), TestResultsDirectory));
+        var result = DotNet(TestCommandLine(Solution.Path, Configuration.ToString(), TestResultsDirectory),
+            timeout: TimeoutMilliseconds(TestTimeout));
 
         // The floor under every narrowing this target allows. Forgiving NoTestsRan is what makes a
         // filter usable at all, and it is also what makes "matched one class" and "matched nothing"
@@ -179,6 +191,13 @@ public interface ITestTarget : ICompileTarget
 
         return result;
     }
+
+    /// <summary>
+    /// The timeout in the whole milliseconds <c>DotNet(...)</c> takes; null stays null (unbounded). Rounded
+    /// up and clamped to at least 1, because a sub-millisecond value must not truncate to 0.
+    /// </summary>
+    static int? TimeoutMilliseconds(TimeSpan? timeout) =>
+        timeout is { } value ? (int)Math.Clamp(Math.Ceiling(value.TotalMilliseconds), 1, int.MaxValue) : null;
 
     /// <summary>The command line this build's seams compose, given the run's ambient values.</summary>
     /// <remarks>

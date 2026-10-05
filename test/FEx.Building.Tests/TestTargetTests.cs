@@ -151,6 +151,39 @@ public sealed class TestTargetTests
     }
 
     [Fact]
+    public void ABuildThatSetsNoTimeout_RunsUnbounded()
+    {
+        var build = (ITestTarget)new UngatedBuild();
+
+        build.TestTimeout.ShouldBeNull();
+        ITestTarget.TimeoutMilliseconds(build.TestTimeout).ShouldBeNull();
+    }
+
+    [Fact]
+    public void ATimeoutOverride_ReachesTheCallInWholeMilliseconds()
+    {
+        var build = (ITestTarget)new ContributingBuild();
+
+        build.TestTimeout.ShouldBe(TimeSpan.FromMinutes(20));
+        ITestTarget.TimeoutMilliseconds(build.TestTimeout).ShouldBe(1_200_000);
+    }
+
+    [Theory]
+    [InlineData(0.0, 1)]
+    [InlineData(0.2, 1)]
+    [InlineData(1.2, 2)]
+    public void ATinyTimeout_NeverTruncatesToZero(double milliseconds, int expected)
+    {
+        ITestTarget.TimeoutMilliseconds(TimeSpan.FromMilliseconds(milliseconds)).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void AnOversizedTimeout_IsClampedRatherThanOverflowing()
+    {
+        ITestTarget.TimeoutMilliseconds(TimeSpan.FromDays(60)).ShouldBe(int.MaxValue);
+    }
+
+    [Fact]
     public void ABuildThatContributesNothing_ContributesNothing()
     {
         ((ITestTarget)new UngatedBuild()).AdditionalTestArguments().ShouldBeEmpty();
@@ -369,6 +402,8 @@ public sealed class TestTargetTests
         public override string? TestFilter => "*OrderTests";
 
         public bool ForgivesEmptyAssemblies => true;
+
+        public TimeSpan? TestTimeout => TimeSpan.FromMinutes(20);
 
         public IEnumerable<string> AdditionalTestArguments() => ["--filter-not-namespace", "Slow.Tests*"];
     }

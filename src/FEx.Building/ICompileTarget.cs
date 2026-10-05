@@ -140,6 +140,16 @@ public interface ICompileTarget : INukeBuild
             GetBuildSettings(s, step.Project, step.WithRuntime ? PublishRuntime : null)))
     ];
 
+    /// <summary>
+    /// Upper bound on each <c>dotnet build</c> Compile starts, so a build wedged on a shared compiler server
+    /// or a held file handle fails instead of waiting while holding the caller's build lock. Null, the
+    /// default, leaves the build unbounded.
+    /// </summary>
+    /// <remarks>
+    /// Applies to every pass of <see cref="OnCompile" /> separately, not to the target as a whole.
+    /// </remarks>
+    TimeSpan? CompileTimeout => null;
+
     /// <summary>Whether this run needs the extra RID-specific pass over the publish projects.</summary>
     protected bool RuntimeSpecificPublishPass => PublishRuntime is not null && IsPublishScheduled;
 
@@ -158,6 +168,7 @@ public interface ICompileTarget : INukeBuild
             .SetProjectFile(project)
             .WithRuntime(runtime)
             .SetProcessAdditionalArguments("-m", $"-bl:{BinaryLogPath(BinaryLogDirectory, project, runtime).ToString().DoubleQuoteIfNeeded()}")
+            .SetProcessExecutionTimeout(ITestTarget.TimeoutMilliseconds(CompileTimeout))
             .When(_ => verbosity is not null, s => s.SetVerbosity(verbosity));
 
     /// <summary>Where Compile's binary logs go, one file per <c>dotnet build</c> invocation.</summary>

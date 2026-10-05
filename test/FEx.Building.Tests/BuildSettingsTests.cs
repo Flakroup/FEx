@@ -1,5 +1,6 @@
 using Nuke.Common.IO;
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -46,6 +47,22 @@ public sealed class BuildSettingsTests
         var settings = ((ICompileTarget)Build).GetBuildSettings(new(), Solution, noRestore: noRestore);
 
         ShouldLeaveTheAuditAlone(settings.Properties);
+    }
+
+    [Fact]
+    public void BuildSettings_AreUnboundedByDefault()
+    {
+        ((ICompileTarget)Build).CompileTimeout.ShouldBeNull();
+        ((ICompileTarget)Build).GetBuildSettings(new(), Solution).ProcessExecutionTimeout.ShouldBeNull();
+    }
+
+    [Fact]
+    public void BuildSettings_CarryTheCompileTimeout()
+    {
+        var build = new TimedBuild();
+
+        ((ICompileTarget)build).GetBuildSettings(new(), Solution).ProcessExecutionTimeout
+            .ShouldBe((int)TimeSpan.FromMinutes(7).TotalMilliseconds);
     }
 
     [Fact]
@@ -100,5 +117,12 @@ public sealed class BuildSettingsTests
     private sealed class TestBuild : FExBuild
     {
         public override IEnumerable<string> PublishProjects { get; } = [];
+    }
+
+    private sealed class TimedBuild : FExBuild, ICompileTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        public TimeSpan? CompileTimeout => TimeSpan.FromMinutes(7);
     }
 }

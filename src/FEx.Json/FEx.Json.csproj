@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DependencyInjection.Abstractions\FEx.DependencyInjection.Abstractions.csproj" />
+    <ProjectReference Include="..\Json.Abstractions\FEx.Json.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

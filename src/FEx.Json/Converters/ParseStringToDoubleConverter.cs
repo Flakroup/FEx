@@ -17,8 +17,16 @@ public class ParseStringToDoubleConverter : JsonConverter
 
         var value = serializer.Deserialize<string>(reader);
 
-        // Token is not Null (checked above), so the deserialized value is a non-null string.
-        return value!.ToDouble();
+        try
+        {
+            // Token is not Null (checked above), so the deserialized value is a non-null string.
+            return value!.ToDouble();
+        }
+        catch (Exception ex)
+        {
+            // ToDouble throws a bare Exception; a Newtonsoft exception is reported like any unbindable payload.
+            throw new JsonSerializationException("Cannot unmarshal type double", ex);
+        }
     }
 
     public override void WriteJson(JsonWriter writer, object? untypedValue, JsonSerializer serializer)

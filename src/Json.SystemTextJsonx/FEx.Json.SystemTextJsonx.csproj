@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTargetFrameworkIds)</TargetFrameworks>
+		<Description>System.Text.Json implementation of IFExJsonSerializer with DI-aware construction and the FEx converters; no Newtonsoft.Json dependency, trimming and Native AOT friendly</Description>
+		<!-- The trim/AOT analyzers run on the net10.0 build, so any reflection this package needs is visible to consumers. -->
+		<IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', '$(TargetFrameworkId)'))">true</IsAotCompatible>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Text.Json" Version="$(DotNetNugetsVersion)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Json.Abstractions\FEx.Json.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

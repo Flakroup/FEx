@@ -19,7 +19,8 @@ public class ParseStringToLongConverter : JsonConverter
         if (long.TryParse(value, out var l))
             return l;
 
-        throw new("Cannot unmarshal type long");
+        // A Newtonsoft exception, so the serializer reports it like any other unbindable payload.
+        throw new JsonSerializationException("Cannot unmarshal type long");
     }
 
     public override void WriteJson(JsonWriter writer, object? untypedValue, JsonSerializer serializer)

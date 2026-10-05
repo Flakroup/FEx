@@ -3,6 +3,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Xunit;
 
 namespace FEx.Building.Tests;
@@ -50,19 +51,40 @@ public sealed class BuildSettingsTests
     }
 
     [Fact]
-    public void BuildSettings_AreUnboundedByDefault()
+    public void CompileInvocation_IsUnboundedByDefault()
     {
-        ((ICompileTarget)Build).CompileTimeout.ShouldBeNull();
-        ((ICompileTarget)Build).GetBuildSettings(new(), Solution).ProcessExecutionTimeout.ShouldBeNull();
+        var invocation = ((ICompileTarget)Build).CompileInvocation(Solution, runtime: null);
+
+        invocation.Timeout.ShouldBeNull();
+        invocation.Arguments.ShouldStartWith("build ");
+        invocation.Arguments.ShouldContain("-bl:");
     }
 
     [Fact]
-    public void BuildSettings_CarryTheCompileTimeout()
+    public void CompileInvocation_CarriesTheCompileTimeout_OnEveryPass()
     {
-        var build = new TimedBuild();
+        var build = (ICompileTarget)new TimedBuild(TimeSpan.FromMinutes(7));
 
-        ((ICompileTarget)build).GetBuildSettings(new(), Solution).ProcessExecutionTimeout
-            .ShouldBe((int)TimeSpan.FromMinutes(7).TotalMilliseconds);
+        build.CompileInvocation(Solution, runtime: null).Timeout.ShouldBe(TimeSpan.FromMinutes(7));
+        build.CompileInvocation(Solution, "linux-x64").Timeout.ShouldBe(TimeSpan.FromMinutes(7));
+    }
+
+    [Fact]
+    public void CompileInvocation_TreatsAnInfiniteTimeoutAsNone()
+    {
+        var build = (ICompileTarget)new TimedBuild(Timeout.InfiniteTimeSpan);
+
+        build.CompileInvocation(Solution, runtime: null).Timeout.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void CompileInvocation_RejectsAZeroOrNegativeTimeout(int seconds)
+    {
+        var build = (ICompileTarget)new TimedBuild(TimeSpan.FromSeconds(seconds));
+
+        Should.Throw<ArgumentOutOfRangeException>(() => build.CompileInvocation(Solution, runtime: null));
     }
 
     [Fact]
@@ -119,10 +141,10 @@ public sealed class BuildSettingsTests
         public override IEnumerable<string> PublishProjects { get; } = [];
     }
 
-    private sealed class TimedBuild : FExBuild, ICompileTarget
+    private sealed class TimedBuild(TimeSpan timeout) : FExBuild, ICompileTarget
     {
         public override IEnumerable<string> PublishProjects { get; } = [];
 
-        public TimeSpan? CompileTimeout => TimeSpan.FromMinutes(7);
+        public TimeSpan? CompileTimeout => timeout;
     }
 }

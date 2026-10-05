@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 namespace FEx.Building;
 
@@ -81,9 +80,11 @@ public interface ITestTarget : ICompileTarget
     /// <summary>
     /// Upper bound on the whole <c>dotnet test</c> run, so a hung suite (a wedged database connection, a
     /// looping test, a hung test host) fails instead of waiting while holding the caller's build lock.
-    /// Null, the default, leaves the run unbounded.
+    /// Null, the default, and <see cref="System.Threading.Timeout.InfiniteTimeSpan" /> leave the run unbounded;
+    /// zero or any other negative value throws <see cref="ArgumentOutOfRangeException" />.
     /// </summary>
     /// <remarks>
+    /// On expiry the whole process tree is killed and the target fails with a <see cref="TimeoutException" />.
     /// A suite that legitimately runs long overrides this with a value above its real duration; replacing
     /// <see cref="Test" /> to get a timeout forks the target, see <see cref="AdditionalTestArguments" />.
     /// </remarks>
@@ -172,8 +173,8 @@ public interface ITestTarget : ICompileTarget
     {
         TestResultsDirectory.CreateOrCleanDirectory();
 
-        var result = DotNet(TestCommandLine(Solution.Path, Configuration.ToString(), TestResultsDirectory),
-            timeout: TimeoutMilliseconds(TestTimeout));
+        var result = BoundedProcess.Run(TestInvocation(Solution.Path, Configuration.ToString(), TestResultsDirectory),
+            "The test run");
 
         // The floor under every narrowing this target allows. Forgiving NoTestsRan is what makes a
         // filter usable at all, and it is also what makes "matched one class" and "matched nothing"
@@ -192,13 +193,6 @@ public interface ITestTarget : ICompileTarget
         return result;
     }
 
-    /// <summary>
-    /// The timeout in the whole milliseconds <c>DotNet(...)</c> takes; null stays null (unbounded). Rounded
-    /// up and clamped to at least 1, because a sub-millisecond value must not truncate to 0.
-    /// </summary>
-    static int? TimeoutMilliseconds(TimeSpan? timeout) =>
-        timeout is { } value ? (int)Math.Clamp(Math.Ceiling(value.TotalMilliseconds), 1, int.MaxValue) : null;
-
     /// <summary>The command line this build's seams compose, given the run's ambient values.</summary>
     /// <remarks>
     /// Extracted from the target body so the composition is reachable from a test - it was not, and every
@@ -208,6 +202,14 @@ public interface ITestTarget : ICompileTarget
     /// instead of a silent narrowing, which is the nearest thing to a test that this boundary can have.
     /// The ambient values stay parameters because a build constructed in a test has no solution.
     /// </remarks>
+    /// <summary>
+    /// What <see cref="OnTest" /> starts: the command line together with the bound on it, so a test reaches
+    /// both and the target cannot run the one without the other.
+    /// </summary>
+    sealed DotNetInvocation TestInvocation(string solution, string configuration, string resultsDirectory) =>
+        new(TestCommandLine(solution, configuration, resultsDirectory),
+            BoundedProcess.Validate(TestTimeout, nameof(TestTimeout)));
+
     sealed string TestCommandLine(string solution, string configuration, string resultsDirectory) =>
         TestArguments(solution,
             configuration,

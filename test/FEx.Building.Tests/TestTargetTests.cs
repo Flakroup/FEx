@@ -153,34 +153,39 @@ public sealed class TestTargetTests
     [Fact]
     public void ABuildThatSetsNoTimeout_RunsUnbounded()
     {
-        var build = (ITestTarget)new UngatedBuild();
+        var invocation = ((ITestTarget)new UngatedBuild()).TestInvocation("C:/repo/Some.slnx", "Release", "C:/repo/results");
 
-        build.TestTimeout.ShouldBeNull();
-        ITestTarget.TimeoutMilliseconds(build.TestTimeout).ShouldBeNull();
+        invocation.Timeout.ShouldBeNull();
     }
 
     [Fact]
-    public void ATimeoutOverride_ReachesTheCallInWholeMilliseconds()
+    public void ATimeoutOverride_ReachesTheInvocationAlongsideTheCommandLine()
     {
-        var build = (ITestTarget)new ContributingBuild();
+        // What OnTest starts is this invocation as a whole, so the bound cannot be dropped without the
+        // command line going with it.
+        var invocation = ((ITestTarget)new ContributingBuild()).TestInvocation("C:/repo/Some.slnx", "Release", "C:/repo/results");
 
-        build.TestTimeout.ShouldBe(TimeSpan.FromMinutes(20));
-        ITestTarget.TimeoutMilliseconds(build.TestTimeout).ShouldBe(1_200_000);
+        invocation.Timeout.ShouldBe(TimeSpan.FromMinutes(20));
+        invocation.Arguments.ShouldContain("--solution C:/repo/Some.slnx");
+    }
+
+    [Fact]
+    public void AnInfiniteTimeout_MeansNoTimeout()
+    {
+        var build = (ITestTarget)new InfiniteBuild();
+
+        build.TestInvocation("C:/repo/Some.slnx", "Release", "C:/repo/results").Timeout.ShouldBeNull();
     }
 
     [Theory]
-    [InlineData(0.0, 1)]
-    [InlineData(0.2, 1)]
-    [InlineData(1.2, 2)]
-    public void ATinyTimeout_NeverTruncatesToZero(double milliseconds, int expected)
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void AZeroOrNegativeTimeout_IsRejected(int seconds)
     {
-        ITestTarget.TimeoutMilliseconds(TimeSpan.FromMilliseconds(milliseconds)).ShouldBe(expected);
-    }
+        var build = (ITestTarget)new InvalidTimeoutBuild(TimeSpan.FromSeconds(seconds));
 
-    [Fact]
-    public void AnOversizedTimeout_IsClampedRatherThanOverflowing()
-    {
-        ITestTarget.TimeoutMilliseconds(TimeSpan.FromDays(60)).ShouldBe(int.MaxValue);
+        Should.Throw<ArgumentOutOfRangeException>(
+            () => build.TestInvocation("C:/repo/Some.slnx", "Release", "C:/repo/results"));
     }
 
     [Fact]
@@ -392,6 +397,20 @@ public sealed class TestTargetTests
     private sealed class UngatedBuild : FExBuild, ITestTarget
     {
         public override IEnumerable<string> PublishProjects { get; } = [];
+    }
+
+    private sealed class InfiniteBuild : FExBuild, ITestTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        public TimeSpan? TestTimeout => System.Threading.Timeout.InfiniteTimeSpan;
+    }
+
+    private sealed class InvalidTimeoutBuild(TimeSpan timeout) : FExBuild, ITestTarget
+    {
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        public TimeSpan? TestTimeout => timeout;
     }
 
     /// <summary>A repository that uses every seam at once - the shape the wiring test needs.</summary>

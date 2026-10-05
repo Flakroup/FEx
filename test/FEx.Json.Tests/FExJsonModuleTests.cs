@@ -2,6 +2,7 @@ using FEx.Json.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using StrongInject;
+using System;
 using System.Linq;
 using Xunit;
 
@@ -45,5 +46,11 @@ public sealed class FExJsonModuleTests
 
         services.Single(static d => d.ServiceType == typeof(IFExJsonSerializer)).Lifetime
             .ShouldBe(ServiceLifetime.Singleton);
+    }
+
+    [Fact]
+    public void Serializer_NullSettings_Throw()
+    {
+        Should.Throw<ArgumentNullException>(() => new FExNewtonsoftJsonSerializer(null!));
     }
 }

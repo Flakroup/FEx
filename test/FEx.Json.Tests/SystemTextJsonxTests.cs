@@ -9,6 +9,7 @@ using Shouldly;
 using StrongInject;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -21,6 +22,35 @@ internal sealed partial class ContractJsonContext : JsonSerializerContext;
 
 [RegisterModule(typeof(FExSystemTextJsonModule))]
 public sealed partial class SystemTextJsonTestContainer : IFExSystemTextJsonContainer;
+
+[JsonConverter(typeof(JsonPathConverter<GuardedPathModel>))]
+public sealed class GuardedPathModel
+{
+    public string? Name { get; set; }
+
+    [JsonIgnore]
+    public bool IsAdmin { get; set; }
+
+    public bool Locked { get; private set; }
+
+    public string? Note { get; set; }
+}
+
+public interface IService
+{
+    string Name { get; set; }
+}
+
+public sealed class ServiceWithDependency : IService
+{
+    public ServiceWithDependency(Address dependency)
+    {
+        Dependency = dependency;
+    }
+
+    public Address Dependency { get; }
+    public string Name { get; set; } = string.Empty;
+}
 
 public sealed class SystemTextJsonxTests
 {
@@ -137,13 +167,91 @@ public sealed class SystemTextJsonxTests
         }
     }
 
+    private static IFExJsonSerializer CreateSerializer(DIMeta diMeta) =>
+        new FExSystemTextJsonSerializer(FExSystemTextJsonOptions.WithDIConstruction(
+            FExSystemTextJsonOptions.CreateDefault(), new DIJsonTypeInfoModifier(diMeta)));
+
+    [Fact]
+    public void PublicEntryPoints_RejectNullArguments()
+    {
+        var modifier = new DIJsonTypeInfoModifier(new DIMeta());
+        using var document = JsonDocument.Parse("{}");
+
+        Should.Throw<ArgumentNullException>(() => new FExSystemTextJsonSerializer(null!));
+        Should.Throw<ArgumentNullException>(() => FExSystemTextJsonOptions.CreateDefault(null!));
+        Should.Throw<ArgumentNullException>(() => FExSystemTextJsonOptions.WithDIConstruction(null!, modifier));
+        Should.Throw<ArgumentNullException>(() =>
+            FExSystemTextJsonOptions.WithDIConstruction(FExSystemTextJsonOptions.CreateDefault(), null!));
+        Should.Throw<ArgumentNullException>(() => new DIJsonTypeInfoModifier(null!));
+        Should.Throw<ArgumentNullException>(() => modifier.Modify(null!));
+        Should.Throw<ArgumentNullException>(() => JsonPathSelector.TrySelect(document.RootElement, null!, out _));
+    }
+
+    [Fact]
+    public void Serializer_OptionsWithoutResolver_Throw()
+    {
+        Should.Throw<ArgumentException>(() => new FExSystemTextJsonSerializer(new JsonSerializerOptions()));
+    }
+
+    [Fact]
+    public async Task SharedRegistrationWithoutParameterlessConstructor_ThrowsFExJsonException()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IService, ServiceWithDependency>();
+        var meta = new DIMeta();
+        await meta.OnCompleteInitializationAsync(services);
+
+        Should.Throw<FExJsonException>(() => CreateSerializer(meta).Deserialize<IService>("{\"Name\":\"x\"}"))
+            .Message.ShouldContain("no parameterless constructor");
+    }
+
+    [Fact]
+    public void UnpairedSurrogate_ThrowsFExJsonException()
+    {
+        var serializer = CreateSerializer(new());
+
+        Should.Throw<FExJsonException>(() => serializer.Deserialize<Person>("{\"Name\":\"a\uD800b\"}"))
+            .InnerException.ShouldBeAssignableTo<ArgumentException>();
+    }
+
+    [Fact]
+    public void JsonPath_DoesNotBindIgnoredMembersOrNonPublicSetters()
+    {
+        var serializer = CreateSerializer(new());
+
+        var model = serializer.Deserialize<GuardedPathModel>("{\"Name\":\"x\",\"IsAdmin\":true,\"Locked\":true}")
+            .ShouldNotBeNull();
+
+        model.Name.ShouldBe("x");
+        model.IsAdmin.ShouldBeFalse();
+        model.Locked.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void JsonPath_Write_SkipsIgnoredMembers_AndHonoursDefaultIgnoreCondition()
+    {
+        var options = FExSystemTextJsonOptions.CreateDefault();
+        var model = new GuardedPathModel { Name = "n", IsAdmin = true };
+
+        new FExSystemTextJsonSerializer(options).Serialize(model).ShouldBe("{\"Name\":\"n\",\"Locked\":false}");
+
+        options = FExSystemTextJsonOptions.CreateDefault();
+        options.DefaultIgnoreCondition = JsonIgnoreCondition.Never;
+
+        new FExSystemTextJsonSerializer(options).Serialize(model)
+            .ShouldBe("{\"Name\":\"n\",\"Locked\":false,\"Note\":null}");
+    }
+
     [Theory]
     [InlineData("$.a.b", "1")]
     [InlineData("a['b c']", "2")]
     [InlineData("list[1]", "4")]
+    [InlineData("$schema", "5")]
+    [InlineData("['x]y']", "6")]
+    [InlineData("$", "{\"a\":{\"b\":1,\"b c\":2},\"list\":[3,4],\"$schema\":5,\"x]y\":6}")]
     public void JsonPathSelector_SelectsSupportedPaths(string path, string expected)
     {
-        using var document = JsonDocument.Parse("{\"a\":{\"b\":1,\"b c\":2},\"list\":[3,4]}");
+        using var document = JsonDocument.Parse("{\"a\":{\"b\":1,\"b c\":2},\"list\":[3,4],\"$schema\":5,\"x]y\":6}");
 
         JsonPathSelector.TrySelect(document.RootElement, path, out var element).ShouldBeTrue();
         element.GetRawText().ShouldBe(expected);
@@ -153,6 +261,8 @@ public sealed class SystemTextJsonxTests
     [InlineData("missing")]
     [InlineData("list[5]")]
     [InlineData("a.b.c")]
+    [InlineData("list[3000000000]")]
+    [InlineData("list[-1]")]
     public void JsonPathSelector_NoMatch_SelectsNothing(string path)
     {
         using var document = JsonDocument.Parse("{\"a\":{\"b\":1},\"list\":[3,4]}");

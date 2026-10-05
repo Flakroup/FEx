@@ -7,6 +7,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -173,6 +174,58 @@ public abstract class JsonSerializerContractTests
 
         Should.Throw<ArgumentException>(() => serializer.Serialize("text", typeof(Person)));
     }
+
+    [Fact]
+    public async Task ValueOfAnotherType_ThrowsArgumentException_FromTheStreamOverload()
+    {
+        var serializer = CreateSerializer();
+        using var stream = new MemoryStream();
+
+        await Should.ThrowAsync<ArgumentException>(() => serializer.SerializeAsync(stream, "text", typeof(Person)));
+    }
+
+    [Fact]
+    public async Task NullValueForNonNullableValueType_ThrowsArgumentException()
+    {
+        var serializer = CreateSerializer();
+        using var stream = new MemoryStream();
+
+        Should.Throw<ArgumentException>(() => serializer.Serialize(null, typeof(int)));
+        await Should.ThrowAsync<ArgumentException>(() => serializer.SerializeAsync(stream, null, typeof(int)));
+        serializer.Serialize<int?>(null).ShouldBe("null");
+    }
+
+    [Fact]
+    public async Task StreamThatCannotBeReadOrWritten_ThrowsArgumentException()
+    {
+        var serializer = CreateSerializer();
+        using var readOnly = new MemoryStream(new byte[16], false);
+        using var unreadable = new WriteOnlyStream();
+
+        await Should.ThrowAsync<ArgumentException>(() => serializer.SerializeAsync(readOnly, Sample));
+        await Should.ThrowAsync<ArgumentException>(() => serializer.SerializeAsync(readOnly, Sample, typeof(Person)));
+        await Should.ThrowAsync<ArgumentException>(() => serializer.DeserializeAsync<Person>(unreadable));
+        await Should.ThrowAsync<ArgumentException>(() => serializer.DeserializeAsync(unreadable, typeof(Person)));
+    }
+
+    [Fact]
+    public async Task Cancellation_ThrowsOperationCanceledException_Unwrapped()
+    {
+        var serializer = CreateSerializer();
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+        using var target = new MemoryStream();
+        using var source = new MemoryStream(Encoding.UTF8.GetBytes(serializer.Serialize(Sample)));
+
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            serializer.SerializeAsync(target, Sample, cancellation.Token));
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            serializer.SerializeAsync(target, Sample, typeof(Person), cancellation.Token));
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            serializer.DeserializeAsync<Person>(source, cancellation.Token));
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            serializer.DeserializeAsync(source, typeof(Person), cancellation.Token));
+    }
     #endregion
 
     #region Malformed payload
@@ -206,6 +259,27 @@ public abstract class JsonSerializerContractTests
 
         Should.Throw<FExJsonException>(() => serializer.Deserialize<IDIModel>("{\"Name\":\"x\"}"));
     }
+
+    [Fact]
+    public async Task StreamThatIsNotUtf8_ThrowsFExJsonException()
+    {
+        var serializer = CreateSerializer();
+        // "zażółć" encoded in Windows-1250: not valid UTF-8.
+        using var stream = new MemoryStream([
+            .. Encoding.ASCII.GetBytes("{\"Name\":\"za"), 0xBF, 0xF3, 0xB3, 0xE6, .. Encoding.ASCII.GetBytes("\"}")
+        ]);
+
+        await Should.ThrowAsync<FExJsonException>(() => serializer.DeserializeAsync<Person>(stream));
+    }
+
+    [Fact]
+    public void InvalidTypeContract_ThrowsFExJsonException()
+    {
+        var serializer = CreateSerializer();
+
+        Should.Throw<FExJsonException>(() => serializer.Serialize(new CollidingModel()));
+        Should.Throw<FExJsonException>(() => serializer.Deserialize<CollidingModel>("{\"x\":1}"));
+    }
     #endregion
 
     #region DI-aware construction
@@ -218,6 +292,37 @@ public abstract class JsonSerializerContractTests
 
         model.Name.ShouldBe("x");
         model.Origin.ShouldBe("constructor"); // a singleton is never handed out for deserialization
+    }
+
+    [Theory]
+    [InlineData(ServiceLifetime.Singleton)]
+    [InlineData(ServiceLifetime.Scoped)]
+    public async Task SharedRegistration_IsNeverHandedOut(ServiceLifetime lifetime)
+    {
+        var serializer = await CreateSerializerWithRegistrationsAsync(services =>
+            services.Add(new(typeof(IDIModel), typeof(DIModel), lifetime)));
+        FExServiceProvider.Release();
+
+        try
+        {
+            // Even with a provider that would hand out a container instance, a shared registration is built anew.
+            await FExServiceProvider.InitializeAsync<ServiceProviderTestContainer>();
+
+            serializer.Deserialize<IDIModel>("{\"Name\":\"x\"}").ShouldBeOfType<DIModel>().Origin
+                .ShouldBe("constructor");
+        }
+        finally
+        {
+            FExServiceProvider.Release();
+        }
+    }
+
+    [Fact]
+    public async Task ConcreteRegistration_IsDeserializedAsItself()
+    {
+        var serializer = await CreateSerializerWithRegistrationsAsync(static services => services.AddSingleton<DIModel>());
+
+        serializer.Deserialize<DIModel>("{\"Name\":\"x\"}").ShouldNotBeNull().Name.ShouldBe("x");
     }
 
     [Fact]
@@ -289,6 +394,34 @@ public abstract class JsonSerializerContractTests
     }
 
     [Fact]
+    public void NullPayloadForNonNullableDouble_ThrowsFExJsonException()
+    {
+        var serializer = CreateSerializer();
+
+        // A null member is not covered: the FEx Newtonsoft defaults (NullValueHandling.Ignore) skip it on read.
+        Should.Throw<FExJsonException>(() => serializer.Deserialize<double>("null"));
+        Should.Throw<FExJsonException>(() => serializer.Deserialize("null", typeof(double)));
+    }
+
+    [Fact]
+    public void NullForNullableDouble_ReadsAsNull()
+    {
+        var serializer = CreateSerializer();
+        var culture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+
+        try
+        {
+            serializer.Deserialize<DoubleHolder>("{\"Optional\":null}").ShouldNotBeNull().Optional.ShouldBeNull();
+            serializer.Deserialize<DoubleHolder>("{\"Optional\":\"1.5\"}").ShouldNotBeNull().Optional.ShouldBe(1.5);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
+    }
+
+    [Fact]
     public void JsonPath_ReadsEachPropertyFromItsPath()
     {
         var serializer = CreateSerializer();
@@ -299,6 +432,25 @@ public abstract class JsonSerializerContractTests
         model.Name.ShouldBe("b");
         model.Count.ShouldBe(3);
         model.Flat.ShouldBe("f");
+    }
+
+    [Fact]
+    public void JsonPath_DollarPrefixedName_IsAMemberNotTheRoot()
+    {
+        var serializer = CreateSerializer();
+
+        var model = serializer.Deserialize<PathModel>("{\"$schema\":\"dollar\",\"schema\":\"plain\"}")
+            .ShouldNotBeNull();
+
+        model.Schema.ShouldBe("dollar");
+    }
+
+    [Fact]
+    public void JsonPath_NonObjectPayload_ThrowsFExJsonException()
+    {
+        var serializer = CreateSerializer();
+
+        Should.Throw<FExJsonException>(() => serializer.Deserialize<PathModel>("[1,2]"));
     }
 
     [Fact]
@@ -322,4 +474,9 @@ public abstract class JsonSerializerContractTests
         json.ShouldBe("{\"data.items[1].name\":\"n\",\"data.count\":2}");
     }
     #endregion
+
+    private sealed class WriteOnlyStream : MemoryStream
+    {
+        public override bool CanRead => false;
+    }
 }

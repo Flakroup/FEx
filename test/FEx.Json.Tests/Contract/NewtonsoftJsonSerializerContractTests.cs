@@ -1,6 +1,6 @@
 using FEx.Json.Abstractions;
-using FEx.Json.Extensions;
 using FEx.Json.Abstractions.Helpers;
+using FEx.Json.Extensions;
 using FEx.Json.Resolvers;
 using Newtonsoft.Json;
 using Xunit;

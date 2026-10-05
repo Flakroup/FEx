@@ -13,7 +13,13 @@ public class ParseStringToDoubleConverter : JsonConverter
     public override object? ReadJson(JsonReader reader, Type t, object? existingValue, JsonSerializer serializer)
     {
         if (reader.TokenType == JsonToken.Null)
-            return null;
+        {
+            // Returning null for a non-nullable double made Newtonsoft unbox it (NullReferenceException) or store 0.
+            if (t == typeof(double?))
+                return null;
+
+            throw new JsonSerializationException("Cannot unmarshal null to type double");
+        }
 
         var value = serializer.Deserialize<string>(reader);
 

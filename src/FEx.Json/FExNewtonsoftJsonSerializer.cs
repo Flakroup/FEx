@@ -11,13 +11,17 @@ namespace FEx.Json;
 /// <summary>
 /// <see cref="IFExJsonSerializer" /> on top of Newtonsoft.Json and the given <see cref="JsonSerializerSettings" />
 /// (<see cref="FExJsonModule" /> passes the FEx defaults with <see cref="Resolvers.DIContractResolver" />).
-/// Newtonsoft.Json has no asynchronous reader, so the stream overloads buffer the payload in memory.
+/// Newtonsoft.Json has no asynchronous reader, so the stream overloads buffer the payload in memory. It goes through
+/// <see cref="JsonConvert" />, which applies the process-wide <see cref="JsonConvert.DefaultSettings" /> (installed by
+/// FEx.Json's <c>JsonExtensions</c>) before the given settings: converters registered there apply too.
 /// </summary>
 public sealed class FExNewtonsoftJsonSerializer : IFExJsonSerializer
 {
     private const int CopyBufferSize = 81920;
 
-    private static readonly UTF8Encoding Utf8 = new(false);
+    // Throws on invalid bytes instead of decoding them to U+FFFD, so a payload that is not UTF-8 is rejected as
+    // System.Text.Json rejects it.
+    private static readonly UTF8Encoding Utf8 = new(false, true);
 
     private static readonly byte[] Utf8Bom = [0xEF, 0xBB, 0xBF];
 
@@ -81,20 +85,25 @@ public sealed class FExNewtonsoftJsonSerializer : IFExJsonSerializer
     public async Task SerializeAsync(Stream utf8Json, object? value, Type inputType,
                                      CancellationToken cancellationToken = default)
     {
-        if (utf8Json is null)
-            throw new ArgumentNullException(nameof(utf8Json));
+        FExJsonGuard.EnsureWritable(utf8Json);
 
-        var bytes = Utf8.GetBytes(Serialize(value, inputType));
+        var bytes = Encode(Serialize(value, inputType));
         await utf8Json.WriteAsync(bytes, 0, bytes.Length, cancellationToken);
         await utf8Json.FlushAsync(cancellationToken);
     }
 
-    public async Task<T?> DeserializeAsync<T>(Stream utf8Json, CancellationToken cancellationToken = default) =>
-        Deserialize<T>(await ReadToEndAsync(utf8Json, cancellationToken));
+    public async Task<T?> DeserializeAsync<T>(Stream utf8Json, CancellationToken cancellationToken = default)
+    {
+        FExJsonGuard.EnsureReadable(utf8Json);
+
+        return Deserialize<T>(await ReadToEndAsync(utf8Json, cancellationToken));
+    }
 
     public async Task<object?> DeserializeAsync(Stream utf8Json, Type returnType,
                                                 CancellationToken cancellationToken = default)
     {
+        FExJsonGuard.EnsureReadable(utf8Json);
+
         if (returnType is null)
             throw new ArgumentNullException(nameof(returnType));
 
@@ -103,9 +112,6 @@ public sealed class FExNewtonsoftJsonSerializer : IFExJsonSerializer
 
     private static async Task<string> ReadToEndAsync(Stream utf8Json, CancellationToken cancellationToken)
     {
-        if (utf8Json is null)
-            throw new ArgumentNullException(nameof(utf8Json));
-
         using var buffer = new MemoryStream();
         await utf8Json.CopyToAsync(buffer, CopyBufferSize, cancellationToken);
 
@@ -113,7 +119,27 @@ public sealed class FExNewtonsoftJsonSerializer : IFExJsonSerializer
         var length = (int)buffer.Length;
         var start = HasUtf8Bom(bytes, length) ? Utf8Bom.Length : 0;
 
-        return Utf8.GetString(bytes, start, length - start);
+        try
+        {
+            return Utf8.GetString(bytes, start, length - start);
+        }
+        catch (DecoderFallbackException ex)
+        {
+            throw FExJsonException.DeserializationFailed(ex);
+        }
+    }
+
+    private static byte[] Encode(string json)
+    {
+        try
+        {
+            return Utf8.GetBytes(json);
+        }
+        catch (EncoderFallbackException ex)
+        {
+            // A string holding an unpaired surrogate has no UTF-8 form.
+            throw FExJsonException.SerializationFailed(ex);
+        }
     }
 
     // A leading UTF-8 byte order mark is skipped, as System.Text.Json does.

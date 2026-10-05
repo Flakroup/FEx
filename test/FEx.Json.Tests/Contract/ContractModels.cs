@@ -35,6 +35,20 @@ public sealed class DoubleHolder
 {
     // Both implementations apply ParseStringToDoubleConverter to every double by default.
     public double Value { get; set; }
+
+    public double? Optional { get; set; }
+}
+
+/// <summary>Two members claim the JSON name "x": an invalid contract in both libraries.</summary>
+public sealed class CollidingModel
+{
+    [NewtonsoftProperty("x")]
+    [JsonPropertyName("x")]
+    public int First { get; set; }
+
+    [NewtonsoftProperty("x")]
+    [JsonPropertyName("x")]
+    public int Second { get; set; }
 }
 
 [NewtonsoftConverter(typeof(NJsonPathConverter))]
@@ -50,6 +64,11 @@ public sealed class PathModel
     public int Count { get; set; }
 
     public string? Flat { get; set; }
+
+    // A member name starting with '$' that is not the JSONPath root.
+    [NewtonsoftProperty("$schema")]
+    [JsonPropertyName("$schema")]
+    public string? Schema { get; set; }
 }
 
 public interface IDIModel

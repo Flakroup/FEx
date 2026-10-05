@@ -125,12 +125,6 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     /// <summary>
     /// Initializes a new instance of the <see cref="FlakHttpClient" /> class with a specific handler.
     /// </summary>
-    /// <param name="pars">The <see cref="WebRequestParams" /> parameters for processing HTTP response messages.</param>
-    /// <param name="disposeHandler">
-    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
-    /// <see langword="false" /> if you intend to reuse the inner handler.
-    /// </param>
-    /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public HttpClientEx()
         : this(new WebRequestParams(), true, null)
     {
@@ -146,6 +140,15 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HttpClientEx" /> class from the specified request parameters.
+    /// </summary>
+    /// <param name="pars">The <see cref="WebRequestParams" /> parameters for processing HTTP response messages.</param>
+    /// <param name="disposeHandler">
+    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
+    /// <see langword="false" /> if you intend to reuse the inner handler.
+    /// </param>
+    /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public HttpClientEx(WebRequestParams pars, bool disposeHandler, CancellationTokenSource? cancellationTokenSource)
         : this(pars.GetHttpClientHandler(), disposeHandler, cancellationTokenSource)
     {
@@ -158,11 +161,6 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     /// The <see cref="HttpMessageHandler" /> responsible for processing the HTTP
     /// response messages.
     /// </param>
-    /// <param name="disposeHandler">
-    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
-    /// <see langword="false" /> if you intend to reuse the inner handler.
-    /// </param>
-    /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public HttpClientEx(HttpClientHandler handler)
         : this(handler, true, null)
     {
@@ -173,6 +171,18 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HttpClientEx" /> class with a specific handler.
+    /// </summary>
+    /// <param name="handler">
+    /// The <see cref="HttpMessageHandler" /> responsible for processing the HTTP
+    /// response messages.
+    /// </param>
+    /// <param name="disposeHandler">
+    /// <see langword="true" /> if the inner handler should be disposed of by Dispose(),
+    /// <see langword="false" /> if you intend to reuse the inner handler.
+    /// </param>
+    /// <param name="cancellationTokenSource">The cancellation token source.</param>
     public HttpClientEx(HttpClientHandler handler, bool disposeHandler, CancellationTokenSource? cancellationTokenSource)
         : base(handler, disposeHandler)
     {

@@ -179,8 +179,8 @@ public class ConcurrentObservableDictionary<TKey, TValue> : BaseConcurrentList<K
 
     /// <summary>
     /// Uses the specified functions to add a key/value pair to the
-    /// <see cref="System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key does not already exist, or to
-    /// update a key/value pair in the <see cref="System.Collections.Concurrent.ConcurrentDictionary`2" /> if the key
+    /// <see cref="System.Collections.Concurrent.ConcurrentDictionary{TKey,TValue}" /> if the key does not already exist, or to
+    /// update a key/value pair in the <see cref="System.Collections.Concurrent.ConcurrentDictionary{TKey,TValue}" /> if the key
     /// already exists.
     /// </summary>
     /// <param name="key">The key to be added or whose value should be updated</param>

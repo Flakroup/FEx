@@ -11,6 +11,7 @@ namespace FEx.Asyncx.Services;
 /// <summary>
 /// </summary>
 /// <typeparam name="TWorker"></typeparam>
+/// <typeparam name="TResult"></typeparam>
 /// <remarks>Doesn't require <c>BeginInitialization();</c> call in .ctor</remarks>
 public abstract class AsyncWorkersPool<TWorker, TResult> : AsyncInitializable
     where TWorker : AsyncWorker<TWorker, TResult>

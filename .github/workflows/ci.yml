@@ -83,6 +83,7 @@ jobs:
           name: packages
           path: |
             artifacts/packages/*.nupkg
+            artifacts/packages/*.snupkg
             artifacts/packages/release-version.txt
           if-no-files-found: error   # an empty release must fail here, not get tagged by `publish`
           retention-days: 7

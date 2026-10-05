@@ -304,29 +304,12 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         // SubscribeTask subscribes on the thread pool; signal once the cache is listened to, so an edit made after
         // InitializeAsync returns reaches this subscription.
-        var source = Observable.Create<IChangeSet<TValue, TKey>>(async observer =>
+        var source = Observable.Create<IChangeSet<TValue, TKey>>(observer =>
         {
-            if (BeforeSubscribe is { } hold)
-                await hold().ConfigureAwait(false);
+            var listen = ListenAsync(observer);
+            LastSubscribe = listen.ContinueWith(static _ => { }, TaskScheduler.Default);
 
-            // Disposed already: InitializeAsync has failed, do not listen to a cache that may be disposed too.
-            if (subscribed.Task.IsCompleted)
-            {
-                SubscribeDecided?.Invoke(false);
-
-                return Disposable.Empty;
-            }
-
-            SubscribeDecided?.Invoke(true);
-
-            try
-            {
-                return cacheObservable.Subscribe(observer);
-            }
-            finally
-            {
-                subscribed.TrySetResult(true);
-            }
+            return listen;
         });
 
         var pipelineSubscription = source.Select(WithoutReloads)
@@ -377,6 +360,31 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
         }
 
         await subscribed.Task;
+
+        async Task<IDisposable> ListenAsync(IObserver<IChangeSet<TValue, TKey>> observer)
+        {
+            if (BeforeSubscribe is { } hold)
+                await hold().ConfigureAwait(false);
+
+            // Disposed already: InitializeAsync has failed, do not listen to a cache that may be disposed too.
+            if (subscribed.Task.IsCompleted)
+            {
+                SubscribeDecided?.Invoke(false);
+
+                return Disposable.Empty;
+            }
+
+            SubscribeDecided?.Invoke(true);
+
+            try
+            {
+                return cacheObservable.Subscribe(observer);
+            }
+            finally
+            {
+                subscribed.TrySetResult(true);
+            }
+        }
     }
 
     protected TKey KeyRetriver(TValue value) => (_keyRetriver ??= RetriveKey().Compile()).Invoke(value);
@@ -749,6 +757,12 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
     /// <summary>Test seam: told whether the thread-pool subscribe listens to the cache (<c>false</c> once disposed).</summary>
     internal Action<bool>? SubscribeDecided { get; set; }
+
+    /// <summary>
+    /// Test seam: the latest thread-pool subscribe of the save pipeline; once it completes, nothing of the subscribe
+    /// is rooted any more.
+    /// </summary>
+    internal Task? LastSubscribe { get; private set; }
 
     /// <summary>Test seam: awaited after the save pipeline is built and before it becomes the dictionary's subscription.</summary>
     internal Func<Task>? BeforePipelineAssigned { get; set; }

@@ -907,6 +907,9 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
         (await decided.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken))
             .ShouldBeFalse();
+        // The subscribe's frame still roots the faulted signal until it returns; wait for that, so a GC after this
+        // helper can finalize the signal if the dispose left it unobserved.
+        await sut.LastSubscribe.ShouldNotBeNull().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
 #pragma warning restore VSTHRD003
     }
 

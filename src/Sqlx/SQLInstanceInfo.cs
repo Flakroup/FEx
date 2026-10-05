@@ -1,5 +1,6 @@
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Core.Abstractions.Extensions;
+using FEx.Sqlx.Abstractions;
 using FEx.Sqlx.Enums;
 using FEx.Sqlx.Extensions;
 using Microsoft.SqlServer.Management.Smo;
@@ -18,7 +19,7 @@ namespace FEx.Sqlx;
 // Retained for backward compatibility; full migration tracked as tech debt.
 #pragma warning disable CS0618
 
-public class SQLInstanceInfo
+public class SQLInstanceInfo : ISqlInstanceInfo
 {
     public string SQLInstance { get; }
     public Version? BuildClrVersion { get; protected set; }
@@ -29,10 +30,10 @@ public class SQLInstanceInfo
     public string? Edition { get; protected set; }
     public string? EditionID { get; protected set; }
     public string? EngineEdition { get; protected set; }
-    public FileStreamEffectiveLevel? FilestreamConfiguredLevel { get; protected set; }
-    public FileStreamEffectiveLevel? FilestreamEffectiveLevel { get; protected set; }
+    public SqlFileStreamLevel? FilestreamConfiguredLevel { get; protected set; }
+    public SqlFileStreamLevel? FilestreamEffectiveLevel { get; protected set; }
     public string? FilestreamShareName { get; protected set; }
-    public HadrManagerStatus? HadrManagerStatus { get; protected set; }
+    public SqlHadrManagerStatus? HadrManagerStatus { get; protected set; }
     public string? InstanceDefaultBackupPath { get; protected set; }
     public string? InstanceDefaultDataPath { get; protected set; }
     public string? InstanceDefaultLogPath { get; protected set; }
@@ -68,7 +69,7 @@ public class SQLInstanceInfo
     public string? SqlCharSetName { get; protected set; }
     public short? SqlSortOrder { get; protected set; }
     public string? SqlSortOrderName { get; protected set; }
-    public ServerLoginMode LoginMode => Server?.LoginMode ?? ServerLoginMode.Unknown;
+    public virtual SqlLoginMode LoginMode => Server is null ? SqlLoginMode.Unknown : Server.LoginMode.MapByValue(SqlLoginMode.Unknown);
 
     protected Server? Server { get; set; }
 
@@ -294,19 +295,19 @@ public class SQLInstanceInfo
                 () => GetServerEngineEdition((int?)Server?.EngineEdition));
 
             SafePropertySet(x => FilestreamConfiguredLevel = x,
-                () => (FileStreamEffectiveLevel?)GetInt(props, ServerProp.FilestreamConfiguredLevel));
+                () => (SqlFileStreamLevel?)GetInt(props, ServerProp.FilestreamConfiguredLevel));
 
             SafePropertySet(x => FilestreamEffectiveLevel = x,
-                () => (FileStreamEffectiveLevel?)GetInt(props, ServerProp.FilestreamEffectiveLevel),
-                () => Server?.FilestreamLevel);
+                () => (SqlFileStreamLevel?)GetInt(props, ServerProp.FilestreamEffectiveLevel),
+                () => Server?.FilestreamLevel.MapByValue(SqlFileStreamLevel.Disabled));
 
             SafePropertySet(x => FilestreamShareName = x,
                 () => props.TryGetKeyValue(ServerProp.FilestreamShareName),
                 () => Server?.FilestreamShareName);
 
             SafePropertySet(x => HadrManagerStatus = x,
-                () => (HadrManagerStatus?)GetInt(props, ServerProp.HadrManagerStatus),
-                () => Server?.HadrManagerStatus);
+                () => (SqlHadrManagerStatus?)GetInt(props, ServerProp.HadrManagerStatus),
+                () => Server?.HadrManagerStatus.MapByValue(SqlHadrManagerStatus.PendingCommunication));
 
             SafePropertySet(x => InstanceDefaultBackupPath = x,
                 () => props.TryGetKeyValue(ServerProp.InstanceDefaultBackupPath));

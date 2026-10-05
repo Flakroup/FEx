@@ -4,7 +4,6 @@ using FEx.Asyncx.Abstractions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Sqlx.Abstractions;
 using Microsoft.Data.Sql;
-using Microsoft.SqlServer.Management.Smo;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 #if NETFRAMEWORK
 using FEx.Agnostics.Abstractions.Utilities;
+using Microsoft.SqlServer.Management.Smo;
 using Microsoft.SqlServer.Management.Smo.Wmi;
 #endif
 #if NET
@@ -24,6 +24,8 @@ namespace FEx.Sqlx;
 public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
 {
     public SQLInstanceInfo? SQLInstanceInfo { get; private set; }
+
+    ISqlInstanceInfo? ISqlDbHelper.SQLInstanceInfo => SQLInstanceInfo;
 
     public string? SQLInstance => SQLInstanceInfo?.SQLInstance;
 
@@ -79,7 +81,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
     }
 
     private static bool HasValidLoginMode(SQLInstanceInfo sqlInstanceInfo) =>
-        sqlInstanceInfo?.LoginMode is ServerLoginMode.Integrated or ServerLoginMode.Mixed;
+        sqlInstanceInfo?.LoginMode is SqlLoginMode.Integrated or SqlLoginMode.Mixed;
 
     // Used by GetSqlInstancesAsync in the non-NETFRAMEWORK build (#else branch). R# analyzes the net48
     // TFM, where that single call site is preprocessed out, so it incorrectly reports this as unused.

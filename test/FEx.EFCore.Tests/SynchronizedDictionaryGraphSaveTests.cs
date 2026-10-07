@@ -1,14 +1,10 @@
 using DynamicData;
-using FEx.Agnostics.Abstractions.Interfaces;
-using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.EFCore.Collections;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
-using FEx.EFCore.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -22,14 +18,14 @@ using Xunit;
 namespace FEx.EFCore.Tests;
 
 /// <summary>
-/// Graph shapes the save path (<c>DbSet.Update</c>) handles for a cached value. The shapes it does not handle yet (a
-/// loaded principal overwriting another writer's change, among others) are the acceptance cases of #197.
+/// Graph shapes of a cached value the save path (load the row, apply the cached state) handles; the acceptance cases of
+/// #197 are in <see cref="SynchronizedDictionaryLoadAndApplyTests" />.
 /// </summary>
 public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
 {
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
     private readonly ServiceProvider _services;
-    private readonly GraphDbService _dbService;
+    private readonly SqliteDbService<GraphDbContext> _dbService;
 
     public SynchronizedDictionaryGraphSaveTests()
     {
@@ -61,7 +57,7 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         var services = new ServiceCollection();
         services.AddScoped(_ => CreateContext());
         _services = services.BuildServiceProvider();
-        _dbService = new(new ScopeProvider(_services));
+        _dbService = new(_services);
     }
 
     public void Dispose()
@@ -119,9 +115,8 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         (await NamesAsync())[0].ShouldBe("edited");
     }
 
-    /// <summary>Pins today's behaviour: an item removed from an owned collection is not deleted (#197 decides).</summary>
     [Fact]
-    public async Task OwnedCollection_RemovedItem_IsNotDeleted()
+    public async Task OwnedCollection_RemovedItem_IsDeleted()
     {
         using var sut = new GraphDictionary(_dbService);
         var doc = await LoadWithCategoryAsync();
@@ -131,7 +126,7 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         doc.Name = "edited";
         (await sut.SaveAsync(doc)).ShouldBeTrue();
 
-        (await TagsAsync()).ShouldBe(["t1"]);
+        (await TagsAsync()).ShouldBeEmpty();
     }
 
     private async Task<List<string>> NamesAsync()
@@ -223,26 +218,6 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
             doc.OwnsMany(d => d.Tags, t => t.HasKey(x => x.Id));
             doc.HasOne(d => d.Category).WithMany(c => c.Docs).HasForeignKey(d => d.CategoryId);
         }
-    }
-
-    private sealed class ScopeProvider : IScopeProvider
-    {
-        private readonly IServiceProvider _services;
-
-        public ScopeProvider(IServiceProvider services) => _services = services;
-
-        public IServiceScope CreateScope() => _services.CreateScope();
-    }
-
-    private sealed class GraphDbService : DbServiceBase<GraphDbContext>, IEFCoreDatabaseBackedService<GraphDbContext>
-    {
-        public string? DbKey => null;
-
-        public GraphDbService(IScopeProvider scopeProvider)
-            : base(scopeProvider, new(Substitute.For<IFExLogger>()), Substitute.For<IFExDbConfig>(), [])
-        {
-        }
-
     }
 
     private sealed class GraphDictionary : SynchronizedDictionary<int, GraphDoc, GraphDbContext>

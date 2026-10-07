@@ -1,6 +1,4 @@
 using DynamicData;
-using FEx.Agnostics.Abstractions.Interfaces;
-using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.EFCore.Collections;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
@@ -8,7 +6,6 @@ using FEx.EFCore.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
 using Shouldly;
 using System;
 using System.Collections.Concurrent;
@@ -32,7 +29,7 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
 {
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
     private readonly ServiceProvider _services;
-    private readonly CacheDbService _dbService;
+    private readonly SqliteDbService<CacheDbContext> _dbService;
 
     public SynchronizedDictionaryConflictTests()
     {
@@ -49,7 +46,7 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         services.AddScoped(_ => CreateContext());
         _services = services.BuildServiceProvider();
 
-        _dbService = new(new ScopeProvider(_services));
+        _dbService = new(_services);
     }
 
     public void Dispose()
@@ -1014,28 +1011,6 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
             : base(new DbContextOptionsBuilder<CacheDbContext>().UseSqlite(connection).Options)
         {
         }
-    }
-
-    private sealed class ScopeProvider : IScopeProvider
-    {
-        private readonly IServiceProvider _services;
-
-        public ScopeProvider(IServiceProvider services) => _services = services;
-
-        public IServiceScope CreateScope() => _services.CreateScope();
-    }
-
-    private sealed class CacheDbService : DbServiceBase<CacheDbContext>, IEFCoreDatabaseBackedService<CacheDbContext>
-    {
-        public string? DbKey => null;
-
-        public CacheDbService(IScopeProvider scopeProvider)
-            : base(scopeProvider, new(Substitute.For<IFExLogger>()), Substitute.For<IFExDbConfig>(), [])
-        {
-        }
-
-        // Only the mapping snapshot the dictionary needs; the base also probes the SQL server and runs migrations.
-        protected override async Task OnInitializeAsync() => await EnsureMappingSnapshotAsync();
     }
 
     private sealed class CacheDictionary : SynchronizedDictionary<int, CachedDoc, CacheDbContext>

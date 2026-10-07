@@ -1,5 +1,6 @@
 using DynamicData;
 using FEx.EFCore.Collections;
+using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
 using Microsoft.Data.Sqlite;
@@ -407,6 +408,64 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
             .ShouldHaveSingleItem()
             .Detail.ShouldNotBeNull()
             .Value.ShouldBe("d new");
+    }
+
+    /// <summary>An owned reference that is null in the cached value and absent from the row stays absent, untouched.</summary>
+    [Fact]
+    public async Task OwnedReference_NullInBothTheCachedValueAndTheRow_StaysAbsent()
+    {
+        using var sut = new DocDictionary(_dbService);
+        var doc = await LoadDocAsync();
+        sut.AddOrUpdateValue(doc);
+
+        doc.Tags[0].Detail = null;
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+        (await TagDetailCountAsync()).ShouldBe(0);
+        var writesBefore = _writes.Count;
+
+        doc.Tags[0].Label = "t1 edited";
+        (await sut.SaveAsync(doc)).ShouldBeTrue();
+
+        (_writes.Count - writesBefore).ShouldBe(1);
+        (await TagDetailCountAsync()).ShouldBe(0);
+        using var reader = CreateContext();
+        var saved = (await reader.Docs.SingleAsync(d => d.Id == 1, TestContext.Current.CancellationToken)).Tags
+            .ShouldHaveSingleItem();
+        saved.Label.ShouldBe("t1 edited");
+        saved.Detail.ShouldBeNull();
+    }
+
+    /// <summary>
+    /// A removed value whose row is loaded in the same save through another instance of the same key deletes that row,
+    /// instead of attaching a second instance of it.
+    /// </summary>
+    [Fact]
+    public async Task RemovedValue_WithTheKeyOfARowLoadedForTheSameSave_DeletesTheLoadedRow()
+    {
+        using var sut = NodeDictionary();
+        var root = await LoadNodeAsync(1);
+        sut.AddOrUpdateValue(root);
+
+        root.Name = "root edited";
+        var removed = new Node { Id = 1, Name = "another instance" };
+
+        (await sut.SaveAsync(new(ChangeReason.Refresh, 1, root), new(ChangeReason.Remove, 1, removed))).ShouldBeTrue();
+
+        (await NodesAsync()).ShouldBeEmpty();
+    }
+
+    /// <summary>The key equals a key of the same root type and values, whichever way it is compared.</summary>
+    [Fact]
+    public void EntityKey_EqualsOnlyAKeyOfTheSameTypeAndValues()
+    {
+        using var ctx = CreateContext();
+        var key = CachedValueApplier.EntityKey.Of(ctx.Entry(new Node { Id = 1 }))!;
+
+        key.Equals((object)CachedValueApplier.EntityKey.Of(ctx.Entry(new Node { Id = 1, Name = "other" }))!).ShouldBeTrue();
+        key.Equals((object)CachedValueApplier.EntityKey.Of(ctx.Entry(new Node { Id = 2 }))!).ShouldBeFalse();
+        key.Equals((object)CachedValueApplier.EntityKey.Of(ctx.Entry(new Person { Id = 1 }))!).ShouldBeFalse();
+        key.Equals((object)"1").ShouldBeFalse();
+        key.Equals((object?)null).ShouldBeFalse();
     }
 
     /// <summary>

@@ -31,9 +31,9 @@ public sealed class DIContractResolverTests
 
         meta.RegisterServices(services);
 
-        meta.IsRegistred(typeof(IFoo)).ShouldBeTrue();
+        meta.IsRegistered(typeof(IFoo)).ShouldBeTrue();
         meta.IsTransient(typeof(IFoo)).ShouldBeTrue();
-        meta.RegistredTypeFor(typeof(IFoo)).ShouldBe(typeof(Foo));
+        meta.RegisteredTypeFor(typeof(IFoo)).ShouldBe(typeof(Foo));
     }
 
     [Fact]

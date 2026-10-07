@@ -1,6 +1,7 @@
 using FEx.Agnostics.Abstractions.Extensions.Numericals;
 using Newtonsoft.Json;
 using System;
+using System.Globalization;
 
 namespace FEx.Json.Converters;
 
@@ -30,7 +31,7 @@ public class ParseStringToDoubleConverter : JsonConverter
         }
         catch (Exception ex)
         {
-            // ToDouble throws a bare Exception; a Newtonsoft exception is reported like any unbindable payload.
+            // ToDouble throws FormatException; a Newtonsoft exception is reported like any unbindable payload.
             throw new JsonSerializationException("Cannot unmarshal type double", ex);
         }
     }
@@ -45,6 +46,6 @@ public class ParseStringToDoubleConverter : JsonConverter
         }
 
         var value = (double)untypedValue;
-        serializer.Serialize(writer, value.ToString());
+        serializer.Serialize(writer, value.ToString(CultureInfo.InvariantCulture));
     }
 }

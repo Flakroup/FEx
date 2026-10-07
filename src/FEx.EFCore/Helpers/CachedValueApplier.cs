@@ -172,29 +172,16 @@ internal static class CachedValueApplier
             StructuralComparisons.StructuralEqualityComparer.Equals(GetClrValue(p, loaded), GetClrValue(p, cachedItem)));
     }
 
-    // SetValues copied the cached CLR tokens as current values (a token that differs from the row is then modified);
-    // they also become the original values the UPDATE checks. A shadow token has no value on the cached instance: as
-    // with DbSet.Update, its original value is the CLR default, and it is marked modified when the row differs, so a
-    // moved shadow token is a conflict rather than a silent overwrite.
+    // The cached CLR tokens become the original values the UPDATE checks. A shadow token has no value on the cached
+    // instance: as with DbSet.Update, its original value is the CLR default. EF marks a token whose new original value
+    // differs from the row's modified, so a moved token (CLR or shadow) is a conflict rather than a silent overwrite.
     private static void KeepCachedConcurrencyTokens(EntityEntry row, object cached)
     {
         foreach (var token in row.Metadata.GetProperties().Where(p => p.IsConcurrencyToken))
         {
-            var entry = row.Property(token.Name);
-
-            if (!token.IsShadowProperty())
-            {
-                entry.OriginalValue = GetClrValue(token, cached);
-
-                continue;
-            }
-
-            var defaultValue = token.ClrType.IsValueType ? Activator.CreateInstance(token.ClrType) : null;
-            var stale = !StructuralComparisons.StructuralEqualityComparer.Equals(entry.OriginalValue, defaultValue);
-            entry.OriginalValue = defaultValue;
-
-            if (stale && token.GetAfterSaveBehavior() == PropertySaveBehavior.Save)
-                entry.IsModified = true;
+            row.Property(token.Name).OriginalValue = token.IsShadowProperty()
+                ? token.ClrType.IsValueType ? Activator.CreateInstance(token.ClrType) : null
+                : GetClrValue(token, cached);
         }
     }
 

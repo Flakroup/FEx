@@ -400,8 +400,9 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     /// its owned types and the foreign keys of its reference navigations are written, never a related entity; the cached
     /// concurrency tokens are the original values, so a row changed elsewhere is a conflict. A new value is added and a
     /// removed one removed with its graph, as <c>DbSet.Add</c> and <c>DbSet.Remove</c> do, except that an entity of the
-    /// graph whose row is loaded for this save is not attached (the loaded row stands for it). With <see cref="UseIndex" />, a row the index lists but another writer deleted
-    /// is re-added only while its key is still cached; otherwise its change is dropped from <paramref name="changes" />.
+    /// graph whose row is loaded for this save is not attached (the loaded row stands for it). With
+    /// <see cref="UseIndex" />, a row the index lists but another writer deleted is re-added only while its key is still
+    /// cached; otherwise its change is dropped from <paramref name="changes" />.
     /// </summary>
     protected async Task SaveCacheChangesAsync(TDbCtx dbContext, ICollection<ChangeInfo<TKey, TValue>> changes)
     {

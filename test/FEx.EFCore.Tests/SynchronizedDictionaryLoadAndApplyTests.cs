@@ -62,6 +62,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
                     Notes = [new() { Text = "a" }, new() { Text = "a" }, new() { Text = "b" }]
                 });
             setup.Nodes.Add(new() { Id = 1, Name = "root" });
+            setup.PNodes.Add(new() { Id = 1, Name = "root" });
             setup.Items.Add(new() { Id = 1, Name = "item", Price = 10 });
             setup.Entry(setup.Badges.Add(new() { Title = "badge" }).Entity).Property<int>("Id").CurrentValue = 1;
             setup.Animals.Add(new Dog { Id = 1, Name = "rex", Breed = "collie" });
@@ -469,6 +470,50 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         (await NodesAsync()).ShouldBe(["1:root edited:"]);
     }
 
+    /// <summary>
+    /// A self-reference with a shadow foreign key: an edit of the cached root and a child added under that cached
+    /// instance in one batch are both saved, instead of failing the batch on an identity conflict.
+    /// </summary>
+    [Fact]
+    public async Task AddedChildOfAnEditedRoot_WithAShadowForeignKey_SavesBoth()
+    {
+        using var sut = PNodeDictionary();
+        var root = await LoadPNodeAsync(1);
+        sut.AddOrUpdateValue(root);
+
+        root.Name = "root edited";
+        var child = new PNode { Id = 2, Name = "child", Parent = root };
+
+        (await sut.SaveAsync(new(ChangeReason.Refresh, 1, root), new(ChangeReason.Add, 2, child))).ShouldBeTrue();
+
+        (await PNodesAsync()).ShouldBe(["1:root edited:", "2:child:1"]);
+    }
+
+    /// <summary>The mirror case: a child removed in the batch that edits the cached root it points at.</summary>
+    [Fact]
+    public async Task RemovedChildOfAnEditedRoot_WithAShadowForeignKey_SavesBoth()
+    {
+        using (var ctx = CreateContext())
+        {
+            var trackedRoot = await ctx.PNodes.SingleAsync(n => n.Id == 1, TestContext.Current.CancellationToken);
+            await ctx.PNodes.AddAsync(new() { Id = 2, Name = "child", Parent = trackedRoot },
+                TestContext.Current.CancellationToken);
+            await ctx.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var sut = PNodeDictionary();
+        var root = await LoadPNodeAsync(1);
+        var child = await LoadPNodeAsync(2);
+        child.Parent = root;
+        sut.AddOrUpdateValue(root);
+
+        root.Name = "root edited";
+
+        (await sut.SaveAsync(new(ChangeReason.Refresh, 1, root), new(ChangeReason.Remove, 2, child))).ShouldBeTrue();
+
+        (await PNodesAsync()).ShouldBe(["1:root edited:"]);
+    }
+
     /// <summary>A row hidden by a query filter still exists: it is updated, not inserted again.</summary>
     [Fact]
     public async Task RowHiddenByAQueryFilter_IsUpdated()
@@ -521,6 +566,32 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         saved.Price.ShouldBe(10);
     }
 
+    /// <summary>
+    /// A moved shadow token is a conflict even when nothing else differs and the saving context does not detect
+    /// changes on its own.
+    /// </summary>
+    [Fact]
+    public async Task ShadowConcurrencyTokenMovedWithoutOtherDifferences_RaisesConflict()
+    {
+        _configureSavingContext = ctx => ctx.ChangeTracker.AutoDetectChangesEnabled = false;
+        using var sut = ItemDictionary();
+        var item = await LoadItemAsync();
+        sut.AddOrUpdateValue(item);
+        var conflicts = new ConcurrentQueue<CacheConflict<int, Item>>();
+        sut.ConflictDetected += (_, conflict) => conflicts.Enqueue(conflict);
+
+        using (var writerB = CreateContext())
+        {
+            var other = await writerB.Items.SingleAsync(i => i.Id == 1, TestContext.Current.CancellationToken);
+            writerB.Entry(other).Property<int>("Rev").CurrentValue = 1;
+            await writerB.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        (await sut.SaveAsync(new Change<Item, int>(ChangeReason.Refresh, 1, item))).ShouldBeFalse();
+
+        conflicts.ShouldHaveSingleItem();
+    }
+
     [Fact]
     public async Task ShadowConcurrencyTokenAtItsDefault_Saves()
     {
@@ -540,6 +611,24 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     private IdDictionary<Node> NodeDictionary() => new(_dbService, n => n.Id, ctx => ctx.Nodes);
 
     private IdDictionary<Item> ItemDictionary() => new(_dbService, i => i.Id, ctx => ctx.Items);
+
+    private IdDictionary<PNode> PNodeDictionary() => new(_dbService, n => n.Id, ctx => ctx.PNodes);
+
+    private async Task<PNode> LoadPNodeAsync(int id)
+    {
+        using var ctx = CreateContext();
+
+        return await ctx.PNodes.AsNoTracking().SingleAsync(n => n.Id == id, TestContext.Current.CancellationToken);
+    }
+
+    private async Task<List<string>> PNodesAsync()
+    {
+        using var ctx = CreateContext();
+
+        return await ctx.PNodes.OrderBy(n => n.Id)
+            .Select(n => n.Id + ":" + n.Name + ":" + EF.Property<int?>(n, "ParentId"))
+            .ToListAsync(TestContext.Current.CancellationToken);
+    }
 
     private async Task<Node> LoadNodeAsync(int id)
     {
@@ -692,6 +781,22 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         }
     }
 
+    /// <summary>A self-referencing node whose foreign key is a shadow property.</summary>
+    public sealed class PNode : INotifyPropertyChanged
+    {
+        public int Id { get; set; }
+
+        public string Name { get; set; } = "";
+
+        public PNode? Parent { get; set; }
+
+        public event PropertyChangedEventHandler? PropertyChanged
+        {
+            add { }
+            remove { }
+        }
+    }
+
     /// <summary>Soft-deleted through a query filter, with a shadow concurrency token.</summary>
     public sealed class Item : INotifyPropertyChanged
     {
@@ -752,6 +857,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         public DbSet<Node> Nodes => Set<Node>();
         public DbSet<Item> Items => Set<Item>();
         public DbSet<Badge> Badges => Set<Badge>();
+        public DbSet<PNode> PNodes => Set<PNode>();
 
         public ApplyDbContext(SqliteConnection connection, WriteCounter writes)
             : base(new DbContextOptionsBuilder<ApplyDbContext>().UseSqlite(connection).AddInterceptors(writes).Options)
@@ -770,6 +876,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
             badge.HasKey("Id");
 
             modelBuilder.Entity<Node>().HasOne(n => n.Parent).WithMany().HasForeignKey(n => n.ParentId);
+            modelBuilder.Entity<PNode>().HasOne(n => n.Parent).WithMany().HasForeignKey("ParentId");
 
             var item = modelBuilder.Entity<Item>();
             item.HasQueryFilter(i => !i.Archived);

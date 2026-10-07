@@ -56,6 +56,20 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         _connection.Dispose();
     }
 
+    [Fact]
+    public async Task TryGetValue_ReturnsACachedValue_AndFalseForAnUncachedKey()
+    {
+        using var sut = CreateDictionary(false);
+        var doc = await LoadAsync(1);
+        sut.AddOrUpdateValue(doc);
+
+        sut.TryGetValue(1, out var cached).ShouldBeTrue();
+        cached.ShouldBeSameAs(doc);
+        sut.TryGetValue(99, out var missing).ShouldBeFalse();
+        missing.ShouldBeNull();
+        Should.Throw<InvalidOperationException>(() => sut[99]);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

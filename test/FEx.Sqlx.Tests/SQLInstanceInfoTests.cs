@@ -1,5 +1,5 @@
+﻿using FEx.Sqlx.Abstractions;
 using FEx.Sqlx.Enums;
-using Microsoft.SqlServer.Management.Smo;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -75,7 +75,7 @@ public sealed class SQLInstanceInfoTests
         info.Edition.ShouldBeNull();
         info.ProductVersion.ShouldBeNull();
         info.IsLocalDB.ShouldBeFalse();
-        info.LoginMode.ShouldBe(ServerLoginMode.Unknown);
+        info.LoginMode.ShouldBe(SqlLoginMode.Unknown);
     }
 
     [Fact]
@@ -154,14 +154,23 @@ public sealed class SQLInstanceInfoTests
     {
         var info = Process(FullProps);
 
-        info.FilestreamConfiguredLevel.ShouldBe((FileStreamEffectiveLevel)2);
-        info.FilestreamEffectiveLevel.ShouldBe((FileStreamEffectiveLevel)1);
-        info.HadrManagerStatus.ShouldBe((HadrManagerStatus)1);
+        info.FilestreamConfiguredLevel.ShouldBe(SqlFileStreamLevel.SqlLocalFileSystemAccess);
+        info.FilestreamEffectiveLevel.ShouldBe(SqlFileStreamLevel.SqlAccess);
+        info.HadrManagerStatus.ShouldBe(SqlHadrManagerStatus.Running);
     }
 
     [Fact]
-    public void ProcessProps_ReportsIntegratedSecurityOnlyAsFalse_WhenNoServerIsAttached() =>
-        Process(FullProps).IsIntegratedSecurityOnly.ShouldBe(false);
+    public void ProcessProps_TakesIntegratedSecurityOnlyFromTheProperty_WhenNoServerIsAttached() =>
+        Process(FullProps).IsIntegratedSecurityOnly.ShouldBe(true);
+
+    [Fact]
+    public void ProcessProps_LeavesIntegratedSecurityOnlyUnknown_WhenNeitherServerNorPropertyKnowsIt()
+    {
+        var props = new Dictionary<ServerProp, string?>(FullProps);
+        props.Remove(ServerProp.IsIntegratedSecurityOnly);
+
+        Process(props).IsIntegratedSecurityOnly.ShouldBeNull();
+    }
 
     [Fact]
     public void ProcessProps_StripsLeadingMarkersFromTheClrVersion()
@@ -242,7 +251,7 @@ public sealed class SQLInstanceInfoTests
         var info = new SQLInstanceInfo("HOST");
 
         typeof(SQLInstanceInfo)
-            .GetMethod("ProcessProps", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .GetMethod("ProcessProps", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly, null, [typeof(IDictionary<ServerProp, string?>)], null)!
             .Invoke(info, [props]);
 
         return info;

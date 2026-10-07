@@ -48,6 +48,10 @@ public sealed class SqlxAbstractionTests
     }
 
     [Fact]
+    public void Provider_DefaultConstructor_IsReadyWithoutTouchingTheMachine() =>
+        new SqlInstanceProvider().ShouldBeAssignableTo<ISqlInstanceProvider>();
+
+    [Fact]
     public async Task Provider_MapsDiscoveredInstancesToTheAbstraction()
     {
         TestInstanceInfo first = new("host\\A", SqlLoginMode.Mixed, new(16, 0));

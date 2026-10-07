@@ -389,9 +389,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
         if (imageLink is null)
             return null;
 
-        var entry = FilesCacheIndex[imageLink];
-
-        if (entry is not null)
+        if (FilesCacheIndex.TryGetValue(imageLink, out var entry))
         {
             entry.Cache?.Refresh();
 

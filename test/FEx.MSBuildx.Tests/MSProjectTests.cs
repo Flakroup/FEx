@@ -445,11 +445,11 @@ public sealed class MSProjectTests : IDisposable
     }
 
     [Fact]
-    public void IgnoredFiles_HasNoFullPathForAFileInASubdirectory()
+    public void DiffResult_WithAnIllegalCharacterInTheRelativePath_HasNoFullPath()
     {
         var project = LoadLayout();
 
-        var nested = project.IgnoredFiles.Single(x => x.RelativePath == Path.Combine("sub", "other.txt"));
+        var nested = new DiffResult(project, "bad:name.txt");
 
         nested.FullPath.ShouldBeNull();
         nested.Exists.ShouldBeFalse();

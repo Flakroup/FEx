@@ -1,4 +1,4 @@
-using FEx.Agnostics.Abstractions.Interfaces;
+﻿using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Models;
 using FEx.MVVM.Abstractions;
 using NSubstitute;
@@ -35,7 +35,7 @@ public sealed class LazyImagesHandlerTests : ImagingTestBase
             {
                 await _release.WaitAsync();
 
-                return (BitmapImage?)null;
+                return null;
             });
 
     [Fact]
@@ -65,7 +65,7 @@ public sealed class LazyImagesHandlerTests : ImagingTestBase
         added.ShouldBeTrue();
         succeeded.ShouldBeTrue();
         calls.ShouldBe(["before", "set", "after"]);
-        _ = _cache.Received(1).GetImageAsync(ImageUrl, null, null, false, true, false);
+        _ = _cache.Received(1).GetImageAsync(ImageUrl, forceLoad: true);
     }
 
     [Fact]

@@ -175,9 +175,6 @@
     <Project Path="test/FEx.KeyVault.Tests/FEx.KeyVault.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
-    <Project Path="test/FEx.Sqlx.Tests/FEx.Sqlx.Tests.csproj">
-      <Build Solution="Build|*" Project="false" />
-    </Project>
     <Project Path="test/FEx.Telemetry.Tests/FEx.Telemetry.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>

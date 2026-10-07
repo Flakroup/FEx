@@ -14,6 +14,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Disposables;
@@ -75,6 +76,20 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
     public event EventHandler<CacheConflict<TKey, TValue>>? ConflictDetected;
 
     public TValue this[TKey key] => Cache.Lookup(key).Value;
+
+    /// <summary>Reads a cached value without throwing for a key that is not cached.</summary>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="value">The cached value, or <see langword="default" /> when the key is not cached.</param>
+    /// <returns><see langword="true" /> when the key is cached.</returns>
+    public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
+    {
+        var optional = Cache.Lookup(key);
+        value = optional.HasValue
+            ? optional.Value
+            : default;
+
+        return optional.HasValue;
+    }
 
     protected bool HasCachedAll { get; set; }
     protected string KeyPropertyName { get; }

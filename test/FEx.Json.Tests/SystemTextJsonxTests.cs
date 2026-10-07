@@ -188,6 +188,21 @@ public sealed class SystemTextJsonxTests
     }
 
     [Fact]
+    public void Module_RegisterServices_WithoutAContainer_Throws()
+    {
+        Should.Throw<ArgumentNullException>(() => new TestModule(null!).RegisterServices(new ServiceCollection()));
+    }
+
+    [Fact]
+    public void ParseStringToLongConverter_Singleton_ReadsAStringAndWritesOne()
+    {
+        var options = new JsonSerializerOptions { Converters = { ParseStringToLongConverter.Singleton } };
+
+        JsonSerializer.Deserialize<long>("\"7\"", options).ShouldBe(7L);
+        JsonSerializer.Serialize(7L, options).ShouldBe("\"7\"");
+    }
+
+    [Fact]
     public void Serializer_OptionsWithoutResolver_Throw()
     {
         Should.Throw<ArgumentException>(() => new FExSystemTextJsonSerializer(new JsonSerializerOptions()));
@@ -274,6 +289,11 @@ public sealed class SystemTextJsonxTests
     [InlineData("a.*")]
     [InlineData("$..b")]
     [InlineData("list[?(@ > 3)]")]
+    [InlineData("['x'y]")]
+    [InlineData("['x")]
+    [InlineData("list[1")]
+    [InlineData("list[]")]
+    [InlineData("list[-]")]
     public void JsonPathSelector_MultiTokenSyntax_IsNotSupported(string path)
     {
         using var document = JsonDocument.Parse("{\"a\":{\"b\":1},\"list\":[3,4]}");

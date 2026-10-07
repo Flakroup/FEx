@@ -280,6 +280,20 @@ public abstract class JsonSerializerContractTests
         Should.Throw<FExJsonException>(() => serializer.Serialize(new CollidingModel()));
         Should.Throw<FExJsonException>(() => serializer.Deserialize<CollidingModel>("{\"x\":1}"));
     }
+
+    [Fact]
+    public async Task InvalidTypeContract_ThrowsFExJsonException_FromEverySerializeOverload()
+    {
+        var serializer = CreateSerializer();
+        using var stream = new MemoryStream();
+
+        Should.Throw<FExJsonException>(() => serializer.Serialize(new CollidingModel(), typeof(CollidingModel)));
+        await Should.ThrowAsync<FExJsonException>(() =>
+            serializer.SerializeAsync(stream, new CollidingModel(), TestContext.Current.CancellationToken));
+        await Should.ThrowAsync<FExJsonException>(() =>
+            serializer.SerializeAsync(stream, new CollidingModel(), typeof(CollidingModel),
+                TestContext.Current.CancellationToken));
+    }
     #endregion
 
     #region DI-aware construction

@@ -114,6 +114,61 @@ public sealed class CoverageGateTests
     }
 
     [Fact]
+    public void ExactFileExclusion_NamingAFileTheReportsDoNotMeasure_FailsAsUnmeasured()
+    {
+        var report = Analyze(
+            Options(exclusions: ["src/Acme.Core/Gone.cs"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1)));
+
+        report.Failed.ShouldBeTrue();
+        var stale = report.StaleExclusions.ShouldHaveSingleItem();
+        stale.Path.ShouldBe("src/Acme.Core/Gone.cs");
+        stale.Line.ShouldBe(0);
+        stale.Reason.ShouldBe(StaleReason.FileNotMeasured);
+    }
+
+    [Fact]
+    public void BackslashSpelledExclusion_NamingAnUnmeasuredFile_IsReportedWithForwardSlashes()
+    {
+        var report = Analyze(
+            Options(exclusions: [@"src\Acme.Core\Gone.cs"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1)));
+
+        report.StaleExclusions.ShouldHaveSingleItem().Path.ShouldBe("src/Acme.Core/Gone.cs");
+    }
+
+    [Fact]
+    public void ExactFileExclusion_OutsideTheIncludedPrefix_FailsAsUnmeasured()
+    {
+        var report = Analyze(
+            Options(exclusions: ["samples/App/Program.cs"]),
+            Cobertura("Samples.App", @"X:\repo\samples\App\Program.cs", (1, 0)));
+
+        report.StaleExclusions.ShouldHaveSingleItem().Reason.ShouldBe(StaleReason.FileNotMeasured);
+    }
+
+    [Fact]
+    public void DirectoryExclusionWithTrailingSlash_MatchingNothing_IsNotJudged()
+    {
+        var report = Analyze(
+            Options(exclusions: ["src/Acme.Core/Migrations/", @"src\Acme.Core\Legacy\"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Money.cs", (1, 1)));
+
+        report.Failed.ShouldBeFalse();
+        report.StaleExclusions.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void BareDirectoryExclusion_OverMeasuredFiles_IsNotUnmeasured()
+    {
+        var report = Analyze(
+            Options(exclusions: ["src/Acme.Core/Migrations"]),
+            Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\Migrations\Initial.cs", (1, 0)));
+
+        report.StaleExclusions.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void DirectoryExclusion_OverFullyCoveredFiles_IsNotJudged()
     {
         var report = Analyze(
@@ -130,7 +185,7 @@ public sealed class CoverageGateTests
         // "Migrations" must not also exempt "MigrationsHelper.cs" - a prefix match on the raw string
         // would quietly widen every exclusion.
         var report = Analyze(
-            Options(exclusions: ["src/Acme.Core/Migrations"]),
+            Options(exclusions: ["src/Acme.Core/Migrations/"]),
             Cobertura("Acme.Core", @"X:\repo\src\Acme.Core\MigrationsHelper.cs", (1, 0)));
 
         report.Failed.ShouldBeTrue();

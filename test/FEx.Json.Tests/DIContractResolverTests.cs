@@ -23,6 +23,20 @@ public sealed class DIContractResolverTests
     }
 
     [Fact]
+    public void RegisterServices_RecordsTheRegistrationsOfTheCollection()
+    {
+        var services = new ServiceCollection();
+        services.AddTransient<IFoo, Foo>();
+        var meta = new DIMeta();
+
+        meta.RegisterServices(services);
+
+        meta.IsRegistred(typeof(IFoo)).ShouldBeTrue();
+        meta.IsTransient(typeof(IFoo)).ShouldBeTrue();
+        meta.RegistredTypeFor(typeof(IFoo)).ShouldBe(typeof(Foo));
+    }
+
+    [Fact]
     public async Task ResolveContract_FactoryRegistration_DoesNotRecurseInfinitely()
     {
         var services = new ServiceCollection();

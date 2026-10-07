@@ -1,5 +1,6 @@
-using FEx.Imaging.Windows.Model;
+﻿using FEx.Imaging.Windows.Model;
 using FEx.MVVM.Abstractions;
+using FEx.WPFx.Natives;
 using Shouldly;
 using System;
 using System.IO;
@@ -43,7 +44,7 @@ public sealed class SizedImageCacheTests : ImagingTestBase
     public async Task Constructor_WithAnImage_StartsLoaded()
     {
         using var entry = EntryWithFile();
-        var image = await FEx.WPFx.Natives.CommonWindowsImaging.GetBitmapImageFromFileAsync(entry.FilePath);
+        var image = await CommonWindowsImaging.GetBitmapImageFromFileAsync(entry.FilePath);
         using var sut = new SizedImageCache(entry.CachedImage.ShouldNotBeNull(), new(3, 3), image);
 
         sut.CachedImage.ShouldBeSameAs(image);

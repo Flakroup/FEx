@@ -3,7 +3,6 @@ using FEx.Sqlx.Extensions;
 using Shouldly;
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 using MsSqlConnection = Microsoft.Data.SqlClient.SqlConnection;
@@ -13,10 +12,7 @@ namespace FEx.Sqlx.Tests;
 /// <summary>The static lookup maps and the generated server-properties query; no server is contacted.</summary>
 public sealed class SqlConnectionExtensionsTests
 {
-    private static string PropsSql =>
-        (string)typeof(SqlConnectionExtensions)
-            .GetProperty("PropsSQL", BindingFlags.NonPublic | BindingFlags.Static)!
-            .GetValue(null)!;
+    private static string PropsSql => SqlConnectionExtensions.PropsSQL;
 
     [Fact]
     public void ServerProps_HasAnEntryForEveryEnumMember() =>

@@ -1,4 +1,4 @@
-using FEx.Imaging.Windows.Model;
+﻿using FEx.Imaging.Windows.Model;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -194,7 +194,7 @@ public sealed class IndexEntryTests : ImagingTestBase
         first.Equals(same).ShouldBeTrue();
         first.Equals(otherLength).ShouldBeFalse();
         first.Equals(otherChecksum).ShouldBeFalse();
-        first.Equals((IndexEntryBase?)null).ShouldBeFalse();
+        first.Equals(null).ShouldBeFalse();
     }
 
     [Fact]

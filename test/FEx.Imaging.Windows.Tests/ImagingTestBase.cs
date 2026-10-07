@@ -1,7 +1,8 @@
-using FEx.Agnostics.Abstractions.Enums;
+﻿using FEx.Agnostics.Abstractions.Enums;
 using FEx.Core.Abstractions;
 using FEx.Core.Abstractions.Interfaces;
 using FEx.Core.Abstractions.Services;
+using FEx.EFCore.Configuration;
 using FEx.Imaging.Windows.Model;
 using FEx.Platforms;
 using FEx.Platforms.Abstractions.Interfaces;
@@ -100,7 +101,7 @@ public abstract class ImagingTestBase : IDisposable
     protected FilesCacheServiceConfig CreateConfig(string? dir = null,
                                                    TimeSpan? validPeriod = null,
                                                    bool cacheAll = false) =>
-        new(Substitute.For<FEx.EFCore.Configuration.IDbServiceConfig>(),
+        new(Substitute.For<IDbServiceConfig>(),
             new(dir ?? Dir),
             false,
             validPeriod,

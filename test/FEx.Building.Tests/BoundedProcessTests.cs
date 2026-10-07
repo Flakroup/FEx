@@ -84,12 +84,36 @@ public sealed class BoundedProcessTests
         Should.Throw<ArgumentOutOfRangeException>(() => BoundedProcess.Validate(TimeSpan.FromDays(60), "T"));
     }
 
+    [Fact]
+    public void AProcessThatFinishesBetweenTheDeadlineAndTheKill_IsNotATimeout()
+    {
+        var state = new State(exitCode: 0) { KillFindsTheProcessGone = true };
+
+        BoundedProcess.Run(() => new FakeProcess(state), TimeSpan.FromMilliseconds(50), "The run").ShouldBeEmpty();
+
+        state.Killed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ADotNetInvocation_RunsTheRealHost_AndReturnsItsOutput()
+    {
+        var output = BoundedProcess.Run(new("--version", TimeSpan.FromMinutes(2)), "dotnet --version");
+
+        output.ShouldContain(line => line.Text.Trim().Length > 0);
+    }
+
+    [Fact]
+    public void ADotNetInvocation_ThatExitsNonZero_FailsTheRun() =>
+        Should.Throw<Exception>(() =>
+            BoundedProcess.Run(new("no-such-dotnet-verb", TimeSpan.FromMinutes(2)), "dotnet no-such-dotnet-verb"));
+
     /// <summary>What the test observes of the process, which the run under test disposes.</summary>
     private sealed class State(int exitCode)
     {
         public int ExitCode { get; } = exitCode;
         public ManualResetEventSlim Exited { get; } = new();
         public bool Killed { get; set; }
+        public bool KillFindsTheProcessGone { get; init; }
     }
 
     /// <summary>Blocks in <see cref="WaitForExit" /> until finished or killed, like a hung build.</summary>
@@ -107,6 +131,9 @@ public sealed class BoundedProcessTests
         {
             state.Killed = true;
             state.Exited.Set();
+
+            if (state.KillFindsTheProcessGone)
+                throw new InvalidOperationException("The process has exited.");
         }
 
         public bool WaitForExit()

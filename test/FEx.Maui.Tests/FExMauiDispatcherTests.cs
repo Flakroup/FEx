@@ -80,7 +80,9 @@ public sealed class FExMauiDispatcherTests : IDisposable
         var sut = CreateSut();
         var ran = 0;
 
-        await sut.InvokeOnMainThreadAsync(() => ran++);
+        Action action = () => ran++; // a bare lambda would bind to the Func<T> overload
+
+        await sut.InvokeOnMainThreadAsync(action);
 
         ran.ShouldBe(1);
     }
@@ -90,8 +92,9 @@ public sealed class FExMauiDispatcherTests : IDisposable
     {
         var sut = CreateSut();
 
-        var error = await Record.ExceptionAsync(() =>
-            sut.InvokeOnMainThreadAsync(() => throw new InvalidOperationException("boom")));
+        Action action = () => throw new InvalidOperationException("boom");
+
+        var error = await Record.ExceptionAsync(() => sut.InvokeOnMainThreadAsync(action));
 
         error.ShouldBeOfType<InvalidOperationException>().Message.ShouldBe("boom");
     }

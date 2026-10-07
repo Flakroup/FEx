@@ -464,7 +464,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         key.Equals((object)CachedValueApplier.EntityKey.Of(ctx.Entry(new Node { Id = 1, Name = "other" }))!).ShouldBeTrue();
         key.Equals((object)CachedValueApplier.EntityKey.Of(ctx.Entry(new Node { Id = 2 }))!).ShouldBeFalse();
         key.Equals((object)CachedValueApplier.EntityKey.Of(ctx.Entry(new Person { Id = 1 }))!).ShouldBeFalse();
-        key.Equals((object)"1").ShouldBeFalse();
+        key.Equals("1").ShouldBeFalse();
         key.Equals((object?)null).ShouldBeFalse();
     }
 

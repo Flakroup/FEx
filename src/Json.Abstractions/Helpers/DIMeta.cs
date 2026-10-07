@@ -23,12 +23,12 @@ public sealed class DIMeta : InitializeOnlyModule
         ProcessRegisteredServices(services);
     }
 
-    public bool IsRegistred(Type t) => t is not null && _register.ContainsKey(t.FullName!);
+    public bool IsRegistered(Type t) => t is not null && _register.ContainsKey(t.FullName!);
 
     public bool IsTransient(Type t) =>
         t.FullName is { } key && _lifetimes.TryGetValue(key, out var lifetime) && lifetime == ServiceLifetime.Transient;
 
-    public Type? RegistredTypeFor(Type? t)
+    public Type? RegisteredTypeFor(Type? t)
     {
         var key = t?.FullName;
 

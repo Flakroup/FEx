@@ -44,11 +44,11 @@ public sealed class DIJsonTypeInfoModifier
         var type = typeInfo.Type;
 
         if (typeInfo.Kind != JsonTypeInfoKind.Object
-            || !_diMeta.IsRegistred(type))
+            || !_diMeta.IsRegistered(type))
             return;
 
         // Factory and instance registrations have no implementation type: keep the contract of the type itself.
-        if (_diMeta.RegistredTypeFor(type) is { } implementationType
+        if (_diMeta.RegisteredTypeFor(type) is { } implementationType
             && implementationType != type)
             UseImplementationContract(typeInfo, implementationType);
 

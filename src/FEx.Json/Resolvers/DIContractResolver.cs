@@ -16,7 +16,7 @@ public class DIContractResolver : DefaultContractResolver
 
     protected override JsonObjectContract CreateObjectContract(Type objectType)
     {
-        if (_diMeta.IsRegistred(objectType))
+        if (_diMeta.IsRegistered(objectType))
         {
             var contract = DIResolveContract(objectType);
 
@@ -33,7 +33,7 @@ public class DIContractResolver : DefaultContractResolver
 
     private JsonObjectContract DIResolveContract(Type objectType)
     {
-        var fType = _diMeta.RegistredTypeFor(objectType);
+        var fType = _diMeta.RegisteredTypeFor(objectType);
 
         // Factory/instance registrations have no ImplementationType - build the contract for the
         // service type itself instead of re-entering CreateObjectContract (infinite recursion).

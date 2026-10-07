@@ -1,5 +1,6 @@
 using FEx.Agnostics.Abstractions.Extensions.Numericals;
 using System;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -7,7 +8,7 @@ namespace FEx.Json.SystemTextJsonx.Converters;
 
 /// <summary>
 /// Port of FEx.Json's <c>ParseStringToDoubleConverter</c>: reads a <see cref="double" /> from a JSON string or number
-/// and writes it as a string, with the same culture handling (<c>ToDouble</c> on read, <c>ToString()</c> on write).
+/// and writes it as a string, with the same culture handling (<c>ToDouble</c> on read, the invariant culture on write).
 /// System.Text.Json applies it to <see cref="Nullable{T}" /> of <see cref="double" /> as well.
 /// </summary>
 public sealed class ParseStringToDoubleConverter : JsonConverter<double>
@@ -23,7 +24,7 @@ public sealed class ParseStringToDoubleConverter : JsonConverter<double>
         };
 
     public override void Write(Utf8JsonWriter writer, double value, JsonSerializerOptions options) =>
-        writer.WriteStringValue(value.ToString());
+        writer.WriteStringValue(value.ToString(CultureInfo.InvariantCulture));
 
     private static double ParseString(string value)
     {
@@ -33,7 +34,7 @@ public sealed class ParseStringToDoubleConverter : JsonConverter<double>
         }
         catch (Exception ex)
         {
-            // ToDouble throws a bare Exception; rethrow as JsonException so it is reported like any unbindable payload.
+            // ToDouble throws FormatException; rethrow as JsonException so it is reported like any unbindable payload.
             throw new JsonException("Cannot unmarshal type double", ex);
         }
     }

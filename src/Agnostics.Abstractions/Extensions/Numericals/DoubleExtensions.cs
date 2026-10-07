@@ -35,6 +35,7 @@ public static class DoubleExtensions
     /// <summary>Parses a string to a double, accepting either '.' or ',' as the decimal separator regardless of the current culture.</summary>
     /// <param name="value">The text to parse.</param>
     /// <returns>The parsed number.</returns>
+    /// <exception cref="FormatException"><paramref name="value" /> is not a number.</exception>
     public static double ToDouble(this string value)
     {
         var numberDecimalSeparator = Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator;
@@ -58,7 +59,7 @@ public static class DoubleExtensions
 
         return double.TryParse(value, out var l)
             ? l
-            : throw new("Cannot unmarshal type double");
+            : throw new FormatException("Cannot unmarshal type double");
     }
 
     private static double GetFloatComparison(int floatDigits) =>

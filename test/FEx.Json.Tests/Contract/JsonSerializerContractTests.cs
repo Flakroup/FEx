@@ -394,6 +394,35 @@ public abstract class JsonSerializerContractTests
     }
 
     [Fact]
+    public void ParseStringToDouble_UnparsableString_FailsWithFormatException()
+    {
+        var serializer = CreateSerializer();
+
+        var exception = Should.Throw<FExJsonException>(() => serializer.Deserialize<DoubleHolder>("{\"Value\":\"abc\"}"));
+
+        exception.GetBaseException().ShouldBeOfType<FormatException>();
+    }
+
+    [Fact]
+    public void ParseStringToDouble_UnderCommaCulture_WritesWithInvariantCulture()
+    {
+        var serializer = CreateSerializer();
+        var culture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = new("pl-PL");
+
+        try
+        {
+            CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator.ShouldBe(",");
+            serializer.Serialize(new DoubleHolder { Value = 1.5, Optional = 2.25 }).ShouldBe("{\"Value\":\"1.5\",\"Optional\":\"2.25\"}");
+            serializer.Deserialize<DoubleHolder>("{\"Value\":\"1.5\"}").ShouldNotBeNull().Value.ShouldBe(1.5);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
+    }
+
+    [Fact]
     public void NullPayloadForNonNullableDouble_ThrowsFExJsonException()
     {
         var serializer = CreateSerializer();

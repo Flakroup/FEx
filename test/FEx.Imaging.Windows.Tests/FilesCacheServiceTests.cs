@@ -6,7 +6,6 @@ using FEx.EFCore.Interfaces;
 using FEx.EFCore.Services;
 using FEx.Imaging.Windows.Model;
 using FEx.Legacy.Imaging.Abstractions.Interfaces;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -20,6 +19,9 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
+#if NET
+using Microsoft.Data.Sqlite;
+#endif
 
 namespace FEx.Imaging.Windows.Tests;
 

@@ -40,7 +40,7 @@ public static class DoubleExtensions
         return Math.Abs(left - right) < floatComparison;
     }
 
-    /// <summary>Parses a string to a double, accepting either '.' or ',' as the decimal separator regardless of the current culture.</summary>
+    /// <summary>Parses a string to a double, accepting either '.' or ',' as the decimal separator regardless of the current culture, and the invariant spellings of NaN and the infinities.</summary>
     /// <param name="value">The text to parse.</param>
     /// <returns>The parsed number; <c>-0</c> parses to negative zero on every runtime.</returns>
     /// <exception cref="FormatException"><paramref name="value" /> is not a number.</exception>
@@ -65,7 +65,8 @@ public static class DoubleExtensions
             && "," != numberDecimalSeparator)
             value = value.Replace(",", numberDecimalSeparator);
 
-        if (!double.TryParse(value, out var l))
+        // The invariant fallback reads what ToRoundTripString writes ("Infinity", "NaN") under cultures with other symbols (pl-PL spells infinity with the infinity sign).
+        if (!double.TryParse(value, out var l) && !double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out l))
             throw new FormatException("Cannot unmarshal type double");
 
         // .NET Framework parses "-0" as +0; later runtimes keep the sign, so restore it there.

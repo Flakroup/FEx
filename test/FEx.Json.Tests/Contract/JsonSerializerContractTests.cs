@@ -451,6 +451,32 @@ public abstract class JsonSerializerContractTests
         }
     }
 
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    [InlineData(-0.0)]
+    [InlineData(0.1 + 0.2)]
+    public void ParseStringToDouble_UnderCommaCulture_WrittenValueReadsBackAsTheSameDouble(double value)
+    {
+        var serializer = CreateSerializer();
+        var culture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = new("pl-PL");
+
+        try
+        {
+            var json = serializer.Serialize(new DoubleHolder { Value = value, Optional = value });
+            var read = serializer.Deserialize<DoubleHolder>(json).ShouldNotBeNull();
+
+            BitConverter.DoubleToInt64Bits(read.Value).ShouldBe(BitConverter.DoubleToInt64Bits(value));
+            BitConverter.DoubleToInt64Bits(read.Optional.ShouldNotBeNull()).ShouldBe(BitConverter.DoubleToInt64Bits(value));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
+    }
+
     [Fact]
     public void ParseStringToDouble_UnparsableString_ThrowsFExJsonException()
     {

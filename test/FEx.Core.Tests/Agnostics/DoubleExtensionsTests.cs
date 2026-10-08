@@ -126,6 +126,27 @@ public sealed class DoubleExtensionsTests
     }
 
     [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    [InlineData(-0.0)]
+    [InlineData(0.1 + 0.2)]
+    public void ToRoundTripString_UnderCommaCulture_ToDoubleReadsItBack(double value)
+    {
+        var culture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = new("pl-PL");
+
+        try
+        {
+            BitConverter.DoubleToInt64Bits(value.ToRoundTripString().ToDouble()).ShouldBe(BitConverter.DoubleToInt64Bits(value));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
+    }
+
+    [Theory]
     [InlineData(1, 0.05, true)]
     [InlineData(1, 0.2, false)]
     [InlineData(2, 0.005, true)]

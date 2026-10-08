@@ -34,6 +34,14 @@ public partial class FilesCacheContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Property)
                 .ValueGeneratedNever();
 
+            // Nullable columns, as the migrations created them: an entry is indexed before its file is downloaded, so
+            // both stay null until then. The non-nullable CLR type comes from the IIndexEntryBase contract only.
+            entity.Property(e => e.CheckSum)
+                .IsRequired(false);
+
+            entity.Property(e => e.FilePath)
+                .IsRequired(false);
+
             entity.HasIndex(e => e.FilePath);
         });
 

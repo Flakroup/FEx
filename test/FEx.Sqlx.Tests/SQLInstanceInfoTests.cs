@@ -1,5 +1,6 @@
 ﻿using FEx.Sqlx.Abstractions;
 using FEx.Sqlx.Enums;
+using Microsoft.Data.SqlClient;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -241,6 +242,19 @@ public sealed class SQLInstanceInfoTests
 
         info.Edition.ShouldBeNull();
         info.ProductVersion.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ConnectionString_KeepsTheExplicitUnencryptedIntegratedLogin_ThatMicrosoftDataSqlClientParses()
+    {
+        var builder = new SqlConnectionStringBuilder(new SQLInstanceInfo(@"HOST\INST").ConnectionString);
+
+        builder.DataSource.ShouldBe(@"HOST\INST");
+        builder.InitialCatalog.ShouldBe("master");
+        builder.IntegratedSecurity.ShouldBeTrue();
+        builder.Encrypt.ShouldBe(SqlConnectionEncryptOption.Optional);
+        builder.TrustServerCertificate.ShouldBeFalse();
+        builder.ConnectTimeout.ShouldBe(30);
     }
 
     // An unknown connection-string keyword makes the SqlConnection constructor throw, so no connection attempt is made at all.

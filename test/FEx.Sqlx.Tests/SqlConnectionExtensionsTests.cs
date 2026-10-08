@@ -1,11 +1,12 @@
 using FEx.Sqlx.Enums;
 using FEx.Sqlx.Extensions;
+using Microsoft.Data.SqlClient;
 using Shouldly;
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
-using MsSqlConnection = Microsoft.Data.SqlClient.SqlConnection;
 
 namespace FEx.Sqlx.Tests;
 
@@ -71,7 +72,7 @@ public sealed class SqlConnectionExtensionsTests
     [Fact]
     public void RunSql_ThrowsWithoutContactingAServer_WhenTheConnectionStringIsEmpty()
     {
-        using var connection = new MsSqlConnection();
+        using var connection = new SqlConnection();
 
         Should.Throw<Exception>(() => connection.RunSql("SELECT 1"));
     }
@@ -79,8 +80,52 @@ public sealed class SqlConnectionExtensionsTests
     [Fact]
     public async Task RunSqlAsync_ThrowsWithoutContactingAServer_WhenTheConnectionStringIsEmpty()
     {
-        using var connection = new MsSqlConnection();
+        using var connection = new SqlConnection();
 
         await Should.ThrowAsync<Exception>(() => connection.RunSqlAsync("SELECT 1"));
     }
+
+    [Fact]
+    public async Task LoadDatabasesAsync_Throws_WhenTheConnectionCannotBeOpened()
+    {
+        using var connection = new SqlConnection();
+
+        await Should.ThrowAsync<Exception>(connection.LoadDatabasesAsync);
+    }
+
+    [Fact]
+    public async Task LoadTablesAsync_Throws_WhenTheConnectionCannotBeOpened()
+    {
+        using var connection = new SqlConnection();
+
+        await Should.ThrowAsync<Exception>(connection.LoadTablesAsync);
+    }
+
+    [Fact]
+    public async Task LoadColumnsAsync_DoesNotReportProgress_WhenTheQueryFails()
+    {
+        using var connection = new SqlConnection();
+        var reported = false;
+        var progress = new Progress<bool>(_ => reported = true);
+
+        await Should.ThrowAsync<Exception>(() => connection.LoadColumnsAsync(42, progress));
+
+        reported.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void EveryPublicExtensionMethod_TakesTheMicrosoftSqlConnection()
+    {
+        var methods = typeof(SqlConnectionExtensions).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(x => x.IsDefined(typeof(System.Runtime.CompilerServices.ExtensionAttribute), false))
+            .ToArray();
+
+        methods.ShouldNotBeEmpty();
+        methods.ShouldAllBe(x => x.GetParameters()[0].ParameterType == typeof(SqlConnection));
+    }
+
+    [Fact]
+    public void Sqlx_DoesNotReferenceTheDeprecatedSystemDataSqlClient() =>
+        typeof(SqlConnectionExtensions).Assembly.GetReferencedAssemblies()
+            .ShouldNotContain(x => x.Name == "System.Data.SqlClient");
 }

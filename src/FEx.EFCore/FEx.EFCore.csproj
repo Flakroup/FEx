@@ -8,7 +8,7 @@
 	<ItemGroup>
 		<PackageReference Include="Azure.Identity" Version="1.21.0" />
 		<PackageReference Include="EFCore.BulkExtensions" Version="$(BulkExtensionsVersion)" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EFCoreVersion)" />
 		<!-- Security pin (GHSA-2m69-gcr7-jv3q): EntityFrameworkCore.Sqlite transitively pulls the bundled
@@ -23,9 +23,16 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(DotNetNugetsVersion)" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
 		<PackageReference Include="System.Formats.Asn1" Version="$(DotNetNugetsVersion)" />
 		<PackageReference Include="System.Text.Json" Version="$(DotNetNugetsVersion)" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' != '$(TargetFrameworkId)'">
+		<!-- Security pin, not a usage: EFCore.BulkExtensions 3.6.6 (the build DevConfigs selects for the
+		     netstandard TFMs) pulls System.Data.SqlClient 4.8.2 transitively, which carries GHSA-98g6-xh36-x2p7 and
+		     GHSA-8g2p-5pqh-5jmc. FEx code itself uses Microsoft.Data.SqlClient only. Remove once DevConfigs selects a
+		     BulkExtensions build that no longer depends on System.Data.SqlClient. -->
+		<PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
 	</ItemGroup>
 
 	<ItemGroup>

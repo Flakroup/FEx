@@ -1,6 +1,5 @@
 using FEx.Agnostics.Abstractions.Extensions.Numericals;
 using System;
-using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -24,7 +23,7 @@ public sealed class ParseStringToDoubleConverter : JsonConverter<double>
         };
 
     public override void Write(Utf8JsonWriter writer, double value, JsonSerializerOptions options) =>
-        writer.WriteStringValue(value.ToString(CultureInfo.InvariantCulture));
+        writer.WriteStringValue(value.ToRoundTripString());
 
     private static double ParseString(string value)
     {

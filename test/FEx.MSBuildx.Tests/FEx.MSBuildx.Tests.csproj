@@ -1,14 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>$(TargetFrameworkId)</TargetFramework>
+		<TargetFrameworks>$(WindowsTargetFrameworkIds)</TargetFrameworks>
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+		<IsTestProject>true</IsTestProject>
 	</PropertyGroup>
 
-	<!-- FEx.MSBuildx only targets net481 and net10.0-windows, which a net10.0 test host cannot reference or run,
-	     so the framework-neutral parser is compiled into the tests directly. -->
 	<ItemGroup>
-		<Compile Include="..\..\src\MSBuildx\PackagesConfigFile.cs" Link="PackagesConfigFile.cs" />
-		<PackageReference Include="NuGet.Packaging" Version="7.6.0" />
+		<ProjectReference Include="..\..\src\MSBuildx\FEx.MSBuildx.csproj" />
 	</ItemGroup>
 
 </Project>

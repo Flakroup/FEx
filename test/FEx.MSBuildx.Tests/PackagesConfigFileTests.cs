@@ -1,78 +1,105 @@
 using Shouldly;
 using System;
-using System.IO;
 using System.Linq;
 using System.Xml;
 using Xunit;
 
 namespace FEx.MSBuildx.Tests;
 
-
+/// <summary>
+/// Package entries of a legacy <c>packages.config</c> as they reach <see cref="MSProject.NuGetPackages" />, which is the
+/// only caller of the reader.
+/// </summary>
 public sealed class PackagesConfigFileTests : IDisposable
 {
-    private readonly string _dir = Directory.CreateTempSubdirectory("fex-pkgconf-").FullName;
+    private const string PackagesConfigItem = """<None Include="packages.config" />""";
 
-    public void Dispose() => Directory.Delete(_dir, true);
+    private readonly MSBuildTestWorkspace _workspace = new();
+
+    public void Dispose() => _workspace.Dispose();
 
     [Fact]
-    public void Read_ReturnsEveryEntry_WhenAPackageIdRepeatsAcrossVersions()
+    public void NuGetPackages_ContainsEveryEntry_WhenAPackageIdRepeatsAcrossVersions()
     {
-        var file = Write("""
+        _workspace.WriteFile("packages.config", """
             <packages>
               <package id="A" version="1.0.0" targetFramework="net45" />
               <package id="A" version="2.0.0" targetFramework="net46" />
             </packages>
             """);
 
-        var result = PackagesConfigFile.Read(file);
+        var project = LoadWithPackagesConfig();
 
-        result.Select(x => $"{x.Id} {x.Version}").ShouldBe(["A 1.0.0", "A 2.0.0"]);
+        project.NuGetPackages.Select(x => $"{x.Id} {x.Version}").ShouldBe(["A 1.0.0", "A 2.0.0"], true);
     }
 
     [Fact]
-    public void Read_ReturnsBothEntries_WhenAPackageIdAndVersionRepeatAcrossFrameworks()
+    public void NuGetPackages_Loads_WhenAPackageIdAndVersionRepeatAcrossFrameworks()
     {
-        var file = Write("""
+        _workspace.WriteFile("packages.config", """
             <packages>
               <package id="A" version="1.0.0" targetFramework="net45" />
               <package id="A" version="1.0.0" targetFramework="net46" />
             </packages>
             """);
 
-        PackagesConfigFile.Read(file).Count.ShouldBe(2);
+        var project = LoadWithPackagesConfig();
+
+        project.NuGetPackages.Select(x => $"{x.Id} {x.Version}").ShouldBe(["A 1.0.0"]);
     }
 
     [Fact]
-    public void Read_KeepsThePrereleaseLabel()
+    public void NuGetPackages_KeepsThePrereleaseLabel()
     {
-        var file = Write("""<packages><package id="A" version="1.2.3-beta.4" /></packages>""");
+        _workspace.WriteFile("packages.config", """<packages><package id="A" version="1.2.3-beta.4" /></packages>""");
 
-        var package = PackagesConfigFile.Read(file).ShouldHaveSingleItem();
+        var package = LoadWithPackagesConfig().NuGetPackages.ShouldHaveSingleItem();
 
         package.Version.ToString().ShouldBe("1.2.3-beta.4");
         package.Version.IsPrerelease.ShouldBeTrue();
     }
 
     [Fact]
-    public void Read_ReturnsNoPackages_WhenTheFileDoesNotExist() =>
-        PackagesConfigFile.Read(new FileInfo(Path.Combine(_dir, "missing.config"))).ShouldBeEmpty();
+    public void NuGetPackages_IsEmpty_WhenThePackagesConfigFileDoesNotExist() =>
+        LoadWithPackagesConfig().NuGetPackages.ShouldBeEmpty();
 
     [Fact]
-    public void Read_RejectsAnInlineDtd()
+    public void NuGetPackages_MergesPackagesConfigEntriesWithPackageReferences()
     {
-        var file = Write("""
+        _workspace.WriteFile("packages.config", """<packages><package id="Legacy" version="1.0.0" /></packages>""");
+
+        var project = LoadWithPackagesConfig("""<PackageReference Include="Modern" Version="2.0.0" />""");
+
+        project.NuGetPackages.Select(x => x.Id).ShouldBe(["Legacy", "Modern"], true);
+    }
+
+    [Fact]
+    public void Constructor_RejectsAnInlineDtd()
+    {
+        _workspace.WriteFile("packages.config", """
             <!DOCTYPE packages [<!ENTITY a "Injected.Pkg">]>
             <packages><package id="&a;" version="1.0.0" /></packages>
             """);
 
-        Should.Throw<XmlException>(() => PackagesConfigFile.Read(file));
+        Should.Throw<XmlException>(() => LoadWithPackagesConfig());
     }
 
-    private FileInfo Write(string xml)
+    [Fact]
+    public void Constructor_RejectsAnEntryWithoutAnId()
     {
-        var path = Path.Combine(_dir, "packages.config");
-        File.WriteAllText(path, xml);
+        _workspace.WriteFile("packages.config", """<packages><package version="1.0.0" /></packages>""");
 
-        return new FileInfo(path);
+        Should.Throw<XmlException>(() => LoadWithPackagesConfig()).Message.ShouldContain("id");
     }
+
+    [Fact]
+    public void Constructor_RejectsAnEntryWithoutAVersion()
+    {
+        _workspace.WriteFile("packages.config", """<packages><package id="A" /></packages>""");
+
+        Should.Throw<XmlException>(() => LoadWithPackagesConfig()).Message.ShouldContain("version");
+    }
+
+    private MSProject LoadWithPackagesConfig(string extraItems = "") =>
+        _workspace.Load(_workspace.WriteProject("Demo.csproj", items: PackagesConfigItem + extraItems));
 }

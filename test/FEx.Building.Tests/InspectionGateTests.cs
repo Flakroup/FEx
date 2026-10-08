@@ -66,6 +66,16 @@ public sealed class InspectionGateTests
     }
 
     [Fact]
+    public void Analyze_ReportsNothing_WhenTheRunCarriesNoResultsProperty()
+    {
+        InspectionGate.Analyze(
+            """
+            { "runs": [ { "invocations": [ { "executionSuccessful": true } ],
+              "tool": { "driver": {} } } ] }
+            """).ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Analyze_RefusesAReportThatCarriesNoRun()
     {
         // An empty report is not a clean one. This assertion used to say the opposite, and composed with

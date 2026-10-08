@@ -6,6 +6,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<!-- The build project is an Exe that cannot be referenced; the debt list is plain data, so it is compiled in. -->
+		<Compile Include="..\..\build\CoverageDebt.cs" Link="CoverageDebt.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\..\src\FEx.Building\FEx.Building.csproj" />
 	</ItemGroup>
 

@@ -24,6 +24,8 @@ public static class CoverageGate
         ArgumentNullException.ThrowIfNull(options);
 
         var byFile = new Dictionary<string, LineSets>(StringComparer.OrdinalIgnoreCase);
+        var exemptFiles = new Dictionary<string, LineSets>(StringComparer.OrdinalIgnoreCase);
+        var policedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var modules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var report in reports)
@@ -42,17 +44,27 @@ public static class CoverageGate
                     continue;
 
                 var relative = Relativize(file, options.RootDirectory);
-                if (relative is null || !IsInScope(relative, options))
+                if (relative is null || !IsPoliced(relative, options))
                     continue;
 
-                if (!byFile.TryGetValue(relative, out var lines))
-                    byFile[relative] = lines = new LineSets();
+                policedPaths.Add(relative);
+                if (!IsInScope(relative, options))
+                    continue;
+
+                // An exactly named exempt file is still measured, apart from the gate, so the exemption can be
+                // judged: one that has reached 100% is debt that was paid and must leave the list.
+                var exempt = IsExemptFile(relative, options);
+                var target = exempt ? exemptFiles : byFile;
+
+                if (!target.TryGetValue(relative, out var lines))
+                    target[relative] = lines = new LineSets();
 
                 Collect(@class, lines);
             }
         }
 
         (var stale, var unused) = ApplyMarkers(byFile, options);
+        stale = Ordered([.. stale, .. PaidOffExemptions(exemptFiles), .. UnmeasuredExemptions(policedPaths, options)]);
 
         var files = byFile
             .Select(entry => entry.Value.ToFile(entry.Key))
@@ -125,14 +137,14 @@ public static class CoverageGate
         }
 
         return (Ordered(stale), Ordered(unused));
-
-        static IReadOnlyList<StaleExclusion> Ordered(List<StaleExclusion> entries) =>
-        [
-            .. entries
-                .OrderBy(static s => s.Path, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(static s => s.Line),
-        ];
     }
+
+    private static IReadOnlyList<StaleExclusion> Ordered(IEnumerable<StaleExclusion> entries) =>
+    [
+        .. entries
+            .OrderBy(static s => s.Path, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(static s => s.Line),
+    ];
 
     /// <summary>
     /// How many lines the marker on this line covers and why, or null when it carries none. Bare
@@ -238,17 +250,44 @@ public static class CoverageGate
             : null;
     }
 
-    private static bool IsInScope(string relativePath, CoverageGateOptions options)
+    /// <summary>Whether the gate has any business with the path, before exclusions are considered.</summary>
+    private static bool IsPoliced(string relativePath, CoverageGateOptions options)
     {
         // Source generators emit into obj/; that is code nobody wrote, so it never faces the gate.
         if (relativePath.Split('/').Any(static segment => segment.Equals("obj", StringComparison.OrdinalIgnoreCase)))
             return false;
 
-        if (options.IncludedPrefixes.Count > 0 && !options.IncludedPrefixes.Any(prefix => Matches(relativePath, prefix)))
-            return false;
-
-        return !options.Exclusions.Any(exclusion => Matches(relativePath, exclusion));
+        return options.IncludedPrefixes.Count == 0 || options.IncludedPrefixes.Any(prefix => Matches(relativePath, prefix));
     }
+
+    private static bool IsInScope(string relativePath, CoverageGateOptions options) =>
+        !options.Exclusions.Any(exclusion => Matches(relativePath, exclusion)) || IsExemptFile(relativePath, options);
+
+    /// <summary>Whether an exclusion names exactly this file (a directory subtree is not judged this way).</summary>
+    private static bool IsExemptFile(string relativePath, CoverageGateOptions options) =>
+        options.Exclusions.Any(exclusion =>
+            relativePath.Equals(exclusion.Replace('\\', '/').TrimEnd('/'), StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Exact-file exclusions whose file the reports show at 100%. The list of such files is a ratchet that
+    /// only shrinks, and nothing else would notice a covered file left on it - the gate skips excluded files -
+    /// so it could later fall back to 0% and ship unnoticed.
+    /// </summary>
+    private static IEnumerable<StaleExclusion> PaidOffExemptions(Dictionary<string, LineSets> exemptFiles) =>
+        exemptFiles
+            .Where(static entry => entry.Value.Measurable.Count > 0 && entry.Value.Covered.Count == entry.Value.Measurable.Count)
+            .Select(static entry => new StaleExclusion(entry.Key, 0, StaleReason.FileIsFullyCovered));
+
+    /// <summary>
+    /// Exclusions written without a trailing slash (a file, or a directory spelled bare) that no policed path in the
+    /// reports falls under: the file is gone, renamed, has no instrumented code, or its project is not measured here.
+    /// An entry like that guards nothing and would keep hiding the code if it came back, so it must be deleted.
+    /// </summary>
+    private static IEnumerable<StaleExclusion> UnmeasuredExemptions(HashSet<string> policedPaths, CoverageGateOptions options) =>
+        options.Exclusions
+            .Where(static exclusion => !exclusion.EndsWith('/') && !exclusion.EndsWith('\\'))
+            .Where(exclusion => !policedPaths.Any(path => Matches(path, exclusion)))
+            .Select(static exclusion => new StaleExclusion(exclusion.Replace('\\', '/'), 0, StaleReason.FileNotMeasured));
 
     /// <summary>Matches a whole file or a directory subtree - no globbing, so a pattern cannot silently over-match.</summary>
     private static bool Matches(string relativePath, string pattern)
@@ -335,6 +374,18 @@ public enum StaleReason
     /// runs it. Failing on it would mean no marker could satisfy both at once.
     /// </summary>
     NothingToExclude,
+
+    /// <summary>
+    /// An exact-file exclusion names a file the reports show at 100% (reported with line 0): its debt is
+    /// paid, so the entry must be deleted - left in, it would hide the file if coverage later regressed.
+    /// </summary>
+    FileIsFullyCovered,
+
+    /// <summary>
+    /// An exclusion written without a trailing slash matches nothing the reports measured (reported with line 0):
+    /// the file is gone or renamed, has no instrumented code, or is not part of this run. Delete the entry.
+    /// </summary>
+    FileNotMeasured,
 
     /// <summary>The marker carries no reason. An exemption nobody can review is not an exemption.</summary>
     NoReasonGiven,

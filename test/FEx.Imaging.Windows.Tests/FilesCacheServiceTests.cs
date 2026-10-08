@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -59,31 +60,40 @@ public sealed class FilesCacheServiceTests : ImagingTestBase, IAsyncDisposable
     /// <summary>
     /// Saves every change the indexes still hold or are saving, checks that nothing logged an error, then tears down.
     /// The background save outlives the test body: tearing the database down under it makes it fail, and a failure
-    /// there is only logged.
+    /// there is only logged. The error event is process-wide, so the check is only as narrow as the test run:
+    /// <see cref="EveryTestClass_RunsInTheSharedSerialCollection" /> pins that no other class runs beside this one.
+    /// xUnit calls only this method on a class that is also <see cref="IDisposable" />, so it ends in
+    /// <see cref="ImagingTestBase.Dispose()" />.
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-        foreach (var flush in _flushes)
+        try
         {
-            try
+            foreach (var flush in _flushes)
             {
-                await flush();
-            }
-            catch (ObjectDisposedException)
-            {
-                // the test disposed the index itself, which drops what it still held
+                try
+                {
+                    await flush();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // the test disposed the index itself, which drops what it still held
+                }
             }
         }
+        finally
+        {
+            FExStaticLogger.ErrorLogged -= OnErrorLogged;
 
-        FExStaticLogger.ErrorLogged -= OnErrorLogged;
-
-        foreach (var disposable in Enumerable.Reverse(_disposables))
-            disposable.Dispose();
+            foreach (var disposable in Enumerable.Reverse(_disposables))
+                disposable.Dispose();
 
 #if NET
-        SqliteConnection.ClearAllPools();
+            SqliteConnection.ClearAllPools();
 #endif
-        DeleteDatabase();
+            DeleteDatabase();
+            Dispose();
+        }
 
         _errors.ShouldBeEmpty();
     }
@@ -138,6 +148,17 @@ public sealed class FilesCacheServiceTests : ImagingTestBase, IAsyncDisposable
         await sut.InitializeAsync();
 
         return sut;
+    }
+
+    [Fact]
+    public void EveryTestClass_RunsInTheSharedSerialCollection()
+    {
+        var outside = typeof(FilesCacheServiceTests).Assembly.GetTypes()
+            .Where(static type => type.GetMethods().Any(static method => method.IsDefined(typeof(FactAttribute), true)))
+            .Where(static type => type.GetCustomAttribute<CollectionAttribute>(true)?.Name != ImagingTestCollection.Name)
+            .Select(static type => type.Name);
+
+        outside.ShouldBeEmpty();
     }
 
     [Fact]

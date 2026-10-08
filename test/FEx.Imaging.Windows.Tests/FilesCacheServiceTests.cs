@@ -7,9 +7,6 @@ using FEx.Imaging.Windows.Model;
 using FEx.Legacy.Imaging.Abstractions.Interfaces;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-#if NET9_0_OR_GREATER
-using Microsoft.EntityFrameworkCore.Diagnostics;
-#endif
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Shouldly;
@@ -34,12 +31,7 @@ public sealed class FilesCacheServiceTests : ImagingTestBase
     public FilesCacheServiceTests()
     {
         _connection.Open();
-        var builder = new DbContextOptionsBuilder<FilesCacheContext>().UseSqlite(_connection);
-#if NET9_0_OR_GREATER
-        // The shipped migrations (EF Core 2.2 era) lag the model snapshot; the tests run the schema as shipped.
-        builder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
-#endif
-        var options = builder.Options;
+        var options = new DbContextOptionsBuilder<FilesCacheContext>().UseSqlite(_connection).Options;
 
         using (var setup = new FilesCacheContext(options))
             setup.Database.Migrate();

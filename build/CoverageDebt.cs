@@ -543,8 +543,6 @@ internal static class CoverageDebt
         "src/Imaging.Windows/IndexEntriesCache.cs", // debt: #137 - 68/80 lines
         "src/Imaging.Windows/Migrations/20191014120352_InitialCreate.cs", // debt: #137 - 19/21 lines
         "src/Imaging.Windows/Migrations/20200610104919_Add_Size_Columns.cs", // debt: #137 - 12/20 lines
-        "src/Imaging.Windows/Migrations/FilesCacheContextModelSnapshot.cs", // debt: #137 - 0/27 lines
-        "src/Imaging.Windows/Model/FilesCacheContext.cs", // debt: #137 - 20/22 lines
         "src/Imaging.Windows/Model/IndexEntry.cs", // debt: #137 - 121/126 lines
         "src/Imaging.Windows/WindowsImagingServicesModule.cs", // debt: #137 - 0/14 lines
         "src/Logging.Abstractions/Extensions/LoggerExtensions.cs", // debt: #137 - 17/23 lines

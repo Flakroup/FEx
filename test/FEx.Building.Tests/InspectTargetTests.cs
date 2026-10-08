@@ -11,6 +11,7 @@ namespace FEx.Building.Tests;
 /// The flags that decide what this gate IS, and the decision it makes on the report it gets back. Each
 /// assertion here stands for a way the gate can be defused while every other test stays green.
 /// </summary>
+[Collection(GlobalLoggerCollection.Name)]
 public sealed class InspectTargetTests
 {
     private static readonly AbsolutePath Solution = "/repo/My Solution.slnx";

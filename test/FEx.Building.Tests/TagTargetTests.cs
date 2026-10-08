@@ -11,6 +11,7 @@ namespace FEx.Building.Tests;
 /// resolver refusing to invent a new version for an already-tagged commit, and the tag step refusing
 /// to stack a second tag on it.
 /// </summary>
+[Collection(GlobalLoggerCollection.Name)]
 public sealed class TagTargetTests
 {
     [Fact]

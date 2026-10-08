@@ -13,6 +13,7 @@ namespace FEx.Building.Tests;
 /// handed in - a <see cref="ProcessTree" /> in production - and fails the target with a message that names
 /// the bound.
 /// </summary>
+[Collection(GlobalLoggerCollection.Name)]
 public sealed class BoundedProcessTests
 {
     [Fact]

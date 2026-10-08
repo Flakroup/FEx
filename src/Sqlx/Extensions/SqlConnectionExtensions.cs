@@ -2,20 +2,14 @@ using Dapper;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Interfaces.Collections;
 using FEx.Sqlx.Enums;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MsSqlConnection = Microsoft.Data.SqlClient.SqlConnection;
 
 namespace FEx.Sqlx.Extensions;
-
-// CS0618: System.Data.SqlClient.SqlConnection is obsolete in favour of Microsoft.Data.SqlClient.
-// These overloads are intentionally retained for backward compatibility (the modern type is
-// exposed via the MsSqlConnection overloads). Full migration tracked as tech debt.
-#pragma warning disable CS0618
 
 public static class SqlConnectionExtensions
 {
@@ -31,14 +25,8 @@ public static class SqlConnectionExtensions
 
     internal static string PropsSQL { get; } = GetPropsSQL();
 
-    public static async Task<IDictionary<string, object>[]> RunSqlAsync(this MsSqlConnection connection, string sql) =>
-        [.. (await connection.QueryAsync(sql)).Cast<IDictionary<string, object>>()];
-
     public static async Task<IDictionary<string, object>[]> RunSqlAsync(this SqlConnection connection, string sql) =>
         [.. (await connection.QueryAsync(sql)).Cast<IDictionary<string, object>>()];
-
-    public static IDictionary<string, object>[] RunSql(this MsSqlConnection connection, string sql) =>
-        [.. connection.Query(sql).Cast<IDictionary<string, object>>()];
 
     public static IDictionary<string, object>[] RunSql(this SqlConnection connection, string sql) =>
         [.. connection.Query(sql).Cast<IDictionary<string, object>>()];

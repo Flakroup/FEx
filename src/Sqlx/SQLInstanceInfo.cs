@@ -3,11 +3,11 @@ using FEx.Core.Abstractions.Extensions;
 using FEx.Sqlx.Abstractions;
 using FEx.Sqlx.Enums;
 using FEx.Sqlx.Extensions;
+using Microsoft.Data.SqlClient;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 #if NETFRAMEWORK
@@ -15,10 +15,6 @@ using Microsoft.SqlServer.Management.Smo.Wmi;
 #endif
 
 namespace FEx.Sqlx;
-
-// CS0618: System.Data.SqlClient.SqlConnection is obsolete in favour of Microsoft.Data.SqlClient.
-// Retained for backward compatibility; full migration tracked as tech debt.
-#pragma warning disable CS0618
 
 public class SQLInstanceInfo : ISqlInstanceInfo
 {
@@ -78,6 +74,11 @@ public class SQLInstanceInfo : ISqlInstanceInfo
         ? ReadLoginMode(() => server.LoginMode)
         : SqlLoginMode.Unknown;
 
+    // Encrypt=False is explicit: this probes a local or LAN instance that usually has no trusted certificate, and
+    // Microsoft.Data.SqlClient would otherwise default to Encrypt=True.
+    internal string ConnectionString =>
+        $"Data Source={SQLInstance};Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+
     private Server? _server;
     private SqlLoginMode? _loginMode;
 
@@ -131,12 +132,10 @@ public class SQLInstanceInfo : ISqlInstanceInfo
 
         try
         {
-            var connStr =
-                $"Data Source={SQLInstance};Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
 #if NETFRAMEWORK
-            using var conn = new SqlConnection(connStr);
+            using var conn = new SqlConnection(ConnectionString);
 #else
-            await using var conn = new SqlConnection(connStr);
+            await using var conn = new SqlConnection(ConnectionString);
 #endif
             await conn.OpenAsync();
             var result = await conn.RunSqlAsync(SqlConnectionExtensions.PropsSQL);
@@ -172,9 +171,7 @@ public class SQLInstanceInfo : ISqlInstanceInfo
 
         try
         {
-            using var conn =
-                new SqlConnection(
-                    $"Data Source={SQLInstance};Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            using var conn = new SqlConnection(ConnectionString);
 
             conn.Open();
             var result = conn.RunSql(SqlConnectionExtensions.PropsSQL);

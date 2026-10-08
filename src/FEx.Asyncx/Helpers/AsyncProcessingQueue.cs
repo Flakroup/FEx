@@ -21,6 +21,7 @@ public sealed class AsyncProcessingQueue : IDisposable
     private readonly FExSemaphoreSlim _semaphore;
     private int _concurrencyLimit;
     private int _currentRunning;
+    private long _processingLoopIterations;
 
     /// <summary>
     /// Dynamically updates the maximum allowed concurrency.
@@ -60,6 +61,10 @@ public sealed class AsyncProcessingQueue : IDisposable
 
     // Completes once Dispose has stopped the processing loop.
     internal Task ProcessingLoopTask => _processingLoop.Task;
+
+    // Passes through the top of the processing loop: one on start, then one per queued gate. It stays put while
+    // the loop is parked, so a loop that stops waiting and polls instead shows up as a count that keeps growing.
+    internal long ProcessingLoopIterations => Volatile.Read(ref _processingLoopIterations);
 
     public int RunningCount => Volatile.Read(ref _currentRunning);
 
@@ -160,6 +165,7 @@ public sealed class AsyncProcessingQueue : IDisposable
         {
             while (true)
             {
+                Interlocked.Increment(ref _processingLoopIterations);
                 await _queuedSignal.WaitAsync();
 
                 if (_disposed)

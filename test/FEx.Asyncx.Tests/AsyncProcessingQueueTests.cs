@@ -1,7 +1,7 @@
 using FEx.Asyncx.Helpers;
 using Shouldly;
 using System;
-using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -14,27 +14,39 @@ public sealed class AsyncProcessingQueueTests
 {
     private static readonly TimeSpan _timeout = TimeSpan.FromSeconds(10);
 
+    private static readonly TimeSpan IdleWindow = TimeSpan.FromMilliseconds(500);
+
+    private static async Task WaitUntilAsync(Func<bool> condition, CancellationToken ct)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeout.CancelAfter(_timeout);
+
+        while (!condition())
+            await Task.Delay(5, timeout.Token);
+    }
+
     private static TaskCompletionSource<bool> NewSignal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     /// <summary>
     /// An idle queue with spare capacity used to spin its processing loop at 100% of a core (netstandard2.0).
+    /// A parked loop passes through its top once on start and once per queued gate; a polling loop keeps counting.
     /// </summary>
     [Fact]
-    public async Task IdleQueue_DoesNotBurnCpu()
+    public async Task IdleQueue_ParksTheProcessingLoop_AndWakesItOncePerQueuedItem()
     {
         var ct = TestContext.Current.CancellationToken;
         using var queue = new AsyncProcessingQueue(2);
-        var process = Process.GetCurrentProcess();
 
-        // Let the constructor's background loop start, then measure CPU over an idle window.
-        await Task.Delay(200, ct);
-        var before = process.TotalProcessorTime;
-        await Task.Delay(1000, ct);
-        process.Refresh();
-        var burned = process.TotalProcessorTime - before;
+        await WaitUntilAsync(() => queue.ProcessingLoopIterations >= 1, ct);
+        await Task.Delay(IdleWindow, ct);
+        queue.ProcessingLoopIterations.ShouldBe(1);
 
-        // A spinning loop burns ~1000ms of CPU in the 1s window; an idle one a few ms.
-        burned.TotalMilliseconds.ShouldBeLessThan(400);
+        for (var i = 0; i < 3; i++)
+            await queue.EnqueueAsync(() => Task.CompletedTask, ct);
+
+        await WaitUntilAsync(() => queue.ProcessingLoopIterations >= 4, ct);
+        await Task.Delay(IdleWindow, ct);
+        queue.ProcessingLoopIterations.ShouldBe(4);
     }
 
     [Fact]

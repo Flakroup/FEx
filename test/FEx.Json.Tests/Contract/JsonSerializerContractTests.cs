@@ -212,19 +212,18 @@ public abstract class JsonSerializerContractTests
     public async Task Cancellation_ThrowsOperationCanceledException_Unwrapped()
     {
         var serializer = CreateSerializer();
-        using var cancellation = new CancellationTokenSource();
-        await cancellation.CancelAsync();
+        var cancelled = new CancellationToken(true);
         using var target = new MemoryStream();
         using var source = new MemoryStream(Encoding.UTF8.GetBytes(serializer.Serialize(Sample)));
 
         await Should.ThrowAsync<OperationCanceledException>(() =>
-            serializer.SerializeAsync(target, Sample, cancellation.Token));
+            serializer.SerializeAsync(target, Sample, cancelled));
         await Should.ThrowAsync<OperationCanceledException>(() =>
-            serializer.SerializeAsync(target, Sample, typeof(Person), cancellation.Token));
+            serializer.SerializeAsync(target, Sample, typeof(Person), cancelled));
         await Should.ThrowAsync<OperationCanceledException>(() =>
-            serializer.DeserializeAsync<Person>(source, cancellation.Token));
+            serializer.DeserializeAsync<Person>(source, cancelled));
         await Should.ThrowAsync<OperationCanceledException>(() =>
-            serializer.DeserializeAsync(source, typeof(Person), cancellation.Token));
+            serializer.DeserializeAsync(source, typeof(Person), cancelled));
     }
     #endregion
 

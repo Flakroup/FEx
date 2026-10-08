@@ -79,7 +79,6 @@ internal static class CoverageDebt
         "src/Agnostics.Abstractions/Flow/Error.cs", // debt: #137 - 7/39 lines
         "src/Agnostics.Abstractions/Flow/ExceptionError.cs", // debt: #137 - 5/11 lines
         "src/Agnostics.Abstractions/Flow/Result.cs", // debt: #137 - 18/28 lines
-        "src/Agnostics.Abstractions/Helpers/FExValueTaskHelper.cs", // debt: #137 - 1/2 lines
         "src/Agnostics.Abstractions/Helpers/FileSystemHelper.cs", // debt: #137 - 6/46 lines
         "src/Agnostics.Abstractions/Helpers/HashHelper.cs", // debt: #137 - 15/18 lines
         "src/Agnostics.Abstractions/Helpers/LambdaEqualityHelper.cs", // debt: #137 - 0/24 lines

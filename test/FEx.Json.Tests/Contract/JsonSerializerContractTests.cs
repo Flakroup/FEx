@@ -399,6 +399,58 @@ public abstract class JsonSerializerContractTests
         }
     }
 
+    [Theory]
+    [InlineData(0.1 + 0.2)]
+    [InlineData(double.Epsilon)]
+    [InlineData(double.MaxValue)]
+    [InlineData(double.MinValue)]
+    [InlineData(-0.0)]
+    [InlineData(1.0 / 3.0)]
+    public void ParseStringToDouble_WrittenValue_ReadsBackAsTheSameDouble(double value)
+    {
+        var serializer = CreateSerializer();
+        var culture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+
+        try
+        {
+            var json = serializer.Serialize(new DoubleHolder { Value = value, Optional = value });
+            var read = serializer.Deserialize<DoubleHolder>(json).ShouldNotBeNull();
+
+            BitConverter.DoubleToInt64Bits(read.Value).ShouldBe(BitConverter.DoubleToInt64Bits(value));
+            BitConverter.DoubleToInt64Bits(read.Optional.ShouldNotBeNull()).ShouldBe(BitConverter.DoubleToInt64Bits(value));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
+    }
+
+    [Fact]
+    public void ParseStringToDouble_NonFiniteValues_AreWrittenAsInvariantSymbolsAndReadBack()
+    {
+        var serializer = CreateSerializer();
+        var culture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+
+        try
+        {
+            serializer.Serialize(new DoubleHolder { Value = double.NaN, Optional = double.PositiveInfinity })
+                .ShouldBe("{\"Value\":\"NaN\",\"Optional\":\"Infinity\"}");
+            serializer.Serialize(new DoubleHolder { Value = double.NegativeInfinity })
+                .ShouldBe("{\"Value\":\"-Infinity\"}");
+
+            var read = serializer.Deserialize<DoubleHolder>("{\"Value\":\"NaN\",\"Optional\":\"Infinity\"}").ShouldNotBeNull();
+            double.IsNaN(read.Value).ShouldBeTrue();
+            read.Optional.ShouldBe(double.PositiveInfinity);
+            serializer.Deserialize<DoubleHolder>("{\"Value\":\"-Infinity\"}").ShouldNotBeNull().Value.ShouldBe(double.NegativeInfinity);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
+    }
+
     [Fact]
     public void ParseStringToDouble_UnparsableString_ThrowsFExJsonException()
     {

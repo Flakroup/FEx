@@ -1,7 +1,6 @@
 using FEx.Agnostics.Abstractions.Extensions.Numericals;
 using Newtonsoft.Json;
 using System;
-using System.Globalization;
 
 namespace FEx.Json.Converters;
 
@@ -46,6 +45,6 @@ public class ParseStringToDoubleConverter : JsonConverter
         }
 
         var value = (double)untypedValue;
-        serializer.Serialize(writer, value.ToString(CultureInfo.InvariantCulture));
+        serializer.Serialize(writer, value.ToRoundTripString());
     }
 }

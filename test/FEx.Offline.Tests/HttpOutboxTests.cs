@@ -11,8 +11,9 @@ namespace FEx.Offline.Tests;
 
 /// <summary>
 /// Outbox: queued writes replay in order with their persisted idempotency key; a landed write
-/// leaves the queue, a validation or permission rejection leaves it too (and is reported), a 401, a
-/// network failure or a server error keeps everything and stops the flush.
+/// leaves the queue, a validation or permission rejection moves to the dead-letter list, a 401, a
+/// network failure or a server error keeps everything and stops the flush, and a server error that
+/// repeats until the limit is dead-lettered too.
 /// </summary>
 public sealed class HttpOutboxTests
 {
@@ -92,7 +93,7 @@ public sealed class HttpOutboxTests
     }
 
     [Fact]
-    public async Task ValidationRejection_DropsTheEntry_AndReportsIt()
+    public async Task ValidationRejection_MovesTheEntryToTheDeadLetterList_AndReportsIt()
     {
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
         await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"bad":true}""");
@@ -108,13 +109,17 @@ public sealed class HttpOutboxTests
         var result = await outbox.FlushAsync(http);
 
         result.Sent.ShouldBe(0);
-        result.Rejected.ShouldBe(1);
+        result.DeadLettered.ShouldBe(1);
         result.Remaining.ShouldBe(0); // retrying an unchanged rejected write can never succeed
         result.LastError.ShouldBe("""HTTP 400: {"detail":"Ten klient jest już zapisany."}""");
+
+        var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+        dead.StatusCode.ShouldBe(400);
+        dead.ResponseBody.ShouldBe("""{"detail":"Ten klient jest już zapisany."}""");
     }
 
     [Fact]
-    public async Task PermissionRefusal_DropsTheEntry_AndReportsItWithTheBody()
+    public async Task PermissionRefusal_DeadLettersTheEntry_AndReportsItWithTheBody()
     {
         // A 403 is the server refusing this request for this user - no sign-in makes it land, so it must not
         // block the queue behind it the way a 401 does.
@@ -136,7 +141,7 @@ public sealed class HttpOutboxTests
         var result = await outbox.FlushAsync(http);
 
         result.Sent.ShouldBe(1);
-        result.Rejected.ShouldBe(1);
+        result.DeadLettered.ShouldBe(1);
         result.Remaining.ShouldBe(0);
         result.LastError.ShouldBe("""HTTP 403: {"detail":"Brak uprawnień."}""");
         handler.Requests.Count.ShouldBe(2); // the flush went on past the refusal
@@ -163,7 +168,7 @@ public sealed class HttpOutboxTests
         var result = await outbox.FlushAsync(http);
 
         result.Sent.ShouldBe(0);
-        result.Rejected.ShouldBe(0);
+        result.DeadLettered.ShouldBe(0);
         result.Remaining.ShouldBe(2);
         result.LastError.ShouldBe("HTTP 401");
         handler.Requests.Count.ShouldBe(1); // the second entry was never attempted
@@ -197,7 +202,7 @@ public sealed class HttpOutboxTests
         var result = await outbox.FlushAsync(http);
 
         result.Sent.ShouldBe(0);
-        result.Rejected.ShouldBe(0);
+        result.DeadLettered.ShouldBe(0);
         result.Remaining.ShouldBe(2);
         result.LastError.ShouldBe($"HTTP {(int)status}");
         handler.Requests.Count.ShouldBe(1);
@@ -405,6 +410,267 @@ public sealed class HttpOutboxTests
     [Fact]
     public void RegisteringNoDictionary_IsRefused() =>
         Should.Throw<ArgumentNullException>(() => Outbox(null!));
+
+    [Fact]
+    public async Task ClientRejection_StoresTheStatusAndATruncatedBody_AndNeverReplaysIt()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        var entry = await outbox.EnqueueAsync("PUT", "api/sales/inquiries/5", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(5));
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Conflict, new string('x', 500));
+        using var http = Client(handler);
+
+        await outbox.FlushAsync(http);
+
+        var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+        dead.Id.ShouldBe(entry.Id);
+        dead.Method.ShouldBe("PUT");
+        dead.Url.ShouldBe("api/sales/inquiries/5");
+        dead.JsonBody.ShouldBe("""{"n":1}""");
+        dead.CreatedAtUtc.ShouldBe(T0);
+        dead.DeadAtUtc.ShouldBe(T0.AddMinutes(5));
+        dead.StatusCode.ShouldBe(409);
+        dead.ResponseBody.ShouldBe(new string('x', 200));
+        dead.ServerFailures.ShouldBe(0);
+
+        // A second flush has nothing to send: the scripted handler would throw if the dead entry were replayed.
+        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 0, null));
+        handler.Requests.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task ServerError_CountsOnTheEntry_AndStopsTheFlushUntilTheLimit()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, maxServerFailures: 3);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        handler.EnqueueResponse(HttpStatusCode.BadGateway);
+        using var http = Client(handler);
+
+        var first = await outbox.FlushAsync(http);
+        var second = await outbox.FlushAsync(http);
+
+        first.Remaining.ShouldBe(2);
+        second.Remaining.ShouldBe(2);
+        second.DeadLettered.ShouldBe(0);
+        handler.Requests.Count.ShouldBe(2); // each flush stopped at the head; the second entry was never attempted
+
+        var queue = await outbox.ListAsync();
+        queue[0].ServerFailures.ShouldBe(2);
+        queue[0].Attempts.ShouldBe(2);
+        queue[1].ServerFailures.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ServerError_AtTheLimit_MovesTheEntryToTheDeadLetterList_AndTheFlushGoesOn()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, maxServerFailures: 2);
+        var poisoned = await outbox.EnqueueAsync("POST", "api/sales/leads/7/trash", null);
+        time.Advance(TimeSpan.FromMinutes(1));
+        var behind = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError, "boom");
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError, "boom again");
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http);
+
+        result.Sent.ShouldBe(1);
+        result.DeadLettered.ShouldBe(1);
+        result.Remaining.ShouldBe(0);
+        result.LastError.ShouldBe("HTTP 500: boom again");
+
+        handler.IdempotencyKeys.ShouldBe(new()
+        {
+            poisoned.Id.ToString(),
+            poisoned.Id.ToString(),
+            behind.Id.ToString()
+        });
+
+        var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+        dead.Id.ShouldBe(poisoned.Id);
+        dead.StatusCode.ShouldBe(500);
+        dead.ResponseBody.ShouldBe("boom again");
+        dead.ServerFailures.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task TheDefaultLimit_IsTen()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+
+        for (var i = 0; i < 10; i++)
+            handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+
+        using var http = Client(handler);
+
+        for (var i = 0; i < 9; i++)
+            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+
+        (await outbox.ListAsync()).ShouldHaveSingleItem().ServerFailures.ShouldBe(9);
+
+        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().ServerFailures.ShouldBe(10);
+        HttpOutbox.DefaultMaxServerFailures.ShouldBe(10);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void ALimitBelowOne_IsRefused(int limit)
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => new HttpOutbox(new InMemoryKeyValueStore(), new FixedTime(T0), maxServerFailures: limit))
+            .ParamName.ShouldBe("maxServerFailures");
+
+        Should.Throw<ArgumentOutOfRangeException>(() => new HttpOutbox(new InMemoryKeyValueStore(), new FixedTime(T0), null, ClientMarker(), limit))
+            .ParamName.ShouldBe("maxServerFailures");
+    }
+
+    [Fact]
+    public async Task OnlyServerAnswersCount_AWriteSurvivesFiftyTransientFailures_AndLandsOnTheNext2xx()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        var entry = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+
+        for (var i = 0; i < 10; i++)
+        {
+            handler.EnqueueNetworkFailure();
+            handler.EnqueueTimeout();
+            handler.EnqueueResponse(HttpStatusCode.Unauthorized);
+            handler.EnqueueResponse(HttpStatusCode.RequestTimeout);
+            handler.EnqueueResponse(HttpStatusCode.TooManyRequests);
+        }
+
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        for (var i = 0; i < 50; i++)
+            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+
+        var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
+        kept.Id.ShouldBe(entry.Id);
+        kept.Attempts.ShouldBe(50);
+        kept.ServerFailures.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+    }
+
+    [Fact]
+    public async Task TransientAnswers_KeepTheServerFailuresAlreadyCounted()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxServerFailures: 3);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        handler.EnqueueResponse(HttpStatusCode.TooManyRequests);
+        handler.EnqueueNetworkFailure();
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        using var http = Client(handler);
+
+        for (var i = 0; i < 4; i++)
+            await outbox.FlushAsync(http);
+
+        (await outbox.ListAsync()).ShouldHaveSingleItem().ServerFailures.ShouldBe(2);
+
+        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task DeadEntries_SurviveARestart_AreNeverMixedIntoTheQueue_AndAreNeverReplayed()
+    {
+        InMemoryKeyValueStore store = new();
+        FixedTime time = new(T0);
+        HttpOutbox before = new(store, time);
+        var dead = await before.EnqueueAsync("POST", "api/sales/inquiries", """{"bad":true}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        var live = await before.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler first = new();
+        first.EnqueueResponse(HttpStatusCode.UnprocessableEntity);
+        first.EnqueueResponse(HttpStatusCode.ServiceUnavailable);
+        using var firstHttp = Client(first);
+        await before.FlushAsync(firstHttp);
+
+        HttpOutbox after = new(store, time);
+
+        (await after.ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(dead.Id);
+        (await after.ListAsync()).ShouldHaveSingleItem().Id.ShouldBe(live.Id);
+        (await after.CountAsync()).ShouldBe(1);
+
+        using ScriptedHandler second = new();
+        second.EnqueueResponse(HttpStatusCode.Created);
+        using var secondHttp = Client(second);
+
+        (await after.FlushAsync(secondHttp)).ShouldBe(new(1, 0, 0, null));
+        second.IdempotencyKeys.ShouldBe(new() { live.Id.ToString() });
+        (await after.ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(dead.Id);
+    }
+
+    [Fact]
+    public async Task RemoveDead_DeletesOnlyTheEntryWithThatId()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        var first = await outbox.EnqueueAsync("POST", "api/a", null);
+        time.Advance(TimeSpan.FromMinutes(1));
+        var second = await outbox.EnqueueAsync("POST", "api/b", null);
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.BadRequest);
+        handler.EnqueueResponse(HttpStatusCode.BadRequest);
+        using var http = Client(handler);
+        await outbox.FlushAsync(http);
+
+        (await outbox.ListDeadAsync()).Select(d => d.Id).ShouldBe(new[] { first.Id, second.Id });
+
+        (await outbox.RemoveDeadAsync(first.Id)).ShouldBeTrue();
+        (await outbox.RemoveDeadAsync(first.Id)).ShouldBeFalse();
+        (await outbox.RemoveDeadAsync(Guid.NewGuid())).ShouldBeFalse();
+
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(second.Id);
+    }
+
+    [Fact]
+    public async Task EntryParkedByAnOlderVersion_ListsWithNoServerFailures()
+    {
+        // Written before ServerFailures existed: the missing property reads as zero, so the entry gets its full limit.
+        InMemoryKeyValueStore store = new();
+        Guid id = new("33333333-3333-3333-3333-333333333333");
+
+        await store.SetAsync($"outbox:{T0.UtcTicks:D19}:{id:N}",
+            $$"""{"id":"{{id}}","method":"POST","url":"api/a","jsonBody":null,"createdAtUtc":"2026-07-15T03:00:00+00:00","attempts":4,"lastError":"HTTP 500"}""");
+
+        var entry = (await new HttpOutbox(store, new FixedTime(T0)).ListAsync()).ShouldHaveSingleItem();
+
+        entry.Attempts.ShouldBe(4);
+        entry.ServerFailures.ShouldBe(0);
+    }
+
+    private static HttpClient Client(ScriptedHandler handler) => new(handler)
+    {
+        BaseAddress = new("http://localhost/")
+    };
 
     private const string MarkerValue = "fex-offline-test-client";
     private const string SecondValue = "fex-offline-second-header";

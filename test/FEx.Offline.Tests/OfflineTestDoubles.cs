@@ -62,6 +62,8 @@ internal sealed class ScriptedHandler : HttpMessageHandler
 
     public void EnqueueNetworkFailure() => _script.Enqueue(_ => throw new HttpRequestException("connection refused"));
 
+    public void EnqueueTimeout() => _script.Enqueue(_ => throw new TaskCanceledException("timed out"));
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
                                                                  CancellationToken cancellationToken)
     {

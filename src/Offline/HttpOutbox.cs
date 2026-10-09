@@ -70,7 +70,7 @@ public sealed class HttpOutbox
     /// </summary>
     public const string IdempotencyHeader = "Idempotency-Key";
 
-    /// <summary>How many 5xx answers an entry takes before it moves to the dead-letter list.</summary>
+    /// <summary>How many 5xx answers other than 503 an entry takes before it moves to the dead-letter list.</summary>
     public const int DefaultMaxServerFailures = 10;
 
     private const string KeyPrefix = "outbox:";

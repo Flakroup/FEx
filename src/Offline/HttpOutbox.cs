@@ -13,7 +13,7 @@ namespace FEx.Offline;
 /// <summary>
 /// One queued write. <see cref="Id" /> doubles as the Idempotency-Key the server replays on.
 /// <see cref="Attempts" /> counts every failed replay, a dropped connection included;
-/// <see cref="ServerFailures" /> counts only the 5xx answers, which is what the outbox's retry limit caps.
+/// <see cref="ServerFailures" /> counts only the 5xx answers other than 503, which is what the outbox's retry limit caps.
 /// </summary>
 public sealed record OutboxEntry(
     Guid Id,
@@ -53,12 +53,12 @@ public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining
 /// request that DID land (but whose response was lost) never double-executes, plus every replay header
 /// the host registered. A 2xx removes the entry. A 4xx other than 401, 408 and 429 moves it to the dead-letter
 /// list (the server understood and rejected it - retrying forever cannot fix a validation error) and the flush
-/// goes on. A 5xx keeps the entry, counts a server failure on it and stops the flush (the server is sick -
+/// goes on. A 5xx other than 503 keeps the entry, counts a server failure on it and stops the flush (the server is sick -
 /// hammering the rest of the queue would not help); at the limit of server failures the entry moves to the
 /// dead-letter list instead and the flush goes on, so one write the server keeps refusing cannot block the
-/// ones behind it. A 401, 408, 429 or a transport failure keeps the entry, records the error and stops the
-/// flush too, but is never counted: the session needs renewing, the server is throttling or the network is
-/// down, none of which says anything about the write. Dead entries are listed with
+/// ones behind it. A 401, 408, 429, 503 or a transport failure keeps the entry, records the error and stops the
+/// flush too, but is never counted: the session needs renewing, the server is throttling or overloaded or the
+/// network is down, none of which says anything about the write. Dead entries are listed with
 /// <see cref="ListDeadAsync" /> and deleted with <see cref="RemoveDeadAsync" />.
 /// </summary>
 public sealed class HttpOutbox
@@ -241,10 +241,11 @@ public sealed class HttpOutbox
 
                 var status = (int)response.StatusCode;
 
-                // Only a 5xx says the server refused the write itself. A 401 (sign in again), a 408/429 (timeout,
-                // throttling) and a dropped connection say nothing about it, so they never count toward the limit -
-                // a device offline for a week must not lose its writes.
-                var serverFailures = entry.ServerFailures + (status >= 500 ? 1 : 0);
+                // Only a 5xx other than 503 says the server refused the write itself. A 401 (sign in again), a
+                // 408/429/503 (timeout, throttling, temporary overload) and a dropped connection say nothing about it,
+                // so they never count toward the limit - a device offline for a week must not lose its writes.
+                var countsAsServerFailure = status >= 500 && status != (int)HttpStatusCode.ServiceUnavailable;
+                var serverFailures = entry.ServerFailures + (countsAsServerFailure ? 1 : 0);
 
                 // 401 means the session is not enough - once the user signs in again the unchanged write can
                 // land, and 408/429 are transient by definition, so these stay queued like a 5xx. Every other
@@ -252,7 +253,7 @@ public sealed class HttpOutbox
                 // conflict): a retry cannot succeed, so it is dead-lettered for the consumer to read.
                 var rejected = status is >= 400 and < 500 && !IsTransientClientError(response.StatusCode);
 
-                if (rejected || status >= 500 && serverFailures >= _maxServerFailures)
+                if (rejected || countsAsServerFailure && serverFailures >= _maxServerFailures)
                 {
                     var body = await ReadBodyAsync(response);
 
@@ -267,7 +268,7 @@ public sealed class HttpOutbox
                     continue;
                 }
 
-                // Server-side trouble (5xx), a session to renew (401) or throttling (408/429): worth retrying later,
+                // Server-side trouble (5xx), a session to renew (401) or throttling/overload (408/429/503): worth retrying later,
                 // not worth hammering now - stopping the flush here also spares a rate-limited server the rest of the queue.
                 var error = $"HTTP {status}";
 

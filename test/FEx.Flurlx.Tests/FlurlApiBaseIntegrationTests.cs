@@ -50,9 +50,9 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
         {
             MaxRetryAttempts = 2, // 2 retries to match test scenario (2 failures then success)
             InitialRetryDelay = TimeSpan.FromMilliseconds(50),
-            // No wall-clock timeout: under machine load an attempt can stall past any fixed limit, the policy\r
-            // then cuts it before it reaches the server and the retry tests see fewer requests than attempts.\r
-            // The timeout path has its own test (GetResponseAsync_Timeout_ThrowsTimeoutException).\r
+            // No wall-clock timeout: under machine load an attempt can stall past any fixed limit, the policy
+            // then cuts it before it reaches the server and the retry tests see fewer requests than attempts.
+            // The timeout path has its own test (GetResponseAsync_Timeout_ThrowsTimeoutException).
             RequestTimeout = Timeout.InfiniteTimeSpan,
             CircuitBreakerFailureThreshold = 5,
             MaxParallelization = 10,

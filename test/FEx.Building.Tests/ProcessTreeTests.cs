@@ -45,12 +45,27 @@ public sealed class ProcessTreeTests
         }
         finally
         {
-            // A failed assertion must not leave the tree it started behind to keep burning the machine.
-            if (!tree.HasExited)
+            // A failed assertion must not leave the tree it started behind to keep burning the machine, and a
+            // cleanup step that finds its target already gone must neither replace that assertion nor skip the
+            // steps after it. ProcessTree.Kill throws InvalidOperationException for a root that has exited and
+            // ArgumentException when it exits between that check and the lookup of its id.
+            try
+            {
                 tree.Kill();
+            }
+            catch (Exception e) when (e is InvalidOperationException or ArgumentException)
+            {
+                // Already gone - nothing left to kill.
+            }
 
-            if (innerProcess is { HasExited: false })
-                innerProcess.Kill();
+            try
+            {
+                innerProcess?.Kill();
+            }
+            catch (InvalidOperationException)
+            {
+                // Already gone - nothing left to kill.
+            }
 
             innerProcess?.Dispose();
             File.Delete(innerIdFile);

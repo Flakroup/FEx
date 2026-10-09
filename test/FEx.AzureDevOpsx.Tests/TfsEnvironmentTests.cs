@@ -11,7 +11,10 @@ namespace FEx.AzureDevOpsx.Tests;
 
 public sealed class TfsEnvironmentTests
 {
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    // Only a ceiling for detecting a wedged load (a regression), never a pace the test depends on. A failed load
+    // against the unreachable server takes ~2-5 s of the SDK's own retry delay plus cold JIT, which CPU load and
+    // coverage instrumentation stretch, so the ceiling is far above any legitimate duration.
+    private static readonly TimeSpan Timeout = TimeSpan.FromMinutes(3);
 
     private static TfsEnvironment CreateEnvironment() =>
         new("env", "http://127.0.0.1:1/tfs", Substitute.For<IProgressAggregator>(), null);

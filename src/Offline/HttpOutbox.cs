@@ -109,8 +109,6 @@ public sealed class HttpOutbox
     /// absolute one included, and a malformed value is echoed in the exception this constructor throws.
     /// </para>
     /// </summary>
-    /// <param name="maxServerFailures">How many 5xx answers an entry takes before it moves to the dead-letter
-    /// list.</param>
     /// <exception cref="ArgumentNullException"><paramref name="replayHeaders" /> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxServerFailures" /> is below 1.</exception>
     /// <exception cref="ArgumentException">A header is <see cref="IdempotencyHeader" />, which the outbox

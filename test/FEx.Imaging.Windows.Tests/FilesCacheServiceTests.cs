@@ -1,69 +1,136 @@
-﻿using FEx.Agnostics.Abstractions.Helpers;
-using FEx.Agnostics.Abstractions.Interfaces;
+﻿using FEx.Agnostics.Abstractions.Flow;
+using FEx.Agnostics.Abstractions.Helpers;
+using FEx.Agnostics.Abstractions.Logging;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Services;
 using FEx.Imaging.Windows.Model;
 using FEx.Legacy.Imaging.Abstractions.Interfaces;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-#if NET9_0_OR_GREATER
-using Microsoft.EntityFrameworkCore.Diagnostics;
-#endif
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Shouldly;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
+#if NET
+using Microsoft.Data.Sqlite;
+#endif
 
 namespace FEx.Imaging.Windows.Tests;
 
-/// <summary>The service and its index over a real (in-memory) SQLite database and a real temp folder.</summary>
-public sealed class FilesCacheServiceTests : ImagingTestBase
+/// <summary>
+/// The service and its index over a real SQLite database file and a real temp folder. Like in production, every
+/// context opens its own connection to the file: the index saves in the background while a test goes on, and
+/// the two must not share a connection or a transaction.
+/// </summary>
+public sealed class FilesCacheServiceTests : ImagingTestBase, IAsyncDisposable
 {
-    private readonly SqliteConnection _connection = new("DataSource=:memory:");
-    private readonly ServiceProvider _services;
+    // Never cached, so reloading it changes nothing.
+    private const string FlushKey = "https://images.test/flush";
+
+    // Beside the cache folder, not in it: the service deletes every file in its folder the index does not know.
+    private readonly string _dbPath;
+    private readonly ConcurrentQueue<string> _errors = new();
     private readonly TestDbService _dbService;
     private readonly List<IDisposable> _disposables = [];
+    private readonly List<Func<Task>> _flushes = [];
 
     public FilesCacheServiceTests()
     {
-        _connection.Open();
-        var builder = new DbContextOptionsBuilder<FilesCacheContext>().UseSqlite(_connection);
-#if NET9_0_OR_GREATER
-        // The shipped migrations (EF Core 2.2 era) lag the model snapshot; the tests run the schema as shipped.
-        builder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
-#endif
-        var options = builder.Options;
+        _dbPath = Dir + ".db";
+        var options = CreateOptions();
 
         using (var setup = new FilesCacheContext(options))
             setup.Database.Migrate();
 
         var services = new ServiceCollection();
         services.AddScoped(_ => new FilesCacheContext(options));
-        _services = services.BuildServiceProvider();
-        _dbService = new(new ScopeProvider(_services));
+        var provider = services.BuildServiceProvider();
+        _disposables.Add(provider);
+        _dbService = new(new ScopeProvider(provider));
+        FExStaticLogger.ErrorLogged += OnErrorLogged;
+    }
+
+    /// <summary>
+    /// Saves every change the indexes still hold or are saving, checks that nothing logged an error, then tears down.
+    /// The background save outlives the test body: tearing the database down under it makes it fail, and a failure
+    /// there is only logged. The error event is process-wide, so the check is only as narrow as the test run:
+    /// <see cref="EveryTestClass_RunsInTheSharedSerialCollection" /> pins that no other class runs beside this one.
+    /// xUnit calls only this method on a class that is also <see cref="IDisposable" />, so it ends in
+    /// <see cref="ImagingTestBase.Dispose()" />.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            foreach (var flush in _flushes)
+            {
+                try
+                {
+                    await flush();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // the test disposed the index itself, which drops what it still held
+                }
+            }
+        }
+        finally
+        {
+            FExStaticLogger.ErrorLogged -= OnErrorLogged;
+
+            foreach (var disposable in Enumerable.Reverse(_disposables))
+                disposable.Dispose();
+
+#if NET
+            SqliteConnection.ClearAllPools();
+#endif
+            DeleteDatabase();
+            Dispose();
+        }
+
+        _errors.ShouldBeEmpty();
     }
 
     protected override void Dispose(bool disposing)
     {
         if (disposing)
-        {
-            foreach (var disposable in Enumerable.Reverse(_disposables))
-                disposable.Dispose();
-
             _dbService.Dispose();
-            _services.Dispose();
-            _connection.Dispose();
-        }
 
         base.Dispose(disposing);
     }
+
+    private void OnErrorLogged(object? sender, FExErrorEventArgs e) =>
+        _errors.Enqueue(e.Exception?.ToString() ?? e.Message ?? string.Empty);
+
+    private DbContextOptions<FilesCacheContext> CreateOptions() =>
+        new DbContextOptionsBuilder<FilesCacheContext>().UseSqlite($"Data Source={_dbPath}").Options;
+
+    private void DeleteDatabase()
+    {
+        try
+        {
+            File.Delete(_dbPath);
+        }
+        catch (IOException)
+        {
+            // still held for a moment; the file lives under the temp path anyway
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // same as above
+        }
+    }
+
+    // The index has to be saved before the database goes away, whoever disposes it: see DisposeAsync.
+    private void FlushOnTearDown(IndexEntriesCache index) => _flushes.Add(() => index.ReloadAsync(FlushKey));
 
     private FilesCacheService CreateSut(FilesCacheServiceConfig? config = null)
     {
@@ -72,6 +139,7 @@ public sealed class FilesCacheServiceTests : ImagingTestBase
             new(_dbService, config),
             Locks);
         _disposables.Add(sut);
+        FlushOnTearDown(sut.FilesCacheIndex);
 
         return sut;
     }
@@ -81,6 +149,17 @@ public sealed class FilesCacheServiceTests : ImagingTestBase
         await sut.InitializeAsync();
 
         return sut;
+    }
+
+    [Fact]
+    public void EveryTestClass_RunsInTheSharedSerialCollection()
+    {
+        var outside = typeof(FilesCacheServiceTests).Assembly.GetTypes()
+            .Where(static type => type.GetMethods().Any(static method => method.IsDefined(typeof(FactAttribute), true)))
+            .Where(static type => type.GetCustomAttribute<CollectionAttribute>(true)?.Name != ImagingTestCollection.Name)
+            .Select(static type => type.Name);
+
+        outside.ShouldBeEmpty();
     }
 
     [Fact]
@@ -385,6 +464,7 @@ public sealed class FilesCacheServiceTests : ImagingTestBase
         var png = WriteFile("given.png", Png(2, 2));
         var sut = new IndexEntriesCache(_dbService, config);
         _disposables.Add(sut);
+        FlushOnTearDown(sut);
         await sut.InitializeAsync();
 
         var entry = Borrow(await sut.GetOrAddValueAsync(ImageUrl.AbsoluteUri, true, "given.png"));
@@ -400,6 +480,7 @@ public sealed class FilesCacheServiceTests : ImagingTestBase
     {
         var sut = new IndexEntriesCache(_dbService, CreateConfig());
         _disposables.Add(sut);
+        FlushOnTearDown(sut);
         await sut.InitializeAsync();
         var stray = WriteFile("stray.png", Png(2, 2));
 
@@ -414,9 +495,61 @@ public sealed class FilesCacheServiceTests : ImagingTestBase
     {
         var sut = new IndexEntriesCache(_dbService, CreateConfig());
         _disposables.Add(sut);
+        FlushOnTearDown(sut);
         await sut.InitializeAsync();
 
         await Should.NotThrowAsync(() => sut.RemoveIndexEntriesAsync(new Dictionary<string, FileInfo>()));
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_NewUrl_IsSavedByTheBackgroundSave()
+    {
+        var sut = await InitializedAsync(CreateSut());
+
+        var entry = Borrow(await sut.GetEntryAsync(ImageUrl));
+        await sut.FilesCacheIndex.ReloadAsync(FlushKey, TestContext.Current.CancellationToken);
+
+        using var context = new FilesCacheContext(CreateOptions());
+        context.IndexEntries.AsNoTracking().Select(x => x.AbsoluteUri).ShouldBe([entry.AbsoluteUri]);
+    }
+
+    [Fact]
+    public async Task DbService_OverlappingOperations_DoNotShareATransaction()
+    {
+        var holding = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = _dbService.RunTaskInDbContextAsync(async context =>
+        {
+            var count = await context.IndexEntries.CountAsync(TestContext.Current.CancellationToken);
+            holding.SetResult(true);
+#pragma warning disable VSTHRD003 // completed by the test
+            await release.Task;
+#pragma warning restore VSTHRD003
+
+            return count;
+        });
+
+        try
+        {
+            await Task.WhenAny(holding.Task, first);
+
+            // On a connection of its own the second operation waits for the first one's lock or just reads; on a shared
+            // connection it would try to begin a nested transaction and fail. Off the test thread: SQLite waits for a
+            // lock synchronously, and the lock is released below.
+            var second = Task.Run(() => _dbService.RunTaskInDbContextAsync(context =>
+                context.IndexEntries.CountAsync(TestContext.Current.CancellationToken)));
+            await Task.Delay(500, TestContext.Current.CancellationToken);
+            release.SetResult(true);
+
+            (await second).ShouldBe(0);
+        }
+        finally
+        {
+            release.TrySetResult(true);
+#pragma warning disable VSTHRD003 // the task is the operation this test started
+            await first;
+#pragma warning restore VSTHRD003
+        }
     }
 
     private sealed class ScopeProvider(IServiceProvider services) : IScopeProvider
@@ -429,7 +562,7 @@ public sealed class FilesCacheServiceTests : ImagingTestBase
         public string? DbKey => null;
 
         public TestDbService(IScopeProvider scopeProvider)
-            : base(scopeProvider, new(Substitute.For<IFExLogger>()), Substitute.For<IFExDbConfig>(), [])
+            : base(scopeProvider, new(FExStaticLogger.Instance), Substitute.For<IFExDbConfig>(), [])
         {
         }
 

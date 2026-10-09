@@ -17,6 +17,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using WireMock;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
@@ -49,7 +50,10 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
         {
             MaxRetryAttempts = 2, // 2 retries to match test scenario (2 failures then success)
             InitialRetryDelay = TimeSpan.FromMilliseconds(50),
-            RequestTimeout = TimeSpan.FromSeconds(5),
+            // No wall-clock timeout: under machine load an attempt can stall past any fixed limit, the policy
+            // then cuts it before it reaches the server and the retry tests see fewer requests than attempts.
+            // The timeout path has its own test (GetResponseAsync_Timeout_ThrowsTimeoutException).
+            RequestTimeout = Timeout.InfiniteTimeSpan,
             CircuitBreakerFailureThreshold = 5,
             MaxParallelization = 10,
             EnableFallback = true
@@ -272,6 +276,26 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
         results.Count(r => r != null).ShouldBeLessThanOrEqualTo(3); // Max 3 can succeed (2 parallel + 1 queued)
     }
 
+    // The fixture policy has no timeout, so a stalled attempt cannot be cut and silently lost; this bounds a
+    // genuine hang instead, which would otherwise block the run.
+    private const int AttemptCountTestTimeoutMs = 120_000;
+
+    // Answers 500 and counts each request inside the callback, before the response goes out. Counting from
+    // WireMock's LogEntries instead would depend on when the server appends its log entry relative to the response.
+    private Func<int> ArrangeFailingEndpoint(IRequestBuilder request)
+    {
+        var count = 0;
+
+        _mockServer.Given(request).RespondWith(Response.Create().WithCallback(_ =>
+        {
+            Interlocked.Increment(ref count);
+
+            return new ResponseMessage { StatusCode = 500 };
+        }));
+
+        return () => Volatile.Read(ref count);
+    }
+
     private static FExPollyPolicyBuilder GetPolicyBuilder() => new(Substitute.For<IFExLogger>());
 
     private static IFlurlConfigurator GetMocks(IFlurlClient flurlClient, IAsyncPolicy<IFlurlResponse> resiliencePolicy)
@@ -317,31 +341,29 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
     }
 
     // The guard must not disarm resilience wholesale - a safe method still gets every retry it used to.
-    [Fact]
+    [Fact(Timeout = AttemptCountTestTimeoutMs)]
     public async Task GetResponseAsync_SafeMethodFailing_IsStillRetried()
     {
-        _mockServer.Given(Request.Create().WithPath("/api/retry-count").UsingGet())
-            .RespondWith(Response.Create().WithStatusCode(500));
+        var attempts = ArrangeFailingEndpoint(Request.Create().WithPath("/api/retry-count").UsingGet());
 
         await Should.ThrowAsync<Exception>(() => _testApi.GetRetryCountDataAsync(TestContext.Current.CancellationToken));
 
         // MaxRetryAttempts = 2 in this fixture, so the original call plus two retries.
-        _mockServer.LogEntries.Count(entry => entry.RequestMessage?.Path == "/api/retry-count").ShouldBe(3);
+        attempts().ShouldBe(3);
     }
 
     // The decision is a seam, not a rule: a client whose writes really are idempotent can opt back in.
-    [Fact]
+    [Fact(Timeout = AttemptCountTestTimeoutMs)]
     public async Task GetResponseAsync_UnsafeMethodOnAnOptedInClient_IsRetried()
     {
-        _mockServer.Given(Request.Create().WithPath("/api/create").UsingPost())
-            .RespondWith(Response.Create().WithStatusCode(500));
+        var attempts = ArrangeFailingEndpoint(Request.Create().WithPath("/api/create").UsingPost());
 
         using var optedIn = new RetryEverythingApi(GetMocks(_flurlClient, _resiliencePolicy));
 
         await Should.ThrowAsync<Exception>(() =>
             optedIn.CreateDataAsync(new TestRequestData { Value = "x", Count = 1 }, TestContext.Current.CancellationToken));
 
-        _mockServer.LogEntries.Count(entry => entry.RequestMessage?.Path == "/api/create").ShouldBe(3);
+        attempts().ShouldBe(3);
     }
 
     #region IDisposable

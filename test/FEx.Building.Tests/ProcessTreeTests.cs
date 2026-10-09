@@ -1,7 +1,9 @@
 using Nuke.Common.Tooling;
 using Shouldly;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -11,13 +13,17 @@ namespace FEx.Building.Tests;
 
 public sealed class ProcessTreeTests
 {
+    private static readonly TimeSpan Ceiling = TimeSpan.FromMinutes(3);
+
     [Fact]
     public void Kill_TakesTheProcessesTheRootSpawned_WithIt()
     {
         // A real tree, because this is exactly what a fake cannot show: pwsh running pwsh, the inner one
-        // writing a heartbeat. Killing the outer one alone leaves the heartbeat going.
-        var heartbeat = Path.Combine(Path.GetTempPath(), $"fex-heartbeat-{Guid.NewGuid():N}");
-        var inner = $"while ($true) {{ [IO.File]::WriteAllText('{heartbeat}', [DateTime]::UtcNow.Ticks); Start-Sleep -Milliseconds 50 }}";
+        // writing its own id. Killing the outer one alone leaves the inner one running. Every wait is on a
+        // condition with a ceiling far above any load - starting two nested pwsh hosts takes many seconds on a
+        // machine with more runnable processes than hardware threads - and none is a fixed pause.
+        var innerIdFile = Path.Combine(Path.GetTempPath(), $"fex-inner-id-{Guid.NewGuid():N}");
+        var inner = $"[IO.File]::WriteAllText('{innerIdFile}.tmp', [string]$PID); [IO.File]::Move('{innerIdFile}.tmp', '{innerIdFile}'); Start-Sleep -Seconds 600";
         var outer = $"pwsh -NoProfile -EncodedCommand {Encoded(inner)}";
 
         using var tree = new ProcessTree(ProcessTasks.StartProcess("pwsh",
@@ -25,22 +31,49 @@ public sealed class ProcessTreeTests
             logOutput: false,
             logInvocation: false)!);
 
+        Process? innerProcess = null;
         try
         {
-            WaitFor(() => File.Exists(heartbeat), TimeSpan.FromSeconds(30)).ShouldBeTrue("the inner process never started");
+            WaitFor(() => File.Exists(innerIdFile) || tree.HasExited, Ceiling);
+            File.Exists(innerIdFile).ShouldBeTrue("the inner process never started");
+
+            // GetProcessById holds no handle, so the handle is pinned before the kill: from then on the id cannot be
+            // recycled while the test waits on it, and the cleanup below cannot kill a stranger that inherited it.
+            innerProcess = Process.GetProcessById(int.Parse(File.ReadAllText(innerIdFile), CultureInfo.InvariantCulture));
+            _ = innerProcess.SafeHandle;
 
             tree.Kill();
 
-            tree.WaitForExit();
-            Thread.Sleep(300);
-            var last = File.ReadAllText(heartbeat);
-            Thread.Sleep(500);
-
-            File.ReadAllText(heartbeat).ShouldBe(last);
+            innerProcess.WaitForExit(Ceiling).ShouldBeTrue("the inner process outlived the kill of its parent");
         }
         finally
         {
-            File.Delete(heartbeat);
+            // A failed assertion must not leave the tree it started behind to keep burning the machine, and a
+            // cleanup step that finds its target already gone must neither replace that assertion nor skip the
+            // steps after it. ProcessTree.Kill throws InvalidOperationException for a root that has exited and
+            // ArgumentException when it exits between that check and the lookup of its id, and the tree kill reports a
+            // descendant it could not terminate as an AggregateException.
+            try
+            {
+                tree.Kill();
+            }
+            catch (Exception e) when (e is InvalidOperationException or ArgumentException or AggregateException)
+            {
+                // Already gone - nothing left to kill.
+            }
+
+            try
+            {
+                innerProcess?.Kill();
+            }
+            catch (Win32Exception)
+            {
+                // Already terminating - nothing left to kill.
+            }
+
+            innerProcess?.Dispose();
+            File.Delete(innerIdFile);
+            File.Delete($"{innerIdFile}.tmp");
         }
     }
 
@@ -58,17 +91,10 @@ public sealed class ProcessTreeTests
 
     private static string Encoded(string script) => Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
 
-    private static bool WaitFor(Func<bool> condition, TimeSpan timeout)
+    private static void WaitFor(Func<bool> condition, TimeSpan timeout)
     {
         var clock = Stopwatch.StartNew();
-        while (!condition())
-        {
-            if (clock.Elapsed > timeout)
-                return false;
-
+        while (!condition() && clock.Elapsed <= timeout)
             Thread.Sleep(100);
-        }
-
-        return true;
     }
 }

@@ -1,6 +1,7 @@
 using Nuke.Common.Tooling;
 using Shouldly;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -36,8 +37,10 @@ public sealed class ProcessTreeTests
             WaitFor(() => File.Exists(innerIdFile) || tree.HasExited, Ceiling);
             File.Exists(innerIdFile).ShouldBeTrue("the inner process never started");
 
-            // The handle is held before the kill, so the id cannot be recycled while the test waits on it.
+            // GetProcessById holds no handle, so the handle is pinned before the kill: from then on the id cannot be
+            // recycled while the test waits on it, and the cleanup below cannot kill a stranger that inherited it.
             innerProcess = Process.GetProcessById(int.Parse(File.ReadAllText(innerIdFile), CultureInfo.InvariantCulture));
+            _ = innerProcess.SafeHandle;
 
             tree.Kill();
 
@@ -45,12 +48,28 @@ public sealed class ProcessTreeTests
         }
         finally
         {
-            // A failed assertion must not leave the tree it started behind to keep burning the machine.
-            if (!tree.HasExited)
+            // A failed assertion must not leave the tree it started behind to keep burning the machine, and a
+            // cleanup step that finds its target already gone must neither replace that assertion nor skip the
+            // steps after it. ProcessTree.Kill throws InvalidOperationException for a root that has exited and
+            // ArgumentException when it exits between that check and the lookup of its id, and the tree kill reports a
+            // descendant it could not terminate as an AggregateException.
+            try
+            {
                 tree.Kill();
+            }
+            catch (Exception e) when (e is InvalidOperationException or ArgumentException or AggregateException)
+            {
+                // Already gone - nothing left to kill.
+            }
 
-            if (innerProcess is { HasExited: false })
-                innerProcess.Kill();
+            try
+            {
+                innerProcess?.Kill();
+            }
+            catch (Win32Exception)
+            {
+                // Already terminating - nothing left to kill.
+            }
 
             innerProcess?.Dispose();
             File.Delete(innerIdFile);

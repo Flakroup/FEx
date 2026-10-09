@@ -1,6 +1,7 @@
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -649,6 +650,93 @@ public sealed class HttpOutboxTests
         (await outbox.RemoveDeadAsync(Guid.NewGuid())).ShouldBeFalse();
 
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(second.Id);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    [InlineData(HttpStatusCode.BadRequest)]
+    public async Task ABodyThatCannotBeRead_StillDeadLettersTheEntry_AndDoesNotBlockTheQueue(HttpStatusCode status)
+    {
+        // An undecodable charset makes ReadAsStringAsync throw; that must not escape the flush and pin the head entry.
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, maxServerFailures: 1);
+        await outbox.EnqueueAsync("POST", "api/a", null);
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/b", null);
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueUnreadableResponse(status);
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.Sent.ShouldBe(1);
+        result.DeadLettered.ShouldBe(1);
+        var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+        dead.StatusCode.ShouldBe((int)status);
+        dead.ResponseBody.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task AFailedDeadLetterWrite_LeavesTheWriteInTheQueue()
+    {
+        // The dead copy lands before the live entry goes, so a store that fails the first write loses nothing.
+        HttpOutbox outbox = new(new DeadWriteFailingStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/a", null);
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.BadRequest);
+        using var http = Client(handler);
+
+        await Should.ThrowAsync<IOException>(() => outbox.FlushAsync(http));
+
+        (await outbox.ListAsync()).ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task AnEntryAlreadyPastALoweredLimit_IsNotDeadLetteredByAnAnswerThatNeverCounts()
+    {
+        // Stored with 5 server failures, then the host restarts with a limit of 3: a 401 is still only a session to renew.
+        InMemoryKeyValueStore store = new();
+        Guid id = new("44444444-4444-4444-4444-444444444444");
+
+        await store.SetAsync($"outbox:{T0.UtcTicks:D19}:{id:N}",
+            $$"""{"id":"{{id}}","method":"POST","url":"api/a","jsonBody":null,"createdAtUtc":"2026-07-15T03:00:00+00:00","attempts":5,"lastError":"HTTP 500","serverFailures":5}""");
+
+        HttpOutbox outbox = new(store, new FixedTime(T0), maxServerFailures: 3);
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Unauthorized);
+        using var http = Client(handler);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.DeadLettered.ShouldBe(0);
+        (await outbox.ListAsync()).ShouldHaveSingleItem().ServerFailures.ShouldBe(5);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task AWriteBuriedBeforeAFailedRemoval_ThatLandsOnTheNextFlush_LeavesNoDeadCopy()
+    {
+        FailingFirstRemoveStore store = new();
+        HttpOutbox outbox = new(store, new FixedTime(T0), maxServerFailures: 1);
+        await outbox.EnqueueAsync("POST", "api/a", null);
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        // The dead copy is written, then removing the live entry fails.
+        await Should.ThrowAsync<IOException>(() => outbox.FlushAsync(http));
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(1, 0, 0, null));
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
     }
 
     [Fact]

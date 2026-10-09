@@ -232,6 +232,10 @@ public sealed class HttpOutbox
                 if (response.IsSuccessStatusCode)
                 {
                     await RemoveAsync(entry);
+
+                    // A stale dead copy of this very write (the flush died between burying it and removing the live
+                    // entry) must not tell the consumer that a write which landed has failed.
+                    await _store.RemoveAsync(DeadKeyFor(entry));
                     sent++;
 
                     continue;
@@ -252,7 +256,7 @@ public sealed class HttpOutbox
 
                 if (rejected || status >= 500 && serverFailures >= _maxServerFailures)
                 {
-                    var body = Truncate(await response.Content.ReadAsStringAsync());
+                    var body = await ReadBodyAsync(response);
 
                     await DeadLetterAsync(entry with
                     {
@@ -310,6 +314,21 @@ public sealed class HttpOutbox
         value.Length <= 200
             ? value
             : value[..200];
+
+    // A server (or a proxy) can send a Content-Type whose charset .NET cannot decode, and reading the body then
+    // throws: out of the flush, before the entry could be counted or buried, so the same write would block the queue
+    // forever. (A connection that drops mid-body never gets here: SendAsync buffers the body and fails as a transport error.)
+    private static async Task<string> ReadBodyAsync(HttpResponseMessage response)
+    {
+        try
+        {
+            return Truncate(await response.Content.ReadAsStringAsync());
+        }
+        catch (InvalidOperationException)
+        {
+            return "";
+        }
+    }
 
     private async Task<List<T>> LoadAsync<T>(string prefix)
     {

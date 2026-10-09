@@ -183,9 +183,11 @@ public sealed class HttpOutboxTests
     [Theory]
     [InlineData(HttpStatusCode.RequestTimeout)]
     [InlineData(HttpStatusCode.TooManyRequests)]
-    public async Task TransientClientError_KeepsTheEntryWithTheError_AndStopsTheFlush(HttpStatusCode status)
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    public async Task TransientAnswer_KeepsTheEntryWithTheError_AndStopsTheFlush(HttpStatusCode status)
     {
-        // 408 and 429 are timeouts and throttling: the unchanged write can land later, so it must not be dropped.
+        // 408, 429 and 503 are timeouts, throttling and temporary overload: the unchanged write can land later, so it
+        // must not be dropped, and none of them counts as a server failure.
         FixedTime time = new(T0);
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
         await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
@@ -210,6 +212,7 @@ public sealed class HttpOutboxTests
 
         var kept = (await outbox.ListAsync())[0];
         kept.Attempts.ShouldBe(1);
+        kept.ServerFailures.ShouldBe(0);
         kept.JsonBody.ShouldBe("""{"n":1}""");
     }
 
@@ -471,8 +474,11 @@ public sealed class HttpOutboxTests
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
     }
 
-    [Fact]
-    public async Task ServerError_AtTheLimit_MovesTheEntryToTheDeadLetterList_AndTheFlushGoesOn()
+    [Theory]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    [InlineData(HttpStatusCode.BadGateway)]
+    [InlineData(HttpStatusCode.GatewayTimeout)]
+    public async Task ServerError_AtTheLimit_MovesTheEntryToTheDeadLetterList_AndTheFlushGoesOn(HttpStatusCode status)
     {
         FixedTime time = new(T0);
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, maxServerFailures: 2);
@@ -481,8 +487,8 @@ public sealed class HttpOutboxTests
         var behind = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
 
         using ScriptedHandler handler = new();
-        handler.EnqueueResponse(HttpStatusCode.InternalServerError, "boom");
-        handler.EnqueueResponse(HttpStatusCode.InternalServerError, "boom again");
+        handler.EnqueueResponse(status, "boom");
+        handler.EnqueueResponse(status, "boom again");
         handler.EnqueueResponse(HttpStatusCode.Created);
         using var http = Client(handler);
 
@@ -492,7 +498,7 @@ public sealed class HttpOutboxTests
         result.Sent.ShouldBe(1);
         result.DeadLettered.ShouldBe(1);
         result.Remaining.ShouldBe(0);
-        result.LastError.ShouldBe("HTTP 500: boom again");
+        result.LastError.ShouldBe($"HTTP {(int)status}: boom again");
 
         handler.IdempotencyKeys.ShouldBe(new()
         {
@@ -503,7 +509,7 @@ public sealed class HttpOutboxTests
 
         var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
         dead.Id.ShouldBe(poisoned.Id);
-        dead.StatusCode.ShouldBe(500);
+        dead.StatusCode.ShouldBe((int)status);
         dead.ResponseBody.ShouldBe("boom again");
         dead.ServerFailures.ShouldBe(2);
     }
@@ -544,7 +550,7 @@ public sealed class HttpOutboxTests
     }
 
     [Fact]
-    public async Task OnlyServerAnswersCount_AWriteSurvivesFiftyTransientFailures_AndLandsOnTheNext2xx()
+    public async Task OnlyServerAnswersCount_AWriteSurvivesSixtyTransientFailures_AndLandsOnTheNext2xx()
     {
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
         var entry = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
@@ -558,17 +564,18 @@ public sealed class HttpOutboxTests
             handler.EnqueueResponse(HttpStatusCode.Unauthorized);
             handler.EnqueueResponse(HttpStatusCode.RequestTimeout);
             handler.EnqueueResponse(HttpStatusCode.TooManyRequests);
+            handler.EnqueueResponse(HttpStatusCode.ServiceUnavailable);
         }
 
         handler.EnqueueResponse(HttpStatusCode.Created);
         using var http = Client(handler);
 
-        for (var i = 0; i < 50; i++)
+        for (var i = 0; i < 60; i++)
             (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
 
         var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
         kept.Id.ShouldBe(entry.Id);
-        kept.Attempts.ShouldBe(50);
+        kept.Attempts.ShouldBe(60);
         kept.ServerFailures.ShouldBe(0);
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
 
@@ -584,12 +591,13 @@ public sealed class HttpOutboxTests
         using ScriptedHandler handler = new();
         handler.EnqueueResponse(HttpStatusCode.InternalServerError);
         handler.EnqueueResponse(HttpStatusCode.TooManyRequests);
+        handler.EnqueueResponse(HttpStatusCode.ServiceUnavailable);
         handler.EnqueueNetworkFailure();
         handler.EnqueueResponse(HttpStatusCode.InternalServerError);
         handler.EnqueueResponse(HttpStatusCode.InternalServerError);
         using var http = Client(handler);
 
-        for (var i = 0; i < 4; i++)
+        for (var i = 0; i < 5; i++)
             await outbox.FlushAsync(http);
 
         (await outbox.ListAsync()).ShouldHaveSingleItem().ServerFailures.ShouldBe(2);
@@ -694,10 +702,13 @@ public sealed class HttpOutboxTests
         (await outbox.ListAsync()).ShouldHaveSingleItem();
     }
 
-    [Fact]
-    public async Task AnEntryAlreadyPastALoweredLimit_IsNotDeadLetteredByAnAnswerThatNeverCounts()
+    [Theory]
+    [InlineData(HttpStatusCode.Unauthorized)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    public async Task AnEntryAlreadyPastALoweredLimit_IsNotDeadLetteredByAnAnswerThatNeverCounts(HttpStatusCode status)
     {
-        // Stored with 5 server failures, then the host restarts with a limit of 3: a 401 is still only a session to renew.
+        // Stored with 5 server failures, then the host restarts with a limit of 3: a 401 is still only a session to
+        // renew and a 503 only an overloaded server.
         InMemoryKeyValueStore store = new();
         Guid id = new("44444444-4444-4444-4444-444444444444");
 
@@ -707,7 +718,7 @@ public sealed class HttpOutboxTests
         HttpOutbox outbox = new(store, new FixedTime(T0), maxServerFailures: 3);
 
         using ScriptedHandler handler = new();
-        handler.EnqueueResponse(HttpStatusCode.Unauthorized);
+        handler.EnqueueResponse(status);
         using var http = Client(handler);
 
         var result = await outbox.FlushAsync(http);

@@ -1,8 +1,7 @@
 ﻿using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Core.Abstractions;
 using FluentFTP;
-using FluentFTP.Helpers;
-using FluentFTP.Proxy;
+using FluentFTP.Proxy.AsyncProxy;
 using System;
 using System.Collections.Concurrent;
 using System.Net;
@@ -19,7 +18,7 @@ public class FtpClientFactory
     public string? ProxyHost { get; set; }
     public int ProxyPort { get; set; }
 
-    public Task<FtpClient> CreateAsync(string? user = null, string? pass = null, bool useProxy = false, int port = 0)
+    public Task<AsyncFtpClient> CreateAsync(string? user = null, string? pass = null, bool useProxy = false, int port = 0)
     {
         var credentials = user != null || pass != null
             ? new NetworkCredential(user, pass)
@@ -30,7 +29,7 @@ public class FtpClientFactory
         return CreateAsync(credentials, proxy, port);
     }
 
-    public Task<FtpClient> CreateAsync(string? user = null, string? pass = null, ProxyInfo? proxy = null, int port = 0)
+    public Task<AsyncFtpClient> CreateAsync(string? user = null, string? pass = null, FtpProxyProfile? proxy = null, int port = 0)
     {
         var credentials = user != null || pass != null
             ? new NetworkCredential(user, pass)
@@ -39,23 +38,23 @@ public class FtpClientFactory
         return CreateAsync(credentials, proxy, port);
     }
 
-    public Task<FtpClient> CreateAsync(NetworkCredential? credentials = null, bool useProxy = false, int port = 0)
+    public Task<AsyncFtpClient> CreateAsync(NetworkCredential? credentials = null, bool useProxy = false, int port = 0)
     {
         var proxy = GetProxy(useProxy);
 
         return CreateAsync(credentials, proxy, port);
     }
 
-    public async Task<FtpClient> CreateAsync(NetworkCredential? credentials = null, ProxyInfo? proxy = null, int port = 0)
+    public async Task<AsyncFtpClient> CreateAsync(NetworkCredential? credentials = null, FtpProxyProfile? proxy = null, int port = 0)
     {
         await _semaphore.WaitAsync();
 
         try
         {
-            FtpClient client;
+            AsyncFtpClient client;
 
             if (proxy != null)
-                client = new FtpClientHttp11Proxy(proxy);
+                client = new AsyncFtpClientHttp11Proxy(proxy);
             else
                 client = new();
 
@@ -68,8 +67,6 @@ public class FtpClientFactory
             if (port != 0)
                 client.Port = port;
 
-            FtpTrace.WriteLine($"FTPClient::ConnectionType = \'{client.ConnectionType}\'");
-
             return client;
         }
         catch
@@ -80,15 +77,15 @@ public class FtpClientFactory
         }
     }
 
-    public async Task ReleaseClientAsync(FtpClient client)
+    public async Task ReleaseClientAsync(AsyncFtpClient client)
     {
         if (!client.IsDisposed)
         {
             if (client.IsConnected)
-                await client.DisconnectAsync();
+                await client.Disconnect();
 
 #pragma warning disable IDISP007 // factory release pattern, client created by CreateAsync
-            client.Dispose();
+            await client.DisposeAsync();
 #pragma warning restore IDISP007
         }
 
@@ -100,14 +97,14 @@ public class FtpClientFactory
         e.Accept = true;
     }
 
-    internal ProxyInfo? GetProxy(bool useProxy)
+    internal FtpProxyProfile? GetProxy(bool useProxy)
     {
         if (useProxy)
             return new()
             {
-                Credentials = (NetworkCredential)ProxyCredentials,
-                Host = ProxyHost,
-                Port = ProxyPort
+                ProxyCredentials = (NetworkCredential)ProxyCredentials,
+                ProxyHost = ProxyHost,
+                ProxyPort = ProxyPort
             };
 
         return null;

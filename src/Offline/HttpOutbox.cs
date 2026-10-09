@@ -10,7 +10,11 @@ using System.Threading.Tasks;
 
 namespace FEx.Offline;
 
-/// <summary>One queued write. <see cref="Id" /> doubles as the Idempotency-Key the server replays on.</summary>
+/// <summary>
+/// One queued write. <see cref="Id" /> doubles as the Idempotency-Key the server replays on.
+/// <see cref="Attempts" /> counts every failed replay, a dropped connection included;
+/// <see cref="ServerFailures" /> counts only the 5xx answers, which is what the outbox's retry limit caps.
+/// </summary>
 public sealed record OutboxEntry(
     Guid Id,
     string Method,
@@ -18,20 +22,44 @@ public sealed record OutboxEntry(
     string? JsonBody,
     DateTimeOffset CreatedAtUtc,
     int Attempts,
-    string? LastError);
+    string? LastError,
+    int ServerFailures = 0);
 
-/// <summary>What a flush did: how many writes landed, how many the server rejected outright, what remains.</summary>
-public sealed record OutboxFlushResult(int Sent, int Rejected, int Remaining, string? LastError);
+/// <summary>
+/// A write the outbox gave up on and keeps for the consumer to read: the server rejected it with a 4xx, or
+/// answered 5xx until the retry limit. It is never replayed. <see cref="StatusCode" /> and
+/// <see cref="ResponseBody" /> (truncated) are the server's last answer.
+/// </summary>
+public sealed record DeadOutboxEntry(
+    Guid Id,
+    string Method,
+    string Url,
+    string? JsonBody,
+    DateTimeOffset CreatedAtUtc,
+    DateTimeOffset DeadAtUtc,
+    int ServerFailures,
+    int StatusCode,
+    string ResponseBody);
+
+/// <summary>
+/// What a flush did: how many writes landed, how many it moved to the dead-letter list, what remains in the
+/// queue.
+/// </summary>
+public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining, string? LastError);
 
 /// <summary>
 /// Store-and-forward queue for writes made while offline. Enqueue persists the request; flush
 /// replays the queue in order, sending each entry's id as the Idempotency-Key header so a retry of a
 /// request that DID land (but whose response was lost) never double-executes, plus every replay header
-/// the host registered. A 2xx removes the entry; a 4xx other than 401 removes it too (the server understood
-/// and rejected it - retrying forever cannot fix a validation error) and reports it; a 401, a transport
-/// failure or a 5xx keeps the entry, records the error and
-/// stops the flush (the network is down, the server is sick or the session needs renewing - hammering the
-/// rest of the queue would not help).
+/// the host registered. A 2xx removes the entry. A 4xx other than 401, 408 and 429 moves it to the dead-letter
+/// list (the server understood and rejected it - retrying forever cannot fix a validation error) and the flush
+/// goes on. A 5xx keeps the entry, counts a server failure on it and stops the flush (the server is sick -
+/// hammering the rest of the queue would not help); at the limit of server failures the entry moves to the
+/// dead-letter list instead and the flush goes on, so one write the server keeps refusing cannot block the
+/// ones behind it. A 401, 408, 429 or a transport failure keeps the entry, records the error and stops the
+/// flush too, but is never counted: the session needs renewing, the server is throttling or the network is
+/// down, none of which says anything about the write. Dead entries are listed with
+/// <see cref="ListDeadAsync" /> and deleted with <see cref="RemoveDeadAsync" />.
 /// </summary>
 public sealed class HttpOutbox
 {
@@ -42,22 +70,33 @@ public sealed class HttpOutbox
     /// </summary>
     public const string IdempotencyHeader = "Idempotency-Key";
 
+    /// <summary>How many 5xx answers an entry takes before it moves to the dead-letter list.</summary>
+    public const int DefaultMaxServerFailures = 10;
+
     private const string KeyPrefix = "outbox:";
+
+    // Deliberately not "outbox:" plus a suffix: ListAsync and CountAsync read by that prefix, which must never reach a dead entry.
+    private const string DeadKeyPrefix = "outbox-dead:";
 
     private readonly IKeyValueStore _store;
     private readonly TimeProvider _time;
     private readonly JsonSerializerOptions _json;
     private readonly KeyValuePair<string, string>[] _replayHeaders;
+    private readonly int _maxServerFailures;
 
-    public HttpOutbox(IKeyValueStore store, TimeProvider time, JsonSerializerOptions? json = null)
-        : this(store, time, json, new Dictionary<string, string>())
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxServerFailures" /> is below 1.</exception>
+    public HttpOutbox(IKeyValueStore store,
+                      TimeProvider time,
+                      JsonSerializerOptions? json = null,
+                      int maxServerFailures = DefaultMaxServerFailures)
+        : this(store, time, json, new Dictionary<string, string>(), maxServerFailures)
     {
     }
 
     /// <summary>
     /// An outbox whose every replay also carries <paramref name="replayHeaders" /> - for a server that refuses
     /// a write lacking a header the host's own client always sends (a marker forcing a CORS preflight, say).
-    /// Without it such a write replays bare, the server answers 4xx, and the flush drops it as rejected.
+    /// Without it such a write replays bare, the server answers 4xx, and the flush dead-letters it.
     /// <para>
     /// Supplied at replay time, never persisted with the entry. The value is the host's to assert on the
     /// request the flush sends now, not a fact captured from the one that failed - so a write parked before
@@ -71,6 +110,7 @@ public sealed class HttpOutbox
     /// </para>
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="replayHeaders" /> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxServerFailures" /> is below 1.</exception>
     /// <exception cref="ArgumentException">A header is <see cref="IdempotencyHeader" />, which the outbox
     /// sends itself from each entry's id, or a value is blank - to a server checking for a marker, an empty
     /// one is no marker at all.</exception>
@@ -81,14 +121,20 @@ public sealed class HttpOutbox
     public HttpOutbox(IKeyValueStore store,
                       TimeProvider time,
                       JsonSerializerOptions? json,
-                      IReadOnlyDictionary<string, string> replayHeaders)
+                      IReadOnlyDictionary<string, string> replayHeaders,
+                      int maxServerFailures = DefaultMaxServerFailures)
     {
         ArgumentNullException.ThrowIfNull(replayHeaders);
+
+        if (maxServerFailures < 1)
+            throw new ArgumentOutOfRangeException(nameof(maxServerFailures), maxServerFailures,
+                "An entry needs at least one server failure to be dead-lettered.");
 
         _store = store;
         _time = time;
         _json = json ?? JsonSerializerOptions.Web;
         _replayHeaders = [.. replayHeaders];
+        _maxServerFailures = maxServerFailures;
 
         // Refused here rather than on the first flush. A header .NET refuses throws out of FlushAsync on every
         // attempt. A non-ASCII value passes Headers.Add and can be refused by the transport instead -
@@ -132,28 +178,37 @@ public sealed class HttpOutbox
         return entry;
     }
 
+    /// <summary>How many writes wait for a replay. Dead entries are not among them.</summary>
     public async Task<int> CountAsync() => (await _store.GetKeysAsync(KeyPrefix)).Count;
 
-    public async Task<IReadOnlyList<OutboxEntry>> ListAsync()
-    {
-        // The key embeds the zero-padded creation ticks, so sorting keys replays in enqueue order.
-        var keys = await _store.GetKeysAsync(KeyPrefix);
-        List<OutboxEntry> entries = [];
+    /// <summary>The writes waiting for a replay, in enqueue order. Dead entries are not among them.</summary>
+    public async Task<IReadOnlyList<OutboxEntry>> ListAsync() => await LoadAsync<OutboxEntry>(KeyPrefix);
 
-        foreach (var key in keys.OrderBy(k => k, StringComparer.Ordinal))
+    /// <summary>The writes the outbox gave up on, oldest first. They are never replayed.</summary>
+    public async Task<IReadOnlyList<DeadOutboxEntry>> ListDeadAsync() => await LoadAsync<DeadOutboxEntry>(DeadKeyPrefix);
+
+    /// <summary>Delete one dead entry. False when no dead entry has this id.</summary>
+    public async Task<bool> RemoveDeadAsync(Guid id)
+    {
+        var suffix = $":{id:N}";
+        var removed = false;
+
+        foreach (var key in await _store.GetKeysAsync(DeadKeyPrefix))
         {
-            if (await _store.GetAsync(key) is { } stored)
-                entries.Add(JsonSerializer.Deserialize<OutboxEntry>(stored, _json)
-                            ?? throw new InvalidOperationException($"Outbox entry '{key}' stored as JSON null."));
+            if (!key.EndsWith(suffix, StringComparison.Ordinal))
+                continue;
+
+            await _store.RemoveAsync(key);
+            removed = true;
         }
 
-        return entries;
+        return removed;
     }
 
     public async Task<OutboxFlushResult> FlushAsync(HttpClient http)
     {
         var sent = 0;
-        var rejected = 0;
+        var deadLettered = 0;
         string? lastError = null;
 
         foreach (var entry in await ListAsync())
@@ -175,32 +230,51 @@ public sealed class HttpOutbox
                 if (response.IsSuccessStatusCode)
                 {
                     await RemoveAsync(entry);
+
+                    // A stale dead copy of this very write (the flush died between burying it and removing the live
+                    // entry) must not tell the consumer that a write which landed has failed.
+                    await _store.RemoveAsync(DeadKeyFor(entry));
                     sent++;
 
                     continue;
                 }
 
+                var status = (int)response.StatusCode;
+
+                // Only a 5xx says the server refused the write itself. A 401 (sign in again), a 408/429 (timeout,
+                // throttling) and a dropped connection say nothing about it, so they never count toward the limit -
+                // a device offline for a week must not lose its writes.
+                var serverFailures = entry.ServerFailures + (status >= 500 ? 1 : 0);
+
                 // 401 means the session is not enough - once the user signs in again the unchanged write can
-                // land, and 408/429 are transient by definition (timeout, rate limit), so these stay queued like a
-                // 5xx. Every other 4xx, 403 included, is the server refusing this request itself (validation,
-                // permission, conflict): a retry cannot succeed, so drop and report it.
-                if ((int)response.StatusCode is >= 400 and < 500 && !IsTransientClientError(response.StatusCode))
+                // land, and 408/429 are transient by definition, so these stay queued like a 5xx. Every other
+                // 4xx, 403 included, is the server refusing this request itself (validation, permission,
+                // conflict): a retry cannot succeed, so it is dead-lettered for the consumer to read.
+                var rejected = status is >= 400 and < 500 && !IsTransientClientError(response.StatusCode);
+
+                if (rejected || status >= 500 && serverFailures >= _maxServerFailures)
                 {
-                    var body = await response.Content.ReadAsStringAsync();
-                    await RemoveAsync(entry);
-                    rejected++;
-                    lastError = $"HTTP {(int)response.StatusCode}: {Truncate(body)}";
+                    var body = await ReadBodyAsync(response);
+
+                    await DeadLetterAsync(entry with
+                    {
+                        ServerFailures = serverFailures
+                    }, status, body);
+
+                    deadLettered++;
+                    lastError = $"HTTP {status}: {body}";
 
                     continue;
                 }
 
                 // Server-side trouble (5xx), a session to renew (401) or throttling (408/429): worth retrying later,
                 // not worth hammering now - stopping the flush here also spares a rate-limited server the rest of the queue.
-                var error = $"HTTP {(int)response.StatusCode}";
+                var error = $"HTTP {status}";
 
                 await SaveAsync(entry with
                 {
                     Attempts = entry.Attempts + 1,
+                    ServerFailures = serverFailures,
                     LastError = error
                 });
 
@@ -224,7 +298,7 @@ public sealed class HttpOutbox
             }
         } // coverage-exclude: the foreach body's closing brace: every branch inside ends in continue or break, so nothing falls through to it
 
-        return new(sent, rejected, await CountAsync(), lastError);
+        return new(sent, deadLettered, await CountAsync(), lastError);
     }
 
     private static bool IsTransientClientError(HttpStatusCode status) =>
@@ -232,10 +306,54 @@ public sealed class HttpOutbox
 
     private static string KeyFor(OutboxEntry entry) => $"{KeyPrefix}{entry.CreatedAtUtc.UtcTicks:D19}:{entry.Id:N}";
 
+    private static string DeadKeyFor(OutboxEntry entry) => $"{DeadKeyPrefix}{entry.CreatedAtUtc.UtcTicks:D19}:{entry.Id:N}";
+
     private static string Truncate(string value) =>
         value.Length <= 200
             ? value
             : value[..200];
+
+    // A server (or a proxy) can send a Content-Type whose charset .NET cannot decode, and reading the body then
+    // throws: out of the flush, before the entry could be counted or buried, so the same write would block the queue
+    // forever. (A connection that drops mid-body never gets here: SendAsync buffers the body and fails as a transport error.)
+    private static async Task<string> ReadBodyAsync(HttpResponseMessage response)
+    {
+        try
+        {
+            return Truncate(await response.Content.ReadAsStringAsync());
+        }
+        catch (InvalidOperationException)
+        {
+            return "";
+        }
+    }
+
+    private async Task<List<T>> LoadAsync<T>(string prefix)
+    {
+        // The key embeds the zero-padded creation ticks, so sorting keys replays in enqueue order.
+        var keys = await _store.GetKeysAsync(prefix);
+        List<T> entries = [];
+
+        foreach (var key in keys.OrderBy(k => k, StringComparer.Ordinal))
+        {
+            if (await _store.GetAsync(key) is { } stored)
+                entries.Add(JsonSerializer.Deserialize<T>(stored, _json)
+                            ?? throw new InvalidOperationException($"Outbox entry '{key}' stored as JSON null."));
+        }
+
+        return entries;
+    }
+
+    // The dead copy lands before the live one goes: a crash in between replays the write once more under the same
+    // Idempotency-Key and buries it again, instead of losing it.
+    private async Task DeadLetterAsync(OutboxEntry entry, int status, string body)
+    {
+        DeadOutboxEntry dead = new(entry.Id, entry.Method, entry.Url, entry.JsonBody, entry.CreatedAtUtc,
+            _time.GetUtcNow(), entry.ServerFailures, status, body);
+
+        await _store.SetAsync(DeadKeyFor(entry), JsonSerializer.Serialize(dead, _json));
+        await RemoveAsync(entry);
+    }
 
     private Task SaveAsync(OutboxEntry entry) => _store.SetAsync(KeyFor(entry), JsonSerializer.Serialize(entry, _json));
 

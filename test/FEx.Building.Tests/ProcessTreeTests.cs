@@ -72,17 +72,10 @@ public sealed class ProcessTreeTests
 
     private static string Encoded(string script) => Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
 
-    private static bool WaitFor(Func<bool> condition, TimeSpan timeout)
+    private static void WaitFor(Func<bool> condition, TimeSpan timeout)
     {
         var clock = Stopwatch.StartNew();
-        while (!condition())
-        {
-            if (clock.Elapsed > timeout)
-                return false;
-
+        while (!condition() && clock.Elapsed <= timeout)
             Thread.Sleep(100);
-        }
-
-        return true;
     }
 }

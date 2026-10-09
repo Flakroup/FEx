@@ -4,7 +4,7 @@
 		<Description>FTP client factory and download utilities with resume support</Description>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="FluentFTP" Version="35.0.4" />
+		<PackageReference Include="FluentFTP" Version="55.0.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Agnostics.Abstractions\FEx.Agnostics.Abstractions.csproj" />

@@ -240,7 +240,12 @@ public sealed class FtpDownloaderTests : IDisposable
 
         public Stream? GetResponseStream() => stream;
 
-        public void Dispose() => Disposed = true;
+        public ValueTask DisposeAsync()
+        {
+            Disposed = true;
+
+            return default;
+        }
     }
 
     /// <summary>Yields <paramref name="data" /> once, then EOF, or throws <paramref name="error" /> when no data is left.</summary>

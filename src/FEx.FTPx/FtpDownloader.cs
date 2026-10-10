@@ -1,6 +1,5 @@
 using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Extensions;
-using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Core.Abstractions.Extensions;
 using FEx.MVVM;
@@ -13,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -180,7 +178,7 @@ public static class FtpDownloader
                     return true;
             }
 
-            using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
+            await using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
 
             using var stream = response.GetResponseStream();
             viewModel?.PrgSetMax(fileSize - offset);
@@ -343,13 +341,7 @@ public static class FtpDownloader
             }
             else if (serverUri.Scheme == Uri.UriSchemeFtp)
             {
-                var request = (FtpWebRequest)serverUri.GetWebRequest();
-                request.Proxy = null;
-                request.ApplyCredentials(username, password);
-                request.Method = WebRequestMethods.Ftp.GetFileSize;
-
-                using var response = (FtpWebResponse)await request.GetResponseAsync();
-                bytesTotal = response.ContentLength;
+                bytesTotal = await FtpTransport.Instance.GetSizeAsync(serverUri, username, password, cancellationToken);
             }
         }
         catch (Exception ex)
@@ -381,7 +373,7 @@ public static class FtpDownloader
             while (readCount <= 0
                    && newOffset < fileSize)
             {
-                using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
+                await using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
 
                 try
                 {
@@ -395,7 +387,7 @@ public static class FtpDownloader
 
                         while (readCount > 0)
                         {
-                            using var innerResponse = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
+                            await using var innerResponse = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
 
                             using var innerStream = innerResponse.GetResponseStream();
 

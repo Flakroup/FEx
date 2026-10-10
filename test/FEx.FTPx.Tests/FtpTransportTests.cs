@@ -1,9 +1,14 @@
 #pragma warning disable IDISP001, IDISP004 // responses are disposed through await using; the pool tests dispose them on purpose
 using FEx.Agnostics.Abstractions.Enums;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.MVVM;
+using FEx.MVVM.Abstractions.Interfaces;
 using FluentFTP.Exceptions;
+using NSubstitute;
 using Shouldly;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -279,6 +284,44 @@ public sealed class FtpTransportTests : IDisposable
         await Should.NotThrowAsync(async () => await response.DisposeAsync());
 
         (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct).WaitAsync(TimeSpan.FromSeconds(10), Ct)).ShouldBe(Payload.Length);
+    }
+
+    [Fact]
+    public async Task Recovery_AfterTheRetryLimit_AgainstAServerThatServesAgain_ProbesOnceAndReturns()
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        _server.AbortNextRetrs = 1;
+        var path = Path.Combine(_dir, "recovered.bin");
+
+        var state = new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries };
+
+        // The probe used to read the same byte of the same offset for ever, opening a connection each time.
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        cts.CancelAfter(TimeSpan.FromSeconds(20));
+
+        (await FtpDownloader.RestartDownloadFromServerAsync(FtpTransport.Instance, state, path, ServerFile, null, 0, "", "", cts.Token)).ShouldBeFalse();
+
+        state.RetryCount.ShouldBe(0);
+        new FileInfo(path).Length.ShouldBe(0);
+        _server.Commands.Count(c => c.StartsWith("RETR ", StringComparison.Ordinal)).ShouldBe(2); // the aborted transfer and one probe
+    }
+
+    [Fact]
+    public async Task Recovery_ProbeClosedEarlyBy451_IsToleratedAndKeepsTheProbedOffset()
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        _server.AbortNextRetrs = 1; // the transfer dies before its first byte, which starts the recovery
+        _server.AbortRetrAfterBytes = 3; // every probe then reads a byte of a transfer the server cuts short with a 451
+        var path = Path.Combine(_dir, "aborted.bin");
+        var state = new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries };
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        cts.CancelAfter(TimeSpan.FromSeconds(20));
+
+        await FtpDownloader.RestartDownloadFromServerAsync(FtpTransport.Instance, state, path, ServerFile, null, 0, "", "", cts.Token);
+
+        // The probe at offset 0 reads a byte, and the 451 the server answers when the probe closes early changes nothing: no zero fill.
+        new FileInfo(path).Length.ShouldBe(0);
+        _server.Commands.Count(c => c.StartsWith("RETR ", StringComparison.Ordinal)).ShouldBe(2);
     }
 
     [Fact]

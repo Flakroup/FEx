@@ -354,6 +354,8 @@ public static class FtpDownloader
             : FileLengthConverter.ConvertFileLength(bytesTotal, LengthType.Bytes, unit).length;
     }
 
+    private const long ProbeStep = 1024 * 1024 / 2;
+
     /// <summary>Reads one byte at <paramref name="offset" /> on a connection that is released before returning; <see langword="null" /> when there is no stream.</summary>
     private static async Task<int?> ProbeAsync(IFtpTransport transport,
                                                Uri serverUri,
@@ -370,6 +372,12 @@ public static class FtpDownloader
             : await stream.ReadAsync(new byte[1], 0, 1, cancellationToken);
     }
 
+    /// <summary>
+    /// Finds where the server serves the file again after the transfer died at <paramref name="offset" />: probes there, skips ahead
+    /// in <see cref="ProbeStep" /> chunks while a probe reads nothing, and then bisects the last chunk for the first readable byte.
+    /// The bytes before the result are zero-filled by the caller. A probe that fails ends the search with the best offset known.
+    /// The number of probes is bounded: at most one per chunk of the file plus ceil(log2(<see cref="ProbeStep" />)) = 19 for the bisection.
+    /// </summary>
     private static async Task<long> DetectOffsetAsync(IFtpTransport transport,
                                                       Uri serverUri,
                                                       long offset,
@@ -384,44 +392,43 @@ public static class FtpDownloader
         {
             var fileSize = await transport.GetSizeAsync(serverUri, username, password, cancellationToken);
             viewModel?.PrgSetMax(fileSize - offset);
-            var readCount = 0;
 
-            while (readCount <= 0
-                   && newOffset < fileSize)
+            try
             {
-                try
+                // One connection at a time: each probe is closed before the next one opens.
+                while (newOffset < fileSize
+                       && await ProbeAsync(transport, serverUri, username, password, newOffset, cancellationToken) is not > 0)
                 {
-                    // One connection at a time: each probe is closed before the next one opens.
-                    if (await ProbeAsync(transport, serverUri, username, password, offset, cancellationToken) is { } first)
+                    newOffset += ProbeStep;
+                    viewModel?.PrgSet(newOffset - offset);
+                    viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
+                }
+
+                if (newOffset < fileSize)
+                {
+                    // newOffset is readable and the chunk before it was not: the first readable byte lies in (low, newOffset].
+                    var low = Math.Max(offset, newOffset - ProbeStep + 1);
+
+                    while (low < newOffset)
                     {
-                        readCount = first;
-                        newOffset--;
+                        var middle = low + (newOffset - low) / 2;
 
-                        while (readCount > 0)
-                        {
-                            if (await ProbeAsync(transport, serverUri, username, password, offset, cancellationToken) is not { } next)
-                                break;
-
-                            readCount = next;
-                            viewModel?.PrgSet(newOffset - offset);
-                            viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
-                            newOffset--;
-                        }
+                        if (await ProbeAsync(transport, serverUri, username, password, middle, cancellationToken) is > 0)
+                            newOffset = middle;
+                        else
+                            low = middle + 1;
                     }
                 }
-                catch (Exception ex) when (ex is not OperationCanceledException)
-                {
-                    ex.HandleException();
-
-                    return newOffset;
-                }
-
-                viewModel?.PrgSet(newOffset - offset);
-                viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
-
-                if (readCount <= 0)
-                    newOffset += 1024 * 1024 / 2;
             }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                ex.HandleException();
+
+                return newOffset;
+            }
+
+            viewModel?.PrgSet(newOffset - offset);
+            viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
         }
 
         return newOffset;

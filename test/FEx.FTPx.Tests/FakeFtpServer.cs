@@ -23,6 +23,7 @@ internal sealed class FakeFtpServer : IDisposable
     private readonly TcpListener _listener;
     private readonly CancellationTokenSource _cts = new();
     private readonly ConcurrentQueue<string> _commands = new();
+    private int _abortNextRetrs;
     private int _open;
     private int _maxOpen;
 
@@ -42,6 +43,13 @@ internal sealed class FakeFtpServer : IDisposable
 
     /// <summary>When set, a download sends only this many bytes and then answers 451 instead of 226, like a server giving up on a read.</summary>
     public int? AbortRetrAfterBytes { get; set; }
+
+    /// <summary>The next this many downloads abort before the first byte with <see cref="AbortReply" />; later ones follow <see cref="AbortRetrAfterBytes" />.</summary>
+    public int AbortNextRetrs
+    {
+        get => Volatile.Read(ref _abortNextRetrs);
+        set => Volatile.Write(ref _abortNextRetrs, value);
+    }
 
     /// <summary>The final reply of a download that <see cref="AbortRetrAfterBytes" /> cuts short; 426 is what a server answers to a transfer the client abandoned.</summary>
     public string AbortReply { get; set; } = "451 local error in processing";
@@ -178,8 +186,10 @@ internal sealed class FakeFtpServer : IDisposable
                         if (Files.TryGetValue(Resolve(arg), out var content))
                         {
                             var rest = content[(int)restartAt..];
-                            var aborted = AbortRetrAfterBytes is not null;
-                            var sent = aborted ? rest[..Math.Min(AbortRetrAfterBytes!.Value, rest.Length)] : rest;
+                            var abortAfter = Interlocked.Decrement(ref _abortNextRetrs) >= 0 ? 0 : AbortRetrAfterBytes;
+
+                            var aborted = abortAfter is not null;
+                            var sent = aborted ? rest[..Math.Min(abortAfter!.Value, rest.Length)] : rest;
                             await Transfer(writer, data, async d => await d.WriteAsync(sent), false, aborted ? AbortReply : "226 transfer complete");
                         }
                         else

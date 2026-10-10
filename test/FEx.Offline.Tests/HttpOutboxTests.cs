@@ -291,7 +291,8 @@ public sealed class HttpOutboxTests
     public async Task TransientAnswer_KeepsTheEntryWithTheError_AndStopsTheFlush(HttpStatusCode status)
     {
         // 408, 429, 502, 503 and 504 are timeouts, throttling, a failing gateway and temporary overload: the unchanged
-        // write can land later, so it must not be dropped, and none of them counts as a server failure.
+        // write can land later, so one answer drops nothing, and none of them counts as a server failure. All but the
+        // 429 count as an unavailable answer, which has a limit of its own.
         FixedTime time = new(T0);
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
         await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
@@ -317,6 +318,7 @@ public sealed class HttpOutboxTests
         var kept = (await outbox.ListAsync())[0];
         kept.Attempts.ShouldBe(1);
         kept.ServerFailures.ShouldBe(0);
+        kept.UnavailableAnswers.ShouldBe(status == HttpStatusCode.TooManyRequests ? 0 : 1);
         kept.JsonBody.ShouldBe("""{"n":1}""");
     }
 
@@ -621,10 +623,10 @@ public sealed class HttpOutboxTests
     [Theory]
     [InlineData(HttpStatusCode.BadGateway)]
     [InlineData(HttpStatusCode.GatewayTimeout)]
-    public async Task GatewayError_NeverCounts_SoAGatewayOutageCannotBuryAValidWrite(HttpStatusCode status)
+    public async Task GatewayError_DoesNotCountTowardTheServerFailureLimit_SoAGatewayOutageCannotBuryAValidWrite(HttpStatusCode status)
     {
         // 502 and 504 say the proxy in front of the server failed, not that the server refused this write - like 503 they
-        // are retried forever and the entry stays at the head of the queue.
+        // stay out of the server-failure limit, so a short outage keeps the entry at the head of the queue.
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxServerFailures: 2);
         var entry = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
 
@@ -643,10 +645,154 @@ public sealed class HttpOutboxTests
         kept.Id.ShouldBe(entry.Id);
         kept.Attempts.ShouldBe(5);
         kept.ServerFailures.ShouldBe(0);
+        kept.UnavailableAnswers.ShouldBe(5);
         kept.LastError.ShouldBe($"HTTP {(int)status}");
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
 
         (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.RequestTimeout)]
+    [InlineData(HttpStatusCode.BadGateway)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    [InlineData(HttpStatusCode.GatewayTimeout)]
+    public async Task UnavailableAnswer_AtTheLimit_MovesTheEntryToTheDeadLetterList_AndTheFlushGoesOn(HttpStatusCode status)
+    {
+        // The #256 probe: a write the origin always answers 408/502/503/504 would otherwise sit at the head of the queue forever.
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, maxUnavailableAnswers: 3);
+        var stuck = await outbox.EnqueueAsync("POST", "api/sales/leads/7/trash", null);
+        time.Advance(TimeSpan.FromMinutes(1));
+        var behind = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(status, "first");
+        handler.EnqueueResponse(status, "second");
+        handler.EnqueueResponse(status, "last");
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http);
+
+        result.Sent.ShouldBe(1);
+        result.DeadLettered.ShouldBe(1);
+        result.Remaining.ShouldBe(0);
+        result.LastError.ShouldBe($"HTTP {(int)status}: last");
+
+        handler.IdempotencyKeys.ShouldBe(new()
+        {
+            stuck.Id.ToString(),
+            stuck.Id.ToString(),
+            stuck.Id.ToString(),
+            behind.Id.ToString()
+        });
+
+        var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+        dead.Id.ShouldBe(stuck.Id);
+        dead.StatusCode.ShouldBe((int)status);
+        dead.ResponseBody.ShouldBe("last");
+        dead.ServerFailures.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task UnavailableAnswer_BelowTheLimit_KeepsTheEntryLive_AndBlocksTheQueue()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, maxUnavailableAnswers: 3);
+        var head = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.ServiceUnavailable);
+        handler.EnqueueResponse(HttpStatusCode.ServiceUnavailable);
+        using var http = Client(handler);
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 2, "HTTP 503"));
+        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 2, "HTTP 503"));
+
+        handler.Requests.Count.ShouldBe(2); // each flush stopped at the head; the second entry was never attempted
+
+        var queue = await outbox.ListAsync();
+        queue[0].Id.ShouldBe(head.Id);
+        queue[0].UnavailableAnswers.ShouldBe(2);
+        queue[0].Attempts.ShouldBe(2);
+        queue[1].UnavailableAnswers.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ServerError_CountsTowardTheServerFailureLimit_NotTheUnavailableOne()
+    {
+        // The unavailable limit is 1 here, so a 500 that counted on it would bury the entry on the first answer.
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxServerFailures: 3, maxUnavailableAnswers: 1);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        using var http = Client(handler);
+
+        await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http);
+
+        var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
+        kept.ServerFailures.ShouldBe(2);
+        kept.UnavailableAnswers.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+
+        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task SessionThrottlingAndTransportAnswers_NeverCountTowardTheUnavailableLimit()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxUnavailableAnswers: 1);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Unauthorized);
+        handler.EnqueueResponse(HttpStatusCode.TooManyRequests);
+        handler.EnqueueNetworkFailure();
+        handler.EnqueueTimeout();
+        using var http = Client(handler);
+
+        for (var i = 0; i < 4; i++)
+            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+
+        var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
+        kept.Attempts.ShouldBe(4);
+        kept.UnavailableAnswers.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task UnavailableAnswers_SurviveARestart()
+    {
+        InMemoryKeyValueStore store = new();
+        FixedTime time = new(T0);
+        HttpOutbox before = new(store, time, maxUnavailableAnswers: 3);
+        await before.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.GatewayTimeout);
+        handler.EnqueueResponse(HttpStatusCode.GatewayTimeout);
+        handler.EnqueueResponse(HttpStatusCode.GatewayTimeout);
+        using var http = Client(handler);
+
+        await before.FlushAsync(http);
+        await before.FlushAsync(http);
+
+        // A new outbox over the same store: the count comes from the stored entry, not from the instance.
+        HttpOutbox after = new(store, time, maxUnavailableAnswers: 3);
+
+        (await after.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(2);
+        (await after.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await after.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(504);
     }
 
     [Fact]
@@ -682,6 +828,18 @@ public sealed class HttpOutboxTests
 
         Should.Throw<ArgumentOutOfRangeException>(() => new HttpOutbox(new InMemoryKeyValueStore(), new FixedTime(T0), null, ClientMarker(), limit))
             .ParamName.ShouldBe("maxServerFailures");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void AnUnavailableLimitBelowOne_IsRefused(int limit)
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => new HttpOutbox(new InMemoryKeyValueStore(), new FixedTime(T0), maxUnavailableAnswers: limit))
+            .ParamName.ShouldBe("maxUnavailableAnswers");
+
+        Should.Throw<ArgumentOutOfRangeException>(() => new HttpOutbox(new InMemoryKeyValueStore(), new FixedTime(T0), null, ClientMarker(), 10, limit))
+            .ParamName.ShouldBe("maxUnavailableAnswers");
     }
 
     [Fact]
@@ -936,6 +1094,7 @@ public sealed class HttpOutboxTests
 
         entry.Attempts.ShouldBe(4);
         entry.ServerFailures.ShouldBe(0);
+        entry.UnavailableAnswers.ShouldBe(0);
     }
 
     [Fact]

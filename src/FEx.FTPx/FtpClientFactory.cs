@@ -15,12 +15,21 @@ public class FtpClientFactory
 {
     private static readonly ConditionalWeakTable<AsyncFtpClient, FtpClientFactory> Owners = new();
     private readonly SemaphoreSlim _semaphore;
+    /// <summary>
+    ///     The data connection type of a client unless the caller passes another one: <see cref="FtpDataConnectionType.PASVEX" /> connects the
+    ///     data channel to the control-connection host and takes only the port from the PASV reply, so a hostile or misconfigured server cannot
+    ///     aim the client at another host (the port-scan/bounce class of curl CVE-2020-8284). The cost: EPSV is never tried on an IPv4 control
+    ///     connection, so an IPv4 server that answers EPSV but not PASV fails; pass <see cref="FtpDataConnectionType.AutoPassive" /> or
+    ///     <see cref="FtpDataConnectionType.EPSV" /> as <c>dataConnectionType</c> for such a server.
+    /// </summary>
+    public const FtpDataConnectionType DefaultDataConnectionType = FtpDataConnectionType.PASVEX;
+
     public Uri HostUri { get; }
     public ICredentials ProxyCredentials { get; set; } = CredentialCache.DefaultCredentials;
     public string? ProxyHost { get; set; }
     public int ProxyPort { get; set; }
 
-    public Task<AsyncFtpClient> CreateAsync(string? user = null, string? pass = null, bool useProxy = false, int port = 0)
+    public Task<AsyncFtpClient> CreateAsync(string? user = null, string? pass = null, bool useProxy = false, int port = 0, FtpDataConnectionType? dataConnectionType = null)
     {
         var credentials = user != null || pass != null
             ? new NetworkCredential(user, pass)
@@ -28,30 +37,33 @@ public class FtpClientFactory
 
         var proxy = GetProxy(useProxy);
 
-        return CreateAsync(credentials, proxy, port);
+        return CreateAsync(credentials, proxy, port, dataConnectionType);
     }
 
-    public Task<AsyncFtpClient> CreateAsync(string? user = null, string? pass = null, FtpProxyProfile? proxy = null, int port = 0)
+    public Task<AsyncFtpClient> CreateAsync(string? user = null, string? pass = null, FtpProxyProfile? proxy = null, int port = 0, FtpDataConnectionType? dataConnectionType = null)
     {
         var credentials = user != null || pass != null
             ? new NetworkCredential(user, pass)
             : null;
 
-        return CreateAsync(credentials, proxy, port);
+        return CreateAsync(credentials, proxy, port, dataConnectionType);
     }
 
-    public Task<AsyncFtpClient> CreateAsync(NetworkCredential? credentials = null, bool useProxy = false, int port = 0)
+    public Task<AsyncFtpClient> CreateAsync(NetworkCredential? credentials = null, bool useProxy = false, int port = 0, FtpDataConnectionType? dataConnectionType = null)
     {
         var proxy = GetProxy(useProxy);
 
-        return CreateAsync(credentials, proxy, port);
+        return CreateAsync(credentials, proxy, port, dataConnectionType);
     }
 
-    public Task<AsyncFtpClient> CreateAsync(NetworkCredential? credentials = null, FtpProxyProfile? proxy = null, int port = 0) =>
-        CreateCoreAsync(credentials, proxy, port, CancellationToken.None);
+    public Task<AsyncFtpClient> CreateAsync(NetworkCredential? credentials = null, FtpProxyProfile? proxy = null, int port = 0, FtpDataConnectionType? dataConnectionType = null) =>
+        CreateCoreAsync(credentials, proxy, port, dataConnectionType, CancellationToken.None);
 
-    /// <summary>Waits for a free slot of the host's pool, and stops waiting when <paramref name="cancellationToken" /> is cancelled.</summary>
-    internal async Task<AsyncFtpClient> CreateCoreAsync(NetworkCredential? credentials, FtpProxyProfile? proxy, int port, CancellationToken cancellationToken)
+    /// <summary>
+    ///     Waits for a free slot of the host's pool, and stops waiting when <paramref name="cancellationToken" /> is cancelled. A null
+    ///     <paramref name="dataConnectionType" /> means <see cref="DefaultDataConnectionType" />.
+    /// </summary>
+    internal async Task<AsyncFtpClient> CreateCoreAsync(NetworkCredential? credentials, FtpProxyProfile? proxy, int port, FtpDataConnectionType? dataConnectionType, CancellationToken cancellationToken)
     {
         await _semaphore.WaitAsync(cancellationToken);
 
@@ -75,6 +87,8 @@ public class FtpClientFactory
 
             if (port != 0)
                 client.Port = port;
+
+            client.Config.DataConnectionType = dataConnectionType ?? DefaultDataConnectionType;
 
             Owners.Add(client, this);
 

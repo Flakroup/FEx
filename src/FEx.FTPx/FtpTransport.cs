@@ -127,7 +127,7 @@ internal sealed class FtpTransport : IFtpTransport
         var host = new UriBuilder(serverUri.Scheme, serverUri.DnsSafeHost, serverUri.Port).Uri;
         var factory = await FtpClientFactory.GetInstanceAsync(host.AbsoluteUri);
 
-        var client = await factory.CreateCoreAsync(GetCredentials(serverUri, username, password), null, 0, cancellationToken);
+        var client = await factory.CreateCoreAsync(GetCredentials(serverUri, username, password), null, 0, null, cancellationToken);
 
         // The path is the Uri's, decoded once, and names like 100%.bin, a;b.bin or v1..2.bin are legal on a server. Newlines
         // (command injection) and Unicode spoofing stay rejected; the rest of the sanitizer would refuse such files outright.
@@ -139,12 +139,6 @@ internal sealed class FtpTransport : IFtpTransport
         // '?'. FtpWebRequest always sent UTF-8 and asked for it with OPTS UTF8 ON; setting the encoding makes Connect send that
         // OPTS after login too, and a server that refuses it is tolerated (FluentFTP only notes the failed reply).
         client.Encoding = Encoding.UTF8;
-
-        // The default AutoPassive connects the data channel to the address in the PASV reply, so a hostile server could aim the
-        // client at any host (the port-scan/bounce class of curl CVE-2020-8284). PASVEX takes only the port from the reply and
-        // connects to the control host, which is what FtpWebRequest did. The cost: EPSV is never tried on an IPv4 control
-        // connection (it is used on IPv6, where FluentFTP switches to it itself), so an IPv4 server that answers EPSV but not PASV fails.
-        client.Config.DataConnectionType = FtpDataConnectionType.PASVEX;
 
         return client;
     }

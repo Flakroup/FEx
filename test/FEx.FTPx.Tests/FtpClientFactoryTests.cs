@@ -343,4 +343,108 @@ public sealed class FtpClientFactoryTests : IDisposable
         _server.MaxConcurrentConnections.ShouldBeLessThanOrEqualTo(2);
         _server.MaxConcurrentConnections.ShouldBeGreaterThan(0);
     }
+
+    [Fact]
+    public async Task CreateAsync_WithoutTheOption_DefaultsToPasvexOnEveryOverload()
+    {
+        var factory = await Factory(4);
+        NetworkCredential credentials = new("u", "p");
+
+        var clients = new[]
+        {
+            await factory.CreateAsync("u", "p", false),
+            await factory.CreateAsync("u", "p", proxy: null),
+            await factory.CreateAsync(credentials, false),
+            await factory.CreateAsync(credentials, proxy: null)
+        };
+
+        foreach (var client in clients)
+        {
+            client.Config.DataConnectionType.ShouldBe(FtpDataConnectionType.PASVEX);
+            await factory.ReleaseClientAsync(client);
+        }
+    }
+
+    [Fact]
+    public async Task DefaultClient_PasvReplyNamesAnotherHost_StillConnectsTheDataChannelToTheControlHost()
+    {
+        // Nothing listens on this address; AutoPassive would connect there (only 10/8, 172.16/12, 192.168/16, 127.0.0.1 and 0.0.0.0 are filtered).
+        _server.PasvAddress = IPAddress.Parse("127.0.0.2");
+        _server.Files["/pub/a.txt"] = [1, 2, 3];
+        var factory = await Factory(1);
+        var client = await factory.CreateAsync("u", "p", false, _server.Port);
+
+        try
+        {
+            await client.Connect(TestContext.Current.CancellationToken);
+
+            var listing = await client.GetListing("/pub", TestContext.Current.CancellationToken);
+
+            listing.Select(x => x.Name).ShouldBe(["a.txt"]);
+            _server.Commands.ShouldContain("PASV");
+        }
+        finally
+        {
+            await factory.ReleaseClientAsync(client);
+        }
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithTheOption_PassesItToTheClientOnEveryOverload()
+    {
+        var factory = await Factory(4);
+        NetworkCredential credentials = new("u", "p");
+        const FtpDataConnectionType chosen = FtpDataConnectionType.AutoPassive;
+
+        var clients = new[]
+        {
+            await factory.CreateAsync("u", "p", false, 0, chosen),
+            await factory.CreateAsync("u", "p", proxy: null, port: 0, dataConnectionType: chosen),
+            await factory.CreateAsync(credentials, false, 0, chosen),
+            await factory.CreateAsync(credentials, proxy: null, port: 0, dataConnectionType: chosen)
+        };
+
+        foreach (var client in clients)
+        {
+            client.Config.DataConnectionType.ShouldBe(chosen);
+            await factory.ReleaseClientAsync(client);
+        }
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithTheOption_ProxyClientGetsItToo()
+    {
+        var factory = await Factory(1);
+        FtpProxyProfile proxy = new() { ProxyHost = ProxyHost, ProxyPort = 1, ProxyCredentials = ProxyCredentials };
+
+        var client = await factory.CreateAsync("u", "p", proxy, 0, FtpDataConnectionType.EPSV);
+
+        client.ShouldBeOfType<AsyncFtpClientHttp11Proxy>();
+        client.Config.DataConnectionType.ShouldBe(FtpDataConnectionType.EPSV);
+        await factory.ReleaseClientAsync(client);
+    }
+
+    [Fact]
+    public void DefaultDataConnectionType_IsPasvex() =>
+        FtpClientFactory.DefaultDataConnectionType.ShouldBe(FtpDataConnectionType.PASVEX);
+
+    [Fact]
+    public async Task OptedBackIntoAutoPassive_PasvReplyNamesAnotherHost_ConnectsThere()
+    {
+        // The opt-in is real: the same server that the default survives breaks AutoPassive, which follows the reply to 127.0.0.2.
+        _server.PasvAddress = IPAddress.Parse("127.0.0.2");
+        var factory = await Factory(1);
+        var client = await factory.CreateAsync("u", "p", false, _server.Port, FtpDataConnectionType.AutoPassive);
+
+        try
+        {
+            await client.Connect(TestContext.Current.CancellationToken);
+
+            await Should.ThrowAsync<Exception>(() => client.GetListing("/pub", TestContext.Current.CancellationToken));
+        }
+        finally
+        {
+            await factory.ReleaseClientAsync(client);
+        }
+    }
 }

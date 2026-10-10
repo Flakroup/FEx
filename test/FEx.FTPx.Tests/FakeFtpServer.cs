@@ -23,7 +23,6 @@ internal sealed class FakeFtpServer : IDisposable
     private readonly TcpListener _listener;
     private readonly CancellationTokenSource _cts = new();
     private readonly ConcurrentQueue<string> _commands = new();
-    private long _restart;
     private int _open;
     private int _maxOpen;
 
@@ -106,6 +105,7 @@ internal sealed class FakeFtpServer : IDisposable
             using var reader = new StreamReader(stream, Encoding.UTF8);
             using var writer = new StreamWriter(stream, new UTF8Encoding(false)) { NewLine = "\r\n", AutoFlush = true };
             var user = "";
+            var restart = 0L; // REST belongs to this session
             await writer.WriteLineAsync("220 fake ftp");
 
             while (await reader.ReadLineAsync() is { } line)
@@ -114,6 +114,12 @@ internal sealed class FakeFtpServer : IDisposable
                 var space = line.IndexOf(' ');
                 var cmd = (space < 0 ? line : line[..space]).ToUpperInvariant();
                 var arg = space < 0 ? "" : line[(space + 1)..];
+
+                // REST applies to the next transfer command only, whether that command succeeds or fails.
+                var restartAt = restart;
+
+                if (cmd is "RETR" or "STOR" or "LIST" or "NLST")
+                    restart = 0;
 
                 switch (cmd)
                 {
@@ -143,8 +149,8 @@ internal sealed class FakeFtpServer : IDisposable
                         await writer.WriteLineAsync(Files.TryRemove(arg, out var removed) ? "250 deleted" : "550 not found");
                         break;
                     case "REST":
-                        _restart = long.Parse(arg);
-                        await writer.WriteLineAsync($"350 restarting at {_restart}");
+                        restart = long.Parse(arg);
+                        await writer.WriteLineAsync($"350 restarting at {restart}");
                         break;
                     case "PASV":
                         data?.Stop();
@@ -159,8 +165,7 @@ internal sealed class FakeFtpServer : IDisposable
                     case "RETR":
                         if (Files.TryGetValue(Resolve(arg), out var content))
                         {
-                            var rest = content[(int)_restart..];
-                            _restart = 0;
+                            var rest = content[(int)restartAt..];
                             var aborted = AbortRetrAfterBytes is not null;
                             var sent = aborted ? rest[..Math.Min(AbortRetrAfterBytes!.Value, rest.Length)] : rest;
                             await Transfer(writer, data, async d => await d.WriteAsync(sent), false, aborted ? "451 local error in processing" : "226 transfer complete");

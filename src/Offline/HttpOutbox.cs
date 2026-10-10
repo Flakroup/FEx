@@ -15,9 +15,10 @@ namespace FEx.Offline;
 /// <summary>
 /// One queued write. <see cref="Id" /> doubles as the Idempotency-Key the server replays on.
 /// <see cref="Attempts" /> counts every failed replay, a dropped connection included;
-/// <see cref="ServerFailures" /> counts only the 5xx answers other than 502, 503 and 504, which is what
-/// <see cref="HttpOutbox.DefaultMaxServerFailures" /> caps, and <see cref="UnavailableAnswers" /> counts the 408, 502, 503 and 504 ones and
-/// the redirected answers (followed or not), which <see cref="HttpOutbox.DefaultMaxUnavailableAnswers" /> caps.
+/// <see cref="ServerFailures" /> counts only the 5xx answers other than 502, 503 and 504, which the outbox's
+/// <c>maxServerFailures</c> argument caps (<see cref="HttpOutbox.DefaultMaxServerFailures" /> by default), and
+/// <see cref="UnavailableAnswers" /> counts the 408, 502, 503 and 504 ones and the redirected answers (followed or not), which the
+/// <c>maxUnavailableAnswers</c> argument caps (<see cref="HttpOutbox.DefaultMaxUnavailableAnswers" /> by default).
 /// </summary>
 public sealed record OutboxEntry(
     Guid Id,

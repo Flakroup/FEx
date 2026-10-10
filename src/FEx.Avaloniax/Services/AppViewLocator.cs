@@ -10,10 +10,8 @@ public class AppViewLocator : IViewLocator
 {
     public static bool SupportsRecycling => false;
 
-#pragma warning disable S2360
     public IViewFor<TViewModel>? ResolveView<TViewModel>(string? contract = null) where TViewModel : class =>
         (IViewFor<TViewModel>?)CreateView(typeof(TViewModel), null);
-#pragma warning restore S2360
 
     public IViewFor? ResolveView(object? viewModel, string? contract = null)
     {

@@ -377,7 +377,6 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
     #region INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
-#pragma warning disable S2360 // CallerMemberName requires optional parameter
     public void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         if (propertyName is null)
@@ -405,7 +404,6 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         return true;
     }
 
-#pragma warning restore S2360
 
     [NotifyPropertyChangedInvocator]
     private void NotifyChanged([CallerMemberName] string? propertyName = null)

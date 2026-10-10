@@ -108,7 +108,7 @@ public sealed class HttpOutboxIdempotencyTests
             };
 
             foreach (var (name, values) in context.Response.Headers)
-                response.Headers.TryAddWithoutValidation(name, (IEnumerable<string>)values!);
+                response.Headers.TryAddWithoutValidation(name, values.ToArray());
 
             return response;
         }

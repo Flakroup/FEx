@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -984,6 +985,49 @@ public sealed class HttpOutboxTests
     }
 
     [Fact]
+    public async Task AHandlerThatAddsAQueryStringKey_DoesNotMakeADelivered2xxLookRedirected()
+    {
+        // An API-key handler rewrites RequestUri on every request; the final request is still the queued write.
+        using var server = RedirectingServer(HttpStatusCode.Found, "/login");
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/ok", """{"n":1}""");
+
+        using var http = new HttpClient(new RewritingHandler(uri => new UriBuilder(uri) { Query = "api_key=k" }.Uri)) { BaseAddress = server.BaseAddress };
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        (await outbox.ListAsync()).ShouldBeEmpty();
+        server.Requests.ShouldHaveSingleItem().ShouldStartWith("POST /api/ok");
+    }
+
+    [Fact]
+    public async Task AHandlerThatChangesTheHost_DoesNotMakeADelivered2xxLookRedirected()
+    {
+        // Hedging and routing handlers point the request at another endpoint than the queued URL names.
+        using var server = RedirectingServer(HttpStatusCode.Found, "/login");
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "https://primary.invalid/api/ok", """{"n":1}""");
+
+        using var http = new HttpClient(new RewritingHandler(uri => new UriBuilder(uri) { Scheme = server.BaseAddress.Scheme, Host = server.BaseAddress.Host, Port = server.BaseAddress.Port }.Uri));
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        (await outbox.ListAsync()).ShouldBeEmpty();
+        server.Requests.ShouldBe(["POST /api/ok"]);
+    }
+
+    [Fact]
+    public async Task AHandlerThatRewritesThePath_IsStillTakenForARedirect()
+    {
+        // The documented ceiling of the redirect check: a path change cannot be told from a followed redirect.
+        using var server = RedirectingServer(HttpStatusCode.Found, "/login");
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/ok", """{"n":1}""");
+
+        using var http = new HttpClient(new RewritingHandler(uri => new UriBuilder(uri) { Path = "/api/v2/ok" }.Uri)) { BaseAddress = server.BaseAddress };
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 1, "HTTP 200 after a redirect"));
+    }
+
+    [Fact]
     public async Task AnAnswerWithNoRedirect_StillDeliversTheEntry_OverARealClient()
     {
         using var server = RedirectingServer(HttpStatusCode.Found, "/login");
@@ -1293,6 +1337,17 @@ public sealed class HttpOutboxTests
         ["X-Client"] = MarkerValue,
         ["X-Second"] = SecondValue
     };
+
+    /// <summary>A pipeline handler that rewrites the request's URI before the real client sends it.</summary>
+    private sealed class RewritingHandler(Func<Uri, Uri> rewrite) : DelegatingHandler(new SocketsHttpHandler { UseProxy = false }) // no proxy: a machine-wide one must not swallow loopback
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            request.RequestUri = rewrite(request.RequestUri!);
+
+            return base.SendAsync(request, cancellationToken);
+        }
+    }
 
     // POST /api/payments answers a redirect; the login page, the redirect target and /api/ok answer 200.
     private static RawHttpServer RedirectingServer(HttpStatusCode redirect, string location) => new(request => request switch

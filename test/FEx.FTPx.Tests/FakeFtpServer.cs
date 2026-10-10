@@ -23,7 +23,7 @@ internal sealed class FakeFtpServer : IDisposable
     private readonly TcpListener _listener;
     private readonly CancellationTokenSource _cts = new();
     private readonly ConcurrentQueue<string> _commands = new();
-    private long _restart;
+    private int _abortNextRetrs;
     private int _open;
     private int _maxOpen;
 
@@ -43,6 +43,22 @@ internal sealed class FakeFtpServer : IDisposable
 
     /// <summary>When set, a download sends only this many bytes and then answers 451 instead of 226, like a server giving up on a read.</summary>
     public int? AbortRetrAfterBytes { get; set; }
+
+    /// <summary>The next this many downloads abort before the first byte with <see cref="AbortReply" />; later ones follow <see cref="AbortRetrAfterBytes" />.</summary>
+    public int AbortNextRetrs
+    {
+        get => Volatile.Read(ref _abortNextRetrs);
+        set => Volatile.Write(ref _abortNextRetrs, value);
+    }
+
+    /// <summary>The final reply of a download that <see cref="AbortRetrAfterBytes" /> cuts short; 426 is what a server answers to a transfer the client abandoned.</summary>
+    public string AbortReply { get; set; } = "451 local error in processing";
+
+    /// <summary>The reply to OPTS (the client switching the server to UTF-8); a refusal such as <c>501 ...</c> must not fail a transfer.</summary>
+    public string OptsReply { get; set; } = "200 ok";
+
+    /// <summary>When set, the PASV reply names this address instead of the one the data listener is on, like a hostile or misconfigured server.</summary>
+    public IPAddress? PasvAddress { get; set; }
 
     /// <summary>When set, FEAT advertises nothing (SIZE included), like a minimal server that still answers SIZE.</summary>
     public bool NoFeat { get; set; }
@@ -106,6 +122,7 @@ internal sealed class FakeFtpServer : IDisposable
             using var reader = new StreamReader(stream, Encoding.UTF8);
             using var writer = new StreamWriter(stream, new UTF8Encoding(false)) { NewLine = "\r\n", AutoFlush = true };
             var user = "";
+            var restart = 0L; // REST belongs to this session
             await writer.WriteLineAsync("220 fake ftp");
 
             while (await reader.ReadLineAsync() is { } line)
@@ -114,6 +131,12 @@ internal sealed class FakeFtpServer : IDisposable
                 var space = line.IndexOf(' ');
                 var cmd = (space < 0 ? line : line[..space]).ToUpperInvariant();
                 var arg = space < 0 ? "" : line[(space + 1)..];
+
+                // REST applies to the next transfer command only, whether that command succeeds or fails.
+                var restartAt = restart;
+
+                if (cmd is "RETR" or "STOR" or "LIST" or "NLST")
+                    restart = 0;
 
                 switch (cmd)
                 {
@@ -130,8 +153,11 @@ internal sealed class FakeFtpServer : IDisposable
                     case "PWD":
                         await writer.WriteLineAsync("257 \"/\" is the current directory");
                         break;
-                    case "TYPE" or "CWD" or "NOOP" or "OPTS":
+                    case "TYPE" or "CWD" or "NOOP":
                         await writer.WriteLineAsync("200 ok");
+                        break;
+                    case "OPTS":
+                        await writer.WriteLineAsync(OptsReply);
                         break;
                     case "SIZE":
                         await writer.WriteLineAsync(Files.TryGetValue(Resolve(arg), out var sized) ? $"213 {sized.Length}" : "550 not found");
@@ -143,15 +169,15 @@ internal sealed class FakeFtpServer : IDisposable
                         await writer.WriteLineAsync(Files.TryRemove(arg, out var removed) ? "250 deleted" : "550 not found");
                         break;
                     case "REST":
-                        _restart = long.Parse(arg);
-                        await writer.WriteLineAsync($"350 restarting at {_restart}");
+                        restart = long.Parse(arg);
+                        await writer.WriteLineAsync($"350 restarting at {restart}");
                         break;
                     case "PASV":
                         data?.Stop();
                         data = new(_address, 0);
                         data.Start();
                         var p = ((IPEndPoint)data.LocalEndpoint).Port;
-                        await writer.WriteLineAsync($"227 Entering Passive Mode ({_address.ToString().Replace('.', ',')},{p / 256},{p % 256})");
+                        await writer.WriteLineAsync($"227 Entering Passive Mode ({(PasvAddress ?? _address).ToString().Replace('.', ',')},{p / 256},{p % 256})");
                         break;
                     case "LIST" or "NLST":
                         await Transfer(writer, data, async d => await d.WriteAsync(Listing(arg)));
@@ -159,11 +185,12 @@ internal sealed class FakeFtpServer : IDisposable
                     case "RETR":
                         if (Files.TryGetValue(Resolve(arg), out var content))
                         {
-                            var rest = content[(int)_restart..];
-                            _restart = 0;
-                            var aborted = AbortRetrAfterBytes is not null;
-                            var sent = aborted ? rest[..Math.Min(AbortRetrAfterBytes!.Value, rest.Length)] : rest;
-                            await Transfer(writer, data, async d => await d.WriteAsync(sent), false, aborted ? "451 local error in processing" : "226 transfer complete");
+                            var rest = content[(int)restartAt..];
+                            var abortAfter = Interlocked.Decrement(ref _abortNextRetrs) >= 0 ? 0 : AbortRetrAfterBytes;
+
+                            var aborted = abortAfter is not null;
+                            var sent = aborted ? rest[..Math.Min(abortAfter!.Value, rest.Length)] : rest;
+                            await Transfer(writer, data, async d => await d.WriteAsync(sent), false, aborted ? AbortReply : "226 transfer complete");
                         }
                         else
                         {

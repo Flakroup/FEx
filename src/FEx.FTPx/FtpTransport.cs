@@ -3,6 +3,7 @@ using FluentFTP.Exceptions;
 using System;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -133,6 +134,17 @@ internal sealed class FtpTransport : IFtpTransport
         client.Config.SanitizeControlChars = false;
         client.Config.SanitizeUrlEncoding = false;
         client.Config.SanitizeTraversal = false;
+
+        // FluentFTP sends commands in ASCII unless FEAT lists UTF8, which turns every non-ASCII character of a file name into
+        // '?'. FtpWebRequest always sent UTF-8 and asked for it with OPTS UTF8 ON; setting the encoding makes Connect send that
+        // OPTS after login too, and a server that refuses it is tolerated (FluentFTP only notes the failed reply).
+        client.Encoding = Encoding.UTF8;
+
+        // The default AutoPassive connects the data channel to the address in the PASV reply, so a hostile server could aim the
+        // client at any host (the port-scan/bounce class of curl CVE-2020-8284). PASVEX takes only the port from the reply and
+        // connects to the control host, which is what FtpWebRequest did. The cost: EPSV is never tried on an IPv4 control
+        // connection (it is used on IPv6, where FluentFTP switches to it itself), so an IPv4 server that answers EPSV but not PASV fails.
+        client.Config.DataConnectionType = FtpDataConnectionType.PASVEX;
 
         return client;
     }

@@ -15,9 +15,10 @@ namespace FEx.Offline;
 /// <summary>
 /// One queued write. <see cref="Id" /> doubles as the Idempotency-Key the server replays on.
 /// <see cref="Attempts" /> counts every failed replay, a dropped connection included;
-/// <see cref="ServerFailures" /> counts only the 5xx answers other than 502, 503 and 504, which is what
-/// <see cref="HttpOutbox.DefaultMaxServerFailures" /> caps, and <see cref="UnavailableAnswers" /> counts the 408, 502, 503 and 504 ones and
-/// the redirected answers (followed or not), which <see cref="HttpOutbox.DefaultMaxUnavailableAnswers" /> caps.
+/// <see cref="ServerFailures" /> counts only the 5xx answers other than 502, 503 and 504, which the outbox's
+/// <c>maxServerFailures</c> argument caps (<see cref="HttpOutbox.DefaultMaxServerFailures" /> by default), and
+/// <see cref="UnavailableAnswers" /> counts the 408, 502, 503 and 504 ones and the redirected answers (followed or not), which the
+/// <c>maxUnavailableAnswers</c> argument caps (<see cref="HttpOutbox.DefaultMaxUnavailableAnswers" /> by default).
 /// </summary>
 public sealed record OutboxEntry(
     Guid Id,
@@ -70,10 +71,10 @@ public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining
 /// dead-lettered at that limit instead of blocking the queue forever. A 401, 429 or a transport failure keeps the entry,
 /// records the error and stops the flush as well, but is never counted: the session needs renewing, the server is
 /// throttling or the network is down, none of which says anything about the write. An answer that arrives after a
-/// redirect the client followed (the final request's method or URI is not the queued one - a login page standing in
+/// redirect the client followed (the final request's method or path is not the queued one - a login page standing in
 /// for an expired session, say), or a 3xx the client did not follow, is never a delivery, whatever its status: it keeps
 /// the entry like a 401 and counts as an unavailable answer, so a redirect that never ends is dead-lettered at that limit.
-/// A write that really lands behind a redirect (a 303 after a POST, a 307 to another host) is replayed until that limit,
+/// A write that really lands behind a redirect (a 303 after a POST, a 307 to another path) is replayed until that limit,
 /// so an API that redirects on success should answer 2xx instead. Dead entries are listed with
 /// <see cref="ListDeadAsync" /> and deleted with <see cref="RemoveDeadAsync" />.
 /// </summary>
@@ -376,11 +377,17 @@ public sealed class HttpOutbox
         && int.TryParse(values.FirstOrDefault(), NumberStyles.None, CultureInfo.InvariantCulture, out var original)
         && original is >= 200 and < 300;
 
-    // A followed redirect leaves the final request with another URI or another method (a 302 turns a POST into a GET).
+    // A followed redirect leaves the final request with another method (a 302 turns a POST into a GET) or another path. Scheme,
+    // host, port, query and fragment are deliberately not compared: a handler in the client pipeline that routes or hedges
+    // across hosts, or stamps a query-string key, rewrites them on every request, and each delivered 2xx would then look
+    // undelivered. The ceiling: a handler that rewrites the path is still taken for a redirect, and so is a redirect that
+    // changes only the host or the query (a write that landed there is replayed; the idempotency key makes that safe).
     // A response with no request attached (a hand-built one) is never a redirect.
     private static bool IsFollowedRedirect(HttpMethod queuedMethod, Uri? queuedUri, HttpResponseMessage response) =>
         response.RequestMessage is { } final
-        && (final.Method != queuedMethod || final.RequestUri != queuedUri);
+        && (final.Method != queuedMethod || !string.Equals(PathOf(final.RequestUri), PathOf(queuedUri), StringComparison.Ordinal));
+
+    private static string? PathOf(Uri? uri) => uri is { IsAbsoluteUri: true } ? uri.AbsolutePath : null;
 
     private static bool IsTransientClientError(HttpStatusCode status) =>
         status is HttpStatusCode.Unauthorized or HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests;

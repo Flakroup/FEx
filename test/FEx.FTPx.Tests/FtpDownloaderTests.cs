@@ -8,6 +8,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -192,9 +193,8 @@ public sealed class FtpDownloaderTests : IDisposable
         var transport = new FakeTransport { Size = 1_000_000, AbortExceptions = true };
         var state = new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries };
         transport.Responses.Enqueue(new FakeResponse(new ScriptedStream(null, new AbortException())));
-        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([1]))); // outer probe: data
-        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([1]))); // inner probe: data
-        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([])));  // inner probe: EOF
+        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([])));  // probe at the start: nothing served
+        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([1]))); // probe one chunk further: data, so the chunk is bisected
 
         await FtpDownloader.RestartDownloadFromServerAsync(transport, state, NewPath(), Server, null, 0, "", "", TestContext.Current.CancellationToken);
 
@@ -217,6 +217,50 @@ public sealed class FtpDownloaderTests : IDisposable
         // One download holds at most one connection while it recovers: the dead transfer is released before the probe opens.
         transport.Peak.ShouldBeLessThanOrEqualTo(2);
         transport.Live.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Restart_Recovery_ProbesTheWalkedOffset_AndZeroFillsExactlyToTheFirstReadableByte()
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        var transport = new FakeTransport { Size = 2_000_000, AbortExceptions = true, ReadableFrom = 700_000 };
+        var path = NewPath();
+        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream(null, new AbortException())));
+
+        await FtpDownloader.RestartDownloadFromServerAsync(transport, new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries }, path, Server, null, 0, "", "", TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        // The dying transfer, then the probes at the start and one chunk (512 KiB) further, which find nothing, then the chunk
+        // after that, which serves data; the chunk before it is bisected for the first readable byte.
+        transport.Offsets.Take(4).ShouldBe([0, 0, 524_288, 1_048_576]);
+        new FileInfo(path).Length.ShouldBe(700_000);
+        transport.OpenCalls.ShouldBeLessThanOrEqualTo(4 + 19);
+        transport.Created.ShouldAllBe(r => r.Disposed);
+    }
+
+    [Fact]
+    public async Task Restart_Recovery_WhenTheServerServesAtTheStart_ProbesOnceAndFillsNothing()
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var transport = new FakeTransport { Size = 1_000_000, AbortExceptions = true, ReadableFrom = 0 };
+
+        // A probe loop that never ends opens connections without bound: stop it, and fail on the count.
+        transport.OnOpen = () =>
+        {
+            if (transport.OpenCalls > 100)
+                cts.Cancel();
+
+            cts.Token.ThrowIfCancellationRequested();
+        };
+
+        var path = NewPath();
+        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream(null, new AbortException())));
+
+        await FtpDownloader.RestartDownloadFromServerAsync(transport, new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries }, path, Server, null, 0, "", "", cts.Token);
+
+        transport.Offsets.ShouldBe([0, 0]);
+        new FileInfo(path).Length.ShouldBe(0);
     }
 
     private sealed class AbortException : Exception;
@@ -304,6 +348,11 @@ public sealed class FtpDownloaderTests : IDisposable
         public bool AbortExceptions { get; set; }
         public Action? OnOpen { get; set; }
         public int OpenCalls { get; private set; }
+
+        /// <summary>The first offset the server serves a byte at; a probe below it reads nothing. Never, unless set.</summary>
+        public long ReadableFrom { get; set; } = long.MaxValue;
+
+        public List<long> Offsets { get; } = [];
         public Queue<FakeResponse> Responses { get; } = new();
         public List<FakeResponse> Created { get; } = [];
 
@@ -312,13 +361,16 @@ public sealed class FtpDownloaderTests : IDisposable
         public Task<IFtpResponse> OpenAsync(Uri serverUri, string username, string password, long offset, CancellationToken cancellationToken)
         {
             OpenCalls++;
+            Offsets.Add(offset);
             OnOpen?.Invoke();
 
             if (OpenThrows is not null)
                 throw OpenThrows;
 
             // Probes past the scripted responses get an empty (EOF) stream.
-            var response = Responses.Count > 0 ? Responses.Dequeue() : new FakeResponse(new ScriptedStream([]));
+            var response = Responses.Count > 0
+                ? Responses.Dequeue()
+                : new(new ScriptedStream(offset >= ReadableFrom ? [1] : []));
             Created.Add(response);
 
             return Task.FromResult<IFtpResponse>(response);

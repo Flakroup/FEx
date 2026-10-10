@@ -47,9 +47,13 @@ public class FtpClientFactory
         return CreateAsync(credentials, proxy, port);
     }
 
-    public async Task<AsyncFtpClient> CreateAsync(NetworkCredential? credentials = null, FtpProxyProfile? proxy = null, int port = 0)
+    public Task<AsyncFtpClient> CreateAsync(NetworkCredential? credentials = null, FtpProxyProfile? proxy = null, int port = 0) =>
+        CreateCoreAsync(credentials, proxy, port, CancellationToken.None);
+
+    /// <summary>Waits for a free slot of the host's pool, and stops waiting when <paramref name="cancellationToken" /> is cancelled.</summary>
+    internal async Task<AsyncFtpClient> CreateCoreAsync(NetworkCredential? credentials, FtpProxyProfile? proxy, int port, CancellationToken cancellationToken)
     {
-        await _semaphore.WaitAsync();
+        await _semaphore.WaitAsync(cancellationToken);
 
         try
         {

@@ -75,6 +75,45 @@ public sealed class FtpTransportTests : IDisposable
     }
 
     [Fact]
+    public async Task GetSize_ServerOmitsSizeFromFeat_StillAsksForTheSize()
+    {
+        _server.NoFeat = true;
+
+        (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct)).ShouldBe(Payload.Length);
+        _server.Commands.ShouldContain(c => c.StartsWith("SIZE ", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task GetSize_CancelledWhileWaitingForAFreeConnection_StopsWaitingAndLeaksNoSlot()
+    {
+        await LimitToOneClient();
+        await using var held = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        var waiting = FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", cts.Token);
+
+        (await Task.WhenAny(waiting, Task.Delay(TimeSpan.FromMilliseconds(300), Ct))).ShouldNotBe(waiting, "the pool is full");
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(() => waiting.WaitAsync(TimeSpan.FromSeconds(10), Ct));
+        await held.DisposeAsync();
+        (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct).WaitAsync(TimeSpan.FromSeconds(10), Ct)).ShouldBe(Payload.Length);
+    }
+
+    [Theory]
+    [InlineData("100%25.bin", "100%.bin")]
+    [InlineData("a;b.bin", "a;b.bin")]
+    [InlineData("v1..2.bin", "v1..2.bin")]
+    public async Task Open_FileNamesTheSanitizerWouldRefuse_AreStillDownloaded(string uriName, string serverName)
+    {
+        _server.Files["/pub/" + serverName] = Payload;
+        var uri = new UriBuilder(ServerFile) { Path = "/pub/" + uriName }.Uri;
+
+        await using var response = await FtpTransport.Instance.OpenAsync(uri, "u", "p", 0, Ct);
+
+        (await ReadAll(response)).ShouldBe(Payload);
+    }
+
+    [Fact]
     public async Task GetSize_ExplicitCredentials_AreUsedToLogIn()
     {
         _server.Password = "right";

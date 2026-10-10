@@ -45,12 +45,17 @@ internal sealed class FtpTransport : IFtpTransport
                                          CancellationToken cancellationToken)
     {
 #pragma warning disable IDISP001 // released through FtpCommon.ReleaseAsync on every path
-        var client = await CreateClientAsync(serverUri, username, password);
+        var client = await CreateClientAsync(serverUri, username, password, cancellationToken);
 #pragma warning restore IDISP001
 
         try
         {
             await client.Connect(cancellationToken);
+
+            // A server may leave SIZE out of FEAT and still answer it (FtpWebRequest always asked); FluentFTP would not send it then.
+            if (!client.Capabilities.Contains(FtpCapability.SIZE))
+                client.Capabilities.Add(FtpCapability.SIZE);
+
             var size = await client.GetFileSize(RemotePath(serverUri), -1, cancellationToken);
 
             return size >= 0 ? size : throw new FtpException("The server did not report the size of the file.");
@@ -68,7 +73,7 @@ internal sealed class FtpTransport : IFtpTransport
                                               CancellationToken cancellationToken)
     {
 #pragma warning disable IDISP001 // released through FtpCommon.ReleaseAsync on every path
-        var client = await CreateClientAsync(serverUri, username, password);
+        var client = await CreateClientAsync(serverUri, username, password, cancellationToken);
 #pragma warning restore IDISP001
 
         try
@@ -115,13 +120,21 @@ internal sealed class FtpTransport : IFtpTransport
         return path.StartsWith("/", StringComparison.Ordinal) ? path.Substring(1) : path;
     }
 
-    private static async Task<AsyncFtpClient> CreateClientAsync(Uri serverUri, string username, string password)
+    private static async Task<AsyncFtpClient> CreateClientAsync(Uri serverUri, string username, string password, CancellationToken cancellationToken)
     {
         // One pool per host: a path or user info in the Uri must not give every file its own connection limit.
         var host = new UriBuilder(serverUri.Scheme, serverUri.DnsSafeHost, serverUri.Port).Uri;
         var factory = await FtpClientFactory.GetInstanceAsync(host.AbsoluteUri);
 
-        return await factory.CreateAsync(GetCredentials(serverUri, username, password), false);
+        var client = await factory.CreateCoreAsync(GetCredentials(serverUri, username, password), null, 0, cancellationToken);
+
+        // The path is the Uri's, decoded once, and names like 100%.bin, a;b.bin or v1..2.bin are legal on a server. Newlines
+        // (command injection) and Unicode spoofing stay rejected; the rest of the sanitizer would refuse such files outright.
+        client.Config.SanitizeControlChars = false;
+        client.Config.SanitizeUrlEncoding = false;
+        client.Config.SanitizeTraversal = false;
+
+        return client;
     }
 
     private sealed class Response(AsyncFtpClient client, FtpDataStream data) : IFtpResponse

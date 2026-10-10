@@ -135,7 +135,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     {
         var factory = await Factory(1);
         var held = await factory.CreateAsync(null, null, false);
-        var foreign = new AsyncFtpClient("127.0.0.1");
+        var foreign = new AsyncFtpClient(factory.HostUri.DnsSafeHost);
 
         await FtpCommon.ReleaseAsync(foreign);
 

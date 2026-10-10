@@ -44,6 +44,9 @@ internal sealed class FakeFtpServer : IDisposable
     /// <summary>When set, a download sends only this many bytes and then answers 451 instead of 226, like a server giving up on a read.</summary>
     public int? AbortRetrAfterBytes { get; set; }
 
+    /// <summary>When set, FEAT advertises nothing (SIZE included), like a minimal server that still answers SIZE.</summary>
+    public bool NoFeat { get; set; }
+
     public IReadOnlyCollection<string> Commands => [.. _commands];
 
     public int MaxConcurrentConnections => Volatile.Read(ref _maxOpen);
@@ -122,7 +125,7 @@ internal sealed class FakeFtpServer : IDisposable
                         await writer.WriteLineAsync(Password == null || arg == Password ? $"230 welcome {user}" : "530 login incorrect");
                         break;
                     case "FEAT":
-                        await writer.WriteLineAsync("211-Features:\r\n SIZE\r\n MDTM\r\n REST STREAM\r\n211 End");
+                        await writer.WriteLineAsync(NoFeat ? "211 No features" : "211-Features:\r\n SIZE\r\n MDTM\r\n REST STREAM\r\n211 End");
                         break;
                     case "PWD":
                         await writer.WriteLineAsync("257 \"/\" is the current directory");

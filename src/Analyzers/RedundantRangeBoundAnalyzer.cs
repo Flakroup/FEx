@@ -19,7 +19,7 @@ public sealed class RedundantRangeBoundAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A range starts at 0 and ends at ^0 when it says nothing, so '0..x' means '..x' and 'x..^0' means 'x..'. Replaces the ReSharper inspection RedundantRangeBound.");
+        "A range starts at 0 and ends at ^0 when it says nothing, so '0..x' means '..x' and 'x..^0' means 'x..'. A constant that folds to 0 counts, and so does new Index(0). Replaces the ReSharper inspection RedundantRangeBound.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
@@ -33,26 +33,44 @@ public sealed class RedundantRangeBoundAnalyzer : DiagnosticAnalyzer
     private static void Analyze(SyntaxNodeAnalysisContext context)
     {
         var range = (RangeExpressionSyntax)context.Node;
-        if (range.LeftOperand is { } start && IsStartDefault(Unwrap(start)))
+        if (range.LeftOperand is { } start && IsStartDefault(context.SemanticModel, start))
             context.ReportDiagnostic(Diagnostic.Create(Rule, start.GetLocation()));
-        if (range.RightOperand is { } end && IsEndDefault(end))
+        if (range.RightOperand is { } end && IsEndDefault(context.SemanticModel, end))
             context.ReportDiagnostic(Diagnostic.Create(Rule, end.GetLocation()));
     }
 
-    private static bool IsStartDefault(ExpressionSyntax start) =>
-        IsZero(start) || start is CastExpressionSyntax cast && IsZero(Unwrap(cast.Expression));
+    // A constant that folds to 0 counts, written as 0, a const, 1 - 1 or (Index)0, and so does an explicit new Index(0) or new Index(0, false).
+    private static bool IsStartDefault(SemanticModel model, ExpressionSyntax start) =>
+        Strip(start) is var inner && (IsZero(model, inner) || inner is ObjectCreationExpressionSyntax creation && IsIndexFromStartZero(model, creation));
 
-    private static bool IsEndDefault(ExpressionSyntax end) =>
-        end is PrefixUnaryExpressionSyntax prefix && prefix.IsKind(SyntaxKind.IndexExpression) && IsZero(Unwrap(prefix.Operand));
+    private static bool IsEndDefault(SemanticModel model, ExpressionSyntax end) =>
+        end is PrefixUnaryExpressionSyntax prefix && prefix.IsKind(SyntaxKind.IndexExpression) && IsZero(model, Strip(prefix.Operand));
 
-    private static bool IsZero(ExpressionSyntax expression) =>
-        expression is LiteralExpressionSyntax { Token.Value: 0 };
+    // ponytail: only an int-typed constant counts, which is what a range bound is written as; upgrade by widening the pattern.
+    private static bool IsZero(SemanticModel model, ExpressionSyntax expression) =>
+        model.GetConstantValue(expression).Value is 0;
 
-    private static ExpressionSyntax Unwrap(ExpressionSyntax expression)
+    private static bool IsIndexFromStartZero(SemanticModel model, ObjectCreationExpressionSyntax creation) =>
+        creation.ArgumentList is { Arguments: { Count: 1 or 2 } arguments }
+        && IsZero(model, arguments[0].Expression)
+        && (arguments.Count == 1 || model.GetConstantValue(arguments[1].Expression).Value is false)
+        && model.GetTypeInfo(creation).Type is { Name: "Index", ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } };
+
+    private static ExpressionSyntax Strip(ExpressionSyntax expression)
     {
-        while (expression is ParenthesizedExpressionSyntax parenthesized)
-            expression = parenthesized.Expression;
-
-        return expression;
+        while (true)
+        {
+            switch (expression)
+            {
+                case ParenthesizedExpressionSyntax parenthesized:
+                    expression = parenthesized.Expression;
+                    break;
+                case CastExpressionSyntax cast:
+                    expression = cast.Expression;
+                    break;
+                default:
+                    return expression;
+            }
+        }
     }
 }

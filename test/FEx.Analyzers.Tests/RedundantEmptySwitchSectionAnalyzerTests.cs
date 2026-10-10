@@ -94,6 +94,49 @@ public class RedundantEmptySwitchSectionAnalyzerTests
             """);
 
     [Fact]
+    public Task Keeps_a_default_that_holds_code_under_a_false_directive() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                void A(int i)
+                {
+                    switch (i)
+                    {
+                        case 1: break;
+                        default:
+            #if NEVER
+                            Console.Write(2);
+            #endif
+                            break;
+                    }
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_default_beside_a_false_directive_outside_its_section() =>
+        VerifyAsync("""
+            class C
+            {
+                void A(int i)
+                {
+                    switch (i)
+                    {
+                        case 1: break;
+            #if NEVER
+                        case 3: break;
+            #endif
+                        {|FEX0017:default: break;|}
+            #if NEVER
+                        case 4: break;
+            #endif
+                    }
+                }
+            }
+            """);
+
+    [Fact]
     public Task Keeps_a_break_section_that_is_not_the_default() =>
         VerifyAsync("""
             class C

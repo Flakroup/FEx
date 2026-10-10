@@ -111,6 +111,18 @@ public class RedundantCaseLabelAnalyzerTests
             """);
 
     [Fact]
+    public Task Keeps_a_label_that_a_goto_case_reaches_through_a_constant_conversion() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                void A(long x) { switch (x) { case 1L: default: Console.Write(1); break; case 2L: goto case 1; } }
+                void B(long x) { switch (x) { case 2L: goto case 1; case 1: default: break; } }
+                void D(byte x) { switch (x) { case 2: goto case 1; case 1: default: break; } }
+            }
+            """);
+
+    [Fact]
     public Task Reports_a_label_when_the_goto_case_names_another_value() =>
         VerifyAsync("""
             using System;

@@ -54,6 +54,14 @@ public sealed class RedundantVerbatimPrefixAnalyzer : DiagnosticAnalyzer
         if (namesTypeDeclaration && name is "record" or "scoped" or "file" or "extension")
             return false;
 
+        // Without the prefix, '_' declares a discard rather than the variable, and 'when' ends the pattern of a case label or arm.
+        if (parent is SingleVariableDesignationSyntax designation && (name == "_" || name == "when" && EndsInCasePattern(designation)))
+            return false;
+
+        // ReSharper keeps the prefix on every query keyword inside a query, and removing it can change how the query parses.
+        if (SyntaxFacts.IsQueryContextualKeyword(SyntaxFacts.GetContextualKeywordKind(name)) && parent.Ancestors().Any(ancestor => ancestor is QueryExpressionSyntax))
+            return false;
+
         return name switch
         {
             "field" => !InPropertyAccessor(parent),
@@ -62,13 +70,23 @@ public sealed class RedundantVerbatimPrefixAnalyzer : DiagnosticAnalyzer
         };
     }
 
+    // 'case int when:' and 'int when when ...' read 'when' as the start of a filter, so a designation of that name in the pattern needs its prefix.
+    private static bool EndsInCasePattern(SingleVariableDesignationSyntax designation) =>
+        designation.Ancestors().FirstOrDefault(ancestor => ancestor is CasePatternSwitchLabelSyntax or SwitchExpressionArmSyntax) switch
+        {
+            CasePatternSwitchLabelSyntax label => label.Pattern.Span.Contains(designation.Span),
+            SwitchExpressionArmSyntax arm => arm.Pattern.Span.Contains(designation.Span),
+            _ => false,
+        };
+
     // Inside a property accessor or expression body 'field' is a keyword, so the prefix is what keeps it a name.
     private static bool InPropertyAccessor(SyntaxNode? node) =>
         node is not null && node.AncestorsAndSelf().Any(ancestor =>
             ancestor is AccessorDeclarationSyntax { Parent.Parent: PropertyDeclarationSyntax }
             || ancestor is ArrowExpressionClauseSyntax { Parent: PropertyDeclarationSyntax });
 
-    // Inside the body of an async function 'await' is a keyword. A sync lambda or anonymous method passes through to its outer function.
+    // Inside the body of an async function 'await' is a keyword, and so are the parameters of an async lambda, anonymous method or local
+    // function. A sync lambda or anonymous method, and the name and parameters of a sync local function, belong to the function around them.
     private static bool InAsyncBody(SyntaxNode start)
     {
         SyntaxNode? child = null;
@@ -79,8 +97,14 @@ public sealed class RedundantVerbatimPrefixAnalyzer : DiagnosticAnalyzer
                 case MethodDeclarationSyntax method:
                     return method.Modifiers.Any(SyntaxKind.AsyncKeyword) && IsBody(child, method.Body, method.ExpressionBody);
                 case LocalFunctionStatementSyntax local:
-                    return local.Modifiers.Any(SyntaxKind.AsyncKeyword) && IsBody(child, local.Body, local.ExpressionBody);
-                case AnonymousFunctionExpressionSyntax lambda when lambda.Modifiers.Any(SyntaxKind.AsyncKeyword) && child is not null && child == lambda.Body:
+                    if (IsBody(child, local.Body, local.ExpressionBody))
+                        return local.Modifiers.Any(SyntaxKind.AsyncKeyword);
+
+                    if (child is ParameterListSyntax && local.Modifiers.Any(SyntaxKind.AsyncKeyword))
+                        return true;
+
+                    break;
+                case AnonymousFunctionExpressionSyntax lambda when lambda.Modifiers.Any(SyntaxKind.AsyncKeyword):
                     return true;
                 case GlobalStatementSyntax:
                     // Top-level statements become async the moment any of them awaits, so keep the prefix.

@@ -62,22 +62,66 @@ public class RedundantRangeBoundAnalyzerTests
             """);
 
     [Fact]
-    public Task Keeps_bounds_that_are_not_defaults() =>
+    public Task Reports_a_bound_that_folds_to_the_default() =>
         VerifyAsync("""
             using System;
             class C
             {
                 const int Zero = 0;
+                int[] A(int[] a) => a[{|FEX0021:Zero|}..];
+                int[] B(int[] a) => a[..{|FEX0021:^Zero|}];
+                int[] D(int[] a) => a[{|FEX0021:(1 - 1)|}..];
+                int[] E(int[] a) => a[1..{|FEX0021:^(1 - 1)|}];
+                int[] F(int[] a) => a[{|FEX0021:-0|}..];
+                int[] G(int[] a) => a[{|FEX0021:(Index)Zero|}..];
+                int[] H(int[] a) { const int z = 0; return a[{|FEX0021:z|}..]; }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_start_written_as_a_new_index() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                const int Zero = 0;
+                int[] A(int[] a) => a[{|FEX0021:new Index(0)|}..];
+                int[] B(int[] a) => a[{|FEX0021:new Index(Zero, false)|}..];
+                int[] D(int[] a) => a[{|FEX0021:new System.Index(0)|}..2];
+                int[] E(int[] a) => a[{|FEX0021:(new Index(0))|}..];
+            }
+            """);
+
+    [Fact]
+    public Task Keeps_an_index_that_is_not_the_start_of_the_sequence() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                int[] A(int[] a) => a[new(0)..];
+                int[] B(int[] a) => a[..new Index(0, true)];
+                int[] D(int[] a) => a[..new Index(0)];
+                int[] E(int[] a) => a[new Index(1)..];
+                int[] F(int[] a) => a[new Index(0, true)..];
+                int[] G(int[] a, int n) => a[new Index(n)..];
+                int[] H(int[] a) => a[Index.FromStart(0)..];
+                int[] I(int[] a) { Index i = new(0); return a[i..]; }
+            }
+            """);
+
+    [Fact]
+    public Task Keeps_bounds_that_are_not_defaults() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
                 int[] A(int[] a) => a[^0..];
                 int[] B(int[] a) => a[1..3];
                 int[] D(int[] a) => a[..];
                 int[] E(int[] a) => a[1..^1];
                 int[] F(int[] a) => a[..2];
                 int[] G(int[] a) => a[1..];
-                int[] H(int[] a) => a[Zero..];
-                int[] I(int[] a) => a[..^Zero];
                 int[] J(int[] a, int n) => a[n..^n];
-                int[] K(int[] a) => a[1..^(1 - 1)];
                 int[] M2(int[] a) => a[1..-0];
                 int[] M3(int[] a) => a[1..+0];
                 Index L = ^0;

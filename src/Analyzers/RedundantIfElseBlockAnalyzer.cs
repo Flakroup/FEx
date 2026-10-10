@@ -33,11 +33,30 @@ public sealed class RedundantIfElseBlockAnalyzer : DiagnosticAnalyzer
     private static void Analyze(SyntaxNodeAnalysisContext context)
     {
         var statement = (IfStatementSyntax)context.Node;
-        if (statement.Else is not { } @else)
-            return;
-
-        var flow = context.SemanticModel.AnalyzeControlFlow(statement.Statement);
-        if (flow is { EndPointIsReachable: false })
+        if (statement.Else is { } @else && Exits(context.SemanticModel, statement.Statement) && InStatementList(context.SemanticModel, statement))
             context.ReportDiagnostic(Diagnostic.Create(Rule, @else.ElseKeyword.GetLocation()));
+    }
+
+    private static bool Exits(SemanticModel model, StatementSyntax branch) =>
+        model.AnalyzeControlFlow(branch) is { EndPointIsReachable: false };
+
+    // Dropping the else moves its body to after the if, which only reads the same where the if sits in a statement list: not as the body
+    // of a loop, using or lock, nor as the then-branch of another if. Inside an else-if chain every earlier branch must exit as well, or
+    // control would reach the moved body from them. ReSharper stays silent on all of those.
+    private static bool InStatementList(SemanticModel model, IfStatementSyntax statement)
+    {
+        while (true)
+        {
+            switch (statement.Parent)
+            {
+                case BlockSyntax or SwitchSectionSyntax or LabeledStatementSyntax or GlobalStatementSyntax:
+                    return true;
+                case ElseClauseSyntax { Parent: IfStatementSyntax outer } when Exits(model, outer.Statement):
+                    statement = outer;
+                    break;
+                default:
+                    return false;
+            }
+        }
     }
 }

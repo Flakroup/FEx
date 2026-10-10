@@ -189,13 +189,118 @@ public class RedundantVerbatimPrefixAnalyzerTests
             """);
 
     [Fact]
-    public Task Reports_an_await_prefix_on_an_async_lambda_parameter() =>
+    public Task Keeps_an_await_prefix_on_a_parameter_of_an_async_function() =>
         VerifyAsync("""
             using System;
             using System.Threading.Tasks;
             class C
             {
-                Func<int, Task> F = async (int {|FEX0006:@|}await) => { await Task.Yield(); };
+                Func<int, Task> F = async (int @await) => { await Task.Yield(); };
+                Func<int, Task> G = async delegate (int @await) { await Task.Yield(); };
+                Func<int, Task> H = async @await => await Task.Yield();
+                void S() { async Task Local(int @await) { await Task.Yield(); } }
+            }
+            """);
+
+    [Fact]
+    public Task Keeps_an_await_prefix_on_the_signature_of_a_sync_function_inside_an_async_body() =>
+        VerifyAsync("""
+            using System;
+            using System.Threading.Tasks;
+            class C
+            {
+                async Task M()
+                {
+                    void Local(int @await) { }
+                    void @await() { }
+                    Func<int, int> f = @await => @await;
+                    await Task.Yield();
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_an_await_prefix_on_the_signature_of_a_local_function_in_a_sync_method() =>
+        VerifyAsync("""
+            using System.Threading.Tasks;
+            class C
+            {
+                void M() { async Task {|FEX0006:@|}await() { await Task.Yield(); } }
+                void N() { void Local(int {|FEX0006:@|}await) { } }
+            }
+            """);
+
+    [Fact]
+    public Task Keeps_an_await_prefix_in_an_async_expression_body() =>
+        VerifyAsync("""
+            using System;
+            using System.Threading.Tasks;
+            class C
+            {
+                static int {|FEX0006:@|}await;
+                async Task<int> A() => @await;
+                Func<Task<int>> B = async () => @await;
+                void S() { async Task<int> Local() => @await; }
+            }
+            """);
+
+    [Fact]
+    public Task Keeps_a_discard_named_prefix_on_a_variable_declaration() =>
+        VerifyAsync("""
+            using System;
+            using System.Collections.Generic;
+            class C
+            {
+                void A(object o) { if (o is int @_ && {|FEX0006:@|}_ > 0) { } }
+                void B(Dictionary<int, int> d) { d.TryGetValue(1, out var @_); Console.Write({|FEX0006:@|}_); }
+                void D((int, int) t) { var (@_, y) = t; Console.Write(y); }
+                void E(Dictionary<int, int> d) { d.TryGetValue(1, out int @_); }
+            }
+            """);
+
+    [Fact]
+    public Task Keeps_a_query_keyword_prefix_inside_a_query() =>
+        VerifyAsync("""
+            using System.Linq;
+            class C
+            {
+                void Q(int[] xs)
+                {
+                    var {|FEX0006:@|}into = 1; var {|FEX0006:@|}join = 2; var {|FEX0006:@|}ascending = 3; var {|FEX0006:@|}descending = 4;
+                    var {|FEX0006:@|}on = 5; var {|FEX0006:@|}equals = 6; var {|FEX0006:@|}orderby = 7; var {|FEX0006:@|}from = 8;
+                    var {|FEX0006:@|}select = 9; var {|FEX0006:@|}where = 10; var {|FEX0006:@|}group = 11; var {|FEX0006:@|}by = 12;
+                    var {|FEX0006:@|}let = 13;
+                    var q1 = from x in xs join z in xs on x equals z + @into select x;
+                    var q2 = from x in xs select xs.Where(w => w == @join);
+                    var q3 = from x in xs orderby x + @ascending select x;
+                    var q4 = from x in xs orderby @descending select x;
+                    var q5 = from x in xs group x by @on;
+                    var q6 = from x in xs where @equals > 0 select x;
+                    var q7 = from x in xs select @orderby;
+                    var q8 = from x in xs let a = @from select a;
+                    var q9 = from x in xs select @select;
+                    var q10 = from x in xs where x > @where select x;
+                    var q11 = from x in xs group x by @group;
+                    var q12 = from x in xs orderby @by select x;
+                    var q13 = from x in xs select @let;
+                    var o1 = {|FEX0006:@|}into + {|FEX0006:@|}select;
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Keeps_a_when_designation_in_a_case_pattern_and_reports_the_rest() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                void A(object o) { switch (o) { case int @when when {|FEX0006:@|}when > 0: break; } }
+                void B(object o) { switch (o) { case int @when: break; } }
+                int D(object o) => o switch { int @when when {|FEX0006:@|}when > 0 => 1, _ => 0 };
+                void E(object o) { if (o is int {|FEX0006:@|}when) Console.Write({|FEX0006:@|}when); }
+                void F(object o) { switch (o) { case int {|FEX0006:@|}x when {|FEX0006:@|}x > 0: break; } }
+                int G(object o) => o switch { _ => o is int {|FEX0006:@|}when ? 1 : 0 };
+                void H(object o) { switch (o) { case int n when o is int {|FEX0006:@|}when: break; } }
             }
             """);
 

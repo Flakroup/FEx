@@ -19,7 +19,7 @@ public sealed class RedundantCollectionInitializerElementBracesAnalyzer : Diagno
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "An element written as '{ x }' calls Add(x) exactly as 'x' does. Braces around an assignment or a collection expression are kept, since without them the element would mean something else. Replaces the ReSharper inspection RedundantCollectionInitializerElementBraces.");
+        "An element written as '{ x }' calls Add(x) exactly as 'x' does. Braces around an assignment (plain or compound) or a collection expression are kept, since without them the element would mean something else or not compile. Replaces the ReSharper inspection RedundantCollectionInitializerElementBraces.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
@@ -36,9 +36,9 @@ public sealed class RedundantCollectionInitializerElementBracesAnalyzer : Diagno
         if (element.Expressions.Count != 1)
             return;
 
-        // Unbraced, a bare 'x = 1' would be a member initializer and '[1, 2]' an indexer initializer.
+        // Unbraced, a bare 'x = 1' would be a member initializer ('x += 1' is not even that) and '[1, 2]' an indexer initializer.
         var only = element.Expressions[0];
-        if (!only.IsKind(SyntaxKind.SimpleAssignmentExpression) && !only.IsKind(SyntaxKind.CollectionExpression))
+        if (only is not AssignmentExpressionSyntax && !only.IsKind(SyntaxKind.CollectionExpression))
             context.ReportDiagnostic(Diagnostic.Create(Rule, element.OpenBraceToken.GetLocation()));
     }
 }

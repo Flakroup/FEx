@@ -64,6 +64,33 @@ public class RedundantJumpStatementAnalyzerTests
             """);
 
     [Fact]
+    public Task Reports_a_yield_break_when_a_yield_return_makes_the_iterator() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            class C
+            {
+                IEnumerable<int> A(bool b) { if (b) { yield return 1; } {|FEX0019:yield break;|} }
+                IEnumerable<int> B() { IEnumerable<int> Local() { yield return 1; {|FEX0019:yield break;|} } return Local(); }
+            }
+            """);
+
+    [Fact]
+    public Task Keeps_a_yield_break_that_is_the_only_yield_of_its_function() =>
+        VerifyAsync("""
+            using System;
+            using System.Collections.Generic;
+            using System.Threading.Tasks;
+            class C
+            {
+                IEnumerable<int> A() { Console.Write(1); yield break; }
+                IEnumerable<int> B() { yield break; }
+                IEnumerable<int> D(bool b) { if (b) yield break; }
+                async IAsyncEnumerable<int> E() { await Task.Yield(); yield break; }
+                IEnumerable<int> F() { IEnumerable<int> Local() { yield return 1; } foreach (var x in Local()) { Console.Write(x); } yield break; }
+            }
+            """);
+
+    [Fact]
     public Task Reports_a_continue_at_the_end_of_a_loop_body() =>
         VerifyAsync("""
             using System;
@@ -198,6 +225,35 @@ public class RedundantJumpStatementAnalyzerTests
             class C
             {
                 void A(int[] xs) { foreach (var x in xs) { Console.Write(x); continue; Console.Write(1); } }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_jump_that_the_same_jump_follows() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                void A(int i, bool b) { switch (i) { case 1: if (b) {|FEX0019:break;|} else Console.Write(1); break; } }
+                void B(int i, bool b) { switch (i) { case 1: if (b) { Console.Write(1); {|FEX0019:break;|} } break; } }
+                void D(bool b) { while (b) { if (b) {|FEX0019:break;|} else Console.Write(1); break; } }
+                void E(int[] xs, bool b) { foreach (var x in xs) { if (b) {|FEX0019:continue;|} else Console.Write(1); {|FEX0019:continue;|} } }
+                void F(bool b) { if (b) {|FEX0019:return;|} else Console.Write(1); {|FEX0019:return;|} }
+                void G(bool b) { if (b) {|FEX0019:return;|} {|FEX0019:return;|} }
+                void H(int i) { switch (i) { case 1: {|FEX0019:break;|} break; } }
+            }
+            """);
+
+    [Fact]
+    public Task Keeps_a_jump_whose_following_statement_does_other_work_or_jumps_elsewhere() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                void A(int i, bool b) { switch (i) { case 1: if (b) { Console.Write(1); break; } Console.Write(2); break; } }
+                void B(int i, bool b) { switch (i) { case 1: while (b) { break; } break; } }
+                void D(bool b) { if (b) goto L; goto M; L: Console.Write(1); M: Console.Write(2); }
+                void E(int i, int[] xs) { foreach (var x in xs) { switch (i) { case 1: if (x > 0) continue; break; } } }
             }
             """);
 

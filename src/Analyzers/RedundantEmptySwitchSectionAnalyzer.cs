@@ -20,7 +20,7 @@ public sealed class RedundantEmptySwitchSectionAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A default section that holds nothing but 'break;' behaves as a switch without one, unless a 'goto default;' targets it. Replaces the ReSharper inspection RedundantEmptySwitchSection.");
+        "A default section that holds nothing but 'break;' behaves as a switch without one, unless a 'goto default;' targets it or conditional-compilation code sits inside it. Replaces the ReSharper inspection RedundantEmptySwitchSection.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
@@ -34,7 +34,7 @@ public sealed class RedundantEmptySwitchSectionAnalyzer : DiagnosticAnalyzer
     private static void Analyze(SyntaxNodeAnalysisContext context)
     {
         var section = (SwitchSectionSyntax)context.Node;
-        if (section is not { Labels: [DefaultSwitchLabelSyntax], Parent: SwitchStatementSyntax @switch } || !IsOnlyBreak(section.Statements))
+        if (section is not { Labels: [DefaultSwitchLabelSyntax], Parent: SwitchStatementSyntax @switch } || !IsOnlyBreak(section.Statements) || HasInactiveCode(section))
             return;
 
         var targeted = @switch.DescendantNodes()
@@ -43,6 +43,10 @@ public sealed class RedundantEmptySwitchSectionAnalyzer : DiagnosticAnalyzer
         if (!targeted)
             context.ReportDiagnostic(Diagnostic.Create(Rule, section.GetLocation()));
     }
+
+    // Code under a false '#if' is still the author's content for that section, and ReSharper leaves the section alone.
+    private static bool HasInactiveCode(SwitchSectionSyntax section) =>
+        section.DescendantTrivia(section.Span).Any(trivia => trivia.IsKind(SyntaxKind.DisabledTextTrivia));
 
     // Nested blocks around the break change nothing.
     private static bool IsOnlyBreak(SyntaxList<StatementSyntax> statements)

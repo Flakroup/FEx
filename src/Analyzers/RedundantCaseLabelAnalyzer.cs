@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace FEx.Analyzers;
 
@@ -20,7 +21,7 @@ public sealed class RedundantCaseLabelAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "In a section that also has default, a case label adds nothing, unless it carries a 'when' filter, declares a variable with 'var', or is the target of a 'goto case'. Replaces the ReSharper inspection RedundantCaseLabel.");
+        "In a section that also has default, a case label only repeats what default already matches, unless it carries a 'when' filter, declares a variable with 'var', or is the target of a 'goto case'. Like ReSharper, it is also reported where the label sits ahead of a later section that overlaps it, so removing it can change which section runs: check that before deleting it. Replaces the ReSharper inspection RedundantCaseLabel.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
@@ -49,26 +50,20 @@ public sealed class RedundantCaseLabelAnalyzer : DiagnosticAnalyzer
         type is { TypeKind: TypeKind.Enum }
         || type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T, TypeArguments: [{ TypeKind: TypeKind.Enum }] };
 
-    private static bool IsRedundant(SyntaxNodeAnalysisContext context, SwitchStatementSyntax @switch, SwitchLabelSyntax label)
+    private static bool IsRedundant(SyntaxNodeAnalysisContext context, SwitchStatementSyntax @switch, SwitchLabelSyntax label) =>
+        label is not (DefaultSwitchLabelSyntax or CasePatternSwitchLabelSyntax { WhenClause: not null } or CasePatternSwitchLabelSyntax { Pattern: VarPatternSyntax })
+        && !IsGotoCaseTarget(context, @switch, label);
+
+    // 'goto case 1 + 1;' reaches 'case 2:', and 'goto case 1;' reaches 'case 1L:' in a switch on long: the jump's target label is what
+    // counts, not its spelling. A goto inside a nested switch targets that switch's labels, so it never matches one of this switch.
+    private static bool IsGotoCaseTarget(SyntaxNodeAnalysisContext context, SwitchStatementSyntax @switch, SwitchLabelSyntax label)
     {
-        if (label is DefaultSwitchLabelSyntax or CasePatternSwitchLabelSyntax { WhenClause: not null } or CasePatternSwitchLabelSyntax { Pattern: VarPatternSyntax })
-            return false;
-
-        var value = (label as CaseSwitchLabelSyntax)?.Value;
-
-        return value is null || !IsGotoCaseTarget(context, @switch, value);
-    }
-
-    // 'goto case 1 + 1;' reaches 'case 2:', so the label is what the jump needs. A goto inside a nested switch targets that switch.
-    private static bool IsGotoCaseTarget(SyntaxNodeAnalysisContext context, SwitchStatementSyntax @switch, ExpressionSyntax value)
-    {
-        var constant = context.SemanticModel.GetConstantValue(value, context.CancellationToken);
+        var declared = context.SemanticModel.GetDeclaredSymbol(label, context.CancellationToken);
 
         return @switch.DescendantNodes()
-            .OfType<GotoStatementSyntax>()
-            .Where(statement => statement.Expression is not null)
-            .Where(statement => statement.Ancestors().OfType<SwitchStatementSyntax>().First() == @switch)
-            .Select(statement => context.SemanticModel.GetConstantValue(statement.Expression!, context.CancellationToken))
-            .Any(target => target.HasValue && Equals(target.Value, constant.Value));
+            .Where(node => node.IsKind(SyntaxKind.GotoCaseStatement))
+            .Select(statement => context.SemanticModel.GetOperation(statement, context.CancellationToken))
+            .OfType<IBranchOperation>()
+            .Any(branch => SymbolEqualityComparer.Default.Equals(branch.Target, declared));
     }
 }

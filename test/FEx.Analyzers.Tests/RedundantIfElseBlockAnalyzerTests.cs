@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Xunit;
 
 namespace FEx.Analyzers.Tests;
@@ -123,6 +124,66 @@ public class RedundantIfElseBlockAnalyzerTests
                 static void Fail() => throw new Exception();
                 int A(bool b) { if (b) { Environment.Exit(1); } else { Console.Write(1); } return 0; }
                 int B(bool b) { if (b) { Fail(); } else { Console.Write(1); } return 0; }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_an_else_in_a_switch_section_or_behind_a_label() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                void A(int i, bool b) { switch (i) { case 1: if (b) break; {|FEX0020:else|} Console.Write(1); break; } }
+                void B(bool b) { L: if (b) return; {|FEX0020:else|} Console.Write(1); }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_an_else_in_top_level_statements() =>
+        AnalyzerTestHelper.VerifyAsync<RedundantIfElseBlockAnalyzer>("""
+            using System;
+            if (args.Length > 0) return; {|FEX0020:else|} Console.Write(1);
+            """, OutputKind.ConsoleApplication);
+
+    [Fact]
+    public Task Keeps_an_else_when_the_if_is_not_in_a_statement_list() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                void A(Func<bool> c, bool b) { while (c()) if (b) break; else Console.Write(1); }
+                void B(int[] xs) { foreach (var x in xs) if (x > 0) continue; else Console.Write(x); }
+                void D(bool b) { for (var i = 0; i < 3; i++) if (b) break; else Console.Write(i); }
+                void E(bool b) { do if (b) break; else Console.Write(1); while (b); }
+                void F(IDisposable d, bool b) { using (d) if (b) return; else Console.Write(1); Console.Write(2); }
+                void G(object o, bool b) { lock (o) if (b) return; else Console.Write(1); Console.Write(2); }
+                void H(bool a, bool b) { if (a) if (b) return; else Console.Write(1); Console.Write(2); }
+                void I(bool a, bool b) { if (a) Console.Write(0); else if (b) throw new Exception(); else Console.Write(1); }
+            }
+            """);
+
+    [Fact]
+    public Task Keeps_the_else_of_an_else_if_whose_earlier_branch_can_complete() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                int A(int i)
+                {
+                    if (i == 1) { Console.Write(1); }
+                    else if (i == 2) { return 2; }
+                    else { Console.Write(3); }
+                    return 0;
+                }
+
+                int B(int i)
+                {
+                    if (i == 1) return 1;
+                    {|FEX0020:else|} if (i == 2) { Console.Write(2); }
+                    else if (i == 3) return 3;
+                    else Console.Write(4);
+                    return 0;
+                }
             }
             """);
 }

@@ -50,6 +50,17 @@ public class RedundantCollectionInitializerElementBracesAnalyzerTests
             """);
 
     [Fact]
+    public Task Keeps_braces_around_a_compound_assignment() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            class C
+            {
+                List<int> A(int x) => new() { { x += 1 } };
+                List<int?> B(int? x) => new() { { x ??= 1 } };
+            }
+            """);
+
+    [Fact]
     public Task Keeps_braces_around_a_collection_expression() =>
         VerifyAsync("""
             using System.Collections.Generic;

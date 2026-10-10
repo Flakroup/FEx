@@ -33,7 +33,7 @@ internal static class ToStringCalls
 
         // The node the call sits in, and what stands there once the call is gone: 'o?.ToString()' loses its '?.', 'o?.P.ToString()' keeps 'o?.P'.
         SyntaxNode target = call;
-        ExpressionSyntax stripped = receiver;
+        var stripped = receiver;
         if (call.Parent is ConditionalAccessExpressionSyntax conditional && conditional.WhenNotNull == call)
         {
             target = conditional;
@@ -128,11 +128,9 @@ internal static class ToStringCalls
             return false;
 
         var edited = outer.ReplaceNode(target, stripped);
+        // An array would be taken as the params array itself.
         if (owner.SpecialType == SpecialType.System_String && method.Name == "Format")
-        {
-            // An array would be taken as the params array itself.
             return parameter.Ordinal != 0 && type is not IArrayTypeSymbol && Speculation.BindsToSame(model, outer, edited, cancellationToken);
-        }
 
         // Append(string) becomes whichever overload the receiver fits best, which only Append(object) reads the same way.
         return owner.Name == "StringBuilder" && method.Name == "Append" && method.Parameters.Length == 1

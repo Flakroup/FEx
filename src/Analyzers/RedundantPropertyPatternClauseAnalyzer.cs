@@ -37,7 +37,7 @@ public sealed class RedundantPropertyPatternClauseAnalyzer : DiagnosticAnalyzer
 
         // A bare '{ }' is the null check; it only goes redundant behind a type or a positional clause.
         if (pattern.PropertyPatternClause is not { Subpatterns.Count: 0 } clause
-            || (pattern.Type is null && pattern.PositionalPatternClause is null))
+            || pattern.Type is null && pattern.PositionalPatternClause is null)
             return;
 
         // 'int { }' becomes the type pattern 'int', which means more than the clause did in two places.

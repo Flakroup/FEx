@@ -15,7 +15,7 @@ namespace FEx.Offline;
 /// <summary>
 /// One queued write. <see cref="Id" /> doubles as the Idempotency-Key the server replays on.
 /// <see cref="Attempts" /> counts every failed replay, a dropped connection included;
-/// <see cref="ServerFailures" /> counts only the 5xx answers other than 503, which is what the outbox's retry limit caps.
+/// <see cref="ServerFailures" /> counts only the 5xx answers other than 502, 503 and 504, which is what the outbox's retry limit caps.
 /// </summary>
 public sealed record OutboxEntry(
     Guid Id,
@@ -57,12 +57,12 @@ public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining
 /// <c>Idempotency-Original-Status</c> header carries a 2xx status (the write completed on an earlier attempt, only its
 /// response was too large for the server to replay). A 4xx other than 401, 408 and 429 moves it to the dead-letter
 /// list (the server understood and rejected it - retrying forever cannot fix a validation error) and the flush
-/// goes on. A 5xx other than 503 keeps the entry, counts a server failure on it and stops the flush (the server is sick -
+/// goes on. A 5xx other than 502, 503 and 504 keeps the entry, counts a server failure on it and stops the flush (the server is sick -
 /// hammering the rest of the queue would not help); at the limit of server failures the entry moves to the
 /// dead-letter list instead and the flush goes on, so one write the server keeps refusing cannot block the
-/// ones behind it. A 401, 408, 429, 503 or a transport failure keeps the entry, records the error and stops the
-/// flush too, but is never counted: the session needs renewing, the server is throttling or overloaded or the
-/// network is down, none of which says anything about the write. Dead entries are listed with
+/// ones behind it. A 401, 408, 429, 502, 503, 504 or a transport failure keeps the entry, records the error and stops the
+/// flush too, but is never counted: the session needs renewing, the server is throttling or overloaded, a gateway in
+/// front of it is failing or the network is down, none of which says anything about the write. Dead entries are listed with
 /// <see cref="ListDeadAsync" /> and deleted with <see cref="RemoveDeadAsync" />.
 /// </summary>
 public sealed class HttpOutbox
@@ -78,7 +78,11 @@ public sealed class HttpOutbox
     // which this project cannot reference. HttpOutboxIdempotencyTests runs the outbox against the real middleware.
     private const string OriginalStatusHeader = "Idempotency-Original-Status";
 
-    /// <summary>How many 5xx answers other than 503 an entry takes before it moves to the dead-letter list.</summary>
+    /// <summary>
+    /// How many server failures an entry takes before it moves to the dead-letter list. A server failure is a 5xx answer
+    /// other than 502, 503 and 504. The statuses that never count, because they say nothing about the write itself, are
+    /// 401, 408, 429, 502, 503 and 504, as is a transport failure.
+    /// </summary>
     public const int DefaultMaxServerFailures = 10;
 
     private const string KeyPrefix = "outbox:";
@@ -251,10 +255,11 @@ public sealed class HttpOutbox
 
                 var status = (int)response.StatusCode;
 
-                // Only a 5xx other than 503 says the server refused the write itself. A 401 (sign in again), a
-                // 408/429/503 (timeout, throttling, temporary overload) and a dropped connection say nothing about it,
+                // Only a 5xx other than 502/503/504 says the server refused the write itself. A 401 (sign in again), a
+                // 408/429/502/503/504 (timeout, throttling, failing gateway, temporary overload) and a dropped connection say nothing about it,
                 // so they never count toward the limit - a device offline for a week must not lose its writes.
-                var countsAsServerFailure = status >= 500 && status != (int)HttpStatusCode.ServiceUnavailable;
+                var countsAsServerFailure = status >= 500
+                                            && response.StatusCode is not (HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout);
                 var serverFailures = entry.ServerFailures + (countsAsServerFailure ? 1 : 0);
 
                 // 401 means the session is not enough - once the user signs in again the unchanged write can
@@ -278,7 +283,7 @@ public sealed class HttpOutbox
                     continue;
                 }
 
-                // Server-side trouble (5xx), a session to renew (401) or throttling/overload (408/429/503): worth retrying later,
+                // Server-side trouble (5xx), a session to renew (401) or throttling/overload/gateway failure (408/429/502/503/504): worth retrying later,
                 // not worth hammering now - stopping the flush here also spares a rate-limited server the rest of the queue.
                 var error = $"HTTP {status}";
 

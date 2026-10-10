@@ -264,11 +264,13 @@ public sealed class HttpOutboxTests
     [Theory]
     [InlineData(HttpStatusCode.RequestTimeout)]
     [InlineData(HttpStatusCode.TooManyRequests)]
+    [InlineData(HttpStatusCode.BadGateway)]
     [InlineData(HttpStatusCode.ServiceUnavailable)]
+    [InlineData(HttpStatusCode.GatewayTimeout)]
     public async Task TransientAnswer_KeepsTheEntryWithTheError_AndStopsTheFlush(HttpStatusCode status)
     {
-        // 408, 429 and 503 are timeouts, throttling and temporary overload: the unchanged write can land later, so it
-        // must not be dropped, and none of them counts as a server failure.
+        // 408, 429, 502, 503 and 504 are timeouts, throttling, a failing gateway and temporary overload: the unchanged
+        // write can land later, so it must not be dropped, and none of them counts as a server failure.
         FixedTime time = new(T0);
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
         await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
@@ -537,7 +539,7 @@ public sealed class HttpOutboxTests
 
         using ScriptedHandler handler = new();
         handler.EnqueueResponse(HttpStatusCode.InternalServerError);
-        handler.EnqueueResponse(HttpStatusCode.BadGateway);
+        handler.EnqueueResponse(HttpStatusCode.NotImplemented);
         using var http = Client(handler);
 
         var first = await outbox.FlushAsync(http);
@@ -557,8 +559,8 @@ public sealed class HttpOutboxTests
 
     [Theory]
     [InlineData(HttpStatusCode.InternalServerError)]
-    [InlineData(HttpStatusCode.BadGateway)]
-    [InlineData(HttpStatusCode.GatewayTimeout)]
+    [InlineData(HttpStatusCode.NotImplemented)]
+    [InlineData(HttpStatusCode.HttpVersionNotSupported)]
     public async Task ServerError_AtTheLimit_MovesTheEntryToTheDeadLetterList_AndTheFlushGoesOn(HttpStatusCode status)
     {
         FixedTime time = new(T0);
@@ -593,6 +595,37 @@ public sealed class HttpOutboxTests
         dead.StatusCode.ShouldBe((int)status);
         dead.ResponseBody.ShouldBe("boom again");
         dead.ServerFailures.ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadGateway)]
+    [InlineData(HttpStatusCode.GatewayTimeout)]
+    public async Task GatewayError_NeverCounts_SoAGatewayOutageCannotBuryAValidWrite(HttpStatusCode status)
+    {
+        // 502 and 504 say the proxy in front of the server failed, not that the server refused this write - like 503 they
+        // are retried forever and the entry stays at the head of the queue.
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxServerFailures: 2);
+        var entry = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+
+        for (var i = 0; i < 5; i++)
+            handler.EnqueueResponse(status);
+
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        for (var i = 0; i < 5; i++)
+            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+
+        var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
+        kept.Id.ShouldBe(entry.Id);
+        kept.Attempts.ShouldBe(5);
+        kept.ServerFailures.ShouldBe(0);
+        kept.LastError.ShouldBe($"HTTP {(int)status}");
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
     }
 
     [Fact]
@@ -785,11 +818,13 @@ public sealed class HttpOutboxTests
 
     [Theory]
     [InlineData(HttpStatusCode.Unauthorized)]
+    [InlineData(HttpStatusCode.BadGateway)]
     [InlineData(HttpStatusCode.ServiceUnavailable)]
+    [InlineData(HttpStatusCode.GatewayTimeout)]
     public async Task AnEntryAlreadyPastALoweredLimit_IsNotDeadLetteredByAnAnswerThatNeverCounts(HttpStatusCode status)
     {
         // Stored with 5 server failures, then the host restarts with a limit of 3: a 401 is still only a session to
-        // renew and a 503 only an overloaded server.
+        // renew and a 502, 503 or 504 only a failing gateway or an overloaded server.
         InMemoryKeyValueStore store = new();
         Guid id = new("44444444-4444-4444-4444-444444444444");
 

@@ -5,6 +5,7 @@ using FEx.MVVM.Abstractions.Interfaces;
 using NSubstitute;
 using Shouldly;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -201,7 +202,100 @@ public sealed class FtpDownloaderTests : IDisposable
         transport.Created.ShouldAllBe(r => r.Disposed);
     }
 
+    [Fact]
+    public async Task Restart_ParallelRecoveries_OnASmallPool_BothFinish()
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        var transport = new CappedTransport(3);
+        var ct = TestContext.Current.CancellationToken;
+
+        var a = FtpDownloader.RestartDownloadFromServerAsync(transport, new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries }, NewPath(), new("ftp://example.invalid/a.bin"), null, 0, "", "", ct);
+        var b = FtpDownloader.RestartDownloadFromServerAsync(transport, new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries }, NewPath(), new("ftp://example.invalid/b.bin"), null, 0, "", "", ct);
+
+        await Task.WhenAll(a, b).WaitAsync(TimeSpan.FromSeconds(10), ct);
+
+        // One download holds at most one connection while it recovers: the dead transfer is released before the probe opens.
+        transport.Peak.ShouldBeLessThanOrEqualTo(2);
+        transport.Live.ShouldBe(0);
+    }
+
     private sealed class AbortException : Exception;
+
+    /// <summary>
+    ///     Models the per-host client pool: every open response holds one of <paramref name="cap" /> slots until it is
+    ///     disposed. The first open per path is a transfer that dies with an abort once both downloads have one; later
+    ///     ones are the offset probe.
+    /// </summary>
+    private sealed class CappedTransport(int cap) : IFtpTransport
+    {
+        private readonly SemaphoreSlim _slots = new(cap);
+        private readonly ConcurrentDictionary<string, int> _opens = new();
+        private readonly object _gate = new();
+        private readonly TaskCompletionSource _bothTransfersOpen = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _transfers;
+
+        public int Peak { get; private set; }
+        public int Live { get; private set; }
+
+        public async Task<long> GetSizeAsync(Uri serverUri, string username, string password, CancellationToken cancellationToken)
+        {
+            await _slots.WaitAsync(cancellationToken);
+            _slots.Release();
+
+            return 1_000_000;
+        }
+
+        public async Task<IFtpResponse> OpenAsync(Uri serverUri, string username, string password, long offset, CancellationToken cancellationToken)
+        {
+            await _slots.WaitAsync(cancellationToken);
+
+            lock (_gate)
+            {
+                Live++;
+                Peak = Math.Max(Peak, Live);
+            }
+
+            var n = _opens.AddOrUpdate(serverUri.AbsolutePath, 1, (_, v) => v + 1);
+
+            // Both downloads hold their transfer before either fails, so their recoveries really overlap.
+            if (n == 1)
+            {
+                if (Interlocked.Increment(ref _transfers) == 2)
+                    _bothTransfersOpen.TrySetResult();
+
+                await _bothTransfersOpen.Task.WaitAsync(cancellationToken);
+            }
+
+            Stream stream = n == 1 ? new ScriptedStream(null, new AbortException()) : new ScriptedStream(n == 2 ? [1] : []);
+
+            return new SlotResponse(stream, () =>
+            {
+                lock (_gate)
+                    Live--;
+
+                _slots.Release();
+            });
+        }
+
+        public bool IsLocalProcessingAbort(Exception exception) => exception is AbortException;
+    }
+
+    private sealed class SlotResponse(Stream stream, Action release) : IFtpResponse
+    {
+        private int _disposed;
+
+        public string StatusDescription => "226 ok";
+
+        public Stream? GetResponseStream() => stream;
+
+        public ValueTask DisposeAsync()
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) == 0)
+                release();
+
+            return default;
+        }
+    }
 
     private sealed class FakeTransport : IFtpTransport
     {
@@ -240,7 +334,12 @@ public sealed class FtpDownloaderTests : IDisposable
 
         public Stream? GetResponseStream() => stream;
 
-        public void Dispose() => Disposed = true;
+        public ValueTask DisposeAsync()
+        {
+            Disposed = true;
+
+            return default;
+        }
     }
 
     /// <summary>Yields <paramref name="data" /> once, then EOF, or throws <paramref name="error" /> when no data is left.</summary>

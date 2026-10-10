@@ -5,6 +5,7 @@ using Shouldly;
 using System;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -20,6 +21,25 @@ public sealed class FtpClientFactoryTests : IDisposable
 
     private async Task<FtpClientFactory> Factory(int maxParallel) =>
         await FtpClientFactory.GetInstanceAsync(_server.Uri.AbsoluteUri, maxParallel);
+
+    private const string ProxyHost = "127.0.0.1";
+    private static readonly NetworkCredential ProxyCredentials = new("proxy-user", "proxy-pass");
+
+    /// <summary>
+    ///     The proxy profile is not readable from the client, so it is observed on the wire: the client must reach the proxy
+    ///     host on the proxy port, ask it for the FTP host and port, and send the proxy credentials.
+    /// </summary>
+    private async Task AssertConnectsThrough(AsyncFtpClient client, FakeProxyServer proxy)
+    {
+        await Should.ThrowAsync<Exception>(() => client.Connect(TestContext.Current.CancellationToken));
+
+        var request = await proxy.FirstRequest.WaitAsync(Long, TestContext.Current.CancellationToken);
+
+        request.ShouldContain($"CONNECT {_server.Uri.Host}:{_server.Port} HTTP/1.1");
+        request.ShouldContain($"Proxy-Authorization: Basic {Convert.ToBase64String(Encoding.UTF8.GetBytes("proxy-user:proxy-pass"))}");
+    }
+
+    private Uri UriWithPortAndPath() => new UriBuilder(_server.Uri) { Port = _server.Port, Path = "/some/path" }.Uri;
 
 #pragma warning disable VSTHRD003 // the task is started by the caller on purpose, to observe whether it completes
     private static async Task<bool> Completes(Task task, TimeSpan within) =>
@@ -62,6 +82,69 @@ public sealed class FtpClientFactoryTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateAsync_HostUriWithPortAndPath_SetsTheBareHostAndTheUriPort()
+    {
+        var factory = await FtpClientFactory.GetInstanceAsync(UriWithPortAndPath().AbsoluteUri, 2);
+
+        var client = await factory.CreateAsync("u", "p", false);
+
+        client.Host.ShouldBe(_server.Uri.Host);
+        client.Port.ShouldBe(_server.Port);
+        await client.Connect(TestContext.Current.CancellationToken);
+        client.IsConnected.ShouldBeTrue();
+        await factory.ReleaseClientAsync(client);
+    }
+
+    [Fact]
+    public async Task CreateAsync_HostUriWithPort_ExplicitPortArgumentWins()
+    {
+        var factory = await FtpClientFactory.GetInstanceAsync(UriWithPortAndPath().AbsoluteUri, 2);
+
+        var client = await factory.CreateAsync("u", "p", false, 2121);
+
+        client.Port.ShouldBe(2121);
+        await factory.ReleaseClientAsync(client);
+    }
+
+    [Fact]
+    public async Task CreateAsync_HostUriWithDefaultPort_KeepsTheFtpDefaultPort()
+    {
+        var factory = await FtpClientFactory.GetInstanceAsync($"ftp://{_server.Uri.Host}:21/dir", 2);
+
+        var client = await factory.CreateAsync(null, null, false);
+
+        client.Host.ShouldBe(_server.Uri.Host);
+        client.Port.ShouldBe(21);
+        await factory.ReleaseClientAsync(client);
+    }
+
+    [Fact]
+    public async Task CreateAsync_Ipv6HostUri_SetsTheAddressWithoutBrackets()
+    {
+        var factory = await FtpClientFactory.GetInstanceAsync("ftp://[::1]:2121/some/path", 2);
+
+        var client = await factory.CreateAsync(null, null, false);
+
+        client.Host.ShouldBe("::1");
+        client.Port.ShouldBe(2121);
+        await factory.ReleaseClientAsync(client);
+    }
+
+    [Fact]
+    public async Task ReleaseAsync_ClientNoFactoryCreated_IsDisposedWithoutTouchingAnyPool()
+    {
+        var factory = await Factory(1);
+        var held = await factory.CreateAsync(null, null, false);
+        var foreign = new AsyncFtpClient(factory.HostUri.DnsSafeHost);
+
+        await FtpCommon.ReleaseAsync(foreign);
+
+        foreign.IsDisposed.ShouldBeTrue();
+        (await Completes(factory.CreateAsync(null, null, false), Short)).ShouldBeFalse("a foreign release must not free the slot of an unrelated client");
+        await factory.ReleaseClientAsync(held);
+    }
+
+    [Fact]
     public async Task CreateAsync_NoCredentialsAndNoPort_LeavesTheClientDefaults()
     {
         var factory = await Factory(2);
@@ -96,41 +179,47 @@ public sealed class FtpClientFactoryTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateAsync_UseProxyWithProxyHost_ReturnsAnHttp11ProxyClient()
+    public async Task CreateAsync_UseProxyWithProxyHost_ConnectsThroughTheFactoryProxySettings()
     {
+        using var proxy = new FakeProxyServer();
         var factory = await Factory(2);
-        factory.ProxyHost = "proxy.local";
-        factory.ProxyPort = 3128;
-        factory.ProxyCredentials = new NetworkCredential("p", "q");
+        factory.ProxyHost = ProxyHost;
+        factory.ProxyPort = proxy.Port;
+        factory.ProxyCredentials = ProxyCredentials;
 
-        var client = await factory.CreateAsync(new NetworkCredential("bob", "pw"), true);
+        var client = await factory.CreateAsync(new NetworkCredential("bob", "pw"), true, _server.Port);
 
         client.ShouldBeOfType<AsyncFtpClientHttp11Proxy>();
+        await AssertConnectsThrough(client, proxy);
         await factory.ReleaseClientAsync(client);
     }
 
     [Fact]
-    public async Task CreateAsync_ProxyProfile_ReturnsAnHttp11ProxyClientForTheProfile()
+    public async Task CreateAsync_ProxyProfile_ConnectsThroughTheProfile()
     {
+        using var proxy = new FakeProxyServer();
         var factory = await Factory(2);
-        var profile = new FtpProxyProfile { ProxyHost = "proxy.local", ProxyPort = 3128 };
+        var profile = new FtpProxyProfile { ProxyHost = ProxyHost, ProxyPort = proxy.Port, ProxyCredentials = ProxyCredentials };
 
-        var client = await factory.CreateAsync("bob", "pw", profile);
+        var client = await factory.CreateAsync("bob", "pw", profile, _server.Port);
 
         client.ShouldBeOfType<AsyncFtpClientHttp11Proxy>();
         client.Credentials.UserName.ShouldBe("bob");
+        await AssertConnectsThrough(client, proxy);
         await factory.ReleaseClientAsync(client);
     }
 
     [Fact]
-    public async Task CreateAsync_NetworkCredentialAndProxyProfile_ReturnsAnHttp11ProxyClient()
+    public async Task CreateAsync_NetworkCredentialAndProxyProfile_ConnectsThroughTheProfile()
     {
+        using var proxy = new FakeProxyServer();
         var factory = await Factory(2);
-        var profile = new FtpProxyProfile { ProxyHost = "proxy.local", ProxyPort = 3128 };
+        var profile = new FtpProxyProfile { ProxyHost = ProxyHost, ProxyPort = proxy.Port, ProxyCredentials = ProxyCredentials };
 
-        var client = await factory.CreateAsync(new NetworkCredential("bob", "pw"), profile);
+        var client = await factory.CreateAsync(new NetworkCredential("bob", "pw"), profile, _server.Port);
 
         client.ShouldBeOfType<AsyncFtpClientHttp11Proxy>();
+        await AssertConnectsThrough(client, proxy);
         await factory.ReleaseClientAsync(client);
     }
 

@@ -23,6 +23,7 @@ internal sealed class FakeFtpServer : IDisposable
     private readonly TcpListener _listener;
     private readonly CancellationTokenSource _cts = new();
     private readonly ConcurrentQueue<string> _commands = new();
+    private long _restart;
     private int _open;
     private int _maxOpen;
 
@@ -39,6 +40,12 @@ internal sealed class FakeFtpServer : IDisposable
     public ConcurrentDictionary<string, byte[]> Files { get; } = new();
 
     public string? Password { get; set; }
+
+    /// <summary>When set, a download sends only this many bytes and then answers 451 instead of 226, like a server giving up on a read.</summary>
+    public int? AbortRetrAfterBytes { get; set; }
+
+    /// <summary>When set, FEAT advertises nothing (SIZE included), like a minimal server that still answers SIZE.</summary>
+    public bool NoFeat { get; set; }
 
     public IReadOnlyCollection<string> Commands => [.. _commands];
 
@@ -118,7 +125,7 @@ internal sealed class FakeFtpServer : IDisposable
                         await writer.WriteLineAsync(Password == null || arg == Password ? $"230 welcome {user}" : "530 login incorrect");
                         break;
                     case "FEAT":
-                        await writer.WriteLineAsync("211-Features:\r\n SIZE\r\n MDTM\r\n211 End");
+                        await writer.WriteLineAsync(NoFeat ? "211 No features" : "211-Features:\r\n SIZE\r\n MDTM\r\n REST STREAM\r\n211 End");
                         break;
                     case "PWD":
                         await writer.WriteLineAsync("257 \"/\" is the current directory");
@@ -127,13 +134,17 @@ internal sealed class FakeFtpServer : IDisposable
                         await writer.WriteLineAsync("200 ok");
                         break;
                     case "SIZE":
-                        await writer.WriteLineAsync(Files.TryGetValue(arg, out var sized) ? $"213 {sized.Length}" : "550 not found");
+                        await writer.WriteLineAsync(Files.TryGetValue(Resolve(arg), out var sized) ? $"213 {sized.Length}" : "550 not found");
                         break;
                     case "MDTM":
-                        await writer.WriteLineAsync(Files.ContainsKey(arg) ? "213 20260101120000" : "550 not found");
+                        await writer.WriteLineAsync(Files.ContainsKey(Resolve(arg)) ? "213 20260101120000" : "550 not found");
                         break;
                     case "DELE":
                         await writer.WriteLineAsync(Files.TryRemove(arg, out var removed) ? "250 deleted" : "550 not found");
+                        break;
+                    case "REST":
+                        _restart = long.Parse(arg);
+                        await writer.WriteLineAsync($"350 restarting at {_restart}");
                         break;
                     case "PASV":
                         data?.Stop();
@@ -146,10 +157,18 @@ internal sealed class FakeFtpServer : IDisposable
                         await Transfer(writer, data, async d => await d.WriteAsync(Listing(arg)));
                         break;
                     case "RETR":
-                        if (Files.TryGetValue(arg, out var content))
-                            await Transfer(writer, data, async d => await d.WriteAsync(content));
+                        if (Files.TryGetValue(Resolve(arg), out var content))
+                        {
+                            var rest = content[(int)_restart..];
+                            _restart = 0;
+                            var aborted = AbortRetrAfterBytes is not null;
+                            var sent = aborted ? rest[..Math.Min(AbortRetrAfterBytes!.Value, rest.Length)] : rest;
+                            await Transfer(writer, data, async d => await d.WriteAsync(sent), false, aborted ? "451 local error in processing" : "226 transfer complete");
+                        }
                         else
+                        {
                             await writer.WriteLineAsync("550 not found");
+                        }
 
                         break;
                     case "STOR":
@@ -182,7 +201,7 @@ internal sealed class FakeFtpServer : IDisposable
         }
     }
 
-    private static async Task Transfer(StreamWriter control, TcpListener? data, Func<Stream, Task> body, bool upload = false)
+    private static async Task Transfer(StreamWriter control, TcpListener? data, Func<Stream, Task> body, bool upload = false, string done = "226 transfer complete")
     {
         if (data == null)
         {
@@ -200,8 +219,11 @@ internal sealed class FakeFtpServer : IDisposable
             await stream.FlushAsync();
 
         conn.Close();
-        await control.WriteLineAsync("226 transfer complete");
+        await control.WriteLineAsync(done);
     }
+
+    /// <summary>A relative path is relative to the login directory, which is the root here.</summary>
+    private static string Resolve(string path) => path.StartsWith('/') ? path : "/" + path;
 
     private byte[] Listing(string dir)
     {

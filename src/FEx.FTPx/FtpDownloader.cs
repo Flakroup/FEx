@@ -1,6 +1,5 @@
 using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Extensions;
-using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Agnostics.Abstractions.Utilities;
 using FEx.Core.Abstractions.Extensions;
 using FEx.MVVM;
@@ -13,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -180,7 +178,7 @@ public static class FtpDownloader
                     return true;
             }
 
-            using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
+            await using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
 
             using var stream = response.GetResponseStream();
             viewModel?.PrgSetMax(fileSize - offset);
@@ -248,6 +246,10 @@ public static class FtpDownloader
                                 if (state.RetryCount >= FtpDownloadState.MaxReadRetries)
                                 {
                                     var failedRetryCount = state.RetryCount;
+
+                                    // The transfer is dead and the probe below opens its own connections: hand this one back first,
+                                    // or a few parallel recoveries on one host wait for each other's slots forever.
+                                    await response.DisposeAsync();
 
                                     var detectedOffset = await DetectOffsetAsync(transport,
                                         serverUri,
@@ -338,19 +340,9 @@ public static class FtpDownloader
         {
             if (serverUri.Scheme == Uri.UriSchemeHttp
                 || serverUri.Scheme == Uri.UriSchemeHttps)
-            {
                 bytesTotal = Math.Max(await serverUri.GetHttpFileSizeAsync(client: client, cancellationToken: cancellationToken), 0);
-            }
             else if (serverUri.Scheme == Uri.UriSchemeFtp)
-            {
-                var request = (FtpWebRequest)serverUri.GetWebRequest();
-                request.Proxy = null;
-                request.ApplyCredentials(username, password);
-                request.Method = WebRequestMethods.Ftp.GetFileSize;
-
-                using var response = (FtpWebResponse)await request.GetResponseAsync();
-                bytesTotal = response.ContentLength;
-            }
+                bytesTotal = await FtpTransport.Instance.GetSizeAsync(serverUri, username, password, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -360,6 +352,22 @@ public static class FtpDownloader
         return unit == LengthType.Bytes
             ? bytesTotal
             : FileLengthConverter.ConvertFileLength(bytesTotal, LengthType.Bytes, unit).length;
+    }
+
+    /// <summary>Reads one byte at <paramref name="offset" /> on a connection that is released before returning; <see langword="null" /> when there is no stream.</summary>
+    private static async Task<int?> ProbeAsync(IFtpTransport transport,
+                                               Uri serverUri,
+                                               string username,
+                                               string password,
+                                               long offset,
+                                               CancellationToken cancellationToken)
+    {
+        await using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
+        using var stream = response.GetResponseStream();
+
+        return stream is null
+            ? null
+            : await stream.ReadAsync(new byte[1], 0, 1, cancellationToken);
     }
 
     private static async Task<long> DetectOffsetAsync(IFtpTransport transport,
@@ -381,32 +389,23 @@ public static class FtpDownloader
             while (readCount <= 0
                    && newOffset < fileSize)
             {
-                using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
-
                 try
                 {
-                    using var stream = response.GetResponseStream();
-
-                    if (stream is not null)
+                    // One connection at a time: each probe is closed before the next one opens.
+                    if (await ProbeAsync(transport, serverUri, username, password, offset, cancellationToken) is { } first)
                     {
-                        var buffer = new byte[1];
-                        readCount = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+                        readCount = first;
                         newOffset--;
 
                         while (readCount > 0)
                         {
-                            using var innerResponse = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
+                            if (await ProbeAsync(transport, serverUri, username, password, offset, cancellationToken) is not { } next)
+                                break;
 
-                            using var innerStream = innerResponse.GetResponseStream();
-
-                            if (innerStream is not null)
-                            {
-                                buffer = new byte[1];
-                                readCount = await innerStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
-                                viewModel?.PrgSet(newOffset - offset);
-                                viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
-                                newOffset--;
-                            }
+                            readCount = next;
+                            viewModel?.PrgSet(newOffset - offset);
+                            viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
+                            newOffset--;
                         }
                     }
                 }

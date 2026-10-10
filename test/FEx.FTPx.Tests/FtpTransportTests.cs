@@ -4,6 +4,7 @@ using FluentFTP.Exceptions;
 using Shouldly;
 using System;
 using System.IO;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -121,6 +122,18 @@ public sealed class FtpTransportTests : IDisposable
 
         (await ReadAll(response)).ShouldBe(Payload);
         _server.Commands.ShouldContain("RETR pub/zażółć.bin");
+    }
+
+    [Fact]
+    public async Task Open_PasvReplyNamesAnotherHost_TheDataConnectionStillGoesToTheControlHost()
+    {
+        // Nothing listens on this address; AutoPassive would connect there (only 10/8, 172.16/12, 192.168/16, 127.0.0.1 and 0.0.0.0 are filtered).
+        _server.PasvAddress = IPAddress.Parse("127.0.0.2");
+
+        await using var response = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+
+        (await ReadAll(response)).ShouldBe(Payload);
+        _server.Commands.ShouldContain("PASV");
     }
 
     [Fact]

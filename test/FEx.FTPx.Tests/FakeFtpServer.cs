@@ -49,6 +49,9 @@ internal sealed class FakeFtpServer : IDisposable
     /// <summary>The reply to OPTS (the client switching the server to UTF-8); a refusal such as <c>501 ...</c> must not fail a transfer.</summary>
     public string OptsReply { get; set; } = "200 ok";
 
+    /// <summary>When set, the PASV reply names this address instead of the one the data listener is on, like a hostile or misconfigured server.</summary>
+    public IPAddress? PasvAddress { get; set; }
+
     /// <summary>When set, FEAT advertises nothing (SIZE included), like a minimal server that still answers SIZE.</summary>
     public bool NoFeat { get; set; }
 
@@ -166,7 +169,7 @@ internal sealed class FakeFtpServer : IDisposable
                         data = new(_address, 0);
                         data.Start();
                         var p = ((IPEndPoint)data.LocalEndpoint).Port;
-                        await writer.WriteLineAsync($"227 Entering Passive Mode ({_address.ToString().Replace('.', ',')},{p / 256},{p % 256})");
+                        await writer.WriteLineAsync($"227 Entering Passive Mode ({(PasvAddress ?? _address).ToString().Replace('.', ',')},{p / 256},{p % 256})");
                         break;
                     case "LIST" or "NLST":
                         await Transfer(writer, data, async d => await d.WriteAsync(Listing(arg)));

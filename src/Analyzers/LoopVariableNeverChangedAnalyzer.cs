@@ -121,9 +121,9 @@ public sealed class LoopVariableNeverChangedAnalyzer : DiagnosticAnalyzer
 
         return root.DescendantsAndSelf().Any(operation =>
             IsAlias(operation, variable)
-            || (IsWriteTo(operation, variable)
+            || IsWriteTo(operation, variable)
                 && GetEnclosingFunction(operation) is { } function
-                && !SymbolEqualityComparer.Default.Equals(function, variable.ContainingSymbol)));
+                && !SymbolEqualityComparer.Default.Equals(function, variable.ContainingSymbol));
     }
 
     // Anything that takes the variable's address leaves a way to write it later: `&x`, `ref x` as a local or a

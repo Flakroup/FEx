@@ -61,8 +61,6 @@ public sealed class BaseMemberHasParamsAnalyzer : DiagnosticAnalyzer
         if (baseParameters[last].IsParams
             && parameter.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(context.CancellationToken) is ParameterSyntax syntax
             && !syntax.Modifiers.Any(SyntaxKind.ParamsKeyword))
-        {
             context.ReportDiagnostic(Diagnostic.Create(Rule, parameter.Locations[0], member.ToDisplayString(OverrideFormat), baseMember));
-        }
     }
 }

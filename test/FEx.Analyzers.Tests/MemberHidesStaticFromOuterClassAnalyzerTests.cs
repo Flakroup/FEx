@@ -102,4 +102,54 @@ public class MemberHidesStaticFromOuterClassAnalyzerTests
                 }
             }
             """);
+
+    // The tests below pin the verdicts of ReSharper 2026.2.3.1 (MemberHidesStaticFromOuterClass at ERROR), probed
+    // one pairing per class.
+
+    [Fact]
+    public Task Reports_every_pairing_ReSharper_reports() =>
+        VerifyAsync("""
+            using System;
+            using System.Collections.Generic;
+            class Probes
+            {
+                class SameSignature { public static int Do(int a) => a; public class Inner { public int {|FEX0004:Do|}(int a) => 1; } }
+                class OtherParameterName { public static int Do(int a) => a; public class Inner { public int {|FEX0004:Do|}(int b) => 1; } }
+                class OtherReturnType { public static int Do(int a) => a; public class Inner { public string {|FEX0004:Do|}(int a) => ""; } }
+                class VoidReturn { public static int Do(int a) => a; public class Inner { public void {|FEX0004:Do|}(int a) { } } }
+                class BothStatic { public static int Do(int a) => a; public class Inner { public static int {|FEX0004:Do|}(int a) => 1; } }
+                class BothGeneric { public static int Do<T>(T a) => 1; public class Inner { public int {|FEX0004:Do|}<U>(U a) => 1; } }
+                class GenericOverConstructed { public static int Do<T>(List<T> a) => 1; public class Inner { public int {|FEX0004:Do|}<U>(List<U> a) => 1; } }
+                class PropertyVsMethod { public static int Name(int a) => a; public class Inner { public int {|FEX0004:Name|} { get; set; } } }
+                class FieldVsMethod { public static int Value() => 1; public class Inner { public int {|FEX0004:Value|}; } }
+                class MethodVsField { public static int Value; public class Inner { public void {|FEX0004:Value|}() { } } }
+                class StaticMethodVsField { public static int Value; public class Inner { public static int {|FEX0004:Value|}() => 1; } }
+                class FieldVsProperty { public static int Value { get; set; } public class Inner { public int {|FEX0004:Value|}; } }
+                class FieldVsEvent { public static event Action? Ev; public class Inner { public int {|FEX0004:Ev|}; } }
+                class MethodVsDelegateField { public static readonly Func<int, int> Do = a => a; public class Inner { public int {|FEX0004:Do|}(int a) => 1; } }
+                class TypeVsField { public static int Value; public class Inner { public class {|FEX0004:Value|} { } } }
+                class ConstOuter { public const int Value = 1; public class Inner { public int {|FEX0004:Value|}; } }
+                class PrivateOuter { private static int Value; public class Inner { public int {|FEX0004:Value|}; } }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_two_methods_whose_signatures_differ() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            class Probes
+            {
+                class MoreParameters { public static int Do(int a) => a; public class Inner { public void Do(int a, int b) { } } }
+                class FewerParameters { public static int Do(int a, int b) => a; public class Inner { public void Do(string s) { } } }
+                class OtherType { public static int Do(int a) => a; public class Inner { public int Do(string s) => 1; } }
+                class WiderType { public static int Do(int a) => a; public class Inner { public int Do(long a) => 1; } }
+                class ByRef { public static int Do(int a) => a; public class Inner { public void Do(ref int a) { } } }
+                class BaseOverDerived { public static int Do(object a) => 1; public class Inner { public int Do(string a) => 1; } }
+                class DerivedOverBase { public static int Do(string a) => 1; public class Inner { public int Do(object a) => 1; } }
+                class OptionalParameter { public static int Do(int a, int b = 0) => a; public class Inner { public int Do(int a) => 1; } }
+                class GenericOuter { public static int Do<T>(T a) => 1; public class Inner { public int Do(int a) => 1; } }
+                class GenericNested { public static int Do(int a) => a; public class Inner { public void Do<T>(T a) { } } }
+                class OtherTypeArguments { public static int Do<T>(List<T> a) => 1; public class Inner { public int Do<U>(List<int> a) => 1; } }
+            }
+            """);
 }

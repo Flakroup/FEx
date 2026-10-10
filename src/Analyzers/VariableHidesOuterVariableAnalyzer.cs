@@ -48,11 +48,16 @@ public sealed class VariableHidesOuterVariableAnalyzer : DiagnosticAnalyzer
 
             var outer = context.SemanticModel
                 .LookupSymbols(function.SpanStart, name: name)
-                .FirstOrDefault(symbol => symbol is ILocalSymbol or IParameterSymbol && symbol.Locations[0].SourceSpan.End <= function.SpanStart);
-            if (outer is not null && !IsOutOfReach(function, outer))
+                .FirstOrDefault(symbol => IsCapturable(symbol) && symbol.Locations[0].SourceSpan.End <= function.SpanStart);
+            if (outer is not null && !IsBeingInitialized(function, outer) && !IsOutOfReach(function, outer))
                 context.ReportDiagnostic(Diagnostic.Create(Rule, identifier.GetLocation(), name));
         }
     }
+
+    // ReSharper does not count a variable no lambda could capture as an outer one: a ref, in or out parameter, a ref
+    // local, or a local of a ref struct type (a ref struct parameter is still counted).
+    private static bool IsCapturable(ISymbol symbol) =>
+        symbol is ILocalSymbol { RefKind: RefKind.None, Type.IsRefLikeType: false } or IParameterSymbol { RefKind: RefKind.None };
 
     private static bool IsFunction(SyntaxNode node) => node is AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax;
 
@@ -66,6 +71,20 @@ public sealed class VariableHidesOuterVariableAnalyzer : DiagnosticAnalyzer
             CatchDeclarationSyntax catchDeclaration => catchDeclaration.Identifier,
             _ => default,
         };
+
+    // A function inside the initializer of the declaration that declares the variable (`var x = F(() => { var x = 1; })`,
+    // `var (a, b) = F(a => ...)`) is not hiding anything for ReSharper; a sibling declarator of the same statement still is.
+    private static bool IsBeingInitialized(SyntaxNode function, ISymbol outer)
+    {
+        var declaration = outer.DeclaringSyntaxReferences[0].GetSyntax();
+        return declaration switch
+        {
+            VariableDeclaratorSyntax declarator => declarator.Initializer?.Span.Contains(function.Span) == true,
+            SingleVariableDesignationSyntax designation => designation.Ancestors().OfType<DeclarationExpressionSyntax>().FirstOrDefault()
+                is { Parent: AssignmentExpressionSyntax assignment } && assignment.Right.Span.Contains(function.Span),
+            _ => false,
+        };
+    }
 
     // A static lambda or local function cannot see the variable, so reusing its name is harmless. The walk stops at the
     // function that declares the variable; static functions further out do not matter.

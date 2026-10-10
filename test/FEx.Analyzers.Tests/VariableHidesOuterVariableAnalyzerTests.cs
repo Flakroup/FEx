@@ -166,4 +166,71 @@ public class VariableHidesOuterVariableAnalyzerTests
                 }
             }
             """);
+
+    // The tests below pin the verdicts of ReSharper 2026.2.3.1 (VariableHidesOuterVariable at ERROR), probed one
+    // shape per method.
+
+    [Fact]
+    public Task Reports_every_shape_ReSharper_reports() =>
+        VerifyAsync("""
+            using System;
+            class Probes
+            {
+                static T F<T>(Func<T> f) => f();
+
+                void LambdaParameterVsEarlierLocal() { int x = 1; Func<int, int> f = {|FEX0003:x|} => x; }
+                void LocalFunctionParameterVsEarlierLocal() { int x = 1; int Local(int {|FEX0003:x|}) => x; }
+                void LambdaLocalVsEarlierLocal() { int x = 1; Func<int> f = () => { int {|FEX0003:x|} = 2; return x; }; }
+                void NestedLambdaParameters() { Func<int, Func<int, int>> g = y => {|FEX0003:y|} => y; }
+                void LambdaParameterVsMethodParameter(int p) { Func<int, int> f = {|FEX0003:p|} => p; }
+                void AnonymousMethodLocal() { int x = 1; Action a = delegate { int {|FEX0003:x|} = 2; }; }
+                void ForeachVariableInLambda() { int x = 1; Action a = () => { foreach (var {|FEX0003:x|} in new[] { 1 }) { } }; }
+                void SiblingDeclaratorOfTheSameStatement() { int a = 1, b = F(() => { var {|FEX0003:a|} = 2; return a; }); }
+                void EarlierStatementOfAnInitializedVariable() { int x = 1; var y = F(() => { var {|FEX0003:x|} = 2; return x; }); }
+                void ForVariable() { for (int i = 0; i < 1; i++) { Func<int> f = () => { int {|FEX0003:i|} = 0; return i; }; } }
+                void PatternVariable(object o) { if (o is int n) { Func<int, int> f = {|FEX0003:n|} => n; } }
+                void CatchVariable() { try { } catch (Exception ex) { Func<int, int> f = {|FEX0003:ex|} => ex; } }
+                void ForeachVariable() { foreach (var item in new[] { 1 }) { Func<int, int> f = {|FEX0003:item|} => item; } }
+                void EnclosingLambdaLocal() { Action a = () => { int x = 1; Func<int, int> f = {|FEX0003:x|} => x; }; }
+                void LambdaInsideLambdaOfOuterLocal() { int x = 1; Action a = () => { Func<int, int> f = {|FEX0003:x|} => x; }; }
+                void OutVariableOfAnEarlierStatement() { int.TryParse("1", out var n); Func<int, int> f = {|FEX0003:n|} => n; }
+                void OutVariableOfTheSameInitializer() { var ok = int.TryParse("1", out var n) && F(() => { var {|FEX0003:n|} = 2; return n; }) > 0; }
+                void ParameterVsLambdaLocal(int r) { var i = F(() => { int {|FEX0003:r|} = 1; return r; }); }
+                void RefStructParameter(Span<int> s) { Func<int, int> g = {|FEX0003:s|} => s; }
+                void DeconstructedNameOfAnEarlierStatement() { var (a, b) = F(() => (1, 2)); Func<int, int> f = {|FEX0003:a|} => a; }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_every_shape_ReSharper_ignores() =>
+        VerifyAsync("""
+            using System;
+            class Probes
+            {
+                static T F<T>(Func<T> f) => f();
+                static T G<T>(Func<int, T> f) => f(0);
+
+                int fld;
+
+                void OutParameter(out int r) { r = 0; var i = F(() => { int r = 1; return r; }); }
+                void RefParameter(ref int r) { var i = F(() => { int r = 1; return r; }); }
+                void InParameter(in int r) { var i = F(() => { int r = 1; return r; }); }
+                void LocalFunctionParameterVsOutParameter(out int r) { r = 0; int Local(int r) => r; }
+                void RefLocal(int p) { ref int rl = ref p; var i = F(() => { int rl = 1; return rl; }); }
+                void RefReadonlyLocal(int p) { ref readonly int rl = ref p; Func<int, int> g = rl => rl; }
+                void RefStructLocal() { Span<int> s = default; Func<int, int> g = s => s; }
+                void LocalOfADeconstructionInItsOwnInitializer() { var (a, b) = F(() => { var b = 1; return (1, b); }); }
+                void FirstNameOfADeconstructionInItsOwnInitializer() { var (a, b) = F(() => { var a = 1; return (a, 1); }); }
+                void ParameterNamedLikeADeconstructedName() { var (a, b) = G(a => (1, 2)); }
+                void LambdaDeeperInsideItsOwnDeconstruction() { var (a, b) = F(() => { Func<int, int> f = b => b; return (1, 2); }); }
+                void LocalOfADeclaratorInItsOwnInitializer() { var x = F(() => { var x = 1; return x; }); }
+                void LocalFunctionParameterInItsOwnInitializer() { var x = F(() => { int Inner(int x) => x; return Inner(1); }); }
+                void NestedLambdaInItsOwnInitializer() { var x = F(() => F(() => { var x = 1; return x; })); }
+                void LocalOfALaterDeclarator() { int a = F(() => { var b = 1; return b; }), b = 2; }
+                void LocalDeclaredAfterTheLambda() { Func<int, int> f = x => x; int x = 1; }
+                void LocalOfASiblingScope() { { int x = 1; } Func<int, int> f = x => x; }
+                void StaticLambda() { int x = 1; Func<int, int> f = static x => x; }
+                void Field() { Func<int, int> f = fld => fld; }
+            }
+            """);
 }

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -38,7 +39,7 @@ public sealed class MemberHidesStaticFromOuterClassAnalyzer : DiagnosticAnalyzer
         {
             foreach (var candidate in outer.GetMembers(member.Name))
             {
-                if (!IsStaticMember(candidate))
+                if (!IsStaticMember(candidate) || !Clashes(member, candidate))
                     continue;
 
                 context.ReportDiagnostic(Diagnostic.Create(Rule, member.Locations[0], member, candidate));
@@ -55,6 +56,23 @@ public sealed class MemberHidesStaticFromOuterClassAnalyzer : DiagnosticAnalyzer
         && member.Locations[0].IsInSource
         && member is not IMethodSymbol { MethodKind: not MethodKind.Ordinary }
         && member is not IPropertySymbol { IsIndexer: true };
+
+    // ReSharper reports every kind pairing by name, but two methods only clash when a call written for the outer one
+    // would bind to the nested one: the same signature, return type aside.
+    private static bool Clashes(ISymbol member, ISymbol candidate) =>
+        member is not IMethodSymbol nested || candidate is not IMethodSymbol outer || HaveSameSignature(nested, outer);
+
+    private static bool HaveSameSignature(IMethodSymbol nested, IMethodSymbol outer)
+    {
+        if (nested.TypeParameters.Length != outer.TypeParameters.Length || nested.Parameters.Length != outer.Parameters.Length)
+            return false;
+
+        var comparable = outer.IsGenericMethod ? outer.Construct(nested.TypeParameters.Cast<ITypeSymbol>().ToArray()) : outer;
+        return !nested.Parameters
+            .Where((parameter, index) => parameter.RefKind != comparable.Parameters[index].RefKind
+                                         || !SymbolEqualityComparer.Default.Equals(parameter.Type, comparable.Parameters[index].Type))
+            .Any();
+    }
 
     private static bool IsStaticMember(ISymbol candidate) =>
         candidate is { IsStatic: true, IsImplicitlyDeclared: false }

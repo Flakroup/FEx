@@ -163,7 +163,9 @@ internal sealed class FakeFtpServer : IDisposable
                             await Transfer(writer, data, async d => await d.WriteAsync(sent), false, aborted ? "451 local error in processing" : "226 transfer complete");
                         }
                         else
+                        {
                             await writer.WriteLineAsync("550 not found");
+                        }
 
                         break;
                     case "STOR":

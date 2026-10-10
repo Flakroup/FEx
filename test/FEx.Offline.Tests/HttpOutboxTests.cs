@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -830,6 +832,41 @@ public sealed class HttpOutboxTests
     }
 
     [Fact]
+    public async Task ConsumerJsonOptionsWithoutDeadOutboxEntry_StillDeadLetterTheEntry_AndDoNotBlockTheQueue()
+    {
+        // A source-generated resolver that lists OutboxEntry only: serializing DeadOutboxEntry through it throws
+        // NotSupportedException, which used to escape the flush before the live entry was removed - on every flush.
+        InMemoryKeyValueStore store = new();
+        FixedTime time = new(T0);
+        JsonSerializerOptions consumerOptions = new()
+        {
+            TypeInfoResolver = OutboxEntryOnlyJsonContext.Default
+        };
+
+        HttpOutbox outbox = new(store, time, consumerOptions);
+        var rejected = await outbox.EnqueueAsync("POST", "api/a", """{"bad":true}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/b", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.BadRequest, "no way");
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(1, 1, 0, "HTTP 400: no way"));
+        (await outbox.CountAsync()).ShouldBe(0);
+
+        // The dead entry is readable through the same outbox and through one with other options: FEx owns its format.
+        var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+        dead.Id.ShouldBe(rejected.Id);
+        dead.StatusCode.ShouldBe(400);
+        dead.ResponseBody.ShouldBe("no way");
+        (await new HttpOutbox(store, time).ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(rejected.Id);
+    }
+
+    [Fact]
     public async Task EntryParkedByAnOlderVersion_ListsWithNoServerFailures()
     {
         // Written before ServerFailures existed: the missing property reads as zero, so the entry gets its full limit.
@@ -863,3 +900,7 @@ public sealed class HttpOutboxTests
     private static HttpOutbox Outbox(Dictionary<string, string> replayHeaders) =>
         new(new InMemoryKeyValueStore(), new FixedTime(T0), null, replayHeaders);
 }
+
+/// <summary>A consumer's source-generated context that knows the queue's entry type but not the dead-letter one.</summary>
+[JsonSerializable(typeof(OutboxEntry))]
+internal sealed partial class OutboxEntryOnlyJsonContext : JsonSerializerContext;

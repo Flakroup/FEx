@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace FEx.Offline;
@@ -189,10 +190,12 @@ public sealed class HttpOutbox
     public async Task<int> CountAsync() => (await _store.GetKeysAsync(KeyPrefix)).Count;
 
     /// <summary>The writes waiting for a replay, in enqueue order. Dead entries are not among them.</summary>
-    public async Task<IReadOnlyList<OutboxEntry>> ListAsync() => await LoadAsync<OutboxEntry>(KeyPrefix);
+    public async Task<IReadOnlyList<OutboxEntry>> ListAsync() =>
+        await LoadAsync(KeyPrefix, stored => JsonSerializer.Deserialize<OutboxEntry>(stored, _json));
 
     /// <summary>The writes the outbox gave up on, oldest first. They are never replayed.</summary>
-    public async Task<IReadOnlyList<DeadOutboxEntry>> ListDeadAsync() => await LoadAsync<DeadOutboxEntry>(DeadKeyPrefix);
+    public async Task<IReadOnlyList<DeadOutboxEntry>> ListDeadAsync() =>
+        await LoadAsync(DeadKeyPrefix, stored => JsonSerializer.Deserialize(stored, DeadOutboxEntryJsonContext.Default.DeadOutboxEntry));
 
     /// <summary>Delete one dead entry. False when no dead entry has this id.</summary>
     public async Task<bool> RemoveDeadAsync(Guid id)
@@ -344,7 +347,7 @@ public sealed class HttpOutbox
         }
     }
 
-    private async Task<List<T>> LoadAsync<T>(string prefix)
+    private async Task<List<T>> LoadAsync<T>(string prefix, Func<string, T?> deserialize)
     {
         // The key embeds the zero-padded creation ticks, so sorting keys replays in enqueue order.
         var keys = await _store.GetKeysAsync(prefix);
@@ -353,13 +356,15 @@ public sealed class HttpOutbox
         foreach (var key in keys.OrderBy(k => k, StringComparer.Ordinal))
         {
             if (await _store.GetAsync(key) is { } stored)
-                entries.Add(JsonSerializer.Deserialize<T>(stored, _json)
+                entries.Add(deserialize(stored)
                             ?? throw new InvalidOperationException($"Outbox entry '{key}' stored as JSON null."));
         }
 
         return entries;
     }
 
+    // The dead copy is written with FEx's own metadata, not the consumer's options: a source-generated resolver that lists
+    // OutboxEntry but not DeadOutboxEntry would throw here, before the live entry is removed, on every flush.
     // The dead copy lands before the live one goes: a crash in between replays the write once more under the same
     // Idempotency-Key and buries it again, instead of losing it.
     private async Task DeadLetterAsync(OutboxEntry entry, int status, string body)
@@ -367,7 +372,7 @@ public sealed class HttpOutbox
         DeadOutboxEntry dead = new(entry.Id, entry.Method, entry.Url, entry.JsonBody, entry.CreatedAtUtc,
             _time.GetUtcNow(), entry.ServerFailures, status, body);
 
-        await _store.SetAsync(DeadKeyFor(entry), JsonSerializer.Serialize(dead, _json));
+        await _store.SetAsync(DeadKeyFor(entry), JsonSerializer.Serialize(dead, DeadOutboxEntryJsonContext.Default.DeadOutboxEntry));
         await RemoveAsync(entry);
     }
 
@@ -375,3 +380,7 @@ public sealed class HttpOutbox
 
     private Task RemoveAsync(OutboxEntry entry) => _store.RemoveAsync(KeyFor(entry));
 }
+
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSerializable(typeof(DeadOutboxEntry))]
+internal sealed partial class DeadOutboxEntryJsonContext : JsonSerializerContext;

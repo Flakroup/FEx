@@ -558,7 +558,6 @@ internal static class CoverageDebt
         "src/Logging/Sinks/Configurations/PlatformSinkConfigurator.cs", // debt: #137 - 4/6 lines
         "src/Logging/Sinks/PlatformSink.cs", // debt: #137 - 0/11 lines
         "src/MSBuildx/MSProject.cs", // debt: #137 - 211/212 lines
-        "src/Offline/HttpOutbox.cs", // debt: #137 - 106/107 lines
         "src/Offline/OfflineReadCache.cs", // debt: #137 - 26/31 lines
         "src/PersistentStorage.Abstractions/CacheableItem.cs", // debt: #137 - 0/5 lines
         "src/PersistentStorage.Abstractions/Configuration/CacheServiceConfiguration.cs", // debt: #137 - 0/1 lines

@@ -21,6 +21,8 @@ public sealed class FtpClientFactoryTests : IDisposable
     private async Task<FtpClientFactory> Factory(int maxParallel) =>
         await FtpClientFactory.GetInstanceAsync(_server.Uri.AbsoluteUri, maxParallel);
 
+    private Uri UriWithPortAndPath() => new UriBuilder(_server.Uri) { Port = _server.Port, Path = "/some/path" }.Uri;
+
 #pragma warning disable VSTHRD003 // the task is started by the caller on purpose, to observe whether it completes
     private static async Task<bool> Completes(Task task, TimeSpan within) =>
         await Task.WhenAny(task, Task.Delay(within, TestContext.Current.CancellationToken)) == task;
@@ -59,6 +61,69 @@ public sealed class FtpClientFactoryTests : IDisposable
         client.Credentials.Password.ShouldBe("secret");
         client.Port.ShouldBe(2121);
         await factory.ReleaseClientAsync(client);
+    }
+
+    [Fact]
+    public async Task CreateAsync_HostUriWithPortAndPath_SetsTheBareHostAndTheUriPort()
+    {
+        var factory = await FtpClientFactory.GetInstanceAsync(UriWithPortAndPath().AbsoluteUri, 2);
+
+        var client = await factory.CreateAsync("u", "p", false);
+
+        client.Host.ShouldBe(_server.Uri.Host);
+        client.Port.ShouldBe(_server.Port);
+        await client.Connect(TestContext.Current.CancellationToken);
+        client.IsConnected.ShouldBeTrue();
+        await factory.ReleaseClientAsync(client);
+    }
+
+    [Fact]
+    public async Task CreateAsync_HostUriWithPort_ExplicitPortArgumentWins()
+    {
+        var factory = await FtpClientFactory.GetInstanceAsync(UriWithPortAndPath().AbsoluteUri, 2);
+
+        var client = await factory.CreateAsync("u", "p", false, 2121);
+
+        client.Port.ShouldBe(2121);
+        await factory.ReleaseClientAsync(client);
+    }
+
+    [Fact]
+    public async Task CreateAsync_HostUriWithDefaultPort_KeepsTheFtpDefaultPort()
+    {
+        var factory = await FtpClientFactory.GetInstanceAsync($"ftp://{_server.Uri.Host}:21/dir", 2);
+
+        var client = await factory.CreateAsync(null, null, false);
+
+        client.Host.ShouldBe(_server.Uri.Host);
+        client.Port.ShouldBe(21);
+        await factory.ReleaseClientAsync(client);
+    }
+
+    [Fact]
+    public async Task CreateAsync_Ipv6HostUri_SetsTheAddressWithoutBrackets()
+    {
+        var factory = await FtpClientFactory.GetInstanceAsync("ftp://[::1]:2121/some/path", 2);
+
+        var client = await factory.CreateAsync(null, null, false);
+
+        client.Host.ShouldBe("::1");
+        client.Port.ShouldBe(2121);
+        await factory.ReleaseClientAsync(client);
+    }
+
+    [Fact]
+    public async Task ReleaseAsync_ClientNoFactoryCreated_IsDisposedWithoutTouchingAnyPool()
+    {
+        var factory = await Factory(1);
+        var held = await factory.CreateAsync(null, null, false);
+        var foreign = new AsyncFtpClient("127.0.0.1");
+
+        await FtpCommon.ReleaseAsync(foreign);
+
+        foreign.IsDisposed.ShouldBeTrue();
+        (await Completes(factory.CreateAsync(null, null, false), Short)).ShouldBeFalse("a foreign release must not free the slot of an unrelated client");
+        await factory.ReleaseClientAsync(held);
     }
 
     [Fact]

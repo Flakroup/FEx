@@ -5,6 +5,7 @@ using FluentFTP.Proxy.AsyncProxy;
 using System;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +13,7 @@ namespace FEx.FTPx;
 
 public class FtpClientFactory
 {
+    private static readonly ConditionalWeakTable<AsyncFtpClient, FtpClientFactory> Owners = new();
     private readonly SemaphoreSlim _semaphore;
     public Uri HostUri { get; }
     public ICredentials ProxyCredentials { get; set; } = CredentialCache.DefaultCredentials;
@@ -58,14 +60,19 @@ public class FtpClientFactory
             else
                 client = new();
 
-            if (HostUri != null)
-                client.Host = HostUri.AbsoluteUri;
+            // FluentFTP keeps everything after the scheme in Host, so only the bare host goes there; the port is separate.
+            client.Host = HostUri.DnsSafeHost;
+
+            if (!HostUri.IsDefaultPort)
+                client.Port = HostUri.Port;
 
             if (credentials != null)
                 client.Credentials = credentials;
 
             if (port != 0)
                 client.Port = port;
+
+            Owners.Add(client, this);
 
             return client;
         }
@@ -77,7 +84,20 @@ public class FtpClientFactory
         }
     }
 
+    /// <summary>Releases a client to the factory that created it; a client no factory created is only disconnected and disposed.</summary>
+    internal static Task ReleaseOwnedAsync(AsyncFtpClient client) =>
+        Owners.TryGetValue(client, out var factory)
+            ? factory.ReleaseClientAsync(client)
+            : DisconnectAndDisposeAsync(client);
+
     public async Task ReleaseClientAsync(AsyncFtpClient client)
+    {
+        await DisconnectAndDisposeAsync(client);
+
+        _semaphore.Release();
+    }
+
+    private static async Task DisconnectAndDisposeAsync(AsyncFtpClient client)
     {
         if (!client.IsDisposed)
         {
@@ -88,8 +108,6 @@ public class FtpClientFactory
             await client.DisposeAsync();
 #pragma warning restore IDISP007
         }
-
-        _semaphore.Release();
     }
 
     protected void OnValidateCertificate(FtpSslValidationEventArgs e)

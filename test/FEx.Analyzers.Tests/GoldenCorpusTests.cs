@@ -32,6 +32,21 @@ public class GoldenCorpusTests
         [VariableHidesOuterVariableAnalyzer.DiagnosticId] = "VariableHidesOuterVariable",
         [MemberHidesStaticFromOuterClassAnalyzer.DiagnosticId] = "MemberHidesStaticFromOuterClass",
         [BaseMemberHasParamsAnalyzer.DiagnosticId] = "BaseMemberHasParams",
+        [RedundantToStringCallAnalyzer.DiagnosticId] = "RedundantToStringCall",
+        [RedundantToStringCallForValueTypeAnalyzer.DiagnosticId] = "RedundantToStringCallForValueType",
+        [RedundantStringFormatCallAnalyzer.DiagnosticId] = "RedundantStringFormatCall",
+        [RedundantStringInterpolationAnalyzer.DiagnosticId] = "RedundantStringInterpolation",
+        [RedundantStringToCharArrayCallAnalyzer.DiagnosticId] = "RedundantStringToCharArrayCall",
+        [RedundantEnumerableCastCallAnalyzer.DiagnosticId] = "RedundantEnumerableCastCall",
+        [RedundantDelegateCreationAnalyzer.DiagnosticId] = "RedundantDelegateCreation",
+        [RedundantArgumentDefaultValueAnalyzer.DiagnosticId] = "RedundantArgumentDefaultValue",
+        [RedundantExplicitNullableCreationAnalyzer.DiagnosticId] = "RedundantExplicitNullableCreation",
+        [RedundantPropertyPatternClauseAnalyzer.DiagnosticId] = "RedundantPropertyPatternClause",
+        [RedundantLogicalConditionalExpressionOperandAnalyzer.DiagnosticId] = "RedundantLogicalConditionalExpressionOperand",
+        [RemoveRedundantOrStatementFalseAnalyzer.DiagnosticId] = "RemoveRedundantOrStatement.False",
+        [RedundantCheckBeforeAssignmentAnalyzer.DiagnosticId] = "RedundantCheckBeforeAssignment",
+        [RedundantCatchClauseAnalyzer.DiagnosticId] = "RedundantCatchClause",
+        [RedundantBaseConstructorCallAnalyzer.DiagnosticId] = "RedundantBaseConstructorCall",
     };
 
     [Fact]
@@ -48,7 +63,22 @@ public class GoldenCorpusTests
             new LoopVariableNeverChangedAnalyzer(),
             new VariableHidesOuterVariableAnalyzer(),
             new MemberHidesStaticFromOuterClassAnalyzer(),
-            new BaseMemberHasParamsAnalyzer());
+            new BaseMemberHasParamsAnalyzer(),
+            new RedundantToStringCallAnalyzer(),
+            new RedundantToStringCallForValueTypeAnalyzer(),
+            new RedundantStringFormatCallAnalyzer(),
+            new RedundantStringInterpolationAnalyzer(),
+            new RedundantStringToCharArrayCallAnalyzer(),
+            new RedundantEnumerableCastCallAnalyzer(),
+            new RedundantDelegateCreationAnalyzer(),
+            new RedundantArgumentDefaultValueAnalyzer(),
+            new RedundantExplicitNullableCreationAnalyzer(),
+            new RedundantPropertyPatternClauseAnalyzer(),
+            new RedundantLogicalConditionalExpressionOperandAnalyzer(),
+            new RemoveRedundantOrStatementFalseAnalyzer(),
+            new RedundantCheckBeforeAssignmentAnalyzer(),
+            new RedundantCatchClauseAnalyzer(),
+            new RedundantBaseConstructorCallAnalyzer());
         var diagnostics = await compilation.WithAnalyzers(analyzers).GetAnalyzerDiagnosticsAsync(TestContext.Current.CancellationToken);
 
         // A crashing analyzer reports AD0001 and has no SourceTree to map to a sample; name the crash instead.

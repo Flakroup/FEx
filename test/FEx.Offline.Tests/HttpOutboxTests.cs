@@ -1163,6 +1163,52 @@ public sealed class HttpOutboxTests
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(second.Id);
     }
 
+    [Fact]
+    public async Task ClearDead_DeletesEveryDeadEntry_AndLeavesTheLiveOnesToFlush()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        await outbox.EnqueueAsync("POST", "api/a", """{"secret":"a"}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/b", """{"secret":"b"}""");
+
+        using ScriptedHandler rejecting = new();
+        rejecting.EnqueueResponse(HttpStatusCode.BadRequest);
+        rejecting.EnqueueResponse(HttpStatusCode.BadRequest);
+        using var rejectingHttp = Client(rejecting);
+        await outbox.FlushAsync(rejectingHttp);
+
+        time.Advance(TimeSpan.FromMinutes(1));
+        var liveOne = await outbox.EnqueueAsync("POST", "api/c", null);
+        time.Advance(TimeSpan.FromMinutes(1));
+        var liveTwo = await outbox.EnqueueAsync("POST", "api/d", null);
+        (await outbox.ListDeadAsync()).Count.ShouldBe(2);
+
+        (await outbox.ClearDeadAsync()).ShouldBe(2);
+
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+        (await outbox.ListAsync()).Select(e => e.Id).ShouldBe(new[] { liveOne.Id, liveTwo.Id });
+
+        using ScriptedHandler accepting = new();
+        accepting.EnqueueResponse(HttpStatusCode.Created);
+        accepting.EnqueueResponse(HttpStatusCode.Created);
+        using var acceptingHttp = Client(accepting);
+
+        (await outbox.FlushAsync(acceptingHttp)).ShouldBe(new(2, 0, 0, null));
+        accepting.IdempotencyKeys.ShouldBe(new() { liveOne.Id.ToString(), liveTwo.Id.ToString() });
+    }
+
+    [Fact]
+    public async Task ClearDead_OnAnEmptyDeadList_ReturnsZero_AndKeepsTheLiveEntries()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/a", null);
+
+        (await outbox.ClearDeadAsync()).ShouldBe(0);
+
+        (await outbox.CountAsync()).ShouldBe(1);
+    }
+
     [Theory]
     [InlineData(HttpStatusCode.InternalServerError)]
     [InlineData(HttpStatusCode.BadRequest)]

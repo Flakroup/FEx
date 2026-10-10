@@ -9,6 +9,7 @@ using Shouldly;
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
@@ -229,5 +230,64 @@ public sealed class FtpCommonTests : IDisposable
 
         status.ShouldBeNull();
         _server.Commands.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithoutTheOption_DefaultsToPasvex()
+    {
+        var client = await FtpCommon.CreateAsync(Host, "u", "p", false, Port);
+
+        client.Config.DataConnectionType.ShouldBe(FtpDataConnectionType.PASVEX);
+        await FtpCommon.ReleaseAsync(client);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithTheOption_PassesItToTheClient()
+    {
+        var client = await FtpCommon.CreateAsync(Host, "u", "p", false, Port, FtpDataConnectionType.EPSV);
+
+        client.Config.DataConnectionType.ShouldBe(FtpDataConnectionType.EPSV);
+        await FtpCommon.ReleaseAsync(client);
+    }
+
+    [Fact]
+    public async Task Helpers_PasvReplyNamesAnotherHost_SucceedUnderTheDefault()
+    {
+        // Nothing listens on this address; AutoPassive would connect there (only 10/8, 172.16/12, 192.168/16, 127.0.0.1 and 0.0.0.0 are filtered).
+        _server.PasvAddress = IPAddress.Parse("127.0.0.2");
+        _server.Files["/pub/data.bin"] = Payload;
+        var local = Path.Combine(_dir, "up.bin");
+        await File.WriteAllBytesAsync(local, Payload, TestContext.Current.CancellationToken);
+
+        (await FtpCommon.GetListingAsync("/pub", Host, "u", "p", false, Port)).Select(x => x.Name).ShouldBe(["data.bin"]);
+        (await FtpCommon.DownloadFileFtpAsync(_dir, Host, "/pub/data.bin", "u", "p", null, false, Port)).ShouldNotBeNull();
+        (await FtpCommon.UploadFileFtpAsync(local, Host, "/in", "u", "p", _ => true, null, false, Port)).ShouldNotBeNull();
+        _server.Files["/in/up.bin"].ShouldBe(Payload);
+    }
+
+    [Fact]
+    public async Task Helpers_WithAutoPassive_FollowThePasvReplyToTheOtherHost()
+    {
+        // The option reaches the client the helper builds: the same server that the default survives now breaks every data transfer.
+        _server.PasvAddress = IPAddress.Parse("127.0.0.2");
+        _server.Files["/pub/data.bin"] = Payload;
+        var local = Path.Combine(_dir, "up.bin");
+        await File.WriteAllBytesAsync(local, Payload, TestContext.Current.CancellationToken);
+        const FtpDataConnectionType chosen = FtpDataConnectionType.AutoPassive;
+
+        await Should.ThrowAsync<Exception>(() => FtpCommon.GetListingAsync("/pub", Host, "u", "p", false, Port, chosen));
+        await Should.ThrowAsync<Exception>(() => FtpCommon.DownloadFileFtpAsync(_dir, Host, "/pub/data.bin", "u", "p", null, false, Port, chosen));
+        await Should.ThrowAsync<Exception>(() => FtpCommon.UploadFileFtpAsync(local, Host, "/in", "u", "p", _ => true, null, false, Port, chosen));
+        _server.Files.ContainsKey("/in/up.bin").ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task GetFtpFileInfoAsync_ReceivesTheOption()
+    {
+        _server.PasvAddress = IPAddress.Parse("127.0.0.2");
+        _server.Files["/pub/data.bin"] = Payload;
+
+        (await FtpCommon.GetFtpFileInfoAsync("/pub/data.bin", Host, "u", "p", false, Port)).ShouldNotBeNull();
+        (await FtpCommon.GetFtpFileInfoAsync("/pub/data.bin", Host, "u", "p", false, Port, FtpDataConnectionType.AutoPassive)).ShouldBeNull();
     }
 }

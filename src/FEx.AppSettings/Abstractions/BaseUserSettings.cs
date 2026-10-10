@@ -41,12 +41,10 @@ public abstract class BaseUserSettings : SecureNotifyPropertyChanged, IBaseUserS
             OnCreated();
     }
 
-#pragma warning disable S2360
     public override bool SetProperty<TRet>(ref TRet backingField,
                                            TRet newValue,
                                            Action<TRet>? onPropertyChanged = null,
                                            [CallerMemberName] string? propertyName = null) =>
-#pragma warning restore S2360
         base.SetProperty(ref backingField,
             newValue,
             _ =>

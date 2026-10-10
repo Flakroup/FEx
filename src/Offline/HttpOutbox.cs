@@ -76,7 +76,9 @@ public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining
 /// the entry like a 401 and counts as an unavailable answer, so a redirect that never ends is dead-lettered at that limit.
 /// A write that really lands behind a redirect (a 303 after a POST, a 307 to another path) is replayed until that limit,
 /// so an API that redirects on success should answer 2xx instead. Dead entries are listed with
-/// <see cref="ListDeadAsync" /> and deleted with <see cref="RemoveDeadAsync" />.
+/// <see cref="ListDeadAsync" /> and deleted with <see cref="RemoveDeadAsync" /> or <see cref="ClearDeadAsync" />.
+/// A dead entry keeps the request body and the truncated response body in the store, which may hold personal data, until
+/// it is deleted and nothing expires or caps the list: a host should call <see cref="ClearDeadAsync" /> on sign-out.
 /// </summary>
 public sealed class HttpOutbox
 {
@@ -247,6 +249,24 @@ public sealed class HttpOutbox
         }
 
         return removed;
+    }
+
+    /// <summary>
+    /// Delete every dead entry and return how many were deleted. Live (queued) entries are untouched. A dead entry keeps the
+    /// request body and the truncated response body in the store until it is deleted, so a host should call this on sign-out
+    /// (or when the account switches) to leave no personal data of the previous user on the device.
+    /// </summary>
+    public async Task<int> ClearDeadAsync()
+    {
+        var cleared = 0;
+
+        foreach (var key in await _store.GetKeysAsync(DeadKeyPrefix))
+        {
+            await _store.RemoveAsync(key);
+            cleared++;
+        }
+
+        return cleared;
     }
 
     public async Task<OutboxFlushResult> FlushAsync(HttpClient http)

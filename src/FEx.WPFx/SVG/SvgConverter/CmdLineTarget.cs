@@ -8,7 +8,6 @@ namespace FEx.WPFx.SVG.SvgConverter;
 
 public class CmdLineTarget //: SimpleBaseTarget
 {
-#pragma warning disable S2360 // 10+ parameters - overloads impractical
     //[ArgumentCommand(LongDesc = "Creates a ResourceDictionary with the svg-Images of a folder")]
     public int BuildDict(
         //[ArgumentParam(Aliases = "i", Desc = "dir to the SVGs", LongDesc = "specify folder of the graphic files to process")]
@@ -29,7 +28,6 @@ public class CmdLineTarget //: SimpleBaseTarget
         string? compResKeyNSName = null,
         //[ArgumentParam(DefaultValue = false, ExplicitNeeded = false, LongDesc = "If true, PixelsPerDip is filtered to ensure compatibility for < 4.6.2, default: false")]
         bool filterPixelsPerDip = false)
-#pragma warning restore S2360
     {
         FExLoggingModule.Log("Building resource dictionary...", GetType());
         var outFileName = Path.Combine(outputdir ?? inputdir, outputname);

@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -148,6 +150,106 @@ public sealed class HttpOutboxTests
         handler.Requests.Count.ShouldBe(2); // the flush went on past the refusal
     }
 
+    [Theory]
+    [InlineData("200")]
+    [InlineData("201")]
+    [InlineData("204")]
+    public async Task ConflictForAWriteThatAlreadyCompleted_RemovesTheEntryAsDelivered_AndTheFlushGoesOn(string originalStatus)
+    {
+        // The server's idempotency layer answers 409 + the original 2xx when a write landed but its stored
+        // response was too large to replay: the write is done, so it must not show up as a failed one.
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Conflict, "Idempotency-Original-Status", originalStatus);
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(2, 0, 0, null));
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+        handler.Requests.Count.ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("abc")]
+    [InlineData("-201")]
+    [InlineData("+201")]
+    [InlineData("199")]
+    [InlineData("300")]
+    [InlineData("409")]
+    [InlineData("500")]
+    public async Task Conflict_WithoutA2xxOriginalStatus_StillMovesTheEntryToTheDeadLetterList(string? originalStatus)
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+
+        if (originalStatus is null)
+            handler.EnqueueResponse(HttpStatusCode.Conflict, "duplicate");
+        else
+            handler.EnqueueResponse(HttpStatusCode.Conflict, "Idempotency-Original-Status", originalStatus);
+
+        using var http = Client(handler);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.Sent.ShouldBe(0);
+        result.DeadLettered.ShouldBe(1);
+        result.Remaining.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(409);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest)]
+    [InlineData(HttpStatusCode.UnprocessableEntity)]
+    public async Task OriginalStatusHeaderOnAnotherClientError_DoesNotMakeTheWriteDelivered(HttpStatusCode status)
+    {
+        // Only the idempotency layer's 409 says the write landed; the header on any other rejection (a proxy forwarding it, say) must not drop the write.
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(status, "Idempotency-Original-Status", "201");
+        using var http = Client(handler);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.Sent.ShouldBe(0);
+        result.DeadLettered.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe((int)status);
+    }
+
+    [Fact]
+    public async Task ConflictForAWriteThatAlreadyCompleted_LeavesNoStaleDeadCopy()
+    {
+        // The write was buried, removing the live entry failed, and the replay then found the write done.
+        FailingFirstRemoveStore store = new();
+        HttpOutbox outbox = new(store, new FixedTime(T0), maxServerFailures: 1);
+        await outbox.EnqueueAsync("POST", "api/a", null);
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        handler.EnqueueResponse(HttpStatusCode.Conflict, "Idempotency-Original-Status", "201");
+        using var http = Client(handler);
+
+        await Should.ThrowAsync<IOException>(() => outbox.FlushAsync(http));
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(1, 0, 0, null));
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
     [Fact]
     public async Task SessionNotEnough_KeepsTheEntryWithTheError_AndStopsTheFlush()
     {
@@ -183,11 +285,13 @@ public sealed class HttpOutboxTests
     [Theory]
     [InlineData(HttpStatusCode.RequestTimeout)]
     [InlineData(HttpStatusCode.TooManyRequests)]
+    [InlineData(HttpStatusCode.BadGateway)]
     [InlineData(HttpStatusCode.ServiceUnavailable)]
+    [InlineData(HttpStatusCode.GatewayTimeout)]
     public async Task TransientAnswer_KeepsTheEntryWithTheError_AndStopsTheFlush(HttpStatusCode status)
     {
-        // 408, 429 and 503 are timeouts, throttling and temporary overload: the unchanged write can land later, so it
-        // must not be dropped, and none of them counts as a server failure.
+        // 408, 429, 502, 503 and 504 are timeouts, throttling, a failing gateway and temporary overload: the unchanged
+        // write can land later, so it must not be dropped, and none of them counts as a server failure.
         FixedTime time = new(T0);
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
         await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
@@ -456,7 +560,7 @@ public sealed class HttpOutboxTests
 
         using ScriptedHandler handler = new();
         handler.EnqueueResponse(HttpStatusCode.InternalServerError);
-        handler.EnqueueResponse(HttpStatusCode.BadGateway);
+        handler.EnqueueResponse(HttpStatusCode.NotImplemented);
         using var http = Client(handler);
 
         var first = await outbox.FlushAsync(http);
@@ -476,8 +580,8 @@ public sealed class HttpOutboxTests
 
     [Theory]
     [InlineData(HttpStatusCode.InternalServerError)]
-    [InlineData(HttpStatusCode.BadGateway)]
-    [InlineData(HttpStatusCode.GatewayTimeout)]
+    [InlineData(HttpStatusCode.NotImplemented)]
+    [InlineData(HttpStatusCode.HttpVersionNotSupported)]
     public async Task ServerError_AtTheLimit_MovesTheEntryToTheDeadLetterList_AndTheFlushGoesOn(HttpStatusCode status)
     {
         FixedTime time = new(T0);
@@ -512,6 +616,37 @@ public sealed class HttpOutboxTests
         dead.StatusCode.ShouldBe((int)status);
         dead.ResponseBody.ShouldBe("boom again");
         dead.ServerFailures.ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadGateway)]
+    [InlineData(HttpStatusCode.GatewayTimeout)]
+    public async Task GatewayError_NeverCounts_SoAGatewayOutageCannotBuryAValidWrite(HttpStatusCode status)
+    {
+        // 502 and 504 say the proxy in front of the server failed, not that the server refused this write - like 503 they
+        // are retried forever and the entry stays at the head of the queue.
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxServerFailures: 2);
+        var entry = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+
+        for (var i = 0; i < 5; i++)
+            handler.EnqueueResponse(status);
+
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        for (var i = 0; i < 5; i++)
+            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+
+        var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
+        kept.Id.ShouldBe(entry.Id);
+        kept.Attempts.ShouldBe(5);
+        kept.ServerFailures.ShouldBe(0);
+        kept.LastError.ShouldBe($"HTTP {(int)status}");
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
     }
 
     [Fact]
@@ -704,11 +839,13 @@ public sealed class HttpOutboxTests
 
     [Theory]
     [InlineData(HttpStatusCode.Unauthorized)]
+    [InlineData(HttpStatusCode.BadGateway)]
     [InlineData(HttpStatusCode.ServiceUnavailable)]
+    [InlineData(HttpStatusCode.GatewayTimeout)]
     public async Task AnEntryAlreadyPastALoweredLimit_IsNotDeadLetteredByAnAnswerThatNeverCounts(HttpStatusCode status)
     {
         // Stored with 5 server failures, then the host restarts with a limit of 3: a 401 is still only a session to
-        // renew and a 503 only an overloaded server.
+        // renew and a 502, 503 or 504 only a failing gateway or an overloaded server.
         InMemoryKeyValueStore store = new();
         Guid id = new("44444444-4444-4444-4444-444444444444");
 
@@ -751,6 +888,41 @@ public sealed class HttpOutboxTests
     }
 
     [Fact]
+    public async Task ConsumerJsonOptionsWithoutDeadOutboxEntry_StillDeadLetterTheEntry_AndDoNotBlockTheQueue()
+    {
+        // A source-generated resolver that lists OutboxEntry only: serializing DeadOutboxEntry through it throws
+        // NotSupportedException, which used to escape the flush before the live entry was removed - on every flush.
+        InMemoryKeyValueStore store = new();
+        FixedTime time = new(T0);
+        JsonSerializerOptions consumerOptions = new()
+        {
+            TypeInfoResolver = OutboxEntryOnlyJsonContext.Default
+        };
+
+        HttpOutbox outbox = new(store, time, consumerOptions);
+        var rejected = await outbox.EnqueueAsync("POST", "api/a", """{"bad":true}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/b", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.BadRequest, "no way");
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(1, 1, 0, "HTTP 400: no way"));
+        (await outbox.CountAsync()).ShouldBe(0);
+
+        // The dead entry is readable through the same outbox and through one with other options: FEx owns its format.
+        var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+        dead.Id.ShouldBe(rejected.Id);
+        dead.StatusCode.ShouldBe(400);
+        dead.ResponseBody.ShouldBe("no way");
+        (await new HttpOutbox(store, time).ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(rejected.Id);
+    }
+
+    [Fact]
     public async Task EntryParkedByAnOlderVersion_ListsWithNoServerFailures()
     {
         // Written before ServerFailures existed: the missing property reads as zero, so the entry gets its full limit.
@@ -764,6 +936,22 @@ public sealed class HttpOutboxTests
 
         entry.Attempts.ShouldBe(4);
         entry.ServerFailures.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DeadEntryInTheStoredFormat_ListsEveryField()
+    {
+        // The stored dead-entry format is FEx's own (camelCase) and read case-sensitively: pin it, so a naming change cannot silently blank entries already stored.
+        InMemoryKeyValueStore store = new();
+        Guid id = new("44444444-4444-4444-4444-444444444444");
+
+        await store.SetAsync($"outbox-dead:{T0.UtcTicks:D19}:{id:N}",
+            $$"""{"id":"{{id}}","method":"POST","url":"api/a","jsonBody":"{\"n\":1}","createdAtUtc":"2026-07-15T03:00:00+00:00","deadAtUtc":"2026-07-15T04:00:00+00:00","serverFailures":3,"statusCode":422,"responseBody":"no"}""");
+
+        var dead = (await new HttpOutbox(store, new FixedTime(T0)).ListDeadAsync()).ShouldHaveSingleItem();
+
+        dead.ShouldBe(new(id, "POST", "api/a", """{"n":1}""", new(2026, 7, 15, 3, 0, 0, TimeSpan.Zero),
+            new(2026, 7, 15, 4, 0, 0, TimeSpan.Zero), 3, 422, "no"));
     }
 
     private static HttpClient Client(ScriptedHandler handler) => new(handler)
@@ -784,3 +972,7 @@ public sealed class HttpOutboxTests
     private static HttpOutbox Outbox(Dictionary<string, string> replayHeaders) =>
         new(new InMemoryKeyValueStore(), new FixedTime(T0), null, replayHeaders);
 }
+
+/// <summary>A consumer's source-generated context that knows the queue's entry type but not the dead-letter one.</summary>
+[JsonSerializable(typeof(OutboxEntry))]
+internal sealed partial class OutboxEntryOnlyJsonContext : JsonSerializerContext;

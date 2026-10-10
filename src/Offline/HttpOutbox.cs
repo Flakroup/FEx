@@ -1,11 +1,13 @@
 using FEx.Offline.Abstractions;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace FEx.Offline;
@@ -13,7 +15,7 @@ namespace FEx.Offline;
 /// <summary>
 /// One queued write. <see cref="Id" /> doubles as the Idempotency-Key the server replays on.
 /// <see cref="Attempts" /> counts every failed replay, a dropped connection included;
-/// <see cref="ServerFailures" /> counts only the 5xx answers other than 503, which is what the outbox's retry limit caps.
+/// <see cref="ServerFailures" /> counts only the 5xx answers other than 502, 503 and 504, which is what the outbox's retry limit caps.
 /// </summary>
 public sealed record OutboxEntry(
     Guid Id,
@@ -51,14 +53,17 @@ public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining
 /// Store-and-forward queue for writes made while offline. Enqueue persists the request; flush
 /// replays the queue in order, sending each entry's id as the Idempotency-Key header so a retry of a
 /// request that DID land (but whose response was lost) never double-executes, plus every replay header
-/// the host registered. A 2xx removes the entry. A 4xx other than 401, 408 and 429 moves it to the dead-letter
+/// the host registered. A 2xx removes the entry, and so does a 409 whose
+/// <c>Idempotency-Original-Status</c> header carries a 2xx status (the write completed on an earlier attempt, only its
+/// response was too large for the server to replay; a browser client on another origin only sees that header when the
+/// server lists it in <c>Access-Control-Expose-Headers</c>). A 4xx other than 401, 408 and 429 moves it to the dead-letter
 /// list (the server understood and rejected it - retrying forever cannot fix a validation error) and the flush
-/// goes on. A 5xx other than 503 keeps the entry, counts a server failure on it and stops the flush (the server is sick -
+/// goes on. A 5xx other than 502, 503 and 504 keeps the entry, counts a server failure on it and stops the flush (the server is sick -
 /// hammering the rest of the queue would not help); at the limit of server failures the entry moves to the
 /// dead-letter list instead and the flush goes on, so one write the server keeps refusing cannot block the
-/// ones behind it. A 401, 408, 429, 503 or a transport failure keeps the entry, records the error and stops the
-/// flush too, but is never counted: the session needs renewing, the server is throttling or overloaded or the
-/// network is down, none of which says anything about the write. Dead entries are listed with
+/// ones behind it. A 401, 408, 429, 502, 503, 504 or a transport failure keeps the entry, records the error and stops the
+/// flush too, but is never counted: the session needs renewing, the server is throttling or overloaded, a gateway in
+/// front of it is failing or the network is down, none of which says anything about the write. Dead entries are listed with
 /// <see cref="ListDeadAsync" /> and deleted with <see cref="RemoveDeadAsync" />.
 /// </summary>
 public sealed class HttpOutbox
@@ -70,7 +75,15 @@ public sealed class HttpOutbox
     /// </summary>
     public const string IdempotencyHeader = "Idempotency-Key";
 
-    /// <summary>How many 5xx answers other than 503 an entry takes before it moves to the dead-letter list.</summary>
+    // Same reason as IdempotencyHeader: a copy of FEx.AspNetCorex.IdempotencyMiddleware.OriginalStatusHeaderName,
+    // which this project cannot reference. HttpOutboxIdempotencyTests runs the outbox against the real middleware.
+    private const string OriginalStatusHeader = "Idempotency-Original-Status";
+
+    /// <summary>
+    /// How many server failures an entry takes before it moves to the dead-letter list. A server failure is a 5xx answer
+    /// other than 502, 503 and 504. The statuses that never count, because they say nothing about the write itself, are
+    /// 401, 408, 429, 502, 503 and 504, as is a transport failure.
+    /// </summary>
     public const int DefaultMaxServerFailures = 10;
 
     private const string KeyPrefix = "outbox:";
@@ -182,10 +195,12 @@ public sealed class HttpOutbox
     public async Task<int> CountAsync() => (await _store.GetKeysAsync(KeyPrefix)).Count;
 
     /// <summary>The writes waiting for a replay, in enqueue order. Dead entries are not among them.</summary>
-    public async Task<IReadOnlyList<OutboxEntry>> ListAsync() => await LoadAsync<OutboxEntry>(KeyPrefix);
+    public async Task<IReadOnlyList<OutboxEntry>> ListAsync() =>
+        await LoadAsync(KeyPrefix, stored => JsonSerializer.Deserialize<OutboxEntry>(stored, _json));
 
     /// <summary>The writes the outbox gave up on, oldest first. They are never replayed.</summary>
-    public async Task<IReadOnlyList<DeadOutboxEntry>> ListDeadAsync() => await LoadAsync<DeadOutboxEntry>(DeadKeyPrefix);
+    public async Task<IReadOnlyList<DeadOutboxEntry>> ListDeadAsync() =>
+        await LoadAsync(DeadKeyPrefix, stored => JsonSerializer.Deserialize(stored, DeadOutboxEntryJsonContext.Default.DeadOutboxEntry));
 
     /// <summary>Delete one dead entry. False when no dead entry has this id.</summary>
     public async Task<bool> RemoveDeadAsync(Guid id)
@@ -227,7 +242,7 @@ public sealed class HttpOutbox
             {
                 using var response = await http.SendAsync(request);
 
-                if (response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode || IsCompletedEarlier(response))
                 {
                     await RemoveAsync(entry);
 
@@ -241,10 +256,11 @@ public sealed class HttpOutbox
 
                 var status = (int)response.StatusCode;
 
-                // Only a 5xx other than 503 says the server refused the write itself. A 401 (sign in again), a
-                // 408/429/503 (timeout, throttling, temporary overload) and a dropped connection say nothing about it,
+                // Only a 5xx other than 502/503/504 says the server refused the write itself. A 401 (sign in again), a
+                // 408/429/502/503/504 (timeout, throttling, failing gateway, temporary overload) and a dropped connection say nothing about it,
                 // so they never count toward the limit - a device offline for a week must not lose its writes.
-                var countsAsServerFailure = status >= 500 && status != (int)HttpStatusCode.ServiceUnavailable;
+                var countsAsServerFailure = status >= 500
+                                            && response.StatusCode is not (HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout);
                 var serverFailures = entry.ServerFailures + (countsAsServerFailure ? 1 : 0);
 
                 // 401 means the session is not enough - once the user signs in again the unchanged write can
@@ -268,7 +284,7 @@ public sealed class HttpOutbox
                     continue;
                 }
 
-                // Server-side trouble (5xx), a session to renew (401) or throttling/overload (408/429/503): worth retrying later,
+                // Server-side trouble (5xx), a session to renew (401) or throttling/overload/gateway failure (408/429/502/503/504): worth retrying later,
                 // not worth hammering now - stopping the flush here also spares a rate-limited server the rest of the queue.
                 var error = $"HTTP {status}";
 
@@ -302,6 +318,14 @@ public sealed class HttpOutbox
         return new(sent, deadLettered, await CountAsync(), lastError);
     }
 
+    // The server's idempotency layer answers 409 + the original 2xx status when a replayed write had already completed
+    // but its response was too large to store: the write landed, so it is delivered, not rejected.
+    private static bool IsCompletedEarlier(HttpResponseMessage response) =>
+        response.StatusCode == HttpStatusCode.Conflict
+        && response.Headers.TryGetValues(OriginalStatusHeader, out var values)
+        && int.TryParse(values.FirstOrDefault(), NumberStyles.None, CultureInfo.InvariantCulture, out var original)
+        && original is >= 200 and < 300;
+
     private static bool IsTransientClientError(HttpStatusCode status) =>
         status is HttpStatusCode.Unauthorized or HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests;
 
@@ -329,7 +353,7 @@ public sealed class HttpOutbox
         }
     }
 
-    private async Task<List<T>> LoadAsync<T>(string prefix)
+    private async Task<List<T>> LoadAsync<T>(string prefix, Func<string, T?> deserialize)
     {
         // The key embeds the zero-padded creation ticks, so sorting keys replays in enqueue order.
         var keys = await _store.GetKeysAsync(prefix);
@@ -338,13 +362,15 @@ public sealed class HttpOutbox
         foreach (var key in keys.OrderBy(k => k, StringComparer.Ordinal))
         {
             if (await _store.GetAsync(key) is { } stored)
-                entries.Add(JsonSerializer.Deserialize<T>(stored, _json)
+                entries.Add(deserialize(stored)
                             ?? throw new InvalidOperationException($"Outbox entry '{key}' stored as JSON null."));
         }
 
         return entries;
     }
 
+    // The dead copy is written with FEx's own metadata, not the consumer's options: a source-generated resolver that lists
+    // OutboxEntry but not DeadOutboxEntry would throw here, before the live entry is removed, on every flush.
     // The dead copy lands before the live one goes: a crash in between replays the write once more under the same
     // Idempotency-Key and buries it again, instead of losing it.
     private async Task DeadLetterAsync(OutboxEntry entry, int status, string body)
@@ -352,7 +378,7 @@ public sealed class HttpOutbox
         DeadOutboxEntry dead = new(entry.Id, entry.Method, entry.Url, entry.JsonBody, entry.CreatedAtUtc,
             _time.GetUtcNow(), entry.ServerFailures, status, body);
 
-        await _store.SetAsync(DeadKeyFor(entry), JsonSerializer.Serialize(dead, _json));
+        await _store.SetAsync(DeadKeyFor(entry), JsonSerializer.Serialize(dead, DeadOutboxEntryJsonContext.Default.DeadOutboxEntry));
         await RemoveAsync(entry);
     }
 
@@ -360,3 +386,7 @@ public sealed class HttpOutbox
 
     private Task RemoveAsync(OutboxEntry entry) => _store.RemoveAsync(KeyFor(entry));
 }
+
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSerializable(typeof(DeadOutboxEntry))]
+internal sealed partial class DeadOutboxEntryJsonContext : JsonSerializerContext;

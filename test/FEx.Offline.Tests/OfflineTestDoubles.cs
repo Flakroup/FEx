@@ -101,6 +101,20 @@ internal sealed class ScriptedHandler : HttpMessageHandler
             Content = new StringContent(body)
         });
 
+    /// <summary>An answer carrying one response header, e.g. the original status a server-side idempotency layer reports.</summary>
+    public void EnqueueResponse(HttpStatusCode status, string headerName, string headerValue) =>
+        _script.Enqueue(_ =>
+        {
+            HttpResponseMessage response = new(status)
+            {
+                Content = new StringContent("")
+            };
+
+            response.Headers.TryAddWithoutValidation(headerName, headerValue);
+
+            return response;
+        });
+
     public void EnqueueNetworkFailure() => _script.Enqueue(_ => throw new HttpRequestException("connection refused"));
 
     /// <summary>An answer whose Content-Type charset .NET cannot decode, so reading its body as a string throws.</summary>

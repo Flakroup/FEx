@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -169,4 +171,97 @@ internal sealed class FixedTime : TimeProvider
     public override DateTimeOffset GetUtcNow() => _now;
 
     public void Advance(TimeSpan by) => _now += by;
+}
+
+/// <summary>
+/// A loopback HTTP server over raw sockets, so a real <see cref="HttpClient" /> follows (or does not follow) real redirects.
+/// The route maps "METHOD /path" to a status, a Location header (or null) and a body.
+/// </summary>
+internal sealed class RawHttpServer : IDisposable
+{
+    private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
+    private readonly Func<string, (int Status, string? Location, string Body)> _route;
+    private readonly List<string> _requests = [];
+
+    public RawHttpServer(Func<string, (int Status, string? Location, string Body)> route)
+    {
+        _route = route;
+        _listener.Start();
+        _ = Task.Run(AcceptLoopAsync); // ends when Dispose stops the listener
+    }
+
+    public Uri BaseAddress => new($"http://127.0.0.1:{((IPEndPoint)_listener.LocalEndpoint).Port}/");
+
+    /// <summary>Every request line's "METHOD /path", in arrival order.</summary>
+    public IReadOnlyList<string> Requests
+    {
+        get
+        {
+            lock (_requests)
+                return [.. _requests];
+        }
+    }
+
+    public void Dispose() => _listener.Stop();
+
+    private async Task AcceptLoopAsync()
+    {
+        while (true)
+        {
+            try
+            {
+                using var client = await _listener.AcceptTcpClientAsync();
+
+                await ServeQuietlyAsync(client.GetStream());
+            }
+            catch (Exception e) when (e is SocketException or ObjectDisposedException or InvalidOperationException)
+            {
+                return; // the listener was stopped
+            }
+        }
+    }
+
+    // One broken connection (a client that dropped, a request line this server cannot parse) must not end the accept loop:
+    // the next test request would then hang instead of failing.
+    private async Task ServeQuietlyAsync(NetworkStream stream)
+    {
+        try
+        {
+            await ServeAsync(stream);
+        }
+        catch (Exception)
+        {
+            // See above.
+        }
+    }
+
+    private async Task ServeAsync(NetworkStream stream)
+    {
+        StringBuilder head = new();
+        var one = new byte[1];
+
+        while (!head.ToString().EndsWith("\r\n\r\n", StringComparison.Ordinal) && await stream.ReadAsync(one) == 1)
+            head.Append((char)one[0]);
+
+        var lines = head.ToString().Split("\r\n");
+        var requestLine = lines[0].Split(' ');
+        var key = $"{requestLine[0]} {requestLine[1]}";
+
+        // Drain the body so the client is not reset while it is still writing it.
+        var length = lines.Where(l => l.StartsWith("Content-Length:", StringComparison.OrdinalIgnoreCase))
+                          .Select(l => int.Parse(l[15..].Trim()))
+                          .FirstOrDefault();
+
+        await stream.ReadExactlyAsync(new byte[length]);
+
+        lock (_requests)
+            _requests.Add(key);
+
+        var (status, location, body) = _route(key);
+        var response = $"HTTP/1.1 {status} X\r\n"
+                       + (location is null ? "" : $"Location: {location}\r\n")
+                       + $"Content-Length: {Encoding.UTF8.GetByteCount(body)}\r\nConnection: close\r\n\r\n{body}";
+
+        await stream.WriteAsync(Encoding.UTF8.GetBytes(response));
+    }
 }

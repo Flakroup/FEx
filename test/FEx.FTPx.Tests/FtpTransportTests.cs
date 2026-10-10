@@ -1,66 +1,429 @@
+#pragma warning disable IDISP001, IDISP004 // responses are disposed through await using; the pool tests dispose them on purpose
+using FEx.Agnostics.Abstractions.Enums;
+using FEx.Core.Abstractions.Interfaces;
+using FEx.MVVM;
+using FEx.MVVM.Abstractions.Interfaces;
+using FluentFTP.Exceptions;
+using NSubstitute;
 using Shouldly;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace FEx.FTPx.Tests;
 
-/// <summary>Runs the real transport against a closed local port: no server, no external network.</summary>
+/// <summary>Runs the real transport against <see cref="FakeFtpServer" /> (loopback) and against a closed local port.</summary>
 public sealed class FtpTransportTests : IDisposable
 {
+    private static readonly byte[] Payload = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
     private static readonly Uri Unreachable = new("ftp://127.0.0.1:1/file.bin");
+    private readonly FakeFtpServer _server = new();
     private readonly string _dir = Directory.CreateTempSubdirectory().FullName;
 
-    public void Dispose() => Directory.Delete(_dir, true);
+    public FtpTransportTests() => _server.Files["/pub/data.bin"] = Payload;
+
+    public void Dispose()
+    {
+        _server.Dispose();
+        Directory.Delete(_dir, true);
+    }
+
+    private Uri ServerFile => new UriBuilder(_server.Uri) { Port = _server.Port, Path = "/pub/data.bin" }.Uri;
+
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    private async Task LimitToOneClient() =>
+        await FtpClientFactory.GetInstanceAsync(new UriBuilder(_server.Uri) { Port = _server.Port }.Uri.AbsoluteUri, 1);
+
+    private static async Task<byte[]> ReadAll(IFtpResponse response)
+    {
+        using var ms = new MemoryStream();
+        var stream = response.GetResponseStream().ShouldNotBeNull();
+        var buffer = new byte[4];
+        int read;
+
+        while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, Ct)) > 0)
+            await ms.WriteAsync(buffer, 0, read, Ct);
+
+        return ms.ToArray();
+    }
+
+    [Fact]
+    public async Task GetSize_ExistingFile_ReturnsTheRemoteSize() =>
+        (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct)).ShouldBe(Payload.Length);
+
+    [Fact]
+    public async Task GetSize_MissingFile_ThrowsInsteadOfReportingZero()
+    {
+        var missing = new UriBuilder(ServerFile) { Path = "/pub/none.bin" }.Uri;
+
+        await Should.ThrowAsync<FtpException>(() => FtpTransport.Instance.GetSizeAsync(missing, "u", "p", Ct));
+    }
 
     [Fact]
     public async Task GetSize_ServerUnreachable_Throws() =>
-        await Should.ThrowAsync<WebException>(() =>
-            FtpTransport.Instance.GetSizeAsync(Unreachable, "user", "pass", TestContext.Current.CancellationToken));
+        await Should.ThrowAsync<Exception>(() => FtpTransport.Instance.GetSizeAsync(Unreachable, "user", "pass", Ct));
 
     [Fact]
-    public async Task Open_ServerUnreachable_Throws() =>
-        await Should.ThrowAsync<WebException>(async () =>
-        {
-            using var response = await FtpTransport.Instance.OpenAsync(Unreachable, "user", "pass", 0, TestContext.Current.CancellationToken);
-        });
+    public async Task GetSize_ReleasesTheConnectionEvenWhenItFails()
+    {
+        await LimitToOneClient();
+        _server.Password = "right";
+
+        await Should.ThrowAsync<Exception>(() => FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "wrong", Ct));
+
+        _server.Password = null;
+        (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct).WaitAsync(TimeSpan.FromSeconds(10), Ct)).ShouldBe(Payload.Length);
+    }
+
+    [Fact]
+    public async Task GetSize_ServerOmitsSizeFromFeat_StillAsksForTheSize()
+    {
+        _server.NoFeat = true;
+
+        (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct)).ShouldBe(Payload.Length);
+        _server.Commands.ShouldContain(c => c.StartsWith("SIZE ", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task GetSize_CancelledWhileWaitingForAFreeConnection_StopsWaitingAndLeaksNoSlot()
+    {
+        await LimitToOneClient();
+        await using var held = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        var waiting = FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", cts.Token);
+
+        (await Task.WhenAny(waiting, Task.Delay(TimeSpan.FromMilliseconds(300), Ct))).ShouldNotBe(waiting, "the pool is full");
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(() => waiting.WaitAsync(TimeSpan.FromSeconds(10), Ct));
+        await held.DisposeAsync();
+        (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct).WaitAsync(TimeSpan.FromSeconds(10), Ct)).ShouldBe(Payload.Length);
+    }
+
+    private Uri PolishFile => new UriBuilder(ServerFile) { Path = "/pub/zażółć.bin" }.Uri;
+
+    [Fact]
+    public async Task GetSize_NonAsciiFileName_GoesOutAsUtf8EvenWhenFeatDoesNotListUtf8()
+    {
+        _server.Files["/pub/zażółć.bin"] = Payload;
+
+        (await FtpTransport.Instance.GetSizeAsync(PolishFile, "u", "p", Ct)).ShouldBe(Payload.Length);
+
+        _server.Commands.ShouldContain("SIZE pub/zażółć.bin");
+        _server.Commands.ShouldContain("OPTS UTF8 ON");
+    }
+
+    [Fact]
+    public async Task Open_NonAsciiFileName_GoesOutAsUtf8EvenWhenFeatDoesNotListUtf8()
+    {
+        _server.Files["/pub/zażółć.bin"] = Payload;
+
+        await using var response = await FtpTransport.Instance.OpenAsync(PolishFile, "u", "p", 0, Ct);
+
+        (await ReadAll(response)).ShouldBe(Payload);
+        _server.Commands.ShouldContain("RETR pub/zażółć.bin");
+    }
+
+    [Fact]
+    public async Task Open_PasvReplyNamesAnotherHost_TheDataConnectionStillGoesToTheControlHost()
+    {
+        // Nothing listens on this address; AutoPassive would connect there (only 10/8, 172.16/12, 192.168/16, 127.0.0.1 and 0.0.0.0 are filtered).
+        _server.PasvAddress = IPAddress.Parse("127.0.0.2");
+
+        await using var response = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+
+        (await ReadAll(response)).ShouldBe(Payload);
+        _server.Commands.ShouldContain("PASV");
+    }
+
+    [Fact]
+    public async Task GetSize_ServerRefusesOptsUtf8_StillWorksWithUtf8Commands()
+    {
+        _server.OptsReply = "501 option not understood";
+        _server.Files["/pub/zażółć.bin"] = Payload;
+
+        (await FtpTransport.Instance.GetSizeAsync(PolishFile, "u", "p", Ct)).ShouldBe(Payload.Length);
+        _server.Commands.ShouldContain("SIZE pub/zażółć.bin");
+    }
+
+    [Theory]
+    [InlineData("100%25.bin", "100%.bin")]
+    [InlineData("a;b.bin", "a;b.bin")]
+    [InlineData("v1..2.bin", "v1..2.bin")]
+    public async Task Open_FileNamesTheSanitizerWouldRefuse_AreStillDownloaded(string uriName, string serverName)
+    {
+        _server.Files["/pub/" + serverName] = Payload;
+        var uri = new UriBuilder(ServerFile) { Path = "/pub/" + uriName }.Uri;
+
+        await using var response = await FtpTransport.Instance.OpenAsync(uri, "u", "p", 0, Ct);
+
+        (await ReadAll(response)).ShouldBe(Payload);
+    }
+
+    [Fact]
+    public async Task GetSize_ExplicitCredentials_AreUsedToLogIn()
+    {
+        _server.Password = "right";
+
+        await Should.ThrowAsync<Exception>(() => FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "wrong", Ct));
+        (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "right", Ct)).ShouldBe(Payload.Length);
+    }
+
+    [Fact]
+    public async Task GetSize_BlankCredentials_FallBackToTheUriUserInfo()
+    {
+        _server.Password = "s3 cret";
+        var withUserInfo = new UriBuilder(ServerFile) { UserName = "alice", Password = "s3%20cret" }.Uri;
+
+        (await FtpTransport.Instance.GetSizeAsync(withUserInfo, "", "", Ct)).ShouldBe(Payload.Length);
+        _server.Commands.ShouldContain("USER alice");
+    }
+
+    [Fact]
+    public async Task Open_AtZero_StreamsTheWholeFileWithoutRest()
+    {
+        await using var response = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+
+        (await ReadAll(response)).ShouldBe(Payload);
+        _server.Commands.ShouldNotContain(c => c.StartsWith("REST", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Open_AtOffset_ResumesWithRestAndStreamsTheRest()
+    {
+        await using var response = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 4, Ct);
+
+        (await ReadAll(response)).ShouldBe(Payload[4..]);
+        _server.Commands.ShouldContain("REST 4");
+    }
+
+    [Fact]
+    public async Task Open_StatusDescription_IsTheReplyThatOpenedTheTransfer()
+    {
+        await using var response = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+
+        response.StatusDescription.ShouldStartWith("150 ");
+    }
+
+    [Fact]
+    public async Task Open_MissingFile_ThrowsAndReleasesTheConnection()
+    {
+        await LimitToOneClient();
+        var missing = new UriBuilder(ServerFile) { Path = "/pub/none.bin" }.Uri;
+
+        await Should.ThrowAsync<FtpException>(() => FtpTransport.Instance.OpenAsync(missing, "u", "p", 0, Ct));
+
+        (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct).WaitAsync(TimeSpan.FromSeconds(10), Ct)).ShouldBe(Payload.Length);
+    }
+
+    [Fact]
+    public async Task Open_DisposingTheResponse_ReleasesTheConnectionAndSaysQuit()
+    {
+        await LimitToOneClient();
+        var response = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+        var next = FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct);
+
+        (await Task.WhenAny(next, Task.Delay(TimeSpan.FromMilliseconds(300), Ct))).ShouldNotBe(next, "the open response holds the only connection");
+
+        await response.DisposeAsync();
+
+        (await next.WaitAsync(TimeSpan.FromSeconds(10), Ct)).ShouldBe(Payload.Length);
+        _server.Commands.ShouldContain("QUIT");
+    }
+
+    [Fact]
+    public async Task Open_DisposingTheResponseTwice_ReleasesItsSlotOnlyOnce()
+    {
+        await LimitToOneClient();
+        var response = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+
+#pragma warning disable IDISP016 // disposing twice is the behaviour under test
+        await response.DisposeAsync();
+        await response.DisposeAsync();
+#pragma warning restore IDISP016
+
+        await using var first = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+        var second = FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+
+        (await Task.WhenAny(second, Task.Delay(TimeSpan.FromMilliseconds(300), Ct))).ShouldNotBe(second, "the second dispose must not hand out a second slot");
+
+        await first.DisposeAsync();
+        await using var released = await second.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+    }
+
+    [Fact]
+    public async Task Open_ServerAbortsTheTransfer_TheReadThatHitsTheEndFailsWithA451()
+    {
+        _server.AbortRetrAfterBytes = 3;
+        await using var response = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+
+        var ex = await Should.ThrowAsync<FtpCommandException>(() => ReadAll(response));
+
+        ex.CompletionCode.ShouldBe("451");
+        FtpTransport.Instance.IsLocalProcessingAbort(ex).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("426 connection closed; transfer aborted")]
+    [InlineData("451 local error in processing")]
+    public async Task Dispose_ServerAnswersAnErrorToAnAbandonedTransfer_IsSwallowedAndTheSlotIsReleased(string reply)
+    {
+        await LimitToOneClient();
+        _server.AbortRetrAfterBytes = 3;
+        _server.AbortReply = reply;
+        var response = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+        var stream = response.GetResponseStream().ShouldNotBeNull();
+        (await stream.ReadAsync(new byte[1], 0, 1, Ct)).ShouldBe(1);
+
+        // The probe of the offset recovery abandons a transfer this way on every real server.
+        await Should.NotThrowAsync(async () => await response.DisposeAsync());
+
+        (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct).WaitAsync(TimeSpan.FromSeconds(10), Ct)).ShouldBe(Payload.Length);
+    }
+
+    [Fact]
+    public async Task Recovery_AfterTheRetryLimit_AgainstAServerThatServesAgain_ProbesOnceAndReturns()
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        _server.AbortNextRetrs = 1;
+        var path = Path.Combine(_dir, "recovered.bin");
+
+        var state = new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries };
+
+        // The probe used to read the same byte of the same offset for ever, opening a connection each time.
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        cts.CancelAfter(TimeSpan.FromSeconds(20));
+
+        (await FtpDownloader.RestartDownloadFromServerAsync(FtpTransport.Instance, state, path, ServerFile, null, 0, "", "", cts.Token)).ShouldBeFalse();
+
+        state.RetryCount.ShouldBe(0);
+        new FileInfo(path).Length.ShouldBe(0);
+        _server.Commands.Count(c => c.StartsWith("RETR ", StringComparison.Ordinal)).ShouldBe(2); // the aborted transfer and one probe
+    }
+
+    [Fact]
+    public async Task Recovery_ProbeClosedEarlyBy451_IsToleratedAndKeepsTheProbedOffset()
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        _server.AbortNextRetrs = 1; // the transfer dies before its first byte, which starts the recovery
+        _server.AbortRetrAfterBytes = 3; // every probe then reads a byte of a transfer the server cuts short with a 451
+        var path = Path.Combine(_dir, "aborted.bin");
+        var state = new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries };
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        cts.CancelAfter(TimeSpan.FromSeconds(20));
+
+        await FtpDownloader.RestartDownloadFromServerAsync(FtpTransport.Instance, state, path, ServerFile, null, 0, "", "", cts.Token);
+
+        // The probe at offset 0 reads a byte, and the 451 the server answers when the probe closes early changes nothing: no zero fill.
+        new FileInfo(path).Length.ShouldBe(0);
+        _server.Commands.Count(c => c.StartsWith("RETR ", StringComparison.Ordinal)).ShouldBe(2);
+    }
+
+    [Fact]
+    public void IsLocalProcessingAbort_OnlyAFtp451IsAnAbort()
+    {
+        FtpTransport.Instance.IsLocalProcessingAbort(new FtpCommandException("451", "local error")).ShouldBeTrue();
+        FtpTransport.Instance.IsLocalProcessingAbort(new FtpCommandException("550", "no such file")).ShouldBeFalse();
+        FtpTransport.Instance.IsLocalProcessingAbort(new FtpException("451")).ShouldBeFalse();
+        FtpTransport.Instance.IsLocalProcessingAbort(new InvalidOperationException()).ShouldBeFalse();
+        FtpTransport.Instance.IsLocalProcessingAbort(new IOException()).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("ftp://host/dir/file.bin", "dir/file.bin")]
+    [InlineData("ftp://host/file.bin", "file.bin")]
+    [InlineData("ftp://host//abs/file.bin", "/abs/file.bin")]
+    [InlineData("ftp://host/%2Fabs/file.bin", "/abs/file.bin")]
+    [InlineData("ftp://host:2121/my%20dir/a%5B1%5D.bin", "my dir/a[1].bin")]
+    public void RemotePath_IsRelativeToTheLoginDirectoryUnlessSpelledAbsolute(string uri, string expected) =>
+        FtpTransport.RemotePath(new(uri)).ShouldBe(expected);
+
+    private static Uri UriWithUserInfo(string user, string password) =>
+        new UriBuilder(Uri.UriSchemeFtp, "host") { Path = "/f", UserName = user, Password = password }.Uri;
+
+    [Fact]
+    public void GetCredentials_BothPartsGiven_WinOverTheUriUserInfo()
+    {
+        var credentials = FtpTransport.GetCredentials(UriWithUserInfo("alice", "x"), "bob", "pw").ShouldNotBeNull();
+
+        credentials.UserName.ShouldBe("bob");
+        credentials.Password.ShouldBe("pw");
+    }
+
+    [Theory]
+    [InlineData("", "")]
+    [InlineData("bob", "")]
+    [InlineData("", "pw")]
+    [InlineData(" ", " ")]
+    public void GetCredentials_AnEmptyPart_KeepsTheUriUserInfo(string user, string password)
+    {
+        var credentials = FtpTransport.GetCredentials(UriWithUserInfo("al%40ice", "p%3Aw"), user, password).ShouldNotBeNull();
+
+        credentials.UserName.ShouldBe("al@ice");
+        credentials.Password.ShouldBe("p:w");
+    }
+
+    [Fact]
+    public void GetCredentials_UserInfoWithoutPassword_HasAnEmptyPassword() =>
+        FtpTransport.GetCredentials(UriWithUserInfo("alice", ""), "", "").ShouldNotBeNull().Password.ShouldBe(string.Empty);
+
+    [Fact]
+    public void GetCredentials_NothingGiven_IsAnonymous() =>
+        FtpTransport.GetCredentials(new("ftp://host/f"), "", "").ShouldBeNull();
+
+    [Fact]
+    public async Task DownloadFile_PartialFile_ResumesFromItsLength()
+    {
+        var path = Path.Combine(_dir, "partial.bin");
+        await File.WriteAllBytesAsync(path, Payload[..4], Ct);
+
+        (await Download(path, ServerFile, "u", "p")).ShouldBeTrue();
+
+        (await File.ReadAllBytesAsync(path, Ct)).ShouldBe(Payload);
+        _server.Commands.ShouldContain("REST 4");
+    }
+
+    [Fact]
+    public async Task DownloadFile_NewFile_DownloadsItWhole()
+    {
+        var path = Path.Combine(_dir, "new.bin");
+
+        (await Download(path, ServerFile, "", "")).ShouldBeTrue();
+
+        (await File.ReadAllBytesAsync(path, Ct)).ShouldBe(Payload);
+    }
 
     [Fact]
     public async Task DownloadFile_PartialFileAndServerUnreachable_IsNotReportedComplete()
     {
-        var path = Path.Combine(_dir, "partial.bin");
-        await File.WriteAllBytesAsync(path, [1, 2, 3], TestContext.Current.CancellationToken);
+        var path = Path.Combine(_dir, "unreachable.bin");
+        await File.WriteAllBytesAsync(path, [1, 2, 3], Ct);
 
-        var ex = await Should.ThrowAsync<IOException>(() => Download(path, "user", "pass"));
+        var ex = await Should.ThrowAsync<IOException>(() => Download(path, Unreachable, "user", "pass"));
 
-        ex.InnerException.ShouldBeOfType<WebException>();
+        ex.InnerException.ShouldNotBeNull();
+        new FileInfo(path).Length.ShouldBe(3);
     }
 
     [Fact]
-    public async Task DownloadFile_DefaultCredentials_FailsOnTheNetworkNotOnTheCredentials()
+    public async Task CalculateSize_FtpFile_ReturnsTheRemoteSizeInTheRequestedUnit()
     {
-        var ex = await Should.ThrowAsync<IOException>(() => Download(Path.Combine(_dir, "new.bin"), "", ""));
-
-        ex.InnerException.ShouldBeOfType<WebException>();
+        (await FtpDownloader.CalculateSizeAsync(ServerFile, false, LengthType.Bytes, "u", "p", cancellationToken: Ct)).ShouldBe(Payload.Length);
     }
 
     [Fact]
-    public void IsLocalProcessingAbort_NonFtpFailures_AreNotAborts()
+    public async Task CalculateSize_MissingFtpFile_ReportsZeroInsteadOfThrowing()
     {
-        FtpTransport.Instance.IsLocalProcessingAbort(new InvalidOperationException()).ShouldBeFalse();
-        FtpTransport.Instance.IsLocalProcessingAbort(new WebException("no response")).ShouldBeFalse();
+        var missing = new UriBuilder(ServerFile) { Path = "/pub/none.bin" }.Uri;
+
+        (await FtpDownloader.CalculateSizeAsync(missing, false, LengthType.Bytes, "u", "p", cancellationToken: Ct)).ShouldBe(0);
     }
 
-    private static Task<bool> Download(string path, string username, string password) =>
-        FtpDownloader.DownloadFileAsync(FtpTransport.Instance,
-            TimeSpan.Zero,
-            path,
-            Unreachable,
-            null,
-            username,
-            password,
-            2,
-            TestContext.Current.CancellationToken);
+    private static Task<bool> Download(string path, Uri uri, string username, string password) =>
+        FtpDownloader.DownloadFileAsync(FtpTransport.Instance, TimeSpan.Zero, path, uri, null, username, password, 2, Ct);
 }

@@ -111,8 +111,6 @@ public sealed class RedundantVerbatimPrefixAnalyzer : DiagnosticAnalyzer
                     return true;
                 case MemberDeclarationSyntax or AccessorDeclarationSyntax or CompilationUnitSyntax:
                     return false;
-                default:
-                    break;
             }
         }
     }

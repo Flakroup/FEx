@@ -43,6 +43,9 @@ internal sealed class FakeFtpServer : IDisposable
     /// <summary>When set, a download sends only this many bytes and then answers 451 instead of 226, like a server giving up on a read.</summary>
     public int? AbortRetrAfterBytes { get; set; }
 
+    /// <summary>The final reply of a download that <see cref="AbortRetrAfterBytes" /> cuts short; 426 is what a server answers to a transfer the client abandoned.</summary>
+    public string AbortReply { get; set; } = "451 local error in processing";
+
     /// <summary>When set, FEAT advertises nothing (SIZE included), like a minimal server that still answers SIZE.</summary>
     public bool NoFeat { get; set; }
 
@@ -168,7 +171,7 @@ internal sealed class FakeFtpServer : IDisposable
                             var rest = content[(int)restartAt..];
                             var aborted = AbortRetrAfterBytes is not null;
                             var sent = aborted ? rest[..Math.Min(AbortRetrAfterBytes!.Value, rest.Length)] : rest;
-                            await Transfer(writer, data, async d => await d.WriteAsync(sent), false, aborted ? "451 local error in processing" : "226 transfer complete");
+                            await Transfer(writer, data, async d => await d.WriteAsync(sent), false, aborted ? AbortReply : "226 transfer complete");
                         }
                         else
                         {

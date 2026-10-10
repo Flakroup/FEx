@@ -216,6 +216,24 @@ public sealed class FtpTransportTests : IDisposable
         FtpTransport.Instance.IsLocalProcessingAbort(ex).ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData("426 connection closed; transfer aborted")]
+    [InlineData("451 local error in processing")]
+    public async Task Dispose_ServerAnswersAnErrorToAnAbandonedTransfer_IsSwallowedAndTheSlotIsReleased(string reply)
+    {
+        await LimitToOneClient();
+        _server.AbortRetrAfterBytes = 3;
+        _server.AbortReply = reply;
+        var response = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+        var stream = response.GetResponseStream().ShouldNotBeNull();
+        (await stream.ReadAsync(new byte[1], 0, 1, Ct)).ShouldBe(1);
+
+        // The probe of the offset recovery abandons a transfer this way on every real server.
+        await Should.NotThrowAsync(async () => await response.DisposeAsync());
+
+        (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct).WaitAsync(TimeSpan.FromSeconds(10), Ct)).ShouldBe(Payload.Length);
+    }
+
     [Fact]
     public void IsLocalProcessingAbort_OnlyAFtp451IsAnAbort()
     {

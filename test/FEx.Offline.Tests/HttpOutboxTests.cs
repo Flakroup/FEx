@@ -181,6 +181,7 @@ public sealed class HttpOutboxTests
     [InlineData("")]
     [InlineData("abc")]
     [InlineData("-201")]
+    [InlineData("+201")]
     [InlineData("199")]
     [InlineData("300")]
     [InlineData("409")]
@@ -205,6 +206,26 @@ public sealed class HttpOutboxTests
         result.DeadLettered.ShouldBe(1);
         result.Remaining.ShouldBe(0);
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(409);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest)]
+    [InlineData(HttpStatusCode.UnprocessableEntity)]
+    public async Task OriginalStatusHeaderOnAnotherClientError_DoesNotMakeTheWriteDelivered(HttpStatusCode status)
+    {
+        // Only the idempotency layer's 409 says the write landed; the header on any other rejection (a proxy forwarding it, say) must not drop the write.
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(status, "Idempotency-Original-Status", "201");
+        using var http = Client(handler);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.Sent.ShouldBe(0);
+        result.DeadLettered.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe((int)status);
     }
 
     [Fact]
@@ -915,6 +936,22 @@ public sealed class HttpOutboxTests
 
         entry.Attempts.ShouldBe(4);
         entry.ServerFailures.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DeadEntryInTheStoredFormat_ListsEveryField()
+    {
+        // The stored dead-entry format is FEx's own (camelCase) and read case-sensitively: pin it, so a naming change cannot silently blank entries already stored.
+        InMemoryKeyValueStore store = new();
+        Guid id = new("44444444-4444-4444-4444-444444444444");
+
+        await store.SetAsync($"outbox-dead:{T0.UtcTicks:D19}:{id:N}",
+            $$"""{"id":"{{id}}","method":"POST","url":"api/a","jsonBody":"{\"n\":1}","createdAtUtc":"2026-07-15T03:00:00+00:00","deadAtUtc":"2026-07-15T04:00:00+00:00","serverFailures":3,"statusCode":422,"responseBody":"no"}""");
+
+        var dead = (await new HttpOutbox(store, new FixedTime(T0)).ListDeadAsync()).ShouldHaveSingleItem();
+
+        dead.ShouldBe(new(id, "POST", "api/a", """{"n":1}""", new(2026, 7, 15, 3, 0, 0, TimeSpan.Zero),
+            new(2026, 7, 15, 4, 0, 0, TimeSpan.Zero), 3, 422, "no"));
     }
 
     private static HttpClient Client(ScriptedHandler handler) => new(handler)

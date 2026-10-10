@@ -55,7 +55,8 @@ public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining
 /// request that DID land (but whose response was lost) never double-executes, plus every replay header
 /// the host registered. A 2xx removes the entry, and so does a 409 whose
 /// <c>Idempotency-Original-Status</c> header carries a 2xx status (the write completed on an earlier attempt, only its
-/// response was too large for the server to replay). A 4xx other than 401, 408 and 429 moves it to the dead-letter
+/// response was too large for the server to replay; a browser client on another origin only sees that header when the
+/// server lists it in <c>Access-Control-Expose-Headers</c>). A 4xx other than 401, 408 and 429 moves it to the dead-letter
 /// list (the server understood and rejected it - retrying forever cannot fix a validation error) and the flush
 /// goes on. A 5xx other than 502, 503 and 504 keeps the entry, counts a server failure on it and stops the flush (the server is sick -
 /// hammering the rest of the queue would not help); at the limit of server failures the entry moves to the

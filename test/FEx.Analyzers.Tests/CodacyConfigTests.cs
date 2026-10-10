@@ -13,41 +13,28 @@ namespace FEx.Analyzers.Tests;
 /// </summary>
 public class CodacyConfigTests
 {
-    private const string CorpusDirectory = "test/FEx.Analyzers.Tests/CorpusData";
+    private const string TestProjectDirectory = "test/FEx.Analyzers.Tests";
+    private const string CorpusDirectoryName = "CorpusData";
 
+    // Pinned whole rather than parsed: a broader glob, an include_paths that re-includes the corpus, a byte order mark
+    // or broken YAML each change what Codacy analyzes, and a line-by-line reader would wave every one of them through.
     [Fact]
-    public void The_corpus_directory_exists_at_the_path_the_exclusion_names()
+    public void The_config_excludes_the_corpus_and_nothing_else()
     {
-        var corpus = Path.Combine(FindRepositoryRoot(), "test", "FEx.Analyzers.Tests", "CorpusData");
+        var path = Path.Combine(FindRepositoryRoot(), ".codacy.yml");
 
-        Directory.Exists(corpus).ShouldBeTrue();
-        File.Exists(Path.Combine(corpus, "expected.json")).ShouldBeTrue();
+        File.ReadAllBytes(path)[0].ShouldBe((byte)'-', "Codacy requires the file to open with the --- marker, no byte order mark");
+        File.ReadAllLines(path).ShouldBe(["---", "exclude_paths:", $"  - \"{TestProjectDirectory}/{CorpusDirectoryName}/**\""]);
     }
 
-    [Theory]
-    [InlineData(CorpusDirectory + "/StyleA.cs")]
-    [InlineData(CorpusDirectory + "/StyleB.cs")]
-    [InlineData(CorpusDirectory + "/Stubs.cs")]
-    public void Codacy_excludes_every_corpus_source_file(string repositoryRelativePath) =>
-        ExcludedGlobs().Any(glob => Covers(glob, repositoryRelativePath)).ShouldBeTrue();
-
+    // Codacy's globs are case-sensitive and Windows paths are not, so the name is read from the listing, not probed.
     [Fact]
-    public void The_config_file_opens_with_the_document_marker_codacy_requires() =>
-        File.ReadLines(Path.Combine(FindRepositoryRoot(), ".codacy.yml")).First().Trim().ShouldBe("---");
-
-    // Codacy's globs are Java globs; the entry in use is a directory prefix ending in "/**", the only shape handled here.
-    private static bool Covers(string glob, string path) =>
-        glob.EndsWith("/**", StringComparison.Ordinal) && path.StartsWith(glob[..^2], StringComparison.Ordinal);
-
-    private static string[] ExcludedGlobs()
+    public void The_corpus_directory_carries_exactly_the_name_the_exclusion_spells()
     {
-        var lines = File.ReadAllLines(Path.Combine(FindRepositoryRoot(), ".codacy.yml"));
-        return lines
-            .SkipWhile(line => line.TrimEnd() != "exclude_paths:")
-            .Skip(1)
-            .TakeWhile(line => line.TrimStart().StartsWith("- ", StringComparison.Ordinal))
-            .Select(line => line.TrimStart()[2..].Trim().Trim('"', '\''))
-            .ToArray();
+        var project = Path.Combine(FindRepositoryRoot(), TestProjectDirectory);
+
+        Directory.EnumerateDirectories(project).Select(Path.GetFileName).ShouldContain(CorpusDirectoryName);
+        File.Exists(Path.Combine(project, CorpusDirectoryName, "expected.json")).ShouldBeTrue();
     }
 
     private static string FindRepositoryRoot()

@@ -47,10 +47,12 @@ public sealed class ObfuscatedFileStorageServiceTests : IDisposable
     {
         _storageService.Set("token", new Credential { User = "gio", Secret = "hunter2" });
 
-        var onDisk = File.ReadAllText(Path.Combine(_storage.FullName, "token.sfex"));
+        // Search the decoded envelope, not its base64 text: a case-insensitive "gio" turns up in random base64 about
+        // once in a hundred runs, against once in tens of thousands among the raw bytes. A plaintext file fails to decode.
+        var onDisk = Convert.FromBase64String(File.ReadAllText(Path.Combine(_storage.FullName, "token.sfex")));
 
-        onDisk.ShouldNotContain("hunter2");
-        onDisk.ShouldNotContain("gio");
+        onDisk.AsSpan().IndexOf("hunter2"u8).ShouldBe(-1);
+        onDisk.AsSpan().IndexOf("gio"u8).ShouldBe(-1);
     }
 
     [Fact]

@@ -58,18 +58,19 @@ public sealed class RedundantRangeBoundAnalyzer : DiagnosticAnalyzer
 
     private static ExpressionSyntax Strip(ExpressionSyntax expression)
     {
+        var current = expression;
         while (true)
         {
-            switch (expression)
+            switch (current)
             {
                 case ParenthesizedExpressionSyntax parenthesized:
-                    expression = parenthesized.Expression;
+                    current = parenthesized.Expression;
                     break;
                 case CastExpressionSyntax cast:
-                    expression = cast.Expression;
+                    current = cast.Expression;
                     break;
                 default:
-                    return expression;
+                    return current;
             }
         }
     }

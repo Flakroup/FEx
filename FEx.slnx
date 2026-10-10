@@ -88,6 +88,9 @@
   <Folder Name="/test/">
     <File Path="test/Directory.Build.props" />
     <File Path="test/Directory.Build.targets" />
+    <Project Path="test/FEx.Analyzers.Tests/FEx.Analyzers.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.AspNetCorex.Tests/FEx.AspNetCorex.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
@@ -210,6 +213,9 @@
     </Project>
   </Folder>
   <Project Path="build/_build.csproj" />
+  <Project Path="src/Analyzers/FEx.Analyzers.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
   <Project Path="src/FEx.AppSettings/FEx.AppSettings.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>

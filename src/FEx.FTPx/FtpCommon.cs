@@ -4,7 +4,6 @@ using FEx.MVVM.Abstractions.Interfaces;
 using FluentFTP;
 using System;
 using System.IO;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,28 +20,12 @@ public static class FtpCommon
     {
         try
         {
-            var client = await CreateAsync(ftphost, username, password, useProxy, port);
-            //client.ListingParser = FtpParser.Unix;
-            //client.Encoding = Encoding.UTF8;
-            //client.DataConnectionType = FtpDataConnectionType.PASV;
-            await client.ConnectAsync();
-            //string parentPath = ftpfilepath.GetFtpDirectoryName();
-            //FtpListItem[] ldist = (await client.GetListingAsync("/video")).Where(x => x.FullName == parentPath).ToArray();
-            //string a = HttpUtility.UrlEncode("[");
-            //string b = HttpUtility.UrlEncode("]");
-            //string encodedPath = parentPath.Replace("[", a).Replace("]", b);
-            var item = await client.GetObjectInfoAsync(ftpfilepath, true);
-            //await client.SetWorkingDirectoryAsync(parentPath);
-            //string xyz = await client.GetWorkingDirectoryAsync();
-            //FtpListItem[] list = await client.GetListingAsync(parentPath, FtpListOption.Auto);
-            //if (list.Any())
-            //{
-
-            //}
-            //FtpListItem item = list.Find(x => x.FullName == ftpfilepath);
-            await ReleaseAsync(client);
-
-            return item;
+            return await RunFtpActionAsync(ftphost,
+                username,
+                password,
+                useProxy,
+                client => client.GetObjectInfo(ftpfilepath, true),
+                port);
         }
         catch (Exception ex)
         {
@@ -52,18 +35,18 @@ public static class FtpCommon
         }
     }
 
-    public static async Task<FtpClient> CreateAsync(Uri ftphost,
-                                                    string username,
-                                                    string password,
-                                                    bool useProxy = false,
-                                                    int port = 0)
+    public static async Task<AsyncFtpClient> CreateAsync(Uri ftphost,
+                                                         string username,
+                                                         string password,
+                                                         bool useProxy = false,
+                                                         int port = 0)
     {
         var factory = await FtpClientFactory.GetInstanceAsync(ftphost.AbsoluteUri);
 
         return await factory.CreateAsync(username, password, useProxy, port);
     }
 
-    public static async Task ReleaseAsync(FtpClient client)
+    public static async Task ReleaseAsync(AsyncFtpClient client)
     {
         var factory = await FtpClientFactory.GetInstanceAsync($"ftp://{client.Host}");
         await factory.ReleaseClientAsync(client);
@@ -75,7 +58,8 @@ public static class FtpCommon
                                                           string username,
                                                           string password,
                                                           IProgressAggregator? viewModel = null,
-                                                          bool useProxy = false)
+                                                          bool useProxy = false,
+                                                          int port = 0)
     {
         var fName = Path.GetFileName(ftpfilepath);
 
@@ -84,13 +68,20 @@ public static class FtpCommon
             && !fName.Contains("]")) // TODO: FluentFTP#268 - brackets in filenames cause timeout
         {
             var target = Path.Combine(inputdirpath, fName);
-            var client = await CreateAsync(ftphost, username, password, useProxy);
-            await client.ConnectAsync();
-            var size = await client.GetFileSizeAsync(ftpfilepath);
-            viewModel?.PrgSetMax(size);
-            var prg = GetProgress(viewModel, size);
-            await client.DownloadFileAsync(target, ftpfilepath, FtpLocalExists.Overwrite, FtpVerify.None, prg);
-            await ReleaseAsync(client);
+            var size = await RunFtpActionAsync(ftphost,
+                username,
+                password,
+                useProxy,
+                async client =>
+                {
+                    var remoteSize = await client.GetFileSize(ftpfilepath);
+                    viewModel?.PrgSetMax(remoteSize);
+                    var prg = GetProgress(viewModel, remoteSize);
+                    await client.DownloadFile(target, ftpfilepath, FtpLocalExists.Overwrite, FtpVerify.None, prg);
+
+                    return remoteSize;
+                },
+                port);
 
             var info = new FileInfo(target);
 
@@ -109,42 +100,47 @@ public static class FtpCommon
                                                             string password,
                                                             Func<string, bool> onTargetExists,
                                                             IProgressAggregator? viewModel = null,
-                                                            bool useProxy = false)
+                                                            bool useProxy = false,
+                                                            int port = 0)
     {
-        FtpStatus? res = null;
         var fName = Path.GetFileName(inputfilepath);
 
-        if (fName != null)
-        {
-            var target = $"{ftpdirpath}/{fName}";
-            var client = await CreateAsync(ftphost, username, password, useProxy);
-            await client.ConnectAsync();
-            var size = new FileInfo(inputfilepath).Length;
-            viewModel?.PrgSetMax(size);
-            var prg = GetProgress(viewModel, size);
+        if (fName == null)
+            return null;
 
-            if (!await client.FileExistsAsync(target)
-                || onTargetExists(target))
-                //CommonMVVM.ShowMessage($"File {target} already exists. Do you want to overwrite it?", typeof(FtpCommon), ownerWindow, true, true, "Target file exists", MessageIcon.Question, MessageButton.YesNo) == MessageResult.Yes
-                res = await client.UploadFileAsync(inputfilepath,
+        var target = $"{ftpdirpath}/{fName}";
+
+        return await RunFtpActionAsync<FtpStatus?>(ftphost,
+            username,
+            password,
+            useProxy,
+            async client =>
+            {
+                var size = new FileInfo(inputfilepath).Length;
+                viewModel?.PrgSetMax(size);
+                var prg = GetProgress(viewModel, size);
+
+                if (await client.FileExists(target)
+                    && !onTargetExists(target))
+                    return null;
+
+                return await client.UploadFile(inputfilepath,
                     target,
                     FtpRemoteExists.Overwrite,
                     true,
                     FtpVerify.None,
                     prg,
                     CancellationToken.None);
-
-            await ReleaseAsync(client);
-        }
-
-        return res;
+            },
+            port);
     }
 
     public static async Task<FtpListItem[]> GetListingAsync(string ftpdirpath,
                                                             Uri ftphost,
                                                             string username,
                                                             string password,
-                                                            bool useProxy = false)
+                                                            bool useProxy = false,
+                                                            int port = 0)
     {
         FtpListItem[] res = [];
 
@@ -153,21 +149,10 @@ public static class FtpCommon
                 username,
                 password,
                 useProxy,
-                client => client.GetListingAsync(ftpdirpath));
+                client => client.GetListing(ftpdirpath),
+                port);
 
         return res;
-    }
-
-    public static void RunFtpAction(Uri targetUrl, Action<FtpClient> action, NetworkCredential? credentials = null)
-    {
-        using var client = new FtpClient(targetUrl.Host)
-        {
-            Credentials = credentials
-        };
-
-        client.Connect();
-        action(client);
-        client.Disconnect();
     }
 
     private static IProgress<FtpProgress>? GetProgress(IProgressAggregator? viewModel, long size)
@@ -187,13 +172,22 @@ public static class FtpCommon
                                                       string username,
                                                       string password,
                                                       bool useProxy,
-                                                      Func<FtpClient, Task<T>> func)
+                                                      Func<AsyncFtpClient, Task<T>> func,
+                                                      int port = 0)
     {
-        var client = await CreateAsync(ftphost, username, password, useProxy);
-        await client.ConnectAsync();
-        var res = await func(client);
-        await ReleaseAsync(client);
+#pragma warning disable IDISP001 // released in the finally block below
+        var client = await CreateAsync(ftphost, username, password, useProxy, port);
+#pragma warning restore IDISP001
 
-        return res;
+        try
+        {
+            await client.Connect();
+
+            return await func(client);
+        }
+        finally
+        {
+            await ReleaseAsync(client);
+        }
     }
 }

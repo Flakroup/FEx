@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -49,15 +50,15 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
 
         var arguments = ArgumentsOf(node);
         if (arguments.IsDefaultOrEmpty
-            || ParametersOf(model.GetSymbolInfo(node).Symbol) is not { } parameters
-            || IsInExpressionTree(node, model))
+            || ParametersOf(model.GetSymbolInfo(node, context.CancellationToken).Symbol) is not { } parameters
+            || IsInExpressionTree(node, model, context.CancellationToken))
             return;
 
-        var redundant = RedundantArguments(arguments, parameters, model);
+        var redundant = RedundantArguments(arguments, parameters, model, context.CancellationToken);
         if (redundant.Count == 0)
             return;
 
-        if (!Speculation.BindsToSame(model, node, Without(node, redundant)))
+        if (!Speculation.BindsToSame(model, node, Without(node, redundant), context.CancellationToken))
             return;
 
         foreach (var argument in redundant)
@@ -65,13 +66,20 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>One argument of a call: the node that goes away with it, the value it passes and whether it stands by position.</summary>
-    private readonly struct Argument(SyntaxNode node, ExpressionSyntax expression, bool positional)
+    private readonly struct Argument
     {
-        public SyntaxNode Node { get; } = node;
+        public Argument(SyntaxNode node, ExpressionSyntax expression, bool positional)
+        {
+            Node = node;
+            Expression = expression;
+            Positional = positional;
+        }
 
-        public ExpressionSyntax Expression { get; } = expression;
+        public SyntaxNode Node { get; }
 
-        public bool Positional { get; } = positional;
+        public ExpressionSyntax Expression { get; }
+
+        public bool Positional { get; }
     }
 
     private static ImmutableArray<Argument> ArgumentsOf(SyntaxNode node) => node switch
@@ -97,7 +105,11 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
         _ => null,
     };
 
-    private static List<Argument> RedundantArguments(ImmutableArray<Argument> arguments, ImmutableArray<IParameterSymbol> parameters, SemanticModel model)
+    private static List<Argument> RedundantArguments(
+        ImmutableArray<Argument> arguments,
+        ImmutableArray<IParameterSymbol> parameters,
+        SemanticModel model,
+        CancellationToken cancellationToken)
     {
         var redundant = new List<Argument>();
 
@@ -111,7 +123,7 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
             if (!arguments[i].Positional)
                 continue;
 
-            if (!laterPositionalStay && i < positionalPrefix && i < parameters.Length && RepeatsDefault(arguments[i].Expression, parameters[i], model))
+            if (!laterPositionalStay && i < positionalPrefix && i < parameters.Length && RepeatsDefault(arguments[i].Expression, parameters[i], model, cancellationToken))
                 redundant.Add(arguments[i]);
             else
                 laterPositionalStay = true;
@@ -120,13 +132,13 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
         return redundant;
     }
 
-    private static bool RepeatsDefault(ExpressionSyntax expression, IParameterSymbol parameter, SemanticModel model)
+    private static bool RepeatsDefault(ExpressionSyntax expression, IParameterSymbol parameter, SemanticModel model, CancellationToken cancellationToken)
     {
         if (!parameter.HasExplicitDefaultValue
             || parameter.GetAttributes().Any(static a => a.AttributeClass?.Name is "CallerMemberNameAttribute" or "CallerFilePathAttribute" or "CallerLineNumberAttribute" or "CallerArgumentExpressionAttribute"))
             return false;
 
-        var constant = model.GetConstantValue(expression);
+        var constant = model.GetConstantValue(expression, cancellationToken);
         var defaultValue = parameter.ExplicitDefaultValue;
 
         if (constant.HasValue)
@@ -134,20 +146,23 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
 
         // A struct's default has no constant form: 'default', 'default(S)' and 'new S()' all spell it.
         return defaultValue is null
-            && SymbolEqualityComparer.Default.Equals(model.GetTypeInfo(expression).Type, parameter.Type)
-            && SpellsDefault(expression, model);
+            && SymbolEqualityComparer.Default.Equals(model.GetTypeInfo(expression, cancellationToken).Type, parameter.Type)
+            && SpellsDefault(expression, model, cancellationToken);
     }
 
-    // 'new S()' is the default only while no constructor was declared: a C# 10 struct may declare its own parameterless one.
-    private static bool SpellsDefault(ExpressionSyntax expression, SemanticModel model) => expression switch
+    // 'new S()' is the default only while no constructor was declared: a C# 10 struct may declare its own parameterless one,
+    // and 'new T()' for a type parameter runs whichever one the argument has.
+    private static bool SpellsDefault(ExpressionSyntax expression, SemanticModel model, CancellationToken cancellationToken) => expression switch
     {
         DefaultExpressionSyntax or LiteralExpressionSyntax { RawKind: (int)SyntaxKind.DefaultLiteralExpression } => true,
         ObjectCreationExpressionSyntax { Initializer: null } creation =>
-            model.GetSymbolInfo(creation).Symbol is not { IsImplicitlyDeclared: false },
+            model.GetSymbolInfo(creation, cancellationToken).Symbol is not { IsImplicitlyDeclared: false }
+            && model.GetTypeInfo(creation, cancellationToken).Type is not ITypeParameterSymbol,
         _ => false,
     };
 
     // Roslyn hands constants over as boxed primitives; an int literal for a double or long parameter is the same default.
+    // Exactly the same value, though: '-0.0' is not '0.0' (1 / x tells them apart) and '1.0m' prints differently from '1m'.
     private static bool ConstantsEqual(object? left, object? right)
     {
         if (left is null || right is null)
@@ -157,8 +172,8 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
             return left.Equals(right);
 
         return left is float or double || right is float or double
-            ? Convert.ToDouble(left) == Convert.ToDouble(right)
-            : Convert.ToDecimal(left) == Convert.ToDecimal(right);
+            ? BitConverter.DoubleToInt64Bits(Convert.ToDouble(left)) == BitConverter.DoubleToInt64Bits(Convert.ToDouble(right))
+            : decimal.GetBits(Convert.ToDecimal(left)).SequenceEqual(decimal.GetBits(Convert.ToDecimal(right)));
     }
 
     private static SyntaxNode Without(SyntaxNode node, List<Argument> redundant)
@@ -183,10 +198,30 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
         SyntaxFactory.SeparatedList(arguments.Where(a => !gone.Contains(a)));
 
     // An expression tree cannot contain a call that leaves an optional argument out.
-    private static bool IsInExpressionTree(SyntaxNode node, SemanticModel model)
+    private static bool IsInExpressionTree(SyntaxNode node, SemanticModel model, CancellationToken cancellationToken)
     {
-        var expression = model.Compilation.GetTypeByMetadataName("System.Linq.Expressions.Expression`1");
-        return node.Ancestors().OfType<LambdaExpressionSyntax>().Any(lambda =>
-            SymbolEqualityComparer.Default.Equals(model.GetTypeInfo(lambda).ConvertedType?.OriginalDefinition, expression));
+        var compilation = model.Compilation;
+        var expression = compilation.GetTypeByMetadataName("System.Linq.Expressions.Expression`1");
+        var queryable = compilation.GetTypeByMetadataName("System.Linq.IQueryable");
+
+        foreach (var ancestor in node.Ancestors())
+        {
+            var isTree = ancestor switch
+            {
+                LambdaExpressionSyntax lambda =>
+                    SymbolEqualityComparer.Default.Equals(model.GetTypeInfo(lambda, cancellationToken).ConvertedType?.OriginalDefinition, expression),
+                // A query over an IQueryable is translated into lambdas that become expression trees.
+                QueryExpressionSyntax query => IsQueryable(model.GetTypeInfo(query, cancellationToken).Type),
+                _ => false,
+            };
+            if (isTree)
+                return true;
+        }
+
+        return false;
+
+        bool IsQueryable(ITypeSymbol? type) => type is not null
+            && (SymbolEqualityComparer.Default.Equals(type.OriginalDefinition, queryable)
+                || type.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, queryable)));
     }
 }

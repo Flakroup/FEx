@@ -36,7 +36,8 @@ public sealed class RemoveRedundantOrStatementFalseAnalyzer : DiagnosticAnalyzer
 
         // Only a plain bool is reported; ReSharper stays silent on bool?.
         if (statement.Expression is AssignmentExpressionSyntax { RawKind: (int)SyntaxKind.OrAssignmentExpression, Right: LiteralExpressionSyntax { RawKind: (int)SyntaxKind.FalseLiteralExpression } } assignment
-            && context.SemanticModel.GetTypeInfo(assignment.Left).Type?.SpecialType == SpecialType.System_Boolean)
+            && context.SemanticModel.GetTypeInfo(assignment.Left, context.CancellationToken).Type?.SpecialType == SpecialType.System_Boolean
+            && PlainStorage.IsPlainStorage(assignment.Left, context.SemanticModel, context.CancellationToken))
             context.ReportDiagnostic(Diagnostic.Create(Rule, statement.GetLocation()));
     }
 }

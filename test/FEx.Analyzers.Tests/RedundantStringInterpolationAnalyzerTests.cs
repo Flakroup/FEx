@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -16,8 +17,6 @@ public class RedundantStringInterpolationAnalyzerTests
                 string Empty() => {|FEX0025:$""|};
                 string Verbatim() => {|FEX0025:$@"a ""b"" c"|};
                 string Raw() => {|FEX0025:$"""abc"""|};
-                string Escaped() => {|FEX0025:$"{{x}}"|};
-                string EscapedAndText() => {|FEX0025:$"a {{ b"|};
                 const string Constant = {|FEX0025:$"abc"|};
             }
             """");
@@ -95,4 +94,49 @@ public class RedundantStringInterpolationAnalyzerTests
                 string Nested(int i) => $"a" + ($"b" + $"c{i}");
             }
             """);
+
+    [Fact]
+    public Task Ignores_a_string_with_an_escaped_brace_because_dropping_the_dollar_changes_the_text() =>
+        VerifyAsync(""""
+            class C
+            {
+                string Escaped() => $"{{x}}";
+                string EscapedAndText() => $"a {{ b";
+            }
+            """");
+
+    [Fact]
+    public Task Ignores_a_string_whose_target_is_an_interpolated_string_handler() =>
+        VerifyAsync("""
+            using System.Globalization;
+            using System.Runtime.CompilerServices;
+
+            [InterpolatedStringHandler]
+            public ref struct Handler
+            {
+                public Handler(int literalLength, int formattedCount) { }
+                public void AppendLiteral(string value) { }
+                public void AppendFormatted<T>(T value) { }
+            }
+
+            class C
+            {
+                void Log(Handler handler) { }
+                void Custom() { Log($"abc"); }
+                string Create() => string.Create(CultureInfo.InvariantCulture, $"abc");
+            }
+            """);
+
+    [Fact]
+    public Task Handles_a_very_long_interpolated_concatenation_without_overflowing_the_stack()
+    {
+        // 20,000 terms: a recursive walk down the left spine would exhaust the stack, and a rescan from every term would not finish.
+        var terms = string.Join(" + ", Enumerable.Repeat("$\"a\"", 20_000));
+        return VerifyAsync($$"""
+            class C
+            {
+                string Long(int i) => {{terms}} + $"b{i}";
+            }
+            """);
+    }
 }

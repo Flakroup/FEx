@@ -33,7 +33,7 @@ public sealed class RedundantToStringCallForValueTypeAnalyzer : DiagnosticAnalyz
     private static void Analyze(SyntaxNodeAnalysisContext context)
     {
         var call = (InvocationExpressionSyntax)context.Node;
-        if (ToStringCalls.IsRedundant(call, context.SemanticModel, valueTypeReceiver: true))
+        if (ToStringCalls.IsRedundant(call, context.SemanticModel, valueTypeReceiver: true, context.CancellationToken))
             context.ReportDiagnostic(Diagnostic.Create(Rule, call.GetLocation()));
     }
 }

@@ -37,8 +37,8 @@ public sealed class RedundantStringToCharArrayCallAnalyzer : DiagnosticAnalyzer
         // ReSharper stays silent for 'var' and for loop variables that convert the element, so only an explicit 'char' is reported.
         if (loop.Type.IsVar
             || loop.Expression is not InvocationExpressionSyntax { ArgumentList.Arguments.Count: 0 } call
-            || context.SemanticModel.GetTypeInfo(loop.Type).Type?.SpecialType != SpecialType.System_Char
-            || context.SemanticModel.GetSymbolInfo(call).Symbol is not IMethodSymbol { Name: "ToCharArray", ContainingType.SpecialType: SpecialType.System_String })
+            || context.SemanticModel.GetTypeInfo(loop.Type, context.CancellationToken).Type?.SpecialType != SpecialType.System_Char
+            || context.SemanticModel.GetSymbolInfo(call, context.CancellationToken).Symbol is not IMethodSymbol { Name: "ToCharArray", ContainingType.SpecialType: SpecialType.System_String })
             return;
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, call.GetLocation()));

@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>$(StandardTargetFrameworkId)</TargetFramework>
-		<Description>Roslyn analyzers for correctness defects that the .NET SDK analyzers do not report</Description>
+		<Description>Roslyn analyzers for correctness defects and redundant code that the .NET SDK analyzers do not report</Description>
 		<IsRoslynComponent>true</IsRoslynComponent>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<IncludeBuildOutput>false</IncludeBuildOutput>

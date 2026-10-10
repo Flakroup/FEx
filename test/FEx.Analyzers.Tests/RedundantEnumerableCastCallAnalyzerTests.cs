@@ -8,16 +8,15 @@ public class RedundantEnumerableCastCallAnalyzerTests
     private static Task VerifyAsync(string source) => AnalyzerTestHelper.VerifyAsync<RedundantEnumerableCastCallAnalyzer>(source);
 
     [Fact]
-    public Task Reports_Cast_and_OfType_to_the_element_type() =>
+    public Task Reports_Cast_to_the_element_type() =>
         VerifyAsync("""
             using System.Collections.Generic;
             using System.Linq;
             class C
             {
                 IEnumerable<int> Cast(IEnumerable<int> e) => e.{|FEX0027:Cast<int>|}();
-                IEnumerable<int> OfType(IEnumerable<int> e) => e.{|FEX0027:OfType<int>|}();
                 IEnumerable<string> Strings(IEnumerable<string> e) => e.{|FEX0027:Cast<string>|}();
-                IEnumerable<object> Objects(IEnumerable<object> e) => e.{|FEX0027:OfType<object>|}();
+                IEnumerable<object> Objects(IEnumerable<object> e) => e.{|FEX0027:Cast<object>|}();
             }
             """);
 
@@ -175,5 +174,71 @@ public class RedundantEnumerableCastCallAnalyzerTests
             using System.Collections.Generic;
             using System.Linq;
             class C { IEnumerable<int> M<TList>(TList list) where TList : IEnumerable<int> => list.Cast<int>(); }
+            """);
+
+    [Fact]
+    public Task Ignores_OfType_because_it_drops_nulls() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            using System.Linq;
+            class C
+            {
+                IEnumerable<int> Ints(IEnumerable<int> e) => e.OfType<int>();
+                IEnumerable<object> Objects(IEnumerable<object> e) => e.OfType<object>();
+                IEnumerable<string> Strings(IEnumerable<string> e) => e.OfType<string>();
+                IEnumerable<int?> Nullables(int?[] a) => a.OfType<int?>();
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_Cast_that_changes_the_overload_or_the_type_of_a_var() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            using System.Linq;
+            class C
+            {
+                static string Pick(IEnumerable<int> e) => "enumerable";
+                static string Pick(List<int> l) => "list";
+                string Overload(List<int> list) => Pick(list.Cast<int>());
+                void Retyped(List<int> list) { var e = list.Cast<int>(); e = e.Where(x => x > 0); }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_Cast_whose_surroundings_keep_their_meaning() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            using System.Linq;
+            class C
+            {
+                static string Pick(IEnumerable<int> e) => "enumerable";
+                string Argument(IEnumerable<int> e) => Pick(e.{|FEX0027:Cast<int>|}());
+                int Count(List<int> list) => list.{|FEX0027:Cast<int>|}().Count();
+                IEnumerable<int> Declared(List<int> list) { IEnumerable<int> e = list.{|FEX0027:Cast<int>|}(); return e; }
+                IEnumerable<int> Assigned(List<int> list) { IEnumerable<int> e; e = list.{|FEX0027:Cast<int>|}(); return e; }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_sequence_that_is_returned_or_parenthesized() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            using System.Linq;
+            class C
+            {
+                IEnumerable<int> Returned(List<int> list) { return list.{|FEX0027:Cast<int>|}(); }
+                void Parenthesized(List<int> list) { foreach (var i in (list.{|FEX0027:Cast<int>|}())) { } }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_sequence_returned_from_a_lambda_because_the_return_type_is_inferred() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            using System.Linq;
+            class C
+            {
+                void M(List<int> list) { var f = () => { return list.Cast<int>(); }; }
+            }
             """);
 }

@@ -62,13 +62,11 @@ public class RedundantCheckBeforeAssignmentAnalyzerTests
             """);
 
     [Fact]
-    public Task Reports_the_check_for_an_indexer() =>
+    public Task Reports_the_check_for_an_array_element() =>
         VerifyAsync("""
-            using System.Collections.Generic;
             class C
             {
                 void Array(int[] a) { {|FEX0034:if (a[0] != 1) a[0] = 1;|} }
-                void List(List<int> l) { {|FEX0034:if (l[0] != 1) l[0] = 1;|} }
             }
             """);
 
@@ -80,7 +78,6 @@ public class RedundantCheckBeforeAssignmentAnalyzerTests
                 private int _f;
                 int Value() => 1;
                 void Reversed() { {|FEX0034:if (1 != _f) _f = 1;|} }
-                void Call() { {|FEX0034:if (_f != Value()) _f = Value();|} }
                 void Variable(int x) { {|FEX0034:if (_f != x) _f = x;|} }
                 void Reversed2(int x) { {|FEX0034:if (x != _f) _f = x;|} }
             }
@@ -174,6 +171,62 @@ public class RedundantCheckBeforeAssignmentAnalyzerTests
                 private int _f;
                 void Add() { if (_f != 1) _f += 1; }
                 void Or() { if (_f != 1) _f |= 1; }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_the_check_for_an_indexer_because_its_setter_may_do_more() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            using System.Collections.ObjectModel;
+            class C
+            {
+                void List(List<int> l) { if (l[0] != 1) l[0] = 1; }
+                void Observable(ObservableCollection<int> o) { if (o[0] != 1) o[0] = 1; }
+                void Dictionary(Dictionary<string, int> d, int v) { if (d["k"] != v) d["k"] = v; }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_the_check_whose_value_has_side_effects_or_calls() =>
+        VerifyAsync("""
+            class C
+            {
+                private int _f;
+                int V() => 1;
+                void Called() { if (_f != V()) _f = V(); }
+                void Incremented(int[] a, int i) { if (a[i++] != 1) a[i++] = 1; }
+                void Created() { if (_f != new C()._f) _f = new C()._f; }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_the_check_made_with_a_user_defined_inequality() =>
+        VerifyAsync("""
+            class Money
+            {
+                public int Amount;
+                public static bool operator ==(Money a, Money b) => a.Amount / 10 == b.Amount / 10;
+                public static bool operator !=(Money a, Money b) => a.Amount / 10 != b.Amount / 10;
+                public override bool Equals(object obj) => false;
+                public override int GetHashCode() => 0;
+            }
+            class C
+            {
+                private Money _m = new Money();
+                void Set(Money m) { if (_m != m) _m = m; }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_the_check_for_a_decimal_and_a_string_whose_operators_are_the_framework_s() =>
+        VerifyAsync("""
+            class C
+            {
+                private decimal _d;
+                private string _s = "";
+                void Decimal(decimal d) { {|FEX0034:if (_d != d) _d = d;|} }
+                void Text(string s) { {|FEX0034:if (_s != s) _s = s;|} }
             }
             """);
 }

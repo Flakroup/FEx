@@ -36,7 +36,7 @@ public sealed class RedundantDelegateCreationAnalyzer : DiagnosticAnalyzer
         var model = context.SemanticModel;
 
         if (creation.ArgumentList is not { Arguments: [var argument] }
-            || model.GetTypeInfo(creation) is not { Type.TypeKind: TypeKind.Delegate, ConvertedType.TypeKind: TypeKind.Delegate } info)
+            || model.GetTypeInfo(creation, context.CancellationToken) is not { Type.TypeKind: TypeKind.Delegate, ConvertedType.TypeKind: TypeKind.Delegate } info)
             return;
 
         SyntaxNode node = creation;
@@ -45,7 +45,10 @@ public sealed class RedundantDelegateCreationAnalyzer : DiagnosticAnalyzer
 
         // Where the delegate is itself the operand, or the context would infer a type from it, the creation is what fixes the type.
         // A binary operator other than ?? has no target type to convert a bare method group or lambda to.
-        if (node.Parent is MemberAccessExpressionSyntax or ConditionalAccessExpressionSyntax or ConditionalExpressionSyntax
+        if (node.Parent is MemberAccessExpressionSyntax or ConditionalAccessExpressionSyntax or ConditionalExpressionSyntax or SwitchExpressionArmSyntax
+                or SelectOrGroupClauseSyntax or QueryClauseSyntax or OrderingSyntax
+            || node.Parent is InvocationExpressionSyntax invoked && invoked.Expression == node
+            || node.Parent is InitializerExpressionSyntax { Parent: ImplicitArrayCreationExpressionSyntax }
             || node.Parent is BinaryExpressionSyntax binary && !binary.IsKind(SyntaxKind.CoalesceExpression)
             || node.Parent is EqualsValueClauseSyntax { Parent: VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax { Type.IsVar: true } } })
             return;
@@ -53,8 +56,10 @@ public sealed class RedundantDelegateCreationAnalyzer : DiagnosticAnalyzer
         if (!model.ClassifyConversion(argument.Expression, info.ConvertedType).IsImplicit)
             return;
 
-        if (node.Parent is ArgumentSyntax passed && Speculation.OwnerOf(passed) is { } owner
-            && !Speculation.BindsToSame(model, owner, owner.ReplaceNode(creation, argument.Expression.WithTriviaFrom(creation))))
+        // An argument is a call's to bind again; one that no call owns (a tuple element, a primary constructor's base call) is not.
+        if (node.Parent is ArgumentSyntax passed
+            && (Speculation.OwnerOf(passed) is not { } owner
+                || !Speculation.BindsToSame(model, owner, owner.ReplaceNode(creation, argument.Expression.WithTriviaFrom(creation)), context.CancellationToken)))
             return;
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, creation.GetLocation()));

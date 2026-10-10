@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -35,7 +36,7 @@ public sealed class RedundantCatchClauseAnalyzer : DiagnosticAnalyzer
         var catches = ((TryStatementSyntax)context.Node).Catches;
         for (var i = 0; i < catches.Count; i++)
         {
-            if (IsPlainRethrow(catches[i]) && !ShadowsLaterClause(catches, i, context.SemanticModel))
+            if (IsPlainRethrow(catches[i]) && !ShadowsLaterClause(catches, i, context.SemanticModel, context.CancellationToken))
                 context.ReportDiagnostic(Diagnostic.Create(Rule, catches[i].GetLocation()));
         }
     }
@@ -44,16 +45,16 @@ public sealed class RedundantCatchClauseAnalyzer : DiagnosticAnalyzer
         clause.Filter is null && clause.Block.Statements is [ThrowStatementSyntax { Expression: null }];
 
     /// <summary>Whether a clause after <paramref name="index"/> would catch what this one catches, and so only sees it because this one rethrows.</summary>
-    private static bool ShadowsLaterClause(SyntaxList<CatchClauseSyntax> catches, int index, SemanticModel model)
+    private static bool ShadowsLaterClause(SyntaxList<CatchClauseSyntax> catches, int index, SemanticModel model, CancellationToken cancellationToken)
     {
-        var caught = CaughtType(catches[index], model);
+        var caught = CaughtType(catches[index], model, cancellationToken);
         for (var i = index + 1; i < catches.Count; i++)
         {
             // A later rethrow is redundant itself, so it takes nothing over.
             if (IsPlainRethrow(catches[i]))
                 continue;
 
-            var later = CaughtType(catches[i], model);
+            var later = CaughtType(catches[i], model, cancellationToken);
             if (caught is null || later is null || IsSameOrDerived(caught, later))
                 return true;
         }
@@ -62,11 +63,15 @@ public sealed class RedundantCatchClauseAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>The caught type, or <c>null</c> for a bare <c>catch</c> or one that cannot be resolved: either is taken to catch anything.</summary>
-    private static ITypeSymbol? CaughtType(CatchClauseSyntax clause, SemanticModel model) =>
-        clause.Declaration is { } declaration && model.GetTypeInfo(declaration.Type).Type is { TypeKind: not TypeKind.Error } type ? type : null;
+    private static ITypeSymbol? CaughtType(CatchClauseSyntax clause, SemanticModel model, CancellationToken cancellationToken) =>
+        clause.Declaration is { } declaration && model.GetTypeInfo(declaration.Type, cancellationToken).Type is { TypeKind: not TypeKind.Error } type ? type : null;
 
     private static bool IsSameOrDerived(ITypeSymbol type, ITypeSymbol candidateBase)
     {
+        // A type parameter has no base type to walk, yet 'catch (T)' can catch whatever its argument derives from.
+        if (type is ITypeParameterSymbol || candidateBase is ITypeParameterSymbol)
+            return true;
+
         for (var current = type; current is not null; current = current.BaseType)
         {
             if (SymbolEqualityComparer.Default.Equals(current, candidateBase))

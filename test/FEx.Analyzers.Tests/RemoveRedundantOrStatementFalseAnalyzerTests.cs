@@ -8,18 +8,16 @@ public class RemoveRedundantOrStatementFalseAnalyzerTests
     private static Task VerifyAsync(string source) => AnalyzerTestHelper.VerifyAsync<RemoveRedundantOrStatementFalseAnalyzer>(source);
 
     [Fact]
-    public Task Reports_or_assign_false_on_a_local_a_field_and_a_property() =>
+    public Task Reports_or_assign_false_on_a_local_and_a_field() =>
         VerifyAsync("""
             class C
             {
                 private bool _field;
                 private static bool _static;
-                public bool Property { get; set; }
                 void Local() { var a = true; {|FEX0033:a |= false;|} }
                 void Field() { {|FEX0033:_field |= false;|} }
                 void This() { {|FEX0033:this._field |= false;|} }
                 void Static() { {|FEX0033:_static |= false;|} }
-                void Prop() { {|FEX0033:Property |= false;|} }
                 void Other(C other) { {|FEX0033:other._field |= false;|} }
             }
             """);
@@ -108,6 +106,20 @@ public class RemoveRedundantOrStatementFalseAnalyzerTests
                 bool Assigned(bool a, bool b) { b = a |= false; return b; }
                 Func<bool> Lambda(bool a) => () => a |= false;
                 void Loop(bool a) { for (; ; a |= false) { } }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_or_assign_false_where_the_target_does_more_than_store() =>
+        VerifyAsync("""
+            class C
+            {
+                public bool Property { get; set; }
+                private bool[] Items() => new bool[1];
+                void Property_() { Property |= false; }
+                void Incremented(bool[] array, int i) { array[i++] |= false; }
+                void Called() { Items()[0] |= false; }
+                void Indexed(System.Collections.Generic.List<bool> list) { list[0] |= false; }
             }
             """);
 }

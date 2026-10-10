@@ -44,7 +44,6 @@ public class RedundantToStringCallAnalyzerTests
             class C
             {
                 string Plain(object o) => $"{ {|FEX0022:o.ToString()|} }";
-                string Formatted(object o) => $"{ {|FEX0022:o.ToString()|}:x}";
                 string Aligned(object o) => $"{ {|FEX0022:o.ToString()|},5}";
             }
             """);
@@ -207,6 +206,110 @@ public class RedundantToStringCallAnalyzerTests
                 void Mine(Writer w, object o) { w.Append(o.ToString()); }
                 void Range(StringBuilder sb, object o) { sb.Append(o.ToString(), 0, 1); }
                 string Pattern(Uri uri) => string.Format(uri.ToString(), 1);
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_ToString_next_to_a_user_defined_plus_a_conversion_or_a_hiding_ToString() =>
+        VerifyAsync("""
+            class WithPlus
+            {
+                public override string ToString() => "TOSTR";
+                public static string operator +(string left, WithPlus right) => left + "PLUS";
+            }
+            class WithConversion
+            {
+                public override string ToString() => "TOSTR";
+                public static implicit operator string(WithConversion value) => "CONV";
+            }
+            class Hides
+            {
+                public new string ToString() => "HIDDEN";
+            }
+            class C
+            {
+                string Plus(WithPlus p) => "a" + p.ToString();
+                string Conversion(WithConversion c) => "a" + c.ToString();
+                string Hidden(Hides h) => "a" + h.ToString();
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_ToString_whose_removal_changes_the_overload() =>
+        VerifyAsync("""
+            using System.Text;
+            class WithConversion
+            {
+                public override string ToString() => "TOSTR";
+                public static implicit operator string(WithConversion value) => "CONV";
+            }
+            class C
+            {
+                void Chars(StringBuilder sb, char[] chars) { sb.Append(chars.ToString()); }
+                void Converted(StringBuilder sb, WithConversion c) { sb.Append(c.ToString()); }
+                string Objects(object[] array) => string.Format("{0}", array.ToString());
+                string Strings(string[] array) => string.Format("{0}", array.ToString());
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_ToString_in_a_hole_that_has_a_format_or_goes_to_a_handler_or_formattable() =>
+        VerifyAsync("""
+            using System;
+            using System.Globalization;
+            class C
+            {
+                string Formatted(object o) => $"{o.ToString():x}";
+                string Handler(object o) => string.Create(CultureInfo.InvariantCulture, $"{o.ToString()}");
+                FormattableString Formattable(object o) => $"{o.ToString()}";
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_ToString_passed_to_a_named_parameter_that_is_not_the_format() =>
+        VerifyAsync("""
+            class C
+            {
+                string Named(object f) => string.Format(arg0: "x", format: f.ToString());
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_two_ToString_calls_that_would_leave_no_string() =>
+        VerifyAsync("""
+            class C
+            {
+                string Both(object a, object b) => a.ToString() + b.ToString();
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_ToString_that_is_the_receiver_of_a_null_conditional_call() =>
+        VerifyAsync("""
+            class C
+            {
+                string Trimmed(object o) => "a" + o.ToString()?.Trim();
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_receiver_that_is_a_ref_struct() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                string Span(Span<char> span) => "a" + span.ToString();
+                string ReadOnly(ReadOnlySpan<char> text) => "a" + text.ToString();
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_two_ToString_calls_when_the_other_one_is_parenthesized_or_null_conditional() =>
+        VerifyAsync("""
+            class C
+            {
+                string Parenthesized(object a, object b) => a.ToString() + (b.ToString());
+                string Conditional(object a, object b) => a.ToString() + b?.ToString();
             }
             """);
 }

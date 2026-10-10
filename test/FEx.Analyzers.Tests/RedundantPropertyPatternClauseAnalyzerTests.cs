@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis.CSharp;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -103,4 +104,36 @@ public class RedundantPropertyPatternClauseAnalyzerTests
                 bool Constant(object o) => o is null;
             }
             """);
+
+    [Fact]
+    public Task Ignores_empty_braces_that_make_a_type_test_an_always_true_check() =>
+        VerifyAsync("""
+            class C
+            {
+                bool Plain(int i) => i is int { };
+                bool Combined(int i) => i is int { } and > 0;
+            }
+            """);
+
+    [Fact]
+    public Task Reports_empty_braces_behind_a_type_that_can_still_fail_or_be_nullable() =>
+        VerifyAsync("""
+            class C
+            {
+                bool Boxed(object o) => o is int {|FEX0031:{ }|};
+                bool Nullable(int? n) => n is int {|FEX0031:{ }|};
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_empty_braces_where_the_type_pattern_needs_a_newer_language_version() =>
+        AnalyzerTestHelper.VerifyAsync<RedundantPropertyPatternClauseAnalyzer>(
+            """
+            class C
+            {
+                int Switch(object o) { switch (o) { case string { }: return 1; default: return 2; } }
+                bool Test(object o) => o is string {|FEX0031:{ }|};
+            }
+            """,
+            languageVersion: LanguageVersion.CSharp8);
 }

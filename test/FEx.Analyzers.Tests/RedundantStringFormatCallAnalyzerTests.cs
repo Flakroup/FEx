@@ -104,4 +104,13 @@ public class RedundantStringFormatCallAnalyzerTests
                 string Null() => string.Format(null);
             }
             """);
+
+    [Fact]
+    public Task Ignores_a_literal_whose_braces_are_written_as_escapes() =>
+        VerifyAsync("""
+            class C
+            {
+                string Escaped() => string.Format("{}");
+            }
+            """);
 }

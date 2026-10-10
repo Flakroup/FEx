@@ -126,4 +126,45 @@ public class RedundantToStringCallForValueTypeAnalyzerTests
                 bool Right(int i) => "a" != i.ToString();
             }
             """);
+
+    [Fact]
+    public Task Ignores_a_value_type_next_to_a_user_defined_plus_or_conversion() =>
+        VerifyAsync("""
+            struct WithPlus
+            {
+                public override string ToString() => "TOSTR";
+                public static string operator +(string left, WithPlus right) => left + "SPLUS";
+            }
+            struct WithConversion
+            {
+                public override string ToString() => "TOSTR";
+                public static implicit operator string(WithConversion value) => "CONV";
+            }
+            class C
+            {
+                string Plus(WithPlus s) => "a" + s.ToString();
+                string Conversion(WithConversion s) => "a" + s.ToString();
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_two_numbers_that_would_add_instead_of_concatenate() =>
+        VerifyAsync("""
+            class C
+            {
+                string Both(int i, int j) => i.ToString() + j.ToString();
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_receiver_that_is_a_ref_struct_or_a_null_conditional_receiver() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                string Span(Span<char> span) => "a" + span.ToString();
+                string ReadOnly(ReadOnlySpan<char> text) => "a" + text.ToString();
+                string Trimmed(int i) => "a" + i.ToString()?.Trim();
+            }
+            """);
 }

@@ -655,4 +655,85 @@ public class RedundantArgumentDefaultValueAnalyzerTests
                 int Run() => this[1, 2];
             }
             """);
+
+    [Fact]
+    public Task Ignores_a_default_that_differs_in_the_sign_of_zero_or_the_scale_of_a_decimal() =>
+        VerifyAsync("""
+            class C
+            {
+                static void Negative(double d = -0.0) { }
+                static void Scaled(decimal d = 1.0m) { }
+                void Run()
+                {
+                    Negative(0);
+                    Negative(0.0);
+                    Scaled(1m);
+                    Scaled(1.00m);
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_default_that_matches_bit_for_bit_and_scale_for_scale() =>
+        VerifyAsync("""
+            class C
+            {
+                static void Negative(double d = -0.0) { }
+                static void Scaled(decimal d = 1.0m) { }
+                void Run()
+                {
+                    Negative({|FEX0029:-0.0|});
+                    Scaled({|FEX0029:1.0m|});
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_new_of_a_type_parameter_because_its_constructor_may_do_more_than_default() =>
+        VerifyAsync("""
+            class C
+            {
+                static int Take<T>(T value = default) where T : struct => 0;
+                static int Run<T>() where T : struct => Take<T>(new T());
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_call_in_a_query_over_a_queryable_but_reports_one_over_an_enumerable() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            using System.Linq;
+            class C
+            {
+                static int Def(int a, int b = 0) => a;
+                object Queryable(IQueryable<int> q) => from x in q where Def(x, 0) > 0 select x;
+                object Enumerable(IEnumerable<int> e) => from x in e where Def(x, {|FEX0029:0|}) > 0 select x;
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_call_in_a_lambda_nested_in_an_expression_tree() =>
+        VerifyAsync("""
+            using System;
+            using System.Linq.Expressions;
+            class C
+            {
+                static int Def(int a, int b = 0) => a;
+                Expression<Func<int, Func<int, int>>> Nested() => a => b => Def(b, 0);
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_default_in_a_target_typed_creation_of_a_nullable_reference_type() =>
+        VerifyAsync("""
+            #nullable enable
+            class P
+            {
+                public P(int a, int b = 0) { }
+            }
+            class C
+            {
+                P? Make() => new(1, {|FEX0029:0|});
+            }
+            """);
 }

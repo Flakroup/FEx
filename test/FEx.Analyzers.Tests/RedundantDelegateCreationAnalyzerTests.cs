@@ -163,17 +163,6 @@ public class RedundantDelegateCreationAnalyzerTests
             """);
 
     [Fact]
-    public Task Reports_a_creation_that_is_a_tuple_component() =>
-        VerifyAsync("""
-            using System;
-            class C
-            {
-                static void Run() { }
-                (Action, int) Pair() => ({|FEX0028:new Action(Run)|}, 1);
-            }
-            """);
-
-    [Fact]
     public Task Ignores_a_creation_passed_to_a_call_that_does_not_resolve() =>
         VerifyAsync("""
             using System;
@@ -197,6 +186,104 @@ public class RedundantDelegateCreationAnalyzerTests
             {
                 static void Run() { }
                 Action M() => new Wrapper(Run);
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_creation_that_is_a_tuple_element_a_query_select_or_an_implicit_array_element() =>
+        VerifyAsync("""
+            using System;
+            using System.Linq;
+            class C
+            {
+                static void Run() { }
+                (Action, int) Pair() => (new Action(Run), 1);
+                void Var() { var t = (new Action(Run), 1); }
+                void Select() { var q = from x in new[] { 1 } select new Action(Run); }
+                void Array() { var a = new[] { new Func<int, int>(x => x) }; }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_creation_that_is_invoked_directly() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                static void Run() { }
+                void Direct() { new Action(Run)(); }
+                void Lambda() { new Action(() => { })(); }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_creation_in_a_switch_arm_or_a_conditional_branch() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                static void A() { }
+                static void B() { }
+                void Switch(int k) { var s = k switch { 1 => new Action(A), _ => new Action(B) }; }
+                void Conditional(bool b) { var c = b ? new Action(A) : new Action(B); }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_creation_passed_to_a_primary_constructor_base_call() =>
+        VerifyAsync("""
+            using System;
+            class BaseD { public BaseD(Action a) { } }
+            class P() : BaseD(new Action(A))
+            {
+                static void A() { }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_creation_passed_inside_a_null_conditional_chain() =>
+        VerifyAsync("""
+            using System;
+            class Holder
+            {
+                public Holder P => this;
+                public Holder N() => this;
+                public void T(Action a) { }
+                public int this[Action a] => 0;
+            }
+            class C
+            {
+                static void F() { }
+                void Chain(Holder h) { h?.P.T(new Action(F)); h?.N().T(new Action(F)); }
+                int? Index(Holder h) => h?[new Action(F)];
+                int? Mixed(Holder h) => h?.P[new Action(F)];
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_creation_passed_to_an_indexer_that_keeps_its_overload() =>
+        VerifyAsync("""
+            using System;
+            class Holder
+            {
+                public int this[Action a] => 0;
+            }
+            class C
+            {
+                static void F() { }
+                int Index(Holder h) => h[{|FEX0028:new Action(F)|}];
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_creation_next_to_an_argument_that_holds_a_whole_null_conditional_access() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                static void Run() { }
+                static void Take(Action action, int? length) { }
+                void M(string text) { Take({|FEX0028:new Action(Run)|}, text?.Length); }
             }
             """);
 }

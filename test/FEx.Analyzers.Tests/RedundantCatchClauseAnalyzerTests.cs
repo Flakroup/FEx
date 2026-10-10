@@ -156,4 +156,45 @@ public class RedundantCatchClauseAnalyzerTests
                 void Run() { }
             }
             """);
+
+    [Fact]
+    public Task Ignores_a_rethrow_of_a_type_parameter_because_it_may_shadow_a_later_clause() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                void Run() { }
+                void Log() { }
+                void Before<T>() where T : Exception
+                {
+                    try { Run(); }
+                    catch (T) { throw; }
+                    catch (Exception) { Log(); }
+                }
+                void After<T>() where T : Exception
+                {
+                    try { Run(); }
+                    catch (ArgumentException) { throw; }
+                    catch (T) { Log(); }
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_rethrow_that_follows_a_filtered_clause_of_its_base_type() =>
+        VerifyAsync("""
+            using System;
+            class C
+            {
+                void Run() { }
+                void Log() { }
+                bool Check() => true;
+                void M()
+                {
+                    try { Run(); }
+                    catch (Exception) when (Check()) { Log(); }
+                    {|FEX0035:catch (ArgumentException) { throw; }|}
+                }
+            }
+            """);
 }

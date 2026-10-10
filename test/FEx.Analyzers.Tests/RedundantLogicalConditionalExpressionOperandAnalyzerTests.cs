@@ -114,4 +114,37 @@ public class RedundantLogicalConditionalExpressionOperandAnalyzerTests
                 bool Comparison(int i) => i > 0 && i < 5;
             }
             """);
+
+    [Fact]
+    public Task Ignores_a_named_constant_inside_a_larger_expression() =>
+        VerifyAsync("""
+            class C
+            {
+                private const bool Flag = true;
+                private const bool Off = false;
+                bool Negated(bool a) => a || !Flag;
+                bool Compared(bool a) => a && Flag == true;
+                bool NegatedCompared(bool a) => a && !Off == true;
+                bool Grouped(bool a) => a && (Flag);
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_operands_that_are_not_plain_bool_so_the_operators_run_code() =>
+        VerifyAsync("""
+            struct Tri
+            {
+                public static Tri operator &(Tri a, Tri b) => a;
+                public static Tri operator |(Tri a, Tri b) => a;
+                public static bool operator true(Tri a) => true;
+                public static bool operator false(Tri a) => false;
+                public static implicit operator Tri(bool b) => default;
+            }
+            class C
+            {
+                Tri And(Tri a) => a && true;
+                Tri Or(Tri a) => a || false;
+                dynamic Dynamic(dynamic d) => d && true;
+            }
+            """);
 }

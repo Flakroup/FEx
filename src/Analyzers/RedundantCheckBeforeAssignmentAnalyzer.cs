@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -40,12 +41,23 @@ public sealed class RedundantCheckBeforeAssignmentAnalyzer : DiagnosticAnalyzer
             || !MatchesEitherWay(condition, assignment))
             return;
 
-        // A property setter may do more than store, so skipping it is a behaviour change; a field, a local and an indexer cannot.
-        if (context.SemanticModel.GetSymbolInfo(assignment.Left).Symbol is IPropertySymbol { IsIndexer: false })
+        // A property or an indexer setter may do more than store (raise an event, throw, count calls), so skipping it is a behaviour change;
+        // so is calling the value's expression once instead of twice, or reading it through an operator that is not plain equality.
+        var model = context.SemanticModel;
+        var cancellationToken = context.CancellationToken;
+        if (!PlainStorage.IsPlainStorage(assignment.Left, model, cancellationToken)
+            || HasEffects(assignment.Right)
+            || model.GetSymbolInfo(condition, cancellationToken).Symbol is IMethodSymbol { MethodKind: MethodKind.UserDefinedOperator, ContainingType.SpecialType: SpecialType.None })
             return;
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, statement.GetLocation()));
     }
+
+    // Anything that runs code or changes state: evaluating it once less is observable.
+    private static bool HasEffects(ExpressionSyntax expression) => expression.DescendantNodesAndSelf().Any(static n => n
+        is InvocationExpressionSyntax or BaseObjectCreationExpressionSyntax or AssignmentExpressionSyntax or AwaitExpressionSyntax
+        || n.IsKind(SyntaxKind.PreIncrementExpression) || n.IsKind(SyntaxKind.PreDecrementExpression)
+        || n.IsKind(SyntaxKind.PostIncrementExpression) || n.IsKind(SyntaxKind.PostDecrementExpression));
 
     private static AssignmentExpressionSyntax? SingleAssignment(StatementSyntax body)
     {

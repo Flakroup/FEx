@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -33,26 +35,28 @@ public sealed class RedundantLogicalConditionalExpressionOperandAnalyzer : Diagn
     private static void Analyze(SyntaxNodeAnalysisContext context)
     {
         var binary = (BinaryExpressionSyntax)context.Node;
+        var model = context.SemanticModel;
+
+        // Only plain bool operands, which use the built-in operator: a user-defined '&', '|', 'true' or 'false' and a 'dynamic' operand run code of their own.
+        if (model.GetTypeInfo(binary.Left, context.CancellationToken).Type?.SpecialType != SpecialType.System_Boolean
+            || model.GetTypeInfo(binary.Right, context.CancellationToken).Type?.SpecialType != SpecialType.System_Boolean)
+            return;
 
         // The value that changes nothing: true for 'and', false for 'or'.
         var neutral = binary.IsKind(SyntaxKind.LogicalAndExpression);
         foreach (var operand in new[] { binary.Left, binary.Right })
         {
-            if (IsConstant(operand, context.SemanticModel, neutral))
+            if (IsConstant(operand, model, neutral, context.CancellationToken))
                 context.ReportDiagnostic(Diagnostic.Create(Rule, operand.GetLocation()));
         }
     }
 
-    private static bool IsConstant(ExpressionSyntax operand, SemanticModel model, bool expected)
+    private static bool IsConstant(ExpressionSyntax operand, SemanticModel model, bool expected, CancellationToken cancellationToken)
     {
-        if (model.GetConstantValue(operand) is not { HasValue: true, Value: bool value } || value != expected)
+        if (model.GetConstantValue(operand, cancellationToken) is not { HasValue: true, Value: bool value } || value != expected)
             return false;
 
-        // Naming a constant is a statement of intent, and ReSharper leaves it alone.
-        var inner = operand;
-        while (inner is ParenthesizedExpressionSyntax parenthesized)
-            inner = parenthesized.Expression;
-
-        return inner is not (IdentifierNameSyntax or MemberAccessExpressionSyntax);
+        // Naming a constant anywhere in the operand ('Flag', '!Flag', 'Flag == true') is a statement of intent, and ReSharper leaves it alone.
+        return !operand.DescendantNodesAndSelf().Any(static n => n is IdentifierNameSyntax or MemberAccessExpressionSyntax);
     }
 }

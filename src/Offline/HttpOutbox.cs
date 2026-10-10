@@ -1,6 +1,7 @@
 using FEx.Offline.Abstractions;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -51,7 +52,9 @@ public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining
 /// Store-and-forward queue for writes made while offline. Enqueue persists the request; flush
 /// replays the queue in order, sending each entry's id as the Idempotency-Key header so a retry of a
 /// request that DID land (but whose response was lost) never double-executes, plus every replay header
-/// the host registered. A 2xx removes the entry. A 4xx other than 401, 408 and 429 moves it to the dead-letter
+/// the host registered. A 2xx removes the entry, and so does a 409 whose
+/// <c>Idempotency-Original-Status</c> header carries a 2xx status (the write completed on an earlier attempt, only its
+/// response was too large for the server to replay). A 4xx other than 401, 408 and 429 moves it to the dead-letter
 /// list (the server understood and rejected it - retrying forever cannot fix a validation error) and the flush
 /// goes on. A 5xx other than 503 keeps the entry, counts a server failure on it and stops the flush (the server is sick -
 /// hammering the rest of the queue would not help); at the limit of server failures the entry moves to the
@@ -69,6 +72,10 @@ public sealed class HttpOutbox
     /// reference ASP.NET Core, so the two sides keep their own copy of the same header name.
     /// </summary>
     public const string IdempotencyHeader = "Idempotency-Key";
+
+    // Same reason as IdempotencyHeader: a copy of FEx.AspNetCorex.IdempotencyMiddleware.OriginalStatusHeaderName,
+    // which this project cannot reference. HttpOutboxIdempotencyTests runs the outbox against the real middleware.
+    private const string OriginalStatusHeader = "Idempotency-Original-Status";
 
     /// <summary>How many 5xx answers other than 503 an entry takes before it moves to the dead-letter list.</summary>
     public const int DefaultMaxServerFailures = 10;
@@ -227,7 +234,7 @@ public sealed class HttpOutbox
             {
                 using var response = await http.SendAsync(request);
 
-                if (response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode || IsCompletedEarlier(response))
                 {
                     await RemoveAsync(entry);
 
@@ -301,6 +308,14 @@ public sealed class HttpOutbox
 
         return new(sent, deadLettered, await CountAsync(), lastError);
     }
+
+    // The server's idempotency layer answers 409 + the original 2xx status when a replayed write had already completed
+    // but its response was too large to store: the write landed, so it is delivered, not rejected.
+    private static bool IsCompletedEarlier(HttpResponseMessage response) =>
+        response.StatusCode == HttpStatusCode.Conflict
+        && response.Headers.TryGetValues(OriginalStatusHeader, out var values)
+        && int.TryParse(values.FirstOrDefault(), NumberStyles.None, CultureInfo.InvariantCulture, out var original)
+        && original is >= 200 and < 300;
 
     private static bool IsTransientClientError(HttpStatusCode status) =>
         status is HttpStatusCode.Unauthorized or HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests;

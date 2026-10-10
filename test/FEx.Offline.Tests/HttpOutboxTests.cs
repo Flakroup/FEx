@@ -148,6 +148,85 @@ public sealed class HttpOutboxTests
         handler.Requests.Count.ShouldBe(2); // the flush went on past the refusal
     }
 
+    [Theory]
+    [InlineData("200")]
+    [InlineData("201")]
+    [InlineData("204")]
+    public async Task ConflictForAWriteThatAlreadyCompleted_RemovesTheEntryAsDelivered_AndTheFlushGoesOn(string originalStatus)
+    {
+        // The server's idempotency layer answers 409 + the original 2xx when a write landed but its stored
+        // response was too large to replay: the write is done, so it must not show up as a failed one.
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Conflict, "Idempotency-Original-Status", originalStatus);
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(2, 0, 0, null));
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+        handler.Requests.Count.ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("abc")]
+    [InlineData("-201")]
+    [InlineData("199")]
+    [InlineData("300")]
+    [InlineData("409")]
+    [InlineData("500")]
+    public async Task Conflict_WithoutA2xxOriginalStatus_StillMovesTheEntryToTheDeadLetterList(string? originalStatus)
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+
+        if (originalStatus is null)
+            handler.EnqueueResponse(HttpStatusCode.Conflict, "duplicate");
+        else
+            handler.EnqueueResponse(HttpStatusCode.Conflict, "Idempotency-Original-Status", originalStatus);
+
+        using var http = Client(handler);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.Sent.ShouldBe(0);
+        result.DeadLettered.ShouldBe(1);
+        result.Remaining.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(409);
+    }
+
+    [Fact]
+    public async Task ConflictForAWriteThatAlreadyCompleted_LeavesNoStaleDeadCopy()
+    {
+        // The write was buried, removing the live entry failed, and the replay then found the write done.
+        FailingFirstRemoveStore store = new();
+        HttpOutbox outbox = new(store, new FixedTime(T0), maxServerFailures: 1);
+        await outbox.EnqueueAsync("POST", "api/a", null);
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        handler.EnqueueResponse(HttpStatusCode.Conflict, "Idempotency-Original-Status", "201");
+        using var http = Client(handler);
+
+        await Should.ThrowAsync<IOException>(() => outbox.FlushAsync(http));
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(1, 0, 0, null));
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
     [Fact]
     public async Task SessionNotEnough_KeepsTheEntryWithTheError_AndStopsTheFlush()
     {

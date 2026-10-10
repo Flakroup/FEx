@@ -795,10 +795,12 @@ public sealed class HttpOutboxTests
         (await after.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(504);
     }
 
-    [Fact]
-    public async Task TheDefaultLimit_IsTen()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TheDefaultLimit_IsTen(bool withReplayHeaders)
     {
-        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        var outbox = DefaultOutbox(withReplayHeaders);
         await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
 
         using ScriptedHandler handler = new();
@@ -816,6 +818,31 @@ public sealed class HttpOutboxTests
         (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem().ServerFailures.ShouldBe(10);
         HttpOutbox.DefaultMaxServerFailures.ShouldBe(10);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TheDefaultUnavailableLimit_IsAHundred(bool withReplayHeaders)
+    {
+        var outbox = DefaultOutbox(withReplayHeaders);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+
+        for (var i = 0; i < 100; i++)
+            handler.EnqueueResponse(HttpStatusCode.ServiceUnavailable);
+
+        using var http = Client(handler);
+
+        for (var i = 0; i < 99; i++)
+            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+
+        (await outbox.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(99);
+
+        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(503);
+        HttpOutbox.DefaultMaxUnavailableAnswers.ShouldBe(100);
     }
 
     [Theory]
@@ -1211,6 +1238,12 @@ public sealed class HttpOutboxTests
         "GET /login" => (200, null, "login page"),
         _ => (200, null, "ok")
     });
+
+    // The default limits through the constructor without replay headers, or the one with them.
+    private static HttpOutbox DefaultOutbox(bool withReplayHeaders) =>
+        withReplayHeaders
+            ? Outbox(ClientMarker())
+            : new(new InMemoryKeyValueStore(), new FixedTime(T0));
 
     private static HttpOutbox Outbox(Dictionary<string, string> replayHeaders) =>
         new(new InMemoryKeyValueStore(), new FixedTime(T0), null, replayHeaders);

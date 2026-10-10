@@ -16,8 +16,8 @@ namespace FEx.Offline;
 /// One queued write. <see cref="Id" /> doubles as the Idempotency-Key the server replays on.
 /// <see cref="Attempts" /> counts every failed replay, a dropped connection included;
 /// <see cref="ServerFailures" /> counts only the 5xx answers other than 502, 503 and 504, which is what
-/// <see cref="HttpOutbox.DefaultMaxServerFailures" /> caps, and <see cref="UnavailableAnswers" /> counts the 408, 502, 503 and 504 ones,
-/// which <see cref="HttpOutbox.DefaultMaxUnavailableAnswers" /> caps.
+/// <see cref="HttpOutbox.DefaultMaxServerFailures" /> caps, and <see cref="UnavailableAnswers" /> counts the 408, 502, 503 and 504 ones and
+/// the answers that came after a followed redirect, which <see cref="HttpOutbox.DefaultMaxUnavailableAnswers" /> caps.
 /// </summary>
 public sealed record OutboxEntry(
     Guid Id,
@@ -69,7 +69,10 @@ public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining
 /// write is wrong, so a short outage buries nothing, yet a write the origin answers that way on every flush is
 /// dead-lettered at that limit instead of blocking the queue forever. A 401, 429 or a transport failure keeps the entry,
 /// records the error and stops the flush as well, but is never counted: the session needs renewing, the server is
-/// throttling or the network is down, none of which says anything about the write. Dead entries are listed with
+/// throttling or the network is down, none of which says anything about the write. An answer that arrives after a
+/// redirect the client followed (the final request's method or URI is not the queued one - a login page standing in
+/// for an expired session, say) is never a delivery, whatever its status: it keeps the entry like a 401 and counts as an
+/// unavailable answer, so a redirect that never ends is dead-lettered at that limit. Dead entries are listed with
 /// <see cref="ListDeadAsync" /> and deleted with <see cref="RemoveDeadAsync" />.
 /// </summary>
 public sealed class HttpOutbox
@@ -93,8 +96,8 @@ public sealed class HttpOutbox
     public const int DefaultMaxServerFailures = 10;
 
     /// <summary>
-    /// How many 408, 502, 503 or 504 answers an entry takes before it moves to the dead-letter list. They say the origin was
-    /// unreachable or overloaded, not that the write is wrong, so the limit is far above <see cref="DefaultMaxServerFailures" />:
+    /// How many 408, 502, 503, 504 or followed-redirect answers an entry takes before it moves to the dead-letter list. They say
+    /// the origin was unreachable or overloaded, or the session needs renewing, not that the write is wrong, so the limit is far above <see cref="DefaultMaxServerFailures" />:
     /// an outage of that many flushes buries nothing a healthy origin would refuse, while a write that always gets such an
     /// answer still stops blocking the queue behind it.
     /// </summary>
@@ -260,11 +263,22 @@ public sealed class HttpOutbox
 
             request.Headers.Add(IdempotencyHeader, entry.Id.ToString());
 
+            // Taken before the send: the client follows a redirect by rewriting this very request, so afterwards it
+            // can no longer tell what was queued.
+            var queuedMethod = request.Method;
+            var queuedUri = request.RequestUri is { IsAbsoluteUri: false } relative && http.BaseAddress is { } baseAddress
+                ? new Uri(baseAddress, relative)
+                : request.RequestUri;
+
             try
             {
                 using var response = await http.SendAsync(request);
 
-                if (response.IsSuccessStatusCode || IsCompletedEarlier(response))
+                // A client that follows redirects hands back the final answer: a login page's 200 for a write whose session
+                // expired is not a delivery, so a redirected answer is judged before its status.
+                var redirected = IsFollowedRedirect(queuedMethod, queuedUri, response);
+
+                if (!redirected && (response.IsSuccessStatusCode || IsCompletedEarlier(response)))
                 {
                     await RemoveAsync(entry);
 
@@ -280,11 +294,13 @@ public sealed class HttpOutbox
 
                 // Only a 5xx other than 502/503/504 says the server refused the write itself. A 408/502/503/504 (timeout, failing
                 // gateway, temporary overload) says the origin was unreachable: it counts on its own, much higher limit, so a
-                // short outage buries nothing but a write that always meets it cannot block the queue for good. A 401 (sign in
-                // again), a 429 (throttling) and a dropped connection say nothing about the write and never count - a device
-                // offline for a week must not lose its writes.
-                var unavailable = response.StatusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.BadGateway
-                    or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout;
+                // short outage buries nothing but a write that always meets it cannot block the queue for good. So does a
+                // followed redirect (the session is not enough, like a 401, but one that never ends must not block either). A 401,
+                // a 429 (throttling) and a dropped connection say nothing about the write and never count - a device offline
+                // for a week must not lose its writes.
+                var unavailable = redirected
+                                  || response.StatusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.BadGateway
+                                      or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout;
                 var countsAsServerFailure = status >= 500 && !unavailable;
                 var serverFailures = entry.ServerFailures + (countsAsServerFailure ? 1 : 0);
                 var unavailableAnswers = entry.UnavailableAnswers + (unavailable ? 1 : 0);
@@ -293,7 +309,7 @@ public sealed class HttpOutbox
                 // land, and 408/429 are transient by definition, so these stay queued like a 5xx. Every other
                 // 4xx, 403 included, is the server refusing this request itself (validation, permission,
                 // conflict): a retry cannot succeed, so it is dead-lettered for the consumer to read.
-                var rejected = status is >= 400 and < 500 && !IsTransientClientError(response.StatusCode);
+                var rejected = status is >= 400 and < 500 && !redirected && !IsTransientClientError(response.StatusCode);
 
                 if (rejected
                     || countsAsServerFailure && serverFailures >= _maxServerFailures
@@ -315,7 +331,9 @@ public sealed class HttpOutbox
 
                 // Server-side trouble (5xx), a session to renew (401) or throttling/overload/gateway failure (408/429/502/503/504): worth retrying later,
                 // not worth hammering now - stopping the flush here also spares a rate-limited server the rest of the queue.
-                var error = $"HTTP {status}";
+                var error = redirected
+                    ? $"HTTP {status} after a redirect to {response.RequestMessage?.RequestUri}"
+                    : $"HTTP {status}";
 
                 await SaveAsync(entry with
                 {
@@ -355,6 +373,12 @@ public sealed class HttpOutbox
         && response.Headers.TryGetValues(OriginalStatusHeader, out var values)
         && int.TryParse(values.FirstOrDefault(), NumberStyles.None, CultureInfo.InvariantCulture, out var original)
         && original is >= 200 and < 300;
+
+    // A followed redirect leaves the final request with another URI or another method (a 302 turns a POST into a GET).
+    // A response with no request attached (a hand-built one) is never a redirect.
+    private static bool IsFollowedRedirect(HttpMethod queuedMethod, Uri? queuedUri, HttpResponseMessage response) =>
+        response.RequestMessage is { } final
+        && (final.Method != queuedMethod || final.RequestUri != queuedUri);
 
     private static bool IsTransientClientError(HttpStatusCode status) =>
         status is HttpStatusCode.Unauthorized or HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests;

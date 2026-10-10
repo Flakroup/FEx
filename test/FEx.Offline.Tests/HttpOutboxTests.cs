@@ -831,6 +831,82 @@ public sealed class HttpOutboxTests
     }
 
     [Theory]
+    [InlineData(HttpStatusCode.Found, "/login", "GET /login", false)]
+    [InlineData(HttpStatusCode.Found, "/login", "GET /login", true)]
+    [InlineData(HttpStatusCode.TemporaryRedirect, "/api/elsewhere", "POST /api/elsewhere", false)]
+    public async Task AnAnswerAfterAFollowedRedirect_KeepsTheEntry_CountsItAsUnavailable_AndStopsTheFlush(
+        HttpStatusCode redirect, string location, string finalRequest, bool absoluteUrl)
+    {
+        // A 302 turns the POST into a GET of the login page, whose 200 used to remove the write as delivered; a 307 keeps the
+        // method and changes only the URI. Either way the final request is not the queued one.
+        using var server = RedirectingServer(redirect, location);
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        await outbox.EnqueueAsync("POST", absoluteUrl ? $"{server.BaseAddress}api/payments" : "api/payments", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/ok", """{"n":2}""");
+
+        using HttpClient http = new()
+        {
+            BaseAddress = server.BaseAddress
+        };
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(0, 0, 2, $"HTTP 200 after a redirect to {server.BaseAddress.ToString().TrimEnd('/')}{finalRequest.Split(' ')[1]}"));
+        server.Requests.ShouldBe(["POST /api/payments", finalRequest]); // the second entry was never attempted
+
+        var kept = (await outbox.ListAsync())[0];
+        kept.UnavailableAnswers.ShouldBe(1);
+        kept.Attempts.ShouldBe(1);
+        kept.ServerFailures.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task AFollowedRedirect_AtTheUnavailableLimit_MovesTheEntryToTheDeadLetterList_AndTheFlushGoesOn()
+    {
+        using var server = RedirectingServer(HttpStatusCode.Found, "/login");
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, maxUnavailableAnswers: 2);
+        var redirected = await outbox.EnqueueAsync("POST", "api/payments", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/ok", """{"n":2}""");
+
+        using HttpClient http = new()
+        {
+            BaseAddress = server.BaseAddress
+        };
+
+        (await outbox.FlushAsync(http)).Remaining.ShouldBe(2);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(1, 1, 0, "HTTP 200: login page"));
+
+        var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+        dead.Id.ShouldBe(redirected.Id);
+        dead.StatusCode.ShouldBe(200);
+        dead.ResponseBody.ShouldBe("login page");
+    }
+
+    [Fact]
+    public async Task AnAnswerWithNoRedirect_StillDeliversTheEntry_OverARealClient()
+    {
+        using var server = RedirectingServer(HttpStatusCode.Found, "/login");
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/ok", """{"n":1}""");
+
+        using HttpClient http = new()
+        {
+            BaseAddress = server.BaseAddress
+        };
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        server.Requests.ShouldBe(["POST /api/ok"]);
+    }
+
+    [Theory]
     [InlineData(0)]
     [InlineData(-1)]
     public void AnUnavailableLimitBelowOne_IsRefused(int limit)
@@ -1127,6 +1203,14 @@ public sealed class HttpOutboxTests
         ["X-Client"] = MarkerValue,
         ["X-Second"] = SecondValue
     };
+
+    // POST /api/payments answers a redirect; the login page, the redirect target and /api/ok answer 200.
+    private static RawHttpServer RedirectingServer(HttpStatusCode redirect, string location) => new(request => request switch
+    {
+        "POST /api/payments" => ((int)redirect, location, ""),
+        "GET /login" => (200, null, "login page"),
+        _ => (200, null, "ok")
+    });
 
     private static HttpOutbox Outbox(Dictionary<string, string> replayHeaders) =>
         new(new InMemoryKeyValueStore(), new FixedTime(T0), null, replayHeaders);

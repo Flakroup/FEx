@@ -21,7 +21,7 @@ public class GoldenCorpusTests
 {
     private const string SampleMarker = "//# ";
 
-    private static readonly string[] SourceFiles = ["StyleA.cs", "StyleB.cs", "Stubs.cs"];
+    private static readonly string[] SourceFiles = ["StyleA.cs", "StyleB.cs", "Stubs.cs", "EmptyNs.cs"];
 
     private static readonly string[] CorpusLibraries = ["netstandard", "mscorlib", "Serilog", "JetBrains.Annotations"];
 
@@ -32,6 +32,22 @@ public class GoldenCorpusTests
         [VariableHidesOuterVariableAnalyzer.DiagnosticId] = "VariableHidesOuterVariable",
         [MemberHidesStaticFromOuterClassAnalyzer.DiagnosticId] = "MemberHidesStaticFromOuterClass",
         [BaseMemberHasParamsAnalyzer.DiagnosticId] = "BaseMemberHasParams",
+        [RedundantVerbatimPrefixAnalyzer.DiagnosticId] = "RedundantVerbatimPrefix",
+        [RedundantVerbatimStringPrefixAnalyzer.DiagnosticId] = "RedundantVerbatimStringPrefix",
+        [RedundantLambdaSignatureParenthesesAnalyzer.DiagnosticId] = "RedundantLambdaSignatureParentheses",
+        [RedundantAttributeParenthesesAnalyzer.DiagnosticId] = "RedundantAttributeParentheses",
+        [RedundantDeclarationSemicolonAnalyzer.DiagnosticId] = "RedundantDeclarationSemicolon",
+        [EmptyStatementAnalyzer.DiagnosticId] = "EmptyStatement",
+        [EmptyForStatementAnalyzer.DiagnosticId] = "EmptyForStatement",
+        [EmptyNamespaceAnalyzer.DiagnosticId] = "EmptyNamespace",
+        [RedundantCollectionInitializerElementBracesAnalyzer.DiagnosticId] = "RedundantCollectionInitializerElementBraces",
+        [RedundantQueryOrderByAscendingKeywordAnalyzer.DiagnosticId] = "RedundantQueryOrderByAscendingKeyword",
+        [RedundantEmptyFinallyBlockAnalyzer.DiagnosticId] = "RedundantEmptyFinallyBlock",
+        [RedundantEmptySwitchSectionAnalyzer.DiagnosticId] = "RedundantEmptySwitchSection",
+        [RedundantCaseLabelAnalyzer.DiagnosticId] = "RedundantCaseLabel",
+        [RedundantJumpStatementAnalyzer.DiagnosticId] = "RedundantJumpStatement",
+        [RedundantIfElseBlockAnalyzer.DiagnosticId] = "RedundantIfElseBlock",
+        [RedundantRangeBoundAnalyzer.DiagnosticId] = "RedundantRangeBound",
     };
 
     [Fact]
@@ -48,7 +64,23 @@ public class GoldenCorpusTests
             new LoopVariableNeverChangedAnalyzer(),
             new VariableHidesOuterVariableAnalyzer(),
             new MemberHidesStaticFromOuterClassAnalyzer(),
-            new BaseMemberHasParamsAnalyzer());
+            new BaseMemberHasParamsAnalyzer(),
+            new RedundantVerbatimPrefixAnalyzer(),
+            new RedundantVerbatimStringPrefixAnalyzer(),
+            new RedundantLambdaSignatureParenthesesAnalyzer(),
+            new RedundantAttributeParenthesesAnalyzer(),
+            new RedundantDeclarationSemicolonAnalyzer(),
+            new EmptyStatementAnalyzer(),
+            new EmptyForStatementAnalyzer(),
+            new EmptyNamespaceAnalyzer(),
+            new RedundantCollectionInitializerElementBracesAnalyzer(),
+            new RedundantQueryOrderByAscendingKeywordAnalyzer(),
+            new RedundantEmptyFinallyBlockAnalyzer(),
+            new RedundantEmptySwitchSectionAnalyzer(),
+            new RedundantCaseLabelAnalyzer(),
+            new RedundantJumpStatementAnalyzer(),
+            new RedundantIfElseBlockAnalyzer(),
+            new RedundantRangeBoundAnalyzer());
         var diagnostics = await compilation.WithAnalyzers(analyzers).GetAnalyzerDiagnosticsAsync(TestContext.Current.CancellationToken);
 
         // A crashing analyzer reports AD0001 and has no SourceTree to map to a sample; name the crash instead.

@@ -1,8 +1,9 @@
-using FEx.Agnostics.Abstractions.Extensions.Web;
-using FEx.Webx.Utilities;
+using FluentFTP;
+using FluentFTP.Exceptions;
 using System;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,16 +25,19 @@ internal interface IFtpTransport
     bool IsLocalProcessingAbort(Exception exception);
 }
 
-/// <summary>An open FTP download response; disposing it releases the underlying connection.</summary>
-internal interface IFtpResponse : IDisposable
+/// <summary>An open FTP download response; disposing it releases the underlying connection. Disposing twice is harmless.</summary>
+internal interface IFtpResponse : IAsyncDisposable
 {
     string StatusDescription { get; }
 
     Stream? GetResponseStream();
 }
 
+/// <summary>Downloads through FluentFTP, with every connection taken from the <see cref="FtpClientFactory" /> of the host.</summary>
 internal sealed class FtpTransport : IFtpTransport
 {
+    private const string LocalProcessingAbortCode = "451";
+
     public static FtpTransport Instance { get; } = new();
 
     public async Task<long> GetSizeAsync(Uri serverUri,
@@ -41,15 +45,26 @@ internal sealed class FtpTransport : IFtpTransport
                                          string password,
                                          CancellationToken cancellationToken)
     {
-        var request = (FtpWebRequest)serverUri.GetWebRequest();
-        request.Proxy = null;
-        request.ApplyCredentials(username, password);
-        request.Method = WebRequestMethods.Ftp.GetFileSize;
+#pragma warning disable IDISP001 // released through FtpCommon.ReleaseAsync on every path
+        var client = await CreateClientAsync(serverUri, username, password, cancellationToken);
+#pragma warning restore IDISP001
 
-        using var registration = cancellationToken.Register(request.Abort);
-        using var response = (FtpWebResponse)await request.GetResponseAsync();
+        try
+        {
+            await client.Connect(cancellationToken);
 
-        return response.ContentLength;
+            // A server may leave SIZE out of FEAT and still answer it (FtpWebRequest always asked); FluentFTP would not send it then.
+            if (!client.Capabilities.Contains(FtpCapability.SIZE))
+                client.Capabilities.Add(FtpCapability.SIZE);
+
+            var size = await client.GetFileSize(RemotePath(serverUri), -1, cancellationToken);
+
+            return size >= 0 ? size : throw new FtpException("The server did not report the size of the file.");
+        }
+        finally
+        {
+            await FtpCommon.ReleaseAsync(client);
+        }
     }
 
     public async Task<IFtpResponse> OpenAsync(Uri serverUri,
@@ -58,40 +73,155 @@ internal sealed class FtpTransport : IFtpTransport
                                               long offset,
                                               CancellationToken cancellationToken)
     {
-        var request = (FtpWebRequest)serverUri.GetWebRequest();
-        request.Method = WebRequestMethods.Ftp.DownloadFile;
-        request.ApplyCredentials(username, password);
-        request.ContentOffset = offset;
+#pragma warning disable IDISP001 // released through FtpCommon.ReleaseAsync on every path
+        var client = await CreateClientAsync(serverUri, username, password, cancellationToken);
+#pragma warning restore IDISP001
 
-        using var registration = cancellationToken.Register(request.Abort);
+        try
+        {
+            await client.Connect(cancellationToken);
 
-        return new Response((FtpWebResponse)await request.GetResponseAsync());
+            // fileLen -1: the size is not needed here, so no SIZE round trip.
+            return await client.OpenRead(RemotePath(serverUri), FtpDataType.Binary, offset, -1L, cancellationToken) is FtpDataStream data
+                ? new Response(client, data)
+                : throw new FtpException("The server did not open a data connection.");
+        }
+        catch
+        {
+            await FtpCommon.ReleaseAsync(client);
+
+            throw;
+        }
     }
 
+    /// <summary>A 451 reply to the transfer: the server gave up on a read, which the downloader retries and, past a limit, skips.</summary>
     public bool IsLocalProcessingAbort(Exception exception) =>
-        exception is WebException { Response: FtpWebResponse { StatusCode: FtpStatusCode.ActionAbortedLocalProcessingError } };
+        exception is FtpCommandException { CompletionCode: LocalProcessingAbortCode };
 
-    private sealed class Response(FtpWebResponse inner) : IFtpResponse
+    /// <summary>Explicit credentials win when both parts are given; otherwise the Uri user info, otherwise anonymous.</summary>
+    internal static NetworkCredential? GetCredentials(Uri serverUri, string username, string password)
     {
-        public string StatusDescription => inner.StatusDescription ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(username)
+            && !string.IsNullOrWhiteSpace(password))
+            return new(username, password);
 
-        public Stream? GetResponseStream() => inner.GetResponseStream();
+        if (serverUri.UserInfo.Length == 0)
+            return null;
 
-#pragma warning disable IDISP007 // ownership of the response was transferred to this wrapper
-        public void Dispose() => inner.Dispose();
-#pragma warning restore IDISP007
+        var parts = serverUri.UserInfo.Split([':'], 2);
+
+        return new(Uri.UnescapeDataString(parts[0]), parts.Length > 1 ? Uri.UnescapeDataString(parts[1]) : string.Empty);
     }
-}
 
-internal static class FtpWebRequestExtensions
-{
-    /// <summary>
-    /// Sets explicit credentials when both parts are given; otherwise keeps the request default (anonymous, or the
-    /// URI user info), because <see cref="FtpWebRequest" /> rejects <see cref="CredentialCache.DefaultNetworkCredentials" />.
-    /// </summary>
-    public static void ApplyCredentials(this FtpWebRequest request, string username, string password)
+    /// <summary>Path relative to the login directory, as FTP URLs conventionally read; an absolute path is spelled <c>//dir</c> or <c>%2Fdir</c>.</summary>
+    internal static string RemotePath(Uri serverUri)
     {
-        if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
-            request.Credentials = NetworkUtilities.GetCredentials(username, password);
+        var path = Uri.UnescapeDataString(serverUri.AbsolutePath);
+
+        return path.StartsWith("/", StringComparison.Ordinal) ? path.Substring(1) : path;
+    }
+
+    private static async Task<AsyncFtpClient> CreateClientAsync(Uri serverUri, string username, string password, CancellationToken cancellationToken)
+    {
+        // One pool per host: a path or user info in the Uri must not give every file its own connection limit.
+        var host = new UriBuilder(serverUri.Scheme, serverUri.DnsSafeHost, serverUri.Port).Uri;
+        var factory = await FtpClientFactory.GetInstanceAsync(host.AbsoluteUri);
+
+        var client = await factory.CreateCoreAsync(GetCredentials(serverUri, username, password), null, 0, cancellationToken);
+
+        // The path is the Uri's, decoded once, and names like 100%.bin, a;b.bin or v1..2.bin are legal on a server. Newlines
+        // (command injection) and Unicode spoofing stay rejected; the rest of the sanitizer would refuse such files outright.
+        client.Config.SanitizeControlChars = false;
+        client.Config.SanitizeUrlEncoding = false;
+        client.Config.SanitizeTraversal = false;
+
+        // FluentFTP sends commands in ASCII unless FEAT lists UTF8, which turns every non-ASCII character of a file name into
+        // '?'. FtpWebRequest always sent UTF-8 and asked for it with OPTS UTF8 ON; setting the encoding makes Connect send that
+        // OPTS after login too, and a server that refuses it is tolerated (FluentFTP only notes the failed reply).
+        client.Encoding = Encoding.UTF8;
+
+        // The default AutoPassive connects the data channel to the address in the PASV reply, so a hostile server could aim the
+        // client at any host (the port-scan/bounce class of curl CVE-2020-8284). PASVEX takes only the port from the reply and
+        // connects to the control host, which is what FtpWebRequest did. The cost: EPSV is never tried on an IPv4 control
+        // connection (it is used on IPv6, where FluentFTP switches to it itself), so an IPv4 server that answers EPSV but not PASV fails.
+        client.Config.DataConnectionType = FtpDataConnectionType.PASVEX;
+
+        return client;
+    }
+
+    private sealed class Response(AsyncFtpClient client, FtpDataStream data) : IFtpResponse
+    {
+        private readonly DownloadStream _stream = new(data);
+        private int _disposed;
+
+        public string StatusDescription { get; } = $"{data.CommandStatus.Code} {data.CommandStatus.Message}".Trim();
+
+        public Stream GetResponseStream() => _stream;
+
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+                return;
+
+            try
+            {
+                await _stream.CompleteAsync();
+            }
+            catch (Exception ex) when (ex is FtpException or IOException or TimeoutException)
+            {
+                // Abandoned or broken transfer: the release below drops the connection anyway.
+            }
+            finally
+            {
+                await FtpCommon.ReleaseAsync(client);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reads the data connection and, at its end, reads the final reply of the server, so a transfer the server
+    /// aborted (451) fails the read that hit the end instead of looking like a complete file.
+    /// </summary>
+    private sealed class DownloadStream(FtpDataStream data) : Stream
+    {
+        private bool _completed;
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+
+        public async Task CompleteAsync()
+        {
+            if (_completed)
+                return;
+
+            _completed = true;
+            await data.CloseAsync();
+        }
+
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            var read = await data.ReadAsync(buffer, offset, count, cancellationToken);
+
+            if (read == 0)
+                await CompleteAsync();
+
+            return read;
+        }
+
+        // ponytail: the downloader reads asynchronously only; a synchronous read would have to block on the final reply.
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException("Read asynchronously.");
+
+        public override void Flush()
+        {
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 }

@@ -46,11 +46,7 @@ public static class FtpCommon
         return await factory.CreateAsync(username, password, useProxy, port);
     }
 
-    public static async Task ReleaseAsync(AsyncFtpClient client)
-    {
-        var factory = await FtpClientFactory.GetInstanceAsync($"ftp://{client.Host}");
-        await factory.ReleaseClientAsync(client);
-    }
+    public static Task ReleaseAsync(AsyncFtpClient client) => FtpClientFactory.ReleaseOwnedAsync(client);
 
     public static async Task<string?> DownloadFileFtpAsync(string inputdirpath,
                                                           Uri ftphost,

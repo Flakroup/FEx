@@ -74,6 +74,21 @@ public sealed class FtpCommonTests : IDisposable
     }
 
     [Fact]
+    public async Task ReleaseAsync_HostUriWithPortAndPath_ReturnsTheSlotSoTheNextCreateReusesIt()
+    {
+        var host = new UriBuilder(Host) { Port = Port, Path = "/some/path" }.Uri;
+        await FtpClientFactory.GetInstanceAsync(host.AbsoluteUri, 1);
+        var client = await FtpCommon.CreateAsync(host, "u", "p");
+        await client.Connect(TestContext.Current.CancellationToken);
+
+        await FtpCommon.ReleaseAsync(client);
+
+        var next = FtpCommon.CreateAsync(host, "u", "p");
+        (await Task.WhenAny(next, Task.Delay(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken))).ShouldBe(next);
+        await FtpCommon.ReleaseAsync(await next);
+    }
+
+    [Fact]
     public async Task GetFtpFileInfoAsync_ExistingFile_ReturnsItsListItem()
     {
         _server.Files["/pub/data.bin"] = Payload;

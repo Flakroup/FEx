@@ -143,6 +143,7 @@ All notable changes to FEx are documented in this file. The format follows [Keep
 - **FEx.Offline**: the `OutboxEntry` documentation named `HttpOutbox.DefaultMaxServerFailures` and `DefaultMaxUnavailableAnswers` as the caps of `ServerFailures` and `UnavailableAnswers`; they are only the defaults of the `maxServerFailures` and `maxUnavailableAnswers` constructor arguments, which do the capping. Documentation only, no behaviour change ([#273](https://github.com/Flakroup/FEx/pull/274)).
 - **FEx.FTPx (tests)**: the in-process `FakeFtpServer` keeps the `REST` offset per control connection and clears it after the next transfer command, whether that command succeeds or fails; before, a `REST` followed by a `RETR` of a missing file shifted the next download of any session ([#273](https://github.com/Flakroup/FEx/pull/274)).
 - **FEx.FTPx (tests)**: the swallowed error reply to an abandoned transfer in `FtpTransport` (the 426 or 451 a real server sends when the offset probe closes a read early, which recovery depends on) is pinned by a test, and `FakeFtpServer.AbortReply` can answer it ([#274](https://github.com/Flakroup/FEx/pull/274)).
+- **FEx.FTPx (tests)**: the `if (!HostUri.IsDefaultPort)` guard of `FtpClientFactory.CreateAsync` is pinned: a host Uri without an explicit port leaves the client port unset, so a consumer that switches the client to implicit FTPS gets port 990, not 21 ([#274](https://github.com/Flakroup/FEx/pull/274)).
 
 ## [0.3.0] - 2026-08-13
 

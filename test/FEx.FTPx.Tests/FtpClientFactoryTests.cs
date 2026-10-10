@@ -119,6 +119,19 @@ public sealed class FtpClientFactoryTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateAsync_HostUriWithDefaultPort_LeavesThePortUnsetSoImplicitFtpsKeepsItsOwnDefault()
+    {
+        var factory = await FtpClientFactory.GetInstanceAsync(_server.Uri.AbsoluteUri, 2);
+
+        var client = await factory.CreateAsync(null, null, false);
+        client.Config.EncryptionMode = FtpEncryptionMode.Implicit;
+
+        // FluentFTP derives 990 from the mode only while no port was set; an explicit 21 would pin plain FTP's port.
+        client.Port.ShouldBe(990);
+        await factory.ReleaseClientAsync(client);
+    }
+
+    [Fact]
     public async Task CreateAsync_Ipv6HostUri_SetsTheAddressWithoutBrackets()
     {
         var factory = await FtpClientFactory.GetInstanceAsync("ftp://[::1]:2121/some/path", 2);

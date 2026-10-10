@@ -146,6 +146,26 @@ public sealed class FtpTransportTests : IDisposable
     }
 
     [Fact]
+    public async Task Open_DisposingTheResponseTwice_ReleasesItsSlotOnlyOnce()
+    {
+        await LimitToOneClient();
+        var response = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+
+#pragma warning disable IDISP016 // disposing twice is the behaviour under test
+        await response.DisposeAsync();
+        await response.DisposeAsync();
+#pragma warning restore IDISP016
+
+        await using var first = await FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+        var second = FtpTransport.Instance.OpenAsync(ServerFile, "u", "p", 0, Ct);
+
+        (await Task.WhenAny(second, Task.Delay(TimeSpan.FromMilliseconds(300), Ct))).ShouldNotBe(second, "the second dispose must not hand out a second slot");
+
+        await first.DisposeAsync();
+        await using var released = await second.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+    }
+
+    [Fact]
     public async Task Open_ServerAbortsTheTransfer_TheReadThatHitsTheEndFailsWithA451()
     {
         _server.AbortRetrAfterBytes = 3;

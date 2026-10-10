@@ -247,6 +247,10 @@ public static class FtpDownloader
                                 {
                                     var failedRetryCount = state.RetryCount;
 
+                                    // The transfer is dead and the probe below opens its own connections: hand this one back first,
+                                    // or a few parallel recoveries on one host wait for each other's slots forever.
+                                    await response.DisposeAsync();
+
                                     var detectedOffset = await DetectOffsetAsync(transport,
                                         serverUri,
                                         offset + prg,
@@ -354,6 +358,22 @@ public static class FtpDownloader
             : FileLengthConverter.ConvertFileLength(bytesTotal, LengthType.Bytes, unit).length;
     }
 
+    /// <summary>Reads one byte at <paramref name="offset" /> on a connection that is released before returning; <see langword="null" /> when there is no stream.</summary>
+    private static async Task<int?> ProbeAsync(IFtpTransport transport,
+                                               Uri serverUri,
+                                               string username,
+                                               string password,
+                                               long offset,
+                                               CancellationToken cancellationToken)
+    {
+        await using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
+        using var stream = response.GetResponseStream();
+
+        return stream is null
+            ? null
+            : await stream.ReadAsync(new byte[1], 0, 1, cancellationToken);
+    }
+
     private static async Task<long> DetectOffsetAsync(IFtpTransport transport,
                                                       Uri serverUri,
                                                       long offset,
@@ -373,32 +393,23 @@ public static class FtpDownloader
             while (readCount <= 0
                    && newOffset < fileSize)
             {
-                await using var response = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
-
                 try
                 {
-                    using var stream = response.GetResponseStream();
-
-                    if (stream is not null)
+                    // One connection at a time: each probe is closed before the next one opens.
+                    if (await ProbeAsync(transport, serverUri, username, password, offset, cancellationToken) is { } first)
                     {
-                        var buffer = new byte[1];
-                        readCount = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+                        readCount = first;
                         newOffset--;
 
                         while (readCount > 0)
                         {
-                            await using var innerResponse = await transport.OpenAsync(serverUri, username, password, offset, cancellationToken);
+                            if (await ProbeAsync(transport, serverUri, username, password, offset, cancellationToken) is not { } next)
+                                break;
 
-                            using var innerStream = innerResponse.GetResponseStream();
-
-                            if (innerStream is not null)
-                            {
-                                buffer = new byte[1];
-                                readCount = await innerStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
-                                viewModel?.PrgSet(newOffset - offset);
-                                viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
-                                newOffset--;
-                            }
+                            readCount = next;
+                            viewModel?.PrgSet(newOffset - offset);
+                            viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
+                            newOffset--;
                         }
                     }
                 }

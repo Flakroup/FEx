@@ -24,7 +24,7 @@ internal interface IFtpTransport
     bool IsLocalProcessingAbort(Exception exception);
 }
 
-/// <summary>An open FTP download response; disposing it releases the underlying connection.</summary>
+/// <summary>An open FTP download response; disposing it releases the underlying connection. Disposing twice is harmless.</summary>
 internal interface IFtpResponse : IAsyncDisposable
 {
     string StatusDescription { get; }
@@ -127,6 +127,7 @@ internal sealed class FtpTransport : IFtpTransport
     private sealed class Response(AsyncFtpClient client, FtpDataStream data) : IFtpResponse
     {
         private readonly DownloadStream _stream = new(data);
+        private int _disposed;
 
         public string StatusDescription { get; } = $"{data.CommandStatus.Code} {data.CommandStatus.Message}".Trim();
 
@@ -134,6 +135,9 @@ internal sealed class FtpTransport : IFtpTransport
 
         public async ValueTask DisposeAsync()
         {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+                return;
+
             try
             {
                 await _stream.CompleteAsync();

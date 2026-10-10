@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Xunit;
 
 namespace FEx.Analyzers.Tests;
@@ -232,5 +234,61 @@ public class VariableHidesOuterVariableAnalyzerTests
                 void StaticLambda() { int x = 1; Func<int, int> f = static x => x; }
                 void Field() { Func<int, int> f = fld => fld; }
             }
+            """);
+
+    // The compiler's own `value` has no declaration to compare with; the analyzer used to crash on it (AD0001).
+    [Theory]
+    [InlineData("int P { set { Func<int, int> f = value => value; } }")]
+    [InlineData("int P { init { Func<int, int> f = value => value; } }")]
+    [InlineData("int this[int i] { set { Func<int, int> f = value => value; } }")]
+    [InlineData("event Action E { add { Func<int, int> f = value => value; } remove { Func<int, int> g = value => value; } }")]
+    public Task Ignores_the_implicit_value_parameter_of_an_accessor(string member) =>
+        VerifyAsync($$"""
+            using System;
+            class C { {{member}} }
+            """);
+
+    // Top-level statements declare an implicit `args` that has no location.
+    [Theory]
+    [InlineData("Func<int, int> f = args => args;")]
+    [InlineData("Func<int> f = () => { var args = 1; return args; };")]
+    public Task Ignores_the_implicit_args_of_top_level_statements(string statement) =>
+        AnalyzerTestHelper.VerifyAsync<VariableHidesOuterVariableAnalyzer>(
+            $"""
+            using System;
+            {statement}
+            """,
+            OutputKind.ConsoleApplication);
+
+    [Fact]
+    public Task Reports_a_name_from_a_primary_constructor_parameter() =>
+        VerifyAsync("""
+            using System;
+            class C(int x) { void M() { Func<int, int> f = {|FEX0003:x|} => x; } }
+            """);
+
+    // A partial type's primary constructor parameter lives in another file, where an offset says nothing about order.
+    [Fact]
+    public Task Reports_a_name_from_a_primary_constructor_parameter_declared_in_another_file() =>
+        AnalyzerTestHelper.VerifyAsync<VariableHidesOuterVariableAnalyzer>(
+            """
+            using System;
+            partial class P { void M() { Func<int, int> f = {|FEX0003:x|} => x; } }
+            """,
+            otherFiles: ["// " + new string('x', 500) + Environment.NewLine + "partial class P(int x) { }"]);
+
+    // A nested type cannot capture the outer type's primary constructor parameter (CS9105).
+    [Fact]
+    public Task Ignores_a_name_from_the_primary_constructor_of_an_outer_type() =>
+        VerifyAsync("""
+            using System;
+            class Outer(int x) { class Inner { void M() { Func<int, int> f = x => x; } } }
+            """);
+
+    [Fact]
+    public Task Reports_a_name_from_an_outer_local_that_has_no_initializer() =>
+        VerifyAsync("""
+            using System;
+            class C { void M() { int x; x = 1; Func<int, int> f = {|FEX0003:x|} => x; } }
             """);
 }

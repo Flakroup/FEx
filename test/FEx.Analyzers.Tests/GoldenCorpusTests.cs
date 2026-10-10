@@ -52,6 +52,9 @@ public class GoldenCorpusTests
             new BaseMemberHasParamsAnalyzer());
         var diagnostics = await compilation.WithAnalyzers(analyzers).GetAnalyzerDiagnosticsAsync(TestContext.Current.CancellationToken);
 
+        // A crashing analyzer reports AD0001 and has no SourceTree to map to a sample; name the crash instead.
+        diagnostics.Where(diagnostic => diagnostic.Id == "AD0001").Select(diagnostic => diagnostic.GetMessage()).ShouldBeEmpty();
+
         var actual = diagnostics
             .Select(diagnostic => $"{diagnostic.Id} {SampleOf(sources, diagnostic)}")
             .Distinct()

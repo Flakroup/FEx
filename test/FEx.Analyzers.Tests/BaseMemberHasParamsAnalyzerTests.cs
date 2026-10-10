@@ -1,4 +1,6 @@
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
 namespace FEx.Analyzers.Tests;
@@ -55,4 +57,35 @@ public class BaseMemberHasParamsAnalyzerTests
             class Base { public virtual void M() { } }
             class Derived : Base { public override void M() { } }
             """);
+
+    [Fact]
+    public Task Reports_an_indexer_override_that_drops_params() =>
+        VerifyAsync("""
+            class Base { public virtual int this[params int[] i] { get => 0; set { } } }
+            class Derived : Base { public override int this[int[] {|FEX0005:i|}] { get => 1; set { } } }
+            """);
+
+    [Fact]
+    public Task Ignores_an_indexer_override_that_keeps_params_and_a_property_override() =>
+        VerifyAsync("""
+            class Base { public virtual int this[params int[] i] { get => 0; set { } } public virtual int P => 0; }
+            class Derived : Base { public override int this[params int[] i] { get => 1; set { } } public override int P => 1; }
+            """);
+
+    // ReSharper 2026.2.3.1 stays silent on an interface implementation.
+    [Fact]
+    public Task Ignores_an_interface_implementation_that_drops_params() =>
+        VerifyAsync("""
+            interface I { void M(params int[] a); }
+            class Impl : I { public void M(int[] a) { } }
+            """);
+
+    [Fact]
+    public Task Names_the_override_without_the_params_it_does_not_declare() =>
+        AnalyzerTestHelper.VerifyAsync<BaseMemberHasParamsAnalyzer>(
+            """
+            class Base { public virtual void M(params int[] a) { } }
+            class Derived : Base { public override void M(int[] {|#0:a|}) { } }
+            """,
+            expected: [new DiagnosticResult("FEX0005", DiagnosticSeverity.Warning).WithLocation(0).WithArguments("Derived.M(int[])", "Base.M(params int[])")]);
 }

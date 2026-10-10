@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace FEx.Analyzers;
 
-/// <summary>FEX0005: an override whose last parameter drops the <c>params</c> of the overridden method.</summary>
+/// <summary>FEX0005: an overriding method or indexer whose last parameter drops the <c>params</c> of the overridden member.</summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class BaseMemberHasParamsAnalyzer : DiagnosticAnalyzer
 {
@@ -24,28 +24,45 @@ public sealed class BaseMemberHasParamsAnalyzer : DiagnosticAnalyzer
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
+    // The override's own signature is shown without modifiers: its symbol would print the `params` it does not declare.
+    private static readonly SymbolDisplayFormat OverrideFormat =
+        SymbolDisplayFormat.CSharpErrorMessageFormat.RemoveParameterOptions(SymbolDisplayParameterOptions.IncludeParamsRefOut);
+
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSymbolAction(Analyze, SymbolKind.Method);
+        context.RegisterSymbolAction(Analyze, SymbolKind.Method, SymbolKind.Property);
     }
 
     private static void Analyze(SymbolAnalysisContext context)
     {
-        var method = (IMethodSymbol)context.Symbol;
-        if (method.OverriddenMethod is not { Parameters.Length: > 0 } baseMethod || method.Parameters.Length != baseMethod.Parameters.Length)
+        switch (context.Symbol)
+        {
+            case IMethodSymbol { OverriddenMethod: { } baseMethod } method:
+                Check(context, method, method.Parameters, baseMethod);
+                break;
+            case IPropertySymbol { OverriddenProperty: { } baseProperty } property:
+                Check(context, property, property.Parameters, baseProperty);
+                break;
+        }
+    }
+
+    private static void Check(SymbolAnalysisContext context, ISymbol member, ImmutableArray<IParameterSymbol> parameters, ISymbol baseMember)
+    {
+        if (parameters.IsEmpty)
             return;
 
-        var last = method.Parameters.Length - 1;
-        var parameter = method.Parameters[last];
+        var last = parameters.Length - 1;
+        var parameter = parameters[last];
+        var baseParameters = baseMember is IMethodSymbol baseMethod ? baseMethod.Parameters : ((IPropertySymbol)baseMember).Parameters;
 
-        // The symbol of an override reports IsParams from the base method, so only the written modifier tells.
-        if (baseMethod.Parameters[last].IsParams
+        // The symbol of an override reports IsParams from the base member, so only the written modifier tells.
+        if (baseParameters[last].IsParams
             && parameter.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(context.CancellationToken) is ParameterSyntax syntax
             && !syntax.Modifiers.Any(SyntaxKind.ParamsKeyword))
         {
-            context.ReportDiagnostic(Diagnostic.Create(Rule, parameter.Locations[0], method, baseMethod));
+            context.ReportDiagnostic(Diagnostic.Create(Rule, parameter.Locations[0], member.ToDisplayString(OverrideFormat), baseMember));
         }
     }
 }

@@ -32,7 +32,8 @@ public sealed class MemberHidesStaticFromOuterClassAnalyzer : DiagnosticAnalyzer
     private static void Analyze(SymbolAnalysisContext context)
     {
         var member = context.Symbol;
-        if (!IsNamedDeclaration(member) || member.ContainingType.ContainingType is null)
+        // The compiler models a C# 14 extension block as a nested type, but its members belong to the static class itself.
+        if (!IsNamedDeclaration(member) || member.ContainingType.ContainingType is null || member.ContainingType.TypeKind == TypeKind.Extension)
             return;
 
         for (var outer = member.ContainingType.ContainingType; outer is not null; outer = outer.ContainingType)
@@ -48,14 +49,14 @@ public sealed class MemberHidesStaticFromOuterClassAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    // Overrides and enum members take their names from elsewhere; accessors, constructors, operators and indexers
-    // are not named members, and a declaration outside the source has no place to report on.
+    // Overrides and enum members take their names from elsewhere; accessors, constructors and operators are not named
+    // members (an indexer's symbol is called "this[]", so it never clashes), and a declaration outside the source has no
+    // place to report on.
     private static bool IsNamedDeclaration(ISymbol member) =>
         member is { IsImplicitlyDeclared: false, IsOverride: false, ContainingType.TypeKind: not TypeKind.Enum }
         && member.Locations.Length > 0
         && member.Locations[0].IsInSource
-        && member is not IMethodSymbol { MethodKind: not MethodKind.Ordinary }
-        && member is not IPropertySymbol { IsIndexer: true };
+        && member is not IMethodSymbol { MethodKind: not MethodKind.Ordinary };
 
     // ReSharper reports every kind pairing by name, but two methods only clash when a call written for the outer one
     // would bind to the nested one: the same signature, return type aside.

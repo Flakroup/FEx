@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -228,4 +229,115 @@ public class LoopVariableNeverChangedAnalyzerTests
                 }
             }
             """);
+
+    [Fact]
+    public Task Ignores_a_primary_constructor_parameter_another_member_writes() =>
+        VerifyAsync("""
+            class C(bool stop)
+            {
+                void Run() { while (stop) { } }
+                void Stop() { stop = true; }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_variable_whose_address_a_ref_in_or_out_argument_took_outside_the_loop() =>
+        VerifyAsync("""
+            using System;
+            using System.Runtime.InteropServices;
+            class C
+            {
+                static Span<int> Wrap(ref int x) => MemoryMarshal.CreateSpan(ref x, 1);
+                static void Take(in int x) { }
+                static void Init(out int x) { x = 0; }
+                void M()
+                {
+                    int a = 0;
+                    var span = Wrap(ref a);
+                    while (a < 3) { span[0]++; }
+                    int b = 0;
+                    Take(in b);
+                    while (b < 3) { }
+                    int c;
+                    Init(out c);
+                    while (c < 3) { }
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_variable_passed_by_ref_to_a_dynamic_call() =>
+        VerifyAsync("""
+            class C
+            {
+                void Bump(ref int x) { x++; }
+                void M()
+                {
+                    dynamic self = this;
+                    int x = 0;
+                    while (x < 3) { self.Bump(ref x); }
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_condition_decided_by_a_user_defined_operator() =>
+        VerifyAsync("""
+            struct S
+            {
+                public int V;
+                public static bool operator <(S a, S b) => a.V < b.V;
+                public static bool operator >(S a, S b) => a.V > b.V;
+                public void Bump() { V++; }
+            }
+            class C { void M() { S a = default, b = default; b.V = 3; while (a < b) { a.Bump(); } } }
+            """);
+
+    [Fact]
+    public Task Ignores_a_condition_decided_by_a_user_defined_conversion() =>
+        VerifyAsync("""
+            struct W
+            {
+                public int V;
+                public static implicit operator int(W w) => w.V;
+                public void Bump() { V++; }
+            }
+            class C { void M() { W w = default; while (w < 3) { w.Bump(); } } }
+            """);
+
+    [Fact]
+    public Task Reports_a_condition_on_strings_and_enums_with_the_language_operators() =>
+        VerifyAsync("""
+            using System;
+            class C { void M(string s, DayOfWeek d) { while ({|FEX0002:s|} == "a" && {|FEX0002:d|} != DayOfWeek.Monday) { } } }
+            """);
+
+    // ReSharper 2026.2.3.1 reports a captured variable although the enclosing method writes it outside the loop.
+    [Fact]
+    public Task Reports_a_variable_the_enclosing_method_writes_when_the_loop_is_in_a_lambda_or_local_function() =>
+        VerifyAsync("""
+            using System;
+            using System.Threading.Tasks;
+            class C
+            {
+                void M()
+                {
+                    bool stop = false;
+                    Task.Run(() => { while ({|FEX0002:stop|}) { Console.Write(1); } });
+                    stop = true;
+                    bool done = false;
+                    void Spin() { while ({|FEX0002:done|}) { } }
+                    Spin();
+                    done = true;
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_variable_that_is_only_assigned_to_something_else() =>
+        VerifyAsync("class C { void M() { bool c = true, d = false; while ({|FEX0002:c|}) { d = c; } } }");
+
+    [Fact]
+    public Task Reports_a_very_long_condition_without_overflowing_the_stack() =>
+        VerifyAsync("class C { void M(bool a) { while ({|FEX0002:a|} && " + string.Join(" && ", Enumerable.Repeat("a", 5000)) + ") { } } }");
 }

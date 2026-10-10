@@ -152,4 +152,57 @@ public class MemberHidesStaticFromOuterClassAnalyzerTests
                 class OtherTypeArguments { public static int Do<T>(List<T> a) => 1; public class Inner { public int Do<U>(List<int> a) => 1; } }
             }
             """);
+
+    [Fact]
+    public Task Reports_once_when_the_outer_type_has_two_static_overloads() =>
+        VerifyAsync("""
+            class Outer
+            {
+                public static void Do(int a) { }
+                public static void Do(string s) { }
+                class Inner { public void {|FEX0004:Do|}(int a) { } }
+            }
+            """);
+
+    // ReSharper 2026.2.3.1 marks both halves of a partial method or property and only the first part of a partial type.
+    [Fact]
+    public Task Reports_both_parts_of_a_partial_method_and_property_and_the_first_part_of_a_partial_type() =>
+        VerifyAsync("""
+            class Outer
+            {
+                public static void Do() { }
+                public static int Count { get; set; }
+                public static int Twin;
+                partial class Inner
+                {
+                    public static partial void {|FEX0004:Do|}();
+                    public static partial int {|FEX0004:Count|} { get; set; }
+                    public partial class {|FEX0004:Twin|} { }
+                }
+                partial class Inner
+                {
+                    public static partial void {|FEX0004:Do|}() { }
+                    public static partial int {|FEX0004:Count|} { get => 0; set { } }
+                    public partial class Twin { }
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_members_of_an_extension_block() =>
+        AnalyzerTestHelper.VerifyAsync<MemberHidesStaticFromOuterClassAnalyzer>(
+            """
+            static class Ext
+            {
+                public static int Count;
+                public static void Run() { }
+                extension(string s)
+                {
+                    public int Count2 => s.Length;
+                    public int Count => s.Length;
+                    public void Run(int a) { }
+                }
+            }
+            """,
+            languageVersion: Microsoft.CodeAnalysis.CSharp.LanguageVersion.Preview);
 }

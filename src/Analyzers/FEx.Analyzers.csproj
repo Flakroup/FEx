@@ -14,8 +14,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- 4.14 loads in every SDK >= 9.0.300 / Visual Studio 17.14; a newer Roslyn fails to load in older hosts (CS8032). -->
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" PrivateAssets="all" />
+		<!-- 4.14 loads in every SDK >= 9.0.300 / Visual Studio 17.14; a newer Roslyn fails to load in older hosts (CS9057). -->
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(RoslynVersion)" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
 	</ItemGroup>
 

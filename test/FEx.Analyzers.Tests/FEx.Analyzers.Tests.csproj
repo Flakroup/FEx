@@ -7,7 +7,7 @@
 
 	<ItemGroup>
 		<!-- The analyzer project keeps Roslyn private, so the tests bring their own copy, on the version it compiles against. Analyzer.Testing 1.1.2 alone floors Workspaces at 1.0.1, which restores with NU1701, so Workspaces is pinned here. -->
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(RoslynVersion)" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.2" />
 		<!-- The corpus samples use these two libraries. -->
 		<PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />

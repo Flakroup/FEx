@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Operations;
 
 namespace FEx.Analyzers;
 
-/// <summary>FEX0001: a compound assignment or increment/decrement on a <c>volatile</c> field.</summary>
+/// <summary>FEX0001: a compound assignment, <c>??=</c> or increment/decrement on a <c>volatile</c> field.</summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class NonAtomicCompoundOperatorAnalyzer : DiagnosticAnalyzer
 {
@@ -18,7 +18,7 @@ public sealed class NonAtomicCompoundOperatorAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "volatile orders accesses but does not make a compound assignment or ++/-- atomic; another thread can write between the read and the write. Use Interlocked or a lock. Replaces the ReSharper inspection NonAtomicCompoundOperator.");
+        "volatile orders accesses but does not make a compound assignment, ??= or ++/-- atomic; another thread can write between the read and the write. Use Interlocked or a lock. Replaces the ReSharper inspection NonAtomicCompoundOperator.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
@@ -29,6 +29,9 @@ public sealed class NonAtomicCompoundOperatorAnalyzer : DiagnosticAnalyzer
         context.RegisterOperationAction(
             c => Check(c, ((ICompoundAssignmentOperation)c.Operation).Target),
             OperationKind.CompoundAssignment);
+        context.RegisterOperationAction(
+            c => Check(c, ((ICoalesceAssignmentOperation)c.Operation).Target),
+            OperationKind.CoalesceAssignment);
         context.RegisterOperationAction(
             c => Check(c, ((IIncrementOrDecrementOperation)c.Operation).Target),
             OperationKind.Increment,

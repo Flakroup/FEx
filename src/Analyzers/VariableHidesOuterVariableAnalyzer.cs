@@ -48,16 +48,39 @@ public sealed class VariableHidesOuterVariableAnalyzer : DiagnosticAnalyzer
 
             var outer = context.SemanticModel
                 .LookupSymbols(function.SpanStart, name: name)
-                .FirstOrDefault(symbol => IsCapturable(symbol) && symbol.Locations[0].SourceSpan.End <= function.SpanStart);
+                .FirstOrDefault(symbol => IsCapturable(symbol) && IsDeclaredBefore(symbol, function) && IsReachableFromType(symbol, function, context.SemanticModel));
             if (outer is not null && !IsBeingInitialized(function, outer) && !IsOutOfReach(function, outer))
                 context.ReportDiagnostic(Diagnostic.Create(Rule, identifier.GetLocation(), name));
         }
     }
 
     // ReSharper does not count a variable no lambda could capture as an outer one: a ref, in or out parameter, a ref
-    // local, or a local of a ref struct type (a ref struct parameter is still counted).
+    // local, or a local of a ref struct type (a ref struct parameter is still counted). The compiler's implicit
+    // variables (an accessor's `value`, the `args` of top-level statements) have no declaration to compare with.
     private static bool IsCapturable(ISymbol symbol) =>
-        symbol is ILocalSymbol { RefKind: RefKind.None, Type.IsRefLikeType: false } or IParameterSymbol { RefKind: RefKind.None };
+        symbol is ILocalSymbol { RefKind: RefKind.None, Type.IsRefLikeType: false } or IParameterSymbol { RefKind: RefKind.None }
+        && symbol.DeclaringSyntaxReferences.Length > 0 && symbol.Locations is [{ IsInSource: true }, ..];
+
+    // Offsets only mean something inside one file. The one outer variable declared in another file than its user is the
+    // primary constructor parameter of a partial type, and its scope is the whole type body.
+    private static bool IsDeclaredBefore(ISymbol symbol, SyntaxNode function)
+    {
+        var name = symbol.Locations[0];
+
+        return name.SourceTree == function.SyntaxTree ? name.SourceSpan.End <= function.SpanStart : symbol is IParameterSymbol;
+    }
+
+    // A primary constructor parameter belongs to its own type's members: a nested type cannot capture it (CS9105).
+    private static bool IsReachableFromType(ISymbol symbol, SyntaxNode function, SemanticModel model)
+    {
+        if (symbol is not IParameterSymbol { ContainingSymbol: IMethodSymbol { MethodKind: MethodKind.Constructor } constructor }
+            || symbol.DeclaringSyntaxReferences[0].GetSyntax().Parent?.Parent is not TypeDeclarationSyntax)
+            return true;
+
+        var user = function.Ancestors().OfType<BaseTypeDeclarationSyntax>().FirstOrDefault();
+
+        return user is not null && SymbolEqualityComparer.Default.Equals(model.GetDeclaredSymbol(user), constructor.ContainingType);
+    }
 
     private static bool IsFunction(SyntaxNode node) => node is AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax;
 
@@ -92,7 +115,8 @@ public sealed class VariableHidesOuterVariableAnalyzer : DiagnosticAnalyzer
     {
         for (var node = function; node is not null; node = node.Parent?.AncestorsAndSelf().FirstOrDefault(IsFunction))
         {
-            if (node.Span.Contains(outer.Locations[0].SourceSpan))
+            var name = outer.Locations[0];
+            if (node.SyntaxTree == name.SourceTree && node.Span.Contains(name.SourceSpan))
                 return false;
 
             var modifiers = node is AnonymousFunctionExpressionSyntax anonymous

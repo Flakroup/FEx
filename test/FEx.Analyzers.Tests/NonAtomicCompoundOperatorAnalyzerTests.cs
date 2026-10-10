@@ -48,4 +48,12 @@ public class NonAtomicCompoundOperatorAnalyzerTests
     [Fact]
     public Task Ignores_a_compound_assignment_to_a_local_and_a_property() =>
         VerifyAsync("class C { private volatile int _v; int P { get; set; } void M() { var local = _v; local++; P += 1; } }");
+
+    [Fact]
+    public Task Reports_null_coalescing_assignment_to_a_volatile_field() =>
+        VerifyAsync("class C { private volatile string? _v; void M() { {|FEX0001:_v ??= \"x\"|}; } }");
+
+    [Fact]
+    public Task Ignores_null_coalescing_assignment_to_a_field_that_is_not_volatile() =>
+        VerifyAsync("class C { private string? _v; void M() { _v ??= \"x\"; } }");
 }

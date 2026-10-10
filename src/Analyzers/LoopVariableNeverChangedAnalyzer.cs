@@ -63,31 +63,50 @@ public sealed class LoopVariableNeverChangedAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(Diagnostic.Create(Rule, group.First().Syntax.GetLocation(), group.Key!.Name));
     }
 
-    // True when the condition is built only from locals, parameters, constants and operators on them: the one shape
-    // whose value is decided by the variables alone. A call, member access or assignment could change it by itself.
-    private static bool CollectInvariantReferences(IOperation operation, List<IOperation> references)
+    // True when the condition is built only from locals, parameters, constants and the language's own operators on them:
+    // the one shape whose value is decided by the variables alone. A call, member access, assignment or user-defined
+    // operator could change it by itself. Walked with a stack, left to right: a condition thousands of terms long
+    // would overflow a recursive walk.
+    private static bool CollectInvariantReferences(IOperation condition, List<IOperation> references)
     {
-        switch (operation)
+        var pending = new Stack<IOperation>();
+        pending.Push(condition);
+        while (pending.Count > 0)
         {
-            case { ConstantValue.HasValue: true }:
-                return true;
-            case ILocalReferenceOperation or IParameterReferenceOperation:
-                references.Add(operation);
-                return true;
-            case IBinaryOperation or IUnaryOperation or IConversionOperation or IParenthesizedOperation or IConditionalOperation:
-                return operation.ChildOperations.All(child => CollectInvariantReferences(child, references));
-            default:
-                return false;
+            var operation = pending.Pop();
+            switch (operation)
+            {
+                case { ConstantValue.HasValue: true }:
+                    break;
+                case ILocalReferenceOperation or IParameterReferenceOperation:
+                    references.Add(operation);
+                    break;
+                case IBinaryOperation { OperatorMethod: null } or IUnaryOperation { OperatorMethod: null } or IConversionOperation { OperatorMethod: null }
+                    or IParenthesizedOperation or IConditionalOperation:
+                    foreach (var child in operation.ChildOperations.Reverse())
+                        pending.Push(child);
+
+                    break;
+                default:
+                    return false;
+            }
         }
+
+        return true;
     }
 
+    // A primary constructor parameter is state of the whole type: any member, on any thread, may write it.
     private static ISymbol? GetVariable(IOperation reference) =>
         reference switch
         {
             ILocalReferenceOperation { Local.RefKind: RefKind.None } local => local.Local,
-            IParameterReferenceOperation { Parameter.RefKind: RefKind.None } parameter => parameter.Parameter,
+            IParameterReferenceOperation { Parameter.RefKind: RefKind.None } parameter when !IsPrimaryConstructorParameter(parameter.Parameter) => parameter.Parameter,
             _ => null,
         };
+
+    private static bool IsPrimaryConstructorParameter(IParameterSymbol parameter) =>
+        parameter.ContainingSymbol is IMethodSymbol { MethodKind: MethodKind.Constructor }
+        && parameter.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().Parent?.Parent is TypeDeclarationSyntax;
 
     private static bool IsWritten(IReadOnlyCollection<IOperation> parts, ISymbol variable) =>
         parts.SelectMany(part => part.DescendantsAndSelf()).Any(operation => IsWriteTo(operation, variable));
@@ -107,9 +126,12 @@ public sealed class LoopVariableNeverChangedAnalyzer : DiagnosticAnalyzer
                 && !SymbolEqualityComparer.Default.Equals(function, variable.ContainingSymbol)));
     }
 
+    // Anything that takes the variable's address leaves a way to write it later: `&x`, `ref x` as a local or a
+    // return, and a ref, in or out argument (a Span over it, MemoryMarshal.CreateSpan), even through a dynamic call.
     private static bool IsAlias(IOperation reference, ISymbol variable) =>
         SymbolEqualityComparer.Default.Equals(GetVariable(reference), variable)
-        && (reference.Parent is IAddressOfOperation || reference.Syntax.Parent is RefExpressionSyntax);
+        && (reference.Parent is IAddressOfOperation or IArgumentOperation { Parameter.RefKind: not RefKind.None }
+            || reference.Syntax.Parent is RefExpressionSyntax or ArgumentSyntax { RefKindKeyword.RawKind: not 0 });
 
     private static ISymbol? GetEnclosingFunction(IOperation operation)
     {

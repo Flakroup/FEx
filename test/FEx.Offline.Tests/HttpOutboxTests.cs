@@ -861,11 +861,13 @@ public sealed class HttpOutboxTests
     [InlineData(HttpStatusCode.Found, "/login", "GET /login", false)]
     [InlineData(HttpStatusCode.Found, "/login", "GET /login", true)]
     [InlineData(HttpStatusCode.TemporaryRedirect, "/api/elsewhere", "POST /api/elsewhere", false)]
+    [InlineData(HttpStatusCode.SeeOther, "/api/payments", "GET /api/payments", false)]
     public async Task AnAnswerAfterAFollowedRedirect_KeepsTheEntry_CountsItAsUnavailable_AndStopsTheFlush(
         HttpStatusCode redirect, string location, string finalRequest, bool absoluteUrl)
     {
         // A 302 turns the POST into a GET of the login page, whose 200 used to remove the write as delivered; a 307 keeps the
-        // method and changes only the URI. Either way the final request is not the queued one.
+        // method and changes only the URI; a 303 back to the same URI changes only the method. Either way the final request
+        // is not the queued one.
         using var server = RedirectingServer(redirect, location);
         FixedTime time = new(T0);
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
@@ -873,14 +875,11 @@ public sealed class HttpOutboxTests
         time.Advance(TimeSpan.FromMinutes(1));
         await outbox.EnqueueAsync("POST", "api/ok", """{"n":2}""");
 
-        using HttpClient http = new()
-        {
-            BaseAddress = server.BaseAddress
-        };
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
 
         var result = await outbox.FlushAsync(http);
 
-        result.ShouldBe(new(0, 0, 2, $"HTTP 200 after a redirect to {server.BaseAddress.ToString().TrimEnd('/')}{finalRequest.Split(' ')[1]}"));
+        result.ShouldBe(new(0, 0, 2, "HTTP 200 after a redirect"));
         server.Requests.ShouldBe(["POST /api/payments", finalRequest]); // the second entry was never attempted
 
         var kept = (await outbox.ListAsync())[0];
@@ -900,10 +899,7 @@ public sealed class HttpOutboxTests
         time.Advance(TimeSpan.FromMinutes(1));
         await outbox.EnqueueAsync("POST", "api/ok", """{"n":2}""");
 
-        using HttpClient http = new()
-        {
-            BaseAddress = server.BaseAddress
-        };
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
 
         (await outbox.FlushAsync(http)).Remaining.ShouldBe(2);
 
@@ -917,6 +913,76 @@ public sealed class HttpOutboxTests
         dead.ResponseBody.ShouldBe("login page");
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.Forbidden)]
+    [InlineData(HttpStatusCode.NotFound)]
+    public async Task ARedirectThatEndsInA4xx_KeepsTheEntry_AndIsNotTakenForARejection(HttpStatusCode landing)
+    {
+        // The 4xx is the redirect target's answer (a login page that is gone), not the server judging the write: the entry
+        // must not be dead-lettered on it.
+        using RawHttpServer server = new(request => request switch
+        {
+            "POST /api/payments" => (302, "/login", ""),
+            "GET /login" => ((int)landing, null, "nope"),
+            _ => (200, null, "ok")
+        });
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/payments", """{"n":1}""");
+
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 1, $"HTTP {(int)landing} after a redirect"));
+        (await outbox.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ARedirectLoop_IsCounted_AndDeadLetteredAtTheUnavailableLimit()
+    {
+        // The client gives up after 50 hops and hands back the last 307, whose method and URI equal the queued ones.
+        using RawHttpServer server = new(request => request == "POST /api/payments" ? (307, "/api/payments", "") : (200, null, "ok"));
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxUnavailableAnswers: 2);
+        await outbox.EnqueueAsync("POST", "api/payments", """{"n":1}""");
+
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
+
+        (await outbox.FlushAsync(http)).Remaining.ShouldBe(1);
+        (await outbox.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(1);
+
+        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(307);
+    }
+
+    [Fact]
+    public async Task ARedirectTheClientDidNotFollow_IsCountedAsUnavailable_NotLeftToBlockTheQueue()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxUnavailableAnswers: 2);
+        await outbox.EnqueueAsync("POST", "api/a", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Found);
+        handler.EnqueueResponse(HttpStatusCode.Found);
+        using var http = Client(handler);
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 1, "HTTP 302 after a redirect"));
+        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(302);
+    }
+
+    [Fact]
+    public async Task AnEntryWithNoUrl_IsDeliveredToTheBaseAddress_NotTakenForARedirect()
+    {
+        // HttpClient fills the request's missing URI from BaseAddress while sending, so the queued URI must be that address too.
+        using RawHttpServer server = new(_ => (200, null, "ok"));
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "", """{"n":1}""");
+
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        server.Requests.ShouldBe(["POST /"]);
+    }
+
     [Fact]
     public async Task AnAnswerWithNoRedirect_StillDeliversTheEntry_OverARealClient()
     {
@@ -924,10 +990,7 @@ public sealed class HttpOutboxTests
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
         await outbox.EnqueueAsync("POST", "api/ok", """{"n":1}""");
 
-        using HttpClient http = new()
-        {
-            BaseAddress = server.BaseAddress
-        };
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
 
         (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
         server.Requests.ShouldBe(["POST /api/ok"]);

@@ -17,7 +17,7 @@ namespace FEx.Offline;
 /// <see cref="Attempts" /> counts every failed replay, a dropped connection included;
 /// <see cref="ServerFailures" /> counts only the 5xx answers other than 502, 503 and 504, which is what
 /// <see cref="HttpOutbox.DefaultMaxServerFailures" /> caps, and <see cref="UnavailableAnswers" /> counts the 408, 502, 503 and 504 ones and
-/// the answers that came after a followed redirect, which <see cref="HttpOutbox.DefaultMaxUnavailableAnswers" /> caps.
+/// the redirected answers (followed or not), which <see cref="HttpOutbox.DefaultMaxUnavailableAnswers" /> caps.
 /// </summary>
 public sealed record OutboxEntry(
     Guid Id,
@@ -32,7 +32,7 @@ public sealed record OutboxEntry(
 
 /// <summary>
 /// A write the outbox gave up on and keeps for the consumer to read: the server rejected it with a 4xx, or
-/// answered 5xx, 408 or a gateway error until the retry limit. It is never replayed. <see cref="StatusCode" /> and
+/// answered 5xx, 408, a gateway error or a redirect until the retry limit. It is never replayed. <see cref="StatusCode" /> and
 /// <see cref="ResponseBody" /> (truncated) are the server's last answer.
 /// </summary>
 public sealed record DeadOutboxEntry(
@@ -71,8 +71,10 @@ public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining
 /// records the error and stops the flush as well, but is never counted: the session needs renewing, the server is
 /// throttling or the network is down, none of which says anything about the write. An answer that arrives after a
 /// redirect the client followed (the final request's method or URI is not the queued one - a login page standing in
-/// for an expired session, say) is never a delivery, whatever its status: it keeps the entry like a 401 and counts as an
-/// unavailable answer, so a redirect that never ends is dead-lettered at that limit. Dead entries are listed with
+/// for an expired session, say), or a 3xx the client did not follow, is never a delivery, whatever its status: it keeps
+/// the entry like a 401 and counts as an unavailable answer, so a redirect that never ends is dead-lettered at that limit.
+/// A write that really lands behind a redirect (a 303 after a POST, a 307 to another host) is replayed until that limit,
+/// so an API that redirects on success should answer 2xx instead. Dead entries are listed with
 /// <see cref="ListDeadAsync" /> and deleted with <see cref="RemoveDeadAsync" />.
 /// </summary>
 public sealed class HttpOutbox
@@ -138,7 +140,8 @@ public sealed class HttpOutbox
     /// </para>
     /// <para>
     /// Never register a credential. The headers ride on every replay to whatever URL the entry holds, an
-    /// absolute one included, and a malformed value is echoed in the exception this constructor throws.
+    /// absolute one included, and on to wherever a redirect the client follows leads (an HttpClient drops only
+    /// Authorization on another origin), and a malformed value is echoed in the exception this constructor throws.
     /// </para>
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="replayHeaders" /> is null.</exception>
@@ -266,17 +269,23 @@ public sealed class HttpOutbox
             // Taken before the send: the client follows a redirect by rewriting this very request, so afterwards it
             // can no longer tell what was queued.
             var queuedMethod = request.Method;
-            var queuedUri = request.RequestUri is { IsAbsoluteUri: false } relative && http.BaseAddress is { } baseAddress
-                ? new Uri(baseAddress, relative)
-                : request.RequestUri;
+            var queuedUri = request.RequestUri switch
+            {
+                null => http.BaseAddress,
+                { IsAbsoluteUri: false } relative when http.BaseAddress is { } baseAddress => new Uri(baseAddress, relative),
+                var uri => uri
+            };
 
             try
             {
                 using var response = await http.SendAsync(request);
 
+                var status = (int)response.StatusCode;
+
                 // A client that follows redirects hands back the final answer: a login page's 200 for a write whose session
-                // expired is not a delivery, so a redirected answer is judged before its status.
-                var redirected = IsFollowedRedirect(queuedMethod, queuedUri, response);
+                // expired is not a delivery, so a redirected answer is judged before its status. A 3xx that reaches this point
+                // is a redirect nobody followed (a client that does not, or one that gave up after too many hops).
+                var redirected = status is >= 300 and < 400 || IsFollowedRedirect(queuedMethod, queuedUri, response);
 
                 if (!redirected && (response.IsSuccessStatusCode || IsCompletedEarlier(response)))
                 {
@@ -289,8 +298,6 @@ public sealed class HttpOutbox
 
                     continue;
                 }
-
-                var status = (int)response.StatusCode;
 
                 // Only a 5xx other than 502/503/504 says the server refused the write itself. A 408/502/503/504 (timeout, failing
                 // gateway, temporary overload) says the origin was unreachable: it counts on its own, much higher limit, so a
@@ -317,11 +324,7 @@ public sealed class HttpOutbox
                 {
                     var body = await ReadBodyAsync(response);
 
-                    await DeadLetterAsync(entry with
-                    {
-                        ServerFailures = serverFailures,
-                        UnavailableAnswers = unavailableAnswers
-                    }, status, body);
+                    await DeadLetterAsync(entry with { ServerFailures = serverFailures }, status, body);
 
                     deadLettered++;
                     lastError = $"HTTP {status}: {body}";
@@ -331,9 +334,8 @@ public sealed class HttpOutbox
 
                 // Server-side trouble (5xx), a session to renew (401) or throttling/overload/gateway failure (408/429/502/503/504): worth retrying later,
                 // not worth hammering now - stopping the flush here also spares a rate-limited server the rest of the queue.
-                var error = redirected
-                    ? $"HTTP {status} after a redirect to {response.RequestMessage?.RequestUri}"
-                    : $"HTTP {status}";
+                // The redirect target is left out of the error: a Location can carry a token or a signature, and LastError is stored.
+                var error = redirected ? $"HTTP {status} after a redirect" : $"HTTP {status}";
 
                 await SaveAsync(entry with
                 {

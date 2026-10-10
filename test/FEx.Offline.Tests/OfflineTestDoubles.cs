@@ -173,7 +173,6 @@ internal sealed class FixedTime : TimeProvider
     public void Advance(TimeSpan by) => _now += by;
 }
 
-
 /// <summary>
 /// A loopback HTTP server over raw sockets, so a real <see cref="HttpClient" /> follows (or does not follow) real redirects.
 /// The route maps "METHOD /path" to a status, a Location header (or null) and a body.
@@ -213,16 +212,26 @@ internal sealed class RawHttpServer : IDisposable
             {
                 using var client = await _listener.AcceptTcpClientAsync();
 
-                await ServeAsync(client.GetStream());
+                await ServeQuietlyAsync(client.GetStream());
             }
             catch (Exception e) when (e is SocketException or ObjectDisposedException or InvalidOperationException)
             {
                 return; // the listener was stopped
             }
-            catch (IOException)
-            {
-                // A client that dropped its connection mid-request: serve the next one.
-            }
+        }
+    }
+
+    // One broken connection (a client that dropped, a request line this server cannot parse) must not end the accept loop:
+    // the next test request would then hang instead of failing.
+    private async Task ServeQuietlyAsync(NetworkStream stream)
+    {
+        try
+        {
+            await ServeAsync(stream);
+        }
+        catch (Exception)
+        {
+            // See above.
         }
     }
 

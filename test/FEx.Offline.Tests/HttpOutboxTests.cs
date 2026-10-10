@@ -291,7 +291,8 @@ public sealed class HttpOutboxTests
     public async Task TransientAnswer_KeepsTheEntryWithTheError_AndStopsTheFlush(HttpStatusCode status)
     {
         // 408, 429, 502, 503 and 504 are timeouts, throttling, a failing gateway and temporary overload: the unchanged
-        // write can land later, so it must not be dropped, and none of them counts as a server failure.
+        // write can land later, so one answer drops nothing, and none of them counts as a server failure. All but the
+        // 429 count as an unavailable answer, which has a limit of its own.
         FixedTime time = new(T0);
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
         await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
@@ -317,6 +318,7 @@ public sealed class HttpOutboxTests
         var kept = (await outbox.ListAsync())[0];
         kept.Attempts.ShouldBe(1);
         kept.ServerFailures.ShouldBe(0);
+        kept.UnavailableAnswers.ShouldBe(status == HttpStatusCode.TooManyRequests ? 0 : 1);
         kept.JsonBody.ShouldBe("""{"n":1}""");
     }
 
@@ -621,10 +623,10 @@ public sealed class HttpOutboxTests
     [Theory]
     [InlineData(HttpStatusCode.BadGateway)]
     [InlineData(HttpStatusCode.GatewayTimeout)]
-    public async Task GatewayError_NeverCounts_SoAGatewayOutageCannotBuryAValidWrite(HttpStatusCode status)
+    public async Task GatewayError_DoesNotCountTowardTheServerFailureLimit_SoAGatewayOutageCannotBuryAValidWrite(HttpStatusCode status)
     {
         // 502 and 504 say the proxy in front of the server failed, not that the server refused this write - like 503 they
-        // are retried forever and the entry stays at the head of the queue.
+        // stay out of the server-failure limit, so a short outage keeps the entry at the head of the queue.
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxServerFailures: 2);
         var entry = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
 
@@ -643,16 +645,162 @@ public sealed class HttpOutboxTests
         kept.Id.ShouldBe(entry.Id);
         kept.Attempts.ShouldBe(5);
         kept.ServerFailures.ShouldBe(0);
+        kept.UnavailableAnswers.ShouldBe(5);
         kept.LastError.ShouldBe($"HTTP {(int)status}");
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
 
         (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
     }
 
-    [Fact]
-    public async Task TheDefaultLimit_IsTen()
+    [Theory]
+    [InlineData(HttpStatusCode.RequestTimeout)]
+    [InlineData(HttpStatusCode.BadGateway)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    [InlineData(HttpStatusCode.GatewayTimeout)]
+    public async Task UnavailableAnswer_AtTheLimit_MovesTheEntryToTheDeadLetterList_AndTheFlushGoesOn(HttpStatusCode status)
     {
-        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        // The #256 probe: a write the origin always answers 408/502/503/504 would otherwise sit at the head of the queue forever.
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, maxUnavailableAnswers: 3);
+        var stuck = await outbox.EnqueueAsync("POST", "api/sales/leads/7/trash", null);
+        time.Advance(TimeSpan.FromMinutes(1));
+        var behind = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(status, "first");
+        handler.EnqueueResponse(status, "second");
+        handler.EnqueueResponse(status, "last");
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http);
+
+        result.Sent.ShouldBe(1);
+        result.DeadLettered.ShouldBe(1);
+        result.Remaining.ShouldBe(0);
+        result.LastError.ShouldBe($"HTTP {(int)status}: last");
+
+        handler.IdempotencyKeys.ShouldBe(new()
+        {
+            stuck.Id.ToString(),
+            stuck.Id.ToString(),
+            stuck.Id.ToString(),
+            behind.Id.ToString()
+        });
+
+        var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+        dead.Id.ShouldBe(stuck.Id);
+        dead.StatusCode.ShouldBe((int)status);
+        dead.ResponseBody.ShouldBe("last");
+        dead.ServerFailures.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task UnavailableAnswer_BelowTheLimit_KeepsTheEntryLive_AndBlocksTheQueue()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, maxUnavailableAnswers: 3);
+        var head = await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.ServiceUnavailable);
+        handler.EnqueueResponse(HttpStatusCode.ServiceUnavailable);
+        using var http = Client(handler);
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 2, "HTTP 503"));
+        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 2, "HTTP 503"));
+
+        handler.Requests.Count.ShouldBe(2); // each flush stopped at the head; the second entry was never attempted
+
+        var queue = await outbox.ListAsync();
+        queue[0].Id.ShouldBe(head.Id);
+        queue[0].UnavailableAnswers.ShouldBe(2);
+        queue[0].Attempts.ShouldBe(2);
+        queue[1].UnavailableAnswers.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ServerError_CountsTowardTheServerFailureLimit_NotTheUnavailableOne()
+    {
+        // The unavailable limit is 1 here, so a 500 that counted on it would bury the entry on the first answer.
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxServerFailures: 3, maxUnavailableAnswers: 1);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        handler.EnqueueResponse(HttpStatusCode.InternalServerError);
+        using var http = Client(handler);
+
+        await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http);
+
+        var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
+        kept.ServerFailures.ShouldBe(2);
+        kept.UnavailableAnswers.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+
+        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task SessionThrottlingAndTransportAnswers_NeverCountTowardTheUnavailableLimit()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxUnavailableAnswers: 1);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Unauthorized);
+        handler.EnqueueResponse(HttpStatusCode.TooManyRequests);
+        handler.EnqueueNetworkFailure();
+        handler.EnqueueTimeout();
+        using var http = Client(handler);
+
+        for (var i = 0; i < 4; i++)
+            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+
+        var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
+        kept.Attempts.ShouldBe(4);
+        kept.UnavailableAnswers.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task UnavailableAnswers_SurviveARestart()
+    {
+        InMemoryKeyValueStore store = new();
+        FixedTime time = new(T0);
+        HttpOutbox before = new(store, time, maxUnavailableAnswers: 3);
+        await before.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.GatewayTimeout);
+        handler.EnqueueResponse(HttpStatusCode.GatewayTimeout);
+        handler.EnqueueResponse(HttpStatusCode.GatewayTimeout);
+        using var http = Client(handler);
+
+        await before.FlushAsync(http);
+        await before.FlushAsync(http);
+
+        // A new outbox over the same store: the count comes from the stored entry, not from the instance.
+        HttpOutbox after = new(store, time, maxUnavailableAnswers: 3);
+
+        (await after.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(2);
+        (await after.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await after.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(504);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TheDefaultLimit_IsTen(bool withReplayHeaders)
+    {
+        var outbox = DefaultOutbox(withReplayHeaders);
         await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
 
         using ScriptedHandler handler = new();
@@ -673,6 +821,31 @@ public sealed class HttpOutboxTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TheDefaultUnavailableLimit_IsAHundred(bool withReplayHeaders)
+    {
+        var outbox = DefaultOutbox(withReplayHeaders);
+        await outbox.EnqueueAsync("POST", "api/sales/inquiries", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+
+        for (var i = 0; i < 100; i++)
+            handler.EnqueueResponse(HttpStatusCode.ServiceUnavailable);
+
+        using var http = Client(handler);
+
+        for (var i = 0; i < 99; i++)
+            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+
+        (await outbox.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(99);
+
+        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(503);
+        HttpOutbox.DefaultMaxUnavailableAnswers.ShouldBe(100);
+    }
+
+    [Theory]
     [InlineData(0)]
     [InlineData(-1)]
     public void ALimitBelowOne_IsRefused(int limit)
@@ -682,6 +855,157 @@ public sealed class HttpOutboxTests
 
         Should.Throw<ArgumentOutOfRangeException>(() => new HttpOutbox(new InMemoryKeyValueStore(), new FixedTime(T0), null, ClientMarker(), limit))
             .ParamName.ShouldBe("maxServerFailures");
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Found, "/login", "GET /login", false)]
+    [InlineData(HttpStatusCode.Found, "/login", "GET /login", true)]
+    [InlineData(HttpStatusCode.TemporaryRedirect, "/api/elsewhere", "POST /api/elsewhere", false)]
+    [InlineData(HttpStatusCode.SeeOther, "/api/payments", "GET /api/payments", false)]
+    public async Task AnAnswerAfterAFollowedRedirect_KeepsTheEntry_CountsItAsUnavailable_AndStopsTheFlush(
+        HttpStatusCode redirect, string location, string finalRequest, bool absoluteUrl)
+    {
+        // A 302 turns the POST into a GET of the login page, whose 200 used to remove the write as delivered; a 307 keeps the
+        // method and changes only the URI; a 303 back to the same URI changes only the method. Either way the final request
+        // is not the queued one.
+        using var server = RedirectingServer(redirect, location);
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        await outbox.EnqueueAsync("POST", absoluteUrl ? $"{server.BaseAddress}api/payments" : "api/payments", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/ok", """{"n":2}""");
+
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(0, 0, 2, "HTTP 200 after a redirect"));
+        server.Requests.ShouldBe(["POST /api/payments", finalRequest]); // the second entry was never attempted
+
+        var kept = (await outbox.ListAsync())[0];
+        kept.UnavailableAnswers.ShouldBe(1);
+        kept.Attempts.ShouldBe(1);
+        kept.ServerFailures.ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task AFollowedRedirect_AtTheUnavailableLimit_MovesTheEntryToTheDeadLetterList_AndTheFlushGoesOn()
+    {
+        using var server = RedirectingServer(HttpStatusCode.Found, "/login");
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, maxUnavailableAnswers: 2);
+        var redirected = await outbox.EnqueueAsync("POST", "api/payments", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/ok", """{"n":2}""");
+
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
+
+        (await outbox.FlushAsync(http)).Remaining.ShouldBe(2);
+
+        var result = await outbox.FlushAsync(http);
+
+        result.ShouldBe(new(1, 1, 0, "HTTP 200: login page"));
+
+        var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
+        dead.Id.ShouldBe(redirected.Id);
+        dead.StatusCode.ShouldBe(200);
+        dead.ResponseBody.ShouldBe("login page");
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Forbidden)]
+    [InlineData(HttpStatusCode.NotFound)]
+    public async Task ARedirectThatEndsInA4xx_KeepsTheEntry_AndIsNotTakenForARejection(HttpStatusCode landing)
+    {
+        // The 4xx is the redirect target's answer (a login page that is gone), not the server judging the write: the entry
+        // must not be dead-lettered on it.
+        using RawHttpServer server = new(request => request switch
+        {
+            "POST /api/payments" => (302, "/login", ""),
+            "GET /login" => ((int)landing, null, "nope"),
+            _ => (200, null, "ok")
+        });
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/payments", """{"n":1}""");
+
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 1, $"HTTP {(int)landing} after a redirect"));
+        (await outbox.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ARedirectLoop_IsCounted_AndDeadLetteredAtTheUnavailableLimit()
+    {
+        // The client gives up after 50 hops and hands back the last 307, whose method and URI equal the queued ones.
+        using RawHttpServer server = new(request => request == "POST /api/payments" ? (307, "/api/payments", "") : (200, null, "ok"));
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxUnavailableAnswers: 2);
+        await outbox.EnqueueAsync("POST", "api/payments", """{"n":1}""");
+
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
+
+        (await outbox.FlushAsync(http)).Remaining.ShouldBe(1);
+        (await outbox.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(1);
+
+        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(307);
+    }
+
+    [Fact]
+    public async Task ARedirectTheClientDidNotFollow_IsCountedAsUnavailable_NotLeftToBlockTheQueue()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0), maxUnavailableAnswers: 2);
+        await outbox.EnqueueAsync("POST", "api/a", """{"n":1}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Found);
+        handler.EnqueueResponse(HttpStatusCode.Found);
+        using var http = Client(handler);
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 1, "HTTP 302 after a redirect"));
+        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(302);
+    }
+
+    [Fact]
+    public async Task AnEntryWithNoUrl_IsDeliveredToTheBaseAddress_NotTakenForARedirect()
+    {
+        // HttpClient fills the request's missing URI from BaseAddress while sending, so the queued URI must be that address too.
+        using RawHttpServer server = new(_ => (200, null, "ok"));
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "", """{"n":1}""");
+
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        server.Requests.ShouldBe(["POST /"]);
+    }
+
+    [Fact]
+    public async Task AnAnswerWithNoRedirect_StillDeliversTheEntry_OverARealClient()
+    {
+        using var server = RedirectingServer(HttpStatusCode.Found, "/login");
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/ok", """{"n":1}""");
+
+        using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
+
+        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        server.Requests.ShouldBe(["POST /api/ok"]);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void AnUnavailableLimitBelowOne_IsRefused(int limit)
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => new HttpOutbox(new InMemoryKeyValueStore(), new FixedTime(T0), maxUnavailableAnswers: limit))
+            .ParamName.ShouldBe("maxUnavailableAnswers");
+
+        Should.Throw<ArgumentOutOfRangeException>(() => new HttpOutbox(new InMemoryKeyValueStore(), new FixedTime(T0), null, ClientMarker(), 10, limit))
+            .ParamName.ShouldBe("maxUnavailableAnswers");
     }
 
     [Fact]
@@ -936,6 +1260,7 @@ public sealed class HttpOutboxTests
 
         entry.Attempts.ShouldBe(4);
         entry.ServerFailures.ShouldBe(0);
+        entry.UnavailableAnswers.ShouldBe(0);
     }
 
     [Fact]
@@ -968,6 +1293,20 @@ public sealed class HttpOutboxTests
         ["X-Client"] = MarkerValue,
         ["X-Second"] = SecondValue
     };
+
+    // POST /api/payments answers a redirect; the login page, the redirect target and /api/ok answer 200.
+    private static RawHttpServer RedirectingServer(HttpStatusCode redirect, string location) => new(request => request switch
+    {
+        "POST /api/payments" => ((int)redirect, location, ""),
+        "GET /login" => (200, null, "login page"),
+        _ => (200, null, "ok")
+    });
+
+    // The default limits through the constructor without replay headers, or the one with them.
+    private static HttpOutbox DefaultOutbox(bool withReplayHeaders) =>
+        withReplayHeaders
+            ? Outbox(ClientMarker())
+            : new(new InMemoryKeyValueStore(), new FixedTime(T0));
 
     private static HttpOutbox Outbox(Dictionary<string, string> replayHeaders) =>
         new(new InMemoryKeyValueStore(), new FixedTime(T0), null, replayHeaders);

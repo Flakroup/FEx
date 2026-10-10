@@ -3,6 +3,7 @@ using FluentFTP.Exceptions;
 using System;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -133,6 +134,11 @@ internal sealed class FtpTransport : IFtpTransport
         client.Config.SanitizeControlChars = false;
         client.Config.SanitizeUrlEncoding = false;
         client.Config.SanitizeTraversal = false;
+
+        // FluentFTP sends commands in ASCII unless FEAT lists UTF8, which turns every non-ASCII character of a file name into
+        // '?'. FtpWebRequest always sent UTF-8 and asked for it with OPTS UTF8 ON; setting the encoding makes Connect send that
+        // OPTS after login too, and a server that refuses it is tolerated (FluentFTP only notes the failed reply).
+        client.Encoding = Encoding.UTF8;
 
         return client;
     }

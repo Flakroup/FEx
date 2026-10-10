@@ -99,6 +99,40 @@ public sealed class FtpTransportTests : IDisposable
         (await FtpTransport.Instance.GetSizeAsync(ServerFile, "u", "p", Ct).WaitAsync(TimeSpan.FromSeconds(10), Ct)).ShouldBe(Payload.Length);
     }
 
+    private Uri PolishFile => new UriBuilder(ServerFile) { Path = "/pub/zażółć.bin" }.Uri;
+
+    [Fact]
+    public async Task GetSize_NonAsciiFileName_GoesOutAsUtf8EvenWhenFeatDoesNotListUtf8()
+    {
+        _server.Files["/pub/zażółć.bin"] = Payload;
+
+        (await FtpTransport.Instance.GetSizeAsync(PolishFile, "u", "p", Ct)).ShouldBe(Payload.Length);
+
+        _server.Commands.ShouldContain("SIZE pub/zażółć.bin");
+        _server.Commands.ShouldContain("OPTS UTF8 ON");
+    }
+
+    [Fact]
+    public async Task Open_NonAsciiFileName_GoesOutAsUtf8EvenWhenFeatDoesNotListUtf8()
+    {
+        _server.Files["/pub/zażółć.bin"] = Payload;
+
+        await using var response = await FtpTransport.Instance.OpenAsync(PolishFile, "u", "p", 0, Ct);
+
+        (await ReadAll(response)).ShouldBe(Payload);
+        _server.Commands.ShouldContain("RETR pub/zażółć.bin");
+    }
+
+    [Fact]
+    public async Task GetSize_ServerRefusesOptsUtf8_StillWorksWithUtf8Commands()
+    {
+        _server.OptsReply = "501 option not understood";
+        _server.Files["/pub/zażółć.bin"] = Payload;
+
+        (await FtpTransport.Instance.GetSizeAsync(PolishFile, "u", "p", Ct)).ShouldBe(Payload.Length);
+        _server.Commands.ShouldContain("SIZE pub/zażółć.bin");
+    }
+
     [Theory]
     [InlineData("100%25.bin", "100%.bin")]
     [InlineData("a;b.bin", "a;b.bin")]

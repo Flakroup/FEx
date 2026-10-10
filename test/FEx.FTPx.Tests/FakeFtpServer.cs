@@ -46,6 +46,9 @@ internal sealed class FakeFtpServer : IDisposable
     /// <summary>The final reply of a download that <see cref="AbortRetrAfterBytes" /> cuts short; 426 is what a server answers to a transfer the client abandoned.</summary>
     public string AbortReply { get; set; } = "451 local error in processing";
 
+    /// <summary>The reply to OPTS (the client switching the server to UTF-8); a refusal such as <c>501 ...</c> must not fail a transfer.</summary>
+    public string OptsReply { get; set; } = "200 ok";
+
     /// <summary>When set, FEAT advertises nothing (SIZE included), like a minimal server that still answers SIZE.</summary>
     public bool NoFeat { get; set; }
 
@@ -139,8 +142,11 @@ internal sealed class FakeFtpServer : IDisposable
                     case "PWD":
                         await writer.WriteLineAsync("257 \"/\" is the current directory");
                         break;
-                    case "TYPE" or "CWD" or "NOOP" or "OPTS":
+                    case "TYPE" or "CWD" or "NOOP":
                         await writer.WriteLineAsync("200 ok");
+                        break;
+                    case "OPTS":
+                        await writer.WriteLineAsync(OptsReply);
                         break;
                     case "SIZE":
                         await writer.WriteLineAsync(Files.TryGetValue(Resolve(arg), out var sized) ? $"213 {sized.Length}" : "550 not found");

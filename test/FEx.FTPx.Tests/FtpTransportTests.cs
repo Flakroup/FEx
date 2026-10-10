@@ -235,10 +235,13 @@ public sealed class FtpTransportTests : IDisposable
     public void RemotePath_IsRelativeToTheLoginDirectoryUnlessSpelledAbsolute(string uri, string expected) =>
         FtpTransport.RemotePath(new(uri)).ShouldBe(expected);
 
+    private static Uri UriWithUserInfo(string user, string password) =>
+        new UriBuilder(Uri.UriSchemeFtp, "host") { Path = "/f", UserName = user, Password = password }.Uri;
+
     [Fact]
     public void GetCredentials_BothPartsGiven_WinOverTheUriUserInfo()
     {
-        var credentials = FtpTransport.GetCredentials(new("ftp://alice:x@host/f"), "bob", "pw").ShouldNotBeNull();
+        var credentials = FtpTransport.GetCredentials(UriWithUserInfo("alice", "x"), "bob", "pw").ShouldNotBeNull();
 
         credentials.UserName.ShouldBe("bob");
         credentials.Password.ShouldBe("pw");
@@ -251,7 +254,7 @@ public sealed class FtpTransportTests : IDisposable
     [InlineData(" ", " ")]
     public void GetCredentials_AnEmptyPart_KeepsTheUriUserInfo(string user, string password)
     {
-        var credentials = FtpTransport.GetCredentials(new("ftp://al%40ice:p%3Aw@host/f"), user, password).ShouldNotBeNull();
+        var credentials = FtpTransport.GetCredentials(UriWithUserInfo("al%40ice", "p%3Aw"), user, password).ShouldNotBeNull();
 
         credentials.UserName.ShouldBe("al@ice");
         credentials.Password.ShouldBe("p:w");
@@ -259,7 +262,7 @@ public sealed class FtpTransportTests : IDisposable
 
     [Fact]
     public void GetCredentials_UserInfoWithoutPassword_HasAnEmptyPassword() =>
-        FtpTransport.GetCredentials(new("ftp://alice@host/f"), "", "").ShouldNotBeNull().Password.ShouldBe(string.Empty);
+        FtpTransport.GetCredentials(UriWithUserInfo("alice", ""), "", "").ShouldNotBeNull().Password.ShouldBe(string.Empty);
 
     [Fact]
     public void GetCredentials_NothingGiven_IsAnonymous() =>

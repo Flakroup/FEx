@@ -53,6 +53,17 @@ public sealed class FromJsonLoggingTests : IDisposable
     }
 
     [Fact]
+    public void FromJson_SerializationFailureBelowTheRoot_LogsItsPathWithoutTheSecret()
+    {
+        Should.Throw<JsonSerializationException>(() =>
+            $"{{\"a\":{{\"b\":\"{LeakMarker}\"}}}}".FromJson<Dictionary<string, Dictionary<string, Dictionary<string, int>>>>());
+
+        AssertNoLoggedSecret();
+        LoggedText().ShouldContain("at path 'a.b'");
+        LoggedText().ShouldContain(nameof(JsonSerializationException));
+    }
+
+    [Fact]
     public void FromJson_ConverterQuotingTheValue_LogsNeitherTheMessageNorTheInput()
     {
         var settings = new JsonSerializerSettings { Converters = [new QuotingConverter()] };
@@ -62,6 +73,7 @@ public sealed class FromJsonLoggingTests : IDisposable
         AssertNoLoggedSecret();
         LoggedText().ShouldContain(typeof(Dictionary<string, int>).FullName!);
         LoggedText().ShouldContain(nameof(InvalidOperationException));
+        LoggedText().ShouldContain("at path 'unknown'");
     }
 
     // Every argument of every call the logger received: messages, scope and label values, and the logged

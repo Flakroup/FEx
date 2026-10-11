@@ -5,6 +5,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -179,6 +180,37 @@ public sealed class JsonExtensionsTests
     {
         " abc ".TrimJsonString().ShouldBe("abc");
         ((string?)null).TrimJsonString().ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetJsonPath_ReaderException_ReturnsItsPath()
+    {
+        var exception = Should.Throw<JsonReaderException>(() =>
+            JsonConvert.DeserializeObject<Sample>("{\"Count\":\"many\"}"));
+
+        exception.GetJsonPath().ShouldBe("Count");
+    }
+
+    [Fact]
+    public void GetJsonPath_SerializationException_ReturnsItsPath()
+    {
+        var exception = Should.Throw<JsonSerializationException>(() =>
+            JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, int>>>("{\"a\":\"b\"}"));
+
+        exception.GetJsonPath().ShouldBe("a");
+    }
+
+    [Fact]
+    public void GetJsonPath_JsonExceptionWithoutAPath_ReturnsEmpty()
+    {
+        new JsonReaderException("no path").GetJsonPath().ShouldBe(string.Empty);
+        new JsonSerializationException("no path").GetJsonPath().ShouldBe(string.Empty);
+    }
+
+    [Fact]
+    public void GetJsonPath_OtherException_ReturnsNull()
+    {
+        new InvalidOperationException("not json").GetJsonPath().ShouldBeNull();
     }
 
     [Fact]

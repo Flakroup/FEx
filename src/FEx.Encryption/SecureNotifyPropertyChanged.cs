@@ -142,11 +142,12 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
     /// the stored shape no longer matches the type, which is what a model change looks like. Degrading to
     /// the default keeps a schema change from bringing the application down, and the failure is logged.
     /// <para>
-    /// The JSON is deserialized directly rather than through <c>FromJson</c>: that helper logs the
-    /// serializer's exception, whose message quotes the decrypted value, and with a debugger attached it
-    /// writes the whole document to the temp folder. <see cref="OnDecryptionFailed" /> gets a
-    /// <see cref="FExDecryptionException" /> naming the exception type and JSON path instead, with no inner
-    /// exception that could carry the plaintext.
+    /// The JSON is deserialized directly rather than through <c>FromJson</c>: that helper logs an error of its
+    /// own and rethrows, while a failed read here must not log anything beyond what
+    /// <see cref="OnDecryptionFailed" /> chooses to - a derived type may override it to surface the failure in the
+    /// UI instead. <see cref="OnDecryptionFailed" /> gets a <see cref="FExDecryptionException" /> naming the
+    /// exception type and JSON path, with no inner exception, because the serializer's exception message can
+    /// quote the decrypted value.
     /// </para>
     /// </remarks>
     protected T? DecryptFromJsonSource<T>(string? source, [CallerMemberName] string? propertyName = null)
@@ -164,16 +165,9 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            var path = ex switch
-            {
-                JsonReaderException reader => reader.Path,
-                JsonSerializationException serialization => serialization.Path,
-                _ => null
-            };
-
             OnDecryptionFailed(propertyName,
                 new FExDecryptionException(
-                    $"The stored value of '{propertyName}' is not a valid {typeof(T).Name} ({ex.GetType().Name} at path '{path}')."));
+                    $"The stored value of '{propertyName}' is not a valid {typeof(T).Name} ({ex.GetType().Name} at path '{ex.GetJsonPath()}')."));
 
             return default;
         }

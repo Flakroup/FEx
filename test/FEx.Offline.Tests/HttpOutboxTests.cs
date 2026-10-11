@@ -1359,6 +1359,42 @@ public sealed class HttpOutboxTests
     }
 
     [Fact]
+    public async Task ACancelledFlush_WaitingBehindAnotherFlush_Throws_SendsNothing_AndLeavesTheGateUsable()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/profile", null);
+
+        using GatedHandler handler = new();
+        using var http = Gated(handler);
+        var first = outbox.FlushAsync(http, TestContext.Current.CancellationToken);
+        await handler.Entered;
+
+        using CancellationTokenSource cts = new();
+        var second = outbox.FlushAsync(http, cts.Token);
+        second.IsCompleted.ShouldBeFalse();
+
+        await cts.CancelAsync();
+
+        // Cancelled while the first flush still holds the gate. The bound only turns a flush that ignores the token into a
+        // failure instead of a hang. (Answering first would race: SemaphoreSlim hands the gate to a waiter whose cancellation
+        // has not been processed yet.)
+        await Should.ThrowAsync<OperationCanceledException>(() => second.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+
+        handler.Answer(HttpStatusCode.Created);
+        (await first).ShouldBe(new(1, 0, 0, null));
+        handler.Requests.ShouldBe(1);
+
+        // The cancelled wait released nothing: the gate still admits a flush (and the first flush's own release did not throw).
+        await outbox.EnqueueAsync("POST", "api/profile", null);
+        using GatedHandler later = new();
+        using var laterHttp = Gated(later);
+        var third = outbox.FlushAsync(laterHttp, TestContext.Current.CancellationToken);
+        await later.Entered;
+        later.Answer(HttpStatusCode.Created);
+        (await third).ShouldBe(new(1, 0, 0, null));
+    }
+
+    [Fact]
     public async Task AFlushCancelledBetweenEntries_StopsThere_AndLeavesTheNextEntryQueued()
     {
         FixedTime time = new(T0);

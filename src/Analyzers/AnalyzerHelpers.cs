@@ -97,10 +97,8 @@ internal static class AnalyzerHelpers
     }
 
     /// <summary>
-    /// The one definition of "the variable is written, or may be": the reference is assigned (a deconstruction included),
-    /// incremented or decremented, passed as a <c>ref</c> or <c>out</c> argument (a dynamic call included), has its address
-    /// taken with <c>&amp;</c>, or is aliased by a <c>ref</c> local or <c>ref</c> return, since each of those can write later through
-    /// the pointer or the alias. An <c>in</c> argument, written or not, cannot write, so it is not a write.
+    /// Whether the reference is assigned (a deconstruction included) or incremented or decremented. Handing out the
+    /// variable's address is a different question, <see cref="TakesAddress"/>.
     /// </summary>
     public static bool IsWrite(IOperation reference)
     {
@@ -116,25 +114,19 @@ internal static class AnalyzerHelpers
         {
             IAssignmentOperation assignment => assignment.Target == child,
             IIncrementOrDecrementOperation => true,
-            _ => TakesAddress(reference) && !IsReadOnlyArgument(reference),
+            _ => false,
         };
     }
 
     /// <summary>
-    /// Whether a reference hands out the variable's address: <c>&amp;x</c>, <c>ref x</c> as a local's initializer or a return, or an
-    /// argument written with <c>ref</c>, <c>in</c> or <c>out</c>. A write is one such case; an <c>in</c> argument is the other.
+    /// Whether a reference hands out the variable's address, so something can write through it later: <c>&amp;x</c>, <c>ref x</c> as a
+    /// local's initializer or a return, or an argument passed by <c>ref</c>, <c>in</c> or <c>out</c>. The bound parameter decides the
+    /// argument, which covers a <c>this ref</c> extension receiver, a parenthesized <c>ref (x)</c> and an <c>in</c> argument written
+    /// without the keyword (a callee can cast the <c>in</c> away); the keyword decides a dynamic call, which has no bound parameter.
     /// </summary>
     public static bool TakesAddress(IOperation reference) =>
-        reference.Parent is IAddressOfOperation
+        reference.Parent is IAddressOfOperation or IArgumentOperation { Parameter.RefKind: not RefKind.None }
         || reference.Syntax.Parent is RefExpressionSyntax or ArgumentSyntax { RefKindKeyword.RawKind: not 0 };
-
-    // An argument for an in or ref readonly parameter: the parameter decides when the callee is known, the keyword when it is not (a dynamic call).
-    private static bool IsReadOnlyArgument(IOperation reference) =>
-        reference.Parent switch
-        {
-            IArgumentOperation { Parameter: { } parameter } => parameter.RefKind is not (RefKind.Ref or RefKind.Out),
-            _ => reference.Syntax.Parent is ArgumentSyntax { RefKindKeyword.RawKind: (int)SyntaxKind.InKeyword },
-        };
 
     /// <summary>Whether <paramref name="symbol"/> implements a member of one of its type's interfaces, implicitly or explicitly.</summary>
     public static bool ImplementsInterfaceMember(ISymbol symbol)

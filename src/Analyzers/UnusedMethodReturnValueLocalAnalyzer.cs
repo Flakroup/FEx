@@ -19,7 +19,7 @@ public sealed class UnusedMethodReturnValueLocalAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor Rule = new(
         DiagnosticId,
         "Unused method return value (local)",
-        "The value returned by '{0}' is never used; the method can return void",
+        "The value returned by '{0}' is never used; the method can return {1}",
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
@@ -65,10 +65,18 @@ public sealed class UnusedMethodReturnValueLocalAnalyzer : DiagnosticAnalyzer
                 // Both parts of a partial method are declarations of it. Calls in generated code count as uses, but nobody edits a generated declaration.
                 foreach (var reference in new[] { pair.Key, pair.Key.PartialImplementationPart }.OfType<IMethodSymbol>().SelectMany(part => part.DeclaringSyntaxReferences)
                              .Where(reference => !AnalyzerHelpers.IsGenerated(reference.SyntaxTree, pair.Key, end.Options, end.CancellationToken)))
-                    end.ReportDiagnostic(Diagnostic.Create(Rule, ((MethodDeclarationSyntax)reference.GetSyntax(end.CancellationToken)).ReturnType.GetLocation(), pair.Key.Name));
+                    end.ReportDiagnostic(Diagnostic.Create(Rule, ((MethodDeclarationSyntax)reference.GetSyntax(end.CancellationToken)).ReturnType.GetLocation(), pair.Key.Name, ReplacementReturnType(pair.Key.ReturnType)));
             }
         });
     }
+
+    // Dropping the value of an awaited Task<T> keeps the await: the non-generic task is the replacement, and void would not be awaitable.
+    private static string ReplacementReturnType(ITypeSymbol returnType) => returnType.OriginalDefinition.ToDisplayString() switch
+    {
+        "System.Threading.Tasks.Task<TResult>" => "Task",
+        "System.Threading.Tasks.ValueTask<TResult>" => "ValueTask",
+        _ => "void",
+    };
 
     // The compiler calls these by name (foreach, await, using, deconstruction, collection initializers, ranges, fixed), and what they return is what it needs.
     private static readonly HashSet<string> PatternMethods =

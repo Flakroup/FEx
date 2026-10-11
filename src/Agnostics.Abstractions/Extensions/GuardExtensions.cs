@@ -27,7 +27,7 @@ public static class GuardExtensions
     /// </remarks>
     [ContractAnnotation("value: null => stop")]
     [return: SysNotNull]
-    public static T GuardProperty<T>([SysNotNull] [CanBeNull] this T value,
+    public static T GuardProperty<T>([SysNotNull] this T? value,
                                      string? message = null,
                                      [CallerMemberName] string? paramName = null)
     {
@@ -45,7 +45,7 @@ public static class GuardExtensions
     /// <exception cref="ArgumentNullException"><paramref name="value" /> is null.</exception>
     [ContractAnnotation("value: null => stop")]
     [return: SysNotNull]
-    public static T Guard<T>([SysNotNull] [CanBeNull] this T value, string? paramName) =>
+    public static T Guard<T>([SysNotNull] this T? value, string? paramName) =>
         value.Guard(paramName, null);
 
     /// <summary>
@@ -67,7 +67,7 @@ public static class GuardExtensions
     /// </remarks>
     [ContractAnnotation("value: null => stop")]
     [return: SysNotNull]
-    public static T Guard<T>([SysNotNull] [CanBeNull] this T value, string? paramName, string? message)
+    public static T Guard<T>([SysNotNull] this T? value, string? paramName, string? message)
     {
         if (value is null)
             throw new ArgumentNullException(paramName, message ?? "Precondition not met.");
@@ -83,7 +83,7 @@ public static class GuardExtensions
     /// <returns>The value itself.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="predicate" /> returns false.</exception>
     [ContractAnnotation("value: null => stop")]
-    public static T Guard<T>([CanBeNull] this T value, Func<T, bool> predicate, string? paramName) =>
+    public static T Guard<T>(this T value, Func<T, bool> predicate, string? paramName) =>
         value.Guard(predicate, paramName, null);
 
     /// <summary>
@@ -105,7 +105,7 @@ public static class GuardExtensions
     /// Throws a <see cref="ArgumentNullException" /> if the condition is false.
     /// </remarks>
     [ContractAnnotation("value: null => stop")]
-    public static T Guard<T>([CanBeNull] this T value, Func<T, bool> predicate, string? paramName, string? message)
+    public static T Guard<T>(this T value, Func<T, bool> predicate, string? paramName, string? message)
     {
 #if NET9_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(predicate);

@@ -46,7 +46,7 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
 
         secrets.Secret.ShouldBeNull();
 
-        _logger.ReceivedWithAnyArgs(1).Warning(default(string)!);
+        _logger.ReceivedWithAnyArgs(1).Warning(default!);
         var logged = LoggedText().ShouldHaveSingleItem();
         logged.ShouldContain(nameof(DefaultSecrets.Secret));
         logged.ShouldContain(nameof(FExDecryptionException));

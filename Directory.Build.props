@@ -16,6 +16,10 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<!-- The Roslyn version FEx.Analyzers compiles against and its tests bring along; one number, so they cannot drift. -->
 		<RoslynVersion>4.14.0</RoslynVersion>
+		<!-- FEx builds the analyzer itself (Directory.Build.targets references the project). This opt-out is what stops the older
+		     published FEx.Analyzers rules from running beside the ones at HEAD: without it restore adds the package next to the
+		     project analyzer and both load. -->
+		<DevConfigsFExAnalyzers>false</DevConfigsFExAnalyzers>
 	</PropertyGroup>
 
 </Project>

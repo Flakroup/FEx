@@ -89,7 +89,8 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
 
         try
         {
-            var secrets = new RecordingSecrets(_cipher) { RawPayload = _cipher.Encrypt("{\"Inner\":{\"Name\":}}") };
+            var json = $"{{\"{nameof(ConvertedPayload.Inner)}\":{{\"Name\":}}}}";
+            var secrets = new RecordingSecrets(_cipher) { RawPayload = _cipher.Encrypt(json) };
 
             secrets.Converted.ShouldBeNull();
 

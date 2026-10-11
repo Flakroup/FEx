@@ -117,6 +117,18 @@ internal sealed class ScriptedHandler : HttpMessageHandler
             return response;
         });
 
+    /// <summary>An answer that first runs <paramref name="onSend" />, e.g. to cancel a token while the request is in flight.</summary>
+    public void EnqueueResponse(HttpStatusCode status, Action onSend) =>
+        _script.Enqueue(_ =>
+        {
+            onSend();
+
+            return new(status)
+            {
+                Content = new StringContent("")
+            };
+        });
+
     public void EnqueueNetworkFailure() => _script.Enqueue(_ => throw new HttpRequestException("connection refused"));
 
     /// <summary>An answer whose Content-Type charset .NET cannot decode, so reading its body as a string throws.</summary>

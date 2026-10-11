@@ -73,7 +73,8 @@ public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining
 /// records the error and stops the flush as well, but is never counted: the session needs renewing, the server is
 /// throttling or the network is down, none of which says anything about the write. An answer that arrives after a
 /// redirect the client followed (the final request's method or path is not the queued one - a login page standing in
-/// for an expired session, say), or a 3xx the client did not follow, is never a delivery, whatever its status: it keeps
+/// for an expired session, say), a 3xx the client did not follow, or the status 0 a browser reports for a redirect (every
+/// request asks its fetch not to follow one), is never a delivery, whatever its status: it keeps
 /// the entry like a 401 and counts as an unavailable answer, so a redirect that never ends is dead-lettered at that limit.
 /// A write that really lands behind a redirect (a 303 after a POST, a 307 to another path) is replayed until that limit,
 /// so an API that redirects on success should answer 2xx instead. Dead entries are listed with
@@ -101,6 +102,9 @@ public sealed class HttpOutbox
     // Same reason as IdempotencyHeader: a copy of FEx.AspNetCorex.IdempotencyMiddleware.OriginalStatusHeaderName,
     // which this project cannot reference. HttpOutboxIdempotencyTests runs the outbox against the real middleware.
     private const string OriginalStatusHeader = "Idempotency-Original-Status";
+
+    // The request option BrowserHttpHandler passes to fetch() entry by entry.
+    private static readonly HttpRequestOptionsKey<IDictionary<string, object>> WebAssemblyFetchOptionsKey = new("WebAssemblyFetchOptions");
 
     /// <summary>
     /// How many server failures an entry takes before it moves to the dead-letter list. A server failure is a 5xx answer
@@ -317,6 +321,11 @@ public sealed class HttpOutbox
 
             request.Headers.Add(IdempotencyHeader, entry.Id.ToString());
 
+            // In the browser fetch follows a redirect on its own and BrowserHttpHandler never updates RequestMessage, so a
+            // followed redirect cannot be told from a delivery. "manual" makes fetch stop at the redirect instead, which the
+            // handler reports as status 0 (opaqueredirect). Other handlers ignore this option.
+            request.Options.Set(WebAssemblyFetchOptionsKey, new Dictionary<string, object> { ["redirect"] = "manual" });
+
             // Taken before the send: the client follows a redirect by rewriting this very request, so afterwards it
             // can no longer tell what was queued.
             var queuedMethod = request.Method;
@@ -335,8 +344,10 @@ public sealed class HttpOutbox
 
                 // A client that follows redirects hands back the final answer: a login page's 200 for a write whose session
                 // expired is not a delivery, so a redirected answer is judged before its status. A 3xx that reaches this point
-                // is a redirect nobody followed (a client that does not, or one that gave up after too many hops).
-                var redirected = status is >= 300 and < 400 || IsFollowedRedirect(queuedMethod, queuedUri, response);
+                // is a redirect nobody followed (a client that does not, or one that gave up after too many hops). In the
+                // browser a redirect always arrives as status 0: BrowserHttpHandler sets it only for the opaqueredirect answer
+                // that the "manual" fetch option above provokes, so status 0 alone marks that redirect.
+                var redirected = status is >= 300 and < 400 || status == 0 || IsFollowedRedirect(queuedMethod, queuedUri, response);
 
                 if (!redirected && (response.IsSuccessStatusCode || IsCompletedEarlier(response)))
                 {
@@ -433,7 +444,8 @@ public sealed class HttpOutbox
     // across hosts, or stamps a query-string key, rewrites them on every request, and each delivered 2xx would then look
     // undelivered. The ceiling: a handler that rewrites the path is still taken for a redirect, and so is a redirect that
     // changes only the host or the query (a write that landed there is replayed; the idempotency key makes that safe).
-    // A response with no request attached (a hand-built one) is never a redirect.
+    // A response with no request attached (a hand-built one) is never a redirect. The browser never gets this far: its
+    // fetch is told not to follow redirects, and the opaqueredirect answer is caught by its status 0 before this check.
     private static bool IsFollowedRedirect(HttpMethod queuedMethod, Uri? queuedUri, HttpResponseMessage response) =>
         response.RequestMessage is { } final
         && (final.Method != queuedMethod || !string.Equals(PathOf(final.RequestUri), PathOf(queuedUri), StringComparison.Ordinal));

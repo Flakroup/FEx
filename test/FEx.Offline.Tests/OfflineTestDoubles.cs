@@ -129,6 +129,15 @@ internal sealed class ScriptedHandler : HttpMessageHandler
             };
         });
 
+    /// <summary>What the browser's BrowserHttpHandler hands back for a fetch made with redirect "manual" that met a redirect:
+    /// status 0 with the reason phrase "opaqueredirect".</summary>
+    public void EnqueueOpaqueRedirect() =>
+        _script.Enqueue(_ => new(0)
+        {
+            ReasonPhrase = "opaqueredirect",
+            Content = new StringContent("")
+        });
+
     public void EnqueueNetworkFailure() => _script.Enqueue(_ => throw new HttpRequestException("connection refused"));
 
     /// <summary>An answer whose Content-Type charset .NET cannot decode, so reading its body as a string throws.</summary>

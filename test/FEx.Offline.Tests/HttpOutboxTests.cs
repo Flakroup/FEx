@@ -971,6 +971,76 @@ public sealed class HttpOutboxTests
     }
 
     [Fact]
+    public async Task EveryFlushedRequest_AsksTheBrowserFetchNotToFollowRedirects()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        await outbox.EnqueueAsync("POST", "api/a", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("PUT", "api/b", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        handler.EnqueueResponse(HttpStatusCode.OK);
+        using var http = Client(handler);
+
+        await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
+
+        handler.Requests.Count.ShouldBe(2);
+        foreach (var request in handler.Requests)
+        {
+            request.Options.TryGetValue(new HttpRequestOptionsKey<IDictionary<string, object>>("WebAssemblyFetchOptions"), out var options).ShouldBeTrue();
+            options.ShouldBe(new Dictionary<string, object> { ["redirect"] = "manual" });
+        }
+    }
+
+    [Fact]
+    public async Task AnOpaqueRedirectFromTheBrowser_KeepsTheEntry_CountsItAsUnavailable_AndStopsTheFlush()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        await outbox.EnqueueAsync("POST", "api/a", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/b", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueOpaqueRedirect();
+        using var http = Client(handler);
+
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(0, 0, 2, "HTTP 0 after a redirect"));
+
+        handler.Requests.Count.ShouldBe(1);
+        var first = (await outbox.ListAsync())[0];
+        first.UnavailableAnswers.ShouldBe(1);
+        first.Attempts.ShouldBe(1);
+        first.LastError.ShouldBe("HTTP 0 after a redirect");
+    }
+
+    [Fact]
+    public async Task AnOpaqueRedirectFromTheBrowser_AtTheUnavailableLimit_MovesTheEntryToTheDeadLetterList_AndTheFlushGoesOn()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time, maxUnavailableAnswers: 2);
+        var redirected = await outbox.EnqueueAsync("POST", "api/a", """{"n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/b", """{"n":2}""");
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueOpaqueRedirect();
+        handler.EnqueueOpaqueRedirect();
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).Remaining.ShouldBe(2);
+
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
+
+        result.DeadLettered.ShouldBe(1);
+        result.Sent.ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(redirected.Id);
+    }
+
+    [Fact]
     public async Task AnEntryWithNoUrl_IsDeliveredToTheBaseAddress_NotTakenForARedirect()
     {
         // HttpClient fills the request's missing URI from BaseAddress while sending, so the queued URI must be that address too.

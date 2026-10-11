@@ -374,7 +374,8 @@ public static class FtpDownloader
 
     /// <summary>
     /// Finds where the server serves the file again after the transfer died at <paramref name="offset" />: probes there, skips ahead
-    /// in <see cref="ProbeStep" /> chunks while a probe reads nothing, and then bisects the last chunk for the first readable byte.
+    /// in <see cref="ProbeStep" /> chunks while a probe reads nothing, and then bisects the last chunk for the first readable byte;
+    /// when the walk steps past the end of the file, the last chunk is bisected up to the file size, so a tail the server still serves is kept.
     /// The bytes before the result are zero-filled by the caller. A probe that fails ends the search with the best offset known.
     /// The number of probes is bounded: at most one per chunk of the file plus ceil(log2(<see cref="ProbeStep" />)) = 19 for the bisection.
     /// </summary>
@@ -404,10 +405,12 @@ public static class FtpDownloader
                     viewModel?.SetCurrentDownloadState(newOffset - offset, fileSize - offset);
                 }
 
-                if (newOffset < fileSize)
+                if (newOffset > offset)
                 {
-                    // newOffset is readable and the chunk before it was not: the first readable byte lies in (low, newOffset].
+                    // The chunk before newOffset read nothing. When newOffset is readable, the first readable byte lies in [low, newOffset].
+                    // When the walk overshot the end, the tail [low, fileSize) may still be served: bisect it, and fileSize means nothing is.
                     var low = Math.Max(offset, newOffset - ProbeStep + 1);
+                    newOffset = Math.Min(newOffset, fileSize);
 
                     while (low < newOffset)
                     {

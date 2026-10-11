@@ -238,6 +238,25 @@ public sealed class FtpDownloaderTests : IDisposable
         transport.Created.ShouldAllBe(r => r.Disposed);
     }
 
+    [Theory]
+    [InlineData(1_300_000, 1_200_000)] // the last step overshoots the end, the tail from 1_200_000 is served
+    [InlineData(1_300_000, 1_048_577)] // the first readable byte is the first one after the last probe that read nothing
+    [InlineData(1_048_576, 1_048_575)] // the file ends exactly on a chunk boundary
+    public async Task Restart_Recovery_WhenTheWalkBackOvershootsTheEnd_BisectsTheTailForTheFirstReadableByte(long size, long readableFrom)
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        var transport = new FakeTransport { Size = size, AbortExceptions = true, ReadableFrom = readableFrom };
+        var path = NewPath();
+        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream(null, new AbortException())));
+
+        await FtpDownloader.RestartDownloadFromServerAsync(transport, new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries }, path, Server, null, 0, "", "", TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        new FileInfo(path).Length.ShouldBe(readableFrom);
+        transport.OpenCalls.ShouldBeLessThanOrEqualTo(1 + 3 + 19);
+        transport.Created.ShouldAllBe(r => r.Disposed);
+    }
+
     [Fact]
     public async Task Restart_Recovery_WhenTheServerServesAtTheStart_ProbesOnceAndFillsNothing()
     {

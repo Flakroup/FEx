@@ -325,6 +325,36 @@ public sealed class FtpTransportTests : IDisposable
     }
 
     [Fact]
+    public async Task Recovery_WhenTheWalkBackOvershootsTheEnd_StillRecoversTheServedTail()
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        const int size = 1_300_000;
+        const int readableFrom = 1_200_000;
+        var source = Enumerable.Range(0, size).Select(i => (byte)(i % 251 + 1)).ToArray(); // never zero, so a zero-filled tail differs from it
+        _server.Files["/pub/big.bin"] = source;
+        _server.ReadableFrom = readableFrom;
+        _server.AbortNextRetrs = 1; // the transfer dies before its first byte, which starts the recovery
+        var uri = new UriBuilder(ServerFile) { Path = "/pub/big.bin" }.Uri;
+        var path = Path.Combine(_dir, "overshoot.bin");
+        var state = new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries };
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        cts.CancelAfter(TimeSpan.FromSeconds(60));
+
+        // Probes at 0, 512 KiB and 1 MiB read nothing and the next step lands past the end: the tail from the first readable byte is still served.
+        (await FtpDownloader.RestartDownloadFromServerAsync(FtpTransport.Instance, state, path, uri, null, 0, "", "", cts.Token)).ShouldBeFalse();
+        new FileInfo(path).Length.ShouldBe(readableFrom);
+
+        (await FtpDownloader.RestartDownloadFromServerAsync(FtpTransport.Instance, state, path, uri, null, readableFrom, "", "", cts.Token)).ShouldBeTrue();
+
+        var recovered = await File.ReadAllBytesAsync(path, Ct);
+        recovered.Length.ShouldBe(size);
+        recovered.Take(readableFrom).ShouldAllBe(b => b == 0);
+        recovered.AsSpan(readableFrom).SequenceEqual(source.AsSpan(readableFrom)).ShouldBeTrue();
+        _server.MaxConcurrentConnections.ShouldBe(1);
+        _server.Commands.Count(c => c.StartsWith("RETR ", StringComparison.Ordinal)).ShouldBeLessThanOrEqualTo(1 + 3 + 19 + 1);
+    }
+
+    [Fact]
     public void IsLocalProcessingAbort_OnlyAFtp451IsAnAbort()
     {
         FtpTransport.Instance.IsLocalProcessingAbort(new FtpCommandException("451", "local error")).ShouldBeTrue();

@@ -1,5 +1,6 @@
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -102,9 +103,9 @@ internal static class JsonPathRedaction
 
     // Newtonsoft writes a property as `name` (`.name` after another segment), or as `['name']` with JavaScript
     // escapes when it holds special characters, and an array item as `[index]`.
-    private static bool TryReadSegment(string path, ref int position, out Segment segment)
+    private static bool TryReadSegment(string path, ref int position, [NotNullWhen(true)] out Segment? segment)
     {
-        segment = default;
+        segment = null;
 
         if (path[position] == '.')
             position++;
@@ -143,22 +144,29 @@ internal static class JsonPathRedaction
         return true;
     }
 
-    private static bool TryReadQuotedName(string path, ref int position, out Segment segment)
+    private static bool TryReadQuotedName(string path,
+                                          ref int position,
+                                          [NotNullWhen(true)] out Segment? segment)
     {
-        segment = default;
+        segment = null;
         var start = position;
+        var i = position + 2;
 
-        for (var i = position + 2; i < path.Length; i++)
+        while (i < path.Length)
         {
             if (path[i] == '\\')
             {
-                i++;
+                i += 2;
 
                 continue;
             }
 
             if (path[i] != '\'')
+            {
+                i++;
+
                 continue;
+            }
 
             if (i + 1 >= path.Length || path[i + 1] != ']')
                 return false;
@@ -176,7 +184,7 @@ internal static class JsonPathRedaction
         return false;
     }
 
-    private readonly struct Segment(string text, string? name, int? index, bool isQuoted)
+    private sealed class Segment(string text, string? name, int? index, bool isQuoted)
     {
         public string Text { get; } = text;
 

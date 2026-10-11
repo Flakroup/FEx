@@ -67,6 +67,10 @@ public class AnalyzerMessageTests
         Verify<UnusedMethodReturnValueLocalAnalyzer>("FEX0049", "using System.Threading.Tasks; public class C { private {|#0:ValueTask<int>|} Get() => new ValueTask<int>(1); public async Task M() { await Get(); } }", "Get", "ValueTask");
 
     [Fact]
+    public Task FEX0049_names_Task_for_a_Task_of_T_called_as_a_bare_statement() =>
+        Verify<UnusedMethodReturnValueLocalAnalyzer>("FEX0049", "using System.Threading.Tasks; public class C { private {|#0:Task<int>|} Get() => Task.FromResult(1); public void M() { Get(); } }", "Get", "Task");
+
+    [Fact]
     public Task FEX0050_names_the_accessor() =>
         Verify<ValueParameterNotUsedAnalyzer>("FEX0050", "public class C { private int _p; public int P { get => _p; {|#0:set|} { } } }", "set");
 

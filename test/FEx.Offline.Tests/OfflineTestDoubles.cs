@@ -132,7 +132,7 @@ internal sealed class ScriptedHandler : HttpMessageHandler
     /// <summary>What the browser's BrowserHttpHandler hands back for a fetch made with redirect "manual" that met a redirect:
     /// status 0 with the reason phrase "opaqueredirect".</summary>
     public void EnqueueOpaqueRedirect() =>
-        _script.Enqueue(_ => new((HttpStatusCode)0)
+        _script.Enqueue(_ => new(0)
         {
             ReasonPhrase = "opaqueredirect",
             Content = new StringContent("")

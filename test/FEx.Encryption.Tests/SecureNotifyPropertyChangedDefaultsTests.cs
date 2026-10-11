@@ -89,7 +89,7 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
 
         try
         {
-            var json = $"{{\"{nameof(ConvertedPayload.Inner)}\":{{\"Name\":}}}}";
+            const string json = $"{{\"{nameof(ConvertedPayload.Inner)}\":{{\"Name\":}}}}";
             var secrets = new RecordingSecrets(_cipher) { RawPayload = _cipher.Encrypt(json) };
 
             secrets.Converted.ShouldBeNull();

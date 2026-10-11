@@ -19,6 +19,7 @@ Reference .NET library - shared framework used as a git submodule across several
 - Package versions centralized in `DevConfigs/Directory.Build.props` (`DotNetNugetsVersion`, `AvaloniaVersion`, etc.)
 - Used as a submodule in other projects - breaking changes ripple to consumers
 - Analyzers (via `Directory.Build.targets`): IDisposableAnalyzers, Microsoft.VisualStudio.Threading.Analyzers, ReflectionAnalyzers
+- Own analyzer: `FEx.Analyzers` (`src/Analyzers`) runs on every project except itself and its tests, built from source: `Directory.Build.targets` adds it as a `ProjectReference` with `OutputItemType="Analyzer"` and `ReferenceOutputAssembly="false"`, and `Directory.Build.props` sets `DevConfigsFExAnalyzers=false` so DevConfigs does not also restore the published package. Its rules are errors through `DevConfigs/FEx.Analyzers.globalconfig`
 - Nullable: **enabled globally** via `DevConfigs/Directory.Build.props`; PolySharp polyfills the nullable annotation attributes (`[NotNullWhen]`, `[MaybeNull]`, `[MemberNotNull]`, ...) on down-level TFMs (`netstandard2.0`/`net481`). Set nullability only via csproj/props/targets, never `#nullable enable/disable` in a file; do not re-declare `<Nullable>` per project (it is inherited)
 - NEVER exclude projects from the build - fix the build instead of bypassing
 

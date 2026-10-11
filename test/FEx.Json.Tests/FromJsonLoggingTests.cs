@@ -18,8 +18,8 @@ namespace FEx.Json.Tests;
 [Collection(StaticStateCollection.Name)]
 public sealed class FromJsonLoggingTests : IDisposable
 {
-    private const string Secret = "4711-secret";
-    private const string SecretBearingJson = $"{{\"Pin\":\"{Secret}\"}}";
+    private const string LeakMarker = "4711-secret";
+    private const string LeakMarkerJson = $"{{\"Pin\":\"{LeakMarker}\"}}";
 
     private readonly IFExLogger _previousLogger = FExStaticLogger.Instance;
     private readonly IFExLogger _logger = Substitute.For<IFExLogger>();
@@ -34,7 +34,7 @@ public sealed class FromJsonLoggingTests : IDisposable
     [Fact]
     public void FromJson_ValueOfTheWrongType_LogsTypePathAndExceptionTypeButNotTheSecret()
     {
-        Should.Throw<JsonReaderException>(() => SecretBearingJson.FromJson<Dictionary<string, int>>());
+        Should.Throw<JsonReaderException>(() => LeakMarkerJson.FromJson<Dictionary<string, int>>());
 
         AssertNoLoggedSecret();
         LoggedText().ShouldContain(typeof(Dictionary<string, int>).FullName!);
@@ -45,7 +45,7 @@ public sealed class FromJsonLoggingTests : IDisposable
     [Fact]
     public void FromJson_ValueThatIsNotAnObject_LogsTheSerializationFailureWithoutTheSecret()
     {
-        Should.Throw<JsonSerializationException>(() => $"\"{Secret}\"".FromJson<Dictionary<string, int>>());
+        Should.Throw<JsonSerializationException>(() => $"\"{LeakMarker}\"".FromJson<Dictionary<string, int>>());
 
         AssertNoLoggedSecret();
         LoggedText().ShouldContain(typeof(Dictionary<string, int>).FullName!);
@@ -57,7 +57,7 @@ public sealed class FromJsonLoggingTests : IDisposable
     {
         var settings = new JsonSerializerSettings { Converters = [new QuotingConverter()] };
 
-        Should.Throw<InvalidOperationException>(() => SecretBearingJson.FromJson<Dictionary<string, int>>(settings));
+        Should.Throw<InvalidOperationException>(() => LeakMarkerJson.FromJson<Dictionary<string, int>>(settings));
 
         AssertNoLoggedSecret();
         LoggedText().ShouldContain(typeof(Dictionary<string, int>).FullName!);
@@ -76,7 +76,7 @@ public sealed class FromJsonLoggingTests : IDisposable
     private void AssertNoLoggedSecret()
     {
         _logger.ReceivedCalls().ShouldNotBeEmpty();
-        LoggedArguments().ShouldAllBe(text => !text.Contains(Secret));
+        LoggedArguments().ShouldAllBe(text => !text.Contains(LeakMarker));
     }
 
     private sealed class QuotingConverter : JsonConverter<int>

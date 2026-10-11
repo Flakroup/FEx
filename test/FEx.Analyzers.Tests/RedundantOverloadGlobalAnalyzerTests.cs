@@ -1852,4 +1852,12 @@ public class RedundantOverloadGlobalAnalyzerTests
         VerifyAsync("""
             public class A { public void {|FEX0039:M|}(int a) { M(a, double.NaN); } public void M(int a, double d = double.NaN) { System.Console.Write(a + d); } }
             """);
+
+    [Fact]
+    public Task Ignores_forwarder_a_derived_type_uses_to_implement_an_interface() =>
+        VerifyAsync("""
+            public interface I { void M(int a); }
+            public class A { public void M(int a) { M(a, 0); } public void M(int a, int b = 0) { System.Console.Write(a + b); } }
+            public class B : A, I { }
+            """);
 }

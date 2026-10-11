@@ -15,12 +15,13 @@ internal static class RedundantOverloadAnalysis
     /// <summary>
     /// Starts FEX0039 (<paramref name="local"/> false) or FEX0040 (true): the redundant overloads in the compilation, minus
     /// those some code uses as a method group, because <c>Action&lt;int&gt; f = r.M;</c> binds the forwarder and not the
-    /// sibling, which takes two arguments. Generated code (Razor binds handlers that way) is read for those uses and never reported.
+    /// sibling, which takes two arguments, and those a derived type implements an interface with (<c>class B : A, I</c>), which
+    /// a two-parameter sibling cannot do. Generated code (Razor binds handlers that way) is read for those uses and never reported.
     /// </summary>
     public static void Start(CompilationStartAnalysisContext start, DiagnosticDescriptor rule, bool local)
     {
         var candidates = new ConcurrentDictionary<IMethodSymbol, Diagnostic>(SymbolEqualityComparer.Default);
-        var methodGroups = new ConcurrentDictionary<IMethodSymbol, bool>(SymbolEqualityComparer.Default);
+        var boundByShape = new ConcurrentDictionary<IMethodSymbol, bool>(SymbolEqualityComparer.Default);
         start.RegisterSyntaxNodeAction(
             node =>
             {
@@ -31,10 +32,18 @@ internal static class RedundantOverloadAnalysis
             },
             SyntaxKind.MethodDeclaration,
             SyntaxKind.ConstructorDeclaration);
-        start.RegisterOperationAction(operation => methodGroups[((IMethodReferenceOperation)operation.Operation).Method.OriginalDefinition] = true, OperationKind.MethodReference);
+        start.RegisterOperationAction(operation => boundByShape[((IMethodReferenceOperation)operation.Operation).Method.OriginalDefinition] = true, OperationKind.MethodReference);
+        start.RegisterSymbolAction(
+            symbol =>
+            {
+                var type = (INamedTypeSymbol)symbol.Symbol;
+                foreach (var implementation in type.AllInterfaces.SelectMany(contract => contract.GetMembers()).Select(type.FindImplementationForInterfaceMember).OfType<IMethodSymbol>())
+                    boundByShape[implementation.OriginalDefinition] = true;
+            },
+            SymbolKind.NamedType);
         start.RegisterCompilationEndAction(end =>
         {
-            foreach (var pair in candidates.Where(pair => !methodGroups.ContainsKey(pair.Key)))
+            foreach (var pair in candidates.Where(pair => !boundByShape.ContainsKey(pair.Key)))
                 end.ReportDiagnostic(pair.Value);
         });
     }

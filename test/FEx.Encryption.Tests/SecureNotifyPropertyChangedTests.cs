@@ -107,11 +107,15 @@ public sealed class SecureNotifyPropertyChangedTests
     [Fact]
     public void JsonProperty_RoundTrips()
     {
-        var secrets = new Secrets(_cipher) { Data = new() { Name = "thing", Count = 7 } };
+        var secrets = new Secrets(_cipher)
+        {
+            Data = new() { Name = "thing", Count = 7, Limits = new() { ["daily"] = 3 } }
+        };
 
         secrets.Data.ShouldNotBeNull();
         secrets.Data!.Name.ShouldBe("thing");
         secrets.Data.Count.ShouldBe(7);
+        secrets.Data.Limits.ShouldBe(new Dictionary<string, int> { ["daily"] = 3 });
     }
 
     [Fact]
@@ -142,6 +146,18 @@ public sealed class SecureNotifyPropertyChangedTests
     }
 
     [Fact]
+    public void JsonProperty_WithAMistypedDictionaryValue_ReportsThePathWithoutTheKey()
+    {
+        // Newtonsoft leaves a plain key unquoted, so the raw path would be `Limits.password123`.
+        var secrets = new Secrets(_cipher) { RawPayload = _cipher.Encrypt("{\"Limits\":{\"password123\":\"x\"}}") };
+
+        secrets.Data.ShouldBeNull();
+
+        secrets.Failures.ShouldHaveSingleItem().Exception.Message.ShouldBe(
+            $"The stored value of 'Data' is not a valid {nameof(Payload)} ({nameof(JsonReaderException)} at path 'Limits[*]').");
+    }
+
+    [Fact]
     public void JsonProperty_FailingOutsideTheJsonReader_ReportsAnEmptyPath()
     {
         // A converter's own exception carries no JSON path; the report names its type and leaves the path empty.
@@ -158,6 +174,8 @@ public sealed class SecureNotifyPropertyChangedTests
         public string? Name { get; set; }
 
         public int Count { get; set; }
+
+        public Dictionary<string, int>? Limits { get; set; }
     }
 
     [JsonConverter(typeof(ThrowingConverter))]

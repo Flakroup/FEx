@@ -2,6 +2,7 @@ using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Logging;
 using FEx.Json.Extensions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NSubstitute;
 using Shouldly;
 using System;
@@ -38,7 +39,7 @@ public sealed class FromJsonLoggingTests : IDisposable
 
         AssertNoLoggedSecret();
         LoggedText().ShouldContain(typeof(Dictionary<string, int>).FullName!);
-        LoggedText().ShouldContain("'Pin'");
+        LoggedText().ShouldContain("at path '[*]'");
         LoggedText().ShouldContain(nameof(JsonReaderException));
     }
 
@@ -59,7 +60,7 @@ public sealed class FromJsonLoggingTests : IDisposable
             $"{{\"a\":{{\"b\":\"{LeakMarker}\"}}}}".FromJson<Dictionary<string, Dictionary<string, Dictionary<string, int>>>>());
 
         AssertNoLoggedSecret();
-        LoggedText().ShouldContain("at path 'a.b'");
+        LoggedText().ShouldContain("at path '[*][*]'");
         LoggedText().ShouldContain(nameof(JsonSerializationException));
     }
 
@@ -74,6 +75,51 @@ public sealed class FromJsonLoggingTests : IDisposable
         LoggedText().ShouldContain(typeof(Dictionary<string, int>).FullName!);
         LoggedText().ShouldContain(nameof(InvalidOperationException));
         LoggedText().ShouldContain("at path 'unknown'");
+    }
+
+    [Theory]
+    [InlineData("{\"password123\":\"x\"}", "password123")]
+    [InlineData("{\"a.b\":\"x\"}", "a.b")]
+    public void FromJson_DictionaryKey_IsNotLogged(string json, string key)
+    {
+        Should.Throw<JsonReaderException>(json.FromJson<Dictionary<string, int>>);
+
+        LoggedText().ShouldContain("at path '[*]'");
+        LoggedArguments().ShouldAllBe(text => !text.Contains(key));
+    }
+
+    [Fact]
+    public void FromJson_ArrayIndexAndNestedProperty_AreLoggedWhileTheKeyBelowThemIsNot()
+    {
+        Should.Throw<JsonReaderException>(() =>
+            "{\"Children\":[{},{\"DailyLimits\":{\"password123\":\"x\"}}]}".FromJson<JsonPathRedactionTests.Account>());
+
+        LoggedText().ShouldContain("at path 'Children[1].DailyLimits[*]'");
+        LoggedArguments().ShouldAllBe(text => !text.Contains("password123"));
+    }
+
+    [Fact]
+    public void FromJson_JTokenMember_LogsTheMemberAndRedactsTheRest()
+    {
+        Should.Throw<JsonReaderException>(() =>
+            "{\"Extra\":{\"password123\":{\"pin\":}}}".FromJson<JsonPathRedactionTests.Account>());
+
+        LoggedText().ShouldContain("at path 'Extra[*][*]'");
+        LoggedArguments().ShouldAllBe(text => !text.Contains("password123"));
+    }
+
+    [Fact]
+    public void FromJson_ResolvesThePathWithTheContractResolverOfItsSettings()
+    {
+        var settings = new JsonSerializerSettings
+        {
+            ContractResolver = new DefaultContractResolver { NamingStrategy = new SnakeCaseNamingStrategy() }
+        };
+
+        Should.Throw<JsonReaderException>(() =>
+            "{\"daily_limits\":{\"password123\":\"x\"}}".FromJson<JsonPathRedactionTests.Account>(settings));
+
+        LoggedText().ShouldContain("at path 'daily_limits[*]'");
     }
 
     // Every argument of every call the logger received: messages, scope and label values, and the logged

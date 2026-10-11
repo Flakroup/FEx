@@ -4,6 +4,7 @@ using FEx.Json.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -86,29 +87,48 @@ public static class JsonExtensions
         {
             // Newtonsoft (and any converter) can quote the offending value in the exception message, and
             // FEx.SecureStorage deserializes decrypted secrets here, so neither the exception nor the input is
-            // logged - only the target type, the JSON path and the exception type. The caller gets the exception.
+            // logged - only the target type, the redacted JSON path and the exception type. The caller gets the
+            // exception.
             FExStaticLogger.Error(
-                $"Could not deserialize JSON into {typeof(T).FullName} at path '{ex.GetJsonPath() ?? "unknown"}' ({ex.GetType().FullName}).");
+                $"Could not deserialize JSON into {typeof(T).FullName} at path '{ex.GetJsonPath(typeof(T), settings?.ContractResolver) ?? "unknown"}' ({ex.GetType().FullName}).");
 
             throw;
         }
     }
 
     /// <summary>
-    /// The JSON path a Newtonsoft.Json reader or serialization exception points at - safe to log, unlike the
-    /// exception message, which can quote the offending value.
+    /// The JSON path a Newtonsoft.Json reader or serialization exception points at, with its data redacted so it is
+    /// safe to log, unlike the exception message, which can quote the offending value. The path is walked against
+    /// the contracts of <paramref name="targetType" />: dictionary keys become <c>[*]</c>, array indices and declared
+    /// property names stay, and from the first segment the contracts cannot vouch for (a <c>JToken</c> or
+    /// <c>object</c> member, a converter, an unknown name) every remaining segment becomes <c>[*]</c>.
     /// </summary>
+    /// <param name="exception">The exception the deserialization threw.</param>
+    /// <param name="targetType">The type that was being deserialized.</param>
+    /// <param name="contractResolver">
+    /// The resolver the deserialization used; null means the one <see cref="JsonSerializer.CreateDefault()" /> uses.
+    /// </param>
     /// <returns>
-    /// The path (empty when Newtonsoft.Json recorded none), or null when <paramref name="exception" /> is
+    /// The redacted path (empty when Newtonsoft.Json recorded none), or null when <paramref name="exception" /> is
     /// neither a <see cref="JsonReaderException" /> nor a <see cref="JsonSerializationException" />.
     /// </returns>
-    public static string? GetJsonPath(this Exception exception) =>
-        exception switch
+    public static string? GetJsonPath(this Exception exception,
+                                      Type targetType,
+                                      IContractResolver? contractResolver = null)
+    {
+        var path = exception switch
         {
             JsonReaderException readerException => readerException.Path ?? string.Empty,
             JsonSerializationException serializationException => serializationException.Path ?? string.Empty,
             _ => null
         };
+
+        return path is null
+            ? null
+            : JsonPathRedaction.Redact(path,
+                targetType,
+                contractResolver ?? JsonSerializer.CreateDefault().ContractResolver);
+    }
 
     public static T? FromJson<T>(this string json) => json.FromJson<T>(null, default);
 

@@ -53,12 +53,12 @@ public sealed class HttpOutboxIdempotencyTests
         await outbox.EnqueueAsync("POST", "api/payments", """{"amount":5}""");
 
         handler.LoseNextResponse = true;
-        var first = await outbox.FlushAsync(http);
+        var first = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         first.Sent.ShouldBe(0);
         first.Remaining.ShouldBe(1); // the response never arrived: the entry stays queued
 
-        var replay = await outbox.FlushAsync(http);
+        var replay = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         handler.LastStatus.ShouldBe(StatusCodes.Status409Conflict);
         replay.ShouldBe(new(1, 0, 0, null));

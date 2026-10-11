@@ -14,10 +14,13 @@
 
     <!-- FEx.Analyzers runs on every other project from source, its rules at error through DevConfigs'
          FEx.Analyzers.globalconfig. The analyzer project and its tests are the only exclusions: the analyzer cannot analyze
-         itself before it is built, and the tests reference it as an ordinary library to drive it. -->
+         itself before it is built, and the tests reference it as an ordinary library to drive it.
+         OutputItemType="Analyzer" is what makes the compiler run it; ReferenceOutputAssembly="false" is what keeps it out of
+         a packed nuspec (restore drops such a reference, so no FEx.Analyzers dependency is written). Both are pinned by
+         OwnAnalyzerWiringTests. -->
     <ItemGroup Condition=" '$(MSBuildProjectName)' != 'FEx.Analyzers' And '$(MSBuildProjectName)' != 'FEx.Analyzers.Tests' ">
         <ProjectReference Include="$(MSBuildThisFileDirectory)src/Analyzers/FEx.Analyzers.csproj"
-                          OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+                          OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(IsPackable)' != 'false' ">

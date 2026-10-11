@@ -1,6 +1,8 @@
 using FEx.Agnostics.Abstractions.Extensions;
 using Shouldly;
 using System;
+using System.IO;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace FEx.Core.Tests.Agnostics;
@@ -105,5 +107,42 @@ public sealed class GuardExtensionsTests
 
         value.Guard(_ => true, "value").ShouldBeNull();
         value.Guard(_ => true, "value", "message").ShouldBeNull();
+    }
+
+    // JetBrains' ContractAnnotation is [Conditional("JETBRAINS_ANNOTATIONS")], so the compiler drops it and neither
+    // behaviour nor reflection can see it come back; only the source can (#304).
+    [Fact]
+    public void PredicateOverloads_DoNotCarryANullContractAnnotation()
+    {
+        var source = File.ReadAllText(GuardExtensionsSourcePath());
+
+        // Each predicate overload together with the attributes right above it or in front of it on its line.
+        var declarations = Regex.Matches(source,
+            @"(?<attributes>(?:[ \t]*\[[^\r\n]*?\]\s*)*)"
+            + @"public static T Guard<T>\(\s*this T value,\s*Func<T, bool> predicate",
+            RegexOptions.None,
+            TimeSpan.FromSeconds(5));
+
+        declarations.Count.ShouldBe(2, "both predicate overloads must be found, or this check proves nothing");
+
+        foreach (Match declaration in declarations)
+            declaration.Groups["attributes"].Value.ShouldNotContain("ContractAnnotation");
+    }
+
+    private static string GuardExtensionsSourcePath()
+    {
+        var relative = Path.Combine("src", "Agnostics.Abstractions", "Extensions", "GuardExtensions.cs");
+
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
+             directory is not null;
+             directory = directory.Parent)
+        {
+            var candidate = Path.Combine(directory.FullName, relative);
+
+            if (File.Exists(candidate))
+                return candidate;
+        }
+
+        throw new FileNotFoundException($"No {relative} above {AppContext.BaseDirectory}.");
     }
 }

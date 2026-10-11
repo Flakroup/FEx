@@ -45,6 +45,41 @@ public sealed class JsonPathRedactionTests
         public Opaque? Sealed { get; set; }
 
         public OpaqueDictionary? SealedMap { get; set; }
+
+        public Thing? Thing { get; set; }
+
+        public ThingList? Things { get; set; }
+
+        public ThingHolder? Holder { get; set; }
+    }
+
+    public sealed class Thing
+    {
+        public string? Name { get; set; }
+    }
+
+    [JsonArray(ItemConverterType = typeof(ThingConverter))]
+    public sealed class ThingList : List<Thing>;
+
+    [JsonObject(ItemConverterType = typeof(ThingConverter))]
+    public sealed class ThingHolder
+    {
+        public Thing? Thing { get; set; }
+    }
+
+    /// <summary>Reads a <see cref="Thing" /> from any JSON shape, so its member names can be data.</summary>
+    public sealed class ThingConverter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType) => objectType == typeof(Thing);
+
+        public override object ReadJson(JsonReader reader,
+                                        Type objectType,
+                                        object? existingValue,
+                                        JsonSerializer serializer) =>
+            new Thing { Name = JToken.Load(reader).ToString() };
+
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) =>
+            throw new NotSupportedException();
     }
 
     [JsonConverter(typeof(VersionConverter))]
@@ -103,6 +138,41 @@ public sealed class JsonPathRedactionTests
             JsonConvert.DeserializeObject<Account>("{\"display.name\":\"x\"}"));
 
         exception.GetJsonPath(typeof(Account)).ShouldBe("['display.name']");
+    }
+
+    [Fact]
+    public void QuotedPropertyNameBelowAnotherSegment_IsAppendedWithoutASeparator()
+    {
+        var exception = Should.Throw<JsonReaderException>(() =>
+            JsonConvert.DeserializeObject<Account>("{\"Children\":[{\"display.name\":\"x\"}]}"));
+
+        exception.Path.ShouldBe("Children[0]['display.name']");
+        exception.GetJsonPath(typeof(Account)).ShouldBe("Children[0]['display.name']");
+    }
+
+    [Fact]
+    public void ConverterFromTheSettings_RedactsTheRestOfThePath()
+    {
+        var settings = new JsonSerializerSettings { Converters = [new ThingConverter()] };
+
+        Exception("Thing.Name").GetJsonPath(typeof(Account), settings).ShouldBe("Thing[*]");
+        Exception("Name").GetJsonPath(typeof(Thing), settings).ShouldBe("[*]");
+    }
+
+    [Fact]
+    public void ConverterFromTheSettingsThatCannotConvertTheType_LeavesTheNames()
+    {
+        var settings = new JsonSerializerSettings { Converters = [new VersionConverter()] };
+
+        Exception("Thing.Name").GetJsonPath(typeof(Account), settings).ShouldBe("Thing.Name");
+    }
+
+    [Theory]
+    [InlineData("Things[0].Name", "Things[0][*]")]
+    [InlineData("Holder.Thing.Name", "Holder.Thing[*]")]
+    public void ContainerItemConverter_RedactsTheRestOfThePath(string path, string expected)
+    {
+        Exception(path).GetJsonPath(typeof(Account)).ShouldBe(expected);
     }
 
     [Fact]
@@ -167,8 +237,9 @@ public sealed class JsonPathRedactionTests
         // Under the default resolver `daily_limits` names no property, so the whole path would be redacted.
         var resolver = new DefaultContractResolver { NamingStrategy = new SnakeCaseNamingStrategy() };
 
-        Exception("children[0].daily_limits.password123").GetJsonPath(typeof(Account), resolver)
-                                                         .ShouldBe("children[0].daily_limits[*]");
+        Exception("children[0].daily_limits.password123")
+            .GetJsonPath(typeof(Account), new JsonSerializerSettings { ContractResolver = resolver })
+            .ShouldBe("children[0].daily_limits[*]");
     }
 
     [Fact]
@@ -177,7 +248,20 @@ public sealed class JsonPathRedactionTests
         var resolver = Substitute.For<IContractResolver>();
         resolver.ResolveContract(Arg.Any<Type>()).Returns(_ => throw new InvalidOperationException("boom"));
 
-        Exception("password123").GetJsonPath(typeof(Account), resolver).ShouldBe("[*]");
+        Exception("password123")
+            .GetJsonPath(typeof(Account), new JsonSerializerSettings { ContractResolver = resolver })
+            .ShouldBe("[*]");
+    }
+
+    [Fact]
+    public void ThrowingConverter_RedactsTheWholePathInsteadOfThrowing()
+    {
+        var converter = Substitute.For<JsonConverter>();
+        converter.CanConvert(Arg.Any<Type>()).Returns(_ => throw new InvalidOperationException("boom"));
+
+        Exception("Name")
+            .GetJsonPath(typeof(Thing), new JsonSerializerSettings { Converters = [converter] })
+            .ShouldBe("[*]");
     }
 
     private static JsonSerializationException Exception(string path) => new("failed", path, 1, 1, null);

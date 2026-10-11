@@ -122,6 +122,40 @@ public sealed class FromJsonLoggingTests : IDisposable
         LoggedText().ShouldContain("at path 'daily_limits[*]'");
     }
 
+    [Fact]
+    public void FromJson_ConverterOfItsSettings_RedactsThePathFromTheConvertedMemberOn()
+    {
+        var settings = new JsonSerializerSettings { Converters = [new JsonPathRedactionTests.ThingConverter()] };
+
+        Should.Throw<JsonReaderException>(() =>
+            "{\"Thing\":{\"Name\":}}".FromJson<JsonPathRedactionTests.Account>(settings));
+
+        LoggedText().ShouldContain("at path 'Thing[*]'");
+        LoggedArguments().ShouldAllBe(text => !text.Contains("Thing.Name"));
+    }
+
+    [Fact]
+    public void FromJson_WithoutSettings_RedactsThePathWithTheConvertersOfTheDefaultSettings()
+    {
+        // JsonExtensions installs its own defaults on first use, so it is initialized before they are swapped.
+        JsonExtensions.Initialize();
+        var original = JsonConvert.DefaultSettings;
+        var settings = new JsonSerializerSettings { Converters = [new JsonPathRedactionTests.ThingConverter()] };
+        JsonConvert.DefaultSettings = () => settings;
+
+        try
+        {
+            Should.Throw<JsonReaderException>(() =>
+                "{\"Thing\":{\"Name\":}}".FromJson<JsonPathRedactionTests.Account>());
+        }
+        finally
+        {
+            JsonConvert.DefaultSettings = original;
+        }
+
+        LoggedText().ShouldContain("at path 'Thing[*]'");
+    }
+
     // Every argument of every call the logger received: messages, scope and label values, and the logged
     // exception rendered the way a sink renders it (ToString includes the message and inner exceptions).
     private IEnumerable<string> LoggedArguments() =>

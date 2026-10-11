@@ -21,22 +21,29 @@ internal static class AnalyzerTestHelper
     /// <summary>
     /// Runs <typeparamref name="TAnalyzer"/> over <paramref name="source"/>, which must compile.
     /// Mark each expected hit as <c>{|FEX0001:code|}</c>; unmarked code must stay silent.
+    /// Pass <see cref="CompilerDiagnostics.None"/> to run over code that does not compile, the way an editor does while the user types.
+    /// <paramref name="editorConfig"/> is the text of the <c>.editorconfig</c> at the root of the project.
     /// </summary>
     public static async Task VerifyAsync<TAnalyzer>(
         string source,
         OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary,
         LanguageVersion? languageVersion = null,
         string[]? otherFiles = null,
-        DiagnosticResult[]? expected = null)
+        DiagnosticResult[]? expected = null,
+        CompilerDiagnostics compilerDiagnostics = CompilerDiagnostics.Errors,
+        string? editorConfig = null)
         where TAnalyzer : DiagnosticAnalyzer, new()
     {
         var test = new CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
         {
             TestCode = source,
             ReferenceAssemblies = Net10,
+            CompilerDiagnostics = compilerDiagnostics,
         };
         foreach (var (text, index) in (otherFiles ?? []).Select((text, index) => (text, index)))
             test.TestState.Sources.Add(($"Other{index}.cs", text));
+        if (editorConfig is not null)
+            test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
         test.ExpectedDiagnostics.AddRange(expected ?? []);
         test.SolutionTransforms.Add((solution, projectId) =>
         {

@@ -63,6 +63,23 @@ public class GoldenCorpusTests
         [RedundantCheckBeforeAssignmentAnalyzer.DiagnosticId] = "RedundantCheckBeforeAssignment",
         [RedundantCatchClauseAnalyzer.DiagnosticId] = "RedundantCatchClause",
         [RedundantBaseConstructorCallAnalyzer.DiagnosticId] = "RedundantBaseConstructorCall",
+        [ParameterHidesMemberAnalyzer.DiagnosticId] = "ParameterHidesMember",
+        [LocalVariableHidesMemberAnalyzer.DiagnosticId] = "LocalVariableHidesMember",
+        [RedundantOverloadGlobalAnalyzer.DiagnosticId] = "RedundantOverload.Global",
+        [RedundantOverloadLocalAnalyzer.DiagnosticId] = "RedundantOverload.Local",
+        [MethodOverloadWithOptionalParameterAnalyzer.DiagnosticId] = "MethodOverloadWithOptionalParameter",
+        [OptionalParameterHierarchyMismatchAnalyzer.DiagnosticId] = "OptionalParameterHierarchyMismatch",
+        [OptionalParameterRefOutAnalyzer.DiagnosticId] = "OptionalParameterRefOut",
+        [PartialMethodWithSinglePartAnalyzer.DiagnosticId] = "PartialMethodWithSinglePart",
+        [PartialTypeWithSinglePartAnalyzer.DiagnosticId] = "PartialTypeWithSinglePart",
+        [UnusedParameterInPartialMethodAnalyzer.DiagnosticId] = "UnusedParameterInPartialMethod",
+        [RedundantOverriddenMemberAnalyzer.DiagnosticId] = "RedundantOverriddenMember",
+        [UnusedTypeParameterAnalyzer.DiagnosticId] = "UnusedTypeParameter",
+        [UnusedMethodReturnValueLocalAnalyzer.DiagnosticId] = "UnusedMethodReturnValue.Local",
+        [ValueParameterNotUsedAnalyzer.DiagnosticId] = "ValueParameterNotUsed",
+        [ConvertToConstantLocalAnalyzer.DiagnosticId] = "ConvertToConstant.Local",
+        [MethodHasAsyncOverloadWithCancellationAnalyzer.DiagnosticId] = "MethodHasAsyncOverloadWithCancellation",
+        [UseCancellationTokenForIAsyncEnumerableAnalyzer.DiagnosticId] = "UseCancellationTokenForIAsyncEnumerable",
     };
 
     [Fact]
@@ -110,7 +127,24 @@ public class GoldenCorpusTests
             new RemoveRedundantOrStatementFalseAnalyzer(),
             new RedundantCheckBeforeAssignmentAnalyzer(),
             new RedundantCatchClauseAnalyzer(),
-            new RedundantBaseConstructorCallAnalyzer());
+            new RedundantBaseConstructorCallAnalyzer(),
+            new ParameterHidesMemberAnalyzer(),
+            new LocalVariableHidesMemberAnalyzer(),
+            new RedundantOverloadGlobalAnalyzer(),
+            new RedundantOverloadLocalAnalyzer(),
+            new MethodOverloadWithOptionalParameterAnalyzer(),
+            new OptionalParameterHierarchyMismatchAnalyzer(),
+            new OptionalParameterRefOutAnalyzer(),
+            new PartialMethodWithSinglePartAnalyzer(),
+            new PartialTypeWithSinglePartAnalyzer(),
+            new UnusedParameterInPartialMethodAnalyzer(),
+            new RedundantOverriddenMemberAnalyzer(),
+            new UnusedTypeParameterAnalyzer(),
+            new UnusedMethodReturnValueLocalAnalyzer(),
+            new ValueParameterNotUsedAnalyzer(),
+            new ConvertToConstantLocalAnalyzer(),
+            new MethodHasAsyncOverloadWithCancellationAnalyzer(),
+            new UseCancellationTokenForIAsyncEnumerableAnalyzer());
         var diagnostics = await compilation.WithAnalyzers(analyzers).GetAnalyzerDiagnosticsAsync(TestContext.Current.CancellationToken);
 
         // A crashing analyzer reports AD0001 and has no SourceTree to map to a sample; name the crash instead.

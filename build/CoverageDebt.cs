@@ -50,7 +50,6 @@ internal static class CoverageDebt
         "src/Agnostics.Abstractions/Extensions/FExLoggerExtensions.cs", // debt: #137 - 1/6 lines
         "src/Agnostics.Abstractions/Extensions/FileInfoExtensions.cs", // debt: #137 - 15/68 lines
         "src/Agnostics.Abstractions/Extensions/FileSystemInfoExtensions.cs", // debt: #137 - 0/9 lines
-        "src/Agnostics.Abstractions/Extensions/GuardExtensions.cs", // debt: #137 - 10/20 lines
         "src/Agnostics.Abstractions/Extensions/InitializationExtensions.cs", // debt: #137 - 4/9 lines
         "src/Agnostics.Abstractions/Extensions/Interop/EnumerableExtensions.cs", // debt: #137 - 0/19 lines
         "src/Agnostics.Abstractions/Extensions/LambdaExtensions.cs", // debt: #137 - 0/32 lines

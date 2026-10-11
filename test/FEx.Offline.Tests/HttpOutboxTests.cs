@@ -1263,6 +1263,103 @@ public sealed class HttpOutboxTests
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(rejected.Id);
     }
 
+    [Fact]
+    public async Task ClearDead_StartedDuringAFlush_WaitsForIt_AndDeletesTheEntryItDeadLetters()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/profile", """{"email":"alice@example.com"}""");
+
+        using GatedHandler handler = new();
+        using var http = Gated(handler);
+        var flush = outbox.FlushAsync(http);
+        await handler.Entered;
+
+        var clear = outbox.ClearDeadAsync();
+        clear.IsCompleted.ShouldBeFalse();
+
+        handler.Answer(HttpStatusCode.BadRequest);
+
+        (await flush).DeadLettered.ShouldBe(1);
+        (await clear).ShouldBe(1);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Clear_StartedDuringAFlush_WaitsForIt_AndDeletesTheEntryItKeeps()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/profile", """{"email":"alice@example.com"}""");
+
+        using GatedHandler handler = new();
+        using var http = Gated(handler);
+        var flush = outbox.FlushAsync(http);
+        await handler.Entered;
+
+        var clear = outbox.ClearAsync();
+        clear.IsCompleted.ShouldBeFalse();
+
+        handler.FailOnTransport();
+
+        (await flush).Remaining.ShouldBe(1);
+        (await clear).ShouldBe(1);
+        (await outbox.ListAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task TwoConcurrentFlushes_SendTheEntryOnce()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/profile", null);
+
+        using GatedHandler handler = new();
+        using var http = Gated(handler);
+        var first = outbox.FlushAsync(http);
+        await handler.Entered;
+
+        var second = outbox.FlushAsync(http);
+        second.IsCompleted.ShouldBeFalse();
+
+        handler.Answer(HttpStatusCode.Created);
+
+        (await first).ShouldBe(new(1, 0, 0, null));
+        (await second).ShouldBe(new(0, 0, 0, null));
+        handler.Requests.ShouldBe(1);
+    }
+
+    private static HttpClient Gated(GatedHandler handler) => new(handler)
+    {
+        BaseAddress = new("http://localhost/")
+    };
+
+    /// <summary>Holds every request until the test answers, so a flush can be caught in flight without sleeping.</summary>
+    private sealed class GatedHandler : HttpMessageHandler
+    {
+        private readonly TaskCompletionSource _entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<Func<HttpResponseMessage>> _answer = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _requests;
+
+        public Task Entered => _entered.Task;
+
+        public int Requests => Volatile.Read(ref _requests);
+
+        public void Answer(HttpStatusCode status) => _answer.SetResult(() => new(status)
+        {
+            Content = new StringContent("answer")
+        });
+
+        public void FailOnTransport() => _answer.SetResult(() => throw new HttpRequestException("connection refused"));
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Interlocked.Increment(ref _requests);
+            _entered.TrySetResult();
+
+#pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
+            return (await _answer.Task)();
+#pragma warning restore VSTHRD003
+        }
+    }
+
     [Theory]
     [InlineData(HttpStatusCode.InternalServerError)]
     [InlineData(HttpStatusCode.BadRequest)]

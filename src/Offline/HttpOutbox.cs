@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FEx.Offline;
@@ -81,6 +82,12 @@ public sealed record OutboxFlushResult(int Sent, int DeadLettered, int Remaining
 /// in the store until it is deleted, and nothing expires or caps either list. Both may hold personal data, and a live
 /// entry left behind is replayed by the next flush with whatever credentials the client carries then: on sign-out or an
 /// account switch a host should call both <see cref="ClearAsync" /> and <see cref="ClearDeadAsync" />.
+/// <para>
+/// <see cref="FlushAsync" />, <see cref="ClearAsync" /> and <see cref="ClearDeadAsync" /> on one instance run one at a time: a
+/// clear started during a flush waits for that flush to finish and then clears, so a write the flush keeps or dead-letters
+/// cannot outlive the clear, and a second flush waits for the first instead of replaying the same entries alongside it. The
+/// guarantee holds per instance only, so use one <see cref="HttpOutbox" /> per store (register it as a singleton).
+/// </para>
 /// </summary>
 public sealed class HttpOutbox
 {
@@ -121,6 +128,9 @@ public sealed class HttpOutbox
     private readonly KeyValuePair<string, string>[] _replayHeaders;
     private readonly int _maxServerFailures;
     private readonly int _maxUnavailableAnswers;
+
+    // Serializes FlushAsync, ClearAsync and ClearDeadAsync: each waits for the one in flight, none skips.
+    private readonly SemaphoreSlim _gate = new(1, 1);
 
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxServerFailures" /> or <paramref name="maxUnavailableAnswers" /> is below 1.</exception>
     public HttpOutbox(IKeyValueStore store,
@@ -257,19 +267,26 @@ public sealed class HttpOutbox
     /// Delete every live (queued) entry and return how many were deleted. Dead entries are untouched. A live entry keeps the
     /// request body and the last error in the store until it is sent or deleted, and the next flush replays it with the
     /// credentials the client carries then, so on sign-out (or when the account switches) a host should call this and
-    /// <see cref="ClearDeadAsync" />: either one alone leaves the previous user's writes on the device.
+    /// <see cref="ClearDeadAsync" />: either one alone leaves the previous user's writes on the device. A clear started during
+    /// a flush waits for that flush to finish, so an entry the flush keeps is deleted too.
     /// </summary>
-    public Task<int> ClearAsync() => RemoveAllAsync(KeyPrefix);
+    public Task<int> ClearAsync() => UnderGateAsync(() => RemoveAllAsync(KeyPrefix));
 
     /// <summary>
     /// Delete every dead entry and return how many were deleted. Live (queued) entries are untouched. A dead entry keeps the
     /// request body and the truncated response body in the store until it is deleted, so on sign-out (or when the account
     /// switches) a host should call this and <see cref="ClearAsync" />: either one alone leaves the previous user's writes on
-    /// the device.
+    /// the device. A clear started during a flush waits for that flush to finish, so an entry the flush dead-letters is deleted
+    /// too.
     /// </summary>
-    public Task<int> ClearDeadAsync() => RemoveAllAsync(DeadKeyPrefix);
+    public Task<int> ClearDeadAsync() => UnderGateAsync(() => RemoveAllAsync(DeadKeyPrefix));
 
-    public async Task<OutboxFlushResult> FlushAsync(HttpClient http)
+    /// <summary>
+    /// Replay the queue in order. A flush started while another flush or a clear runs on this instance waits for it to finish.
+    /// </summary>
+    public Task<OutboxFlushResult> FlushAsync(HttpClient http) => UnderGateAsync(() => FlushQueueAsync(http));
+
+    private async Task<OutboxFlushResult> FlushQueueAsync(HttpClient http)
     {
         var sent = 0;
         var deadLettered = 0;
@@ -433,6 +450,20 @@ public sealed class HttpOutbox
         catch (InvalidOperationException)
         {
             return "";
+        }
+    }
+
+    private async Task<T> UnderGateAsync<T>(Func<Task<T>> action)
+    {
+        await _gate.WaitAsync();
+
+        try
+        {
+            return await action();
+        }
+        finally
+        {
+            _gate.Release();
         }
     }
 

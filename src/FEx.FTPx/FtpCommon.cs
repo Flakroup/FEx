@@ -16,7 +16,8 @@ public static class FtpCommon
                                                               string username,
                                                               string password,
                                                               bool useProxy = false,
-                                                              int port = 0)
+                                                              int port = 0,
+                                                              FtpDataConnectionType? dataConnectionType = null)
     {
         try
         {
@@ -25,7 +26,8 @@ public static class FtpCommon
                 password,
                 useProxy,
                 client => client.GetObjectInfo(ftpfilepath, true),
-                port);
+                port,
+                dataConnectionType);
         }
         catch (Exception ex)
         {
@@ -39,11 +41,12 @@ public static class FtpCommon
                                                          string username,
                                                          string password,
                                                          bool useProxy = false,
-                                                         int port = 0)
+                                                         int port = 0,
+                                                         FtpDataConnectionType? dataConnectionType = null)
     {
         var factory = await FtpClientFactory.GetInstanceAsync(ftphost.AbsoluteUri);
 
-        return await factory.CreateAsync(username, password, useProxy, port);
+        return await factory.CreateAsync(username, password, useProxy, port, dataConnectionType);
     }
 
     public static Task ReleaseAsync(AsyncFtpClient client) => FtpClientFactory.ReleaseOwnedAsync(client);
@@ -55,7 +58,8 @@ public static class FtpCommon
                                                           string password,
                                                           IProgressAggregator? viewModel = null,
                                                           bool useProxy = false,
-                                                          int port = 0)
+                                                          int port = 0,
+                                                          FtpDataConnectionType? dataConnectionType = null)
     {
         var fName = Path.GetFileName(ftpfilepath);
 
@@ -77,7 +81,8 @@ public static class FtpCommon
 
                     return remoteSize;
                 },
-                port);
+                port,
+                dataConnectionType);
 
             var info = new FileInfo(target);
 
@@ -97,7 +102,8 @@ public static class FtpCommon
                                                             Func<string, bool> onTargetExists,
                                                             IProgressAggregator? viewModel = null,
                                                             bool useProxy = false,
-                                                            int port = 0)
+                                                            int port = 0,
+                                                            FtpDataConnectionType? dataConnectionType = null)
     {
         var fName = Path.GetFileName(inputfilepath);
 
@@ -128,7 +134,8 @@ public static class FtpCommon
                     prg,
                     CancellationToken.None);
             },
-            port);
+            port,
+            dataConnectionType);
     }
 
     public static async Task<FtpListItem[]> GetListingAsync(string ftpdirpath,
@@ -136,7 +143,8 @@ public static class FtpCommon
                                                             string username,
                                                             string password,
                                                             bool useProxy = false,
-                                                            int port = 0)
+                                                            int port = 0,
+                                                            FtpDataConnectionType? dataConnectionType = null)
     {
         FtpListItem[] res = [];
 
@@ -146,7 +154,8 @@ public static class FtpCommon
                 password,
                 useProxy,
                 client => client.GetListing(ftpdirpath),
-                port);
+                port,
+                dataConnectionType);
 
         return res;
     }
@@ -169,10 +178,11 @@ public static class FtpCommon
                                                       string password,
                                                       bool useProxy,
                                                       Func<AsyncFtpClient, Task<T>> func,
-                                                      int port = 0)
+                                                      int port = 0,
+                                                      FtpDataConnectionType? dataConnectionType = null)
     {
 #pragma warning disable IDISP001 // released in the finally block below
-        var client = await CreateAsync(ftphost, username, password, useProxy, port);
+        var client = await CreateAsync(ftphost, username, password, useProxy, port, dataConnectionType);
 #pragma warning restore IDISP001
 
         try

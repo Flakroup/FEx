@@ -391,6 +391,9 @@ dotnet build -c Release
 - **Samples Guide**: [`samples/README.md`](samples/README.md) - Detailed architecture patterns
 - **Migration Rules**: [`.cursorrules`](.cursorrules) - Architecture guidelines & merge workflow
 - **Build Configuration**: [`DevConfigs/README.md`](DevConfigs/README.md) - Build system details
+- **Architecture**: [`docs/architecture.md`](docs/architecture.md) - Layers, module system, build gates
+- **Decisions**: [`docs/decisions/`](docs/decisions/README.md) - Architecture decision records
+- **Migration**: [`docs/migration/namespace-mapping.md`](docs/migration/namespace-mapping.md) - Older FlakEssentials namespaces to current ones
 
 ---
 

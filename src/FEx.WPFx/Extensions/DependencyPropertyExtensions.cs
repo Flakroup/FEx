@@ -6,7 +6,6 @@ using System.Windows;
 
 namespace FEx.WPFx.Extensions;
 
-#pragma warning disable S2360 // Factory methods with callback-style optional parameters - overloads impractical
 
 public static class DependencyPropertyExtensions
 {
@@ -145,4 +144,3 @@ public static class DependencyPropertyExtensions
                 : (b, v) => coerceValue(((TView)b, (TProperty)v)));
 }
 
-#pragma warning restore S2360

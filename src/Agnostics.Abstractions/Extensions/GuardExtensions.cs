@@ -27,11 +27,9 @@ public static class GuardExtensions
     /// </remarks>
     [ContractAnnotation("value: null => stop")]
     [return: SysNotNull]
-#pragma warning disable S2360 // Optional parameter overload not possible - CallerMemberName requires optional string, creating ambiguity with message parameter
     public static T GuardProperty<T>([SysNotNull] [CanBeNull] this T value,
                                      string? message = null,
                                      [CallerMemberName] string? paramName = null)
-#pragma warning restore S2360
     {
         if (value is null)
             throw new ArgumentNullException(paramName, message ?? "Precondition not met.");

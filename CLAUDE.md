@@ -8,6 +8,7 @@ Reference .NET library - shared framework used as a git submodule across several
 - `test/` - test projects
 - `samples/` - sample apps (WPF, Avalonia, WebAPI)
 - `DevConfigs/` - shared build config (.editorconfig, Directory.Build.props/targets)
+- `docs/` - architecture overview, decision records (`docs/decisions/`) and migration notes
 
 ## Key Rules
 

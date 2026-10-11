@@ -368,7 +368,7 @@ public sealed class FtpDownloaderTests : IDisposable
         public Action? OnOpen { get; set; }
         public int OpenCalls { get; private set; }
 
-        /// <summary>The first offset the server serves a byte at; a probe below it reads nothing. Never, unless set.</summary>
+        /// <summary>The first offset the server serves a byte at; a probe below it, or at or past <see cref="Size" />, reads nothing. Never, unless set.</summary>
         public long ReadableFrom { get; set; } = long.MaxValue;
 
         public List<long> Offsets { get; } = [];
@@ -386,10 +386,10 @@ public sealed class FtpDownloaderTests : IDisposable
             if (OpenThrows is not null)
                 throw OpenThrows;
 
-            // Probes past the scripted responses get an empty (EOF) stream.
+            // Probes past the scripted responses get an empty (EOF) stream, and so does any offset at or past the end of the file.
             var response = Responses.Count > 0
                 ? Responses.Dequeue()
-                : new(new ScriptedStream(offset >= ReadableFrom ? [1] : []));
+                : new(new ScriptedStream(offset >= ReadableFrom && offset < Size ? [1] : []));
             Created.Add(response);
 
             return Task.FromResult<IFtpResponse>(response);

@@ -2035,29 +2035,44 @@ public class ConvertToConstantLocalAnalyzerTests
             public class C { private int P { get; } = 5; public int M() => P; }
             """);
 
-    // The write helper's three disputed cases, decided once: an address may be written through, a ref alias may be written through, an in argument cannot be.
+    // A keyword-less 'in' argument passes the variable's own address, the same as an explicit 'in': a callee can cast it away.
     [Fact]
-    public Task Ignores_a_local_whose_address_is_taken() =>
+    public Task Ignores_a_local_passed_to_an_in_parameter_without_the_keyword() =>
         VerifyAsync("""
-            public unsafe class C { public int M() { int x = 5; int* p = &x; return *p; } }
+            public class C { private static int Read(in int a) => a; public int M() { int x = 5; return Read(x); } }
             """);
 
     [Fact]
-    public Task Ignores_a_local_aliased_by_a_ref_local() =>
+    public Task Ignores_a_field_passed_to_an_in_parameter_without_the_keyword() =>
         VerifyAsync("""
-            public class C { public int M() { int x = 5; ref int r = ref x; r = 6; return x; } }
+            public class C { private int _f = 5; private static int Read(in int a) => a; public int M() => Read(_f); }
+            """);
+
+    // The receiver of a 'this ref' extension is passed by reference with no keyword in the syntax.
+    [Fact]
+    public Task Ignores_a_local_that_is_the_receiver_of_a_this_ref_extension() =>
+        VerifyAsync("""
+            public static class E { public static void Bump(this ref int x) => x++; }
+            public class C { public int M() { int x = 5; x.Bump(); return x; } }
             """);
 
     [Fact]
-    public Task Reports_a_local_passed_to_an_in_parameter_without_the_keyword() =>
+    public Task Ignores_a_field_that_is_the_receiver_of_a_this_ref_extension() =>
         VerifyAsync("""
-            public class C { private static int Read(in int a) => a; public int M() { int {|FEX0051:x|} = 5; return Read(x); } }
+            public static class E { public static void Bump(this ref int x) => x++; }
+            public class C { private int _f = 5; public void S() { _f.Bump(); } public int G() => _f; }
             """);
 
     [Fact]
-    public Task Ignores_a_local_passed_with_the_in_keyword() =>
+    public Task Ignores_a_local_passed_by_ref_in_parentheses() =>
         VerifyAsync("""
-            public class C { private static int Read(in int a) => a; public int M() { int x = 5; return Read(in x); } }
+            public class C { private static void Inc(ref int a) => a++; public int M() { int x = 5; Inc(ref (x)); return x; } }
+            """);
+
+    [Fact]
+    public Task Ignores_a_field_passed_by_ref_in_parentheses() =>
+        VerifyAsync("""
+            public class C { private int _f = 5; private static void Inc(ref int a) => a++; public void S() { Inc(ref (_f)); } public int G() => _f; }
             """);
 
     [Fact]

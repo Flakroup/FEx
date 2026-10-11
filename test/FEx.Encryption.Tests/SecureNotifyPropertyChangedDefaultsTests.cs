@@ -1,6 +1,9 @@
 using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Agnostics.Abstractions.Logging;
 using FEx.Encryption.Exceptions;
+using FEx.Json.Extensions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NSubstitute;
 using Shouldly;
 using System;
@@ -73,6 +76,32 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
         logged.ShouldAllBe(text => !text.Contains(Plaintext));
     }
 
+    [Fact]
+    public void JsonShapeMismatch_BelowAConverterOfTheDefaultSettings_ReportsThePathOnlyUpToTheConvertedMember()
+    {
+        // The read uses JsonConvert.DefaultSettings, so the path must be redacted with its converters: the converter
+        // decides what `Name` means inside `Inner`, the contracts cannot vouch for it. JsonExtensions installs its own
+        // defaults on first use, so it is initialized before they are swapped for the duration of the test.
+        JsonExtensions.Initialize();
+        var original = JsonConvert.DefaultSettings;
+        var settings = new JsonSerializerSettings { Converters = [new InnerConverter()] };
+        JsonConvert.DefaultSettings = () => settings;
+
+        try
+        {
+            var secrets = new RecordingSecrets(_cipher) { RawPayload = _cipher.Encrypt("{\"Inner\":{\"Name\":}}") };
+
+            secrets.Converted.ShouldBeNull();
+
+            secrets.Failures.ShouldHaveSingleItem().Message.ShouldBe(
+                $"The stored value of '{nameof(DefaultSecrets.Converted)}' is not a valid {nameof(ConvertedPayload)} ({nameof(JsonReaderException)} at path 'Inner[*]').");
+        }
+        finally
+        {
+            JsonConvert.DefaultSettings = original;
+        }
+    }
+
     /// <summary>Every string and exception handed to a logging method, flattened to text.</summary>
     private IEnumerable<string> LoggedText() =>
         _logger.ReceivedCalls()
@@ -88,6 +117,30 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
     private sealed class Payload
     {
         public int Count { get; set; }
+    }
+
+    private sealed class ConvertedPayload
+    {
+        public Inner? Inner { get; set; }
+    }
+
+    private sealed class Inner
+    {
+        public string? Name { get; set; }
+    }
+
+    private sealed class InnerConverter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType) => objectType == typeof(Inner);
+
+        public override object ReadJson(JsonReader reader,
+                                        Type objectType,
+                                        object? existingValue,
+                                        JsonSerializer serializer) =>
+            new Inner { Name = JToken.Load(reader).ToString() };
+
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) =>
+            throw new NotSupportedException();
     }
 
     /// <summary>Overrides only the cipher; <see cref="SecureNotifyPropertyChanged.OnDecryptionFailed" /> keeps its default body.</summary>
@@ -119,6 +172,8 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
         }
 
         public Payload? Data => DecryptFromJsonSource<Payload>(_payload);
+
+        public ConvertedPayload? Converted => DecryptFromJsonSource<ConvertedPayload>(_payload);
 
         protected override FExStringCipher Cipher => _instanceCipher;
     }

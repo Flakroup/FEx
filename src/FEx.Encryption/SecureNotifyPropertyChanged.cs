@@ -157,17 +157,19 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
         if (json is null)
             return default;
 
+        var settings = JsonExtensions.DefaultSettings;
+
         try
         {
             return json == JsonExtensions.NullString
                 ? default
-                : JsonConvert.DeserializeObject<T>(json, JsonExtensions.DefaultSettings);
+                : JsonConvert.DeserializeObject<T>(json, settings);
         }
         catch (Exception ex)
         {
             OnDecryptionFailed(propertyName,
                 new FExDecryptionException(
-                    $"The stored value of '{propertyName}' is not a valid {typeof(T).Name} ({ex.GetType().Name} at path '{ex.GetJsonPath(typeof(T))}')."));
+                    $"The stored value of '{propertyName}' is not a valid {typeof(T).Name} ({ex.GetType().Name} at path '{ex.GetJsonPath(typeof(T), settings)}')."));
 
             return default;
         }

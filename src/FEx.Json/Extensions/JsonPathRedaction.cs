@@ -1,7 +1,9 @@
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -13,19 +15,22 @@ namespace FEx.Json.Extensions;
 /// like a property name - so the path text alone cannot tell the two apart; the contract can. Dictionary keys
 /// become <see cref="Placeholder" />, array indices and declared property names stay, and from the first segment
 /// the contracts cannot vouch for (a <c>JToken</c> or <c>object</c> member, a converter, an unknown name) every
-/// remaining segment is redacted.
+/// remaining segment is redacted. A converter is one from an attribute (on the type, the member or the containing
+/// type's items) or one from the serializer settings that can convert the type, exactly as Newtonsoft.Json picks it.
 /// </summary>
 internal static class JsonPathRedaction
 {
     internal const string Placeholder = "[*]";
 
-    internal static string Redact(string path, Type targetType, IContractResolver contractResolver)
+    internal static string Redact(string path, Type targetType, JsonSerializerSettings? settings)
     {
         var builder = new StringBuilder(path.Length);
 
         try
         {
-            var contract = contractResolver.ResolveContract(targetType);
+            // The serializer JsonConvert builds for these settings: JsonConvert.DefaultSettings, then the settings.
+            var serializer = JsonSerializer.CreateDefault(settings);
+            var contract = serializer.ContractResolver.ResolveContract(targetType);
             var position = 0;
 
             while (position < path.Length)
@@ -39,12 +44,12 @@ internal static class JsonPathRedaction
 
                 contract = contract is null
                     ? Redacted(builder)
-                    : Append(builder, segment, contract, contractResolver);
+                    : Append(builder, segment, contract, serializer);
             }
         }
         catch (Exception)
         {
-            // A resolver that throws here would replace the caller's exception with this one; fail closed instead.
+            // A resolver or converter that throws here would replace the caller's exception with this one; fail closed instead.
             return Placeholder;
         }
 
@@ -54,11 +59,23 @@ internal static class JsonPathRedaction
     private static JsonContract? Append(StringBuilder builder,
                                         Segment segment,
                                         JsonContract contract,
-                                        IContractResolver contractResolver)
+                                        JsonSerializer serializer)
     {
-        if (contract.Converter is not null)
+        if (contract.Converter is not null
+            || serializer.Converters.Any(converter => converter.CanConvert(contract.UnderlyingType)))
             return Redacted(builder);
 
+        var child = AppendSegment(builder, segment, contract, serializer.ContractResolver);
+
+        // A container's item converter reads every item or member below it, so its contracts vouch for nothing there.
+        return contract is JsonContainerContract { ItemConverter: not null } ? null : child;
+    }
+
+    private static JsonContract? AppendSegment(StringBuilder builder,
+                                               Segment segment,
+                                               JsonContract contract,
+                                               IContractResolver contractResolver)
+    {
         if (segment.Index is { } index)
         {
             if (contract is not JsonArrayContract arrayContract)

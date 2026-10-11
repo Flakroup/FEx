@@ -4,7 +4,6 @@ using FEx.Json.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -77,11 +76,13 @@ public static class JsonExtensions
     /// </summary>
     public static T? FromJson<T>(this string json, JsonSerializerSettings? settings, T? fallback)
     {
+        settings ??= DefaultSettings;
+
         try
         {
             return json is null || json == NullString
                 ? fallback
-                : JsonConvert.DeserializeObject<T>(json, settings ?? DefaultSettings);
+                : JsonConvert.DeserializeObject<T>(json, settings);
         }
         catch (Exception ex)
         {
@@ -90,7 +91,7 @@ public static class JsonExtensions
             // logged - only the target type, the redacted JSON path and the exception type. The caller gets the
             // exception.
             FExStaticLogger.Error(
-                $"Could not deserialize JSON into {typeof(T).FullName} at path '{ex.GetJsonPath(typeof(T), settings?.ContractResolver) ?? "unknown"}' ({ex.GetType().FullName}).");
+                $"Could not deserialize JSON into {typeof(T).FullName} at path '{ex.GetJsonPath(typeof(T), settings) ?? "unknown"}' ({ex.GetType().FullName}).");
 
             throw;
         }
@@ -101,12 +102,15 @@ public static class JsonExtensions
     /// safe to log, unlike the exception message, which can quote the offending value. The path is walked against
     /// the contracts of <paramref name="targetType" />: dictionary keys become <c>[*]</c>, array indices and declared
     /// property names stay, and from the first segment the contracts cannot vouch for (a <c>JToken</c> or
-    /// <c>object</c> member, a converter, an unknown name) every remaining segment becomes <c>[*]</c>.
+    /// <c>object</c> member, a converter, an unknown name) every remaining segment becomes <c>[*]</c>. A converter
+    /// counts whether it comes from an attribute or from the settings: the walk uses the contract resolver and the
+    /// converters of the serializer <see cref="JsonConvert" /> builds for <paramref name="settings" />.
     /// </summary>
     /// <param name="exception">The exception the deserialization threw.</param>
     /// <param name="targetType">The type that was being deserialized.</param>
-    /// <param name="contractResolver">
-    /// The resolver the deserialization used; null means the one <see cref="JsonSerializer.CreateDefault()" /> uses.
+    /// <param name="settings">
+    /// The settings the deserialization used; null means <see cref="JsonSerializer.CreateDefault()" />, which applies
+    /// <see cref="JsonConvert.DefaultSettings" />.
     /// </param>
     /// <returns>
     /// The redacted path (empty when Newtonsoft.Json recorded none), or null when <paramref name="exception" /> is
@@ -114,7 +118,7 @@ public static class JsonExtensions
     /// </returns>
     public static string? GetJsonPath(this Exception exception,
                                       Type targetType,
-                                      IContractResolver? contractResolver = null)
+                                      JsonSerializerSettings? settings = null)
     {
         var path = exception switch
         {
@@ -125,9 +129,7 @@ public static class JsonExtensions
 
         return path is null
             ? null
-            : JsonPathRedaction.Redact(path,
-                targetType,
-                contractResolver ?? JsonSerializer.CreateDefault().ContractResolver);
+            : JsonPathRedaction.Redact(path, targetType, settings);
     }
 
     public static T? FromJson<T>(this string json) => json.FromJson<T>(null, default);

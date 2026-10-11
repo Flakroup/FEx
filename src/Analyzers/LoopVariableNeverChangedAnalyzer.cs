@@ -127,7 +127,8 @@ public sealed class LoopVariableNeverChangedAnalyzer : DiagnosticAnalyzer
     }
 
     // Anything that takes the variable's address leaves a way to write it later, even through a dynamic call: `&x`,
-    // `ref x` as a local or a return, a Span over it (MemoryMarshal.CreateSpan), an explicit `in`, which can be cast away.
+    // `ref x` as a local or a return, a Span over it (MemoryMarshal.CreateSpan), an explicit `in`, which can be cast away, and a keyword-less `in` argument
+    // (it binds to an `in` parameter, so AnalyzerHelpers.TakesAddress reports it by the bound Parameter.RefKind).
     private static bool IsAlias(IOperation reference, ISymbol variable) =>
         SymbolEqualityComparer.Default.Equals(GetVariable(reference), variable) && AnalyzerHelpers.TakesAddress(reference);
 

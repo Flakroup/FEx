@@ -5,7 +5,6 @@ using FEx.Agnostics.Abstractions.Collections.Concurrent;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Collections.Concurrent;
 using FEx.Core.Abstractions.Interfaces;
-using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -329,7 +328,7 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     /// The one-dimensional array that is the destination of the elements copied from
     /// the hash set. The array must have zero-based indexing.
     /// </param>
-    public virtual void CopyTo([NotNull] T[] array) => _set.CopyTo(array);
+    public virtual void CopyTo(T[] array) => _set.CopyTo(array);
 
     /// <summary>
     /// Copies the specified number of elements of the hash set to an array, starting at the specified array index.
@@ -340,7 +339,7 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     /// </param>
     /// <param name="arrayIndex"> The zero-based index in array at which copying begins. </param>
     /// <param name="count"> The number of elements to copy to array. </param>
-    public virtual void CopyTo([NotNull] T[] array, int arrayIndex, int count) => _set.CopyTo(array, arrayIndex, count);
+    public virtual void CopyTo(T[] array, int arrayIndex, int count) => _set.CopyTo(array, arrayIndex, count);
 
     /// <summary>
     /// Removes all elements that match the conditions defined by the specified predicate
@@ -350,7 +349,7 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
     /// The <see cref="Predicate{T}" /> delegate that defines the conditions of the elements to remove.
     /// </param>
     /// <returns> The number of elements that were removed from the hash set. </returns>
-    public virtual int RemoveWhere([NotNull] Predicate<T> match)
+    public virtual int RemoveWhere(Predicate<T> match)
     {
         var copy = new HashSet<T>(_set, _set.Comparer);
 

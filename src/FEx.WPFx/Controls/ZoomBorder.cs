@@ -260,7 +260,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
     }
 
     [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods")]
-    private async void ZoomBorder_MouseWheel(object sender, [NotNull] MouseWheelEventArgs e)
+    private async void ZoomBorder_MouseWheel(object sender, MouseWheelEventArgs e)
     {
         if (_zoomingEnabled)
         {
@@ -285,7 +285,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         }
     }
 
-    private void ZoomBorder_MouseLeftButtonDown(object sender, [NotNull] MouseButtonEventArgs e)
+    private void ZoomBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (_child is not null)
         {
@@ -308,7 +308,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         }
     }
 
-    private void ZoomBorder_MouseLeftButtonUp(object sender, [NotNull] MouseButtonEventArgs e)
+    private void ZoomBorder_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         if (_child is not null
             && e.LeftButton != MouseButtonState.Pressed)
@@ -318,7 +318,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         }
     }
 
-    private void ZoomBorder_PreviewMouseButtonDown(object sender, [NotNull] MouseButtonEventArgs e)
+    private void ZoomBorder_PreviewMouseButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton == MouseButton.Middle)
             Reset();
@@ -379,7 +379,7 @@ public class ZoomBorder : Border, INotifyPropertyChanged
         }
     }
 
-    private void ZoomBorder_SizeChanged(object sender, [NotNull] SizeChangedEventArgs e)
+    private void ZoomBorder_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         const double tolerance = 0.1;
 

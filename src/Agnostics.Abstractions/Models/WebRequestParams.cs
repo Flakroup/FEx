@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Security;
@@ -28,7 +27,6 @@ public class WebRequestParams
     public int? ReadWriteTimeout { get; set; }
 
     /// <summary>Gets or sets the proxy used for the request.</summary>
-    [CanBeNull]
     public IWebProxy? Proxy { get; set; }
 
     /// <summary>Gets or sets a value indicating whether the request must bypass any proxy, even the system one.</summary>

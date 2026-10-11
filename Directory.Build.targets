@@ -12,6 +12,14 @@
         <PackageTags>dotnet;utilities;extensions;fex;flakroup</PackageTags>
     </PropertyGroup>
 
+    <!-- FEx.Analyzers runs on every other project from source, its rules at error through DevConfigs'
+         FEx.Analyzers.globalconfig. The analyzer project and its tests are the only exclusions: the analyzer cannot analyze
+         itself before it is built, and the tests reference it as an ordinary library to drive it. -->
+    <ItemGroup Condition=" '$(MSBuildProjectName)' != 'FEx.Analyzers' And '$(MSBuildProjectName)' != 'FEx.Analyzers.Tests' ">
+        <ProjectReference Include="$(MSBuildThisFileDirectory)src/Analyzers/FEx.Analyzers.csproj"
+                          OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    </ItemGroup>
+
     <ItemGroup Condition=" '$(IsPackable)' != 'false' ">
         <None Include="$(MSBuildThisFileDirectory)\flakroup.png">
             <Pack>True</Pack>

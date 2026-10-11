@@ -74,7 +74,7 @@ public sealed class SecureStorageModuleTests : IDisposable
 
         SecureStorageModule.CreateSecureStorageService(() => keystore, () => _storage, true).ShouldBeSameAs(keystore);
 
-        _logger.DidNotReceiveWithAnyArgs().Warning(default(string)!);
+        _logger.DidNotReceiveWithAnyArgs().Warning(default!);
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public sealed class SecureStorageModuleTests : IDisposable
         var service = SecureStorageModule.CreateSecureStorageService(() => null, () => _storage, true);
 
         service.ShouldBeOfType<ObfuscatedFileStorageService>();
-        _logger.ReceivedWithAnyArgs(1).Warning(default(string)!);
+        _logger.ReceivedWithAnyArgs(1).Warning(default!);
         var message = (string)_logger.ReceivedCalls()
             .Single(call => call.GetMethodInfo().Name == nameof(IFExLogger.Warning))
             .GetArguments()[0]!;
@@ -123,7 +123,7 @@ public sealed class SecureStorageModuleTests : IDisposable
         var cipherStorage = new DirectoryInfo(Path.Combine(_storage.FullName, SecureStorageModule.FallbackCipherDirectory));
         new ObfuscatedFileStorageService(appCipher, cipherStorage).Get<string>("token").ShouldBe("hunter2");
         Should.Throw<FExDecryptionException>(() => new ObfuscatedFileStorageService(cipherStorage).Get<string>("token"));
-        _logger.ReceivedWithAnyArgs(1).Warning(default(string)!);
+        _logger.ReceivedWithAnyArgs(1).Warning(default!);
     }
 
     [Fact]

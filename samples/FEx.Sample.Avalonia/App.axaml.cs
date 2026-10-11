@@ -1,12 +1,10 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using FEx.Avaloniax;
-using System.Diagnostics.CodeAnalysis;
 
 namespace FEx.Sample.Avalonia;
 
-[SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
-public partial class App : FExAvaloniaApp<AppContainer>
+public class App : FExAvaloniaApp<AppContainer>
 {
     public override void Initialize()
     {

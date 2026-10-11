@@ -633,7 +633,8 @@ public class UnusedMethodReturnValueLocalAnalyzerTests
             """);
 
     [Fact]
-    public Task Reports_X10_Task_not_awaited() =>
+    public Task Ignores_X10_Task_not_awaited() =>
+        // ReSharper reports this one, but "void" would turn the method into an async void or lose the task, so the advice would change behaviour.
         VerifyAsync("""
             #nullable enable
             using System;
@@ -643,7 +644,73 @@ public class UnusedMethodReturnValueLocalAnalyzerTests
             using System.Threading;
             using System.Threading.Tasks;
 
-            public class X10 { private {|FEX0049:Task|} R() => Task.CompletedTask; public void M() { R(); } }
+            public class X10 { private Task R() => Task.CompletedTask; public void M() { R(); } }
+            """);
+
+    [Fact]
+    public Task Ignores_async_Task_called_as_a_bare_statement() =>
+        VerifyAsync("""
+            using System.Threading.Tasks;
+
+            public class C { private async Task SaveAsync() { await Task.Yield(); } public void M() { SaveAsync(); } }
+            """);
+
+    [Fact]
+    public Task Ignores_non_generic_ValueTask_called_as_a_bare_statement() =>
+        VerifyAsync("""
+            using System.Threading.Tasks;
+
+            public class C { private ValueTask Save() => default; public void M() { Save(); } }
+            """);
+
+    [Fact]
+    public Task Ignores_awaited_user_awaitable_of_T() =>
+        VerifyAsync("""
+            using System;
+            using System.Runtime.CompilerServices;
+            using System.Threading.Tasks;
+
+            public struct MyTask<T> { public MyAwaiter<T> GetAwaiter() => default; }
+            public struct MyAwaiter<T> : INotifyCompletion
+            {
+                public bool IsCompleted => true;
+                public T GetResult() => default!;
+                public void OnCompleted(Action continuation) { }
+            }
+            public class C { private MyTask<int> R() => default; public async Task M() { await R(); } }
+            """);
+
+    [Fact]
+    public Task Ignores_awaited_ConfiguredTaskAwaitable_of_T() =>
+        VerifyAsync("""
+            using System.Runtime.CompilerServices;
+            using System.Threading.Tasks;
+
+            public class C { private ConfiguredTaskAwaitable<int> R() => Task.FromResult(1).ConfigureAwait(false); public async Task M() { await R(); } }
+            """);
+
+    [Fact]
+    public Task Ignores_awaitable_whose_GetAwaiter_is_an_extension_method() =>
+        VerifyAsync("""
+            using System.Runtime.CompilerServices;
+            using System.Threading.Tasks;
+
+            public struct Handle<T> { public T Value; }
+            public static class HandleExtensions { public static TaskAwaiter<T> GetAwaiter<T>(this Handle<T> handle) => Task.FromResult(handle.Value).GetAwaiter(); }
+            public class C { private Handle<int> R() => default; public async Task M() { await R(); } }
+            """);
+
+    [Fact]
+    public Task Ignores_a_type_declared_in_source_as_System_Threading_Tasks_Task_of_T() =>
+        // GetTypeByMetadataName prefers the source declaration, so a symbol match alone would call the fake the real Task<T> and advise "Task".
+        // It is awaitable, so the rule stays silent for the same reason it does for any user awaitable.
+        VerifyAsync("""
+            namespace System.Threading.Tasks
+            {
+                public class Task<TResult> { public System.Runtime.CompilerServices.TaskAwaiter GetAwaiter() => default; }
+            }
+
+            public class C { private System.Threading.Tasks.Task<int> R() => new(); public async System.Threading.Tasks.Task M() { await R(); } }
             """);
 
     [Fact]

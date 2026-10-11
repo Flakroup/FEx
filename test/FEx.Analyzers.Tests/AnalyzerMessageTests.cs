@@ -55,8 +55,20 @@ public class AnalyzerMessageTests
         Verify<UnusedTypeParameterAnalyzer>("FEX0048", "public class C<{|#0:T|}> { }", "T");
 
     [Fact]
-    public Task FEX0049_names_the_method() =>
-        Verify<UnusedMethodReturnValueLocalAnalyzer>("FEX0049", "public class C { private {|#0:int|} Get() => 1; public void M() { Get(); } }", "Get");
+    public Task FEX0049_names_the_method_and_void() =>
+        Verify<UnusedMethodReturnValueLocalAnalyzer>("FEX0049", "public class C { private {|#0:int|} Get() => 1; public void M() { Get(); } }", "Get", "void");
+
+    [Fact]
+    public Task FEX0049_names_Task_for_an_awaited_Task_of_T() =>
+        Verify<UnusedMethodReturnValueLocalAnalyzer>("FEX0049", "using System.Threading.Tasks; public class C { private async {|#0:Task<int>|} Get() { await Task.Yield(); return 1; } public async Task M() { await Get(); } }", "Get", "Task");
+
+    [Fact]
+    public Task FEX0049_names_ValueTask_for_an_awaited_ValueTask_of_T() =>
+        Verify<UnusedMethodReturnValueLocalAnalyzer>("FEX0049", "using System.Threading.Tasks; public class C { private {|#0:ValueTask<int>|} Get() => new ValueTask<int>(1); public async Task M() { await Get(); } }", "Get", "ValueTask");
+
+    [Fact]
+    public Task FEX0049_names_Task_for_a_Task_of_T_called_as_a_bare_statement() =>
+        Verify<UnusedMethodReturnValueLocalAnalyzer>("FEX0049", "using System.Threading.Tasks; public class C { private {|#0:Task<int>|} Get() => Task.FromResult(1); public void M() { Get(); } }", "Get", "Task");
 
     [Fact]
     public Task FEX0050_names_the_accessor() =>

@@ -3,9 +3,7 @@ using System.IO;
 
 namespace FEx.Imaging.Windows.Model;
 
-// ReSharper disable PartialTypeWithSinglePart
-public partial class FilesCacheContext : DbContext
-// ReSharper restore PartialTypeWithSinglePart
+public class FilesCacheContext : DbContext
 {
     // EF Core populates the DbSet; non-null by construction
     public virtual DbSet<IndexEntry> IndexEntries { get; set; } = null!;
@@ -44,11 +42,5 @@ public partial class FilesCacheContext : DbContext
 
             entity.HasIndex(e => e.FilePath);
         });
-
-        OnModelCreatingPartial(modelBuilder);
     }
-
-    // ReSharper disable PartialMethodWithSinglePart
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
-    // ReSharper restore PartialMethodWithSinglePart
 }

@@ -393,7 +393,7 @@ public sealed class FlurlApiBaseIntegrationTests : IDisposable
         public async Task<TestData> GetRetryCountDataAsync(CancellationToken ct = default) =>
             await GetResponseAsync<TestData>("api/retry-count", method: RequestMethod.GET, cancellationToken: ct);
 
-        public async Task<TestData> GetSlowDataAsync(CancellationToken ct = default) =>
+        public async Task GetSlowDataAsync(CancellationToken ct = default) =>
             await GetResponseAsync<TestData>("api/slow", method: RequestMethod.GET, cancellationToken: ct);
 
         public async Task<TestData> GetConcurrentDataAsync(CancellationToken ct = default) =>

@@ -19,7 +19,7 @@ public sealed class DirectoryWalkerSafeDeleteTests
         var dir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
 
         // Act
-        var result = dir.SafeDelete(false);
+        var result = dir.SafeDelete();
 
         // Assert
         result.ShouldBeTrue();
@@ -34,7 +34,7 @@ public sealed class DirectoryWalkerSafeDeleteTests
         try
         {
             // Act
-            var result = new DirectoryInfo(dir.FullName).SafeDelete(false);
+            var result = new DirectoryInfo(dir.FullName).SafeDelete();
 
             // Assert
             result.ShouldBeTrue();
@@ -59,7 +59,7 @@ public sealed class DirectoryWalkerSafeDeleteTests
             File.WriteAllText(Path.Combine(dir.FullName, "file.txt"), "data");
 
             // Act
-            var result = new DirectoryInfo(dir.FullName).SafeDelete(false);
+            var result = new DirectoryInfo(dir.FullName).SafeDelete();
 
             // Assert
             result.ShouldBeFalse();

@@ -348,7 +348,7 @@ public class OptionalParameterHierarchyMismatchAnalyzerTests
             """);
 
     [Fact]
-    public Task Reports_P24_indexer_override_with_different_default() =>
+    public Task Reports_P24_indexer_override_once() =>
         VerifyAsync("""
             #nullable enable
             using System;
@@ -358,7 +358,7 @@ public class OptionalParameterHierarchyMismatchAnalyzerTests
             using System.Threading.Tasks;
 
             public class P24B { public virtual int this[int i, int j = 1] => i + j; }
-            public class P24 : P24B { public override int this[int i, int {|FEX0042:{|FEX0042:j|}|} = 2] => i + j; }
+            public class P24 : P24B { public override int this[int i, int {|FEX0042:j|} = 2] => i + j; }
             """);
 
     [Fact]
@@ -532,5 +532,27 @@ public class OptionalParameterHierarchyMismatchAnalyzerTests
 
             public class PA9B { public virtual void M(int a = 1, params int[] rest) { Console.Write(a + rest.Length); } }
             public class PA9 : PA9B { public override void M(int {|FEX0042:a|} = 2, params int[] rest) { Console.Write(a + rest.Length); } }
+            """);
+
+    [Fact]
+    public Task Ignores_NaN_default_equal_to_NaN() =>
+        VerifyAsync("""
+            public class B { public virtual void M(double d = double.NaN, float f = float.NaN) { System.Console.Write(d + f); } }
+            public class D : B { public override void M(double d = double.NaN, float f = float.NaN) { System.Console.Write(d + f); } }
+            """);
+
+    [Fact]
+    public Task Ignores_base_parameter_typed_as_type_parameter() =>
+        VerifyAsync("""
+            #nullable enable
+            public class B<T> { public virtual void M(T t = default!) { System.Console.Write(t); } public virtual void N(T t = default!) { System.Console.Write(t); } }
+            public class D : B<int> { public override void M(int t = 0) { System.Console.Write(t); } public override void N(int t = default) { System.Console.Write(t); } }
+            """);
+
+    [Fact]
+    public Task Reports_long_defaults_that_differ_above_two_to_the_53() =>
+        VerifyAsync("""
+            public class B { public virtual void M(long x = 9007199254740993L) { System.Console.Write(x); } }
+            public class D : B { public override void M(long {|FEX0042:x|} = 9007199254740992L) { System.Console.Write(x); } }
             """);
 }

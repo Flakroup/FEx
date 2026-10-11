@@ -446,7 +446,7 @@ public class MethodHasAsyncOverloadWithCancellationAnalyzerTests
             """);
 
     [Fact]
-    public Task Reports_N20_static_async_lambda_in_class_with() =>
+    public Task Ignores_N20_static_async_lambda_in_class_with() =>
         VerifyAsync("""
             #nullable enable
             using System;
@@ -455,11 +455,11 @@ public class MethodHasAsyncOverloadWithCancellationAnalyzerTests
             using System.Threading;
             using System.Threading.Tasks;
 
-            public class N20 { private CancellationToken _ct; public void M() { Func<Task> f = static async () => { {|FEX0052:Do()|}; await Task.Yield(); }; Console.Write(f); Console.Write(_ct); } private static void Do() { } private static Task DoAsync(CancellationToken ct) => Task.CompletedTask; }
+            public class N20 { private CancellationToken _ct; public void M() { Func<Task> f = static async () => { Do(); await Task.Yield(); }; Console.Write(f); Console.Write(_ct); } private static void Do() { } private static Task DoAsync(CancellationToken ct) => Task.CompletedTask; }
             """);
 
     [Fact]
-    public Task Reports_N21_static_local_function_in_async_method() =>
+    public Task Ignores_N21_static_local_function_in_async_method() =>
         VerifyAsync("""
             #nullable enable
             using System;
@@ -468,7 +468,7 @@ public class MethodHasAsyncOverloadWithCancellationAnalyzerTests
             using System.Threading;
             using System.Threading.Tasks;
 
-            public class N21 { private CancellationToken _ct; private static void Do() { } private static Task DoAsync(CancellationToken ct) => Task.CompletedTask; public async Task M() { await L(); static async Task L() { {|FEX0052:Do()|}; await Task.Yield(); } Console.Write(_ct); } }
+            public class N21 { private CancellationToken _ct; private static void Do() { } private static Task DoAsync(CancellationToken ct) => Task.CompletedTask; public async Task M() { await L(); static async Task L() { Do(); await Task.Yield(); } Console.Write(_ct); } }
             """);
 
     [Fact]
@@ -1028,5 +1028,48 @@ public class MethodHasAsyncOverloadWithCancellationAnalyzerTests
             namespace Other { public class Task { } public class Task<T> { } }
 
             public class C { public int Get() => 1; public Other.Task<int> GetAsync(CancellationToken ct) => new(); public async System.Threading.Tasks.Task M(CancellationToken ct) { Get(); await System.Threading.Tasks.Task.Yield(); Console.Write(ct); } }
+            """);
+
+    [Fact]
+    public Task Ignores_call_inside_lock() =>
+        VerifyAsync("""
+            using System.Threading;
+            using System.Threading.Tasks;
+            public class L
+            {
+                private readonly object _g = new();
+                private static void Do() { }
+                private static Task DoAsync(CancellationToken ct) => Task.CompletedTask;
+                public async Task M(CancellationToken ct) { lock (_g) { Do(); } await Task.Yield(); System.Console.Write(ct); }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_static_lambda_with_its_own_token_parameter() =>
+        VerifyAsync("""
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+            public class L
+            {
+                private static void Do() { }
+                private static Task DoAsync(CancellationToken ct) => Task.CompletedTask;
+                public void M() { Func<CancellationToken, Task> f = static async ct => { {|FEX0052:Do()|}; await Task.Yield(); Console.Write(ct); }; Console.Write(f); }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_static_lambda_that_would_capture_the_token_of_the_enclosing_method() =>
+        VerifyAsync("""
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            public class L
+            {
+                private static void Do() { }
+                private static Task DoAsync(CancellationToken ct) => Task.CompletedTask;
+                public void M(CancellationToken ct) { var local = ct; Func<Task> f = static async () => { Do(); await Task.Yield(); }; Console.Write(f); Console.Write(local); }
+            }
             """);
 }

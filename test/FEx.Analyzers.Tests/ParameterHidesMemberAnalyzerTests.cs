@@ -1143,4 +1143,22 @@ public class ParameterHidesMemberAnalyzerTests
         VerifyAsync("""
             public class C { static int x; public static implicit operator C(int {|FEX0037:x|}) => new(); public int X => x; }
             """);
+
+    [Fact]
+    public Task Ignores_arglist_parameter() =>
+        VerifyAsync("""
+            public class A { public void V(int a) { V(a, 0, __arglist()); } public void V(int a, int b = 0, __arglist) { System.Console.Write(a + b); } }
+            """);
+
+    [Fact]
+    public Task Ignores_delegate_parameters_named_like_delegate_members() =>
+        VerifyAsync("""
+            public delegate int D(int Method, object Target);
+            """);
+
+    [Fact]
+    public Task Ignores_partial_method_implementation_in_the_declaration_of_its_definition() =>
+        VerifyAsync("""
+            public partial class P { private int value; partial void Q(int value); partial void Q(int value) { } public void G() => Q(1); }
+            """);
 }

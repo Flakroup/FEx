@@ -592,4 +592,27 @@ public class UseCancellationTokenForIAsyncEnumerableAnalyzerTests
 
             public class AA11 { public async Task M(IAsyncEnumerable<int> e) { static async Task L(IAsyncEnumerable<int> e, CancellationToken ct) { await foreach (int x in {|FEX0053:e|}) { Console.Write(x); } Console.Write(ct); } await L(e, default); } }
             """);
+
+    [Fact]
+    public Task Ignores_local_initialized_from_a_call() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            using System.Threading;
+            using System.Threading.Tasks;
+            public class A
+            {
+                private static IAsyncEnumerable<int> Produce(CancellationToken ct) => throw new System.NotSupportedException();
+                public async Task M(CancellationToken ct) { var seq = Produce(ct); await foreach (var x in seq) { System.Console.Write(x); } }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_user_ConfigureAwait_without_arguments_without_crashing() =>
+        VerifyAsync("""
+            using System.Collections.Generic;
+            using System.Threading;
+            using System.Threading.Tasks;
+            public class TaskAsyncEnumerableExtensions { public IAsyncEnumerable<int> ConfigureAwait() => throw new System.NotSupportedException(); }
+            public class A { public async Task M(CancellationToken ct, TaskAsyncEnumerableExtensions e) { await foreach (var x in {|FEX0053:e.ConfigureAwait()|}) { System.Console.Write(x + ct.GetHashCode()); } } }
+            """);
 }

@@ -36,7 +36,11 @@ public sealed class PartialMethodWithSinglePartAnalyzer : DiagnosticAnalyzer
         if (context.Symbol is not IMethodSymbol { IsPartialDefinition: true, PartialImplementationPart: null } method)
             return;
 
-        var syntax = (MethodDeclarationSyntax)method.DeclaringSyntaxReferences[0].GetSyntax(context.CancellationToken);
+        // The unfinished accessor of a partial property, typed in an editor, is a partial definition too.
+        if (method.DeclaringSyntaxReferences[0].GetSyntax(context.CancellationToken) is not MethodDeclarationSyntax syntax
+            || AnalyzerHelpers.IsNamedInDisabledCode(context.Compilation, method.Name, context.CancellationToken))
+            return;
+
         context.ReportDiagnostic(Diagnostic.Create(Rule, syntax.Modifiers.First(modifier => modifier.IsKind(SyntaxKind.PartialKeyword)).GetLocation(), method.Name));
     }
 }

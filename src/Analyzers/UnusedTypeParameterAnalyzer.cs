@@ -43,6 +43,10 @@ public sealed class UnusedTypeParameterAnalyzer : DiagnosticAnalyzer
         var scopes = declaration is TypeDeclarationSyntax
             ? context.SemanticModel.GetDeclaredSymbol(declaration, context.CancellationToken)!.DeclaringSyntaxReferences.Select(reference => reference.GetSyntax(context.CancellationToken)).ToList()
             : [declaration];
+        // A static field exists once per closed type, so dropping the parameter merges the copies the callers rely on.
+        if (declaration is TypeDeclarationSyntax && scopes.Any(HasStaticStorage))
+            return;
+
         if (!scopes.Any(scope => IsMentioned(scope, name)))
             context.ReportDiagnostic(Diagnostic.Create(Rule, parameter.Identifier.GetLocation(), name));
     }
@@ -64,6 +68,14 @@ public sealed class UnusedTypeParameterAnalyzer : DiagnosticAnalyzer
 
         return AnalyzerHelpers.ImplementsInterfaceMember(symbol);
     }
+
+    private static bool HasStaticStorage(SyntaxNode scope) =>
+        scope.DescendantNodes().Any(node => node switch
+        {
+            FieldDeclarationSyntax or EventFieldDeclarationSyntax => ((MemberDeclarationSyntax)node).Modifiers.Any(SyntaxKind.StaticKeyword),
+            PropertyDeclarationSyntax property => property.Modifiers.Any(SyntaxKind.StaticKeyword) && property.AccessorList is { } list && list.Accessors.Any(accessor => accessor is { Body: null, ExpressionBody: null }),
+            _ => false,
+        });
 
     private static bool IsMentioned(SyntaxNode scope, string name)
     {

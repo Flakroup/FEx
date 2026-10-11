@@ -1,11 +1,10 @@
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace FEx.Analyzers;
 
-/// <summary>FEX0040: a private method or constructor that only forwards to a sibling, supplying the sibling's own defaults.</summary>
+/// <summary>FEX0040: an effectively private method or constructor that only forwards to a sibling, supplying the sibling's own defaults.</summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class RedundantOverloadLocalAnalyzer : DiagnosticAnalyzer
 {
@@ -18,20 +17,16 @@ public sealed class RedundantOverloadLocalAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "Callers of the sibling get the same call without the extra overload, which only adds a second candidate to overload resolution. Replaces the ReSharper inspection RedundantOverload.Local.");
+        "Callers of the sibling get the same call without the extra overload, which only adds a second candidate to overload resolution. Replaces the ReSharper inspection RedundantOverload.Local.",
+        null,
+        WellKnownDiagnosticTags.CompilationEnd);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(Analyze, SyntaxKind.MethodDeclaration, SyntaxKind.ConstructorDeclaration);
-    }
-
-    private static void Analyze(SyntaxNodeAnalysisContext context)
-    {
-        if (RedundantOverloadAnalysis.FindRedundant(context) is { } method && AnalyzerHelpers.IsEffectivelyPrivate(method))
-            context.ReportDiagnostic(Diagnostic.Create(Rule, method.Locations[0], method.Name == ".ctor" ? method.ContainingType.Name : method.Name));
+        context.RegisterCompilationStartAction(start => RedundantOverloadAnalysis.Start(start, Rule, true));
     }
 }

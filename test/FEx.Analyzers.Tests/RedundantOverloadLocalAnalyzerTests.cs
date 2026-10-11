@@ -117,4 +117,22 @@ public class RedundantOverloadLocalAnalyzerTests
 
             public class OA25 { private class In { public void M(int a, int b = 0) { Console.Write(a + b); } public void {|FEX0040:M|}(int a) { M(a, 0); } } public object G() => new In(); }
             """);
+
+    [Fact]
+    public Task Ignores_arglist_forwarder() =>
+        VerifyAsync("""
+            public class A { private void V(int a) { V(a, 0, __arglist()); } private void V(int a, int b = 0, __arglist) { System.Console.Write(a + b); } }
+            """);
+
+    [Fact]
+    public Task Ignores_forwarder_used_as_method_group() =>
+        VerifyAsync("""
+            public class A { private void M(int a) { M(a, 0); } private void M(int a, int b = 0) { System.Console.Write(a + b); } public System.Action<int> F() => M; }
+            """);
+
+    [Fact]
+    public Task Ignores_params_forwarder() =>
+        VerifyAsync("""
+            public class A { private void M(params int[] a) { M(a, 0); } private void M(int[] a, int b = 0) { System.Console.Write(a.Length + b); } }
+            """);
 }

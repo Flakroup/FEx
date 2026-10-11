@@ -308,4 +308,17 @@ public class UnusedParameterInPartialMethodAnalyzerTests
             public partial class UA7 { private int a; partial void P(int a); public int G() => a; }
             public partial class UA7 { partial void P(int {|FEX0046:a|}) { Console.Write(this.a); } }
             """);
+
+    [Fact]
+    public Task Ignores_extern_implementation() =>
+        VerifyAsync("""
+            using System.Runtime.InteropServices;
+            public partial class E { private static partial int Beep(int f); [DllImport("kernel32")] private static extern partial int Beep(int f); public int G() => Beep(1); }
+            """);
+
+    [Fact]
+    public Task Ignores_discard_named_parameters() =>
+        VerifyAsync("""
+            public partial class Q { partial void A(int _); partial void A(int _) { } partial void B(int _1); partial void B(int _1) { } public void G() { A(1); B(1); } }
+            """);
 }

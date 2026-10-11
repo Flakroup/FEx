@@ -442,7 +442,7 @@ public class RedundantOverriddenMemberAnalyzerTests
             """);
 
     [Fact]
-    public Task Reports_V14_override_with_different_default_value() =>
+    public Task Ignores_V14_override_with_different_default_value() =>
         VerifyAsync("""
             #nullable enable
             using System;
@@ -451,7 +451,7 @@ public class RedundantOverriddenMemberAnalyzerTests
             using System.Threading.Tasks;
 
             public class V14B { public virtual void M(int a = 1) { Console.Write(a); } }
-            public class V14 : V14B { public override void {|FEX0047:M|}(int a = 2) { base.M(a); } }
+            public class V14 : V14B { public override void M(int a = 2) { base.M(a); } }
             """);
 
     [Fact]
@@ -1160,7 +1160,7 @@ public class RedundantOverriddenMemberAnalyzerTests
             """);
 
     [Fact]
-    public Task Reports_EQ7_Equals_pass_through_plus_operator() =>
+    public Task Ignores_EQ7_Equals_pass_through_plus_operator() =>
         VerifyAsync("""
             #nullable enable
             using System;
@@ -1171,7 +1171,7 @@ public class RedundantOverriddenMemberAnalyzerTests
             using System.Threading;
             using System.Threading.Tasks;
 
-            public class EQ7 { public override bool {|FEX0047:Equals|}(object? obj) => base.Equals(obj); public static bool operator ==(EQ7? a, EQ7? b) => ReferenceEquals(a, b); public static bool operator !=(EQ7? a, EQ7? b) => !(a == b); public override int {|FEX0047:GetHashCode|}() => base.GetHashCode(); }
+            public class EQ7 { public override bool Equals(object? obj) => base.Equals(obj); public static bool operator ==(EQ7? a, EQ7? b) => ReferenceEquals(a, b); public static bool operator !=(EQ7? a, EQ7? b) => !(a == b); public override int GetHashCode() => base.GetHashCode(); }
             """);
 
     [Fact]
@@ -1201,5 +1201,35 @@ public class RedundantOverriddenMemberAnalyzerTests
         VerifyAsync("""
             public class B { public virtual int GetHashCode(int seed) => seed; }
             public class C : B { public override int GetHashCode(int seed) => base.GetHashCode(seed); public override bool Equals(object? o) => true; public override int GetHashCode() => 1; }
+            """);
+
+    [Fact]
+    public Task Ignores_record_overrides() =>
+        VerifyAsync("""
+            public record Base2(int A);
+            public record Rec(int A) : Base2(A) { public override string ToString() => base.ToString(); public override int GetHashCode() => base.GetHashCode(); }
+            """);
+
+    [Fact]
+    public Task Ignores_base_call_with_explicit_type_arguments() =>
+        VerifyAsync("""
+            public class B { public virtual string M<T>(T x) => typeof(T).Name; }
+            public class D : B { public override string M<T>(T x) => base.M<object>(x); }
+            """);
+
+    [Fact]
+    public Task Ignores_override_that_adds_a_parameter_attribute() =>
+        VerifyAsync("""
+            using System.Runtime.CompilerServices;
+            public class B { public virtual string M(string c = "") => c; }
+            public class D : B { public override string M([CallerMemberName] string c = "") => base.M(c); }
+            """);
+
+    [Fact]
+    public Task Ignores_override_in_a_type_that_re_lists_the_interface() =>
+        VerifyAsync("""
+            public interface I { string M(); }
+            public class B : I { string I.M() => "explicit"; public virtual string M() => "virtual"; }
+            public class D : B, I { public override string M() => base.M(); }
             """);
 }

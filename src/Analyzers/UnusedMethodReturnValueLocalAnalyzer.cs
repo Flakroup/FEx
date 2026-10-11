@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -29,7 +31,7 @@ public sealed class UnusedMethodReturnValueLocalAnalyzer : DiagnosticAnalyzer
 
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
         context.RegisterCompilationStartAction(Start);
     }
@@ -42,10 +44,10 @@ public sealed class UnusedMethodReturnValueLocalAnalyzer : DiagnosticAnalyzer
             operation =>
             {
                 var call = (IInvocationOperation)operation.Operation;
-                Record(usages, call.TargetMethod, !IsIgnored(call));
+                Record(usages, call.TargetMethod, !IsIgnored(call), operation.CancellationToken);
             },
             OperationKind.Invocation);
-        context.RegisterOperationAction(operation => Record(usages, ((IMethodReferenceOperation)operation.Operation).Method, true), OperationKind.MethodReference);
+        context.RegisterOperationAction(operation => Record(usages, ((IMethodReferenceOperation)operation.Operation).Method, true, operation.CancellationToken), OperationKind.MethodReference);
         context.RegisterOperationAction(
             operation =>
             {
@@ -53,32 +55,42 @@ public sealed class UnusedMethodReturnValueLocalAnalyzer : DiagnosticAnalyzer
                 var argument = ((INameOfOperation)operation.Operation).Argument.Syntax;
                 var info = operation.Operation.SemanticModel!.GetSymbolInfo(argument, operation.CancellationToken);
                 foreach (var method in info.CandidateSymbols.OfType<IMethodSymbol>())
-                    Record(usages, method, true);
+                    Record(usages, method, true, operation.CancellationToken);
             },
             OperationKind.NameOf);
         context.RegisterCompilationEndAction(end =>
         {
             foreach (var pair in usages.Where(pair => !pair.Value.Used))
             {
-                // Both parts of a partial method are declarations of it.
-                foreach (var syntax in new[] { pair.Key, pair.Key.PartialImplementationPart }.OfType<IMethodSymbol>().SelectMany(part => part.DeclaringSyntaxReferences))
-                    end.ReportDiagnostic(Diagnostic.Create(Rule, ((MethodDeclarationSyntax)syntax.GetSyntax(end.CancellationToken)).ReturnType.GetLocation(), pair.Key.Name));
+                // Both parts of a partial method are declarations of it. Calls in generated code count as uses, but nobody edits a generated declaration.
+                foreach (var reference in new[] { pair.Key, pair.Key.PartialImplementationPart }.OfType<IMethodSymbol>().SelectMany(part => part.DeclaringSyntaxReferences)
+                             .Where(reference => !AnalyzerHelpers.IsGenerated(reference.SyntaxTree, pair.Key, end.Options, end.CancellationToken)))
+                    end.ReportDiagnostic(Diagnostic.Create(Rule, ((MethodDeclarationSyntax)reference.GetSyntax(end.CancellationToken)).ReturnType.GetLocation(), pair.Key.Name));
             }
         });
     }
 
+    // The compiler calls these by name (foreach, await, using, deconstruction, collection initializers, ranges, fixed), and what they return is what it needs.
+    private static readonly HashSet<string> PatternMethods =
+    [
+        "GetEnumerator", "GetAsyncEnumerator", "MoveNext", "MoveNextAsync", "GetAwaiter", "GetResult", "Dispose", "DisposeAsync",
+        "Deconstruct", "Add", "GetPinnableReference", "Slice",
+    ];
+
     // A method of a source type that no other type can call, whose signature no interface or base class dictates and
     // that is not an extern import, whose return type the native side fixes.
-    private static bool IsCandidate(IMethodSymbol method) =>
+    private static bool IsCandidate(IMethodSymbol method, CancellationToken cancellationToken) =>
         method is { ReturnsVoid: false, IsOverride: false, IsVirtual: false, IsAbstract: false, IsExtern: false }
-        && method.DeclaringSyntaxReferences.Any(reference => reference.GetSyntax() is MethodDeclarationSyntax)
+        && !PatternMethods.Contains(method.Name)
+        && method.DeclaringSyntaxReferences.Any(reference => reference.GetSyntax(cancellationToken) is MethodDeclarationSyntax)
         && AnalyzerHelpers.IsEffectivelyPrivate(method)
-        && !AnalyzerHelpers.ImplementsInterfaceMember(method);
+        && !AnalyzerHelpers.ImplementsInterfaceMember(method)
+        && !AnalyzerHelpers.IsImplementedByDerivedType(method);
 
-    private static void Record(ConcurrentDictionary<IMethodSymbol, Usage> usages, IMethodSymbol target, bool used)
+    private static void Record(ConcurrentDictionary<IMethodSymbol, Usage> usages, IMethodSymbol target, bool used, CancellationToken cancellationToken)
     {
         var method = target.OriginalDefinition;
-        if (!IsCandidate(method))
+        if (!IsCandidate(method, cancellationToken))
             return;
 
         var usage = usages.GetOrAdd(method, _ => new Usage());

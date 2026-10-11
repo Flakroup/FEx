@@ -1,6 +1,8 @@
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
@@ -46,6 +48,7 @@ public sealed class UseCancellationTokenForIAsyncEnumerableAnalyzer : Diagnostic
         var source = Unwrap(loop.Collection);
         if (!SymbolEqualityComparer.Default.Equals((source.Type as INamedTypeSymbol)?.OriginalDefinition, asyncEnumerable)
             || source is IInvocationOperation call && PassesToken(call, token)
+            || IsLocalFromCall(source, context.CancellationToken)
             || !CancellationScope.HasTokenInScope(loop, context.ContainingSymbol, token))
             return;
 
@@ -55,11 +58,16 @@ public sealed class UseCancellationTokenForIAsyncEnumerableAnalyzer : Diagnostic
     private static IOperation Unwrap(IOperation collection)
     {
         var source = WithoutConversions(collection);
-        if (source is not IInvocationOperation { TargetMethod: { Name: "ConfigureAwait", ContainingType.Name: "TaskAsyncEnumerableExtensions" } } call)
+        if (source is not IInvocationOperation { TargetMethod: { IsExtensionMethod: true, Name: "ConfigureAwait", ContainingType.Name: "TaskAsyncEnumerableExtensions" } } call)
             return source;
 
         return WithoutConversions(call.Arguments[0].Value);
     }
+
+    // A sequence kept in a local was made by the call that initialized it, where the token belonged; ReSharper looks no further than that.
+    private static bool IsLocalFromCall(IOperation source, CancellationToken cancellationToken) =>
+        source is ILocalReferenceOperation { Local.DeclaringSyntaxReferences: [{ } declaration] }
+        && declaration.GetSyntax(cancellationToken) is VariableDeclaratorSyntax { Initializer.Value: InvocationExpressionSyntax };
 
     private static IOperation WithoutConversions(IOperation operation)
     {

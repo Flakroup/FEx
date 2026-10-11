@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -11,6 +12,33 @@ namespace FEx.Analyzers;
 /// <summary>What FEX0039 and FEX0040 share: finding a method or constructor that does nothing but call a sibling with its own defaults filled in.</summary>
 internal static class RedundantOverloadAnalysis
 {
+    /// <summary>
+    /// Starts FEX0039 (<paramref name="local"/> false) or FEX0040 (true): the redundant overloads in the compilation, minus
+    /// those some code uses as a method group, because <c>Action&lt;int&gt; f = r.M;</c> binds the forwarder and not the
+    /// sibling, which takes two arguments. Generated code (Razor binds handlers that way) is read for those uses and never reported.
+    /// </summary>
+    public static void Start(CompilationStartAnalysisContext start, DiagnosticDescriptor rule, bool local)
+    {
+        var candidates = new ConcurrentDictionary<IMethodSymbol, Diagnostic>(SymbolEqualityComparer.Default);
+        var methodGroups = new ConcurrentDictionary<IMethodSymbol, bool>(SymbolEqualityComparer.Default);
+        start.RegisterSyntaxNodeAction(
+            node =>
+            {
+                if (FindRedundant(node) is { } method
+                    && AnalyzerHelpers.IsEffectivelyPrivate(method) == local
+                    && !AnalyzerHelpers.IsGenerated(node.Node.SyntaxTree, method, node.Options, node.CancellationToken))
+                    candidates[method] = Diagnostic.Create(rule, method.Locations[0], method.Name == ".ctor" ? method.ContainingType.Name : method.Name);
+            },
+            SyntaxKind.MethodDeclaration,
+            SyntaxKind.ConstructorDeclaration);
+        start.RegisterOperationAction(operation => methodGroups[((IMethodReferenceOperation)operation.Operation).Method.OriginalDefinition] = true, OperationKind.MethodReference);
+        start.RegisterCompilationEndAction(end =>
+        {
+            foreach (var pair in candidates.Where(pair => !methodGroups.ContainsKey(pair.Key)))
+                end.ReportDiagnostic(pair.Value);
+        });
+    }
+
     /// <summary>
     /// The method the node declares, when it is a block-bodied overload (or a constructor chaining to <c>this(...)</c>
     /// with an empty body) that forwards its parameters in order to a sibling and fills each remaining parameter of the
@@ -36,7 +64,11 @@ internal static class RedundantOverloadAnalysis
             return null;
 
         var method = (IMethodSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, context.CancellationToken)!;
-        if (method is { IsVirtual: true } or { IsOverride: true }
+        if (method is { IsVirtual: true } or { IsOverride: true } or { IsVararg: true }
+            // 'params' callers expand into the forwarder, which the sibling's array parameter does not take.
+            || method.Parameters.Any(parameter => parameter.IsParams)
+            // 'new T()' and every serializer look a parameterless constructor up by its shape, not by what it can be called with.
+            || method is { MethodKind: MethodKind.Constructor, Parameters.Length: 0 }
             || context.SemanticModel.GetOperation(call, context.CancellationToken) is not IInvocationOperation invocation)
             return null;
 
@@ -63,8 +95,18 @@ internal static class RedundantOverloadAnalysis
         method.Name == target.Name
         && (target.Arity == 0 || target.Arity == method.Arity)
         && method.IsStatic == target.IsStatic
+        && !target.IsVararg
+        && IsAsAccessible(target.DeclaredAccessibility, method.DeclaredAccessibility)
         && SymbolEqualityComparer.Default.Equals(method.ContainingType, target.ContainingType)
         && SymbolEqualityComparer.Default.Equals(method.ReturnType, target.ReturnType);
+
+    // Callers of the forwarder have to reach the sibling too: 'public M(a)' next to 'private M(a, b = 0)' is no redundancy, nor is 'protected' next to 'internal'.
+    private static bool IsAsAccessible(Accessibility sibling, Accessibility forwarder) =>
+        sibling == forwarder
+        || sibling == Accessibility.Public
+        || sibling == Accessibility.ProtectedOrInternal && forwarder != Accessibility.Public
+        || sibling is Accessibility.Protected or Accessibility.Internal && forwarder is Accessibility.ProtectedAndInternal or Accessibility.Private
+        || sibling == Accessibility.ProtectedAndInternal && forwarder == Accessibility.Private;
 
     private static bool ForwardsWithDefaults(IMethodSymbol method, IInvocationOperation invocation)
     {
@@ -77,15 +119,24 @@ internal static class RedundantOverloadAnalysis
         {
             // M(a, b) next to M(a, b = 0) is a different method, not a shorter spelling of the same one.
             if (own[i].IsOptional != forwarded[i].IsOptional
-                || own[i].IsOptional && !AnalyzerHelpers.DefaultsEqual(own[i], forwarded[i]))
+                || own[i].IsOptional && !AnalyzerHelpers.DefaultsEqual(own[i], forwarded[i])
+                // By reference or dynamic, the sibling is no stand-in a caller could not tell from the forwarder.
+                || own[i].RefKind != RefKind.None || forwarded[i].RefKind != RefKind.None
+                || own[i].Type.TypeKind == TypeKind.Dynamic || forwarded[i].Type.TypeKind == TypeKind.Dynamic)
                 return false;
         }
 
-        return invocation.Arguments.All(argument => IsForwardedOrDefault(argument, own, forwarded));
+        // A caller-info parameter the forwarder fills with a constant would be filled with the call site's own once it is gone.
+        return forwarded.Skip(own.Length).All(parameter => !IsCallerInfo(parameter))
+               && invocation.Arguments.All(argument => IsForwardedOrDefault(argument, own, forwarded));
     }
+
+    private static bool IsCallerInfo(IParameterSymbol parameter) =>
+        parameter.GetAttributes().Any(static attribute => attribute.AttributeClass?.Name is "CallerMemberNameAttribute" or "CallerFilePathAttribute" or "CallerLineNumberAttribute" or "CallerArgumentExpressionAttribute");
 
     private static bool IsForwardedOrDefault(IArgumentOperation argument, ImmutableArray<IParameterSymbol> own, ImmutableArray<IParameterSymbol> forwarded)
     {
+        // Only the argument of a '__arglist' belongs to no parameter, and IsSibling has turned such a target away.
         var position = argument.Parameter!.Ordinal;
 
         // A default the call leaves out is the sibling's own, which is exactly what the forwarder must pass.
@@ -94,9 +145,19 @@ internal static class RedundantOverloadAnalysis
             : argument.ArgumentKind == ArgumentKind.DefaultValue
               || argument is { ArgumentKind: ArgumentKind.ParamArray, Value: IArrayCreationOperation { Initializer.ElementValues.IsEmpty: true } }
               || argument.ArgumentKind == ArgumentKind.Explicit
-              && forwarded[position].HasExplicitDefaultValue
-              && argument.Value.ConstantValue is { HasValue: true } constant
-              && AnalyzerHelpers.ValuesEqual(constant.Value, forwarded[position].ExplicitDefaultValue);
+              && forwarded[position].IsOptional
+              && (argument.Value.ConstantValue is { HasValue: true } constant
+                  ? forwarded[position].HasExplicitDefaultValue && AnalyzerHelpers.ValuesEqual(constant.Value, forwarded[position].ExplicitDefaultValue)
+                  // 'default' for a struct has no constant form, and is what 'CancellationToken ct = default' spells; such a parameter has no explicit default value.
+                  : WithoutImplicitConversions(argument.Value) is IDefaultValueOperation && (!forwarded[position].HasExplicitDefaultValue || forwarded[position].ExplicitDefaultValue is null));
+    }
+
+    private static IOperation WithoutImplicitConversions(IOperation operation)
+    {
+        while (operation is IConversionOperation { IsImplicit: true } conversion)
+            operation = conversion.Operand;
+
+        return operation;
     }
 
     private static bool CanBeCalledWith(IMethodSymbol method, int arguments)

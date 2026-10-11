@@ -37,9 +37,11 @@ public sealed class PartialTypeWithSinglePartAnalyzer : DiagnosticAnalyzer
         if (type.DeclaringSyntaxReferences is not [{ } reference] || reference.GetSyntax(context.CancellationToken) is not TypeDeclarationSyntax syntax)
             return;
 
-        // A declaration-only partial method needs the keyword on the type, and ReSharper leaves such a type alone - as it
-        // does one that holds another partial type.
-        if (syntax.Members.Any(member => member is MethodDeclarationSyntax or BaseTypeDeclarationSyntax && member.Modifiers.Any(SyntaxKind.PartialKeyword)))
+        // A declaration-only partial member needs the keyword on the type, and ReSharper leaves such a type alone - as it
+        // does one that holds another partial type. A property, event or constructor with both parts in one declaration is
+        // the same, because the keyword cannot come off it.
+        if (syntax.Members.Any(member => member.Modifiers.Any(SyntaxKind.PartialKeyword))
+            || AnalyzerHelpers.IsNamedInDisabledCode(context.Compilation, type.Name, context.CancellationToken))
             return;
 
         foreach (var modifier in syntax.Modifiers.Where(modifier => modifier.IsKind(SyntaxKind.PartialKeyword)))

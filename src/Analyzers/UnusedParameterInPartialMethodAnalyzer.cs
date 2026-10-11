@@ -33,7 +33,8 @@ public sealed class UnusedParameterInPartialMethodAnalyzer : DiagnosticAnalyzer
 
     private static void Analyze(OperationBlockAnalysisContext context)
     {
-        if (context.OwningSymbol is not IMethodSymbol { MethodKind: MethodKind.Ordinary, PartialDefinitionPart: not null } method)
+        // An extern implementation has no body to use a parameter in.
+        if (context.OwningSymbol is not IMethodSymbol { MethodKind: MethodKind.Ordinary, PartialDefinitionPart: not null, IsExtern: false } method)
             return;
 
         // nameof(a) names the parameter without using it.
@@ -45,7 +46,10 @@ public sealed class UnusedParameterInPartialMethodAnalyzer : DiagnosticAnalyzer
                 .Select(reference => reference.Parameter),
             SymbolEqualityComparer.Default);
 
-        foreach (var parameter in method.Parameters.Where(parameter => !used.Contains(parameter)))
+        foreach (var parameter in method.Parameters.Where(parameter => !used.Contains(parameter) && !IsDiscard(parameter.Name)))
             context.ReportDiagnostic(Diagnostic.Create(Rule, parameter.Locations[0], parameter.Name));
     }
+
+    // `_`, `_1`: the name says the value is not wanted.
+    private static bool IsDiscard(string name) => name.Length > 0 && name[0] == '_' && name.Skip(1).All(char.IsDigit);
 }

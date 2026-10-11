@@ -371,4 +371,17 @@ public class PartialMethodWithSinglePartAnalyzerTests
 
             public partial class SA7 { {|FEX0044:partial|} void M(); }
             """);
+
+    [Fact]
+    public Task Ignores_other_part_in_a_disabled_if_branch() =>
+        VerifyAsync("""
+            public partial class M1
+            {
+                partial void Log(string s);
+                public void G() => Log("a");
+            #if DEBUG
+                partial void Log(string s) { System.Console.Write(s); }
+            #endif
+            }
+            """);
 }

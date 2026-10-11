@@ -1180,7 +1180,7 @@ public class RedundantOverloadGlobalAnalyzerTests
             """);
 
     [Fact]
-    public Task Reports_OA16_ref_kind_mismatch_prefix() =>
+    public Task Ignores_OA16_ref_kind_mismatch_prefix() =>
         VerifyAsync("""
             #nullable enable
             using System;
@@ -1191,7 +1191,7 @@ public class RedundantOverloadGlobalAnalyzerTests
             using System.Threading;
             using System.Threading.Tasks;
 
-            public class OA16 { public void M(int a, int b = 0) { Console.Write(a + b); } public void {|FEX0039:M|}(ref int a) { M(a, 0); } }
+            public class OA16 { public void M(int a, int b = 0) { Console.Write(a + b); } public void M(ref int a) { M(a, 0); } }
             """);
 
     [Fact]
@@ -1785,5 +1785,71 @@ public class RedundantOverloadGlobalAnalyzerTests
             using System;
 
             public class C { public void M(int a, int b, int c = 0) { Console.Write(a + b + c); } public void M(int a, int b) { M(b, a, 0); } }
+            """);
+
+    [Fact]
+    public Task Ignores_arglist_forwarder() =>
+        VerifyAsync("""
+            public class A { public void V(int a) { V(a, 0, __arglist()); } public void V(int a, int b = 0, __arglist) { System.Console.Write(a + b); } }
+            """);
+
+    [Fact]
+    public Task Ignores_target_less_accessible_than_forwarder() =>
+        VerifyAsync("""
+            public class A { public void M(int a) { M(a, 0); } private void M(int a, int b = 0) { System.Console.Write(a + b); } }
+            public class B { protected void M(int a) { M(a, 0); } internal void M(int a, int b = 0) { System.Console.Write(a + b); } }
+            public class C { public C(int a) : this(a, 0) { } private C(int a, int b = 0) { System.Console.Write(a + b); } }
+            """);
+
+    [Fact]
+    public Task Ignores_params_forwarder() =>
+        VerifyAsync("""
+            public class A { public void M(params int[] a) { M(a, 0); } public void M(int[] a, int b = 0) { System.Console.Write(a.Length + b); } }
+            """);
+
+    [Fact]
+    public Task Ignores_parameterless_constructor() =>
+        VerifyAsync("""
+            public class A { public A() : this(0) { } public A(int a = 0) { System.Console.Write(a); } }
+            """);
+
+    [Fact]
+    public Task Ignores_forwarder_used_as_method_group() =>
+        VerifyAsync("""
+            public class A { public void M(int a) { M(a, 0); } public void M(int a, int b = 0) { System.Console.Write(a + b); } public System.Action<int> F() => M; }
+            """);
+
+    [Fact]
+    public Task Ignores_in_out_and_dynamic_parameters() =>
+        VerifyAsync("""
+            public class A
+            {
+                public void I(in int a) { I(in a, 0); }
+                public void I(in int a, int b = 0) { System.Console.Write(a + b); }
+                public void O(out int a) { O(out a, 0); }
+                public void O(out int a, int b = 0) { a = b; }
+                public void D(object a) { D(a, 0); }
+                public void D(dynamic a, int b = 0) { System.Console.Write(b); }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_forwarder_that_leaves_a_caller_info_parameter_to_the_compiler() =>
+        VerifyAsync("""
+            using System.Runtime.CompilerServices;
+            public class A { public void M(string s) { M(s, 0); } public void M(string s, int n = 0, [CallerMemberName] string caller = "") { System.Console.Write(s + n + caller); } }
+            """);
+
+    [Fact]
+    public Task Reports_default_literal_for_default_cancellation_token() =>
+        VerifyAsync("""
+            using System.Threading;
+            public class A { public void {|FEX0039:M|}(int a) { M(a, default); } public void M(int a, CancellationToken ct = default) { System.Console.Write(a); ct.ThrowIfCancellationRequested(); } }
+            """);
+
+    [Fact]
+    public Task Reports_NaN_forwarded_as_the_default() =>
+        VerifyAsync("""
+            public class A { public void {|FEX0039:M|}(int a) { M(a, double.NaN); } public void M(int a, double d = double.NaN) { System.Console.Write(a + d); } }
             """);
 }

@@ -1154,4 +1154,27 @@ public class UnusedMethodReturnValueLocalAnalyzerTests
         VerifyAsync("""
             public class C { private static extern int Free(int h); public void M() { Free(1); } }
             """);
+
+    [Fact]
+    public Task Ignores_pattern_methods() =>
+        VerifyAsync("""
+            public class Host
+            {
+                private sealed class Bag { public System.Collections.Generic.List<int>.Enumerator GetEnumerator() => new System.Collections.Generic.List<int>().GetEnumerator(); }
+                private sealed class Coll : System.Collections.IEnumerable { public int Add(int x) => x; public System.Collections.IEnumerator GetEnumerator() => throw new System.NotSupportedException(); }
+                public void M() { var b = new Bag(); b.GetEnumerator(); foreach (var x in b) { System.Console.Write(x); } var c = new Coll { 1, 2 }; c.Add(3); }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_method_a_derived_type_uses_to_implement_an_interface() =>
+        VerifyAsync("""
+            public class Host
+            {
+                private interface IGet { int Get(); }
+                private class A { public int Get() => 1; }
+                private sealed class B : A, IGet { }
+                public void M() { new A().Get(); IGet g = new B(); System.Console.Write(g); }
+            }
+            """);
 }

@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -20,7 +21,7 @@ public sealed class RedundantOverriddenMemberAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "Removing it changes nothing, except where it is the second half of an Equals/GetHashCode pair that was written on purpose. Replaces the ReSharper inspection RedundantOverriddenMember.");
+        "The override only repeats the base member. It is not reported where removing it would still change something: a record's synthesized members, a default value or a parameter attribute that differs, an interface the type implements again, or an Equals/GetHashCode pair next to a hand-written counterpart or an == operator. Replaces the ReSharper inspection RedundantOverriddenMember.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
@@ -45,8 +46,14 @@ public sealed class RedundantOverriddenMemberAnalyzer : DiagnosticAnalyzer
         };
 
         if (overridden is null
+            // A record synthesizes ToString, GetHashCode, Equals, PrintMembers and EqualityContract only where none is written.
+            || symbol.ContainingType.IsRecord
             || !ParametersOf(symbol).Select(parameter => parameter.Name).SequenceEqual(ParametersOf(overridden).Select(parameter => parameter.Name))
-            || HasWrittenCounterpart(symbol))
+            || !ParametersOf(symbol).Zip(ParametersOf(overridden), AnalyzerHelpers.DefaultsEqual).All(same => same)
+            // [CallerMemberName] and the like take effect through the member a call binds to.
+            || ParametersOf(overridden).Concat(ParametersOf(symbol)).Any(parameter => !parameter.GetAttributes().IsEmpty)
+            || HasWrittenCounterpart(symbol, context.CancellationToken)
+            || ReimplementsInterface(symbol))
             return;
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, IdentifierOf(member).GetLocation(), symbol.Name));
@@ -54,7 +61,7 @@ public sealed class RedundantOverriddenMemberAnalyzer : DiagnosticAnalyzer
 
     // Equals and GetHashCode go as a pair: a pass-through of one next to any hand-written other (an overload, a static
     // Equals, an IEquatable implementation) keeps the pair visible, as the contract between them is the reason both are there.
-    private static bool HasWrittenCounterpart(ISymbol symbol)
+    private static bool HasWrittenCounterpart(ISymbol symbol, CancellationToken cancellationToken)
     {
         var counterpart = symbol switch
         {
@@ -64,11 +71,24 @@ public sealed class RedundantOverriddenMemberAnalyzer : DiagnosticAnalyzer
         };
 
         return counterpart is not null
-               && symbol.ContainingType.GetMembers(counterpart).OfType<IMethodSymbol>()
-                   .SelectMany(other => other.DeclaringSyntaxReferences)
-                   .Select(reference => reference.GetSyntax())
-                   .OfType<MethodDeclarationSyntax>()
-                   .Any(syntax => !IsPassThrough(syntax));
+               && (symbol.ContainingType.GetMembers(counterpart).OfType<IMethodSymbol>()
+                       .SelectMany(other => other.DeclaringSyntaxReferences)
+                       .Select(reference => reference.GetSyntax(cancellationToken))
+                       .OfType<MethodDeclarationSyntax>()
+                       .Any(syntax => !IsPassThrough(syntax))
+                   // Without the override, '==' next to the inherited Equals and GetHashCode is warning CS0660 and CS0661.
+                   || symbol.ContainingType.GetMembers().OfType<IMethodSymbol>().Any(method => method.Name is "op_Equality" or "op_Inequality"));
+    }
+
+    // A type that lists an interface again maps its members to the ones the type itself declares, overrides included.
+    private static bool ReimplementsInterface(ISymbol symbol)
+    {
+        var type = symbol.ContainingType;
+
+        return type.Interfaces
+            .SelectMany(contract => contract.AllInterfaces.Add(contract))
+            .SelectMany(contract => contract.GetMembers())
+            .Any(member => SymbolEqualityComparer.Default.Equals(type.FindImplementationForInterfaceMember(member), symbol));
     }
 
     // A renamed parameter changes what a caller can write as a named argument, so the override is no longer a copy.
@@ -102,7 +122,15 @@ public sealed class RedundantOverriddenMemberAnalyzer : DiagnosticAnalyzer
         SoleExpression(method.Body, method.ExpressionBody) is InvocationExpressionSyntax call
         && call.Expression is MemberAccessExpressionSyntax { Expression: BaseExpressionSyntax, Name: var name }
         && name.Identifier.ValueText == method.Identifier.ValueText
+        && TypeArgumentsPassThrough(name, method.TypeParameterList)
         && ArgumentsPassThrough(call.ArgumentList.Arguments, method.ParameterList.Parameters);
+
+    // `base.M<object>(x)` is another call than `base.M<T>(x)`; only the override's own type parameters, in order, repeat the base call.
+    private static bool TypeArgumentsPassThrough(SimpleNameSyntax name, TypeParameterListSyntax? parameters) =>
+        name is not GenericNameSyntax generic
+        || parameters is not null
+        && generic.TypeArgumentList.Arguments.Select(argument => (argument as IdentifierNameSyntax)?.Identifier.ValueText)
+            .SequenceEqual(parameters.Parameters.Select(parameter => parameter.Identifier.ValueText));
 
     private static bool AllBaseAccesses(ArrowExpressionClauseSyntax? arrow, AccessorListSyntax? list, string? name, BracketedParameterListSyntax? indexer) =>
         arrow is not null

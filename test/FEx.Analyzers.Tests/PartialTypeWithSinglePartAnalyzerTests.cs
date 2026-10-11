@@ -384,4 +384,19 @@ public class PartialTypeWithSinglePartAnalyzerTests
 
             public partial class SA7 { partial void M(); }
             """);
+
+    [Fact]
+    public Task Ignores_other_part_in_a_disabled_if_branch() =>
+        VerifyAsync("""
+            public partial class T1 { }
+            #if DEBUG
+            public partial class T1 { public int X; }
+            #endif
+            """);
+
+    [Fact]
+    public Task Ignores_partial_property_with_both_parts_in_one_declaration() =>
+        VerifyAsync("""
+            public partial class C { public partial int P { get; set; } public partial int P { get => 1; set { } } }
+            """);
 }

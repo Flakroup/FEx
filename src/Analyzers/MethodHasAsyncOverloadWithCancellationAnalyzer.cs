@@ -59,6 +59,9 @@ public sealed class MethodHasAsyncOverloadWithCancellationAnalyzer : DiagnosticA
                     return function.Symbol.IsAsync;
                 case ILocalFunctionOperation local:
                     return local.Symbol.IsAsync;
+                // An await cannot stand in a lock.
+                case ILockOperation:
+                    return false;
             }
         }
 

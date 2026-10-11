@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -17,6 +19,11 @@ internal static class MemberHiding
         var owner = container;
         while (owner is not INamedTypeSymbol)
         {
+            // The statements of a top-level program are one static method, whose names ReSharper leaves alone; a lambda in
+            // an attribute argument has no enclosing type at all.
+            if (owner is null or IMethodSymbol { Name: WellKnownMemberNames.TopLevelStatementsEntryPointMethodName })
+                return false;
+
             staticContext |= owner.IsStatic;
             owner = owner.ContainingSymbol;
         }
@@ -36,14 +43,22 @@ internal static class MemberHiding
         return false;
     }
 
-    /// <summary>A parameter of something that has no body cannot hide anything: it names no variable a body could mistake.</summary>
+    /// <summary>
+    /// A parameter of something that has no body cannot hide anything: it names no variable a body could mistake.
+    /// Nor can one of a partial method's implementation whose declaring part sits in the same type declaration.
+    /// </summary>
     public static bool IsBodiless(ParameterSyntax parameter) =>
         parameter.Parent?.Parent switch
         {
             MethodDeclarationSyntax method => method.Body is null && method.ExpressionBody is null,
             OperatorDeclarationSyntax @operator => @operator.Body is null && @operator.ExpressionBody is null,
             ConversionOperatorDeclarationSyntax conversion => conversion.Body is null && conversion.ExpressionBody is null,
-            ConstructorDeclarationSyntax or TypeDeclarationSyntax => true,
+            ConstructorDeclarationSyntax or TypeDeclarationSyntax or DelegateDeclarationSyntax => true,
             _ => false,
         };
+
+    /// <summary>Whether <paramref name="parameter"/> belongs to a partial method implementation whose definition is in the same type declaration.</summary>
+    public static bool IsPartOfOneDeclaration(IParameterSymbol parameter, CancellationToken cancellationToken) =>
+        parameter.ContainingSymbol is IMethodSymbol { PartialDefinitionPart: { } definition } implementation
+        && implementation.DeclaringSyntaxReferences.Any(reference => definition.DeclaringSyntaxReferences.Any(other => other.GetSyntax(cancellationToken).Parent == reference.GetSyntax(cancellationToken).Parent));
 }

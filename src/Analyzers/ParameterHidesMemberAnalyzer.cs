@@ -36,7 +36,10 @@ public sealed class ParameterHidesMemberAnalyzer : DiagnosticAnalyzer
         if (MemberHiding.IsBodiless(syntax))
             return;
 
-        var parameter = context.SemanticModel.GetDeclaredSymbol(syntax, context.CancellationToken)!;
+        // '__arglist' is a parameter without a symbol.
+        if (context.SemanticModel.GetDeclaredSymbol(syntax, context.CancellationToken) is not { } parameter || MemberHiding.IsPartOfOneDeclaration(parameter, context.CancellationToken))
+            return;
+
         if (MemberHiding.Hides(context.Compilation, parameter.ContainingSymbol, parameter.Name))
             context.ReportDiagnostic(Diagnostic.Create(Rule, syntax.Identifier.GetLocation(), parameter.Name));
     }

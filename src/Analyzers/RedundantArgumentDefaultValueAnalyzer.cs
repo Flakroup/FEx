@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -142,7 +141,7 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
         var defaultValue = parameter.ExplicitDefaultValue;
 
         if (constant.HasValue)
-            return ConstantsEqual(constant.Value, defaultValue);
+            return AnalyzerHelpers.ValuesEqual(constant.Value, defaultValue);
 
         // A struct's default has no constant form: 'default', 'default(S)' and 'new S()' all spell it.
         return defaultValue is null
@@ -160,21 +159,6 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
             && model.GetTypeInfo(creation, cancellationToken).Type is not ITypeParameterSymbol,
         _ => false,
     };
-
-    // Roslyn hands constants over as boxed primitives; an int literal for a double or long parameter is the same default.
-    // Exactly the same value, though: '-0.0' is not '0.0' (1 / x tells them apart) and '1.0m' prints differently from '1m'.
-    private static bool ConstantsEqual(object? left, object? right)
-    {
-        if (left is null || right is null)
-            return left is null && right is null;
-
-        if (left is string || right is string || left is char || right is char)
-            return left.Equals(right);
-
-        return left is float or double || right is float or double
-            ? BitConverter.DoubleToInt64Bits(Convert.ToDouble(left)) == BitConverter.DoubleToInt64Bits(Convert.ToDouble(right))
-            : decimal.GetBits(Convert.ToDecimal(left)).SequenceEqual(decimal.GetBits(Convert.ToDecimal(right)));
-    }
 
     private static SyntaxNode Without(SyntaxNode node, List<Argument> redundant)
     {

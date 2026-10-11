@@ -1458,7 +1458,7 @@ public class ConvertToConstantLocalAnalyzerTests
             """);
 
     [Fact]
-    public Task Reports_K32_private_field_in_struct() =>
+    public Task Ignores_K32_private_field_in_struct() =>
         VerifyAsync("""
             #nullable enable
             using System;
@@ -1468,7 +1468,7 @@ public class ConvertToConstantLocalAnalyzerTests
             using System.Threading;
             using System.Threading.Tasks;
 
-            public struct K32 { private int {|FEX0051:_f|} = 5; public K32() { } public int G() => _f; }
+            public struct K32 { private int _f = 5; public K32() { } public int G() => _f; }
             """);
 
     [Fact]
@@ -2045,5 +2045,43 @@ public class ConvertToConstantLocalAnalyzerTests
     public Task Ignores_a_nullable_field_set_to_default() =>
         VerifyAsync("""
             public class C { private int? n = default; public int M() => n ?? 0; }
+            """);
+
+    [Fact]
+    public Task Ignores_local_whose_constant_changes_overload_resolution() =>
+        VerifyAsync("""
+            using System;
+            public class K
+            {
+                private static void F(object o) { }
+                private static void F(DayOfWeek d) { }
+                private static void G(long l) { }
+                private static void G(byte b) { }
+                public void M() { int zero = 0; F(zero); int one = 1; G(one); }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_field_whose_constant_changes_overload_resolution() =>
+        VerifyAsync("""
+            using System;
+            public class K
+            {
+                private int _zero = 0;
+                private static void F(object o) { }
+                private static void F(DayOfWeek d) { }
+                public void M() => F(_zero);
+            }
+            """);
+
+    [Fact]
+    public Task Reports_local_whose_constant_keeps_the_overload() =>
+        VerifyAsync("""
+            public class K
+            {
+                private static void F(object o) { }
+                private static void F(long d) { }
+                public void M() { int {|FEX0051:size|} = 5; F(size); }
+            }
             """);
 }

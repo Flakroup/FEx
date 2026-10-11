@@ -50,8 +50,7 @@ public sealed class LocalVariableHidesMemberAnalyzer : DiagnosticAnalyzer
         if (identifier.IsKind(SyntaxKind.None))
             return;
 
-        var local = context.SemanticModel.GetDeclaredSymbol(context.Node, context.CancellationToken)!;
-        if (MemberHiding.Hides(context.Compilation, local.ContainingSymbol, local.Name))
+        if (context.SemanticModel.GetDeclaredSymbol(context.Node, context.CancellationToken) is { } local && MemberHiding.Hides(context.Compilation, local.ContainingSymbol, local.Name))
             context.ReportDiagnostic(Diagnostic.Create(Rule, identifier.GetLocation(), local.Name));
     }
 }

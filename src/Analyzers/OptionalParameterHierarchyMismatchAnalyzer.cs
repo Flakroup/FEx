@@ -32,20 +32,35 @@ public sealed class OptionalParameterHierarchyMismatchAnalyzer : DiagnosticAnaly
     {
         switch (context.Symbol)
         {
+            // The accessors of an indexer carry its parameters too, and the indexer itself is reported once.
+            case IMethodSymbol { MethodKind: MethodKind.PropertyGet or MethodKind.PropertySet }:
+                break;
             case IMethodSymbol { OverriddenMethod: { } baseMethod } method:
-                Check(context, method, method.Parameters, baseMethod.Parameters);
+                Check(context, method, method.Parameters, baseMethod);
                 break;
             case IPropertySymbol { OverriddenProperty: { } baseProperty } property:
-                Check(context, property, property.Parameters, baseProperty.Parameters);
+                Check(context, property, property.Parameters, baseProperty);
                 break;
         }
     }
 
-    private static void Check(SymbolAnalysisContext context, ISymbol member, ImmutableArray<IParameterSymbol> parameters, ImmutableArray<IParameterSymbol> baseParameters)
+    private static void Check(SymbolAnalysisContext context, ISymbol member, ImmutableArray<IParameterSymbol> parameters, ISymbol baseMember)
     {
+        var baseParameters = baseMember switch
+        {
+            IMethodSymbol method => method.Parameters,
+            _ => ((IPropertySymbol)baseMember).Parameters,
+        };
+        var declared = baseMember.OriginalDefinition switch
+        {
+            IMethodSymbol method => method.Parameters,
+            _ => ((IPropertySymbol)baseMember.OriginalDefinition).Parameters,
+        };
+
         for (var i = 0; i < parameters.Length; i++)
         {
-            if (!AnalyzerHelpers.DefaultsEqual(parameters[i], baseParameters[i]))
+            // 'T t = default' in 'B<T>' is 'int t = 0' in 'B<int>': the same default, spelt as null where the base is generic.
+            if (declared[i].Type is not ITypeParameterSymbol && !AnalyzerHelpers.DefaultsEqual(parameters[i], baseParameters[i]))
                 context.ReportDiagnostic(Diagnostic.Create(Rule, parameters[i].Locations[0], parameters[i].Name, member.ToDisplayString()));
         }
     }

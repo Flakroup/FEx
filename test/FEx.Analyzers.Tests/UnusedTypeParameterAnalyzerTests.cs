@@ -786,4 +786,22 @@ public class UnusedTypeParameterAnalyzerTests
             // name="T"
             public class DT5<{|FEX0048:T|}> { }
             """);
+
+    [Fact]
+    public Task Ignores_generic_type_with_static_field() =>
+        VerifyAsync("""
+            public sealed class Id<T> { private static int s; public static int Next() => ++s; }
+            """);
+
+    [Fact]
+    public Task Ignores_generic_type_with_static_auto_property() =>
+        VerifyAsync("""
+            public sealed class Id<T> { public static int Count { get; set; } }
+            """);
+
+    [Fact]
+    public Task Reports_generic_type_with_instance_field_only() =>
+        VerifyAsync("""
+            public class Id<{|FEX0048:T|}> { private int x; public int X => x; }
+            """);
 }

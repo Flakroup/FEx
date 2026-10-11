@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -30,7 +31,7 @@ public sealed class ConvertToConstantLocalAnalyzer : DiagnosticAnalyzer
 
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
         context.RegisterOperationBlockAction(AnalyzeLocals);
         context.RegisterCompilationStartAction(Start);
@@ -54,7 +55,10 @@ public sealed class ConvertToConstantLocalAnalyzer : DiagnosticAnalyzer
                 continue;
 
             var uses = references[local].ToList();
-            if (uses.Count > 0 && !uses.Any(AnalyzerHelpers.IsWrite))
+            if (uses.Count > 0
+                && !uses.Any(AnalyzerHelpers.IsWrite)
+                && !uses.Any(use => ChangesBinding(use, initializer.Value, local.Type, context.CancellationToken))
+                && !AnalyzerHelpers.IsGenerated(syntax.SyntaxTree, context.OwningSymbol, context.Options, context.CancellationToken))
                 context.ReportDiagnostic(Diagnostic.Create(Rule, syntax.Identifier.GetLocation(), local.Name));
         }
     }
@@ -75,6 +79,7 @@ public sealed class ConvertToConstantLocalAnalyzer : DiagnosticAnalyzer
                     {
                         state.Declarator = (VariableDeclaratorSyntax)initializer.Syntax.Parent!;
                         state.IsConstant = IsConstantInitializer(initializer.Value, ((EqualsValueClauseSyntax)initializer.Syntax).Value);
+                        state.IsGenerated = AnalyzerHelpers.IsGenerated(initializer.Syntax.SyntaxTree, field, operation.Options, operation.CancellationToken);
                     }
                 }
             },
@@ -83,11 +88,15 @@ public sealed class ConvertToConstantLocalAnalyzer : DiagnosticAnalyzer
             operation =>
             {
                 var reference = (IFieldReferenceOperation)operation.Operation;
-                var state = fields.GetOrAdd(reference.Field.OriginalDefinition, _ => new FieldState());
+                var field = reference.Field.OriginalDefinition;
+                var state = fields.GetOrAdd(field, _ => new FieldState());
+                var changesBinding = IsCandidate(field)
+                                     && field.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(operation.CancellationToken) is VariableDeclaratorSyntax { Initializer: { } initializer }
+                                     && ChangesBinding(reference, initializer.Value, field.Type, operation.CancellationToken);
                 lock (state)
                 {
                     state.IsReferenced = true;
-                    state.IsBlocked |= AnalyzerHelpers.IsWrite(reference);
+                    state.IsBlocked |= changesBinding || AnalyzerHelpers.IsWrite(reference);
                 }
             },
             OperationKind.FieldReference);
@@ -106,13 +115,30 @@ public sealed class ConvertToConstantLocalAnalyzer : DiagnosticAnalyzer
             OperationKind.NameOf);
         context.RegisterCompilationEndAction(end =>
         {
-            foreach (var state in fields.Values.Where(state => state is { IsConstant: true, IsReferenced: true, IsBlocked: false }))
+            foreach (var state in fields.Values.Where(state => state is { IsConstant: true, IsReferenced: true, IsBlocked: false, IsGenerated: false }))
                 end.ReportDiagnostic(Diagnostic.Create(Rule, state.Declarator!.Identifier.GetLocation(), state.Declarator.Identifier.ValueText));
         });
     }
 
+    // An instance field of a struct is also the field of 'default(S)', which no initializer reaches.
     private static bool IsCandidate(IFieldSymbol field) =>
-        field is { IsConst: false } && AnalyzerHelpers.IsConstantType(field.Type) && AnalyzerHelpers.IsEffectivelyPrivate(field);
+        field is { IsConst: false } && !(field.ContainingType.IsValueType && !field.IsStatic) && AnalyzerHelpers.IsConstantType(field.Type) && AnalyzerHelpers.IsEffectivelyPrivate(field);
+
+    // A constant is a constant expression wherever it is read, and the compiler treats those more kindly than a variable:
+    // 'int zero = 0; F(zero)' picks F(object), 'const int zero = 0' picks F(DayOfWeek). Ask what the argument binds to with the value written in.
+    private static bool ChangesBinding(IOperation reference, ExpressionSyntax initializer, ITypeSymbol type, CancellationToken cancellationToken)
+    {
+        if (reference.Syntax.Parent is not ArgumentSyntax argument || Speculation.OwnerOf(argument) is not { } owner)
+            return false;
+
+        var model = reference.SemanticModel!;
+        var typeSyntax = SyntaxFactory.ParseTypeName(type.ToMinimalDisplayString(model, owner.SpanStart));
+        ExpressionSyntax constant = initializer.IsKind(SyntaxKind.DefaultLiteralExpression)
+            ? SyntaxFactory.DefaultExpression(typeSyntax)
+            : SyntaxFactory.CastExpression(typeSyntax, SyntaxFactory.ParenthesizedExpression(initializer.WithoutTrivia()));
+
+        return !Speculation.BindsToSame(model, owner, owner.ReplaceNode(argument.Expression, constant), cancellationToken);
+    }
 
     // `null` is not worth a constant, `default` is.
     private static bool IsConstantInitializer(IOperation value, ExpressionSyntax expression) =>
@@ -127,5 +153,7 @@ public sealed class ConvertToConstantLocalAnalyzer : DiagnosticAnalyzer
         public bool IsReferenced { get; set; }
 
         public bool IsBlocked { get; set; }
+
+        public bool IsGenerated { get; set; }
     }
 }

@@ -268,25 +268,36 @@ public sealed class HttpOutbox
     /// request body and the last error in the store until it is sent or deleted, and the next flush replays it with the
     /// credentials the client carries then, so on sign-out (or when the account switches) a host should call this and
     /// <see cref="ClearDeadAsync" />: either one alone leaves the previous user's writes on the device. A clear started during
-    /// a flush waits for that flush to finish, so an entry the flush keeps is deleted too.
+    /// a flush waits for that flush to finish, so an entry the flush keeps is deleted too. <paramref name="cancellationToken" />
+    /// abandons that wait: an <see cref="OperationCanceledException" /> is thrown and nothing is deleted. Once the clear holds
+    /// the gate it deletes every entry, whatever the token does.
     /// </summary>
-    public Task<int> ClearAsync() => UnderGateAsync(() => RemoveAllAsync(KeyPrefix));
+    public Task<int> ClearAsync(CancellationToken cancellationToken = default) =>
+        UnderGateAsync(() => RemoveAllAsync(KeyPrefix), cancellationToken);
 
     /// <summary>
     /// Delete every dead entry and return how many were deleted. Live (queued) entries are untouched. A dead entry keeps the
     /// request body and the truncated response body in the store until it is deleted, so on sign-out (or when the account
     /// switches) a host should call this and <see cref="ClearAsync" />: either one alone leaves the previous user's writes on
     /// the device. A clear started during a flush waits for that flush to finish, so an entry the flush dead-letters is deleted
-    /// too.
+    /// too. <paramref name="cancellationToken" /> abandons that wait: an <see cref="OperationCanceledException" /> is thrown and
+    /// nothing is deleted. Once the clear holds the gate it deletes every entry, whatever the token does.
     /// </summary>
-    public Task<int> ClearDeadAsync() => UnderGateAsync(() => RemoveAllAsync(DeadKeyPrefix));
+    public Task<int> ClearDeadAsync(CancellationToken cancellationToken = default) =>
+        UnderGateAsync(() => RemoveAllAsync(DeadKeyPrefix), cancellationToken);
 
     /// <summary>
     /// Replay the queue in order. A flush started while another flush or a clear runs on this instance waits for it to finish.
+    /// <paramref name="cancellationToken" /> is observed while waiting, before each entry and during each send; cancelling it
+    /// throws an <see cref="OperationCanceledException" /> and ends the flush. Entries already delivered or dead-lettered stay
+    /// so; the entry being sent stays queued as it was (not dead-lettered, its counters untouched) and is replayed by the next
+    /// flush, so its idempotency key keeps the write from landing twice. A timeout that is not this token still counts as a
+    /// transport failure.
     /// </summary>
-    public Task<OutboxFlushResult> FlushAsync(HttpClient http) => UnderGateAsync(() => FlushQueueAsync(http));
+    public Task<OutboxFlushResult> FlushAsync(HttpClient http, CancellationToken cancellationToken = default) =>
+        UnderGateAsync(() => FlushQueueAsync(http, cancellationToken), cancellationToken);
 
-    private async Task<OutboxFlushResult> FlushQueueAsync(HttpClient http)
+    private async Task<OutboxFlushResult> FlushQueueAsync(HttpClient http, CancellationToken cancellationToken)
     {
         var sent = 0;
         var deadLettered = 0;
@@ -294,6 +305,8 @@ public sealed class HttpOutbox
 
         foreach (var entry in await ListAsync())
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             using HttpRequestMessage request = new(HttpMethod.Parse(entry.Method), entry.Url);
 
             if (entry.JsonBody is not null)
@@ -316,7 +329,7 @@ public sealed class HttpOutbox
 
             try
             {
-                using var response = await http.SendAsync(request);
+                using var response = await http.SendAsync(request, cancellationToken);
 
                 var status = (int)response.StatusCode;
 
@@ -387,8 +400,9 @@ public sealed class HttpOutbox
 
                 break;
             }
-            catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
+            catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException && !cancellationToken.IsCancellationRequested)
             {
+                // A cancellation by the caller's token is not an outage: it escapes this catch with the entry untouched.
                 // Still offline: keep the entry (with the error on record) and stop - the rest of
                 // the queue would fail the same way.
                 await SaveAsync(entry with
@@ -453,9 +467,10 @@ public sealed class HttpOutbox
         }
     }
 
-    private async Task<T> UnderGateAsync<T>(Func<Task<T>> action)
+    private async Task<T> UnderGateAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken)
     {
-        await _gate.WaitAsync();
+        // Outside the try: a cancelled wait never took the gate, so it must not release it.
+        await _gate.WaitAsync(cancellationToken);
 
         try
         {

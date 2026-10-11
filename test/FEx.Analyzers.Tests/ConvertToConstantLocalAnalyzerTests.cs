@@ -2035,6 +2035,46 @@ public class ConvertToConstantLocalAnalyzerTests
             public class C { private int P { get; } = 5; public int M() => P; }
             """);
 
+    // A keyword-less 'in' argument passes the variable's own address, the same as an explicit 'in': a callee can cast it away.
+    [Fact]
+    public Task Ignores_a_local_passed_to_an_in_parameter_without_the_keyword() =>
+        VerifyAsync("""
+            public class C { private static int Read(in int a) => a; public int M() { int x = 5; return Read(x); } }
+            """);
+
+    [Fact]
+    public Task Ignores_a_field_passed_to_an_in_parameter_without_the_keyword() =>
+        VerifyAsync("""
+            public class C { private int _f = 5; private static int Read(in int a) => a; public int M() => Read(_f); }
+            """);
+
+    // The receiver of a 'this ref' extension is passed by reference with no keyword in the syntax.
+    [Fact]
+    public Task Ignores_a_local_that_is_the_receiver_of_a_this_ref_extension() =>
+        VerifyAsync("""
+            public static class E { public static void Bump(this ref int x) => x++; }
+            public class C { public int M() { int x = 5; x.Bump(); return x; } }
+            """);
+
+    [Fact]
+    public Task Ignores_a_field_that_is_the_receiver_of_a_this_ref_extension() =>
+        VerifyAsync("""
+            public static class E { public static void Bump(this ref int x) => x++; }
+            public class C { private int _f = 5; public void S() { _f.Bump(); } public int G() => _f; }
+            """);
+
+    [Fact]
+    public Task Ignores_a_local_passed_by_ref_in_parentheses() =>
+        VerifyAsync("""
+            public class C { private static void Inc(ref int a) => a++; public int M() { int x = 5; Inc(ref (x)); return x; } }
+            """);
+
+    [Fact]
+    public Task Ignores_a_field_passed_by_ref_in_parentheses() =>
+        VerifyAsync("""
+            public class C { private int _f = 5; private static void Inc(ref int a) => a++; public void S() { Inc(ref (_f)); } public int G() => _f; }
+            """);
+
     [Fact]
     public Task Ignores_a_ref_local_over_a_constant() =>
         VerifyAsync("""

@@ -238,6 +238,25 @@ public sealed class FtpDownloaderTests : IDisposable
         transport.Created.ShouldAllBe(r => r.Disposed);
     }
 
+    [Theory]
+    [InlineData(1_300_000, 1_200_000)] // the last step overshoots the end, the tail from 1_200_000 is served
+    [InlineData(1_300_000, 1_048_577)] // the first readable byte is the first one after the last probe that read nothing
+    [InlineData(1_048_576, 1_048_575)] // the file ends exactly on a chunk boundary
+    public async Task Restart_Recovery_WhenTheWalkBackOvershootsTheEnd_BisectsTheTailForTheFirstReadableByte(long size, long readableFrom)
+    {
+        _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
+        var transport = new FakeTransport { Size = size, AbortExceptions = true, ReadableFrom = readableFrom };
+        var path = NewPath();
+        transport.Responses.Enqueue(new FakeResponse(new ScriptedStream(null, new AbortException())));
+
+        await FtpDownloader.RestartDownloadFromServerAsync(transport, new FtpDownloadState { RetryCount = FtpDownloadState.MaxReadRetries }, path, Server, null, 0, "", "", TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        new FileInfo(path).Length.ShouldBe(readableFrom);
+        transport.OpenCalls.ShouldBeLessThanOrEqualTo(1 + 3 + 19);
+        transport.Created.ShouldAllBe(r => r.Disposed);
+    }
+
     [Fact]
     public async Task Restart_Recovery_WhenTheServerServesAtTheStart_ProbesOnceAndFillsNothing()
     {
@@ -349,7 +368,7 @@ public sealed class FtpDownloaderTests : IDisposable
         public Action? OnOpen { get; set; }
         public int OpenCalls { get; private set; }
 
-        /// <summary>The first offset the server serves a byte at; a probe below it reads nothing. Never, unless set.</summary>
+        /// <summary>The first offset the server serves a byte at; a probe below it, or at or past <see cref="Size" />, reads nothing. Never, unless set.</summary>
         public long ReadableFrom { get; set; } = long.MaxValue;
 
         public List<long> Offsets { get; } = [];
@@ -367,10 +386,10 @@ public sealed class FtpDownloaderTests : IDisposable
             if (OpenThrows is not null)
                 throw OpenThrows;
 
-            // Probes past the scripted responses get an empty (EOF) stream.
+            // Probes past the scripted responses get an empty (EOF) stream, and so does any offset at or past the end of the file.
             var response = Responses.Count > 0
                 ? Responses.Dequeue()
-                : new(new ScriptedStream(offset >= ReadableFrom ? [1] : []));
+                : new(new ScriptedStream(offset >= ReadableFrom && offset < Size ? [1] : []));
             Created.Add(response);
 
             return Task.FromResult<IFtpResponse>(response);

@@ -96,7 +96,10 @@ internal static class AnalyzerHelpers
         return false;
     }
 
-    /// <summary>Whether a reference to a variable stores to it, or hands out a way to: assignment, increment, address-of, ref argument, ref alias, deconstruction.</summary>
+    /// <summary>
+    /// Whether the reference is assigned (a deconstruction included) or incremented or decremented. Handing out the
+    /// variable's address is a different question, <see cref="TakesAddress"/>.
+    /// </summary>
     public static bool IsWrite(IOperation reference)
     {
         var child = reference;
@@ -110,11 +113,20 @@ internal static class AnalyzerHelpers
         return parent switch
         {
             IAssignmentOperation assignment => assignment.Target == child,
-            IIncrementOrDecrementOperation or IAddressOfOperation => true,
-            IArgumentOperation argument => argument.Parameter is not { RefKind: RefKind.None },
-            _ => reference.Syntax.Parent is RefExpressionSyntax,
+            IIncrementOrDecrementOperation => true,
+            _ => false,
         };
     }
+
+    /// <summary>
+    /// Whether a reference hands out the variable's address, so something can write through it later: <c>&amp;x</c>, <c>ref x</c> as a
+    /// local's initializer or a return, or an argument passed by <c>ref</c>, <c>in</c> or <c>out</c>. The bound parameter decides the
+    /// argument, which covers a <c>this ref</c> extension receiver, a parenthesized <c>ref (x)</c> and an <c>in</c> argument written
+    /// without the keyword (a callee can cast the <c>in</c> away); the keyword decides a dynamic call, which has no bound parameter.
+    /// </summary>
+    public static bool TakesAddress(IOperation reference) =>
+        reference.Parent is IAddressOfOperation or IArgumentOperation { Parameter.RefKind: not RefKind.None }
+        || reference.Syntax.Parent is RefExpressionSyntax or ArgumentSyntax { RefKindKeyword.RawKind: not 0 };
 
     /// <summary>Whether <paramref name="symbol"/> implements a member of one of its type's interfaces, implicitly or explicitly.</summary>
     public static bool ImplementsInterfaceMember(ISymbol symbol)

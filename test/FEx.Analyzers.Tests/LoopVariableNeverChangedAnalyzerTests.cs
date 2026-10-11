@@ -265,6 +265,64 @@ public class LoopVariableNeverChangedAnalyzerTests
             }
             """);
 
+    // A keyword-less 'in' argument passes the variable's own address, the same as an explicit 'in': a callee can cast it away.
+    [Fact]
+    public Task Ignores_a_variable_passed_to_an_in_parameter_without_the_keyword_inside_the_loop() =>
+        VerifyAsync("""
+            class C
+            {
+                static void Take(in int x) { }
+                void M()
+                {
+                    int a = 0;
+                    while (a < 3) { Take(a); }
+                }
+            }
+            """);
+
+    // The receiver of a 'this ref' extension is passed by reference with no keyword in the syntax.
+    [Fact]
+    public Task Ignores_a_variable_that_is_the_receiver_of_a_this_ref_extension() =>
+        VerifyAsync("""
+            static class E { public static void Bump(this ref int x) => x++; }
+            class C
+            {
+                void M()
+                {
+                    int a = 0;
+                    while (a < 3) { a.Bump(); }
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_variable_passed_by_ref_in_parentheses() =>
+        VerifyAsync("""
+            class C
+            {
+                static void Inc(ref int x) => x++;
+                void M()
+                {
+                    int a = 0;
+                    while (a < 3) { Inc(ref (a)); }
+                }
+            }
+            """);
+
+    // FEX0002 never examines fields, so the parameter is the other variable kind the rule covers.
+    [Fact]
+    public Task Ignores_a_parameter_that_is_the_receiver_of_a_this_ref_extension() =>
+        VerifyAsync("""
+            static class E { public static void Bump(this ref int x) => x++; }
+            class C
+            {
+                void M(int p)
+                {
+                    while (p < 3) { p.Bump(); }
+                }
+            }
+            """);
+
     [Fact]
     public Task Ignores_a_variable_passed_by_ref_to_a_dynamic_call() =>
         VerifyAsync("""

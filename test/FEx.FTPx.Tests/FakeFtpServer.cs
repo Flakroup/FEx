@@ -51,6 +51,9 @@ internal sealed class FakeFtpServer : IDisposable
         set => Volatile.Write(ref _abortNextRetrs, value);
     }
 
+    /// <summary>The first offset the server serves bytes at; a download restarted below it sends nothing and still answers 226, like a server whose damaged region reads as empty.</summary>
+    public long ReadableFrom { get; set; }
+
     /// <summary>The final reply of a download that <see cref="AbortRetrAfterBytes" /> cuts short; 426 is what a server answers to a transfer the client abandoned.</summary>
     public string AbortReply { get; set; } = "451 local error in processing";
 
@@ -185,7 +188,7 @@ internal sealed class FakeFtpServer : IDisposable
                     case "RETR":
                         if (Files.TryGetValue(Resolve(arg), out var content))
                         {
-                            var rest = content[(int)restartAt..];
+                            var rest = restartAt < ReadableFrom ? [] : content[(int)restartAt..];
                             var abortAfter = Interlocked.Decrement(ref _abortNextRetrs) >= 0 ? 0 : AbortRetrAfterBytes;
 
                             var aborted = abortAfter is not null;

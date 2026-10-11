@@ -56,7 +56,7 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         handler.IdempotencyKeys.ShouldBe(new() { key.ToString() });
     }
@@ -79,7 +79,7 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new(2, 0, 0, null));
 
@@ -110,7 +110,7 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.Sent.ShouldBe(0);
         result.DeadLettered.ShouldBe(1);
@@ -142,7 +142,7 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.Sent.ShouldBe(1);
         result.DeadLettered.ShouldBe(1);
@@ -170,7 +170,7 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.Created);
         using var http = Client(handler);
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new(2, 0, 0, null));
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
@@ -201,7 +201,7 @@ public sealed class HttpOutboxTests
 
         using var http = Client(handler);
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.Sent.ShouldBe(0);
         result.DeadLettered.ShouldBe(1);
@@ -222,7 +222,7 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(status, "Idempotency-Original-Status", "201");
         using var http = Client(handler);
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.Sent.ShouldBe(0);
         result.DeadLettered.ShouldBe(1);
@@ -242,10 +242,10 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.Conflict, "Idempotency-Original-Status", "201");
         using var http = Client(handler);
 
-        await Should.ThrowAsync<IOException>(() => outbox.FlushAsync(http));
+        await Should.ThrowAsync<IOException>(() => outbox.FlushAsync(http, TestContext.Current.CancellationToken));
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new(1, 0, 0, null));
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
@@ -269,7 +269,7 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.Sent.ShouldBe(0);
         result.DeadLettered.ShouldBe(0);
@@ -308,7 +308,7 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.Sent.ShouldBe(0);
         result.DeadLettered.ShouldBe(0);
@@ -340,7 +340,7 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.Sent.ShouldBe(0);
         result.Remaining.ShouldBe(2);
@@ -363,7 +363,7 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.Remaining.ShouldBe(1);
         result.LastError.ShouldBe("HTTP 500");
@@ -384,8 +384,8 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        await outbox.FlushAsync(http);
-        var second = await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
+        var second = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         second.Sent.ShouldBe(1);
         second.Remaining.ShouldBe(0);
@@ -409,7 +409,7 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new(0, 0, 0, null));
         handler.Requests.ShouldBeEmpty();
@@ -435,7 +435,7 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new(2, 0, 0, null));
         handler.RequestHeaders.Select(h => h.GetValueOrDefault("X-Client")).ShouldBe(new[] { MarkerValue, MarkerValue });
@@ -470,7 +470,7 @@ public sealed class HttpOutboxTests
             BaseAddress = new("http://localhost/")
         };
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new(1, 0, 0, null));
         handler.RequestHeaders.Single()["X-Client"].ShouldBe(MarkerValue);
@@ -534,7 +534,7 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.Conflict, new string('x', 500));
         using var http = Client(handler);
 
-        await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         var dead = (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
         dead.Id.ShouldBe(entry.Id);
@@ -548,7 +548,7 @@ public sealed class HttpOutboxTests
         dead.ServerFailures.ShouldBe(0);
 
         // A second flush has nothing to send: the scripted handler would throw if the dead entry were replayed.
-        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 0, null));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(0, 0, 0, null));
         handler.Requests.Count.ShouldBe(1);
     }
 
@@ -566,8 +566,8 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.NotImplemented);
         using var http = Client(handler);
 
-        var first = await outbox.FlushAsync(http);
-        var second = await outbox.FlushAsync(http);
+        var first = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
+        var second = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         first.Remaining.ShouldBe(2);
         second.Remaining.ShouldBe(2);
@@ -599,8 +599,8 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.Created);
         using var http = Client(handler);
 
-        await outbox.FlushAsync(http);
-        var result = await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.Sent.ShouldBe(1);
         result.DeadLettered.ShouldBe(1);
@@ -640,7 +640,7 @@ public sealed class HttpOutboxTests
         using var http = Client(handler);
 
         for (var i = 0; i < 5; i++)
-            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+            (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(0);
 
         var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
         kept.Id.ShouldBe(entry.Id);
@@ -650,7 +650,7 @@ public sealed class HttpOutboxTests
         kept.LastError.ShouldBe($"HTTP {(int)status}");
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
 
-        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(1, 0, 0, null));
     }
 
     [Theory]
@@ -674,9 +674,9 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.Created);
         using var http = Client(handler);
 
-        await outbox.FlushAsync(http);
-        await outbox.FlushAsync(http);
-        var result = await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
+        await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.Sent.ShouldBe(1);
         result.DeadLettered.ShouldBe(1);
@@ -712,8 +712,8 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.ServiceUnavailable);
         using var http = Client(handler);
 
-        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 2, "HTTP 503"));
-        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 2, "HTTP 503"));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(0, 0, 2, "HTTP 503"));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(0, 0, 2, "HTTP 503"));
 
         handler.Requests.Count.ShouldBe(2); // each flush stopped at the head; the second entry was never attempted
 
@@ -738,15 +738,15 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.InternalServerError);
         using var http = Client(handler);
 
-        await outbox.FlushAsync(http);
-        await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
+        await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
         kept.ServerFailures.ShouldBe(2);
         kept.UnavailableAnswers.ShouldBe(0);
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
 
-        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(1);
     }
 
     [Fact]
@@ -763,7 +763,7 @@ public sealed class HttpOutboxTests
         using var http = Client(handler);
 
         for (var i = 0; i < 4; i++)
-            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+            (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(0);
 
         var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
         kept.Attempts.ShouldBe(4);
@@ -785,14 +785,14 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.GatewayTimeout);
         using var http = Client(handler);
 
-        await before.FlushAsync(http);
-        await before.FlushAsync(http);
+        await before.FlushAsync(http, TestContext.Current.CancellationToken);
+        await before.FlushAsync(http, TestContext.Current.CancellationToken);
 
         // A new outbox over the same store: the count comes from the stored entry, not from the instance.
         HttpOutbox after = new(store, time, maxUnavailableAnswers: 3);
 
         (await after.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(2);
-        (await after.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await after.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(1);
         (await after.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(504);
     }
 
@@ -812,11 +812,11 @@ public sealed class HttpOutboxTests
         using var http = Client(handler);
 
         for (var i = 0; i < 9; i++)
-            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+            (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(0);
 
         (await outbox.ListAsync()).ShouldHaveSingleItem().ServerFailures.ShouldBe(9);
 
-        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(1);
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem().ServerFailures.ShouldBe(10);
         HttpOutbox.DefaultMaxServerFailures.ShouldBe(10);
     }
@@ -837,11 +837,11 @@ public sealed class HttpOutboxTests
         using var http = Client(handler);
 
         for (var i = 0; i < 99; i++)
-            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+            (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(0);
 
         (await outbox.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(99);
 
-        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(1);
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(503);
         HttpOutbox.DefaultMaxUnavailableAnswers.ShouldBe(100);
     }
@@ -878,7 +878,7 @@ public sealed class HttpOutboxTests
 
         using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new(0, 0, 2, "HTTP 200 after a redirect"));
         server.Requests.ShouldBe(["POST /api/payments", finalRequest]); // the second entry was never attempted
@@ -902,9 +902,9 @@ public sealed class HttpOutboxTests
 
         using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
 
-        (await outbox.FlushAsync(http)).Remaining.ShouldBe(2);
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).Remaining.ShouldBe(2);
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new(1, 1, 0, "HTTP 200: login page"));
 
@@ -932,7 +932,7 @@ public sealed class HttpOutboxTests
 
         using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
 
-        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 1, $"HTTP {(int)landing} after a redirect"));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(0, 0, 1, $"HTTP {(int)landing} after a redirect"));
         (await outbox.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(1);
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
     }
@@ -947,10 +947,10 @@ public sealed class HttpOutboxTests
 
         using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
 
-        (await outbox.FlushAsync(http)).Remaining.ShouldBe(1);
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).Remaining.ShouldBe(1);
         (await outbox.ListAsync()).ShouldHaveSingleItem().UnavailableAnswers.ShouldBe(1);
 
-        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(1);
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(307);
     }
 
@@ -965,8 +965,8 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.Found);
         using var http = Client(handler);
 
-        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 1, "HTTP 302 after a redirect"));
-        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(0, 0, 1, "HTTP 302 after a redirect"));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(1);
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem().StatusCode.ShouldBe(302);
     }
 
@@ -980,7 +980,7 @@ public sealed class HttpOutboxTests
 
         using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
 
-        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(1, 0, 0, null));
         server.Requests.ShouldBe(["POST /"]);
     }
 
@@ -994,7 +994,7 @@ public sealed class HttpOutboxTests
 
         using var http = new HttpClient(new RewritingHandler(uri => new UriBuilder(uri) { Query = "api_key=k" }.Uri)) { BaseAddress = server.BaseAddress };
 
-        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(1, 0, 0, null));
         (await outbox.ListAsync()).ShouldBeEmpty();
         server.Requests.ShouldHaveSingleItem().ShouldStartWith("POST /api/ok");
     }
@@ -1009,7 +1009,7 @@ public sealed class HttpOutboxTests
 
         using var http = new HttpClient(new RewritingHandler(uri => new UriBuilder(uri) { Scheme = server.BaseAddress.Scheme, Host = server.BaseAddress.Host, Port = server.BaseAddress.Port }.Uri));
 
-        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(1, 0, 0, null));
         (await outbox.ListAsync()).ShouldBeEmpty();
         server.Requests.ShouldBe(["POST /api/ok"]);
     }
@@ -1024,7 +1024,7 @@ public sealed class HttpOutboxTests
 
         using var http = new HttpClient(new RewritingHandler(uri => new UriBuilder(uri) { Path = "/api/v2/ok" }.Uri)) { BaseAddress = server.BaseAddress };
 
-        (await outbox.FlushAsync(http)).ShouldBe(new(0, 0, 1, "HTTP 200 after a redirect"));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(0, 0, 1, "HTTP 200 after a redirect"));
     }
 
     [Fact]
@@ -1036,7 +1036,7 @@ public sealed class HttpOutboxTests
 
         using var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = server.BaseAddress }; // no proxy: a machine-wide one must not swallow loopback
 
-        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(1, 0, 0, null));
         server.Requests.ShouldBe(["POST /api/ok"]);
     }
 
@@ -1074,7 +1074,7 @@ public sealed class HttpOutboxTests
         using var http = Client(handler);
 
         for (var i = 0; i < 60; i++)
-            (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(0);
+            (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(0);
 
         var kept = (await outbox.ListAsync()).ShouldHaveSingleItem();
         kept.Id.ShouldBe(entry.Id);
@@ -1082,7 +1082,7 @@ public sealed class HttpOutboxTests
         kept.ServerFailures.ShouldBe(0);
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
 
-        (await outbox.FlushAsync(http)).ShouldBe(new(1, 0, 0, null));
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).ShouldBe(new(1, 0, 0, null));
     }
 
     [Fact]
@@ -1101,11 +1101,11 @@ public sealed class HttpOutboxTests
         using var http = Client(handler);
 
         for (var i = 0; i < 5; i++)
-            await outbox.FlushAsync(http);
+            await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         (await outbox.ListAsync()).ShouldHaveSingleItem().ServerFailures.ShouldBe(2);
 
-        (await outbox.FlushAsync(http)).DeadLettered.ShouldBe(1);
+        (await outbox.FlushAsync(http, TestContext.Current.CancellationToken)).DeadLettered.ShouldBe(1);
     }
 
     [Fact]
@@ -1122,7 +1122,7 @@ public sealed class HttpOutboxTests
         first.EnqueueResponse(HttpStatusCode.UnprocessableEntity);
         first.EnqueueResponse(HttpStatusCode.ServiceUnavailable);
         using var firstHttp = Client(first);
-        await before.FlushAsync(firstHttp);
+        await before.FlushAsync(firstHttp, TestContext.Current.CancellationToken);
 
         HttpOutbox after = new(store, time);
 
@@ -1134,7 +1134,7 @@ public sealed class HttpOutboxTests
         second.EnqueueResponse(HttpStatusCode.Created);
         using var secondHttp = Client(second);
 
-        (await after.FlushAsync(secondHttp)).ShouldBe(new(1, 0, 0, null));
+        (await after.FlushAsync(secondHttp, TestContext.Current.CancellationToken)).ShouldBe(new(1, 0, 0, null));
         second.IdempotencyKeys.ShouldBe(new() { live.Id.ToString() });
         (await after.ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(dead.Id);
     }
@@ -1152,7 +1152,7 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.BadRequest);
         handler.EnqueueResponse(HttpStatusCode.BadRequest);
         using var http = Client(handler);
-        await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         (await outbox.ListDeadAsync()).Select(d => d.Id).ShouldBe(new[] { first.Id, second.Id });
 
@@ -1176,7 +1176,7 @@ public sealed class HttpOutboxTests
         rejecting.EnqueueResponse(HttpStatusCode.BadRequest);
         rejecting.EnqueueResponse(HttpStatusCode.BadRequest);
         using var rejectingHttp = Client(rejecting);
-        await outbox.FlushAsync(rejectingHttp);
+        await outbox.FlushAsync(rejectingHttp, TestContext.Current.CancellationToken);
 
         time.Advance(TimeSpan.FromMinutes(1));
         var liveOne = await outbox.EnqueueAsync("POST", "api/c", null);
@@ -1184,7 +1184,7 @@ public sealed class HttpOutboxTests
         var liveTwo = await outbox.EnqueueAsync("POST", "api/d", null);
         (await outbox.ListDeadAsync()).Count.ShouldBe(2);
 
-        (await outbox.ClearDeadAsync()).ShouldBe(2);
+        (await outbox.ClearDeadAsync(TestContext.Current.CancellationToken)).ShouldBe(2);
 
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
         (await outbox.ListAsync()).Select(e => e.Id).ShouldBe(new[] { liveOne.Id, liveTwo.Id });
@@ -1194,7 +1194,7 @@ public sealed class HttpOutboxTests
         accepting.EnqueueResponse(HttpStatusCode.Created);
         using var acceptingHttp = Client(accepting);
 
-        (await outbox.FlushAsync(acceptingHttp)).ShouldBe(new(2, 0, 0, null));
+        (await outbox.FlushAsync(acceptingHttp, TestContext.Current.CancellationToken)).ShouldBe(new(2, 0, 0, null));
         accepting.IdempotencyKeys.ShouldBe(new() { liveOne.Id.ToString(), liveTwo.Id.ToString() });
     }
 
@@ -1204,7 +1204,7 @@ public sealed class HttpOutboxTests
         HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
         await outbox.EnqueueAsync("POST", "api/a", null);
 
-        (await outbox.ClearDeadAsync()).ShouldBe(0);
+        (await outbox.ClearDeadAsync(TestContext.Current.CancellationToken)).ShouldBe(0);
 
         (await outbox.CountAsync()).ShouldBe(1);
     }
@@ -1223,17 +1223,17 @@ public sealed class HttpOutboxTests
         userA.EnqueueResponse(HttpStatusCode.BadRequest);
         userA.EnqueueNetworkFailure();
         using var userAHttp = Client(userA);
-        (await outbox.FlushAsync(userAHttp)).ShouldBe(new(0, 1, 1, "connection refused"));
+        (await outbox.FlushAsync(userAHttp, TestContext.Current.CancellationToken)).ShouldBe(new(0, 1, 1, "connection refused"));
 
-        (await outbox.ClearAsync()).ShouldBe(1);
-        (await outbox.ClearDeadAsync()).ShouldBe(1);
+        (await outbox.ClearAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
+        (await outbox.ClearDeadAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
 
         // User B signs in; the host flushes with B's token.
         using ScriptedHandler userB = new();
         using var userBHttp = Client(userB);
         userBHttp.DefaultRequestHeaders.Authorization = new("Bearer", "token-of-user-b");
 
-        (await outbox.FlushAsync(userBHttp)).ShouldBe(new(0, 0, 0, null));
+        (await outbox.FlushAsync(userBHttp, TestContext.Current.CancellationToken)).ShouldBe(new(0, 0, 0, null));
         userB.Requests.ShouldBeEmpty();
         (await outbox.ListAsync()).ShouldBeEmpty();
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
@@ -1249,15 +1249,15 @@ public sealed class HttpOutboxTests
         using ScriptedHandler handler = new();
         handler.EnqueueResponse(HttpStatusCode.BadRequest);
         using var http = Client(handler);
-        await outbox.FlushAsync(http);
+        await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         time.Advance(TimeSpan.FromMinutes(1));
         await outbox.EnqueueAsync("POST", "api/b", null);
         time.Advance(TimeSpan.FromMinutes(1));
         await outbox.EnqueueAsync("POST", "api/c", null);
 
-        (await outbox.ClearAsync()).ShouldBe(2);
-        (await outbox.ClearAsync()).ShouldBe(0);
+        (await outbox.ClearAsync(TestContext.Current.CancellationToken)).ShouldBe(2);
+        (await outbox.ClearAsync(TestContext.Current.CancellationToken)).ShouldBe(0);
 
         (await outbox.CountAsync()).ShouldBe(0);
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(rejected.Id);
@@ -1271,10 +1271,10 @@ public sealed class HttpOutboxTests
 
         using GatedHandler handler = new();
         using var http = Gated(handler);
-        var flush = outbox.FlushAsync(http);
+        var flush = outbox.FlushAsync(http, TestContext.Current.CancellationToken);
         await handler.Entered;
 
-        var clear = outbox.ClearDeadAsync();
+        var clear = outbox.ClearDeadAsync(TestContext.Current.CancellationToken);
         clear.IsCompleted.ShouldBeFalse();
 
         handler.Answer(HttpStatusCode.BadRequest);
@@ -1292,10 +1292,10 @@ public sealed class HttpOutboxTests
 
         using GatedHandler handler = new();
         using var http = Gated(handler);
-        var flush = outbox.FlushAsync(http);
+        var flush = outbox.FlushAsync(http, TestContext.Current.CancellationToken);
         await handler.Entered;
 
-        var clear = outbox.ClearAsync();
+        var clear = outbox.ClearAsync(TestContext.Current.CancellationToken);
         clear.IsCompleted.ShouldBeFalse();
 
         handler.FailOnTransport();
@@ -1313,10 +1313,10 @@ public sealed class HttpOutboxTests
 
         using GatedHandler handler = new();
         using var http = Gated(handler);
-        var first = outbox.FlushAsync(http);
+        var first = outbox.FlushAsync(http, TestContext.Current.CancellationToken);
         await handler.Entered;
 
-        var second = outbox.FlushAsync(http);
+        var second = outbox.FlushAsync(http, TestContext.Current.CancellationToken);
         second.IsCompleted.ShouldBeFalse();
 
         handler.Answer(HttpStatusCode.Created);
@@ -1324,6 +1324,125 @@ public sealed class HttpOutboxTests
         (await first).ShouldBe(new(1, 0, 0, null));
         (await second).ShouldBe(new(0, 0, 0, null));
         handler.Requests.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ACancelledClear_WaitingBehindAFlush_Throws_LeavesTheFlushAlone_AndLeavesTheGateUsable(bool clearDead)
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/profile", null);
+
+        using GatedHandler handler = new();
+        using var http = Gated(handler);
+        var flush = outbox.FlushAsync(http, TestContext.Current.CancellationToken);
+        await handler.Entered;
+
+        using CancellationTokenSource cts = new();
+        var clear = clearDead ? outbox.ClearDeadAsync(cts.Token) : outbox.ClearAsync(cts.Token);
+        clear.IsCompleted.ShouldBeFalse();
+
+        await cts.CancelAsync();
+
+        // Cancelled while the flush still holds the gate. The bound only turns a clear that ignores the token into a failure
+        // instead of a hang. (Answering first would race: SemaphoreSlim hands the gate to a waiter whose cancellation has not
+        // been processed yet.)
+        await Should.ThrowAsync<OperationCanceledException>(() => clear.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+
+        handler.Answer(HttpStatusCode.Created);
+        (await flush).ShouldBe(new(1, 0, 0, null));
+
+        // The cancelled wait released nothing: the gate still admits a clear (and the flush's own release did not throw).
+        await outbox.EnqueueAsync("POST", "api/profile", null);
+        (await (clearDead ? outbox.ClearDeadAsync(TestContext.Current.CancellationToken) : outbox.ClearAsync(TestContext.Current.CancellationToken))).ShouldBe(clearDead ? 0 : 1);
+    }
+
+    [Fact]
+    public async Task ACancelledFlush_WaitingBehindAnotherFlush_Throws_SendsNothing_AndLeavesTheGateUsable()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        await outbox.EnqueueAsync("POST", "api/profile", null);
+
+        using GatedHandler handler = new();
+        using var http = Gated(handler);
+        var first = outbox.FlushAsync(http, TestContext.Current.CancellationToken);
+        await handler.Entered;
+
+        using CancellationTokenSource cts = new();
+        var second = outbox.FlushAsync(http, cts.Token);
+        second.IsCompleted.ShouldBeFalse();
+
+        await cts.CancelAsync();
+
+        // Cancelled while the first flush still holds the gate. The bound only turns a flush that ignores the token into a
+        // failure instead of a hang. (Answering first would race: SemaphoreSlim hands the gate to a waiter whose cancellation
+        // has not been processed yet.)
+        await Should.ThrowAsync<OperationCanceledException>(() => second.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+
+        handler.Answer(HttpStatusCode.Created);
+        (await first).ShouldBe(new(1, 0, 0, null));
+        handler.Requests.ShouldBe(1);
+
+        // The cancelled wait released nothing: the gate still admits a flush (and the first flush's own release did not throw).
+        await outbox.EnqueueAsync("POST", "api/profile", null);
+        using GatedHandler later = new();
+        using var laterHttp = Gated(later);
+        var third = outbox.FlushAsync(laterHttp, TestContext.Current.CancellationToken);
+        await later.Entered;
+        later.Answer(HttpStatusCode.Created);
+        (await third).ShouldBe(new(1, 0, 0, null));
+    }
+
+    [Fact]
+    public async Task AFlushCancelledBetweenEntries_StopsThere_AndLeavesTheNextEntryQueued()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        var first = await outbox.EnqueueAsync("POST", "api/a", null);
+        time.Advance(TimeSpan.FromMinutes(1));
+        var second = await outbox.EnqueueAsync("POST", "api/b", null);
+
+        using CancellationTokenSource cts = new();
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.Created, cts.Cancel);
+        handler.EnqueueResponse(HttpStatusCode.Created);
+        using var http = Client(handler);
+
+        await Should.ThrowAsync<OperationCanceledException>(() => outbox.FlushAsync(http, cts.Token));
+
+        handler.IdempotencyKeys.ShouldBe(new() { first.Id.ToString() });
+        (await outbox.ListAsync()).ShouldHaveSingleItem().ShouldBe(second);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task AFlushCancelledWhileSending_LeavesThatEntryQueued_WithItsCountersUnchanged()
+    {
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), new FixedTime(T0));
+        var entry = await outbox.EnqueueAsync("POST", "api/profile", """{"n":1}""");
+
+        using CancellationTokenSource cts = new();
+        using GatedHandler handler = new();
+        using var http = Gated(handler);
+        var flush = outbox.FlushAsync(http, cts.Token);
+        await handler.Entered;
+
+        await cts.CancelAsync();
+
+        // The bound only turns a send that ignores the token into a failure instead of a hang.
+        await Should.ThrowAsync<OperationCanceledException>(() => flush.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+
+        (await outbox.ListAsync()).ShouldHaveSingleItem().ShouldBe(entry);
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+
+        // The next flush replays it with the same idempotency key.
+        using ScriptedHandler replay = new();
+        replay.EnqueueResponse(HttpStatusCode.Created);
+        using var replayHttp = Client(replay);
+
+        (await outbox.FlushAsync(replayHttp, TestContext.Current.CancellationToken)).ShouldBe(new(1, 0, 0, null));
+        replay.IdempotencyKeys.ShouldBe(new() { entry.Id.ToString() });
     }
 
     private static HttpClient Gated(GatedHandler handler) => new(handler)
@@ -1355,7 +1474,7 @@ public sealed class HttpOutboxTests
             _entered.TrySetResult();
 
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
-            return (await _answer.Task)();
+            return (await _answer.Task.WaitAsync(cancellationToken))();
 #pragma warning restore VSTHRD003
         }
     }
@@ -1377,7 +1496,7 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.Created);
         using var http = Client(handler);
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.Sent.ShouldBe(1);
         result.DeadLettered.ShouldBe(1);
@@ -1397,7 +1516,7 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.BadRequest);
         using var http = Client(handler);
 
-        await Should.ThrowAsync<IOException>(() => outbox.FlushAsync(http));
+        await Should.ThrowAsync<IOException>(() => outbox.FlushAsync(http, TestContext.Current.CancellationToken));
 
         (await outbox.ListAsync()).ShouldHaveSingleItem();
     }
@@ -1423,7 +1542,7 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(status);
         using var http = Client(handler);
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.DeadLettered.ShouldBe(0);
         (await outbox.ListAsync()).ShouldHaveSingleItem().ServerFailures.ShouldBe(5);
@@ -1443,10 +1562,10 @@ public sealed class HttpOutboxTests
         using var http = Client(handler);
 
         // The dead copy is written, then removing the live entry fails.
-        await Should.ThrowAsync<IOException>(() => outbox.FlushAsync(http));
+        await Should.ThrowAsync<IOException>(() => outbox.FlushAsync(http, TestContext.Current.CancellationToken));
         (await outbox.ListDeadAsync()).ShouldHaveSingleItem();
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new(1, 0, 0, null));
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
@@ -1474,7 +1593,7 @@ public sealed class HttpOutboxTests
         handler.EnqueueResponse(HttpStatusCode.Created);
         using var http = Client(handler);
 
-        var result = await outbox.FlushAsync(http);
+        var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new(1, 1, 0, "HTTP 400: no way"));
         (await outbox.CountAsync()).ShouldBe(0);

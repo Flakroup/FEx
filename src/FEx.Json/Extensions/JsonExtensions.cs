@@ -1,4 +1,5 @@
 using FEx.Agnostics.Abstractions.Logging;
+using FEx.Json.Abstractions;
 using FEx.Json.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -12,6 +13,14 @@ using System.Text.RegularExpressions;
 
 namespace FEx.Json.Extensions;
 
+/// <summary>
+/// Newtonsoft.Json helpers: <c>ToJson</c>, <c>FromJson</c> and the <see cref="JToken" />, stream and file helpers
+/// built on them. They are the Newtonsoft.Json path by design: they always serialize with Newtonsoft.Json and the
+/// process-wide <see cref="JsonConvert.DefaultSettings" />, whichever <see cref="IFExJsonSerializer" /> module an
+/// application registers, and their <see cref="JsonSerializerSettings" /> and <see cref="Formatting" /> parameters
+/// are Newtonsoft types. FEx.SecureStorage, FEx.Encryption and <c>SecureNotifyPropertyChanged</c> rely on that and
+/// stay on them on purpose. Library-neutral code takes <see cref="IFExJsonSerializer" /> instead.
+/// </summary>
 public static class JsonExtensions
 {
     public static string NullString { get; } = "\"null\"";
@@ -50,6 +59,9 @@ public static class JsonExtensions
         configuration(DefaultSettingsInstance);
     }
 
+    /// <summary>
+    /// Serializes <paramref name="self" /> with Newtonsoft.Json, never through <see cref="IFExJsonSerializer" />.
+    /// </summary>
     public static string ToJson(this object self, JsonSerializerSettings? settings, Formatting formatting) =>
         JsonConvert.SerializeObject(self, formatting, settings ?? DefaultSettings);
 
@@ -60,6 +72,9 @@ public static class JsonExtensions
 
     public static string ToJson(this object self, Formatting formatting) => self.ToJson(null, formatting);
 
+    /// <summary>
+    /// Deserializes <paramref name="json" /> with Newtonsoft.Json, never through <see cref="IFExJsonSerializer" />.
+    /// </summary>
     public static T? FromJson<T>(this string json, JsonSerializerSettings? settings, T? fallback)
     {
         try

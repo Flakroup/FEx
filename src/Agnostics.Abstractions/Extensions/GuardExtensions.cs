@@ -82,7 +82,6 @@ public static class GuardExtensions
     /// <param name="paramName">Name of the parameter.</param>
     /// <returns>The value itself.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="predicate" /> returns false.</exception>
-    [ContractAnnotation("value: null => stop")]
     public static T Guard<T>(this T value, Func<T, bool> predicate, string? paramName) =>
         value.Guard(predicate, paramName, null);
 
@@ -104,7 +103,6 @@ public static class GuardExtensions
     /// <remarks>
     /// Throws a <see cref="ArgumentNullException" /> if the condition is false.
     /// </remarks>
-    [ContractAnnotation("value: null => stop")]
     public static T Guard<T>(this T value, Func<T, bool> predicate, string? paramName, string? message)
     {
 #if NET9_0_OR_GREATER

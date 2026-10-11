@@ -1,5 +1,6 @@
 using FEx.Encryption.Exceptions;
 using FEx.Json.Extensions;
+using Newtonsoft.Json;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -126,11 +127,54 @@ public sealed class SecureNotifyPropertyChangedTests
         secrets.Failures.ShouldNotBeEmpty();
     }
 
+    [Fact]
+    public void JsonProperty_WithAMistypedMember_ReportsTheJsonPathButNotTheValue()
+    {
+        var secrets = new Secrets(_cipher) { RawPayload = _cipher.Encrypt("{\"Count\":\"hunter2\"}") };
+
+        secrets.Data.ShouldBeNull();
+
+        var failure = secrets.Failures.ShouldHaveSingleItem();
+        failure.Exception.ShouldBeOfType<FExDecryptionException>();
+        failure.Exception.Message.ShouldBe(
+            $"The stored value of 'Data' is not a valid {nameof(Payload)} ({nameof(JsonReaderException)} at path 'Count').");
+        failure.Exception.InnerException.ShouldBeNull();
+    }
+
+    [Fact]
+    public void JsonProperty_FailingOutsideTheJsonReader_ReportsAnEmptyPath()
+    {
+        // A converter's own exception carries no JSON path; the report names its type and leaves the path empty.
+        var secrets = new Secrets(_cipher) { RawUnreadable = _cipher.Encrypt("{}") };
+
+        secrets.Unreadable.ShouldBeNull();
+
+        secrets.Failures.ShouldHaveSingleItem().Exception.Message.ShouldBe(
+            $"The stored value of 'Unreadable' is not a valid {nameof(UnreadablePayload)} ({nameof(InvalidOperationException)} at path '').");
+    }
+
     private sealed class Payload
     {
         public string? Name { get; set; }
 
         public int Count { get; set; }
+    }
+
+    [JsonConverter(typeof(ThrowingConverter))]
+    private sealed class UnreadablePayload;
+
+    private sealed class ThrowingConverter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType) => true;
+
+        public override object ReadJson(JsonReader reader,
+                                        Type objectType,
+                                        object? existingValue,
+                                        JsonSerializer serializer) =>
+            throw new InvalidOperationException("Cannot read this payload.");
+
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) =>
+            throw new NotSupportedException();
     }
 
     private sealed class Secrets : SecureNotifyPropertyChanged
@@ -159,6 +203,10 @@ public sealed class SecureNotifyPropertyChangedTests
             get => _payload;
             set => _payload = value;
         }
+
+        internal string? RawUnreadable { get; set; }
+
+        internal UnreadablePayload? Unreadable => DecryptFromJsonSource<UnreadablePayload>(RawUnreadable);
 
         public string? Secret
         {

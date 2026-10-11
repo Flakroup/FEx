@@ -88,18 +88,26 @@ public static class JsonExtensions
             // FEx.SecureStorage deserializes decrypted secrets here, so neither the exception nor the input is
             // logged - only the target type, the JSON path and the exception type. The caller gets the exception.
             FExStaticLogger.Error(
-                $"Could not deserialize JSON into {typeof(T).FullName} at path '{GetJsonPath(ex)}' ({ex.GetType().FullName}).");
+                $"Could not deserialize JSON into {typeof(T).FullName} at path '{ex.GetJsonPath() ?? "unknown"}' ({ex.GetType().FullName}).");
 
             throw;
         }
     }
 
-    private static string GetJsonPath(Exception exception) =>
+    /// <summary>
+    /// The JSON path a Newtonsoft.Json reader or serialization exception points at - safe to log, unlike the
+    /// exception message, which can quote the offending value.
+    /// </summary>
+    /// <returns>
+    /// The path (empty when Newtonsoft.Json recorded none), or null when <paramref name="exception" /> is
+    /// neither a <see cref="JsonReaderException" /> nor a <see cref="JsonSerializationException" />.
+    /// </returns>
+    public static string? GetJsonPath(this Exception exception) =>
         exception switch
         {
             JsonReaderException readerException => readerException.Path ?? string.Empty,
             JsonSerializationException serializationException => serializationException.Path ?? string.Empty,
-            _ => "unknown"
+            _ => null
         };
 
     public static T? FromJson<T>(this string json) => json.FromJson<T>(null, default);

@@ -18,9 +18,13 @@ public class FtpClientFactory
     /// <summary>
     ///     The data connection type of a client unless the caller passes another one: <see cref="FtpDataConnectionType.PASVEX" /> connects the
     ///     data channel to the control-connection host and takes only the port from the PASV reply, so a hostile or misconfigured server cannot
-    ///     aim the client at another host (the port-scan/bounce class of curl CVE-2020-8284). The cost: EPSV is never tried on an IPv4 control
-    ///     connection, so an IPv4 server that answers EPSV but not PASV fails; pass <see cref="FtpDataConnectionType.AutoPassive" /> or
-    ///     <see cref="FtpDataConnectionType.EPSV" /> as <c>dataConnectionType</c> for such a server.
+    ///     aim the client at another host (the port-scan/bounce class of curl CVE-2020-8284). The cost: two kinds of server fail. One is an IPv4
+    ///     server that answers EPSV but not PASV, because EPSV is never tried on an IPv4 control connection. The other is a server whose FEAT
+    ///     lacks EPSV and whose passive data listener is only on the other routable address its PASV reply names (one behind a load-balancer
+    ///     VIP, say), because the data channel goes to the control host instead. Against either, <c>FtpCommon.GetFtpFileInfoAsync</c> returns
+    ///     null, the same answer as a file that does not exist, and <c>FtpCommon.GetListingAsync</c> throws. For such a server pass
+    ///     <c>dataConnectionType: </c><see cref="FtpDataConnectionType.AutoPassive" /> (or <see cref="FtpDataConnectionType.EPSV" /> for the
+    ///     EPSV-only one), or set <c>client.Config.DataConnectionType</c> on the returned client before it connects.
     /// </summary>
     public const FtpDataConnectionType DefaultDataConnectionType = FtpDataConnectionType.PASVEX;
 

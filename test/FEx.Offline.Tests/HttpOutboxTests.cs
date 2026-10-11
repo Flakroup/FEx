@@ -1209,6 +1209,60 @@ public sealed class HttpOutboxTests
         (await outbox.CountAsync()).ShouldBe(1);
     }
 
+    [Fact]
+    public async Task SignOut_ClearAndClearDead_LeaveNothingForTheNextUsersFlushToSend()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        await outbox.EnqueueAsync("POST", "api/rejected", """{"email":"alice@example.com","n":1}""");
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/profile", """{"email":"alice@example.com","n":2}""");
+
+        // User A's flush: the first write is rejected (dead), the second fails on transport and stays live.
+        using ScriptedHandler userA = new();
+        userA.EnqueueResponse(HttpStatusCode.BadRequest);
+        userA.EnqueueNetworkFailure();
+        using var userAHttp = Client(userA);
+        (await outbox.FlushAsync(userAHttp)).ShouldBe(new(0, 1, 1, "connection refused"));
+
+        (await outbox.ClearAsync()).ShouldBe(1);
+        (await outbox.ClearDeadAsync()).ShouldBe(1);
+
+        // User B signs in; the host flushes with B's token.
+        using ScriptedHandler userB = new();
+        using var userBHttp = Client(userB);
+        userBHttp.DefaultRequestHeaders.Authorization = new("Bearer", "token-of-user-b");
+
+        (await outbox.FlushAsync(userBHttp)).ShouldBe(new(0, 0, 0, null));
+        userB.Requests.ShouldBeEmpty();
+        (await outbox.ListAsync()).ShouldBeEmpty();
+        (await outbox.ListDeadAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Clear_DeletesEveryLiveEntry_AndLeavesTheDeadOnes()
+    {
+        FixedTime time = new(T0);
+        HttpOutbox outbox = new(new InMemoryKeyValueStore(), time);
+        var rejected = await outbox.EnqueueAsync("POST", "api/a", null);
+
+        using ScriptedHandler handler = new();
+        handler.EnqueueResponse(HttpStatusCode.BadRequest);
+        using var http = Client(handler);
+        await outbox.FlushAsync(http);
+
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/b", null);
+        time.Advance(TimeSpan.FromMinutes(1));
+        await outbox.EnqueueAsync("POST", "api/c", null);
+
+        (await outbox.ClearAsync()).ShouldBe(2);
+        (await outbox.ClearAsync()).ShouldBe(0);
+
+        (await outbox.CountAsync()).ShouldBe(0);
+        (await outbox.ListDeadAsync()).ShouldHaveSingleItem().Id.ShouldBe(rejected.Id);
+    }
+
     [Theory]
     [InlineData(HttpStatusCode.InternalServerError)]
     [InlineData(HttpStatusCode.BadRequest)]

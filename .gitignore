@@ -475,3 +475,6 @@ work/
 
 # VS Code (full ignore)
 .vscode/
+
+# NUKE build logs and inspectcode cache (.nuke/parameters.json stays tracked)
+.nuke/temp/

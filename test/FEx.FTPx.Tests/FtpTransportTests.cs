@@ -330,8 +330,7 @@ public sealed class FtpTransportTests : IDisposable
         _ = new FExMvvm(Substitute.For<IMessagePopupService>(), Substitute.For<IExceptionHandler>());
         const int size = 1_300_000;
         const int readableFrom = 1_200_000;
-        var source = new byte[size];
-        new Random(276).NextBytes(source);
+        var source = Enumerable.Range(0, size).Select(i => (byte)(i % 251 + 1)).ToArray(); // never zero, so a zero-filled tail differs from it
         _server.Files["/pub/big.bin"] = source;
         _server.ReadableFrom = readableFrom;
         _server.AbortNextRetrs = 1; // the transfer dies before its first byte, which starts the recovery

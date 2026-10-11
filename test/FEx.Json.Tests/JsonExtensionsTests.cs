@@ -188,29 +188,29 @@ public sealed class JsonExtensionsTests
         var exception = Should.Throw<JsonReaderException>(() =>
             JsonConvert.DeserializeObject<Sample>("{\"Count\":\"many\"}"));
 
-        exception.GetJsonPath().ShouldBe("Count");
+        exception.GetJsonPath(typeof(Sample)).ShouldBe("Count");
     }
 
     [Fact]
-    public void GetJsonPath_SerializationException_ReturnsItsPath()
+    public void GetJsonPath_SerializationException_ReturnsItsPathWithTheKeyRedacted()
     {
         var exception = Should.Throw<JsonSerializationException>(() =>
             JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, int>>>("{\"a\":\"b\"}"));
 
-        exception.GetJsonPath().ShouldBe("a");
+        exception.GetJsonPath(typeof(Dictionary<string, Dictionary<string, int>>)).ShouldBe("[*]");
     }
 
     [Fact]
     public void GetJsonPath_JsonExceptionWithoutAPath_ReturnsEmpty()
     {
-        new JsonReaderException("no path").GetJsonPath().ShouldBe(string.Empty);
-        new JsonSerializationException("no path").GetJsonPath().ShouldBe(string.Empty);
+        new JsonReaderException("no path").GetJsonPath(typeof(Sample)).ShouldBe(string.Empty);
+        new JsonSerializationException("no path").GetJsonPath(typeof(Sample)).ShouldBe(string.Empty);
     }
 
     [Fact]
     public void GetJsonPath_OtherException_ReturnsNull()
     {
-        new InvalidOperationException("not json").GetJsonPath().ShouldBeNull();
+        new InvalidOperationException("not json").GetJsonPath(typeof(Sample)).ShouldBeNull();
     }
 
     [Fact]

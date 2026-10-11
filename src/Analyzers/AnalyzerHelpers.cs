@@ -96,7 +96,12 @@ internal static class AnalyzerHelpers
         return false;
     }
 
-    /// <summary>Whether a reference to a variable stores to it, or hands out a way to: assignment, increment, address-of, ref argument, ref alias, deconstruction.</summary>
+    /// <summary>
+    /// The one definition of "the variable is written, or may be": the reference is assigned (a deconstruction included),
+    /// incremented or decremented, passed as a <c>ref</c> or <c>out</c> argument (a dynamic call included), has its address
+    /// taken with <c>&amp;</c>, or is aliased by a <c>ref</c> local or <c>ref</c> return, since each of those can write later through
+    /// the pointer or the alias. An <c>in</c> argument, written or not, cannot write, so it is not a write.
+    /// </summary>
     public static bool IsWrite(IOperation reference)
     {
         var child = reference;
@@ -110,11 +115,26 @@ internal static class AnalyzerHelpers
         return parent switch
         {
             IAssignmentOperation assignment => assignment.Target == child,
-            IIncrementOrDecrementOperation or IAddressOfOperation => true,
-            IArgumentOperation argument => argument.Parameter is not { RefKind: RefKind.None },
-            _ => reference.Syntax.Parent is RefExpressionSyntax,
+            IIncrementOrDecrementOperation => true,
+            _ => TakesAddress(reference) && !IsReadOnlyArgument(reference),
         };
     }
+
+    /// <summary>
+    /// Whether a reference hands out the variable's address: <c>&amp;x</c>, <c>ref x</c> as a local's initializer or a return, or an
+    /// argument written with <c>ref</c>, <c>in</c> or <c>out</c>. A write is one such case; an <c>in</c> argument is the other.
+    /// </summary>
+    public static bool TakesAddress(IOperation reference) =>
+        reference.Parent is IAddressOfOperation
+        || reference.Syntax.Parent is RefExpressionSyntax or ArgumentSyntax { RefKindKeyword.RawKind: not 0 };
+
+    // An argument for an in or ref readonly parameter: the parameter decides when the callee is known, the keyword when it is not (a dynamic call).
+    private static bool IsReadOnlyArgument(IOperation reference) =>
+        reference.Parent switch
+        {
+            IArgumentOperation { Parameter: { } parameter } => parameter.RefKind is not (RefKind.Ref or RefKind.Out),
+            _ => reference.Syntax.Parent is ArgumentSyntax { RefKindKeyword.RawKind: (int)SyntaxKind.InKeyword },
+        };
 
     /// <summary>Whether <paramref name="symbol"/> implements a member of one of its type's interfaces, implicitly or explicitly.</summary>
     public static bool ImplementsInterfaceMember(ISymbol symbol)

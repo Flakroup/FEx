@@ -56,7 +56,7 @@ public sealed class ConvertToConstantLocalAnalyzer : DiagnosticAnalyzer
 
             var uses = references[local].ToList();
             if (uses.Count > 0
-                && !uses.Any(AnalyzerHelpers.IsWrite)
+                && !uses.Any(IsWriteOrAddress)
                 && !uses.Any(use => ChangesBinding(use, initializer.Value, local.Type, context.CancellationToken))
                 && !AnalyzerHelpers.IsGenerated(syntax.SyntaxTree, context.OwningSymbol, context.Options, context.CancellationToken))
                 context.ReportDiagnostic(Diagnostic.Create(Rule, syntax.Identifier.GetLocation(), local.Name));
@@ -96,7 +96,7 @@ public sealed class ConvertToConstantLocalAnalyzer : DiagnosticAnalyzer
                 lock (state)
                 {
                     state.IsReferenced = true;
-                    state.IsBlocked |= changesBinding || AnalyzerHelpers.IsWrite(reference);
+                    state.IsBlocked |= changesBinding || IsWriteOrAddress(reference);
                 }
             },
             OperationKind.FieldReference);
@@ -123,6 +123,9 @@ public sealed class ConvertToConstantLocalAnalyzer : DiagnosticAnalyzer
     // An instance field of a struct is also the field of 'default(S)', which no initializer reaches.
     private static bool IsCandidate(IFieldSymbol field) =>
         field is { IsConst: false } && !(field.ContainingType.IsValueType && !field.IsStatic) && AnalyzerHelpers.IsConstantType(field.Type) && AnalyzerHelpers.IsEffectivelyPrivate(field);
+
+    // A constant has no storage to write and no address to take: `in x` and `ref readonly r = ref x` do not compile once x is const.
+    private static bool IsWriteOrAddress(IOperation reference) => AnalyzerHelpers.IsWrite(reference) || AnalyzerHelpers.TakesAddress(reference);
 
     // A constant is a constant expression wherever it is read, and the compiler treats those more kindly than a variable:
     // 'int zero = 0; F(zero)' picks F(object), 'const int zero = 0' picks F(DayOfWeek). Ask what the argument binds to with the value written in.

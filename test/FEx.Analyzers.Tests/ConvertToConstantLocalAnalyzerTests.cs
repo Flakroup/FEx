@@ -2035,6 +2035,31 @@ public class ConvertToConstantLocalAnalyzerTests
             public class C { private int P { get; } = 5; public int M() => P; }
             """);
 
+    // The write helper's three disputed cases, decided once: an address may be written through, a ref alias may be written through, an in argument cannot be.
+    [Fact]
+    public Task Ignores_a_local_whose_address_is_taken() =>
+        VerifyAsync("""
+            public unsafe class C { public int M() { int x = 5; int* p = &x; return *p; } }
+            """);
+
+    [Fact]
+    public Task Ignores_a_local_aliased_by_a_ref_local() =>
+        VerifyAsync("""
+            public class C { public int M() { int x = 5; ref int r = ref x; r = 6; return x; } }
+            """);
+
+    [Fact]
+    public Task Reports_a_local_passed_to_an_in_parameter_without_the_keyword() =>
+        VerifyAsync("""
+            public class C { private static int Read(in int a) => a; public int M() { int {|FEX0051:x|} = 5; return Read(x); } }
+            """);
+
+    [Fact]
+    public Task Ignores_a_local_passed_with_the_in_keyword() =>
+        VerifyAsync("""
+            public class C { private static int Read(in int a) => a; public int M() { int x = 5; return Read(in x); } }
+            """);
+
     [Fact]
     public Task Ignores_a_ref_local_over_a_constant() =>
         VerifyAsync("""

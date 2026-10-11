@@ -126,12 +126,10 @@ public sealed class LoopVariableNeverChangedAnalyzer : DiagnosticAnalyzer
                 && !SymbolEqualityComparer.Default.Equals(function, variable.ContainingSymbol));
     }
 
-    // Anything that takes the variable's address leaves a way to write it later: `&x`, `ref x` as a local or a
-    // return, and a ref, in or out argument (a Span over it, MemoryMarshal.CreateSpan), even through a dynamic call.
+    // Anything that takes the variable's address leaves a way to write it later, even through a dynamic call: `&x`,
+    // `ref x` as a local or a return, a Span over it (MemoryMarshal.CreateSpan), an explicit `in`, which can be cast away.
     private static bool IsAlias(IOperation reference, ISymbol variable) =>
-        SymbolEqualityComparer.Default.Equals(GetVariable(reference), variable)
-        && (reference.Parent is IAddressOfOperation or IArgumentOperation { Parameter.RefKind: not RefKind.None }
-            || reference.Syntax.Parent is RefExpressionSyntax or ArgumentSyntax { RefKindKeyword.RawKind: not 0 });
+        SymbolEqualityComparer.Default.Equals(GetVariable(reference), variable) && AnalyzerHelpers.TakesAddress(reference);
 
     private static ISymbol? GetEnclosingFunction(IOperation operation)
     {
@@ -149,21 +147,6 @@ public sealed class LoopVariableNeverChangedAnalyzer : DiagnosticAnalyzer
         return null;
     }
 
-    private static bool IsWriteTo(IOperation reference, ISymbol variable)
-    {
-        if (!SymbolEqualityComparer.Default.Equals(GetVariable(reference), variable))
-            return false;
-
-        var target = reference;
-        while (target.Parent is ITupleOperation tuple)
-            target = tuple;
-
-        return target.Parent switch
-        {
-            IAssignmentOperation assignment => assignment.Target == target,
-            IIncrementOrDecrementOperation => true,
-            IArgumentOperation argument => argument.Parameter?.RefKind is RefKind.Ref or RefKind.Out,
-            _ => false,
-        };
-    }
+    private static bool IsWriteTo(IOperation reference, ISymbol variable) =>
+        SymbolEqualityComparer.Default.Equals(GetVariable(reference), variable) && AnalyzerHelpers.IsWrite(reference);
 }

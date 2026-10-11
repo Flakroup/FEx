@@ -265,6 +265,21 @@ public class LoopVariableNeverChangedAnalyzerTests
             }
             """);
 
+    // An in argument is read-only, so it neither moves the condition nor leaves a way to write the variable.
+    [Fact]
+    public Task Reports_a_variable_passed_to_an_in_parameter_without_the_keyword_inside_the_loop() =>
+        VerifyAsync("""
+            class C
+            {
+                static void Take(in int x) { }
+                void M()
+                {
+                    int a = 0;
+                    while ({|FEX0002:a|} < 3) { Take(a); }
+                }
+            }
+            """);
+
     [Fact]
     public Task Ignores_a_variable_passed_by_ref_to_a_dynamic_call() =>
         VerifyAsync("""

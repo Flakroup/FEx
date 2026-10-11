@@ -49,7 +49,8 @@ internal static class JsonPathRedaction
         }
         catch (Exception)
         {
-            // A resolver or converter that throws here would replace the caller's exception with this one; fail closed instead.
+            // A resolver or converter that throws here would replace the caller's exception with this one; fail
+            // closed instead.
             return Placeholder;
         }
 

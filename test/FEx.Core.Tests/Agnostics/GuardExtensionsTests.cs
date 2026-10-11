@@ -118,7 +118,8 @@ public sealed class GuardExtensionsTests
 
         // Each predicate overload together with the attributes right above it or in front of it on its line.
         var declarations = Regex.Matches(source,
-            @"(?<attributes>(?:[ \t]*\[[^\r\n]*?\]\s*)*)public static T Guard<T>\(\s*this T value,\s*Func<T, bool> predicate",
+            @"(?<attributes>(?:[ \t]*\[[^\r\n]*?\]\s*)*)"
+            + @"public static T Guard<T>\(\s*this T value,\s*Func<T, bool> predicate",
             RegexOptions.None,
             TimeSpan.FromSeconds(5));
 
@@ -132,7 +133,9 @@ public sealed class GuardExtensionsTests
     {
         var relative = Path.Combine("src", "Agnostics.Abstractions", "Extensions", "GuardExtensions.cs");
 
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
+             directory is not null;
+             directory = directory.Parent)
         {
             var candidate = Path.Combine(directory.FullName, relative);
 

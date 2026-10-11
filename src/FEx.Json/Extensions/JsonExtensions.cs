@@ -76,13 +76,13 @@ public static class JsonExtensions
     /// </summary>
     public static T? FromJson<T>(this string json, JsonSerializerSettings? settings, T? fallback)
     {
-        settings ??= DefaultSettings;
+        var effectiveSettings = settings ?? DefaultSettings;
 
         try
         {
             return json is null || json == NullString
                 ? fallback
-                : JsonConvert.DeserializeObject<T>(json, settings);
+                : JsonConvert.DeserializeObject<T>(json, effectiveSettings);
         }
         catch (Exception ex)
         {
@@ -91,7 +91,7 @@ public static class JsonExtensions
             // logged - only the target type, the redacted JSON path and the exception type. The caller gets the
             // exception.
             FExStaticLogger.Error(
-                $"Could not deserialize JSON into {typeof(T).FullName} at path '{ex.GetJsonPath(typeof(T), settings) ?? "unknown"}' ({ex.GetType().FullName}).");
+                $"Could not deserialize JSON into {typeof(T).FullName} at path '{ex.GetJsonPath(typeof(T), effectiveSettings) ?? "unknown"}' ({ex.GetType().FullName}).");
 
             throw;
         }

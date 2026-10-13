@@ -82,15 +82,11 @@ internal static class PreconditionCheckAnalysis
         foreach (var function in context.OperationBlocks.SelectMany(static block => block.DescendantsAndSelf()))
         {
             if (function is IAnonymousFunctionOperation lambda && FindChecks(lambda.Body, true) is { } lambdaRoots && !generated.Value)
-            {
                 foreach (var parameter in OnlyChecked(lambda.Symbol.Parameters, lambdaRoots, references.Value))
                     context.ReportDiagnostic(Diagnostic.Create(rule, parameter.Locations[0], parameter.Name));
-            }
             else if (function is ILocalFunctionOperation { Body: { } localBody } localFunction && FindChecks(localBody, false) is { } localRoots && !generated.Value)
-            {
                 foreach (var parameter in OnlyChecked(localFunction.Symbol.Parameters, localRoots, references.Value))
                     candidates.Add((localFunction.Symbol, Diagnostic.Create(rule, parameter.Locations[0], parameter.Name)));
-            }
         }
     }
 

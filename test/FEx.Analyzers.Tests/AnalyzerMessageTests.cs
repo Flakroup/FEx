@@ -81,4 +81,16 @@ public class AnalyzerMessageTests
     [Fact]
     public Task FEX0052_names_the_sync_and_the_async_method() =>
         Verify<MethodHasAsyncOverloadWithCancellationAnalyzer>("FEX0052", "using System.Threading; using System.Threading.Tasks; public class C { private static void Do() { } private static Task DoAsync(CancellationToken ct) => Task.CompletedTask; public async Task M(CancellationToken ct) { {|#0:Do()|}; await Task.Yield(); System.Console.Write(ct); } }", "Do", "DoAsync");
+
+    [Fact]
+    public Task FEX0056_names_the_method() =>
+        Verify<InvokeAsExtensionMemberAnalyzer>("FEX0056", "using System.Collections.Generic; using System.Linq; public class C { public int M(List<int> l) => Enumerable.{|#0:Count|}(l); }", "Count");
+
+    [Fact]
+    public Task FEX0057_names_the_parameter() =>
+        Verify<ParameterOnlyUsedForPreconditionCheckGlobalAnalyzer>("FEX0057", "using System; public class C { public void M(string {|#0:s|}) { ArgumentNullException.ThrowIfNull(s); Console.Write(1); } }", "s");
+
+    [Fact]
+    public Task FEX0058_names_the_parameter() =>
+        Verify<ParameterOnlyUsedForPreconditionCheckLocalAnalyzer>("FEX0058", "using System; public class C { private void M(string {|#0:s|}) { ArgumentNullException.ThrowIfNull(s); Console.Write(1); } public void G() => M(\"a\"); }", "s");
 }

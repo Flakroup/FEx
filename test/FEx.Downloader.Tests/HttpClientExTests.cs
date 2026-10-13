@@ -129,6 +129,50 @@ public sealed class HttpClientExTests : IDisposable
     }
 
     [Fact]
+    public async Task DoDownloadAsync_WhenDestinationIsBrieflyLocked_RetriesAndReplacesIt()
+    {
+        // Windows refuses to replace a file another handle holds open; elsewhere rename ignores the lock.
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "File.Replace honours open handles on Windows only");
+
+        using var client = new HttpClientEx(new StubHandler(_ => Respond(new MemoryStream(Encoding.UTF8.GetBytes("NEW")))));
+        var path = Path.Combine(_dir, "locked.bin");
+        await File.WriteAllTextAsync(path, "OLD-CONTENT", Ct);
+
+        using var response = await client.GetAsync(new Uri("http://stub/f"), HttpCompletionOption.ResponseHeadersRead, Ct);
+
+        Task download;
+
+        using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            download = client.DoDownloadAsync(path, response, false);
+            await Task.Delay(150, Ct);
+        }
+
+        await download;
+
+        (await File.ReadAllTextAsync(path, Ct)).ShouldBe("NEW");
+        Directory.GetFiles(_dir).ShouldBe([path]);
+    }
+
+    [Fact]
+    public async Task DoDownloadAsync_WhenDestinationStaysLocked_ThrowsAfterBoundedAttemptsAndKeepsIt()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "File.Replace honours open handles on Windows only");
+
+        using var client = new HttpClientEx(new StubHandler(_ => Respond(new MemoryStream(Encoding.UTF8.GetBytes("NEW")))));
+        var path = Path.Combine(_dir, "stuck.bin");
+        await File.WriteAllTextAsync(path, "OLD-CONTENT", Ct);
+
+        using var response = await client.GetAsync(new Uri("http://stub/f"), HttpCompletionOption.ResponseHeadersRead, Ct);
+
+        using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))
+            await Should.ThrowAsync<IOException>(() => client.DoDownloadAsync(path, response, false));
+
+        (await File.ReadAllTextAsync(path, Ct)).ShouldBe("OLD-CONTENT");
+        Directory.GetFiles(_dir).ShouldBe([path]);
+    }
+
+    [Fact]
     public async Task DoDownloadAsync_WithoutContentLength_StopsAtMaxDownloadBytes()
     {
         using var client = new HttpClientEx(new StubHandler(_ => Chunked(new string('x', 100)))) { MaxDownloadBytes = 10 };

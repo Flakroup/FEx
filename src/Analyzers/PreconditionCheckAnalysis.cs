@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -19,21 +20,60 @@ internal static class PreconditionCheckAnalysis
     // The members whose answer follows from their arguments, so that reading a parameter through them is still only a check.
     private static readonly string[] PureTypes =
     [
-        "System.String", "System.Math", "System.MathF", "System.Char", "System.Object", "System.Array", "System.Type", "System.Nullable", "System.Linq.Enumerable",
+        "System.String", "System.Math", "System.Char", "System.Object", "System.Array", "System.Type", "System.Nullable", "System.Linq.Enumerable",
     ];
 
-    // 'string' and 'object' would print as keywords, not as the "System.String" the lists above spell.
+    // 'string' and 'object' would print as keywords, not as the "System.String" the list above spells.
     private static readonly SymbolDisplayFormat TypeName = SymbolDisplayFormat.CSharpErrorMessageFormat.RemoveMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
-    private static readonly string[] PureNamespaces = ["System.Collections", "System.Collections.Generic"];
+    // A collection answers questions with the members named here and changes with the rest: 'Add', 'Remove', 'Pop' and 'Clear' are uses.
+    private static readonly string[] CollectionNamespaces = ["System.Collections", "System.Collections.Generic"];
 
-    /// <summary>Reports the parameters of the member the blocks belong to, and of the lambdas and local functions inside, that the local (true) or global (false) rule covers.</summary>
-    public static void Analyze(OperationBlockAnalysisContext context, DiagnosticDescriptor rule, bool local)
+    private static readonly string[] CollectionReads =
+    [
+        "Contains", "ContainsKey", "ContainsValue", "Count", "IndexOf", "LastIndexOf", "Exists", "TrueForAll", "Peek", "Keys", "Values",
+    ];
+
+    /// <summary>
+    /// Starts FEX0057 (<paramref name="local"/> false) or FEX0058 (true). A method or a local function that some code takes as a method
+    /// group or hooks up as an event handler is left out, because the delegate it converts to fixes its signature. Generated code (Razor
+    /// binds handlers that way) is read for those uses and never reported.
+    /// </summary>
+    public static void Start(CompilationStartAnalysisContext start, DiagnosticDescriptor rule, bool local)
     {
-        if (context.OwningSymbol is IMethodSymbol { MethodKind: MethodKind.Ordinary or MethodKind.Constructor or MethodKind.UserDefinedOperator or MethodKind.Conversion or MethodKind.ExplicitInterfaceImplementation } method
-            && context.OperationBlocks.OfType<IBlockOperation>().FirstOrDefault(static block => block.Syntax is BlockSyntax { Parent: BaseMethodDeclarationSyntax }) is { } body
-            && IsLocal(method) == local)
-            Report(context, rule, method.Parameters, body, method.MethodKind == MethodKind.Constructor);
+        var candidates = new ConcurrentBag<(IMethodSymbol Method, Diagnostic Diagnostic)>();
+        var handlers = new ConcurrentDictionary<IMethodSymbol, bool>(SymbolEqualityComparer.Default);
+        start.RegisterOperationAction(operation => handlers[((IMethodReferenceOperation)operation.Operation).Method.OriginalDefinition] = true, OperationKind.MethodReference);
+        start.RegisterOperationBlockAction(block => Analyze(block, rule, local, candidates));
+        start.RegisterCompilationEndAction(end =>
+        {
+            foreach (var (_, diagnostic) in candidates.Where(candidate => !handlers.ContainsKey(candidate.Method)))
+                end.ReportDiagnostic(diagnostic);
+        });
+    }
+
+    // Looks at the member the blocks belong to, and at the lambdas and local functions inside, that the local (true) or global (false) rule covers.
+    private static void Analyze(OperationBlockAnalysisContext context, DiagnosticDescriptor rule, bool local, ConcurrentBag<(IMethodSymbol, Diagnostic)> candidates)
+    {
+        if (context.OwningSymbol is not IMethodSymbol method)
+            return;
+
+        // Both are needed only once a body opens with a check.
+        var generated = new Lazy<bool>(() => AnalyzerHelpers.IsGenerated(context.OperationBlocks[0].Syntax.SyntaxTree, method, context.Options, context.CancellationToken));
+        var references = new Lazy<List<IParameterReferenceOperation>>(() => context.OperationBlocks
+            .SelectMany(static block => block.DescendantsAndSelf())
+            .OfType<IParameterReferenceOperation>()
+            .Where(static reference => !AnalyzerHelpers.IsInsideNameOf(reference))
+            .ToList());
+
+        // Finding the checks is cheap and most bodies have none; deciding whether the member is covered walks the interfaces of its type.
+        if (method.MethodKind is MethodKind.Ordinary or MethodKind.Constructor or MethodKind.UserDefinedOperator or MethodKind.Conversion
+            && context.OperationBlocks.OfType<IBlockOperation>().FirstOrDefault() is { } body
+            && FindChecks(body, method.MethodKind == MethodKind.Constructor) is { } roots
+            && Covers(method, local)
+            && !generated.Value)
+            foreach (var parameter in OnlyChecked(method.Parameters, roots, references.Value))
+                candidates.Add((method, Diagnostic.Create(rule, parameter.Locations[0], parameter.Name)));
 
         // Nothing outside the member can call a lambda or a local function.
         if (!local)
@@ -43,26 +83,35 @@ internal static class PreconditionCheckAnalysis
         {
             switch (function)
             {
-                case IAnonymousFunctionOperation lambda:
-                    Report(context, rule, lambda.Symbol.Parameters, lambda.Body, true);
+                case IAnonymousFunctionOperation lambda when FindChecks(lambda.Body, true) is { } lambdaRoots && !generated.Value:
+                    foreach (var parameter in OnlyChecked(lambda.Symbol.Parameters, lambdaRoots, references.Value))
+                        context.ReportDiagnostic(Diagnostic.Create(rule, parameter.Locations[0], parameter.Name));
                     break;
-                case ILocalFunctionOperation { Body: { } localBody } localFunction:
-                    Report(context, rule, localFunction.Symbol.Parameters, localBody, false);
+                case ILocalFunctionOperation { Body: { } localBody } localFunction when FindChecks(localBody, false) is { } localRoots && !generated.Value:
+                    foreach (var parameter in OnlyChecked(localFunction.Symbol.Parameters, localRoots, references.Value))
+                        candidates.Add((localFunction.Symbol, Diagnostic.Create(rule, parameter.Locations[0], parameter.Name)));
                     break;
             }
         }
     }
 
-    // A constructor counts as local whoever can call it; an override or an interface implementation is reached through its base.
-    private static bool IsLocal(IMethodSymbol method) =>
+    // A constructor counts as local whoever can call it. A virtual method, an override and an interface implementation are reached through their
+    // base or their interface, which fix the signature; ReSharper reports those only at the root declaration, and only when every implementation just checks.
+    private static bool Covers(IMethodSymbol method, bool local) =>
         method.MethodKind == MethodKind.Constructor
-        || !method.IsOverride && !AnalyzerHelpers.ImplementsInterfaceMember(method) && AnalyzerHelpers.IsEffectivelyPrivate(method);
+            ? local
+            : !method.IsVirtual
+              && !method.IsOverride
+              && !AnalyzerHelpers.ImplementsInterfaceMember(method)
+              && !AnalyzerHelpers.IsImplementedByDerivedType(method)
+              && AnalyzerHelpers.IsEffectivelyPrivate(method) == local;
 
-    private static void Report(OperationBlockAnalysisContext context, DiagnosticDescriptor rule, IEnumerable<IParameterSymbol> parameters, IBlockOperation body, bool checksAloneCount)
+    // What the checks at the top of a body read, or null when the body has none or is nothing but checks (a validation method).
+    private static List<IOperation>? FindChecks(IBlockOperation body, bool checksAloneCount)
     {
         // An expression body has no statements to put checks at the top of.
         if (body.Syntax is not BlockSyntax)
-            return;
+            return null;
 
         // A local function and a lambda end in a return the compiler adds; it is no statement of the body.
         var statements = body.Operations.Where(static statement => statement is not IReturnOperation { IsImplicit: true }).ToList();
@@ -77,21 +126,13 @@ internal static class PreconditionCheckAnalysis
             checks++;
         }
 
-        if (checks == 0 || checks == statements.Count && !checksAloneCount)
-            return;
-
-        var references = context.OperationBlocks
-            .SelectMany(static block => block.DescendantsAndSelf())
-            .OfType<IParameterReferenceOperation>()
-            .Where(static reference => !AnalyzerHelpers.IsInsideNameOf(reference))
-            .ToList();
-        foreach (var parameter in parameters.Where(static parameter => parameter is { RefKind: not RefKind.Out, IsImplicitlyDeclared: false } && !parameter.Locations.IsEmpty))
-        {
-            var uses = references.Where(reference => SymbolEqualityComparer.Default.Equals(reference.Parameter, parameter)).ToList();
-            if (uses.Count > 0 && uses.All(use => IsOnlyChecked(use, roots)))
-                context.ReportDiagnostic(Diagnostic.Create(rule, parameter.Locations[0], parameter.Name));
-        }
+        // 'checks == 0' only saves collecting the references: with no check there is no root a use could sit in.
+        return checks == 0 || checks == statements.Count && !checksAloneCount ? null : roots;
     }
+
+    private static IEnumerable<IParameterSymbol> OnlyChecked(IEnumerable<IParameterSymbol> parameters, List<IOperation> roots, List<IParameterReferenceOperation> references) =>
+        parameters.Where(parameter => references.Where(reference => SymbolEqualityComparer.Default.Equals(reference.Parameter, parameter)).ToList() is { Count: > 0 } uses
+            && uses.All(use => IsOnlyChecked(use, roots)));
 
     // The operations a check reads: the condition of a guard, the arguments of a call.
     private static bool TryGetCheck(IOperation statement, out IReadOnlyList<IOperation> read)
@@ -135,7 +176,7 @@ internal static class PreconditionCheckAnalysis
         {
             "Assert" => IsType(type, "System.Diagnostics.Debug") || IsType(type, "System.Diagnostics.Trace") || IsType(type, "System.Diagnostics.Contracts.Contract"),
             "Requires" or "Assume" or "EndContractBlock" => IsType(type, "System.Diagnostics.Contracts.Contract"),
-            _ => method.IsStatic && method.Name.StartsWith("ThrowIf", StringComparison.Ordinal) && IsThrowHelperType(type),
+            _ => IsThrowHelperType(type),
         };
     }
 
@@ -150,31 +191,52 @@ internal static class PreconditionCheckAnalysis
             if (roots.Contains(node))
                 return true;
 
-            if (node.Parent is not { } parent || !PassesThrough(parent, node))
+            if (node.Parent is not { } parent || !PassesThrough(parent))
+                return false;
+
+            // In 'p?.Add(1)' the call runs on the access's instance, not on the operand the climb came from.
+            if (parent is IConditionalAccessOperation access && access.Operation == node && !InstancesOf(access).All(instance => IsOnlyChecked(instance, roots)))
                 return false;
         }
     }
 
-    private static bool PassesThrough(IOperation parent, IOperation child) => parent switch
+    // The instances of the access, not those of an access nested in its right-hand side: that one asks about its own operand.
+    private static IEnumerable<IConditionalAccessInstanceOperation> InstancesOf(IConditionalAccessOperation access) =>
+        access.WhenNotNull.DescendantsAndSelf().OfType<IConditionalAccessInstanceOperation>().Where(instance => OwnerOf(instance) == access);
+
+    // An instance sits in the right-hand side of exactly one access, so the walk up always ends at it.
+    private static IConditionalAccessOperation OwnerOf(IConditionalAccessInstanceOperation instance)
     {
-        IBinaryOperation { OperatorMethod: var method } => method is null || IsReadOnlyMember(method),
-        IUnaryOperation { OperatorMethod: var method } => method is null || IsReadOnlyMember(method),
-        IConversionOperation { OperatorMethod: var method } => method is null || IsReadOnlyMember(method),
-        IParenthesizedOperation or IIsPatternOperation or IIsTypeOperation or IConditionalOperation or ICoalesceOperation
-            or IConditionalAccessOperation or IConditionalAccessInstanceOperation or IArrayElementReferenceOperation
-            or IDelegateCreationOperation or IAnonymousFunctionOperation or IBlockOperation or IReturnOperation or IExpressionStatementOperation => true,
-        IPropertyReferenceOperation reference => reference.Instance == child && IsReadOnlyMember(reference.Property),
-        IFieldReferenceOperation reference => reference.Instance == child && IsReadOnlyMember(reference.Field),
-        IArgumentOperation argument => argument.Parameter is { RefKind: RefKind.None or RefKind.In },
-        IInvocationOperation call => IsReadOnlyMember(call.TargetMethod),
+        for (var node = (IOperation)instance; ; node = node.Parent!)
+        {
+            if (node.Parent is IConditionalAccessOperation access && access.WhenNotNull == node)
+                return access;
+        }
+    }
+
+    // A pattern with a variable, a call with an 'out' or 'ref' argument, a field and a lambda carry the value on, to code the climb does not follow.
+    private static bool PassesThrough(IOperation parent) => parent switch
+    {
+        IBinaryOperation or IUnaryOperation or IConversionOperation or IIsTypeOperation or IConditionalOperation or ICoalesceOperation
+            or IConditionalAccessOperation or IArrayElementReferenceOperation => true,
+        IIsPatternOperation pattern => !DeclaresVariable(pattern.Pattern),
+        IPropertyReferenceOperation reference => IsReadOnlyMember(reference.Property),
+        IArgumentOperation => true,
+        IInvocationOperation call => IsReadOnlyMember(call.TargetMethod) && call.Arguments.All(static argument => argument.Parameter is not { RefKind: RefKind.Out }),
         _ => false,
     };
+
+    // 'is not string s', 'is { Length: var n }' and 'is [_, .. var rest]' bind a variable the rest of the body can read.
+    private static bool DeclaresVariable(IPatternOperation pattern) =>
+        pattern.DescendantsAndSelf().Any(static operation => operation is IDeclarationPatternOperation { DeclaredSymbol: not null }
+            or IRecursivePatternOperation { DeclaredSymbol: not null } or IListPatternOperation { DeclaredSymbol: not null });
 
     // A member of the framework whose answer follows from its inputs; one of the user's own code could do anything with the parameter.
     private static bool IsReadOnlyMember(ISymbol member) =>
         member.Locations.All(static location => !location.IsInSource)
         && member.ContainingType is { } type
-        && (PureTypes.Any(name => IsType(type, name)) || PureNamespaces.Contains(type.ContainingNamespace.ToDisplayString()));
+        && (PureTypes.Any(name => IsType(type, name))
+            || CollectionNamespaces.Contains(type.ContainingNamespace.ToDisplayString()) && (member is IPropertySymbol { IsIndexer: true } || CollectionReads.Contains(member.Name)));
 
     // 'List<T>' is "System.Collections.Generic.List<T>"; the name given leaves the type arguments out.
     private static bool IsType(INamedTypeSymbol type, string name)

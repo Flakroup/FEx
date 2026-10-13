@@ -37,39 +37,38 @@ public sealed class InvokeAsExtensionMemberAnalyzer : DiagnosticAnalyzer
         var call = (IInvocationOperation)context.Operation;
         var method = call.TargetMethod;
 
-        // The static form has the unreduced method; 'list.Count()' already carries the reduced one.
+        // A call 'list.Count()' carries the receiver as no argument, so the first argument written as one marks the static form. Only the cheap checks come
+        // first: the speculative binding below is what decides, and what costs.
         if (!method.IsExtensionMethod
-            || method.ReducedFrom is not null
-            || call.Syntax is not InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax { RawKind: (int)SyntaxKind.SimpleMemberAccessExpression } access } invocation
-            || call.Arguments.FirstOrDefault(static argument => argument.Parameter?.Ordinal == 0) is not { Syntax: ArgumentSyntax { Expression: var receiver } thisArgument }
-            || ReceiverIsUnsuitable(receiver)
-            || !NamesType(call.SemanticModel!, access.Expression, method.ContainingType, context)
+            || call.Syntax is not InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax access } invocation
+            || call.Arguments.FirstOrDefault() is not { Syntax: ArgumentSyntax { Expression: var receiver } thisArgument }
+            || receiver.IsKind(SyntaxKind.InterpolatedStringExpression)
+            || IsOutOfOrder(call, invocation)
             || IsInsideDeclaringType(invocation, method.ContainingType, call.SemanticModel!, context))
             return;
 
+        // The edited tree is built node by node, never parsed from text, so a receiver such as 'a + b' stays one operand without parentheses.
         var rest = invocation.ArgumentList.Arguments.Remove(thisArgument);
         var edited = invocation
-            .WithExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, AsReceiver(receiver.WithoutTrivia()), access.OperatorToken, access.Name))
+            .WithExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, receiver, access.OperatorToken, access.Name))
             .WithArgumentList(invocation.ArgumentList.WithArguments(rest));
 
         // The instance form has to find the same extension method: an instance member, another extension or a missing import would change the call.
         if (Speculation.BoundAfter(call.SemanticModel!, invocation, edited, context.CancellationToken) is IMethodSymbol bound
-            && SymbolEqualityComparer.Default.Equals((bound.ReducedFrom ?? bound).OriginalDefinition, method.OriginalDefinition))
+            && SymbolEqualityComparer.Default.Equals(bound.ReducedFrom, method.OriginalDefinition))
             context.ReportDiagnostic(Diagnostic.Create(Rule, access.Name.GetLocation(), method.Name));
     }
 
-    // ReSharper leaves an interpolated string alone as the receiver, though 'receiver' binds fine.
-    private static bool ReceiverIsUnsuitable(ExpressionSyntax receiver) =>
-        receiver.IsKind(SyntaxKind.InterpolatedStringExpression)
-        || receiver is ParenthesizedExpressionSyntax { Expression: var inner } && ReceiverIsUnsuitable(inner);
-
-    // 'Enumerable' or an alias of it, not an expression that happens to be named like a type.
-    private static bool NamesType(SemanticModel model, ExpressionSyntax qualifier, INamedTypeSymbol declaring, OperationAnalysisContext context)
+    // Written out of order, the arguments are evaluated in that order: 'Ext.M(b: F(), a: H())' would call H before F once 'a' moves to the front.
+    // ReSharper stays silent on every such call, and reports the ones written in order, mixed positional and named included.
+    private static bool IsOutOfOrder(IInvocationOperation call, InvocationExpressionSyntax invocation)
     {
-        var symbol = model.GetSymbolInfo(qualifier, context.CancellationToken).Symbol;
+        var written = invocation.ArgumentList.Arguments
+            .Select(argument => call.Arguments.FirstOrDefault(candidate => candidate.Syntax == argument)?.Parameter?.Ordinal)
+            .OfType<int>()
+            .ToList();
 
-        return (symbol is IAliasSymbol alias ? alias.Target : symbol) is INamedTypeSymbol named
-               && SymbolEqualityComparer.Default.Equals(named.OriginalDefinition, declaring.OriginalDefinition);
+        return written.Zip(written.Skip(1), static (before, after) => after < before).Any(static outOfOrder => outOfOrder);
     }
 
     // ReSharper stays silent inside the static class that declares the extension method.
@@ -77,18 +76,10 @@ public sealed class InvokeAsExtensionMemberAnalyzer : DiagnosticAnalyzer
     {
         for (var type = model.GetEnclosingSymbol(invocation.SpanStart, context.CancellationToken)?.ContainingType; type is not null; type = type.ContainingType)
         {
-            if (SymbolEqualityComparer.Default.Equals(type.OriginalDefinition, declaring.OriginalDefinition))
+            if (SymbolEqualityComparer.Default.Equals(type, declaring))
                 return true;
         }
 
         return false;
     }
-
-    private static ExpressionSyntax AsReceiver(ExpressionSyntax receiver) =>
-        receiver.Kind() is SyntaxKind.IdentifierName or SyntaxKind.GenericName or SyntaxKind.SimpleMemberAccessExpression or SyntaxKind.InvocationExpression
-            or SyntaxKind.ElementAccessExpression or SyntaxKind.ThisExpression or SyntaxKind.BaseExpression or SyntaxKind.ParenthesizedExpression
-            or SyntaxKind.ObjectCreationExpression or SyntaxKind.DefaultExpression or SyntaxKind.TypeOfExpression or SyntaxKind.StringLiteralExpression
-            or SyntaxKind.CharacterLiteralExpression or SyntaxKind.SuppressNullableWarningExpression
-            ? receiver
-            : SyntaxFactory.ParenthesizedExpression(receiver);
 }

@@ -62,13 +62,14 @@ public sealed class FuncProcessor : IDisposable
     }
 
     // environmentId is validated here but intentionally not stored (pre-existing behavior).
-#pragma warning disable FEX0058 // Public signature; the argument only has to be present.
+    // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
     public FuncProcessor(string requestUrl,
                          ICredentials credentials,
+#pragma warning disable FEX0058 // Public signature; the argument only has to be present.
                          string? environmentId,
+#pragma warning restore FEX0058
                          IDictionary<string, object>? args = null,
                          RequestMethod method = RequestMethod.GET)
-#pragma warning restore FEX0058
     {
         if (string.IsNullOrWhiteSpace(requestUrl)
             || string.IsNullOrWhiteSpace(environmentId))

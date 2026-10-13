@@ -1,6 +1,4 @@
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
 namespace FEx.Analyzers.Tests;
@@ -242,6 +240,80 @@ public class InvokeAsExtensionMemberAnalyzerTests
             public class C
             {
                 public int M(string s) => System.Linq.Enumerable.Count(s);
+            }
+            """);
+
+    [Fact]
+    public Task Reports_named_arguments_written_in_order_and_a_generic_extension() =>
+        VerifyAsync("""
+            public static class Ext
+            {
+                public static int Sub(this int a, int b) => a - b;
+                public static T Same<T>(this T value) => value;
+            }
+            public class C
+            {
+                public int InOrder(int i) => Ext.{|FEX0056:Sub|}(a: i, b: 1);
+                public int Mixed(int i) => Ext.{|FEX0056:Sub|}(i, b: 1);
+                public int Generic(string s) => Ext.{|FEX0056:Same|}(s).Length;
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_named_arguments_written_out_of_order() =>
+        VerifyAsync("""
+            public static class Ext { public static int Sub(this int a, int b) => a - b; }
+            public class C
+            {
+                private static int F() => 1;
+                private static int G() => 2;
+                public int Plain(int i) => Ext.Sub(b: 1, a: i);
+                public int Calls() => Ext.Sub(b: F(), a: G());
+                public int OneCall(int i) => Ext.Sub(b: F(), a: i);
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_receiver_whose_last_operand_the_extension_does_not_take() =>
+        VerifyAsync("""
+            public static class Ext { public static int Shout(this string s) => s.Length; }
+            public class C
+            {
+                public int M(int i) => Ext.{|FEX0056:Shout|}("a" + i);
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_call_another_extension_of_a_nearer_namespace_would_take() =>
+        VerifyAsync("""
+            public static class Outer { public static int Twice(this int x) => x * 2; }
+            namespace Near
+            {
+                public static class Closer { public static int Twice(this int x) => x * 3; }
+                public class C { public int M(int i) => Outer.Twice(i); }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_parenthesized_receiver_argument() =>
+        VerifyAsync("""
+            public static class Ext { public static int Twice(this int x) => x * 2; public static int Shout(this string s) => s.Length; }
+            public class C
+            {
+                public int M(int i) => Ext.Twice((i));
+                public int N(int i) => Ext.Shout((($"a{i}")));
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_later_arguments_written_out_of_order_behind_the_receiver() =>
+        VerifyAsync("""
+            public static class Ext { public static int Mix(this int a, int b, int c) => a + b + c; }
+            public class C
+            {
+                private static int F() => 1;
+                private static int G() => 2;
+                public int M(int i) => Ext.Mix(i, c: F(), b: G());
             }
             """);
 }

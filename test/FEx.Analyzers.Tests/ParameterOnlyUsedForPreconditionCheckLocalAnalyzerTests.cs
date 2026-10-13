@@ -182,7 +182,7 @@ public class ParameterOnlyUsedForPreconditionCheckLocalAnalyzerTests
             """);
 
     [Fact]
-    public Task Ignores_a_private_override_and_an_explicit_interface_implementation() =>
+    public Task Ignores_an_explicit_interface_implementation() =>
         VerifyAsync("""
             using System;
             public interface IThing { void Do(string s); }
@@ -289,6 +289,136 @@ public class ParameterOnlyUsedForPreconditionCheckLocalAnalyzerTests
                 }
 
                 public void G() { var n = 1; M(ref n); }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_block_lambda_which_does_nothing_but_validate() =>
+        VerifyAsync("""
+            using System;
+            public class C
+            {
+                public Action<string> M() => {|FEX0058:s|} =>
+                {
+                    ArgumentNullException.ThrowIfNull(s);
+                };
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_void_expression_bodied_lambda_that_validates() =>
+        VerifyAsync("""
+            using System;
+            public class C
+            {
+                public Action<string> M() => s => ArgumentNullException.ThrowIfNull(s);
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_protected_override_of_a_sealed_class() =>
+        VerifyAsync("""
+            using System;
+            public class Base { protected virtual void Run(string s) { Console.Write(s); } }
+            public sealed class C : Base
+            {
+                protected override void Run(string s)
+                {
+                    ArgumentNullException.ThrowIfNull(s);
+                    Console.Write(1);
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_method_of_a_private_nested_type_that_a_derived_type_re_lists_an_interface_with() =>
+        VerifyAsync("""
+            using System;
+            public class Outer
+            {
+                private interface IThing { void Do(string s); }
+                private class A
+                {
+                    public void Do(string s)
+                    {
+                        ArgumentNullException.ThrowIfNull(s);
+                        Console.Write(1);
+                    }
+                }
+                private class B : A, IThing { }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_private_method_some_code_takes_as_a_method_group() =>
+        VerifyAsync("""
+            using System;
+            using System.Collections.Generic;
+            public class C
+            {
+                private void Check(string s)
+                {
+                    ArgumentNullException.ThrowIfNull(s);
+                    Console.Write(1);
+                }
+
+                public void Hook(List<string> items) => items.ForEach(Check);
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_local_function_some_code_takes_as_a_method_group() =>
+        VerifyAsync("""
+            using System;
+            using System.Collections.Generic;
+            public class C
+            {
+                public void Hook(List<string> items)
+                {
+                    items.ForEach(Check);
+
+                    void Check(string s)
+                    {
+                        ArgumentNullException.ThrowIfNull(s);
+                        Console.Write(1);
+                    }
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Reports_a_parameter_of_a_local_function_that_is_only_called() =>
+        VerifyAsync("""
+            using System;
+            public class C
+            {
+                public void Hook()
+                {
+                    Check("a");
+
+                    void Check(string {|FEX0058:s|})
+                    {
+                        ArgumentNullException.ThrowIfNull(s);
+                        Console.Write(1);
+                    }
+                }
+            }
+            """);
+
+    [Fact]
+    public Task Ignores_a_generic_method_some_code_takes_as_a_method_group() =>
+        VerifyAsync("""
+            using System;
+            using System.Collections.Generic;
+            public class C
+            {
+                private void Check<T>(T s)
+                {
+                    ArgumentNullException.ThrowIfNull(s);
+                    Console.Write(1);
+                }
+
+                public void Hook(List<string> items) => items.ForEach(Check);
             }
             """);
 }

@@ -116,4 +116,48 @@ public class AnalyzerGuardTests
     [Fact]
     public Task FEX0051_never_reports_in_a_nested_type_of_a_tagged_type() =>
         Silent<ConvertToConstantLocalAnalyzer>("[System.CodeDom.Compiler.GeneratedCode(\"tool\", \"1\")] public class K { private class N { private int _mode = 1; public int G() => _mode; } }");
+
+    [Fact]
+    public Task FEX0054_never_reports_in_generated_code() =>
+        Silent<RedundantEmptyObjectCreationArgumentListAnalyzer>(Banner + "public class R { public int A; public R M() => new R() { A = 1 }; }");
+
+    [Fact]
+    public Task FEX0055_never_reports_in_generated_code() =>
+        Silent<RedundantEmptyObjectOrCollectionInitializerAnalyzer>(Banner + "public class R { public R M() => new R { }; }");
+
+    [Fact]
+    public Task FEX0056_never_reports_in_generated_code() =>
+        Silent<InvokeAsExtensionMemberAnalyzer>(Banner + "using System.Collections.Generic; using System.Linq; public class R { public int M(List<int> l) => Enumerable.Count(l); }");
+
+    [Fact]
+    public Task FEX0057_never_reports_in_generated_code() =>
+        Silent<ParameterOnlyUsedForPreconditionCheckGlobalAnalyzer>(Banner + "public class R { public void M(string s) { System.ArgumentNullException.ThrowIfNull(s); System.Console.Write(1); } }");
+
+    [Fact]
+    public Task FEX0058_never_reports_in_generated_code() =>
+        Silent<ParameterOnlyUsedForPreconditionCheckLocalAnalyzer>(Banner + "public class R { private void M(string s) { System.ArgumentNullException.ThrowIfNull(s); System.Console.Write(1); } }");
+
+    [Fact]
+    public Task FEX0057_method_group_in_generated_code_counts() =>
+        Silent<ParameterOnlyUsedForPreconditionCheckGlobalAnalyzer>(
+            "public partial class R { public void M(string s) { System.ArgumentNullException.ThrowIfNull(s); System.Console.Write(1); } }",
+            [Banner + "public partial class R { public System.Action<string> F() => M; }"]);
+
+    [Fact]
+    public Task FEX0058_method_group_in_generated_code_counts() =>
+        Silent<ParameterOnlyUsedForPreconditionCheckLocalAnalyzer>(
+            "public partial class R { private void M(string s) { System.ArgumentNullException.ThrowIfNull(s); System.Console.Write(1); } }",
+            [Banner + "public partial class R { public System.Action<string> F() => M; }"]);
+
+    [Fact]
+    public Task FEX0057_never_reports_in_a_type_tagged_GeneratedCode() =>
+        Silent<ParameterOnlyUsedForPreconditionCheckGlobalAnalyzer>("[System.CodeDom.Compiler.GeneratedCode(\"tool\", \"1\")] public class R { public void M(string s) { System.ArgumentNullException.ThrowIfNull(s); System.Console.Write(1); } }");
+
+    [Fact]
+    public Task FEX0058_never_reports_in_a_type_tagged_CompilerGenerated() =>
+        Silent<ParameterOnlyUsedForPreconditionCheckLocalAnalyzer>("[System.Runtime.CompilerServices.CompilerGenerated] public class R { private void M(string s) { System.ArgumentNullException.ThrowIfNull(s); System.Console.Write(1); } }");
+
+    [Fact]
+    public Task FEX0058_never_reports_a_lambda_or_a_local_function_in_a_CompilerGenerated_type() =>
+        Silent<ParameterOnlyUsedForPreconditionCheckLocalAnalyzer>("[System.Runtime.CompilerServices.CompilerGenerated] public class R { public System.Action<string> F() => s => { System.ArgumentNullException.ThrowIfNull(s); }; public void G() { H(\"a\"); void H(string t) { System.ArgumentNullException.ThrowIfNull(t); System.Console.Write(1); } } }");
 }

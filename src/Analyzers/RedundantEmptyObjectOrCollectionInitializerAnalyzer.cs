@@ -27,21 +27,17 @@ public sealed class RedundantEmptyObjectOrCollectionInitializerAnalyzer : Diagno
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(Analyze, SyntaxKind.ObjectInitializerExpression, SyntaxKind.CollectionInitializerExpression);
+        context.RegisterSyntaxNodeAction(Analyze, SyntaxKind.ObjectInitializerExpression);
     }
 
     private static void Analyze(SyntaxNodeAnalysisContext context)
     {
         var initializer = (InitializerExpressionSyntax)context.Node;
 
-        // An array initializer is the array's only way to be sized, and 'with { }' is a copy: neither is a creation's optional tail.
-        var ofCreation = initializer.Parent is BaseObjectCreationExpressionSyntax
-                         || initializer.Parent is AssignmentExpressionSyntax { Parent: InitializerExpressionSyntax { RawKind: (int)SyntaxKind.ObjectInitializerExpression } } assignment
-                         && assignment.Right == initializer;
-
+        // An empty pair of braces is always an object initializer, whatever the type: the parser has no way to tell a collection's apart. An array
+        // initializer is the array's only way to be sized and 'with { }' is a copy; neither has this kind.
         // A comment inside the braces is something the author wrote on purpose.
-        if (ofCreation
-            && initializer.Expressions.Count == 0
+        if (initializer.Expressions.Count == 0
             && !EmptyInitializers.HasComment(initializer.OpenBraceToken.TrailingTrivia)
             && !EmptyInitializers.HasComment(initializer.CloseBraceToken.LeadingTrivia))
             context.ReportDiagnostic(Diagnostic.Create(Rule, initializer.GetLocation()));

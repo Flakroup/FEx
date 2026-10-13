@@ -23,6 +23,7 @@ internal static class AnalyzerTestHelper
     /// Mark each expected hit as <c>{|FEX0001:code|}</c>; unmarked code must stay silent.
     /// Pass <see cref="CompilerDiagnostics.None"/> to run over code that does not compile, the way an editor does while the user types.
     /// <paramref name="editorConfig"/> is the text of the <c>.editorconfig</c> at the root of the project.
+    /// <paramref name="references"/> are assemblies the source may use besides the framework: code in a library is not code in source.
     /// </summary>
     public static async Task VerifyAsync<TAnalyzer>(
         string source,
@@ -31,7 +32,8 @@ internal static class AnalyzerTestHelper
         string[]? otherFiles = null,
         DiagnosticResult[]? expected = null,
         CompilerDiagnostics compilerDiagnostics = CompilerDiagnostics.Errors,
-        string? editorConfig = null)
+        string? editorConfig = null,
+        MetadataReference[]? references = null)
         where TAnalyzer : DiagnosticAnalyzer, new()
     {
         var test = new CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
@@ -42,6 +44,8 @@ internal static class AnalyzerTestHelper
         };
         foreach (var (text, index) in (otherFiles ?? []).Select((text, index) => (text, index)))
             test.TestState.Sources.Add(($"Other{index}.cs", text));
+        foreach (var reference in references ?? [])
+            test.TestState.AdditionalReferences.Add(reference);
         if (editorConfig is not null)
             test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
         test.ExpectedDiagnostics.AddRange(expected ?? []);

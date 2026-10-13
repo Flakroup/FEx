@@ -17,14 +17,16 @@ public sealed class ParameterOnlyUsedForPreconditionCheckLocalAnalyzer : Diagnos
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A parameter that is validated and then never read has no effect on what the body does, so the body either misses a use or the parameter is dead. Replaces the ReSharper inspection ParameterOnlyUsedForPreconditionCheck.Local.");
+        "A parameter that is validated and then never read has no effect on what the body does, so the body either misses a use or the parameter is dead. Replaces the ReSharper inspection ParameterOnlyUsedForPreconditionCheck.Local.",
+        null,
+        WellKnownDiagnosticTags.CompilationEnd);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
-        context.RegisterOperationBlockAction(block => PreconditionCheckAnalysis.Analyze(block, Rule, true));
+        context.RegisterCompilationStartAction(static start => PreconditionCheckAnalysis.Start(start, Rule, true));
     }
 }

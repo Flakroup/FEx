@@ -146,8 +146,8 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
     /// own and rethrows, while a failed read here must not log anything beyond what
     /// <see cref="OnDecryptionFailed" /> chooses to - a derived type may override it to surface the failure in the
     /// UI instead. <see cref="OnDecryptionFailed" /> gets a <see cref="FExDecryptionException" /> naming the
-    /// exception type and JSON path, with no inner exception, because the serializer's exception message can
-    /// quote the decrypted value.
+    /// exception type and the redacted JSON path (no dictionary keys), with no inner exception, because the
+    /// serializer's exception message can quote the decrypted value.
     /// </para>
     /// </remarks>
     protected T? DecryptFromJsonSource<T>(string? source, [CallerMemberName] string? propertyName = null)
@@ -157,17 +157,19 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
         if (json is null)
             return default;
 
+        var settings = JsonExtensions.DefaultSettings;
+
         try
         {
             return json == JsonExtensions.NullString
                 ? default
-                : JsonConvert.DeserializeObject<T>(json, JsonExtensions.DefaultSettings);
+                : JsonConvert.DeserializeObject<T>(json, settings);
         }
         catch (Exception ex)
         {
             OnDecryptionFailed(propertyName,
                 new FExDecryptionException(
-                    $"The stored value of '{propertyName}' is not a valid {typeof(T).Name} ({ex.GetType().Name} at path '{ex.GetJsonPath()}')."));
+                    $"The stored value of '{propertyName}' is not a valid {typeof(T).Name} ({ex.GetType().Name} at path '{ex.GetJsonPath(typeof(T), settings)}')."));
 
             return default;
         }

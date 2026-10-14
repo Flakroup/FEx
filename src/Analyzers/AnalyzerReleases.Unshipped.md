@@ -58,3 +58,8 @@ FEX0050 | Correctness | Warning | ValueParameterNotUsedAnalyzer
 FEX0051 | Correctness | Warning | ConvertToConstantLocalAnalyzer
 FEX0052 | Correctness | Warning | MethodHasAsyncOverloadWithCancellationAnalyzer
 FEX0053 | Correctness | Warning | UseCancellationTokenForIAsyncEnumerableAnalyzer
+FEX0054 | Redundancy | Warning | RedundantEmptyObjectCreationArgumentListAnalyzer
+FEX0055 | Redundancy | Warning | RedundantEmptyObjectOrCollectionInitializerAnalyzer
+FEX0056 | Correctness | Warning | InvokeAsExtensionMemberAnalyzer
+FEX0057 | Correctness | Warning | ParameterOnlyUsedForPreconditionCheckGlobalAnalyzer
+FEX0058 | Correctness | Warning | ParameterOnlyUsedForPreconditionCheckLocalAnalyzer

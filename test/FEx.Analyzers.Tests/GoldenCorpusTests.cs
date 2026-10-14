@@ -80,6 +80,11 @@ public class GoldenCorpusTests
         [ConvertToConstantLocalAnalyzer.DiagnosticId] = "ConvertToConstant.Local",
         [MethodHasAsyncOverloadWithCancellationAnalyzer.DiagnosticId] = "MethodHasAsyncOverloadWithCancellation",
         [UseCancellationTokenForIAsyncEnumerableAnalyzer.DiagnosticId] = "UseCancellationTokenForIAsyncEnumerable",
+        [RedundantEmptyObjectCreationArgumentListAnalyzer.DiagnosticId] = "RedundantEmptyObjectCreationArgumentList",
+        [RedundantEmptyObjectOrCollectionInitializerAnalyzer.DiagnosticId] = "RedundantEmptyObjectOrCollectionInitializer",
+        [InvokeAsExtensionMemberAnalyzer.DiagnosticId] = "InvokeAsExtensionMember",
+        [ParameterOnlyUsedForPreconditionCheckGlobalAnalyzer.DiagnosticId] = "ParameterOnlyUsedForPreconditionCheck.Global",
+        [ParameterOnlyUsedForPreconditionCheckLocalAnalyzer.DiagnosticId] = "ParameterOnlyUsedForPreconditionCheck.Local",
     };
 
     [Fact]
@@ -144,7 +149,12 @@ public class GoldenCorpusTests
             new ValueParameterNotUsedAnalyzer(),
             new ConvertToConstantLocalAnalyzer(),
             new MethodHasAsyncOverloadWithCancellationAnalyzer(),
-            new UseCancellationTokenForIAsyncEnumerableAnalyzer());
+            new UseCancellationTokenForIAsyncEnumerableAnalyzer(),
+            new RedundantEmptyObjectCreationArgumentListAnalyzer(),
+            new RedundantEmptyObjectOrCollectionInitializerAnalyzer(),
+            new InvokeAsExtensionMemberAnalyzer(),
+            new ParameterOnlyUsedForPreconditionCheckGlobalAnalyzer(),
+            new ParameterOnlyUsedForPreconditionCheckLocalAnalyzer());
         var diagnostics = await compilation.WithAnalyzers(analyzers).GetAnalyzerDiagnosticsAsync(TestContext.Current.CancellationToken);
 
         // A crashing analyzer reports AD0001 and has no SourceTree to map to a sample; name the crash instead.

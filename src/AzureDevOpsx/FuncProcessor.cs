@@ -65,7 +65,9 @@ public sealed class FuncProcessor : IDisposable
     // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
     public FuncProcessor(string requestUrl,
                          ICredentials credentials,
+#pragma warning disable FEX0058 // Public signature; the argument only has to be present.
                          string? environmentId,
+#pragma warning restore FEX0058
                          IDictionary<string, object>? args = null,
                          RequestMethod method = RequestMethod.GET)
     {

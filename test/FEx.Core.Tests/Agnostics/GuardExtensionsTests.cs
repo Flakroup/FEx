@@ -129,20 +129,6 @@ public sealed class GuardExtensionsTests
             declaration.Groups["attributes"].Value.ShouldNotContain("ContractAnnotation");
     }
 
-    private static string GuardExtensionsSourcePath()
-    {
-        var relative = Path.Combine("src", "Agnostics.Abstractions", "Extensions", "GuardExtensions.cs");
-
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
-             directory is not null;
-             directory = directory.Parent)
-        {
-            var candidate = Path.Combine(directory.FullName, relative);
-
-            if (File.Exists(candidate))
-                return candidate;
-        }
-
-        throw new FileNotFoundException($"No {relative} above {AppContext.BaseDirectory}.");
-    }
+    private static string GuardExtensionsSourcePath() =>
+        Path.Combine(RepositoryLocator.FindRoot(), "src", "Agnostics.Abstractions", "Extensions", "GuardExtensions.cs");
 }

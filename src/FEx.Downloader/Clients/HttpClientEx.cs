@@ -21,6 +21,8 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
 {
     private const int BufferSize = 81920;
     private const double MaxRetryDelayMs = 30_000;
+    private const int ReplaceAttempts = 5;
+    private const int ReplaceRetryDelayMs = 100;
 
     private readonly bool _ownCTS;
     private string? _filePath;
@@ -342,7 +344,7 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
                 }
 
                 if (File.Exists(filePath))
-                    File.Replace(tempPath, filePath, null);
+                    await ReplaceWithRetryAsync(tempPath, filePath);
                 else
                     File.Move(tempPath, filePath);
             }
@@ -357,6 +359,24 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         {
             if (lockOnFilePath)
                 LockSrv.Release(filePath);
+        }
+    }
+
+    // Windows refuses File.Replace while another process (indexer, antivirus) briefly holds the destination open.
+    private async Task ReplaceWithRetryAsync(string tempPath, string filePath)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                File.Replace(tempPath, filePath, null);
+
+                return;
+            }
+            catch (IOException) when (attempt < ReplaceAttempts)
+            {
+                await Task.Delay(ReplaceRetryDelayMs, CancellationToken);
+            }
         }
     }
 

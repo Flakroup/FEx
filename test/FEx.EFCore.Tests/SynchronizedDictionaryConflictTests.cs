@@ -3,7 +3,6 @@ using FEx.EFCore.Collections;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
 using FEx.EFCore.Services;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -25,16 +24,15 @@ namespace FEx.EFCore.Tests;
 /// The dictionary saves through a real <see cref="PooledDbService{TDbContext}" />; a second writer is a separate
 /// context on the same SQLite database.
 /// </summary>
-public sealed class SynchronizedDictionaryConflictTests : IDisposable
+public sealed class SynchronizedDictionaryConflictTests : IAsyncDisposable, IDisposable
 {
-    private readonly SqliteConnection _connection = new("DataSource=:memory:");
+    private readonly TempSqliteDatabase _database = new();
+    private readonly CacheFlushes _flushes = new();
     private readonly ServiceProvider _services;
     private readonly SqliteDbService<CacheDbContext> _dbService;
 
     public SynchronizedDictionaryConflictTests()
     {
-        _connection.Open();
-
         using (var setup = CreateContext())
         {
             setup.Database.EnsureCreated();
@@ -49,11 +47,27 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
         _dbService = new(_services);
     }
 
+    /// <summary>
+    /// Waits for every dictionary's background save before the database goes away. xUnit calls only this method on a
+    /// class that is also <see cref="IDisposable" />, so it ends in <see cref="Dispose" />. A failed wait fails the test.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await _flushes.FlushAsync();
+        }
+        finally
+        {
+            Dispose();
+        }
+    }
+
     public void Dispose()
     {
         _dbService.Dispose();
         _services.Dispose();
-        _connection.Dispose();
+        _database.Dispose();
     }
 
     [Fact]
@@ -950,7 +964,7 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
 
     private CacheDictionary CreateDictionary(bool useIndex)
     {
-        var dictionary = new CacheDictionary(_dbService, useIndex);
+        var dictionary = _flushes.Track(new CacheDictionary(_dbService, useIndex));
 
         if (useIndex)
             dictionary.Index.Add(1);
@@ -970,7 +984,7 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     private static Change<CachedDoc, int> NewDoc(int id) =>
         new(ChangeReason.Add, id, new() { Id = id, Name = "unrelated", Version = 1 });
 
-    private CacheDbContext CreateContext() => new(_connection);
+    private CacheDbContext CreateContext() => new(_database.ConnectionString);
 
     private async Task<CachedDoc> LoadAsync(int id)
     {
@@ -1021,13 +1035,13 @@ public sealed class SynchronizedDictionaryConflictTests : IDisposable
     {
         public DbSet<CachedDoc> Docs => Set<CachedDoc>();
 
-        public CacheDbContext(SqliteConnection connection)
-            : base(new DbContextOptionsBuilder<CacheDbContext>().UseSqlite(connection).Options)
+        public CacheDbContext(string connectionString)
+            : base(new DbContextOptionsBuilder<CacheDbContext>().UseSqlite(connectionString).Options)
         {
         }
     }
 
-    private sealed class CacheDictionary : SynchronizedDictionary<int, CachedDoc, CacheDbContext>
+    private sealed class CacheDictionary : SynchronizedDictionary<int, CachedDoc, CacheDbContext>, IHasCacheTasks
     {
         public int SaveAttempts { get; private set; }
 

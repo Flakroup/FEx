@@ -103,8 +103,9 @@ public static class JsonExtensions
     /// the contracts of <paramref name="targetType" />: dictionary keys become <c>[*]</c>, array indices and declared
     /// property names stay, and from the first segment the contracts cannot vouch for (a <c>JToken</c> or
     /// <c>object</c> member, a converter, an unknown name) every remaining segment becomes <c>[*]</c>. A converter
-    /// counts whether it comes from an attribute or from the settings: the walk uses the contract resolver and the
-    /// converters of the serializer <see cref="JsonConvert" /> builds for <paramref name="settings" />.
+    /// counts whether it comes from an attribute, from the settings or from Newtonsoft.Json's built-in ones (DataTable,
+    /// DataSet, XmlNode, ...): the walk uses the contract resolver and the converters of the serializer
+    /// <see cref="JsonConvert" /> builds for <paramref name="settings" />.
     /// </summary>
     /// <param name="exception">The exception the deserialization threw.</param>
     /// <param name="targetType">The type that was being deserialized.</param>

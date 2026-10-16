@@ -140,3 +140,14 @@ jobs:
         run: |
           $version = (Get-Content artifacts/packages/release-version.txt -Raw).Trim()
           pwsh ./build.ps1 Publish --skip Restore Compile Test Coverage Verify Pack --configuration Release --release-version $version --nuget-source "https://api.nuget.org/v3/index.json"
+      # The same packages to the internal Azure Artifacts feed, so consumers restoring from it get a new alpha without waiting for
+      # nuget.org to index it. A plain push, not a second NUKE Publish (HEAD is tagged by now, so NUKE would push nothing).
+      # After nuget.org and without continue-on-error: a feed outage cannot block the public release but still turns the job red.
+      # Re-running the failed job is safe: NUKE skips nuget.org (tagged) and --skip-duplicate finishes what this feed lacks.
+      # The runner is Windows, so NuGet keeps the source password DPAPI-encrypted (no --store-password-in-clear-text).
+      - name: Publish to Azure Artifacts (Flakroup feed)
+        env:
+          AZURE_ARTIFACTS_PAT: ${{ secrets.AZURE_ARTIFACTS_PAT }}
+        run: |
+          dotnet nuget add source "https://flakroup.pkgs.visualstudio.com/_packaging/Flakroup/nuget/v3/index.json" --name Flakroup --username az --password $env:AZURE_ARTIFACTS_PAT
+          dotnet nuget push "artifacts/packages/*.nupkg" --source Flakroup --api-key az --skip-duplicate

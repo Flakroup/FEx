@@ -73,3 +73,11 @@ jobs:
         run: |
           $version = (Get-Content artifacts/packages/release-version.txt -Raw).Trim()
           pwsh ./build.ps1 Publish --skip Restore Compile Test Verify Pack --configuration Release --release-version $version --nuget-source "https://api.nuget.org/v3/index.json"
+      # The same packages to the internal Azure Artifacts feed (see the publish job in ci.yml): a plain push after nuget.org,
+      # not a second NUKE Publish, and no continue-on-error. The runner is Windows, so NuGet keeps the source password DPAPI-encrypted.
+      - name: Publish to Azure Artifacts (Flakroup feed)
+        env:
+          AZURE_ARTIFACTS_PAT: ${{ secrets.AZURE_ARTIFACTS_PAT }}
+        run: |
+          dotnet nuget add source "https://flakroup.pkgs.visualstudio.com/_packaging/Flakroup/nuget/v3/index.json" --name Flakroup --username az --password $env:AZURE_ARTIFACTS_PAT
+          dotnet nuget push "artifacts/packages/*.nupkg" --source Flakroup --api-key az --skip-duplicate

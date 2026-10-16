@@ -478,3 +478,6 @@ work/
 
 # NUKE build logs and inspectcode cache (.nuke/parameters.json stays tracked)
 .nuke/temp/
+
+# Mirrored from DevConfigs/.editorconfig at build time (DevConfigsMirrorEditorConfig)
+/.editorconfig

@@ -82,10 +82,21 @@ public sealed class CoverageDebtTests
     {
         var ci = File.ReadAllText(Path.Combine(RepositoryRoot, ".github", "workflows", "ci.yml"));
 
-        ci.ShouldContain("build.ps1 Coverage Inspect");
-        ci.ShouldContain("build.ps1 Coverage Inspect Pack");
+        ci.ShouldMatch(@"build\.ps1 Coverage\r?\n");
+        ci.ShouldContain("build.ps1 Coverage Pack");
+        ci.ShouldNotContain("Inspect");
         ci.ShouldNotContain("build.ps1 Test");
         ci.ShouldContain("--skip Restore Compile Test Coverage Verify Pack");
         ci.ShouldContain("artifacts/test-results/*.cobertura.xml");
+    }
+
+    [Fact]
+    public void ManualPublish_RunsTheSuiteWithoutInspect()
+    {
+        var publish = File.ReadAllText(Path.Combine(RepositoryRoot, ".github", "workflows", "publish.yml"));
+
+        publish.ShouldContain("build.ps1 Test Pack --configuration Release");
+        publish.ShouldNotContain("Inspect");
+        publish.ShouldNotContain("dotnet tool restore");
     }
 }

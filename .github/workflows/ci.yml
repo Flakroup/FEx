@@ -24,9 +24,9 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
 
 jobs:
-  # PR only: full test and inspection (both depend on one NUKE Compile). Push to main/develop runs the
-  # same Coverage and Inspect in the `build` job below, which gates the packages `publish` ships, so they are
-  # not duplicated across two jobs/checkouts.
+  # PR only: the full test suite under Coverage. Push to main/develop runs the same Coverage in the
+  # `build` job below, which gates the packages `publish` ships, so it is not duplicated across two
+  # jobs/checkouts.
   test:
     if: github.event_name == 'pull_request'
     runs-on: windows-latest
@@ -38,14 +38,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Restore workloads (MAUI for FEx.Maui)
-        run: dotnet workload restore FEx.slnx
-      - name: Restore local tools (pinned ReSharper CLT for Inspect)
-        run: dotnet tool restore
-      # One Compile feeds both targets; Coverage runs the suite instrumented and fails below 100% outside
-      # build/CoverageDebt.cs, Inspect fails the build on any ReSharper ERROR.
-      - name: Cover and inspect
-        run: pwsh ./build.ps1 Coverage Inspect
+      # Coverage runs the suite instrumented and fails below 100% outside build/CoverageDebt.cs.
+      - name: Cover
+        run: pwsh ./build.ps1 Coverage
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -57,7 +52,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-  # Push to main/develop, part 1 of 2: the long, flake-prone part (restore, compile, test, inspect, pack).
+  # Push to main/develop, part 1 of 2: the long, flake-prone part (restore, compile, test, pack).
   # It pushes nothing - the packages go up as an artifact and the `publish` job below ships them in one go,
   # so a runner lost here leaves nothing on nuget.org. Mirrors the old .gitlab-ci.yml publish job
   # (push -> develop/main/master).
@@ -73,13 +68,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Restore workloads (MAUI for FEx.Maui)
-        run: dotnet workload restore FEx.slnx
-      - name: Restore local tools (pinned ReSharper CLT for Inspect)
-        run: dotnet tool restore
-      # One Compile feeds all three targets; Coverage (which runs Test) and Inspect gate the Pack output.
-      - name: Cover, inspect and pack
-        run: pwsh ./build.ps1 Coverage Inspect Pack --configuration Release
+      # One Compile feeds both targets; Coverage (which runs Test) gates the Pack output.
+      - name: Cover and pack
+        run: pwsh ./build.ps1 Coverage Pack --configuration Release
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:

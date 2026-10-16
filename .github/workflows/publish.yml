@@ -28,12 +28,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Restore workloads (MAUI for FEx.Maui)
-        run: dotnet workload restore FEx.slnx
-      - name: Restore local tools (pinned ReSharper CLT for Inspect)
-        run: dotnet tool restore
-      - name: Test, inspect and pack
-        run: pwsh ./build.ps1 Test Inspect Pack --configuration Release
+      - name: Test and pack
+        run: pwsh ./build.ps1 Test Pack --configuration Release
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:

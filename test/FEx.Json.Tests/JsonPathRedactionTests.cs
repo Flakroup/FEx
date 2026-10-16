@@ -7,6 +7,7 @@ using NSubstitute;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using Xunit;
 
 namespace FEx.Json.Tests;
@@ -91,6 +92,23 @@ public sealed class JsonPathRedactionTests
     [JsonConverter(typeof(VersionConverter))]
     public sealed class OpaqueDictionary : Dictionary<string, int>;
 
+    /// <summary>Members Newtonsoft.Json reads with its built-in DataTable and DataSet converters.</summary>
+    public sealed class Report
+    {
+        public string? Name { get; set; }
+
+        public DataTable? Table { get; set; }
+
+        public DataSet? Data { get; set; }
+    }
+
+    // Under this resolver DataTable and DataSet resolve to object contracts instead of ISerializable ones, so their
+    // CLR member names (DataSet.Tables, DataTable.TableName) would vouch for JSON names that are data.
+    internal static JsonSerializerSettings ObjectContractsForSerializableTypes { get; } = new()
+    {
+        ContractResolver = new DefaultContractResolver { IgnoreSerializableInterface = true }
+    };
+
     [Fact]
     public void PlainDictionaryKey_IsReplacedWithThePlaceholder()
     {
@@ -173,6 +191,66 @@ public sealed class JsonPathRedactionTests
     public void ContainerItemConverter_RedactsTheRestOfThePath(string path, string expected)
     {
         Exception(path).GetJsonPath(typeof(Account)).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void DataTableColumnName_IsRedacted()
+    {
+        var exception = Should.Throw<JsonReaderException>(() =>
+            JsonConvert.DeserializeObject<Report>("{\"Table\":[{\"password123\":}]}"));
+
+        exception.Path.ShouldBe("Table[0].password123");
+        exception.GetJsonPath(typeof(Report)).ShouldBe("Table[*][*]");
+    }
+
+    [Fact]
+    public void DataSetTableAndColumnNames_AreRedacted()
+    {
+        var exception = Should.Throw<JsonReaderException>(() =>
+            JsonConvert.DeserializeObject<Report>("{\"Data\":{\"secrets\":[{\"password123\":}]}}"));
+
+        exception.Path.ShouldBe("Data.secrets[0].password123");
+        exception.GetJsonPath(typeof(Report)).ShouldBe("Data[*][*][*]");
+    }
+
+    [Fact]
+    public void DataSetTableNamedLikeADataSetMember_IsRedactedWhenTheResolverIgnoresISerializable()
+    {
+        var settings = ObjectContractsForSerializableTypes;
+
+        var exception = Should.Throw<JsonReaderException>(() =>
+            JsonConvert.DeserializeObject<Report>("{\"Data\":{\"tables\":[{\"password123\":}]}}", settings));
+
+        exception.Path.ShouldBe("Data.tables[0].password123");
+        exception.GetJsonPath(typeof(Report), settings).ShouldBe("Data[*][*][*]");
+    }
+
+    [Theory]
+    [InlineData("Table.TableName", "Table[*]")]
+    [InlineData("Table[0].password123", "Table[*][*]")]
+    [InlineData("Data.Tables[0].password123", "Data[*][*][*]")]
+    public void BuiltInConverterMember_RedactsTheRestOfThePathWhenTheResolverIgnoresISerializable(string path,
+        string expected)
+    {
+        Exception(path).GetJsonPath(typeof(Report), ObjectContractsForSerializableTypes).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("Table.TableName", "Table[*]")]
+    [InlineData("Table[0].password123", "Table[*][*]")]
+    [InlineData("Data.secrets[0].password123", "Data[*][*][*]")]
+    public void BuiltInConverterMember_RedactsTheRestOfThePath(string path, string expected)
+    {
+        Exception(path).GetJsonPath(typeof(Report)).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void OrdinaryMember_StaysWhenTheResolverIgnoresISerializable()
+    {
+        var settings = ObjectContractsForSerializableTypes;
+
+        Exception("Name").GetJsonPath(typeof(Report), settings).ShouldBe("Name");
+        Exception("Children[1].Thing.Name").GetJsonPath(typeof(Account), settings).ShouldBe("Children[1].Thing.Name");
     }
 
     [Fact]

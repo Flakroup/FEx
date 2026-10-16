@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,7 +16,7 @@ namespace FEx.Analyzers.Tests;
 /// </summary>
 public partial class OwnAnalyzerWiringTests
 {
-    private static readonly string Root = FindRepositoryRoot();
+    private static readonly string Root = RepositoryLocator.FindRoot();
 
     private static readonly XElement ItemGroup = XDocument.Load(Path.Combine(Root, "Directory.Build.targets"))
         .Descendants("ItemGroup")
@@ -65,16 +64,4 @@ public partial class OwnAnalyzerWiringTests
 
     [GeneratedRegex(@"'\$\(MSBuildProjectName\)'\s*!=\s*'(?<name>[^']+)'")]
     private static partial Regex ExcludedProject();
-
-    private static string FindRepositoryRoot()
-    {
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "Directory.Build.targets"))
-                && File.Exists(Path.Combine(directory.FullName, "src", "Analyzers", "FEx.Analyzers.csproj")))
-                return directory.FullName;
-        }
-
-        throw new FileNotFoundException("The repository root (Directory.Build.targets next to src/Analyzers) was not found above the test output directory.");
-    }
 }

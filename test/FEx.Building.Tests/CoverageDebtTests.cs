@@ -12,7 +12,7 @@ namespace FEx.Building.Tests;
 /// </summary>
 public sealed class CoverageDebtTests
 {
-    private static string RepositoryRoot { get; } = FindRepositoryRoot();
+    private static string RepositoryRoot { get; } = RepositoryLocator.FindRoot();
 
     [Fact]
     public void Debt_NamesFilesOnly_NeverADirectory()
@@ -87,16 +87,5 @@ public sealed class CoverageDebtTests
         ci.ShouldNotContain("build.ps1 Test");
         ci.ShouldContain("--skip Restore Compile Test Coverage Verify Pack");
         ci.ShouldContain("artifacts/test-results/*.cobertura.xml");
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "FEx.slnx")))
-                return directory.FullName;
-        }
-
-        throw new InvalidOperationException("FEx.slnx not found above the test output directory.");
     }
 }

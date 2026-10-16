@@ -135,6 +135,37 @@ public sealed class FromJsonLoggingTests : IDisposable
     }
 
     [Fact]
+    public void FromJson_DataTableColumnName_IsNotLogged()
+    {
+        Should.Throw<JsonReaderException>(() =>
+            "{\"Table\":[{\"password123\":}]}".FromJson<JsonPathRedactionTests.Report>());
+
+        LoggedText().ShouldContain("at path 'Table[*][*]'");
+        LoggedArguments().ShouldAllBe(text => !text.Contains("password123"));
+    }
+
+    [Fact]
+    public void FromJson_DataSetTableAndColumnNames_AreNotLogged()
+    {
+        Should.Throw<JsonReaderException>(() =>
+            "{\"Data\":{\"secrets\":[{\"password123\":}]}}".FromJson<JsonPathRedactionTests.Report>());
+
+        LoggedText().ShouldContain("at path 'Data[*][*][*]'");
+        LoggedArguments().ShouldAllBe(text => !text.Contains("secrets") && !text.Contains("password123"));
+    }
+
+    [Fact]
+    public void FromJson_DataSetTableNamedLikeADataSetMember_IsNotLoggedWhenTheResolverIgnoresISerializable()
+    {
+        Should.Throw<JsonReaderException>(() =>
+            "{\"Data\":{\"tables\":[{\"password123\":}]}}".FromJson<JsonPathRedactionTests.Report>(
+                JsonPathRedactionTests.ObjectContractsForSerializableTypes));
+
+        LoggedText().ShouldContain("at path 'Data[*][*][*]'");
+        LoggedArguments().ShouldAllBe(text => !text.Contains("tables") && !text.Contains("password123"));
+    }
+
+    [Fact]
     public void FromJson_WithoutSettings_RedactsThePathWithTheConvertersOfTheDefaultSettings()
     {
         // JsonExtensions installs its own defaults on first use, so it is initialized before they are swapped.

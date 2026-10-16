@@ -3,7 +3,6 @@ using FEx.EFCore.Collections;
 using FEx.EFCore.Helpers;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,9 +26,10 @@ namespace FEx.EFCore.Tests;
 /// The acceptance cases of #197: a cached value is saved by loading its row and applying the cached state onto it, so
 /// only the value itself and its owned types are written.
 /// </summary>
-public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
+public sealed class SynchronizedDictionaryLoadAndApplyTests : IAsyncDisposable, IDisposable
 {
-    private readonly SqliteConnection _connection = new("DataSource=:memory:");
+    private readonly TempSqliteDatabase _database = new();
+    private readonly CacheFlushes _flushes = new();
     private readonly ServiceProvider _services;
     private readonly SqliteDbService<ApplyDbContext> _dbService;
     private readonly WriteCounter _writes = new();
@@ -37,8 +37,6 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
 
     public SynchronizedDictionaryLoadAndApplyTests()
     {
-        _connection.Open();
-
         using (var setup = CreateContext())
         {
             setup.Database.EnsureCreated();
@@ -84,18 +82,34 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         _dbService = new(_services);
     }
 
+    /// <summary>
+    /// Waits for every dictionary's background save before the database goes away. xUnit calls only this method on a
+    /// class that is also <see cref="IDisposable" />, so it ends in <see cref="Dispose" />. A failed wait fails the test.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await _flushes.FlushAsync();
+        }
+        finally
+        {
+            Dispose();
+        }
+    }
+
     public void Dispose()
     {
         _dbService.Dispose();
         _services.Dispose();
-        _connection.Dispose();
+        _database.Dispose();
     }
 
     /// <summary>Case 1: a repointed navigation saves its foreign key, shadow or explicit.</summary>
     [Fact]
     public async Task RepointedReferenceNavigation_SavesTheForeignKey()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         var person2 = await LoadPersonAsync(2);
         sut.AddOrUpdateValue(doc);
@@ -115,7 +129,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task OwnedCollectionWithShadowKey_IsNotDuplicated()
     {
-        using var sut = new NoteDocDictionary(_dbService);
+        using var sut = _flushes.Track(new NoteDocDictionary(_dbService));
         NoteDoc doc;
 
         using (var ctx = CreateContext())
@@ -137,7 +151,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task NewOwnedItemWithClientSetKey_IsInserted()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
 
@@ -156,7 +170,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task NestedOwnedEntityUnderNewOwnedItem_IsInsertedWithTheRootEdit()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
 
@@ -177,7 +191,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task PrincipalEditedByAnotherWriter_IsNotOverwritten()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
 
@@ -199,7 +213,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task OwnedCollectionItemRemoved_IsDeleted()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
 
@@ -219,7 +233,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task MutableScalarsEditedByAnotherWriter_RaiseConflict()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
         var conflicts = new ConcurrentQueue<CacheConflict<int, ApplyDoc>>();
@@ -249,7 +263,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task StaleTokenWithoutOtherDifferences_RaisesConflict()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
         var conflicts = new ConcurrentQueue<CacheConflict<int, ApplyDoc>>();
@@ -269,7 +283,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task TphDerivedMembers_AreSaved()
     {
-        using var sut = new AnimalDictionary(_dbService);
+        using var sut = _flushes.Track(new AnimalDictionary(_dbService));
         Animal dog;
 
         using (var ctx = CreateContext())
@@ -297,7 +311,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
             ctx.ChangeTracker.LazyLoadingEnabled = false;
         };
 
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
 
@@ -316,7 +330,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task UnchangedValue_SavesWithoutWriting()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
         var writesBefore = _writes.Count;
@@ -333,7 +347,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task EditedOwnedItem_KeepsItsRow()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
         var tagId = doc.Tags.ShouldHaveSingleItem().Id;
@@ -355,7 +369,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     public async Task UnchangedShadowKeyedItems_KeepTheirRows()
     {
         var keysBefore = await NoteKeysAsync(1);
-        using var sut = new NoteDocDictionary(_dbService);
+        using var sut = _flushes.Track(new NoteDocDictionary(_dbService));
         var doc = await LoadNoteDocAsync(1);
         sut.AddOrUpdateValue(doc);
 
@@ -372,7 +386,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     public async Task DuplicateAndReorderedShadowKeyedItems_KeepTheirRows()
     {
         var keysBefore = await NoteKeysAsync(2);
-        using var sut = new NoteDocDictionary(_dbService);
+        using var sut = _flushes.Track(new NoteDocDictionary(_dbService));
         var doc = await LoadNoteDocAsync(2);
         sut.AddOrUpdateValue(doc);
 
@@ -392,7 +406,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task OwnedReference_ClearedIsDeleted_AndSetIsInserted()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
 
@@ -414,7 +428,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task OwnedReference_NullInBothTheCachedValueAndTheRow_StaysAbsent()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
 
@@ -475,7 +489,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
     [Fact]
     public async Task PrincipalWithShadowKey_LeavesTheForeignKey()
     {
-        using var sut = new DocDictionary(_dbService);
+        using var sut = _flushes.Track(new DocDictionary(_dbService));
         var doc = await LoadDocAsync();
         sut.AddOrUpdateValue(doc);
 
@@ -665,13 +679,13 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         (await reader.Items.SingleAsync(i => i.Id == 1, TestContext.Current.CancellationToken)).Price.ShouldBe(99);
     }
 
-    private ApplyDbContext CreateContext() => new(_connection, _writes);
+    private ApplyDbContext CreateContext() => new(_database.ConnectionString, _writes);
 
-    private IdDictionary<Node> NodeDictionary() => new(_dbService, n => n.Id, ctx => ctx.Nodes);
+    private IdDictionary<Node> NodeDictionary() => _flushes.Track(new IdDictionary<Node>(_dbService, n => n.Id, ctx => ctx.Nodes));
 
-    private IdDictionary<Item> ItemDictionary() => new(_dbService, i => i.Id, ctx => ctx.Items);
+    private IdDictionary<Item> ItemDictionary() => _flushes.Track(new IdDictionary<Item>(_dbService, i => i.Id, ctx => ctx.Items));
 
-    private IdDictionary<PNode> PNodeDictionary() => new(_dbService, n => n.Id, ctx => ctx.PNodes);
+    private IdDictionary<PNode> PNodeDictionary() => _flushes.Track(new IdDictionary<PNode>(_dbService, n => n.Id, ctx => ctx.PNodes));
 
     private async Task<PNode> LoadPNodeAsync(int id)
     {
@@ -918,8 +932,8 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         public DbSet<Badge> Badges => Set<Badge>();
         public DbSet<PNode> PNodes => Set<PNode>();
 
-        public ApplyDbContext(SqliteConnection connection, WriteCounter writes)
-            : base(new DbContextOptionsBuilder<ApplyDbContext>().UseSqlite(connection).AddInterceptors(writes).Options)
+        public ApplyDbContext(string connectionString, WriteCounter writes)
+            : base(new DbContextOptionsBuilder<ApplyDbContext>().UseSqlite(connectionString).AddInterceptors(writes).Options)
         {
         }
 
@@ -1014,7 +1028,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         }
     }
 
-    private sealed class IdDictionary<TValue> : SynchronizedDictionary<int, TValue, ApplyDbContext>
+    private sealed class IdDictionary<TValue> : SynchronizedDictionary<int, TValue, ApplyDbContext>, IHasCacheTasks
         where TValue : class, INotifyPropertyChanged
     {
         private readonly Expression<Func<TValue, int>> _key;
@@ -1042,7 +1056,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
             throw new NotSupportedException();
     }
 
-    private sealed class DocDictionary : SynchronizedDictionary<int, ApplyDoc, ApplyDbContext>
+    private sealed class DocDictionary : SynchronizedDictionary<int, ApplyDoc, ApplyDbContext>, IHasCacheTasks
     {
         public List<(bool AutoDetectChanges, QueryTrackingBehavior Tracking, bool LazyLoading)> SavingContextSettings
         {
@@ -1073,7 +1087,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         protected override ApplyDoc GetNew(int key, IDictionary<string, object>? param = null) => new() { Id = key };
     }
 
-    private sealed class NoteDocDictionary : SynchronizedDictionary<int, NoteDoc, ApplyDbContext>
+    private sealed class NoteDocDictionary : SynchronizedDictionary<int, NoteDoc, ApplyDbContext>, IHasCacheTasks
     {
         public NoteDocDictionary(IEFCoreDatabaseBackedService<ApplyDbContext> dbService)
             : base(dbService, nameof(NoteDoc.Id))
@@ -1091,7 +1105,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IDisposable
         protected override NoteDoc GetNew(int key, IDictionary<string, object>? param = null) => new() { Id = key };
     }
 
-    private sealed class AnimalDictionary : SynchronizedDictionary<int, Animal, ApplyDbContext>
+    private sealed class AnimalDictionary : SynchronizedDictionary<int, Animal, ApplyDbContext>, IHasCacheTasks
     {
         public AnimalDictionary(IEFCoreDatabaseBackedService<ApplyDbContext> dbService)
             : base(dbService, nameof(Animal.Id))

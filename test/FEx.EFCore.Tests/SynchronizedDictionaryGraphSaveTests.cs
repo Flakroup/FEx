@@ -2,7 +2,6 @@ using DynamicData;
 using FEx.EFCore.Collections;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Models;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -21,16 +20,15 @@ namespace FEx.EFCore.Tests;
 /// Graph shapes of a cached value the save path (load the row, apply the cached state) handles; the acceptance cases of
 /// #197 are in <see cref="SynchronizedDictionaryLoadAndApplyTests" />.
 /// </summary>
-public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
+public sealed class SynchronizedDictionaryGraphSaveTests : IAsyncDisposable, IDisposable
 {
-    private readonly SqliteConnection _connection = new("DataSource=:memory:");
+    private readonly TempSqliteDatabase _database = new();
+    private readonly CacheFlushes _flushes = new();
     private readonly ServiceProvider _services;
     private readonly SqliteDbService<GraphDbContext> _dbService;
 
     public SynchronizedDictionaryGraphSaveTests()
     {
-        _connection.Open();
-
         using (var setup = CreateContext())
         {
             setup.Database.EnsureCreated();
@@ -60,17 +58,33 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         _dbService = new(_services);
     }
 
+    /// <summary>
+    /// Waits for every dictionary's background save before the database goes away. xUnit calls only this method on a
+    /// class that is also <see cref="IDisposable" />, so it ends in <see cref="Dispose" />. A failed wait fails the test.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await _flushes.FlushAsync();
+        }
+        finally
+        {
+            Dispose();
+        }
+    }
+
     public void Dispose()
     {
         _dbService.Dispose();
         _services.Dispose();
-        _connection.Dispose();
+        _database.Dispose();
     }
 
     [Fact]
     public async Task SavingACachedEntity_StillSavesItsOwnedValues()
     {
-        using var sut = new GraphDictionary(_dbService);
+        using var sut = _flushes.Track(new GraphDictionary(_dbService));
         var doc = await LoadWithCategoryAsync();
         sut.AddOrUpdateValue(doc);
 
@@ -86,7 +100,7 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
     [Fact]
     public async Task BatchOfTwoValuesReachingEachOtherThroughAnInverseCollection_SavesBoth()
     {
-        using var sut = new GraphDictionary(_dbService);
+        using var sut = _flushes.Track(new GraphDictionary(_dbService));
         await sut.CacheAllAsync();
         var first = sut[1];
         var second = sut[2];
@@ -102,7 +116,7 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
     [Fact]
     public async Task OwnedCollection_NewItemAndEditedItem_AreSavedWithTheValue()
     {
-        using var sut = new GraphDictionary(_dbService);
+        using var sut = _flushes.Track(new GraphDictionary(_dbService));
         var doc = await LoadWithCategoryAsync();
         sut.AddOrUpdateValue(doc);
 
@@ -118,7 +132,7 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
     [Fact]
     public async Task OwnedCollection_RemovedItem_IsDeleted()
     {
-        using var sut = new GraphDictionary(_dbService);
+        using var sut = _flushes.Track(new GraphDictionary(_dbService));
         var doc = await LoadWithCategoryAsync();
         sut.AddOrUpdateValue(doc);
 
@@ -144,7 +158,7 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         return [.. doc.Tags.OrderBy(t => t.Id).Select(t => t.Label)];
     }
 
-    private GraphDbContext CreateContext() => new(_connection);
+    private GraphDbContext CreateContext() => new(_database.ConnectionString);
 
     private async Task<GraphDoc> LoadWithCategoryAsync()
     {
@@ -206,8 +220,8 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         public DbSet<GraphDoc> Docs => Set<GraphDoc>();
         public DbSet<Category> Categories => Set<Category>();
 
-        public GraphDbContext(SqliteConnection connection)
-            : base(new DbContextOptionsBuilder<GraphDbContext>().UseSqlite(connection).Options)
+        public GraphDbContext(string connectionString)
+            : base(new DbContextOptionsBuilder<GraphDbContext>().UseSqlite(connectionString).Options)
         {
         }
 
@@ -220,7 +234,7 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IDisposable
         }
     }
 
-    private sealed class GraphDictionary : SynchronizedDictionary<int, GraphDoc, GraphDbContext>
+    private sealed class GraphDictionary : SynchronizedDictionary<int, GraphDoc, GraphDbContext>, IHasCacheTasks
     {
         public GraphDictionary(IEFCoreDatabaseBackedService<GraphDbContext> dbService)
             : base(dbService, nameof(GraphDoc.Id))

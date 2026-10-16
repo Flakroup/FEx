@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Linq;
 using Shouldly;
@@ -21,7 +20,7 @@ public class CodacyConfigTests
     [Fact]
     public void The_config_excludes_the_corpus_and_nothing_else()
     {
-        var path = Path.Combine(FindRepositoryRoot(), ".codacy.yml");
+        var path = Path.Combine(RepositoryLocator.FindRoot(), ".codacy.yml");
 
         File.ReadAllBytes(path)[0].ShouldBe((byte)'-', "Codacy requires the file to open with the --- marker, no byte order mark");
         File.ReadAllLines(path).ShouldBe(["---", "exclude_paths:", $"  - \"{TestProjectDirectory}/{CorpusDirectoryName}/**\""]);
@@ -31,20 +30,9 @@ public class CodacyConfigTests
     [Fact]
     public void The_corpus_directory_carries_exactly_the_name_the_exclusion_spells()
     {
-        var project = Path.Combine(FindRepositoryRoot(), TestProjectDirectory);
+        var project = Path.Combine(RepositoryLocator.FindRoot(), TestProjectDirectory);
 
         Directory.EnumerateDirectories(project).Select(Path.GetFileName).ShouldContain(CorpusDirectoryName);
         File.Exists(Path.Combine(project, CorpusDirectoryName, "expected.json")).ShouldBeTrue();
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "FEx.slnx")))
-                return directory.FullName;
-        }
-
-        throw new FileNotFoundException("FEx.slnx was not found above the test output directory.");
     }
 }

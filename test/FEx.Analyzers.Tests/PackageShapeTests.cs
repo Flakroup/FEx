@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -14,7 +13,7 @@ namespace FEx.Analyzers.Tests;
 /// </summary>
 public class PackageShapeTests
 {
-    private static readonly XDocument Project = XDocument.Load(FindAnalyzerProject());
+    private static readonly XDocument Project = XDocument.Load(Path.Combine(RepositoryLocator.FindRoot(), "src", "Analyzers", "FEx.Analyzers.csproj"));
 
     [Theory]
     [InlineData("IncludeBuildOutput", "false")]
@@ -31,17 +30,5 @@ public class PackageShapeTests
         packed.ShouldHaveSingleItem();
         packed[0].Attribute("Include")!.Value.ShouldEndWith("$(AssemblyName).dll");
         packed[0].Attribute("PackagePath")!.Value.ShouldBe("analyzers/dotnet/cs");
-    }
-
-    private static string FindAnalyzerProject()
-    {
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
-        {
-            var project = Path.Combine(directory.FullName, "src", "Analyzers", "FEx.Analyzers.csproj");
-            if (File.Exists(project))
-                return project;
-        }
-
-        throw new FileNotFoundException("src/Analyzers/FEx.Analyzers.csproj was not found above the test output directory.");
     }
 }

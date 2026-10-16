@@ -16,7 +16,8 @@ namespace FEx.Json.Extensions;
 /// become <see cref="Placeholder" />, array indices and declared property names stay, and from the first segment
 /// the contracts cannot vouch for (a <c>JToken</c> or <c>object</c> member, a converter, an unknown name) every
 /// remaining segment is redacted. A converter is one from an attribute (on the type, the member or the containing
-/// type's items) or one from the serializer settings that can convert the type, exactly as Newtonsoft.Json picks it.
+/// type's items), one from the serializer settings that can convert the type, or a built-in one the contract resolver
+/// assigned, exactly as Newtonsoft.Json picks it.
 /// </summary>
 internal static class JsonPathRedaction
 {
@@ -62,8 +63,11 @@ internal static class JsonPathRedaction
                                         JsonContract contract,
                                         JsonSerializer serializer)
     {
+        // Converter, then the settings' converters, then InternalConverter: the order Newtonsoft.Json reads with. The
+        // last is a built-in converter (DataTable, DataSet, XmlNode, KeyValuePair, ...) the resolver picked.
         if (contract.Converter is not null
-            || serializer.Converters.Any(converter => converter.CanConvert(contract.UnderlyingType)))
+            || serializer.Converters.Any(converter => converter.CanConvert(contract.UnderlyingType))
+            || contract.InternalConverter is not null)
             return Redacted(builder);
 
         var child = AppendSegment(builder, segment, contract, serializer.ContractResolver);

@@ -4,7 +4,6 @@ using FEx.DependencyInjection.Abstractions.Interfaces;
 using FEx.EFCore.Extensions;
 using FEx.EFCore.Interfaces;
 using FEx.EFCore.Services;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using Shouldly;
@@ -28,13 +27,11 @@ public sealed class ConcurrencyConflictTests : IDisposable
         Extension
     }
 
-    private readonly SqliteConnection _connection = new("DataSource=:memory:");
+    private readonly TempSqliteDatabase _database = new();
     private readonly ConcurrencyService _service = new();
 
     public ConcurrencyConflictTests()
     {
-        _connection.Open();
-
         using var setup = CreateContext();
         setup.Database.EnsureCreated();
         setup.Docs.Add(new() { Id = 1, Name = "original", Version = 1 });
@@ -44,7 +41,7 @@ public sealed class ConcurrencyConflictTests : IDisposable
     public void Dispose()
     {
         _service.Dispose();
-        _connection.Dispose();
+        _database.Dispose();
     }
 
     [Theory]
@@ -197,7 +194,7 @@ public sealed class ConcurrencyConflictTests : IDisposable
         saved.Version.ShouldBe(2);
     }
 
-    private ConcurrencyDbContext CreateContext() => new(_connection);
+    private ConcurrencyDbContext CreateContext() => new(_database.ConnectionString);
 
     // The synchronous Save is a separate public path under test; kept out of the async SaveAsync body below.
     private void SaveSynchronously(ConcurrencyDbContext context) => _service.Save(context).IsSuccess.ShouldBeTrue();
@@ -237,8 +234,8 @@ public sealed class ConcurrencyConflictTests : IDisposable
     {
         public DbSet<Doc> Docs => Set<Doc>();
 
-        public ConcurrencyDbContext(SqliteConnection connection)
-            : base(new DbContextOptionsBuilder<ConcurrencyDbContext>().UseSqlite(connection).Options)
+        public ConcurrencyDbContext(string connectionString)
+            : base(new DbContextOptionsBuilder<ConcurrencyDbContext>().UseSqlite(connectionString).Options)
         {
         }
     }

@@ -233,7 +233,7 @@ FEx's **killer feature** is its engine-agnostic dependency injection system:
 | Project Category | Description | Examples |
 |------------------|-------------|----------|
 | **Core** | Foundation & DI | `Agnostics`, `Core`, `DependencyInjection`, `Logging`, `Common` |
-| **UI Frameworks** | Platform-specific UI | `WPFx`, `Avaloniax`, `Maui` |
+| **UI Frameworks** | Platform-specific UI | `WPFx`, `Avaloniax` |
 | **Data & Persistence** | Storage & DB | `EFCore`, `PersistentStorage`, `AzureStorage` |
 | **MVVM & Patterns** | UI patterns | `MVVM`, `MVVM.Abstractions`, `MVVM.Rx` |
 | **Utilities** | Specialized tools | `Json`, `Encryption`, `Downloader`, `FileSystem` |
@@ -380,7 +380,7 @@ dotnet build -c Release
 - **`ci.yml`** - runs on pull requests and on pushes to `main` and `develop` (a branch with a pull request is built by its pull request run only; a branch without one is scanned for secrets but not built):
   - pull requests: `test` - NUKE `build.ps1 Test Inspect` on `windows-latest` (required for the WPF + .NET Framework 4.8.1 projects); `Inspect` fails on any ReSharper ERROR
   - pushes to `main`/`develop`: `build` (`Test Inspect Pack`, uploads the packages) and then `publish` (pushes those packages to nuget.org and tags the release)
-  - Checkout uses `submodules: recursive` + `lfs: true`; the MAUI workload is restored for `FEx.Maui`
+  - Checkout uses `submodules: recursive` + `lfs: true`
 - **`changelog.yml`** - runs on pull requests into `develop` when opened, pushed to, reopened, labeled or unlabeled (a separate workflow so a label change does not rebuild the solution): first `test-check-changelog.sh` checks the gate itself, then job `changelog` on `ubuntu-latest` fails when the PR changes `src/`, `samples/`, `build/`, the `DevConfigs` pointer, the root MSBuild props/targets, `GitVersion.yml`, `global.json`, `.config/dotnet-tools.json`, `.gitmodules`, `.github/workflows/`, `.github/scripts/`, `build.ps1` or `FEx.slnx` without adding a new `- ` bullet under `## [Unreleased]` in `CHANGELOG.md` (compared against the merge base with the live `origin/<base>`). A bullet that repeats a released bullet word for word does not count as an entry (reword it). Released sections must stay identical from the first version heading on, for every PR. Changes only under `test/`, `docs/`, `.claude/` or other `*.md` files need no entry. Label a PR `no-changelog` to exempt it. Logic: `.github/scripts/check-changelog.sh`.
 - **`publish.yml`** - manual `workflow_dispatch` only. Packs and pushes all FEx packages to **nuget.org** at the GitVersion-derived (pre-release) version and tags the release. Requires the `NUGET_API_KEY` repository secret; the NUKE `Publish` target is skipped when it is absent.
 
@@ -425,7 +425,6 @@ dotnet build -c Release
 ### 🔮 Future Plans
 - [ ] Additional DI engine support (Autofac, Unity)
 - [ ] Avalonia UI enhancements
-- [ ] MAUI framework completion
 - [ ] Performance benchmarking suite
 - [ ] Comprehensive API documentation
 

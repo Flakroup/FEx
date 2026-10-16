@@ -128,6 +128,7 @@ All notable changes to FEx are documented in this file. The format follows [Keep
 
 ### Removed
 
+- **FEx.Maui**: no longer built or published from this repository; it moves to its own repository (step 2: [#342](https://github.com/Flakroup/FEx/issues/342)). The `FEx.Maui` and `FEx.Maui.Tests` projects, their solution entries and the MAUI workload restore steps of the CI and publish workflows are gone. Migrate: nothing changes for FEx.Maui code in history (extract it from the commit before this removal); a consumer of the `FEx.Maui` package takes it from the new repository once step 2 lands ([#344](https://github.com/Flakroup/FEx/pull/344), closes [#240](https://github.com/Flakroup/FEx/issues/240)).
 - **Build**: the repo-wide `NU1701` suppression in `Directory.Build.props`, and the `CA2254` and `CS1591` suppressions in the shared `DevConfigs` build config ([Flakroup/DevConfigs#12](https://github.com/Flakroup/DevConfigs/pull/12)); the `DevConfigs` submodule points at the change ([#195](https://github.com/Flakroup/FEx/pull/195), closes [#122](https://github.com/Flakroup/FEx/issues/122), closes [#123](https://github.com/Flakroup/FEx/issues/123), part of [#126](https://github.com/Flakroup/FEx/issues/126)).
 
 ### Fixed

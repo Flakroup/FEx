@@ -14,7 +14,7 @@ An early build defect packed a `develop` snapshot as the stable version 0.1.1 an
 - A stable version can only be produced from the release branch. The NUKE target `AssertStableOnlyFromReleaseBranch` fails a server build that would pack a stable version from any branch other than `main` or `master`.
 - Fields that GitVersion 6 removed (`NuGetVersion*`) are not used; the build reads the supported variables only.
 - Publishing pushes with `--skip-duplicate`, so re-running a partly failed publish does not fail on packages that are already on the feed.
-- CI splits the work into a build job, which compiles, runs coverage and inspection and packs, and a short publish job, which only pushes and tags. A failed push is retried by re-running the publish job from the retained artifact, without rebuilding.
+- CI splits the work into a build job, which compiles, runs coverage and packs, and a short publish job, which only pushes and tags. A failed push is retried by re-running the publish job from the retained artifact, without rebuilding.
 - The phantom stable 0.1.1 stays listed. It is harmless once the floor is above it.
 
 ## Consequences

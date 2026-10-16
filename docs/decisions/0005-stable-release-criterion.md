@@ -12,7 +12,7 @@ FEx is consumed as a submodule and as NuGet packages. A stable release is a prom
 
 1. No open issue carries the label `blocks-main`.
 2. `dotnet list package --vulnerable --include-transitive` reports no vulnerable package.
-3. CI is green on `develop`, including the 100% coverage gate and inspection (see [architecture](../architecture.md#build-and-quality-gates)).
+3. CI is green on `develop`, including the 100% coverage gate (see [architecture](../architecture.md#build-and-quality-gates)).
 
 The label `blocks-main` marks an issue that changes the public API or consumer-visible behavior, because those changes should land before a stable version commits to them. Documentation, build and test work does not get the label and never blocks a release.
 

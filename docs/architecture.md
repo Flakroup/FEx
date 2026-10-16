@@ -133,10 +133,10 @@ Roles are taken from each project's package description.
 | `Compile` | Restore and build the solution (`FEx.slnx`) |
 | `Test` | Run the xUnit v3 suites |
 | `Coverage` | Run the suites instrumented and fail below 100% coverage for any file that is not on the explicit debt list in `build/CoverageDebt.cs`. The list can only shrink |
-| `Inspect` | Run ReSharper `inspectcode` and fail on any error-severity finding |
+| `Inspect` | Run ReSharper `inspectcode` and fail on any error-severity finding. Manual only; CI does not run it |
 | `Pack`, `Publish`, `Tag` | Pack the NuGet packages, push them to nuget.org and tag the version |
 
-Continuous integration (`.github/workflows/`) runs `Coverage` and `Inspect` on every pull request, checks that a pull request that changes shipped paths adds a `CHANGELOG.md` entry under `[Unreleased]` (unless it carries the `no-changelog` label), scans for secrets, and publishes from `main` and `develop`. NuGet vulnerability auditing is always on, including transitive packages (see [ADR 0003](decisions/0003-nuget-audit-runs-on-every-build.md)). The validators for the shared configuration run in the `DevConfigs` repository (see [ADR 0006](decisions/0006-devconfigs-shared-layer-holds-configuration-only.md)).
+Continuous integration (`.github/workflows/`) runs `Coverage` on every pull request, checks that a pull request that changes shipped paths adds a `CHANGELOG.md` entry under `[Unreleased]` (unless it carries the `no-changelog` label), scans for secrets, and publishes from `main` and `develop`. NuGet vulnerability auditing is always on, including transitive packages (see [ADR 0003](decisions/0003-nuget-audit-runs-on-every-build.md)). The validators for the shared configuration run in the `DevConfigs` repository (see [ADR 0006](decisions/0006-devconfigs-shared-layer-holds-configuration-only.md)).
 
 Tests use xUnit v3, NSubstitute, Shouldly and coverlet. Shared test doubles live in `FEx.Agnostics.TestMocks`.
 

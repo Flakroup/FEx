@@ -89,4 +89,14 @@ public sealed class CoverageDebtTests
         ci.ShouldContain("--skip Restore Compile Test Coverage Verify Pack");
         ci.ShouldContain("artifacts/test-results/*.cobertura.xml");
     }
+
+    [Fact]
+    public void ManualPublish_RunsTheSuiteWithoutInspect()
+    {
+        var publish = File.ReadAllText(Path.Combine(RepositoryRoot, ".github", "workflows", "publish.yml"));
+
+        publish.ShouldContain("build.ps1 Test Pack --configuration Release");
+        publish.ShouldNotContain("Inspect");
+        publish.ShouldNotContain("dotnet tool restore");
+    }
 }

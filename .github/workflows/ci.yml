@@ -145,9 +145,10 @@ jobs:
       # After nuget.org and without continue-on-error: a feed outage cannot block the public release but still turns the job red.
       # Re-running the failed job is safe: NUKE skips nuget.org (tagged) and --skip-duplicate finishes what this feed lacks.
       # The runner is Windows, so NuGet keeps the source password DPAPI-encrypted (no --store-password-in-clear-text).
+      # Backslashes in the push path: on Windows, dotnet nuget push expands the wildcard only in a backslash path.
       - name: Publish to Azure Artifacts (Flakroup feed)
         env:
           AZURE_ARTIFACTS_PAT: ${{ secrets.AZURE_ARTIFACTS_PAT }}
         run: |
           dotnet nuget add source "https://flakroup.pkgs.visualstudio.com/_packaging/Flakroup/nuget/v3/index.json" --name Flakroup --username az --password $env:AZURE_ARTIFACTS_PAT
-          dotnet nuget push "artifacts/packages/*.nupkg" --source Flakroup --api-key az --skip-duplicate
+          dotnet nuget push "artifacts\packages\*.nupkg" --source Flakroup --api-key az --skip-duplicate

@@ -38,8 +38,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Restore workloads (MAUI for FEx.Maui)
-        run: dotnet workload restore FEx.slnx
       - name: Restore local tools (pinned ReSharper CLT for Inspect)
         run: dotnet tool restore
       # One Compile feeds both targets; Coverage runs the suite instrumented and fails below 100% outside
@@ -73,8 +71,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Restore workloads (MAUI for FEx.Maui)
-        run: dotnet workload restore FEx.slnx
       - name: Restore local tools (pinned ReSharper CLT for Inspect)
         run: dotnet tool restore
       # One Compile feeds all three targets; Coverage (which runs Test) and Inspect gate the Pack output.

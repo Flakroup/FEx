@@ -18,7 +18,7 @@ public class CorpusSourceTests
     [InlineData("expected.json")]
     public void The_embedded_corpus_file_is_the_one_in_the_DevConfigs_submodule(string name)
     {
-        var path = Path.Combine(RepositoryLocator.FindRoot(), "DevConfigs", "analyzers-corpus", name);
+        var path = Path.Combine(RepositoryLocator.FindRoot(), "DevConfigs", "analyzers-corpus", Path.GetFileName(name));
 
         File.Exists(path).ShouldBeTrue($"{path} is missing: initialize the DevConfigs submodule (git submodule update --init)");
         GoldenCorpusTests.ReadResource(name).ShouldBe(File.ReadAllText(path));

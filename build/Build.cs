@@ -29,7 +29,7 @@ class Build : FExBuild, ICoverageTarget, IInspectTarget, ITagTarget
 
     // Gates Publish on Coverage (which runs Test) passing - one `Publish` invocation runs
     // Restore -> Compile -> Test -> Coverage -> Pack -> Publish -> Tag in a single process.
-    // CI splits that chain across two jobs (build: `Coverage Inspect Pack`, publish: `Publish` with the
+    // CI splits that chain across two jobs (build: `Coverage Pack`, publish: `Publish` with the
     // earlier targets skipped over the uploaded packages), so the gate is the build job's Coverage there.
     // A new pass-through target (not an override of Test/Publish - overriding either
     // would replace its Executes body wholesale and silently drop it from the plan).

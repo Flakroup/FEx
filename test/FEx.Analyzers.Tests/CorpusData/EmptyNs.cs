@@ -1,4 +1,0 @@
-//# EmptyNamespace
-namespace Corpus.Empty
-{
-}

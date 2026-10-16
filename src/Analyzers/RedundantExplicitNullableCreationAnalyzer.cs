@@ -21,7 +21,8 @@ public sealed class RedundantExplicitNullableCreationAnalyzer : DiagnosticAnalyz
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "A value converts to its nullable type without 'new T?(value)' wherever the target type is known. Replaces the ReSharper inspection RedundantExplicitNullableCreation.");
+        "A value converts to its nullable type without 'new T?(value)' wherever the target type is known. Replaces the ReSharper inspection RedundantExplicitNullableCreation.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

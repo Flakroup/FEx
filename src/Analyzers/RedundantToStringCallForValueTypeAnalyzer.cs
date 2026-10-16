@@ -19,7 +19,8 @@ public sealed class RedundantToStringCallForValueTypeAnalyzer : DiagnosticAnalyz
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "Concatenating a string with a value calls ToString on it, and on current runtimes without boxing the value first. Replaces the ReSharper inspection RedundantToStringCallForValueType.");
+        "Concatenating a string with a value calls ToString on it, and on current runtimes without boxing the value first. Replaces the ReSharper inspection RedundantToStringCallForValueType.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

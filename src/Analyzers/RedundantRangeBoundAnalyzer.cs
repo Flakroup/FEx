@@ -19,7 +19,8 @@ public sealed class RedundantRangeBoundAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A range starts at 0 and ends at ^0 when it says nothing, so '0..x' means '..x' and 'x..^0' means 'x..'. A constant that folds to 0 counts, and so does new Index(0). Replaces the ReSharper inspection RedundantRangeBound.");
+        "A range starts at 0 and ends at ^0 when it says nothing, so '0..x' means '..x' and 'x..^0' means 'x..'. A constant that folds to 0 counts, and so does new Index(0). Replaces the ReSharper inspection RedundantRangeBound.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

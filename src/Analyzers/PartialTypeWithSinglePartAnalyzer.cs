@@ -20,7 +20,8 @@ public sealed class PartialTypeWithSinglePartAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "The modifier promises a second declaration that does not exist, which hides whether generated code is missing. Replaces the ReSharper inspection PartialTypeWithSinglePart.");
+        "The modifier promises a second declaration that does not exist, which hides whether generated code is missing. Replaces the ReSharper inspection PartialTypeWithSinglePart.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

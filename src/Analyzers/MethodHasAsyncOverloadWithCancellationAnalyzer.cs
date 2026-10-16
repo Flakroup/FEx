@@ -19,7 +19,8 @@ public sealed class MethodHasAsyncOverloadWithCancellationAnalyzer : DiagnosticA
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "The synchronous call can neither be cancelled nor give the thread back while it waits. Replaces the ReSharper inspection MethodHasAsyncOverloadWithCancellation.");
+        "The synchronous call can neither be cancelled nor give the thread back while it waits. Replaces the ReSharper inspection MethodHasAsyncOverloadWithCancellation.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

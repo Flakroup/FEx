@@ -19,7 +19,8 @@ public sealed class RedundantStringFormatCallAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "string.Format with a literal that has no placeholder and no arguments returns the literal, with its doubled braces collapsed. Replaces the ReSharper inspection RedundantStringFormatCall.");
+        "string.Format with a literal that has no placeholder and no arguments returns the literal, with its doubled braces collapsed. Replaces the ReSharper inspection RedundantStringFormatCall.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

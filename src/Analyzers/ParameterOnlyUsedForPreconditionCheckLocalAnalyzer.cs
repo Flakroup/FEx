@@ -18,7 +18,7 @@ public sealed class ParameterOnlyUsedForPreconditionCheckLocalAnalyzer : Diagnos
         DiagnosticSeverity.Warning,
         true,
         "A parameter that is validated and then never read has no effect on what the body does, so the body either misses a use or the parameter is dead. Replaces the ReSharper inspection ParameterOnlyUsedForPreconditionCheck.Local.",
-        null,
+        RuleDocumentation.HelpLink(DiagnosticId),
         WellKnownDiagnosticTags.CompilationEnd);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);

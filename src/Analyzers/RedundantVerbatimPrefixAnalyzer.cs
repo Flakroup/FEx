@@ -21,7 +21,8 @@ public sealed class RedundantVerbatimPrefixAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "The @ prefix only matters when the name is a reserved keyword (or a contextual one the position would otherwise read as a keyword). Replaces the ReSharper inspection RedundantVerbatimPrefix.");
+        "The @ prefix only matters when the name is a reserved keyword (or a contextual one the position would otherwise read as a keyword). Replaces the ReSharper inspection RedundantVerbatimPrefix.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

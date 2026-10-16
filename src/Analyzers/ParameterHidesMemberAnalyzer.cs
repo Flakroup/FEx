@@ -19,7 +19,8 @@ public sealed class ParameterHidesMemberAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "Inside the body the plain name means the parameter, so a read or write meant for the member silently goes to the parameter. Constructor parameters are exempt, as in ReSharper. Replaces the ReSharper inspection ParameterHidesMember.");
+        "Inside the body the plain name means the parameter, so a read or write meant for the member silently goes to the parameter. Constructor parameters are exempt, as in ReSharper. Replaces the ReSharper inspection ParameterHidesMember.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

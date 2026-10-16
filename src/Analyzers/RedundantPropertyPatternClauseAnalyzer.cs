@@ -20,7 +20,8 @@ public sealed class RedundantPropertyPatternClauseAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "'x is string { }' tests exactly what 'x is string' does. Replaces the ReSharper inspection RedundantPropertyPatternClause.");
+        "'x is string { }' tests exactly what 'x is string' does. Replaces the ReSharper inspection RedundantPropertyPatternClause.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

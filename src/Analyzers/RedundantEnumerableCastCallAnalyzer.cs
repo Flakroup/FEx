@@ -25,7 +25,8 @@ public sealed class RedundantEnumerableCastCallAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "Cast<T> on a sequence of T returns its elements unchanged. Replaces the ReSharper inspection RedundantEnumerableCastCall.");
+        "Cast<T> on a sequence of T returns its elements unchanged. Replaces the ReSharper inspection RedundantEnumerableCastCall.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

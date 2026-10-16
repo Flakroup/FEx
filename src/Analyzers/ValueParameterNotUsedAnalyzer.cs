@@ -20,7 +20,8 @@ public sealed class ValueParameterNotUsedAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "Whatever the caller assigns is silently dropped. Overrides, interface implementations and accessors that only throw are exempt. Replaces the ReSharper inspection ValueParameterNotUsed.");
+        "Whatever the caller assigns is silently dropped. Overrides, interface implementations and accessors that only throw are exempt. Replaces the ReSharper inspection ValueParameterNotUsed.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

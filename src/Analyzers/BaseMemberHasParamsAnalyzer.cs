@@ -20,7 +20,8 @@ public sealed class BaseMemberHasParamsAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A call through the derived type then needs an explicit array while the same call through the base type does not. Replaces the ReSharper inspection BaseMemberHasParams.");
+        "A call through the derived type then needs an explicit array while the same call through the base type does not. Replaces the ReSharper inspection BaseMemberHasParams.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

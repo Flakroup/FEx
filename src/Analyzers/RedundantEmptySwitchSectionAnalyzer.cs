@@ -20,7 +20,8 @@ public sealed class RedundantEmptySwitchSectionAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A default section that holds nothing but 'break;' behaves as a switch without one, unless a 'goto default;' targets it or conditional-compilation code sits inside it. Replaces the ReSharper inspection RedundantEmptySwitchSection.");
+        "A default section that holds nothing but 'break;' behaves as a switch without one, unless a 'goto default;' targets it or conditional-compilation code sits inside it. Replaces the ReSharper inspection RedundantEmptySwitchSection.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

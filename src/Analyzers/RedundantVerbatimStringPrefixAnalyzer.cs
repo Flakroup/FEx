@@ -22,7 +22,8 @@ public sealed class RedundantVerbatimStringPrefixAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A verbatim string only differs from a regular one when its text holds a backslash, a quote, a line break or another character that needs an escape. Replaces the ReSharper inspection RedundantVerbatimStringPrefix.");
+        "A verbatim string only differs from a regular one when its text holds a backslash, a quote, a line break or another character that needs an escape. Replaces the ReSharper inspection RedundantVerbatimStringPrefix.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

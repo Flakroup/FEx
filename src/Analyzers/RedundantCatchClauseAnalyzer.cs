@@ -20,7 +20,8 @@ public sealed class RedundantCatchClauseAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "A catch clause that does nothing but 'throw;' behaves as if absent, unless it keeps a later clause from seeing the exception. Replaces the ReSharper inspection RedundantCatchClause.");
+        "A catch clause that does nothing but 'throw;' behaves as if absent, unless it keeps a later clause from seeing the exception. Replaces the ReSharper inspection RedundantCatchClause.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

@@ -19,7 +19,8 @@ public sealed class RedundantLambdaSignatureParenthesesAnalyzer : DiagnosticAnal
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A lambda with exactly one untyped parameter, no modifier, no attribute and no explicit return type does not need parentheses. Replaces the ReSharper inspection RedundantLambdaSignatureParentheses.");
+        "A lambda with exactly one untyped parameter, no modifier, no attribute and no explicit return type does not need parentheses. Replaces the ReSharper inspection RedundantLambdaSignatureParentheses.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

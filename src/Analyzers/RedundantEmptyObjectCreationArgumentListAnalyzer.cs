@@ -19,7 +19,8 @@ public sealed class RedundantEmptyObjectCreationArgumentListAnalyzer : Diagnosti
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "'new T { ... }' calls the same parameterless constructor as 'new T() { ... }'. Replaces the ReSharper inspection RedundantEmptyObjectCreationArgumentList.");
+        "'new T { ... }' calls the same parameterless constructor as 'new T() { ... }'. Replaces the ReSharper inspection RedundantEmptyObjectCreationArgumentList.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

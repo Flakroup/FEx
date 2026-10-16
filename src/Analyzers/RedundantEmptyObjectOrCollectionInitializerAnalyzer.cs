@@ -19,7 +19,8 @@ public sealed class RedundantEmptyObjectOrCollectionInitializerAnalyzer : Diagno
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "An initializer with no member or element assigns nothing, so the creation behaves the same without it. Replaces the ReSharper inspection RedundantEmptyObjectOrCollectionInitializer.");
+        "An initializer with no member or element assigns nothing, so the creation behaves the same without it. Replaces the ReSharper inspection RedundantEmptyObjectOrCollectionInitializer.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

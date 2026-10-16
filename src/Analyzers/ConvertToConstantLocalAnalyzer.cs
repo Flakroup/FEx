@@ -24,7 +24,7 @@ public sealed class ConvertToConstantLocalAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         true,
         "A constant states that the value cannot change and is folded by the compiler. Replaces the ReSharper inspection ConvertToConstant.Local.",
-        null,
+        RuleDocumentation.HelpLink(DiagnosticId),
         WellKnownDiagnosticTags.CompilationEnd);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);

@@ -23,7 +23,8 @@ public sealed class UseCancellationTokenForIAsyncEnumerableAnalyzer : Diagnostic
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "Cancelling the token then does not stop the enumeration. Replaces the ReSharper inspection UseCancellationTokenForIAsyncEnumerable.");
+        "Cancelling the token then does not stop the enumeration. Replaces the ReSharper inspection UseCancellationTokenForIAsyncEnumerable.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

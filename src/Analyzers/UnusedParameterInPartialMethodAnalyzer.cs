@@ -20,7 +20,8 @@ public sealed class UnusedParameterInPartialMethodAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "The other part decides the signature, so the parameter cannot simply be dropped - which is why the compiler's own unused-parameter check stays silent. Replaces the ReSharper inspection UnusedParameterInPartialMethod.");
+        "The other part decides the signature, so the parameter cannot simply be dropped - which is why the compiler's own unused-parameter check stays silent. Replaces the ReSharper inspection UnusedParameterInPartialMethod.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

@@ -21,7 +21,8 @@ public sealed class RedundantOverriddenMemberAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "The override only repeats the base member. It is not reported where removing it would still change something: a record's synthesized members, a default value or a parameter attribute that differs, an interface the type implements again, or an Equals/GetHashCode pair next to a hand-written counterpart or an == operator. Replaces the ReSharper inspection RedundantOverriddenMember.");
+        "The override only repeats the base member. It is not reported where removing it would still change something: a record's synthesized members, a default value or a parameter attribute that differs, an interface the type implements again, or an Equals/GetHashCode pair next to a hand-written counterpart or an == operator. Replaces the ReSharper inspection RedundantOverriddenMember.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

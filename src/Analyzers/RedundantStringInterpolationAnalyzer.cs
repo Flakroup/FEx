@@ -26,7 +26,8 @@ public sealed class RedundantStringInterpolationAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "A $\"...\" string without a {hole} is a plain string literal. Replaces the ReSharper inspection RedundantStringInterpolation.");
+        "A $\"...\" string without a {hole} is a plain string literal. Replaces the ReSharper inspection RedundantStringInterpolation.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

@@ -19,7 +19,8 @@ public sealed class RedundantToStringCallAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "String concatenation, an interpolation hole and the arguments of string.Format call ToString themselves, and string.ToString returns the string it was called on. Replaces the ReSharper inspection RedundantToStringCall.");
+        "String concatenation, an interpolation hole and the arguments of string.Format call ToString themselves, and string.ToString returns the string it was called on. Replaces the ReSharper inspection RedundantToStringCall.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

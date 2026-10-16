@@ -20,7 +20,8 @@ public sealed class VariableHidesOuterVariableAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "C# allows a lambda or local function to reuse the name of an enclosing local or parameter, so a later edit can read or write the wrong variable without a compiler error. Replaces the ReSharper inspection VariableHidesOuterVariable.");
+        "C# allows a lambda or local function to reuse the name of an enclosing local or parameter, so a later edit can read or write the wrong variable without a compiler error. Replaces the ReSharper inspection VariableHidesOuterVariable.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

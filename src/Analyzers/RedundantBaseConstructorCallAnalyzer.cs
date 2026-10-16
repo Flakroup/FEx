@@ -19,7 +19,8 @@ public sealed class RedundantBaseConstructorCallAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "A constructor, or a primary constructor's base type, with no initializer already calls base(). Replaces the ReSharper inspection RedundantBaseConstructorCall.");
+        "A constructor, or a primary constructor's base type, with no initializer already calls base(). Replaces the ReSharper inspection RedundantBaseConstructorCall.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

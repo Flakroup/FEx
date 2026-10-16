@@ -17,7 +17,8 @@ public sealed class OptionalParameterHierarchyMismatchAnalyzer : DiagnosticAnaly
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "The compiler takes the default from the static type of the receiver, so the same call through the base type and through the derived type passes different arguments. Replaces the ReSharper inspection OptionalParameterHierarchyMismatch.");
+        "The compiler takes the default from the static type of the receiver, so the same call through the base type and through the derived type passes different arguments. Replaces the ReSharper inspection OptionalParameterHierarchyMismatch.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

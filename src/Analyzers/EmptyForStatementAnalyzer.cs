@@ -21,7 +21,8 @@ public sealed class EmptyForStatementAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A for loop with an empty body, a condition, and a header that only reads values and advances its own counters has no effect. A header that calls a method, creates an object or writes anything else is left alone. Replaces the ReSharper inspection EmptyForStatement.");
+        "A for loop with an empty body, a condition, and a header that only reads values and advances its own counters has no effect. A header that calls a method, creates an object or writes anything else is left alone. Replaces the ReSharper inspection EmptyForStatement.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

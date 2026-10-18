@@ -24,8 +24,10 @@ public sealed class BuildSettingsTests
     private static AppPublishEntry PublishEntry { get; } =
         new("/repo/src/Sample.App/Sample.App.csproj", "/repo/artifacts/publish/Sample.App");
 
+#pragma warning disable S1313 // An assembly version, not an IP address: four dotted numbers is the format.
     private static GitVersionInfo VersionInfo { get; } =
         new() { AssemblySemVer = "1.2.3.0", AssemblySemFileVer = "1.2.3.4" };
+#pragma warning restore S1313
 
     [Fact]
     public void RestoreSettings_DoNotDisableTheAudit()

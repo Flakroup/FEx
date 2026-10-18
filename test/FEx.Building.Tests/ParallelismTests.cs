@@ -78,10 +78,12 @@ public sealed class ParallelismTests
 
     [Theory]
     [InlineData(null, 0xFFFF_FFFFL)]
+    [InlineData(0, 0xFFFF_FFFFL)]
+    [InlineData(-1, 0xFFFF_FFFFL)]
     [InlineData(8, 0xFFL)]
     [InlineData(32, 0xFFFFL)]
     [InlineData(4, 0b1010_0101L)]
-    public void AffinityMask_LeavesTheAffinityAlone_WithoutACapOrWithNoMoreProcessorsThanIt(int? cap, long current) =>
+    public void AffinityMask_LeavesTheAffinityAlone_WithoutAPositiveCapOrWithNoMoreProcessorsThanIt(int? cap, long current) =>
         Parallelism.AffinityMask(cap, current).ShouldBeNull();
 
     [Fact]

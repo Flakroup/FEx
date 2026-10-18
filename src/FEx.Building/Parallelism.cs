@@ -10,7 +10,7 @@ namespace FEx.Building;
 /// <c>dotnet test</c> options. Pure, so each translation is testable without a build.
 /// </summary>
 /// <remarks>
-/// A cap has to reach three consumers separately, because none of them reads the others' setting:
+/// A cap has to reach four consumers separately, because none of them reads the others' setting:
 /// <list type="bullet">
 /// <item>
 /// MSBuild. A bare <c>-m</c> / <c>-maxcpucount</c> counts cores through
@@ -108,7 +108,7 @@ public static class Parallelism
     /// </remarks>
     public static long? AffinityMask(int? cap, long current)
     {
-        if (cap is not { } remaining || BitOperations.PopCount((ulong)current) <= remaining)
+        if (cap is not { } remaining || remaining <= 0 || BitOperations.PopCount((ulong)current) <= remaining)
             return null;
 
         var mask = 0L;

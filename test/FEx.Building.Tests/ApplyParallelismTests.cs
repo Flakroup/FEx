@@ -67,7 +67,7 @@ public sealed class ApplyParallelismTests : IDisposable
     }
 
     [Fact]
-    public void ACap_ConfinesTheBuildAndItsChildrenToThatManyProcessors()
+    public void ACap_ConfinesTheBuildToThatManyProcessors()
     {
         var expected = Parallelism.AffinityMask(1, _affinity) ?? _affinity;
 

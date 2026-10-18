@@ -4,6 +4,7 @@ using Nuke.Common.ProjectModel;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -92,12 +93,22 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     /// Sets the environment variables <see cref="Parallelism.Environment" /> names for <paramref name="cap" />.
     /// NUKE snapshots the environment when each tool's settings are created and reads
     /// <c>EnvironmentInfo.Variables</c> live, so setting them once at initialisation reaches every later child
-    /// process. A null cap sets nothing and leaves what the caller exported untouched.
+    /// process. Then narrows this process's affinity to <see cref="Parallelism.AffinityMask" />, which every
+    /// child inherits. A null cap sets nothing and leaves what the caller exported, and its affinity, untouched.
     /// </summary>
     protected static void ApplyParallelism(int? cap)
     {
         foreach (var (name, value) in Parallelism.Environment(cap))
             Environment.SetEnvironmentVariable(name, value);
+
+        // The only two platforms with a process affinity .NET can set; elsewhere the counts alone apply.
+        if (!OperatingSystem.IsWindows() && !OperatingSystem.IsLinux())
+            return;
+
+        using var process = Process.GetCurrentProcess();
+
+        if (Parallelism.AffinityMask(cap, (long)process.ProcessorAffinity) is { } mask)
+            process.ProcessorAffinity = (nint)mask;
     }
 
     protected static void Bootstrap()

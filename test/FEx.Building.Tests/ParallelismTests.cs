@@ -68,6 +68,22 @@ public sealed class ParallelismTests
         environment["SharedCompilationId"].ShouldBe("fex-p6");
     }
 
+    [Theory]
+    [InlineData(24, 0xFFFF_FFFFL, 0xFFFF_FF00L)]
+    [InlineData(6, 0xFFL, 0xFCL)]
+    [InlineData(2, 0b1010_0101L, 0b1010_0000L)]
+    [InlineData(1, -1L, long.MinValue)]
+    public void AffinityMask_KeepsTheHighestProcessorsTheCurrentMaskAllows(int cap, long current, long expected) =>
+        Parallelism.AffinityMask(cap, current).ShouldBe(expected);
+
+    [Theory]
+    [InlineData(null, 0xFFFF_FFFFL)]
+    [InlineData(8, 0xFFL)]
+    [InlineData(32, 0xFFFFL)]
+    [InlineData(4, 0b1010_0101L)]
+    public void AffinityMask_LeavesTheAffinityAlone_WithoutACapOrWithNoMoreProcessorsThanIt(int? cap, long current) =>
+        Parallelism.AffinityMask(cap, current).ShouldBeNull();
+
     [Fact]
     public void TestArguments_AreEmptyWithoutACap() =>
         Parallelism.TestArguments(null, ["--max-threads", "2"]).ShouldBeEmpty();

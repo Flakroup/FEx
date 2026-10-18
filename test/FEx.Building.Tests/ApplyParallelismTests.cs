@@ -2,6 +2,8 @@ using Serilog;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Numerics;
 using Xunit;
 
 namespace FEx.Building.Tests;
@@ -18,8 +20,8 @@ public sealed class ProcessEnvironmentCollection
 
 /// <summary>
 /// A cap reaches the compiler and every .NET tool the build starts through the environment, because the
-/// children read it themselves. These pin that the environment is set, that no cap sets nothing, and that
-/// the hook NUKE calls is what sets it.
+/// children read it themselves, and through the processor affinity, which they inherit. These pin that both
+/// are set, that no cap sets nothing, and that the hook NUKE calls is what sets them.
 /// </summary>
 [Collection(ProcessEnvironmentCollection.Name)]
 public sealed class ApplyParallelismTests : IDisposable
@@ -30,12 +32,57 @@ public sealed class ApplyParallelismTests : IDisposable
     private readonly string? _processorCount = Environment.GetEnvironmentVariable(ProcessorCount);
     private readonly string? _compilationId = Environment.GetEnvironmentVariable(CompilationId);
     private readonly ILogger _logger = Log.Logger;
+    private readonly long _affinity = Affinity;
 
     public void Dispose()
     {
         Environment.SetEnvironmentVariable(ProcessorCount, _processorCount);
         Environment.SetEnvironmentVariable(CompilationId, _compilationId);
         Log.Logger = _logger;
+        Affinity = _affinity;
+    }
+
+    /// <summary>The test host's own affinity, which a cap narrows and <see cref="Dispose" /> restores.</summary>
+    /// <remarks>CI and the machines this build runs on are Windows or Linux, the two that have one.</remarks>
+    private static long Affinity
+    {
+        get
+        {
+            using var process = Process.GetCurrentProcess();
+
+            if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+                return (long)process.ProcessorAffinity;
+
+            throw new PlatformNotSupportedException();
+        }
+        set
+        {
+            using var process = Process.GetCurrentProcess();
+
+            if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+                process.ProcessorAffinity = (nint)value;
+            else
+                throw new PlatformNotSupportedException();
+        }
+    }
+
+    [Fact]
+    public void ACap_ConfinesTheBuildAndItsChildrenToThatManyProcessors()
+    {
+        var expected = Parallelism.AffinityMask(1, _affinity) ?? _affinity;
+
+        CappedBuild.Apply(1);
+
+        Affinity.ShouldBe(expected);
+        BitOperations.PopCount((ulong)Affinity).ShouldBe(1);
+    }
+
+    [Fact]
+    public void NoCap_LeavesTheAffinityAlone()
+    {
+        CappedBuild.Apply(null);
+
+        Affinity.ShouldBe(_affinity);
     }
 
     [Fact]

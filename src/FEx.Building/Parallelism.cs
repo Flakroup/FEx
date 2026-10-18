@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Numerics;
 
 namespace FEx.Building;
 
@@ -28,9 +29,17 @@ namespace FEx.Building;
 /// The test runner. MTP runs one test module per core and xUnit v3 one thread per core by default, hence the
 /// two explicit options.
 /// </item>
+/// <item>
+/// The machine as a whole. Every number above sizes ONE process, and a build runs many at once, so together
+/// they still fill every core - measured on a 32-thread machine, a cap of 24 kept all 32 busy at p95. What
+/// confines the whole tree is the processor affinity (<see cref="AffinityMask" />), which the build sets on
+/// itself and every child process inherits. It does not replace the counts: MSBuild sizes its node pool by
+/// the cores the OS reports, ignoring the affinity, and oversubscribing the allowed cores only adds
+/// switching.
+/// </item>
 /// </list>
-/// A null cap means unbounded and produces nothing at all, so a server build's command lines and environment
-/// stay exactly what they were before the cap existed.
+/// A null cap means unbounded and produces nothing at all, so a server build's command lines, environment and
+/// affinity stay exactly what they were before the cap existed.
 /// </remarks>
 public static class Parallelism
 {
@@ -86,6 +95,37 @@ public static class Parallelism
                 [CompilationIdVariable] = $"fex-p{n.ToString(CultureInfo.InvariantCulture)}"
             }
             : new Dictionary<string, string>();
+
+    /// <summary>
+    /// The processor affinity that confines the build to <paramref name="cap" /> of the processors
+    /// <paramref name="current" /> allows - the highest ones, leaving the lowest, processor 0 included, to the
+    /// rest of the machine. Null means leave the affinity alone: no cap, or a mask that already allows no more
+    /// processors than the cap.
+    /// </summary>
+    /// <remarks>
+    /// Narrows the CURRENT mask rather than building one from the processor count, so a build already confined
+    /// by its caller - a container, a job object, a parent with its own affinity - is never widened.
+    /// </remarks>
+    public static long? AffinityMask(int? cap, long current)
+    {
+        if (cap is not { } remaining || BitOperations.PopCount((ulong)current) <= remaining)
+            return null;
+
+        var mask = 0L;
+
+        for (var bit = 63; remaining > 0; bit--)
+        {
+            var processor = 1L << bit;
+
+            if ((current & processor) == 0)
+                continue;
+
+            mask |= processor;
+            remaining--;
+        }
+
+        return mask;
+    }
 
     /// <summary>
     /// The <c>dotnet test</c> options for the cap. An option pair is left out when

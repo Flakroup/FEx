@@ -102,6 +102,11 @@ public interface ITestTarget : ICompileTarget
     /// <c>--logger trx</c>. Test projects build as Exe with UseMicrosoftTestingPlatformRunner. Coverage is
     /// directed by <c>--results-directory</c> alone - a solution-wide run is one process per test assembly,
     /// and <c>--coverage-output</c> would hand all of them the same file to write.
+    /// <para>
+    /// A <paramref name="maxParallelism" /> cap adds <c>--max-parallel-test-modules N --max-threads N</c>,
+    /// each pair unless <paramref name="additionalArguments" /> already carries that option; null adds
+    /// nothing, so a server's command line is unchanged. See <see cref="Parallelism" />.
+    /// </para>
     /// </remarks>
     static string TestArguments(string solution,
                                 string configuration,
@@ -109,7 +114,8 @@ public interface ITestTarget : ICompileTarget
                                 bool withCoverage,
                                 string? testFilter,
                                 IEnumerable<string>? additionalArguments,
-                                bool forgivesEmptyAssemblies)
+                                bool forgivesEmptyAssemblies,
+                                int? maxParallelism)
     {
         List<string> arguments =
         [
@@ -125,8 +131,13 @@ public interface ITestTarget : ICompileTarget
         if (filtered)
             arguments.AddRange(["--filter-class", testFilter!]);
 
-        if (additionalArguments is not null)
-            arguments.AddRange(additionalArguments);
+        // Read once: an override may be an iterator that logs what it leaves out, and the cap reads it too.
+        var additional = additionalArguments?.ToList() ?? [];
+        arguments.AddRange(additional);
+
+        // A repository's own value wins because Parallelism leaves out what the contributed arguments already
+        // carry: MTP sums the arity of a repeated option and aborts the run.
+        arguments.AddRange(Parallelism.TestArguments(maxParallelism, additional));
 
         // One process per assembly, so narrowing the run leaves every assembly the narrowing missed with
         // nothing to do, and each reports it. Emitted once, because MTP takes the option exactly once.
@@ -164,7 +175,8 @@ public interface ITestTarget : ICompileTarget
     /// <para>
     /// Do NOT contribute <c>--ignore-exit-code</c> here - see <see cref="ForgivesEmptyAssemblies" />. MTP
     /// declares that option with an arity of exactly one and sums arity across repeated occurrences, so a
-    /// second copy aborts the run before a test executes.
+    /// second copy aborts the run before a test executes. <c>--max-parallel-test-modules</c> and
+    /// <c>--max-threads</c> may be contributed here: they replace the cap's own value for that option.
     /// </para>
     /// </remarks>
     IEnumerable<string> AdditionalTestArguments() => [];
@@ -217,7 +229,8 @@ public interface ITestTarget : ICompileTarget
             CollectsCoverage,
             TestFilter,
             AdditionalTestArguments(),
-            ForgivesEmptyAssemblies);
+            ForgivesEmptyAssemblies,
+            Parallelism.Resolve(MaxParallelism));
 
     /// <summary>Quotes what a shell would otherwise split - a checkout under a path with a space in it.</summary>
     private static string Quote(string argument) =>

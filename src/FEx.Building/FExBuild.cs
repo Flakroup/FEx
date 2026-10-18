@@ -4,6 +4,7 @@ using Nuke.Common.ProjectModel;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -27,6 +28,14 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     public virtual Configuration Configuration { get; } = IsLocalBuild
         ? Configuration.Debug
         : Configuration.Release;
+
+    // Override with an initializer, never an expression body: NUKE writes the command-line value into a
+    // backing field, and an expression body has none of its own to read it from.
+    /// <inheritdoc />
+    [Parameter("Most threads the build and the tests may use - default: a quarter of the machine kept free locally (at least 2), unbounded on a server; 0 = unbounded")]
+    public virtual int? MaxParallelism { get; } = IsLocalBuild
+        ? Parallelism.LocalDefault(Environment.ProcessorCount)
+        : null;
 
     /// <inheritdoc />
     public abstract IEnumerable<string> PublishProjects { get; }
@@ -80,6 +89,32 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
         Environment.SetEnvironmentVariable("DOTNET_MULTILEVEL_LOOKUP", "0");
         Environment.SetEnvironmentVariable("DOTNET_NOLOGO", "1");
         Console.WriteLine("Disabled .NET and NUKE telemetry");
+    }
+
+    /// <summary>
+    /// Sets the environment variables <see cref="Parallelism.Environment" /> names for <paramref name="cap" />,
+    /// the compiler server scoped to <paramref name="root" />.
+    /// NUKE snapshots the environment when each tool's settings are created and reads
+    /// <c>EnvironmentInfo.Variables</c> live, so setting them once at initialisation reaches every later child
+    /// process. Then narrows this process's affinity to <see cref="Parallelism.AffinityMask" />, which every
+    /// child inherits. A null cap sets nothing and leaves what the caller exported, and its affinity, untouched.
+    /// </summary>
+    protected static void ApplyParallelism(int? cap, string root)
+    {
+        foreach (var (name, value) in Parallelism.Environment(cap, root))
+            Environment.SetEnvironmentVariable(name, value);
+
+        // The only two platforms with a process affinity .NET can set; elsewhere the counts alone apply.
+        // ponytail: on Linux it binds the calling thread and the threads it creates later, not thread-pool workers
+        // that already exist, so a child started from one of those runs unconfined; NUKE runs targets on the
+        // main thread. Confining every thread means enumerating /proc/self/task.
+        if (!OperatingSystem.IsWindows() && !OperatingSystem.IsLinux())
+            return;
+
+        using var process = Process.GetCurrentProcess();
+
+        if (Parallelism.AffinityMask(cap, (long)process.ProcessorAffinity) is { } mask)
+            process.ProcessorAffinity = (nint)mask;
     }
 
     protected static void Bootstrap()
@@ -215,6 +250,7 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     protected override void OnBuildInitialized()
     {
         base.OnBuildInitialized();
+        ApplyParallelism(Parallelism.Resolve(MaxParallelism), RootDirectory);
         InstallLogRedaction();
         LogBuildInfo();
     }

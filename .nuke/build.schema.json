@@ -121,6 +121,14 @@
           "type": "boolean",
           "description": "Start the ReSharper inspection alongside the tests rather than after them"
         },
+        "MaxParallelism": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Most threads the build and the tests may use - default: a quarter of the machine kept free locally (at least 2), unbounded on a server; 0 = unbounded",
+          "format": "int32"
+        },
         "NuGetApiKey": {
           "type": "string",
           "description": "NuGet API key for pushing packages",

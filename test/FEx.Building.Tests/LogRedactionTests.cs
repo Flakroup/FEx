@@ -338,6 +338,10 @@ public sealed class LogRedactionTests
     {
         public override IEnumerable<string> PublishProjects { get; } = [];
 
+        // Initialize() runs OnBuildInitialized, which exports the cap into the process environment; this test
+        // is about the log pipeline and must not leave a processor count behind for the classes running beside it.
+        public override int? MaxParallelism => null;
+
         public new SecretRedactor Redactor => base.Redactor;
 
         string? INuGetPublishTarget.NuGetApiKey => key;

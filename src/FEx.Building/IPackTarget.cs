@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Nuke.Common;
 using Nuke.Common.IO;
+using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
 using Serilog;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
@@ -23,6 +24,25 @@ public interface IPackTarget : ICompileTarget, IGitVersionComponent
     // reads it instead of resolving GitVersion again, so the tag cannot name a version no package carries.
     sealed AbsolutePath ReleaseVersionFile => PackagesDirectory / "release-version.txt";
 
+    // Settings for one DotNetPack of a project. Extracted from the target body, which needs NUKE to run, so
+    // a test reaches the settings - the version is passed in because resolving it launches GitVersion.
+    virtual DotNetPackSettings GetPackSettings(DotNetPackSettings s,
+                                               string project,
+                                               string version,
+                                               GitVersionInfo versionInfo,
+                                               string informationalVersion) =>
+        s.SetProject(project)
+            .SetConfiguration(Configuration)
+            .EnableNoBuild()
+            .SetOutputDirectory(PackagesDirectory)
+            .SetVersion(version)
+            .SetAssemblyVersion(versionInfo.AssemblySemVer)
+            .SetFileVersion(versionInfo.AssemblySemFileVer)
+            .SetInformationalVersion(informationalVersion)
+            .SetProperty("PackageVersion", version)
+            .SetProperty("NoWarn", "CS1591")
+            .AddProcessAdditionalArguments(Parallelism.MsBuildArguments(Parallelism.Resolve(MaxParallelism)));
+
     Target Pack =>
         _ => _.Description("Creates NuGet packages with GitVersion-derived version")
             .DependsOn(Compile)
@@ -37,16 +57,7 @@ public interface IPackTarget : ICompileTarget, IGitVersionComponent
 
                 foreach (var project in PackProjects)
                 {
-                    DotNetPack(s => s.SetProject(project)
-                        .SetConfiguration(Configuration)
-                        .EnableNoBuild()
-                        .SetOutputDirectory(PackagesDirectory)
-                        .SetVersion(version)
-                        .SetAssemblyVersion(VersionInfo!.AssemblySemVer)
-                        .SetFileVersion(VersionInfo!.AssemblySemFileVer)
-                        .SetInformationalVersion(InformationalVersion)
-                        .SetProperty("PackageVersion", version)
-                        .SetProperty("NoWarn", "CS1591"));
+                    DotNetPack(s => GetPackSettings(s, project, version, VersionInfo!, InformationalVersion));
                 }
 
                 ReleaseVersionFile.WriteAllText(version);

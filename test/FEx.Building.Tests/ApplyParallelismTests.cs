@@ -94,7 +94,8 @@ public sealed class ApplyParallelismTests : IDisposable
 
         CappedBuild.Apply(1);
 
-        using var child = Process.Start(
+        // A constant command line, nothing from input: the child only has to live long enough to be read.
+        using var child = Process.Start( // nosemgrep: csharp_injection_rule-CommandInjection
             new ProcessStartInfo("ping", "-n 30 127.0.0.1") { UseShellExecute = false, RedirectStandardOutput = true })!;
 
         try

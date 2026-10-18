@@ -41,7 +41,10 @@ namespace FEx.Building;
 /// confines the whole tree is the processor affinity (<see cref="AffinityMask" />), which the build sets on
 /// itself and every child process inherits. It does not replace the counts: MSBuild sizes its node pool by
 /// the cores the OS reports, ignoring the affinity, and oversubscribing the allowed cores only adds
-/// switching.
+/// switching. MSBuild's worker nodes outlive the build and keep the affinity of the build that started them,
+/// and their handshake checks neither affinity nor environment, so <c>MSBUILDNODEHANDSHAKESALT</c> gives a
+/// capped build nodes of its own, as <c>SharedCompilationId</c> does the compiler server. Neither is reached
+/// by <c>dotnet build-server shutdown</c>, which stops the default-named servers only.
 /// </item>
 /// </list>
 /// A null cap means unbounded and produces nothing at all, so a server build's command lines, environment and
@@ -51,6 +54,7 @@ public static class Parallelism
 {
     private const string ProcessorCountVariable = "DOTNET_PROCESSOR_COUNT";
     private const string CompilationIdVariable = "SharedCompilationId";
+    private const string NodeSaltVariable = "MSBUILDNODEHANDSHAKESALT";
     private const string ModulesOption = "--max-parallel-test-modules";
     private const string ThreadsOption = "--max-threads";
 
@@ -101,14 +105,20 @@ public static class Parallelism
     /// the hash mismatch, and the mismatched server shuts itself down; keying on the resolved SDK directory
     /// would close that, at the cost of resolving it.
     /// </remarks>
-    public static IReadOnlyDictionary<string, string> Environment(int? cap, string root) =>
-        cap is { } n
-            ? new Dictionary<string, string>
-            {
-                [ProcessorCountVariable] = n.ToString(CultureInfo.InvariantCulture),
-                [CompilationIdVariable] = $"fex-p{n.ToString(CultureInfo.InvariantCulture)}-{Scope(root)}"
-            }
-            : new Dictionary<string, string>();
+    public static IReadOnlyDictionary<string, string> Environment(int? cap, string root)
+    {
+        if (cap is not { } n)
+            return new Dictionary<string, string>();
+
+        var id = $"fex-p{n.ToString(CultureInfo.InvariantCulture)}-{Scope(root)}";
+
+        return new Dictionary<string, string>
+        {
+            [ProcessorCountVariable] = n.ToString(CultureInfo.InvariantCulture),
+            [CompilationIdVariable] = id,
+            [NodeSaltVariable] = id
+        };
+    }
 
     private static string Scope(string root) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(root.ToUpperInvariant())))[..8];
@@ -148,7 +158,8 @@ public static class Parallelism
     /// The <c>dotnet test</c> options for the cap. An option pair is left out when
     /// <paramref name="alreadyPresent" /> names it, in any form MTP parses (<c>--opt v</c>, <c>--opt:v</c>,
     /// <c>--opt=v</c>): MTP sums the arity of a repeated option and aborts the run, so a repository that sets
-    /// its own value wins.
+    /// its own value wins. xUnit applies the command line after <c>xunit.runner.json</c>, so a project that limits
+    /// <c>maxParallelThreads</c> there gets the cap instead; such a limit belongs in the arguments.
     /// </summary>
     public static IReadOnlyList<string> TestArguments(int? cap, IEnumerable<string>? alreadyPresent)
     {

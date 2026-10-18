@@ -65,9 +65,10 @@ public sealed class ParallelismTests
     {
         var environment = Parallelism.Environment(6, Root);
 
-        environment.Count.ShouldBe(2);
+        environment.Count.ShouldBe(3);
         environment["DOTNET_PROCESSOR_COUNT"].ShouldBe("6");
         environment["SharedCompilationId"].ShouldMatch("^fex-p6-[0-9A-F]{8}$");
+        environment["MSBUILDNODEHANDSHAKESALT"].ShouldBe(environment["SharedCompilationId"]);
     }
 
     [Fact]

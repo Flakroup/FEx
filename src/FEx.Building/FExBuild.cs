@@ -29,6 +29,8 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
         ? Configuration.Debug
         : Configuration.Release;
 
+    // Override with an initializer, never an expression body: NUKE writes the command-line value into a
+    // backing field, and an expression body has none of its own to read it from.
     /// <inheritdoc />
     [Parameter("Most threads the build and the tests may use - default: a quarter of the machine kept free locally (at least 2), unbounded on a server; 0 = unbounded")]
     public virtual int? MaxParallelism { get; } = IsLocalBuild
@@ -103,6 +105,9 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
             Environment.SetEnvironmentVariable(name, value);
 
         // The only two platforms with a process affinity .NET can set; elsewhere the counts alone apply.
+        // ponytail: on Linux it binds the calling thread and the threads it creates later, not thread-pool workers
+        // that already exist, so a child started from one of those runs unconfined; NUKE runs targets on the
+        // main thread. Confining every thread means enumerating /proc/self/task.
         if (!OperatingSystem.IsWindows() && !OperatingSystem.IsLinux())
             return;
 

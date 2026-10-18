@@ -28,10 +28,12 @@ public sealed class ApplyParallelismTests : IDisposable
 {
     private const string ProcessorCount = "DOTNET_PROCESSOR_COUNT";
     private const string CompilationId = "SharedCompilationId";
+    private const string NodeSalt = "MSBUILDNODEHANDSHAKESALT";
     private const string Root = @"X:\Repo";
 
     private readonly string? _processorCount = Environment.GetEnvironmentVariable(ProcessorCount);
     private readonly string? _compilationId = Environment.GetEnvironmentVariable(CompilationId);
+    private readonly string? _nodeSalt = Environment.GetEnvironmentVariable(NodeSalt);
     private readonly ILogger _logger = Log.Logger;
     private readonly long _affinity = Affinity;
 
@@ -39,6 +41,7 @@ public sealed class ApplyParallelismTests : IDisposable
     {
         Environment.SetEnvironmentVariable(ProcessorCount, _processorCount);
         Environment.SetEnvironmentVariable(CompilationId, _compilationId);
+        Environment.SetEnvironmentVariable(NodeSalt, _nodeSalt);
         Log.Logger = _logger;
         Affinity = _affinity;
     }
@@ -96,6 +99,7 @@ public sealed class ApplyParallelismTests : IDisposable
 
         Environment.GetEnvironmentVariable(ProcessorCount).ShouldBe("6");
         Environment.GetEnvironmentVariable(CompilationId).ShouldBe(Parallelism.Environment(6, Root)[CompilationId]);
+        Environment.GetEnvironmentVariable(NodeSalt).ShouldBe(Parallelism.Environment(6, Root)[NodeSalt]);
     }
 
     [Fact]

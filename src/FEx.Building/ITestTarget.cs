@@ -135,8 +135,8 @@ public interface ITestTarget : ICompileTarget
         var additional = additionalArguments?.ToList() ?? [];
         arguments.AddRange(additional);
 
-        // After the contributed arguments so that a repository's own value wins: MTP sums the arity of a
-        // repeated option and aborts the run, and Parallelism leaves out what is already there.
+        // A repository's own value wins because Parallelism leaves out what the contributed arguments already
+        // carry: MTP sums the arity of a repeated option and aborts the run.
         arguments.AddRange(Parallelism.TestArguments(maxParallelism, additional));
 
         // One process per assembly, so narrowing the run leaves every assembly the narrowing missed with

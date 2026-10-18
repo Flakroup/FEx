@@ -1,5 +1,6 @@
 using Nuke.Common;
 using Nuke.Common.IO;
+using Nuke.Common.ProjectModel;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -162,9 +163,11 @@ public sealed class BuildSettingsTests
         ((IAppPublishTarget)new CappedBuild(6)).GetPublishSettings(new(), PublishEntry)
             .ProcessAdditionalArguments.ShouldNotBeNull().ShouldContain("-maxcpucount:6");
 
-    [Fact]
-    public void NoCap_AddsNothingToPublish() =>
-        (((IAppPublishTarget)new CappedBuild(null)).GetPublishSettings(new(), PublishEntry).ProcessAdditionalArguments ?? [])
+    [Theory]
+    [InlineData(null)]
+    [InlineData(0)]
+    public void NoCap_AddsNothingToPublish(int? cap) =>
+        (((IAppPublishTarget)new CappedBuild(cap)).GetPublishSettings(new(), PublishEntry).ProcessAdditionalArguments ?? [])
             .ShouldNotContain(static a => a.StartsWith("-maxcpucount"));
 
     [Fact]
@@ -172,17 +175,39 @@ public sealed class BuildSettingsTests
         ((IPackTarget)new CappedBuild(6)).GetPackSettings(new(), "/repo/FEx.slnx", "1.2.3", VersionInfo, "1.2.3+abc")
             .ProcessAdditionalArguments.ShouldNotBeNull().ShouldContain("-maxcpucount:6");
 
-    [Fact]
-    public void NoCap_AddsNothingToPack() =>
-        (((IPackTarget)new CappedBuild(null)).GetPackSettings(new(), "/repo/FEx.slnx", "1.2.3", VersionInfo, "1.2.3+abc")
+    [Theory]
+    [InlineData(null)]
+    [InlineData(0)]
+    public void NoCap_AddsNothingToPack(int? cap) =>
+        (((IPackTarget)new CappedBuild(cap)).GetPackSettings(new(), "/repo/FEx.slnx", "1.2.3", VersionInfo, "1.2.3+abc")
             .ProcessAdditionalArguments ?? [])
         .ShouldNotContain(static a => a.StartsWith("-maxcpucount"));
 
     [Fact]
+    public void ANegativeCap_FailsThePublishSettings() =>
+        Should.Throw<ArgumentOutOfRangeException>(
+            () => ((IAppPublishTarget)new CappedBuild(-1)).GetPublishSettings(new(), PublishEntry));
+
+    [Fact]
+    public void ANegativeCap_FailsThePackSettings() =>
+        Should.Throw<ArgumentOutOfRangeException>(
+            () => ((IPackTarget)new CappedBuild(-1)).GetPackSettings(new(), "/repo/FEx.slnx", "1.2.3", VersionInfo, "1.2.3+abc"));
+
+    [Fact]
+    public void ABuildThatDoesNotDeriveFromFExBuild_IsUnbounded() =>
+        ((ICompileTarget)new PlainBuild()).MaxParallelism.ShouldBeNull();
+
+    [Fact]
     public void PackSettings_StillCarryTheVersionTheyAreGiven()
     {
-        var settings = ((IPackTarget)new CappedBuild(null))
+        var build = new CappedBuild(null);
+        var settings = ((IPackTarget)build)
             .GetPackSettings(new(), "/repo/FEx.slnx", "1.2.3", VersionInfo, "1.2.3+abc");
+
+        settings.Project.ShouldBe("/repo/FEx.slnx");
+        settings.Configuration.ShouldBe(build.Configuration.ToString());
+        settings.OutputDirectory.ShouldBe(((IPackTarget)build).PackagesDirectory);
+        settings.Properties["NoWarn"].ToString().ShouldBe("CS1591");
 
         settings.Properties["Version"].ToString().ShouldBe("1.2.3");
         settings.Properties["PackageVersion"].ToString().ShouldBe("1.2.3");
@@ -231,6 +256,17 @@ public sealed class BuildSettingsTests
             "the build must never switch the dependency audit off");
 
     // FExBuild is abstract; nothing here touches build state, only the settings the two methods return.
+    private sealed class PlainBuild : NukeBuild, ICompileTarget
+    {
+        Solution ICompileTarget.Solution => null!;
+
+        public Configuration Configuration { get; } = Configuration.Debug;
+
+        public IEnumerable<string> PublishProjects { get; } = [];
+
+        public string? PublishRuntime => null;
+    }
+
     private sealed class TestBuild : FExBuild
     {
         public override IEnumerable<string> PublishProjects { get; } = [];

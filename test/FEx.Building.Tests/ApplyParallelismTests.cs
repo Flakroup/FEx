@@ -54,10 +54,7 @@ public sealed class ApplyParallelismTests : IDisposable
         {
             using var process = Process.GetCurrentProcess();
 
-            if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
-                return (long)process.ProcessorAffinity;
-
-            throw new PlatformNotSupportedException();
+            return AffinityOf(process);
         }
         set
         {
@@ -70,6 +67,14 @@ public sealed class ApplyParallelismTests : IDisposable
         }
     }
 
+    private static long AffinityOf(Process process)
+    {
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+            return (long)process.ProcessorAffinity;
+
+        throw new PlatformNotSupportedException();
+    }
+
     [Fact]
     public void ACap_ConfinesTheBuildToThatManyProcessors()
     {
@@ -79,6 +84,28 @@ public sealed class ApplyParallelismTests : IDisposable
 
         Affinity.ShouldBe(expected);
         BitOperations.PopCount((ulong)Affinity).ShouldBe(1);
+    }
+
+    [Fact]
+    public void ACap_IsInheritedByTheProcessesTheBuildStarts()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(),
+            "Linux binds the calling thread only, and a test runs off the main thread; see FExBuild.ApplyParallelism.");
+
+        CappedBuild.Apply(1);
+
+        using var child = Process.Start(
+            new ProcessStartInfo("ping", "-n 30 127.0.0.1") { UseShellExecute = false, RedirectStandardOutput = true })!;
+
+        try
+        {
+            AffinityOf(child).ShouldBe(Affinity);
+        }
+        finally
+        {
+            child.Kill();
+            child.WaitForExit();
+        }
     }
 
     [Fact]

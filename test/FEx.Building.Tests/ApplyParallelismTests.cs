@@ -28,6 +28,7 @@ public sealed class ApplyParallelismTests : IDisposable
 {
     private const string ProcessorCount = "DOTNET_PROCESSOR_COUNT";
     private const string CompilationId = "SharedCompilationId";
+    private const string Root = @"X:\Repo";
 
     private readonly string? _processorCount = Environment.GetEnvironmentVariable(ProcessorCount);
     private readonly string? _compilationId = Environment.GetEnvironmentVariable(CompilationId);
@@ -94,7 +95,7 @@ public sealed class ApplyParallelismTests : IDisposable
         CappedBuild.Apply(6);
 
         Environment.GetEnvironmentVariable(ProcessorCount).ShouldBe("6");
-        Environment.GetEnvironmentVariable(CompilationId).ShouldBe("fex-p6");
+        Environment.GetEnvironmentVariable(CompilationId).ShouldBe(Parallelism.Environment(6, Root)[CompilationId]);
     }
 
     [Fact]
@@ -125,7 +126,7 @@ public sealed class ApplyParallelismTests : IDisposable
         }
 
         Environment.GetEnvironmentVariable(ProcessorCount).ShouldBe("6");
-        Environment.GetEnvironmentVariable(CompilationId).ShouldBe("fex-p6");
+        Environment.GetEnvironmentVariable(CompilationId).ShouldStartWith("fex-p6-");
     }
 
     [Fact]
@@ -162,7 +163,7 @@ public sealed class ApplyParallelismTests : IDisposable
 
         public override int? MaxParallelism => _cap;
 
-        public static void Apply(int? cap) => ApplyParallelism(cap);
+        public static void Apply(int? cap) => ApplyParallelism(cap, Root);
 
         public void Initialize() => OnBuildInitialized();
     }

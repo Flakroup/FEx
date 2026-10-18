@@ -11,6 +11,8 @@ namespace FEx.Building.Tests;
 /// </summary>
 public sealed class ParallelismTests
 {
+    private const string Root = @"X:\Repo";
+
     [Theory]
     [InlineData(1, 1)]
     [InlineData(2, 1)]
@@ -56,17 +58,27 @@ public sealed class ParallelismTests
 
     [Fact]
     public void Environment_IsEmptyWithoutACap() =>
-        Parallelism.Environment(null).ShouldBeEmpty();
+        Parallelism.Environment(null, Root).ShouldBeEmpty();
 
     [Fact]
     public void Environment_GivesTheCapItsOwnProcessorCountAndCompilerServer()
     {
-        var environment = Parallelism.Environment(6);
+        var environment = Parallelism.Environment(6, Root);
 
         environment.Count.ShouldBe(2);
         environment["DOTNET_PROCESSOR_COUNT"].ShouldBe("6");
-        environment["SharedCompilationId"].ShouldBe("fex-p6");
+        environment["SharedCompilationId"].ShouldMatch("^fex-p6-[0-9A-F]{8}$");
     }
+
+    [Fact]
+    public void Environment_GivesEachRepositoryItsOwnCompilerServer_BecauseEachMayResolveAnotherSdk() =>
+        Parallelism.Environment(6, Root)["SharedCompilationId"]
+            .ShouldNotBe(Parallelism.Environment(6, @"X:\Other")["SharedCompilationId"]);
+
+    [Fact]
+    public void Environment_KeepsOneRepositorysCompilerServerAcrossBuildsAndPathCase() =>
+        Parallelism.Environment(6, Root)["SharedCompilationId"]
+            .ShouldBe(Parallelism.Environment(6, Root.ToLowerInvariant())["SharedCompilationId"]);
 
     [Theory]
     [InlineData(24, 0xFFFF_FFFFL, 0xFFFF_FF00L)]
@@ -99,6 +111,17 @@ public sealed class ParallelismTests
     public void TestArguments_LeaveOutAnOptionTheRepositoryAlreadyCarries() =>
         Parallelism.TestArguments(6, ["--max-threads", "2"])
             .ShouldBe(["--max-parallel-test-modules", "6"]);
+
+    [Theory]
+    [InlineData("--max-threads:2")]
+    [InlineData("--max-threads=2")]
+    public void TestArguments_RecogniseTheDelimitedFormsMtpParses(string threads) =>
+        Parallelism.TestArguments(6, [threads, "--max-parallel-test-modules=1"]).ShouldBeEmpty();
+
+    [Fact]
+    public void TestArguments_DoNotMistakeAnotherOptionForTheirs() =>
+        Parallelism.TestArguments(6, ["--max-threads-extra", "2"])
+            .ShouldBe(["--max-parallel-test-modules", "6", "--max-threads", "6"]);
 
     [Fact]
     public void TestArguments_LeaveOutBothWhenBothArePresent() =>

@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Numerics;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace FEx.Building;
 
@@ -23,7 +26,10 @@ namespace FEx.Building;
 /// <c>DOTNET_PROCESSOR_COUNT</c> overrides. The shared compiler server (VBCSCompiler) is reused across builds
 /// and its pipe name does not include the environment, so a server started uncapped would keep serving the
 /// capped build. <c>SharedCompilationId</c>, which MSBuild reads from the environment as a property, gives
-/// each cap its own server, started with the capped environment.
+/// each cap its own server, started with the capped environment. It REPLACES Roslyn's own pipe name, which
+/// carries the compiler's directory, so the id carries the repository instead: one repository resolves one
+/// SDK through its <c>global.json</c>, and a server of another SDK answers a mismatched client with an
+/// error that fails the build.
 /// </item>
 /// <item>
 /// The test runner. MTP runs one test module per core and xUnit v3 one thread per core by default, hence the
@@ -86,15 +92,26 @@ public static class Parallelism
             ? [$"-maxcpucount:{n.ToString(CultureInfo.InvariantCulture)}"]
             : [];
 
-    /// <summary>The environment variables the cap sets for every child process; empty without a cap.</summary>
-    public static IReadOnlyDictionary<string, string> Environment(int? cap) =>
+    /// <summary>
+    /// The environment variables the cap sets for every child process; empty without a cap. The compiler server
+    /// id is scoped to <paramref name="root" />, the repository being built.
+    /// </summary>
+    /// <remarks>
+    /// ponytail: an SDK installed while a capped server is still warm fails ONE build of that repository with
+    /// the hash mismatch, and the mismatched server shuts itself down; keying on the resolved SDK directory
+    /// would close that, at the cost of resolving it.
+    /// </remarks>
+    public static IReadOnlyDictionary<string, string> Environment(int? cap, string root) =>
         cap is { } n
             ? new Dictionary<string, string>
             {
                 [ProcessorCountVariable] = n.ToString(CultureInfo.InvariantCulture),
-                [CompilationIdVariable] = $"fex-p{n.ToString(CultureInfo.InvariantCulture)}"
+                [CompilationIdVariable] = $"fex-p{n.ToString(CultureInfo.InvariantCulture)}-{Scope(root)}"
             }
             : new Dictionary<string, string>();
+
+    private static string Scope(string root) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(root.ToUpperInvariant())))[..8];
 
     /// <summary>
     /// The processor affinity that confines the build to <paramref name="cap" /> of the processors
@@ -129,24 +146,30 @@ public static class Parallelism
 
     /// <summary>
     /// The <c>dotnet test</c> options for the cap. An option pair is left out when
-    /// <paramref name="alreadyPresent" /> names it: MTP sums the arity of a repeated option and aborts the
-    /// run, so a repository that sets its own value wins.
+    /// <paramref name="alreadyPresent" /> names it, in any form MTP parses (<c>--opt v</c>, <c>--opt:v</c>,
+    /// <c>--opt=v</c>): MTP sums the arity of a repeated option and aborts the run, so a repository that sets
+    /// its own value wins.
     /// </summary>
     public static IReadOnlyList<string> TestArguments(int? cap, IEnumerable<string>? alreadyPresent)
     {
         if (cap is not { } n)
             return [];
 
-        var present = new HashSet<string>(alreadyPresent ?? [], StringComparer.Ordinal);
+        var present = (alreadyPresent ?? []).ToList();
         var value = n.ToString(CultureInfo.InvariantCulture);
         List<string> arguments = [];
 
-        if (!present.Contains(ModulesOption))
+        if (!Carries(present, ModulesOption))
             arguments.AddRange([ModulesOption, value]);
 
-        if (!present.Contains(ThreadsOption))
+        if (!Carries(present, ThreadsOption))
             arguments.AddRange([ThreadsOption, value]);
 
         return arguments;
     }
+
+    private static bool Carries(IEnumerable<string> arguments, string option) =>
+        arguments.Any(argument => argument == option ||
+                                  argument.StartsWith($"{option}:", StringComparison.Ordinal) ||
+                                  argument.StartsWith($"{option}=", StringComparison.Ordinal));
 }

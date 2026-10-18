@@ -90,15 +90,16 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     }
 
     /// <summary>
-    /// Sets the environment variables <see cref="Parallelism.Environment" /> names for <paramref name="cap" />.
+    /// Sets the environment variables <see cref="Parallelism.Environment" /> names for <paramref name="cap" />,
+    /// the compiler server scoped to <paramref name="root" />.
     /// NUKE snapshots the environment when each tool's settings are created and reads
     /// <c>EnvironmentInfo.Variables</c> live, so setting them once at initialisation reaches every later child
     /// process. Then narrows this process's affinity to <see cref="Parallelism.AffinityMask" />, which every
     /// child inherits. A null cap sets nothing and leaves what the caller exported, and its affinity, untouched.
     /// </summary>
-    protected static void ApplyParallelism(int? cap)
+    protected static void ApplyParallelism(int? cap, string root)
     {
-        foreach (var (name, value) in Parallelism.Environment(cap))
+        foreach (var (name, value) in Parallelism.Environment(cap, root))
             Environment.SetEnvironmentVariable(name, value);
 
         // The only two platforms with a process affinity .NET can set; elsewhere the counts alone apply.
@@ -244,7 +245,7 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     protected override void OnBuildInitialized()
     {
         base.OnBuildInitialized();
-        ApplyParallelism(Parallelism.Resolve(MaxParallelism));
+        ApplyParallelism(Parallelism.Resolve(MaxParallelism), RootDirectory);
         InstallLogRedaction();
         LogBuildInfo();
     }

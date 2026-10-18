@@ -1,3 +1,4 @@
+using Nuke.Common;
 using Nuke.Common.IO;
 using Shouldly;
 using System;
@@ -19,6 +20,12 @@ public sealed class BuildSettingsTests
     private static readonly TestBuild Build = new();
 
     private static AbsolutePath Solution => "/repo/FEx.slnx";
+
+    private static AppPublishEntry PublishEntry { get; } =
+        new("/repo/src/Sample.App/Sample.App.csproj", "/repo/artifacts/publish/Sample.App");
+
+    private static GitVersionInfo VersionInfo { get; } =
+        new() { AssemblySemVer = "1.2.3.0", AssemblySemFileVer = "1.2.3.4" };
 
     [Fact]
     public void RestoreSettings_DoNotDisableTheAudit()
@@ -93,8 +100,94 @@ public sealed class BuildSettingsTests
         var settings = ((ICompileTarget)Build).GetBuildSettings(new(), Solution);
 
         settings.NoRestore.ShouldBe(true);
-        settings.ProcessAdditionalArguments.ShouldNotBeNull().ShouldContain("-m");
+        // Whether this build is local depends on where the suite runs, so the switch is asserted against the
+        // build's own cap rather than against a literal; the two paths are pinned by the tests that follow.
+        settings.ProcessAdditionalArguments.ShouldNotBeNull()
+            .ShouldContain(Parallelism.MsBuildSwitch(Parallelism.Resolve(Build.MaxParallelism)));
         settings.ProcessAdditionalArguments.ShouldContain(static a => a.StartsWith("-bl:") && a.EndsWith("FEx.slnx.binlog"));
+    }
+
+    [Fact]
+    public void TheCapDefault_IsAQuarterOfTheMachineFreeLocally_AndUnboundedOnAServer() =>
+        Build.MaxParallelism.ShouldBe(
+            NukeBuild.IsLocalBuild
+                ? Parallelism.LocalDefault(Environment.ProcessorCount)
+                : null);
+
+    [Fact]
+    public void ACap_ReachesTheBuildSwitch_AndLeavesNoBareOne()
+    {
+        var arguments = ((ICompileTarget)new CappedBuild(6)).GetBuildSettings(new(), Solution).ProcessAdditionalArguments;
+
+        arguments.ShouldNotBeNull().ShouldContain("-m:6");
+        arguments.ShouldNotContain("-m");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(0)]
+    public void NoCap_KeepsTheBareBuildSwitch_AsItWasBeforeTheCapExisted(int? cap)
+    {
+        var arguments = ((ICompileTarget)new CappedBuild(cap)).GetBuildSettings(new(), Solution).ProcessAdditionalArguments;
+
+        arguments.ShouldNotBeNull().ShouldContain("-m");
+        arguments.ShouldNotContain(static a => a.StartsWith("-m:"));
+    }
+
+    [Fact]
+    public void ACap_ReachesTheCompileCommandLine() =>
+        ((ICompileTarget)new CappedBuild(6)).CompileInvocation(Solution, runtime: null).Arguments.ShouldContain(" -m:6 ");
+
+    [Fact]
+    public void ANegativeCap_FailsTheBuildSettings() =>
+        Should.Throw<ArgumentOutOfRangeException>(
+            () => ((ICompileTarget)new CappedBuild(-1)).GetBuildSettings(new(), Solution));
+
+    [Fact]
+    public void ACap_ReachesRestore() =>
+        ((ICompileTarget)new CappedBuild(6)).GetRestoreSettings(new(), Solution)
+            .ProcessAdditionalArguments.ShouldNotBeNull().ShouldContain("-maxcpucount:6");
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(0)]
+    public void NoCap_AddsNothingToRestore(int? cap) =>
+        (((ICompileTarget)new CappedBuild(cap)).GetRestoreSettings(new(), Solution).ProcessAdditionalArguments ?? [])
+            .ShouldNotContain(static a => a.StartsWith("-maxcpucount"));
+
+    [Fact]
+    public void ACap_ReachesPublish() =>
+        ((IAppPublishTarget)new CappedBuild(6)).GetPublishSettings(new(), PublishEntry)
+            .ProcessAdditionalArguments.ShouldNotBeNull().ShouldContain("-maxcpucount:6");
+
+    [Fact]
+    public void NoCap_AddsNothingToPublish() =>
+        (((IAppPublishTarget)new CappedBuild(null)).GetPublishSettings(new(), PublishEntry).ProcessAdditionalArguments ?? [])
+            .ShouldNotContain(static a => a.StartsWith("-maxcpucount"));
+
+    [Fact]
+    public void ACap_ReachesPack() =>
+        ((IPackTarget)new CappedBuild(6)).GetPackSettings(new(), "/repo/FEx.slnx", "1.2.3", VersionInfo, "1.2.3+abc")
+            .ProcessAdditionalArguments.ShouldNotBeNull().ShouldContain("-maxcpucount:6");
+
+    [Fact]
+    public void NoCap_AddsNothingToPack() =>
+        (((IPackTarget)new CappedBuild(null)).GetPackSettings(new(), "/repo/FEx.slnx", "1.2.3", VersionInfo, "1.2.3+abc")
+            .ProcessAdditionalArguments ?? [])
+        .ShouldNotContain(static a => a.StartsWith("-maxcpucount"));
+
+    [Fact]
+    public void PackSettings_StillCarryTheVersionTheyAreGiven()
+    {
+        var settings = ((IPackTarget)new CappedBuild(null))
+            .GetPackSettings(new(), "/repo/FEx.slnx", "1.2.3", VersionInfo, "1.2.3+abc");
+
+        settings.Properties["Version"].ToString().ShouldBe("1.2.3");
+        settings.Properties["PackageVersion"].ToString().ShouldBe("1.2.3");
+        settings.Properties["AssemblyVersion"].ToString().ShouldBe("1.2.3.0");
+        settings.Properties["FileVersion"].ToString().ShouldBe("1.2.3.4");
+        settings.Properties["InformationalVersion"].ToString().ShouldBe("1.2.3+abc");
+        settings.NoBuild.ShouldBe(true);
     }
 
     /// <summary>
@@ -139,6 +232,18 @@ public sealed class BuildSettingsTests
     private sealed class TestBuild : FExBuild
     {
         public override IEnumerable<string> PublishProjects { get; } = [];
+    }
+
+    // A build with the cap pinned, so a test does not depend on whether the suite runs as a local or a server build.
+    private sealed class CappedBuild : FExBuild, IPackTarget
+    {
+        private readonly int? _cap;
+
+        public CappedBuild(int? cap) => _cap = cap;
+
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        public override int? MaxParallelism => _cap;
     }
 
     private sealed class TimedBuild(TimeSpan timeout) : FExBuild, ICompileTarget

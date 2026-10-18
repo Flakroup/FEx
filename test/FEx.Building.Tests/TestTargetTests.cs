@@ -74,7 +74,8 @@ public sealed class TestTargetTests
             withCoverage: true,
             testFilter: null,
             additionalArguments: null,
-            forgivesEmptyAssemblies: false);
+            forgivesEmptyAssemblies: false,
+            maxParallelism: null);
 
         arguments.ShouldContain(@"--solution ""C:\src\my repo\Some.slnx""");
         arguments.ShouldContain(@"--results-directory ""C:\src\my repo\artifacts\test-results""");
@@ -187,6 +188,91 @@ public sealed class TestTargetTests
         Should.Throw<ArgumentOutOfRangeException>(
             () => build.TestInvocation("C:/repo/Some.slnx", "Release", "C:/repo/results"));
     }
+
+    [Fact]
+    public void ACap_LimitsTheTestModulesAndTheThreads()
+    {
+        var arguments = Arguments(withCoverage: false, maxParallelism: 6);
+
+        arguments.ShouldContain("--max-parallel-test-modules 6");
+        arguments.ShouldContain("--max-threads 6");
+    }
+
+    [Fact]
+    public void NoCap_LeavesTheCommandLineAsItWas()
+    {
+        // The server path: nothing about parallelism appears, so a CI run is byte-for-byte what it was.
+        var arguments = Arguments(withCoverage: true, maxParallelism: null);
+
+        arguments.ShouldNotContain("--max-parallel-test-modules");
+        arguments.ShouldNotContain("--max-threads");
+    }
+
+    [Fact]
+    public void ARepositoryThatSetsItsOwnThreadLimit_KeepsIt_AndTheOptionIsAskedForOnce()
+    {
+        // MTP sums the arity of a repeated option and aborts the run before a test executes.
+        var arguments = Arguments(withCoverage: false, additional: ["--max-threads", "2"], maxParallelism: 6);
+
+        Occurrences(arguments, "--max-threads").ShouldBe(1);
+        arguments.ShouldContain("--max-threads 2");
+        arguments.ShouldContain("--max-parallel-test-modules 6");
+    }
+
+    [Fact]
+    public void TheContributedArguments_AreReadOnce_EvenWithACap()
+    {
+        // An override may be an iterator that logs what it leaves out; the cap must not make it log twice.
+        var reads = 0;
+
+        ITestTarget.TestArguments("C:/repo/Some.slnx", "Release", "C:/repo/artifacts/test-results", false, null,
+            Counted(), false, 6);
+
+        reads.ShouldBe(1);
+
+        IEnumerable<string> Counted()
+        {
+            reads++;
+            yield return "--max-threads";
+            yield return "2";
+        }
+    }
+
+    [Fact]
+    public void ACap_ReachesTheCommandLineTheTargetStarts()
+    {
+        var arguments = ((ITestTarget)new CappedBuild(6))
+            .TestCommandLine("C:/repo/Some.slnx", "Release", "C:/repo/artifacts/test-results");
+
+        arguments.ShouldContain("--max-parallel-test-modules 6");
+        arguments.ShouldContain("--max-threads 6");
+    }
+
+    [Fact]
+    public void ABuildWithoutACap_StartsTheCommandLineItAlwaysDid()
+    {
+        var arguments = ((ITestTarget)new CappedBuild(null))
+            .TestCommandLine("C:/repo/Some.slnx", "Release", "C:/repo/artifacts/test-results");
+
+        arguments.ShouldNotContain("--max-");
+    }
+
+    [Fact]
+    public void ZeroCap_MeansUnbounded()
+    {
+        ((ITestTarget)new CappedBuild(0))
+            .TestCommandLine("C:/repo/Some.slnx", "Release", "C:/repo/artifacts/test-results")
+            .ShouldNotContain("--max-");
+    }
+
+    [Fact]
+    public void MaxParallelism_IsBoundFromTheCommandLine_NotJustAProperty() =>
+        typeof(FExBuild).GetProperty(
+                nameof(FExBuild.MaxParallelism),
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .ShouldNotBeNull()
+            .GetCustomAttribute<ParameterAttribute>()
+            .ShouldNotBeNull();
 
     [Fact]
     public void ABuildThatContributesNothing_ContributesNothing()
@@ -365,7 +451,8 @@ public sealed class TestTargetTests
         bool withCoverage,
         string? testFilter = null,
         IEnumerable<string>? additional = null,
-        bool forgivesEmptyAssemblies = false) =>
+        bool forgivesEmptyAssemblies = false,
+        int? maxParallelism = null) =>
         ITestTarget.TestArguments(
             "C:/repo/Some.slnx",
             "Release",
@@ -373,7 +460,8 @@ public sealed class TestTargetTests
             withCoverage,
             testFilter,
             additional,
-            forgivesEmptyAssemblies);
+            forgivesEmptyAssemblies,
+            maxParallelism);
 
     private static int Occurrences(string arguments, string flag)
     {
@@ -392,6 +480,17 @@ public sealed class TestTargetTests
     private sealed class GatedBuild : FExBuild, ICoverageTarget
     {
         public override IEnumerable<string> PublishProjects { get; } = [];
+    }
+
+    private sealed class CappedBuild : FExBuild, ITestTarget
+    {
+        private readonly int? _cap;
+
+        public CappedBuild(int? cap) => _cap = cap;
+
+        public override IEnumerable<string> PublishProjects { get; } = [];
+
+        public override int? MaxParallelism => _cap;
     }
 
     private sealed class UngatedBuild : FExBuild, ITestTarget

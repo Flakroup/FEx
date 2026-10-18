@@ -80,5 +80,6 @@ public interface IAppPublishTarget : ICompileTarget
             .When(_ => PublishRuntime is not null,
                 c => c.SetRuntime(PublishRuntime).SetSelfContained(PublishSelfContained))
             .When(_ => PublishFramework is not null, c => c.SetFramework(PublishFramework))
-            .When(_ => PublishSingleFile, static c => c.EnablePublishSingleFile());
+            .When(_ => PublishSingleFile, static c => c.EnablePublishSingleFile())
+            .AddProcessAdditionalArguments(Parallelism.MsBuildArguments(Parallelism.Resolve(MaxParallelism)));
 }

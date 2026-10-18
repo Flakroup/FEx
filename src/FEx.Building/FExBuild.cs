@@ -29,6 +29,12 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
         : Configuration.Release;
 
     /// <inheritdoc />
+    [Parameter("Most threads the build and the tests may use - default: a quarter of the machine kept free locally (at least 2), unbounded on a server; 0 = unbounded")]
+    public virtual int? MaxParallelism { get; } = IsLocalBuild
+        ? Parallelism.LocalDefault(Environment.ProcessorCount)
+        : null;
+
+    /// <inheritdoc />
     public abstract IEnumerable<string> PublishProjects { get; }
 
     /// <inheritdoc />
@@ -80,6 +86,18 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
         Environment.SetEnvironmentVariable("DOTNET_MULTILEVEL_LOOKUP", "0");
         Environment.SetEnvironmentVariable("DOTNET_NOLOGO", "1");
         Console.WriteLine("Disabled .NET and NUKE telemetry");
+    }
+
+    /// <summary>
+    /// Sets the environment variables <see cref="Parallelism.Environment" /> names for <paramref name="cap" />.
+    /// NUKE snapshots the environment when each tool's settings are created and reads
+    /// <c>EnvironmentInfo.Variables</c> live, so setting them once at initialisation reaches every later child
+    /// process. A null cap sets nothing and leaves what the caller exported untouched.
+    /// </summary>
+    protected static void ApplyParallelism(int? cap)
+    {
+        foreach (var (name, value) in Parallelism.Environment(cap))
+            Environment.SetEnvironmentVariable(name, value);
     }
 
     protected static void Bootstrap()
@@ -215,6 +233,7 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     protected override void OnBuildInitialized()
     {
         base.OnBuildInitialized();
+        ApplyParallelism(Parallelism.Resolve(MaxParallelism));
         InstallLogRedaction();
         LogBuildInfo();
     }

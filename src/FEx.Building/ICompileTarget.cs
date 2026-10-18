@@ -69,6 +69,16 @@ public interface ICompileTarget : INukeBuild
     /// </summary>
     string? PublishRuntime { get; }
 
+    /// <summary>
+    /// Most threads the build and the tests may use. Null, the default for an implementer that does not derive
+    /// from <see cref="FExBuild" />, leaves everything unbounded, as before this existed; zero means the same.
+    /// </summary>
+    /// <remarks>
+    /// See <see cref="Parallelism" /> for what the cap becomes and why each consumer needs its own setting.
+    /// Negative values throw <see cref="ArgumentOutOfRangeException" /> where the cap is first used.
+    /// </remarks>
+    int? MaxParallelism => null;
+
     Target Restore => _ => _.Executes(OnRestore);
 
     Target Compile => _ => _.DependsOn(Restore).Executes(OnCompile);
@@ -126,7 +136,8 @@ public interface ICompileTarget : INukeBuild
                                                      AbsolutePath solution,
                                                      Configuration? configuration = null) =>
         settings.SetProjectFile(solution)
-            .When(_ => configuration is not null, s => s.SetProperty("Configuration", configuration!.ToString()));
+            .When(_ => configuration is not null, s => s.SetProperty("Configuration", configuration!.ToString()))
+            .AddProcessAdditionalArguments(Parallelism.MsBuildArguments(Parallelism.Resolve(MaxParallelism)));
 
     /// <summary>
     /// Builds the solution, and - when publishing for a runtime - the publish projects again for that RID,
@@ -184,7 +195,7 @@ public interface ICompileTarget : INukeBuild
             .SetNoRestore(noRestore)
             .SetProjectFile(project)
             .WithRuntime(runtime)
-            .SetProcessAdditionalArguments("-m", $"-bl:{BinaryLogPath(BinaryLogDirectory, project, runtime).ToString().DoubleQuoteIfNeeded()}")
+            .SetProcessAdditionalArguments(Parallelism.MsBuildSwitch(Parallelism.Resolve(MaxParallelism)), $"-bl:{BinaryLogPath(BinaryLogDirectory, project, runtime).ToString().DoubleQuoteIfNeeded()}")
             .When(_ => verbosity is not null, s => s.SetVerbosity(verbosity));
 
     /// <summary>Where Compile's binary logs go, one file per <c>dotnet build</c> invocation.</summary>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -23,6 +24,15 @@ public partial class RuleDocumentationTests
 
     public static TheoryData<string> RuleIds => new(Descriptors.Keys.Order());
 
+    // The commit the analyzer assembly was built from; this suite always builds in a git checkout, so there is one.
+    private static readonly string BuildCommit = typeof(NonAtomicCompoundOperatorAnalyzer).Assembly
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion
+        .Split('+')[1];
+
+    [Fact]
+    public void The_links_pin_the_commit_the_package_was_built_from() =>
+        BuildCommit.ShouldMatch("^[0-9a-f]{40}$", "a link to a moving branch breaks in an installed package once that branch drops the rule");
+
     [Fact]
     public void Every_FEX_rule_is_exported() =>
         Descriptors.Count.ShouldBe(58);
@@ -35,7 +45,7 @@ public partial class RuleDocumentationTests
         descriptor.HelpLinkUri.ShouldNotBeNullOrWhiteSpace($"{id} has no helpLinkUri");
         var parts = descriptor.HelpLinkUri.Split('#');
 
-        parts[0].ShouldBe("https://github.com/Flakroup/FEx/blob/develop/src/Analyzers/README.md");
+        parts[0].ShouldBe($"https://github.com/Flakroup/FEx/blob/{BuildCommit}/src/Analyzers/README.md");
         parts.Length.ShouldBe(2);
         var sections = Sections();
         sections.ShouldContainKey(parts[1], $"{id} points at #{parts[1]}, which README.md has no heading for");

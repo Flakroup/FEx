@@ -219,7 +219,7 @@ public class GoldenCorpusTests
     {
         var assembly = typeof(GoldenCorpusTests).Assembly;
         using var stream = assembly.GetManifestResourceStream($"FEx.Analyzers.Tests.CorpusData.{name}")
-            ?? throw new InvalidOperationException($"{name} is not embedded: the test project embeds it from DevConfigs/analyzers-corpus, so the DevConfigs submodule has to be initialized.");
+            ?? throw new InvalidOperationException($"{name} is not embedded: add it to the EmbeddedResource list in FEx.Analyzers.Tests.csproj (a listed file missing from DevConfigs/analyzers-corpus fails the build instead).");
         using var reader = new StreamReader(stream);
 
         return reader.ReadToEnd();

@@ -65,7 +65,7 @@ public static class StringExtensions
     /// </summary>
     public const string SqlWildCardOneCharacterEscaped = "[_]";
 
-    private static readonly Regex PhoneNumberRegex = new("[^.0-9]", RegexOptions.Compiled);
+    private static readonly Regex PhoneNumberRegex = new("[^.0-9]", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
     private static readonly int[] DoubledValues = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9];
 
     /// <summary>Matches a run of word characters and apostrophes delimited by word boundaries.</summary>

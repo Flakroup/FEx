@@ -1,6 +1,7 @@
 using FEx.Common.Abstractions.Interfaces;
 using FEx.MVVM.Rx.Utilities;
 using Shouldly;
+using System;
 using Xunit;
 
 namespace FEx.MVVM.Tests;
@@ -28,5 +29,31 @@ public class StatusServiceTests
             hub.GetStatuses().ShouldContain("Starting");
 
         hub.GetStatuses().ShouldNotContain("Starting");
+    }
+
+    [Fact]
+    public void GetStatuses_returns_a_snapshot_that_later_statuses_do_not_change()
+    {
+        using var hub = new StatusHub(Guid.NewGuid());
+        hub.AddStatus("first");
+
+        var snapshot = hub.GetStatuses();
+        hub.AddStatus("second");
+
+        snapshot.ShouldBe(["first"]);
+        hub.GetStatuses().Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void GetStatuses_result_can_be_mutated_without_touching_the_hub()
+    {
+        using var hub = new StatusHub(Guid.NewGuid());
+        hub.AddStatus("first");
+
+        var snapshot = hub.GetStatuses();
+
+        Should.NotThrow(() => snapshot.Add("extra"));
+        snapshot.Clear();
+        hub.GetStatuses().ShouldBe(["first"]);
     }
 }

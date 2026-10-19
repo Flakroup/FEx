@@ -556,7 +556,9 @@ public class Project : NotifyPropertyChanged
 
             if (json == null
                 || (json["count"]?.Value<int>() ?? 0) <= 0)
+            {
                 return new();
+            }
 
             var displayName = json["value"]?[0]?["pushedBy"]?["displayName"]?.Value<string>() ?? string.Empty;
             var uniqueName = json["value"]?[0]?["pushedBy"]?["uniqueName"]?.Value<string>() ?? string.Empty;
@@ -571,7 +573,9 @@ public class Project : NotifyPropertyChanged
 
             if (url.IsNotNullOrEmptyString()
                 && url.Trim() != "/commit/")
+            {
                 uri = new(url);
+            }
 
             var date = DateTime.ParseExact(createdDate,
                 "MM/dd/yyyy HH:mm:ss",

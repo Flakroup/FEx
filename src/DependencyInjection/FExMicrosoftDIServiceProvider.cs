@@ -51,7 +51,9 @@ public sealed class FExMicrosoftDIServiceProvider : IFExServiceProvider
                          .Distinct()
                          .OrderBy(x => x)
                          .ToList())
+            {
                 sb.AppendLine(m);
+            }
 
             _logger.LogError("{Message}", sb.ToString());
 

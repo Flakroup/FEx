@@ -88,7 +88,9 @@ public static class FtpCommon
 
             if (info.Exists
                 && info.Length == size)
+            {
                 return target;
+            }
         }
 
         return null;
@@ -124,7 +126,9 @@ public static class FtpCommon
 
                 if (await client.FileExists(target)
                     && !onTargetExists(target))
+                {
                     return null;
+                }
 
                 return await client.UploadFile(inputfilepath,
                     target,
@@ -149,6 +153,7 @@ public static class FtpCommon
         FtpListItem[] res = [];
 
         if (ftphost != null)
+        {
             res = await RunFtpActionAsync(ftphost,
                 username,
                 password,
@@ -156,6 +161,7 @@ public static class FtpCommon
                 client => client.GetListing(ftpdirpath),
                 port,
                 dataConnectionType);
+        }
 
         return res;
     }

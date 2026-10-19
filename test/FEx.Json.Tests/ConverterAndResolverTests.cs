@@ -2,8 +2,8 @@ using FEx.Json.Converters;
 using FEx.Json.Resolvers;
 using Newtonsoft.Json;
 using Shouldly;
-using System.IO;
 using System;
+using System.IO;
 using Xunit;
 
 namespace FEx.Json.Tests;

@@ -25,7 +25,9 @@ public class DelayedNotificationObserver<T> : IDisposable
 
         if (delayTimeSpan == TimeSpan.Zero
             || delayTimeSpan.TotalMilliseconds < 1D)
+        {
             delayTimeSpan = TimeSpan.FromMilliseconds(50);
+        }
 
         StateChange = Observable.FromEventPattern<EventHandler<T>, T>(h => _stateChanged += h, h => _stateChanged -= h)
             .Select(x => x.EventArgs)

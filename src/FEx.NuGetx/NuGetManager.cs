@@ -59,7 +59,7 @@ public class NuGetManager : AsyncInitializable
 
     public static async Task<PackageIdentity[]> GetIdentitiesAsync(
         PackageSearchMetadataBuilder.ClonedPackageSearchMetadata package) =>
-        (await package.GetVersionsAsync()).Select(x => new PackageIdentity(package.Identity.Id, x.Version)).ToArray();
+        [.. (await package.GetVersionsAsync()).Select(x => new PackageIdentity(package.Identity.Id, x.Version))];
 
     public static async Task GetPackageDependenciesAsync(PackageIdentity package,
                                                          NuGetFramework framework,
@@ -69,6 +69,7 @@ public class NuGetManager : AsyncInitializable
                                                          ISet<SourcePackageDependencyInfo> availablePackages)
     {
         if (!availablePackages.Contains(package))
+        {
             foreach (var sourceRepository in repositories)
             {
                 var dependencyInfoResource = await sourceRepository.GetResourceAsync<DependencyInfoResource>();
@@ -94,6 +95,7 @@ public class NuGetManager : AsyncInitializable
                     }
                 }
             }
+        }
     }
 
     public async Task BackupPackageAsync(PackageIdentity package,
@@ -223,6 +225,7 @@ public class NuGetManager : AsyncInitializable
     public async Task<bool> DeletePackageAsync(IPackageSearchMetadata pkgToDel, string apiKey)
     {
         if (pkgToDel is not null)
+        {
             try
             {
                 var packageUpdateResource = await PackageUpdateResource.GetAsync();
@@ -238,6 +241,7 @@ public class NuGetManager : AsyncInitializable
             {
                 Logger.LogError(ex.ToString());
             }
+        }
 
         return false;
     }
@@ -258,6 +262,7 @@ public class NuGetManager : AsyncInitializable
         string? directDownloadDirectory = null)
     {
         if (pkgToRestore is not null)
+        {
             try
             {
                 var res = await downloadResource.GetDownloadResourceResultAsync(pkgToRestore,
@@ -276,6 +281,7 @@ public class NuGetManager : AsyncInitializable
             {
                 Logger.LogError(ex.ToString());
             }
+        }
 
         return (null, false);
     }
@@ -307,7 +313,7 @@ public class NuGetManager : AsyncInitializable
             true,
             packagesToPublish));
 
-        return result.Where(x => x.isNotPublished).Select(x => x.nuGet).ToArray();
+        return [.. result.Where(x => x.isNotPublished).Select(x => x.nuGet)];
     }
 
     protected override async Task OnInitializeAsync()
@@ -367,20 +373,24 @@ public class NuGetManager : AsyncInitializable
         if (excludedPackageNames is not null
             && excludedPackageNames.IsNotNullOrEmptyCollection()
             && excludedPackageNames.Contains(identity.Id))
+        {
             return (file, false);
+        }
 
         IPackageSearchMetadata[]? listedPackages = null;
 
         if (filterIds is null
             || filterIds.IsNullOrEmptyCollection()
             || filterIds.Contains(identity.Id))
+        {
             listedPackages =
-                (await packageMetadataResource.GetMetadataAsync(identity.Id,
+                [.. await packageMetadataResource.GetMetadataAsync(identity.Id,
                     includePrerelease,
                     includeUnlisted,
                     sourceCacheContext,
                     Logger,
-                    token)).ToArray();
+                    token)];
+        }
 
         return (file, listedPackages?.All(x => !x.Identity.Version.Equals(identity.Version)) ?? false);
     }

@@ -18,13 +18,13 @@ public sealed class SecureNotifyPropertyChangedTests
 {
     private const int FastIterations = FExStringCipher.MinIterations;
 
-    private static readonly FExStringCipher _cipher = new("the owning passphrase", FastIterations);
-    private static readonly FExStringCipher _stranger = new("an unrelated passphrase", FastIterations);
+    private static readonly FExStringCipher TestCipher = new("the owning passphrase", FastIterations);
+    private static readonly FExStringCipher Stranger = new("an unrelated passphrase", FastIterations);
 
     [Fact]
     public void Property_RoundTrips()
     {
-        var secrets = new Secrets(_cipher) { Secret = "hunter2" };
+        var secrets = new Secrets(TestCipher) { Secret = "hunter2" };
 
         secrets.Secret.ShouldBe("hunter2");
     }
@@ -32,7 +32,7 @@ public sealed class SecureNotifyPropertyChangedTests
     [Fact]
     public void Property_StoresCiphertextRatherThanPlaintext()
     {
-        var secrets = new Secrets(_cipher) { Secret = "hunter2" };
+        var secrets = new Secrets(TestCipher) { Secret = "hunter2" };
 
         secrets.RawSecret.ShouldNotBeNull();
         secrets.RawSecret.ShouldNotContain("hunter2");
@@ -44,7 +44,7 @@ public sealed class SecureNotifyPropertyChangedTests
         // Tabs, newlines and symbols all failed the Unicode-category filter that used to guard this class.
         const string awkward = "line one\nline two\r\n\tindented ☺ ✓ 🎉";
 
-        var secrets = new Secrets(_cipher) { Secret = awkward };
+        var secrets = new Secrets(TestCipher) { Secret = awkward };
 
         secrets.Secret.ShouldBe(awkward);
     }
@@ -52,7 +52,7 @@ public sealed class SecureNotifyPropertyChangedTests
     [Fact]
     public void SettingNull_StoresNull()
     {
-        var secrets = new Secrets(_cipher) { Secret = "hunter2" };
+        var secrets = new Secrets(TestCipher) { Secret = "hunter2" };
 
         secrets.Secret = null;
 
@@ -63,8 +63,8 @@ public sealed class SecureNotifyPropertyChangedTests
     [Fact]
     public void UnreadableValue_IsLeftInPlaceAndReported()
     {
-        var secrets = new Secrets(_cipher);
-        var foreign = _stranger.Encrypt("written elsewhere");
+        var secrets = new Secrets(TestCipher);
+        var foreign = Stranger.Encrypt("written elsewhere");
         secrets.RawSecret = foreign;
 
         var read = secrets.Secret;
@@ -79,7 +79,7 @@ public sealed class SecureNotifyPropertyChangedTests
     [Fact]
     public void RejectedByValidation_IsLeftInPlaceAndReported()
     {
-        var secrets = new Secrets(_cipher) { Secret = "hunter2" };
+        var secrets = new Secrets(TestCipher) { Secret = "hunter2" };
         var stored = secrets.RawSecret;
         secrets.RejectEverything = true;
 
@@ -96,8 +96,8 @@ public sealed class SecureNotifyPropertyChangedTests
         // BaseUserSettings re-serializes on every property write, and a serializer walks every public
         // getter. If an unreadable field threw, saving any unrelated property would fail with it. Serializing
         // writes the stored ciphertext without decrypting it, so the unreadable value survives the save too.
-        var foreign = _stranger.Encrypt("written elsewhere");
-        var secrets = new Secrets(_cipher) { RawSecret = foreign };
+        var foreign = Stranger.Encrypt("written elsewhere");
+        var secrets = new Secrets(TestCipher) { RawSecret = foreign };
 
         var json = Should.NotThrow(secrets.ToJson);
 
@@ -107,7 +107,7 @@ public sealed class SecureNotifyPropertyChangedTests
     [Fact]
     public void JsonProperty_RoundTrips()
     {
-        var secrets = new Secrets(_cipher)
+        var secrets = new Secrets(TestCipher)
         {
             Data = new() { Name = "thing", Count = 7, Limits = new() { ["daily"] = 3 } }
         };
@@ -123,8 +123,8 @@ public sealed class SecureNotifyPropertyChangedTests
     {
         // Authentic bytes that are not the expected shape - what a model change looks like. Degrading beats
         // bringing the application down, but it must not be silent.
-        var stored = _cipher.Encrypt("this is not json at all");
-        var secrets = new Secrets(_cipher) { RawPayload = stored };
+        var stored = TestCipher.Encrypt("this is not json at all");
+        var secrets = new Secrets(TestCipher) { RawPayload = stored };
 
         secrets.Data.ShouldBeNull();
         secrets.RawPayload.ShouldBe(stored, "degrading to the default must not cost the stored value either");
@@ -134,7 +134,7 @@ public sealed class SecureNotifyPropertyChangedTests
     [Fact]
     public void JsonProperty_WithAMistypedMember_ReportsTheJsonPathButNotTheValue()
     {
-        var secrets = new Secrets(_cipher) { RawPayload = _cipher.Encrypt("{\"Count\":\"hunter2\"}") };
+        var secrets = new Secrets(TestCipher) { RawPayload = TestCipher.Encrypt("{\"Count\":\"hunter2\"}") };
 
         secrets.Data.ShouldBeNull();
 
@@ -149,7 +149,7 @@ public sealed class SecureNotifyPropertyChangedTests
     public void JsonProperty_WithAMistypedDictionaryValue_ReportsThePathWithoutTheKey()
     {
         // Newtonsoft leaves a plain key unquoted, so the raw path would be `Limits.password123`.
-        var secrets = new Secrets(_cipher) { RawPayload = _cipher.Encrypt("{\"Limits\":{\"password123\":\"x\"}}") };
+        var secrets = new Secrets(TestCipher) { RawPayload = TestCipher.Encrypt("{\"Limits\":{\"password123\":\"x\"}}") };
 
         secrets.Data.ShouldBeNull();
 
@@ -161,7 +161,7 @@ public sealed class SecureNotifyPropertyChangedTests
     public void JsonProperty_FailingOutsideTheJsonReader_ReportsAnEmptyPath()
     {
         // A converter's own exception carries no JSON path; the report names its type and leaves the path empty.
-        var secrets = new Secrets(_cipher) { RawUnreadable = _cipher.Encrypt("{}") };
+        var secrets = new Secrets(TestCipher) { RawUnreadable = TestCipher.Encrypt("{}") };
 
         secrets.Unreadable.ShouldBeNull();
 

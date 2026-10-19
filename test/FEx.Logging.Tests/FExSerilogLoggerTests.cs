@@ -296,12 +296,12 @@ public sealed class FExSerilogLoggerTests
             LoggerState endScopeState = new();
             LoggerState disposeState = new();
 
-            var endScopeFlow = await RunWithScopeDisposedByParent(logger, endScopeState, _ =>
+            var endScopeFlow = await RunWithScopeDisposedByParentAsync(logger, endScopeState, _ =>
             {
                 logger.EndScope();
                 logger.AddOrUpdateLabel("probe", 1); // the scope was popped: reaches no state
             });
-            var disposeFlow = await RunWithScopeDisposedByParent(logger, disposeState, _ => logger.Dispose());
+            var disposeFlow = await RunWithScopeDisposedByParentAsync(logger, disposeState, _ => logger.Dispose());
 
             await Task.WhenAll(endScopeFlow, disposeFlow).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             endScopeState.ShouldBeEmpty();
@@ -312,7 +312,7 @@ public sealed class FExSerilogLoggerTests
         }
     }
 
-    private static async Task<Task> RunWithScopeDisposedByParent(
+    private static async Task<Task> RunWithScopeDisposedByParentAsync(
         FExSerilogLogger logger, LoggerState state, Action<FExSerilogLogger> inFlowAfterwards)
     {
         TaskCompletionSource<IDisposable> began = new(TaskCreationOptions.RunContinuationsAsynchronously);

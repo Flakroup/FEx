@@ -82,7 +82,9 @@ public static class StringHelpers
         if (currentChar != '\n'
             && currentChar != '\r'
             && currentChar is not null)
+        {
             lineCount++;
+        }
 
         return lineCount;
     }

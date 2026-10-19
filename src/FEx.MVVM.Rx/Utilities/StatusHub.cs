@@ -6,7 +6,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Text;
 
 namespace FEx.MVVM.Rx.Utilities;
@@ -84,15 +83,21 @@ public sealed class StatusHub : IDisposable, IStatusHub
     {
         if (onStatusAdded is not null
             && _subscriptions.TryRemove((StatusAddedKind, onStatusAdded), out var added))
+        {
             StatusAdded -= (EventHandler<(Guid key, string status)>)added;
+        }
 
         if (onStatusRemoved is not null
             && _subscriptions.TryRemove((StatusRemovedKind, onStatusRemoved), out var removed))
+        {
             StatusRemoved -= (EventHandler<(Guid key, string status)>)removed;
+        }
 
         if (onStatusesReset is not null
             && _subscriptions.TryRemove((ResetKind, onStatusesReset), out var reset))
+        {
             Reset -= (EventHandler<EventArgs>)reset;
+        }
     }
 
     public Guid AddStatus(string status, bool unique)
@@ -100,6 +105,7 @@ public sealed class StatusHub : IDisposable, IStatusHub
         Guid? key = null;
 
         if (unique)
+        {
             foreach (var s in Statuses)
             {
                 if (s.Value == status)
@@ -109,6 +115,7 @@ public sealed class StatusHub : IDisposable, IStatusHub
                     break;
                 }
             }
+        }
 
         key ??= Guid.NewGuid();
 
@@ -122,7 +129,9 @@ public sealed class StatusHub : IDisposable, IStatusHub
     {
         if (Statuses.ContainsKey(key)
             && Statuses.TryRemove(key, out var v))
+        {
             StatusChange?.Report((key, v, NotifyCollectionChangedAction.Remove));
+        }
     }
 
     public void CleanStatuses()
@@ -134,7 +143,7 @@ public sealed class StatusHub : IDisposable, IStatusHub
         }
     }
 
-    public IList<string> GetStatuses() => Statuses.Values.ToArray();
+    public IList<string> GetStatuses() => [.. Statuses.Values];
 
     public string GetStatusString(string? separator)
     {

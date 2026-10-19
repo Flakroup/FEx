@@ -21,9 +21,11 @@ public sealed class DesktopStartupHost<TWindow, TShutdownMode>(IDesktopApp<TWind
     protected override void PrepareStartup()
     {
         if (app.StartupUri is not null)
+        {
             throw new InvalidOperationException(
                 "StartupUri is not supported: the framework would load it before the service container is built. "
                 + "Remove it from App.xaml and return the main window from CreateMainWindow().");
+        }
     }
 
     /// <inheritdoc />

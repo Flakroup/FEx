@@ -72,7 +72,9 @@ public class Owner : NotifyPropertyChanged
         {
             if (_image == null
                 && ImageUrl != null)
+            {
                 _ = Task.Run(RefreshImage);
+            }
 
             return _image;
         }
@@ -86,8 +88,10 @@ public class Owner : NotifyPropertyChanged
         {
             if (_tfsEnvironment == null
                 || _tfsEnvironment.EnvironmentId != EnvironmentId)
+            {
                 _tfsEnvironment =
                     TfsService.Instance.TfsEnvironments.FindInEnumerable(x => x.EnvironmentId == EnvironmentId);
+            }
 
             return _tfsEnvironment;
         }
@@ -113,6 +117,8 @@ public class Owner : NotifyPropertyChanged
     {
         if (env != null
             && ImageUrl != null)
+        {
             Image = await TfsExtensions.LoadImageAsync(ImageUrl, env.Server.Guard(nameof(env.Server)).Credentials);
+        }
     }
 }

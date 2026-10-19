@@ -3,8 +3,8 @@ using FEx.Logging;
 using FEx.Logging.Abstractions.Interfaces;
 using FEx.MVVM.Abstractions.Interfaces;
 using FluentFTP;
-using NSubstitute;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
 using Shouldly;
 using System;
 using System.IO;
@@ -36,9 +36,9 @@ public sealed class FtpCommonTests : IDisposable
 
     private int Port => _server.Port;
 
-    private async Task LimitToOneClient() => await FtpClientFactory.GetInstanceAsync(Host.AbsoluteUri, 1);
+    private async Task LimitToOneClientAsync() => await FtpClientFactory.GetInstanceAsync(Host.AbsoluteUri, 1);
 
-    private static async Task Eventually(Func<bool> condition)
+    private static async Task EventuallyAsync(Func<bool> condition)
     {
         var until = DateTime.UtcNow.AddSeconds(5);
 
@@ -63,7 +63,7 @@ public sealed class FtpCommonTests : IDisposable
     [Fact]
     public async Task ReleaseAsync_DisposesTheClientAndFreesItsSlot()
     {
-        await LimitToOneClient();
+        await LimitToOneClientAsync();
         var client = await FtpCommon.CreateAsync(Host, "u", "p", false, Port);
 
         await FtpCommon.ReleaseAsync(client);
@@ -104,7 +104,7 @@ public sealed class FtpCommonTests : IDisposable
     [Fact]
     public async Task GetFtpFileInfoAsync_ServerRejectsTheLogin_ReturnsNullAndFreesTheSlot()
     {
-        await LimitToOneClient();
+        await LimitToOneClientAsync();
         _server.Password = "right";
 
         var rejected = await FtpCommon.GetFtpFileInfoAsync("/x", Host, "u", "wrong", false, Port);
@@ -148,7 +148,7 @@ public sealed class FtpCommonTests : IDisposable
         path.ShouldNotBeNull().ShouldBe(Path.Combine(_dir, "data.bin"));
         (await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)).ShouldBe(Payload);
         progress.Received().PrgSetMax(Payload.Length);
-        await Eventually(() => progress.ReceivedCalls().Any(c => c.GetMethodInfo().Name == nameof(IProgressAggregator.PrgSet)));
+        await EventuallyAsync(() => progress.ReceivedCalls().Any(c => c.GetMethodInfo().Name == nameof(IProgressAggregator.PrgSet)));
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public sealed class FtpCommonTests : IDisposable
     [Fact]
     public async Task DownloadFileFtpAsync_ServerFails_ThrowsAndFreesTheSlot()
     {
-        await LimitToOneClient();
+        await LimitToOneClientAsync();
         _server.Password = "right";
 
         await Should.ThrowAsync<Exception>(() => FtpCommon.DownloadFileFtpAsync(_dir, Host, "/pub/data.bin", "u", "wrong", null, false, Port));

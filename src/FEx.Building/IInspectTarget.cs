@@ -86,7 +86,7 @@ public interface IInspectTarget : ICompileTarget
     /// </summary>
     bool InspectAlongsideTestsByDefault => false;
 
-    public static bool StartsAlongside(bool? requested, bool byDefault) => requested ?? byDefault;
+    static bool StartsAlongside(bool? requested, bool byDefault) => requested ?? byDefault;
 
     /// <summary>
     /// Starts the inspection and moves on, so it runs alongside the suite; <see cref="Inspect" /> collects
@@ -140,10 +140,12 @@ public interface IInspectTarget : ICompileTarget
     {
         var manifest = RootDirectory / ".config" / "dotnet-tools.json";
         if (!File.Exists(manifest))
+        {
             throw new InvalidOperationException(
                 $"No local tool manifest at {manifest}. The inspection runs the version this "
                 + "repository pins, so create it with `dotnet new tool-manifest` and add the tool "
                 + "with `dotnet tool install JetBrains.ReSharper.GlobalTools`.");
+        }
 
         InspectionReport.Parent.CreateDirectory();
 
@@ -172,7 +174,7 @@ public interface IInspectTarget : ICompileTarget
     /// own default it would look for a Debug build that a release run never produced and report the whole
     /// solution as unresolvable.
     /// </remarks>
-    public static string InspectionArguments(AbsolutePath solution,
+    static string InspectionArguments(AbsolutePath solution,
                                              AbsolutePath report,
                                              AbsolutePath cachesDirectory,
                                              Configuration configuration,
@@ -197,7 +199,7 @@ public interface IInspectTarget : ICompileTarget
     /// resolve. Deleting the clean was measured leaving the entire suite green, which is exactly the shape
     /// of regression a gate cannot afford to ship.
     /// </remarks>
-    public static AbsolutePath FreshCaches(AbsolutePath cachesDirectory)
+    static AbsolutePath FreshCaches(AbsolutePath cachesDirectory)
     {
         cachesDirectory.CreateOrCleanDirectory();
 
@@ -212,18 +214,22 @@ public interface IInspectTarget : ICompileTarget
     /// the suite stays green, so it is pinned directly rather than through the target's body.
     /// </summary>
     /// <exception cref="InvalidOperationException">The report holds at least one finding.</exception>
-    public static void Verdict(IReadOnlyList<InspectionFinding> findings)
+    static void Verdict(IReadOnlyList<InspectionFinding> findings)
     {
         ArgumentNullException.ThrowIfNull(findings);
 
         foreach (var finding in findings.OrderBy(static f => f.File, StringComparer.OrdinalIgnoreCase)
                      .ThenBy(static f => f.Line))
+        {
             Log.Error("  {Finding}", finding.ToString());
+        }
 
         if (findings.Count > 0)
+        {
             throw new InvalidOperationException(
                 $"ReSharper inspection failed: {findings.Count} finding(s) at or above the declared "
                 + "severity. Every one of them is a build error here, whatever it is called upstream.");
+        }
 
         Log.Information("ReSharper inspection: nothing at or above the declared severity");
     }

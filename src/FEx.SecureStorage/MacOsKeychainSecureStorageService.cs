@@ -79,7 +79,7 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
         finally
         {
             if (passwordPtr != IntPtr.Zero)
-                SecKeychainItemFreeContent(IntPtr.Zero, passwordPtr);
+                _ = SecKeychainItemFreeContent(IntPtr.Zero, passwordPtr);
         }
     }
 
@@ -130,7 +130,7 @@ public class MacOsKeychainSecureStorageService : ISecureStorageService
             finally
             {
                 if (existingPasswordPtr != IntPtr.Zero)
-                    SecKeychainItemFreeContent(IntPtr.Zero, existingPasswordPtr);
+                    _ = SecKeychainItemFreeContent(IntPtr.Zero, existingPasswordPtr);
 
                 if (existingItemRef != IntPtr.Zero)
                     CFRelease(existingItemRef);

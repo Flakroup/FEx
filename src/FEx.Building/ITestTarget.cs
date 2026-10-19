@@ -195,12 +195,14 @@ public interface ITestTarget : ICompileTarget
         // nothing ANYWHERE is never what the caller meant, whether the filter came from the command
         // line, the environment or a parameters file.
         if (MatchedNothing(TestResultsDirectory.GlobFiles("*.trx").Select(static trx => XDocument.Load(trx))))
+        {
             throw new InvalidOperationException(
                 $"The test run matched no test at all. Filter: '{TestFilter ?? "(none)"}'; extra "
                 + $"arguments: '{string.Join(' ', AdditionalTestArguments())}'. Whichever of those "
                 + "narrowed the run, it narrowed it to nothing. A filter names test CLASSES and "
                 + "takes wildcards - '*OrderTests', not 'OrderTests', and one pattern rather than "
                 + "several separated by spaces.");
+        }
 
         return result;
     }

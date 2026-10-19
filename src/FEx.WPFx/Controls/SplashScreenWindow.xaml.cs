@@ -154,7 +154,9 @@ public partial class SplashScreenWindow : Window, INotifyPropertyChanged
     {
         if (propertyName is null
             || PropertyChanged is null)
+        {
             return;
+        }
 
         PropertyChanged.HandlePropertyChanged(this, propertyName);
     }

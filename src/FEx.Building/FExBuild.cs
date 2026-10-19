@@ -113,7 +113,7 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
 
         using var process = Process.GetCurrentProcess();
 
-        if (Parallelism.AffinityMask(cap, (long)process.ProcessorAffinity) is { } mask)
+        if (Parallelism.AffinityMask(cap, process.ProcessorAffinity) is { } mask)
             process.ProcessorAffinity = (nint)mask;
     }
 
@@ -183,7 +183,9 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
     {
         if (_installedLogger?.TryGetTarget(out var installed) == true
             && ReferenceEquals(Log.Logger, installed))
+        {
             return;
+        }
 
         Log.Logger = RedactingLogSink.Wrap(Log.Logger, Redactor);
         _installedLogger = new(Log.Logger);
@@ -320,7 +322,9 @@ public abstract class FExBuild : NukeBuild, IAppPublishTarget, ITestTarget
             // "(not set)" still distinguishes an unconfigured secret, which is why publish steps skip.
             if (value is not null
                 && secretNames.Contains(name))
+            {
                 value = SecretRedactor.Mask;
+            }
 
             yield return (name, value);
         }

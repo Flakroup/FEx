@@ -22,7 +22,7 @@ public static class FExSerilogWebExtensions
         // FExSerilogLogger dispatches to Serilog's ambient Log.Logger on each call rather than capturing it at
         // construction, so this holds regardless of whether UseSerilog above has already run its deferred setup.
 #pragma warning disable IDISP005 // FExStaticLogger owns the instance for the app's lifetime - same rationale
-                                  // as FExSerilogLogger's own IDISP025 suppression at its class declaration.
+        // as FExSerilogLogger's own IDISP025 suppression at its class declaration.
         FExStaticLogger.Configure(() => new FExSerilogLogger());
 #pragma warning restore IDISP005
 

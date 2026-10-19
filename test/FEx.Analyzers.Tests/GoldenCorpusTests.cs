@@ -1,3 +1,7 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -5,10 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Shouldly;
 using Xunit;
 
 namespace FEx.Analyzers.Tests;
@@ -178,9 +178,7 @@ public class GoldenCorpusTests
         using var document = JsonDocument.Parse(ReadResource("expected.json"));
         var inspections = document.RootElement.GetProperty("inspections");
 
-        return InspectionById
-            .SelectMany(rule => inspections.GetProperty(rule.Value).Deserialize<string[]>()!.Select(sample => $"{rule.Key} {sample}"))
-            .ToList();
+        return [.. InspectionById.SelectMany(rule => inspections.GetProperty(rule.Value).Deserialize<string[]>()!.Select(sample => $"{rule.Key} {sample}"))];
     }
 
     // The sample a diagnostic belongs to: the nearest "//# name" line above it, spelled as expected.json spells it.

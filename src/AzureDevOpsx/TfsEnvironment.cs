@@ -36,7 +36,7 @@ namespace FEx.AzureDevOpsx;
 
 public class TfsEnvironment : NotifyPropertyChanged
 {
-    private static readonly string _lockKey = $"{nameof(TfsEnvironment)}_{Guid.NewGuid()}";
+    private static readonly string LockKey = $"{nameof(TfsEnvironment)}_{Guid.NewGuid()}";
     private string? _name;
     private string? _version;
     private Uri? _serverUri;
@@ -98,7 +98,7 @@ public class TfsEnvironment : NotifyPropertyChanged
                     if (SetProperty(ref _serverUri, value))
                         OnPropertyChanged(nameof(DisplayName));
                 },
-                _lockKey);
+                LockKey);
         }
     }
 
@@ -117,7 +117,7 @@ public class TfsEnvironment : NotifyPropertyChanged
     public string? UserName
     {
         get => _userName;
-        private set { LockSrv.RunLocked(() => SetProperty(ref _userName, value), _lockKey); }
+        private set { LockSrv.RunLocked(() => SetProperty(ref _userName, value), LockKey); }
     }
 
     /// <summary>
@@ -129,7 +129,7 @@ public class TfsEnvironment : NotifyPropertyChanged
     public string? Password
     {
         get => _password;
-        private set { LockSrv.RunLocked(() => SetProperty(ref _password, value), _lockKey); }
+        private set { LockSrv.RunLocked(() => SetProperty(ref _password, value), LockKey); }
     }
 
     public AuthenticatedUserInfo? UserInfo
@@ -166,7 +166,7 @@ public class TfsEnvironment : NotifyPropertyChanged
                     if (SetProperty(ref _projectsCollectionsIsDirty, value))
                         OnPropertyChanged(nameof(LoadingProjectsCollections));
                 },
-                _lockKey);
+                LockKey);
         }
     }
 
@@ -180,7 +180,7 @@ public class TfsEnvironment : NotifyPropertyChanged
                     if (SetProperty(ref _projectsCollectionsIsBusy, value))
                         OnPropertyChanged(nameof(LoadingProjectsCollections));
                 },
-                _lockKey);
+                LockKey);
         }
     }
 
@@ -230,6 +230,7 @@ public class TfsEnvironment : NotifyPropertyChanged
             // GetServerAsync skips LoginAsync (and its load) for an already authenticated server.
             if (res
                 && Server?.HasAuthenticated == true)
+            {
                 try
                 {
                     await GetProjectsCollectionsAsync();
@@ -239,6 +240,7 @@ public class TfsEnvironment : NotifyPropertyChanged
                     ex.HandleException();
                     res = false;
                 }
+            }
 
             return res;
         }
@@ -261,7 +263,9 @@ public class TfsEnvironment : NotifyPropertyChanged
                     || Server.Uri != ServerUri
                     || !Server.HasAuthenticated
                     || !string.IsNullOrWhiteSpace(UserName) && GetDefaultUserName() != GetCurrentUserName()))
+            {
                 return await LoginAsync(username, password);
+            }
 
             return true;
         }

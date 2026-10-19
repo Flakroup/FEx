@@ -34,7 +34,9 @@ public static class WhenResultExtensions
     {
         if (!whenResult.IsResultSet
             && predicate(whenResult.Value))
+        {
             whenResult.Result = result;
+        }
 
         return whenResult;
     }

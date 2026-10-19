@@ -25,10 +25,10 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
     private const int FastIterations = FExStringCipher.MinIterations;
     private const string Plaintext = "hunter2-SECRET";
 
-    private static readonly FExStringCipher _cipher = new("the owning passphrase", FastIterations);
-    private static readonly FExStringCipher _stranger = new("an unrelated passphrase", FastIterations);
+    private static readonly FExStringCipher TestCipher = new("the owning passphrase", FastIterations);
+    private static readonly FExStringCipher Stranger = new("an unrelated passphrase", FastIterations);
 
-    private static readonly string[] _logMethods =
+    private static readonly string[] LogMethods =
         [nameof(IFExLogger.Trace), nameof(IFExLogger.Debug), nameof(IFExLogger.Information),
          nameof(IFExLogger.Warning), nameof(IFExLogger.Error), nameof(IFExLogger.Critical)];
 
@@ -45,7 +45,7 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
     [Fact]
     public void DefaultOnDecryptionFailed_LogsThePropertyAndTheExceptionType()
     {
-        var secrets = new DefaultSecrets(_cipher) { RawSecret = _stranger.Encrypt("written elsewhere") };
+        var secrets = new DefaultSecrets(TestCipher) { RawSecret = Stranger.Encrypt("written elsewhere") };
 
         secrets.Secret.ShouldBeNull();
 
@@ -61,7 +61,7 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
     {
         // Authentic, decryptable JSON whose shape does not fit: a string where an int belongs. The
         // deserializer's own message quotes the offending value - the decrypted secret.
-        var secrets = new RecordingSecrets(_cipher) { RawPayload = _cipher.Encrypt($"{{\"{nameof(Payload.Count)}\":\"{Plaintext}\"}}") };
+        var secrets = new RecordingSecrets(TestCipher) { RawPayload = TestCipher.Encrypt($"{{\"{nameof(Payload.Count)}\":\"{Plaintext}\"}}") };
 
         secrets.Data.ShouldBeNull();
 
@@ -90,7 +90,7 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
         try
         {
             const string json = $"{{\"{nameof(ConvertedPayload.Inner)}\":{{\"Name\":}}}}";
-            var secrets = new RecordingSecrets(_cipher) { RawPayload = _cipher.Encrypt(json) };
+            var secrets = new RecordingSecrets(TestCipher) { RawPayload = TestCipher.Encrypt(json) };
 
             secrets.Converted.ShouldBeNull();
 
@@ -106,7 +106,7 @@ public sealed class SecureNotifyPropertyChangedDefaultsTests : IDisposable
     /// <summary>Every string and exception handed to a logging method, flattened to text.</summary>
     private IEnumerable<string> LoggedText() =>
         _logger.ReceivedCalls()
-            .Where(call => _logMethods.Contains(call.GetMethodInfo().Name))
+            .Where(call => LogMethods.Contains(call.GetMethodInfo().Name))
             .SelectMany(call => call.GetArguments())
             .Select(argument => argument switch
             {

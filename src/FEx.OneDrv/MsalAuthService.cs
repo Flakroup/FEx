@@ -35,7 +35,7 @@ public sealed class MsalAuthService : IOneDriveAuthService
         _clientId = options.ClientId;
         _tenantId = options.TenantId;
         _tokenCachePath = options.TokenCachePath;
-        _scopes = options.Scopes.ToArray();
+        _scopes = [.. options.Scopes];
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -48,6 +48,7 @@ public sealed class MsalAuthService : IOneDriveAuthService
         var firstAccount = accounts.FirstOrDefault();
 
         if (firstAccount != null)
+        {
             try
             {
                 var result = await app.AcquireTokenSilent(scopes, firstAccount).ExecuteAsync(cancellationToken);
@@ -58,6 +59,7 @@ public sealed class MsalAuthService : IOneDriveAuthService
             {
                 _logger.Information("Silent token acquisition failed - falling back to interactive");
             }
+        }
 
         var interactiveResult = await app.AcquireTokenInteractive(scopes).ExecuteAsync(cancellationToken);
 

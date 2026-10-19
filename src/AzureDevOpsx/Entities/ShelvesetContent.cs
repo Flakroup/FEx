@@ -94,8 +94,10 @@ public class ShelvesetContent : NotifyPropertyChanged
         {
             if (_tfsEnvironment == null
                 || _tfsEnvironment.EnvironmentId != EnvironmentId)
+            {
                 _tfsEnvironment =
                     TfsService.Instance.TfsEnvironments.FindInEnumerable(x => x.EnvironmentId == EnvironmentId);
+            }
 
             return _tfsEnvironment;
         }

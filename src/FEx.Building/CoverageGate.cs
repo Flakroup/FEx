@@ -79,7 +79,7 @@ public static class CoverageGate
 
         return new CoverageReport(
             files,
-            modules.OrderBy(static m => m, StringComparer.OrdinalIgnoreCase).ToList(),
+            [.. modules.OrderBy(static m => m, StringComparer.OrdinalIgnoreCase)],
             missing,
             stale,
             unused);
@@ -193,7 +193,7 @@ public static class CoverageGate
             ? options
             : options with { ReadSourceLines = path => ReadFromDisk(options.RootDirectory, path) };
 
-        return Analyze(coberturaFiles.Select(XDocument.Load).ToList(), withReader);
+        return Analyze([.. coberturaFiles.Select(XDocument.Load)], withReader);
     }
 
     /// <summary>Missing or unreadable source is not a gate failure: the report can name a file this
@@ -307,7 +307,7 @@ public static class CoverageGate
             new(path,
                 Measurable.Count,
                 Covered.Count,
-                Measurable.Except(Covered).OrderBy(static n => n).ToList());
+                [.. Measurable.Except(Covered).OrderBy(static n => n)]);
     }
 }
 
@@ -408,7 +408,7 @@ public sealed record CoverageReport(
 
     public double Rate => MeasurableLines == 0 ? 1d : (double)CoveredLines / MeasurableLines;
 
-    public IReadOnlyList<CoverageFile> IncompleteFiles => Files.Where(static f => !f.IsFullyCovered).ToList();
+    public IReadOnlyList<CoverageFile> IncompleteFiles => [.. Files.Where(static f => !f.IsFullyCovered)];
 
     /// <summary>
     /// True when anything is under the threshold, when an expected assembly never reported, or when a

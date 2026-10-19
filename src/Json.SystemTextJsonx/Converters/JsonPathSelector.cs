@@ -76,7 +76,9 @@ public static class JsonPathSelector
             if (closeQuote < 0
                 || closeQuote + 1 >= path.Length
                 || path[closeQuote + 1] != ']')
+            {
                 throw Unsupported(path);
+            }
 
             index = closeQuote + 2;
 
@@ -99,7 +101,9 @@ public static class JsonPathSelector
             || position < 0
             || current.ValueKind != JsonValueKind.Array
             || position >= current.GetArrayLength())
+        {
             return false;
+        }
 
         current = current[position];
 
@@ -126,7 +130,9 @@ public static class JsonPathSelector
     {
         if (current.ValueKind != JsonValueKind.Object
             || !current.TryGetProperty(name, out var member))
+        {
             return false;
+        }
 
         current = member;
 

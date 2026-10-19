@@ -88,6 +88,6 @@ public sealed class VersionResolutionCostTests
         public override IEnumerable<string> PublishProjects { get; } = [];
 
         public IEnumerable<(string Name, object? Value)> Entries() =>
-            GetParameterEntries(new(StringComparer.OrdinalIgnoreCase)).ToList();
+            [.. GetParameterEntries(new(StringComparer.OrdinalIgnoreCase))];
     }
 }

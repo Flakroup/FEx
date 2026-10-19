@@ -45,12 +45,16 @@ public sealed class DIJsonTypeInfoModifier
 
         if (typeInfo.Kind != JsonTypeInfoKind.Object
             || !_diMeta.IsRegistered(type))
+        {
             return;
+        }
 
         // Factory and instance registrations have no implementation type: keep the contract of the type itself.
         if (_diMeta.RegisteredTypeFor(type) is { } implementationType
             && implementationType != type)
+        {
             UseImplementationContract(typeInfo, implementationType);
+        }
 
         if (_diMeta.IsTransient(type))
             typeInfo.CreateObject = () => FExServiceProvider.Instance.GetRequiredService(type);

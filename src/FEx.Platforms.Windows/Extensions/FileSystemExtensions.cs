@@ -136,12 +136,15 @@ public static class FileSystemExtensions
         // so it must never read as "access is already in place".
         if (raw is null
             || raw.Length == 0)
+        {
             return true;
+        }
 
         var wrongOutput = false;
         HashSet<string>? excluded = null;
 
         if (excludes.IsNotNullOrEmptyList())
+        {
             try
             {
                 excluded =
@@ -154,6 +157,7 @@ public static class FileSystemExtensions
             {
                 ex.HandleException();
             }
+        }
 
         var access = raw.AsParallel()
             .Select(x =>
@@ -164,7 +168,9 @@ public static class FileSystemExtensions
                 {
                     if (excludes.IsNullOrEmptyList()
                         || excluded?.Contains(splitted[0]) != true)
+                    {
                         return new ACL(splitted);
+                    }
                 }
                 catch
                 {
@@ -187,7 +193,9 @@ public static class FileSystemExtensions
 
         if (c.Code != 0
             || c.ErrOut.ToString().IsNotNullOrEmptyString())
+        {
             return null;
+        }
 
         return
         [
@@ -225,6 +233,8 @@ public static class FileSystemExtensions
 
         if (c.Code != 0
             || failedCount != 0)
+        {
             throw new($"Command has failed: {last}");
+        }
     }
 }

@@ -288,9 +288,11 @@ public static class PlatformInfoProvider
     private static OSProcessorArchitecture GetProcessorBits()
     {
         if (!IsWindows)
+        {
             return Is32Bit
                 ? OSProcessorArchitecture.Bit32
                 : OSProcessorArchitecture.Bit64;
+        }
 
         var pbits = OSProcessorArchitecture.Unknown;
 

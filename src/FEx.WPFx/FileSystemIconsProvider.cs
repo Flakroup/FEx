@@ -41,7 +41,9 @@ public class FileSystemIconsProvider
 
         if (_iconsCache.TryGetValue(key, out var res)
             && res is not null)
+        {
             return res;
+        }
 
         await _lockSrv.WaitAsync(key);
 

@@ -70,7 +70,9 @@ public class ResxManager : IResxManager
 
                 if (!string.IsNullOrWhiteSpace(key)
                     && !resourceEntries.ContainsValue(value))
+                {
                     resourceEntries.Add(key, value);
+                }
             }
         }
 

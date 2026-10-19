@@ -341,10 +341,14 @@ public static class DictionaryExtensions
             sourceDictionary.RemoveFromDictionaryWhere((key, _) => !syncedDictionary.ContainsKey(key));
 
         if (sourceDictionary.Count == 0)
+        {
             sourceDictionary.AddRangeToDictionary(syncedDictionary);
+        }
         else
+        {
             foreach (var key in syncedDictionary.Keys)
                 sourceDictionary.AddOrUpdateValue(key, () => syncedDictionary[key]);
+        }
     }
 
     /// <summary>Determines whether a dictionary is not null and has entries.</summary>

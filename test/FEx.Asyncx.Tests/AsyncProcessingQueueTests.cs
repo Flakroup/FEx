@@ -12,14 +12,14 @@ namespace FEx.Asyncx.Tests;
 
 public sealed class AsyncProcessingQueueTests
 {
-    private static readonly TimeSpan _timeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(10);
 
     private static readonly TimeSpan IdleWindow = TimeSpan.FromMilliseconds(500);
 
     private static async Task WaitUntilAsync(Func<bool> condition, CancellationToken ct)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        timeout.CancelAfter(_timeout);
+        timeout.CancelAfter(TestTimeout);
 
         while (!condition())
             await Task.Delay(5, timeout.Token);
@@ -63,7 +63,7 @@ public sealed class AsyncProcessingQueueTests
             return Task.CompletedTask;
         }, ct);
 
-        (await ran.Task.WaitAsync(_timeout, ct)).ShouldBeTrue();
+        (await ran.Task.WaitAsync(TestTimeout, ct)).ShouldBeTrue();
     }
 
     [Fact]
@@ -78,9 +78,9 @@ public sealed class AsyncProcessingQueueTests
         var first = queue.EnqueueAsync(async () =>
         {
             firstStarted.SetResult(true);
-            await releaseFirst.Task.WaitAsync(_timeout, ct);
+            await releaseFirst.Task.WaitAsync(TestTimeout, ct);
         }, ct);
-        await firstStarted.Task.WaitAsync(_timeout, ct);
+        await firstStarted.Task.WaitAsync(TestTimeout, ct);
 
         var second = queue.EnqueueAsync(() =>
         {
@@ -96,8 +96,8 @@ public sealed class AsyncProcessingQueueTests
         queue.RunningCount.ShouldBe(1);
 
         releaseFirst.SetResult(true);
-        await secondStarted.Task.WaitAsync(_timeout, ct);
-        await Task.WhenAll(first, second).WaitAsync(_timeout, ct);
+        await secondStarted.Task.WaitAsync(TestTimeout, ct);
+        await Task.WhenAll(first, second).WaitAsync(TestTimeout, ct);
     }
 
     [Fact]
@@ -112,9 +112,9 @@ public sealed class AsyncProcessingQueueTests
         _ = queue.EnqueueAsync(async () =>
         {
             firstStarted.SetResult(true);
-            await releaseFirst.Task.WaitAsync(_timeout, ct);
+            await releaseFirst.Task.WaitAsync(TestTimeout, ct);
         }, ct);
-        await firstStarted.Task.WaitAsync(_timeout, ct);
+        await firstStarted.Task.WaitAsync(TestTimeout, ct);
 
         var second = queue.EnqueueAsync(() =>
         {
@@ -125,7 +125,7 @@ public sealed class AsyncProcessingQueueTests
 
         queue.Dispose();
 
-        await Should.ThrowAsync<ObjectDisposedException>(() => second.WaitAsync(_timeout, ct));
+        await Should.ThrowAsync<ObjectDisposedException>(() => second.WaitAsync(TestTimeout, ct));
         secondRan.ShouldBeFalse();
 
         releaseFirst.SetResult(true);
@@ -139,7 +139,7 @@ public sealed class AsyncProcessingQueueTests
 
         queue.Dispose();
 
-        await queue.ProcessingLoopTask.WaitAsync(_timeout, ct);
+        await queue.ProcessingLoopTask.WaitAsync(TestTimeout, ct);
     }
 
     [Fact]

@@ -63,7 +63,9 @@ public interface ITagTarget : INuGetPublishTarget
 
             if (string.IsNullOrEmpty(token)
                 || string.IsNullOrEmpty(repository))
+            {
                 return null;
+            }
 
             var server = Environment.GetEnvironmentVariable("GITHUB_SERVER_URL") ?? "https://github.com";
             var host = new Uri(server).Host;
@@ -82,7 +84,9 @@ public interface ITagTarget : INuGetPublishTarget
             if (string.IsNullOrEmpty(token)
                 || string.IsNullOrEmpty(serverUrl)
                 || string.IsNullOrEmpty(projectPath))
+            {
                 return null;
+            }
 
             var uri = new Uri(serverUrl);
             var branch = Environment.GetEnvironmentVariable("CI_COMMIT_BRANCH");
@@ -93,7 +97,7 @@ public interface ITagTarget : INuGetPublishTarget
         return null;
     }
 
-    public static string TagVersion(string? releaseVersion, Func<string> resolve) =>
+    static string TagVersion(string? releaseVersion, Func<string> resolve) =>
         string.IsNullOrWhiteSpace(releaseVersion)
             ? resolve()
             : releaseVersion.Trim();
@@ -106,14 +110,16 @@ public interface ITagTarget : INuGetPublishTarget
     /// tag on a commit that is already released.
     /// </summary>
     /// <returns>The reason to skip tagging, or <c>null</c> when the tag may be created.</returns>
-    public static string? DescribeTagSkip(string tag, ISet<string> versionTagsOnHead, bool tagNameTaken)
+    static string? DescribeTagSkip(string tag, ISet<string> versionTagsOnHead, bool tagNameTaken)
     {
         if (versionTagsOnHead.Contains(tag))
             return "HEAD already carries it";
 
         if (GitTags.MarksReleasedCommit(versionTagsOnHead))
+        {
             return "HEAD already carries version tag(s) "
                    + string.Join(", ", versionTagsOnHead.OrderBy(static t => t, StringComparer.Ordinal));
+        }
 
         return tagNameTaken
             ? "the name is taken by another commit"

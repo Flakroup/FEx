@@ -82,7 +82,9 @@ public sealed class SynchronizedAccessService : ISynchronizedAccessService, IDis
     {
         if (key is not null
             && AccessSemaphores.TryGetValue(key, out var semaphore))
+        {
             semaphore.Release();
+        }
     }
 
     public async Task WaitAsync(string key, int maxParallel = 1, CancellationToken cancellationToken = default) =>

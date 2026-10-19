@@ -29,12 +29,14 @@ public class ConfigurationTypeConverter : TypeConverter
     public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
     {
         if (value is string stringValue)
+        {
             return stringValue.ToLowerInvariant() switch
             {
                 "debug" => Configuration.Debug,
                 "release" => Configuration.Release,
                 _ => throw new ArgumentException($"Unknown configuration: {stringValue}")
             };
+        }
 
         return base.ConvertFrom(context, culture, value);
     }

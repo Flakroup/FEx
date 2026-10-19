@@ -15,9 +15,9 @@ namespace FEx.Agnostics.Abstractions;
 public sealed class FExAgnosticsStatics
 {
 #if NETSTANDARD
-    private static readonly object _lockObject = new();
+    private static readonly object LockObject = new();
 #else
-    private static readonly Lock _lockObject = new();
+    private static readonly Lock LockObject = new();
 #endif
     private static IAsyncHelper? _asyncHelper;
     private static bool _hasBeenInitialized;
@@ -54,12 +54,14 @@ public sealed class FExAgnosticsStatics
         if (asyncHelper is null)
             throw new ArgumentNullException(nameof(asyncHelper));
 
-        lock (_lockObject)
+        lock (LockObject)
         {
             if (_hasBeenInitialized && !ReferenceEquals(_asyncHelper, asyncHelper))
+            {
                 throw new InvalidOperationException(
                     $"{nameof(FExAgnosticsStatics)} has already been initialized with a different {nameof(IAsyncHelper)} instance. "
                     + "Cannot reinitialize with a different instance.");
+            }
 
             _asyncHelper = asyncHelper;
             _hasBeenInitialized = true;
@@ -71,7 +73,7 @@ public sealed class FExAgnosticsStatics
     /// </summary>
     internal static void Reset()
     {
-        lock (_lockObject)
+        lock (LockObject)
         {
             _asyncHelper = null;
             _hasBeenInitialized = false;

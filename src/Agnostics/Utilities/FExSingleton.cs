@@ -6,24 +6,24 @@ namespace FEx.Agnostics.Utilities;
 /// <summary>Base class that tracks every singleton instance so they can all be disposed together.</summary>
 public abstract class FExSingleton : IDisposable
 {
-    private static readonly List<FExSingleton> _singletons = [];
+    private static readonly List<FExSingleton> Singletons = [];
 
     /// <summary>Registers the new instance in the global singleton list.</summary>
     protected FExSingleton()
     {
-        lock (_singletons)
-            _singletons.Add(this);
+        lock (Singletons)
+            Singletons.Add(this);
     }
 
     /// <summary>Disposes every registered singleton and clears the registry.</summary>
     public static void ClearAllSingletons()
     {
-        lock (_singletons)
+        lock (Singletons)
         {
-            foreach (var s in _singletons)
+            foreach (var s in Singletons)
                 s.Dispose();
 
-            _singletons.Clear();
+            Singletons.Clear();
         }
     }
 
@@ -59,8 +59,10 @@ public abstract class FExSingleton<T> : FExSingleton where T : class, new()
         get
         {
             if (_instance is null)
+            {
                 lock (SyncRoot)
                     _instance ??= new();
+            }
 
             // Non-null here: either already set, or just created under the lock above.
             return _instance!;

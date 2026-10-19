@@ -1,7 +1,7 @@
 using FEx.Agnostics.Utilities;
 using Shouldly;
-using System.Dynamic;
 using System.Collections.Generic;
+using System.Dynamic;
 using Xunit;
 
 namespace FEx.Core.Tests.Agnostics;

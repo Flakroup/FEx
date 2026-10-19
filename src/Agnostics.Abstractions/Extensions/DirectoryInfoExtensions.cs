@@ -26,7 +26,9 @@ public static class DirectoryInfoExtensions
         {
             if (!path.StartsWith(@"\\?\")
                 && path.Length + d.Length > 260)
+            {
                 path = $@"\\?\{path}";
+            }
 
             path = Path.Combine(path, d);
         }

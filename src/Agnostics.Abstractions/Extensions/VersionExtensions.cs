@@ -13,11 +13,15 @@ public static class VersionExtensions
     {
         if (first.Major > -1
             && first.Major != second.Major)
+        {
             return true;
+        }
 
         if (first.Minor > -1
             && first.Minor != second.Minor)
+        {
             return true;
+        }
 
         return first.Build > -1 && first.Build != second.Build
                || first.Revision > -1 && first.Revision != second.Revision;

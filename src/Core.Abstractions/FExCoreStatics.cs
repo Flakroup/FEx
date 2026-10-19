@@ -18,16 +18,16 @@ namespace FEx.Core.Abstractions;
 
 public class FExCoreStatics : StaticsBase
 {
-    private static readonly StackTraceProvider _defaultStackTraceProviderInstance;
-    private static readonly ILogger _defaultLoggerInstance;
-    private static readonly DebugExceptionHandler _defaultExceptionHandler;
-    private static readonly IAppInfoProvider _defaultAppInfoProvider;
-    private static readonly MainThreadContextProvider _defaultMainThreadContextProvider;
-    private static readonly DeadlockMonitor _defaultDeadlockMonitor;
-    private static readonly DefaultDispatcher _defaultDispatcherInstance;
-    private static readonly AsyncHelper _defaultAsyncHelperInstance;
-    private static readonly SynchronizedAccessService _defaultSynchronizedAccessServiceInstance;
-    private static readonly AlphanumComparatorFast _defaultAlphanumComparatorFastInstance;
+    private static readonly StackTraceProvider DefaultStackTraceProviderInstance;
+    private static readonly ILogger DefaultLoggerInstance;
+    private static readonly DebugExceptionHandler DefaultExceptionHandler;
+    private static readonly IAppInfoProvider DefaultAppInfoProvider;
+    private static readonly MainThreadContextProvider DefaultMainThreadContextProvider;
+    private static readonly DeadlockMonitor DefaultDeadlockMonitor;
+    private static readonly DefaultDispatcher DefaultDispatcherInstance;
+    private static readonly AsyncHelper DefaultAsyncHelperInstance;
+    private static readonly SynchronizedAccessService DefaultSynchronizedAccessServiceInstance;
+    private static readonly AlphanumComparatorFast DefaultAlphanumComparatorFastInstance;
 
     private static Func<IAsyncHelper>? _asyncHelperFactory;
     private static Func<IStackTraceProvider>? _stackTraceProviderFactory;
@@ -45,7 +45,7 @@ public class FExCoreStatics : StaticsBase
     /// <br />
     /// ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable.
     /// </summary>
-    public static IAsyncHelper AsyncHelper => Get(_asyncHelperFactory, static () => _defaultAsyncHelperInstance);
+    public static IAsyncHelper AsyncHelper => Get(_asyncHelperFactory, static () => DefaultAsyncHelperInstance);
 
     /// <summary>
     /// Retrieves the <see cref="IStackTraceProvider" /> instance.
@@ -53,14 +53,14 @@ public class FExCoreStatics : StaticsBase
     /// ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable.
     /// </summary>
     public static IStackTraceProvider StackTraceProvider =>
-        Get(_stackTraceProviderFactory, static () => _defaultStackTraceProviderInstance);
+        Get(_stackTraceProviderFactory, static () => DefaultStackTraceProviderInstance);
 
     /// <summary>
     /// Retrieves the <see cref="ILogger" /> instance.
     /// <br />
     /// ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable.
     /// </summary>
-    public static ILogger Logger => Get(_loggerFactory, static () => _defaultLoggerInstance);
+    public static ILogger Logger => Get(_loggerFactory, static () => DefaultLoggerInstance);
 
     /// <summary>
     /// Retrieves the <see cref="IDeadlockMonitor" /> instance.
@@ -68,14 +68,14 @@ public class FExCoreStatics : StaticsBase
     /// ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable.
     /// </summary>
     public static IDeadlockMonitor DeadlockMonitor =>
-        Get(_deadlockMonitorFactory, static () => _defaultDeadlockMonitor);
+        Get(_deadlockMonitorFactory, static () => DefaultDeadlockMonitor);
 
     /// <summary>
     /// Retrieves the <see cref="IFExDispatcher" /> instance.
     /// <br />
     /// ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable.
     /// </summary>
-    public static IFExDispatcher Dispatcher => Get(_dispatcherFactory, static () => _defaultDispatcherInstance);
+    public static IFExDispatcher Dispatcher => Get(_dispatcherFactory, static () => DefaultDispatcherInstance);
 
     /// <summary>
     /// Retrieves the <see cref="IExceptionHandler" /> instance.
@@ -83,13 +83,13 @@ public class FExCoreStatics : StaticsBase
     /// ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable.
     /// </summary>
     public static IExceptionHandler ExceptionHandler =>
-        Get(_exceptionHandlerFactory, static () => _defaultExceptionHandler);
+        Get(_exceptionHandlerFactory, static () => DefaultExceptionHandler);
 
     public static IMainThreadContextProvider MainThreadContextProvider =>
-        Get(_mainThreadContextProviderFactory, static () => _defaultMainThreadContextProvider);
+        Get(_mainThreadContextProviderFactory, static () => DefaultMainThreadContextProvider);
 
     public static IAppInfoProvider AppInfoProvider =>
-        Get(_appInfoProviderFactory, static () => _defaultAppInfoProvider);
+        Get(_appInfoProviderFactory, static () => DefaultAppInfoProvider);
 
     /// <summary>
     /// Retrieves the <see cref="ISynchronizedAccessService" /> instance.
@@ -97,33 +97,33 @@ public class FExCoreStatics : StaticsBase
     /// ⚠️ This is discouraged and should only be used where Dependency Injection is unavailable.
     /// </summary>
     public static ISynchronizedAccessService SynchronizedAccessService =>
-        Get(_synchronizedAccessServiceFactory, static () => _defaultSynchronizedAccessServiceInstance);
+        Get(_synchronizedAccessServiceFactory, static () => DefaultSynchronizedAccessServiceInstance);
 
     public static AlphanumComparatorFast AlphanumComparatorFast =>
-        Get(_alphanumComparatorFastFactory, static () => _defaultAlphanumComparatorFastInstance);
+        Get(_alphanumComparatorFastFactory, static () => DefaultAlphanumComparatorFastInstance);
 
     static FExCoreStatics()
     {
         // Create basic default instances that do not rely on DI.
-        _defaultStackTraceProviderInstance = new();
-        _defaultLoggerInstance = NullLogger.Instance;
-        _defaultExceptionHandler = new();
-        _defaultAppInfoProvider = new NullAppInfoProvider();
-        _defaultMainThreadContextProvider = new(_defaultAppInfoProvider);
-        _defaultDeadlockMonitor = new(_defaultStackTraceProviderInstance, _defaultLoggerInstance);
+        DefaultStackTraceProviderInstance = new();
+        DefaultLoggerInstance = NullLogger.Instance;
+        DefaultExceptionHandler = new();
+        DefaultAppInfoProvider = new NullAppInfoProvider();
+        DefaultMainThreadContextProvider = new(DefaultAppInfoProvider);
+        DefaultDeadlockMonitor = new(DefaultStackTraceProviderInstance, DefaultLoggerInstance);
         var defaultAppThreadingSettings = new AppThreadingSettings();
 
-        _defaultDispatcherInstance = new(_defaultLoggerInstance,
-            _defaultMainThreadContextProvider,
-            _defaultDeadlockMonitor,
-            _defaultStackTraceProviderInstance,
+        DefaultDispatcherInstance = new(DefaultLoggerInstance,
+            DefaultMainThreadContextProvider,
+            DefaultDeadlockMonitor,
+            DefaultStackTraceProviderInstance,
             defaultAppThreadingSettings);
 
-        _defaultAsyncHelperInstance = new(_defaultDispatcherInstance, _defaultExceptionHandler);
-        _defaultSynchronizedAccessServiceInstance = new();
-        _defaultAlphanumComparatorFastInstance = new();
+        DefaultAsyncHelperInstance = new(DefaultDispatcherInstance, DefaultExceptionHandler);
+        DefaultSynchronizedAccessServiceInstance = new();
+        DefaultAlphanumComparatorFastInstance = new();
 
-        FExAgnosticsStatics.Configure(_defaultAsyncHelperInstance);
+        FExAgnosticsStatics.Configure(DefaultAsyncHelperInstance);
     }
 
     public static void SetDefaults()

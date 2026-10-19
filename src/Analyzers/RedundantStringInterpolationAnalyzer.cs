@@ -1,11 +1,11 @@
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace FEx.Analyzers;
 
@@ -44,7 +44,9 @@ public sealed class RedundantStringInterpolationAnalyzer : DiagnosticAnalyzer
         if (interpolated.Contents.OfType<InterpolationSyntax>().Any()
             || HasEscapedBrace(interpolated)
             || IsPieceOfInterpolatedConcatenation(interpolated))
+        {
             return;
+        }
 
         // A FormattableString or IFormattable target needs the interpolation, and so does a handler, which only an interpolated string converts to.
         if (context.SemanticModel.GetConversion(interpolated, context.CancellationToken) is { IsInterpolatedString: false, IsInterpolatedStringHandler: false })

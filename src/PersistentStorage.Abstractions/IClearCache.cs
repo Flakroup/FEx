@@ -4,7 +4,7 @@ namespace FEx.PersistentStorage.Abstractions;
 
 public interface IClearCache
 {
-    public ClearCacheReason ClearCacheReason { get; }
+    ClearCacheReason ClearCacheReason { get; }
 #if NETSTANDARD2_0
     ClearCachePriority ClearCachePriority { get; }
 #else

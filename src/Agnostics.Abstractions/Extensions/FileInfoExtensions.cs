@@ -12,7 +12,7 @@ namespace FEx.Agnostics.Abstractions.Extensions;
 /// <summary>Extensions for zipping, hashing and buffering files.</summary>
 public static class FileInfoExtensions
 {
-    private static readonly int _defBufferSize =
+    private static readonly int DefBufferSize =
         Convert.ToInt32(FileLengthConverter.ConvertFileLength(128, LengthType.Kilobytes, LengthType.Bytes, 0));
 
     /// <summary>
@@ -121,13 +121,15 @@ public static class FileInfoExtensions
         byte[]? hash = null;
 
         if (file.Exists)
+        {
             using (var stream = new FileStream(file.FullName,
                        FileMode.Open,
                        FileAccess.Read,
                        FileShare.ReadWrite,
-                       _defBufferSize))
+                       DefBufferSize))
             using (var md5 = MD5.Create())
                 hash = md5.ComputeHash(stream);
+        }
 
         return hash.GetHashString(removeDashes, toLower, asBase64String);
     }
@@ -169,7 +171,7 @@ public static class FileInfoExtensions
         return !file.Exists
             ? null
 #pragma warning disable IDISP004
-            : await new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, _defBufferSize)
+            : await new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefBufferSize)
 #pragma warning restore IDISP004
                 .CopyToMemoryStreamAsync(true);
     }

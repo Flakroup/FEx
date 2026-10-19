@@ -1,8 +1,8 @@
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
 
 namespace FEx.Analyzers;
 
@@ -41,6 +41,8 @@ public sealed class RedundantEmptyObjectOrCollectionInitializerAnalyzer : Diagno
         if (initializer.Expressions.Count == 0
             && !EmptyInitializers.HasComment(initializer.OpenBraceToken.TrailingTrivia)
             && !EmptyInitializers.HasComment(initializer.CloseBraceToken.LeadingTrivia))
+        {
             context.ReportDiagnostic(Diagnostic.Create(Rule, initializer.GetLocation()));
+        }
     }
 }

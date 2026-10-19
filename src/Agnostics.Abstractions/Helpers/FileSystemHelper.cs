@@ -98,8 +98,10 @@ public static class FileSystemHelper
             char[] toBeReplaced = [.. segments[i].Distinct().Where(x => InvalidFileOrDirNameChars.Contains(x))];
 
             if (toBeReplaced.Length > 0)
+            {
                 foreach (var c in toBeReplaced)
                     segments[i] = segments[i].Replace(c, '_');
+            }
         }
 
 #if NETSTANDARD

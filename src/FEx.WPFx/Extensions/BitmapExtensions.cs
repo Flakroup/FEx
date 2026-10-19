@@ -53,7 +53,9 @@ public static class BitmapExtensions
     {
         if (stream.CanSeek
             && stream.Position != 0)
+        {
             stream.Seek(0, SeekOrigin.Begin);
+        }
 
         var result = new BitmapImage();
         result.BeginInit();

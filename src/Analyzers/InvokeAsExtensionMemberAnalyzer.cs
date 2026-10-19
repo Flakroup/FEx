@@ -1,10 +1,10 @@
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -46,7 +46,9 @@ public sealed class InvokeAsExtensionMemberAnalyzer : DiagnosticAnalyzer
             || receiver.IsKind(SyntaxKind.InterpolatedStringExpression)
             || IsOutOfOrder(call, invocation)
             || IsInsideDeclaringType(invocation, method.ContainingType, call.SemanticModel!, context))
+        {
             return;
+        }
 
         // The edited tree is built node by node, never parsed from text, so a receiver such as 'a + b' stays one operand without parentheses.
         var rest = invocation.ArgumentList.Arguments.Remove(thisArgument);
@@ -57,7 +59,9 @@ public sealed class InvokeAsExtensionMemberAnalyzer : DiagnosticAnalyzer
         // The instance form has to find the same extension method: an instance member, another extension or a missing import would change the call.
         if (Speculation.BoundAfter(call.SemanticModel!, invocation, edited, context.CancellationToken) is IMethodSymbol bound
             && SymbolEqualityComparer.Default.Equals(bound.ReducedFrom, method.OriginalDefinition))
+        {
             context.ReportDiagnostic(Diagnostic.Create(Rule, access.Name.GetLocation(), method.Name));
+        }
     }
 
     // Written out of order, the arguments are evaluated in that order: 'Ext.M(b: F(), a: H())' would call H before F once 'a' moves to the front.

@@ -73,9 +73,11 @@ public sealed class FuncProcessor : IDisposable
     {
         if (string.IsNullOrWhiteSpace(requestUrl)
             || string.IsNullOrWhiteSpace(environmentId))
+        {
             throw new ArgumentNullException(string.IsNullOrWhiteSpace(requestUrl)
                 ? nameof(requestUrl)
                 : nameof(environmentId));
+        }
 
         RequestUrl = requestUrl;
         Args = args;
@@ -112,8 +114,10 @@ public sealed class FuncProcessor : IDisposable
         var request = GetClient(Credentials).Request(RequestUrl);
 
         if (Args != null)
+        {
             foreach (var arg in Args)
                 request = request.SetQueryParam(arg.Key, arg.Value);
+        }
 
         request = request.WithHeader("User-Agent", "VSTSAuthSample-AuthenticateADALNonInteractive")
             .WithHeader("X-TFS-FedAuthRedirect", "Suppress");
@@ -160,7 +164,9 @@ public sealed class FuncProcessor : IDisposable
 
                     if (contentType == null
                         || contentType.Split(';')[0].Trim() == ExpectedContentType)
+                    {
                         return content;
+                    }
 
                     throw new ArgumentException(
                         $"Unexpected response type. {contentType} instead of {ExpectedContentType}. Response was of {statusCode} status.");
@@ -173,7 +179,9 @@ public sealed class FuncProcessor : IDisposable
 
             if (omitCodes != null
                 && omitCodes.Contains(statusCode))
+            {
                 return null;
+            }
 
             throw;
         }

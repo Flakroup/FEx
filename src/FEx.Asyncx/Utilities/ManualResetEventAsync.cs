@@ -112,8 +112,10 @@ public sealed class ManualResetEventAsync
     {
         // Validate arguments.
         if (timeoutMS < -1)
+        {
             throw new ArgumentException(
                 "The timeout must be either -1ms (indefinitely) or a positive ms value <= int.MaxValue");
+        }
 
         CancellationTokenSource timeoutToken;
 

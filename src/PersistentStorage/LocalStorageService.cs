@@ -42,7 +42,7 @@ public class LocalStorageService : ILocalStorageService
         DbLock.Write(() => _fileLocalStorageService.UpdateFile(cachedFile));
 
     /// <inheritdoc />
-    public void DeleteExpiredFiles() => DbLock.Write(() => _fileLocalStorageService.DeleteExpiredFiles());
+    public void DeleteExpiredFiles() => DbLock.Write(_fileLocalStorageService.DeleteExpiredFiles);
 
     /// <inheritdoc />
     public IReadOnlyList<T> GetAll<T>(Expression<Func<T, bool>>? predicate) where T : ICacheableItem =>

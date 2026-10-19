@@ -28,7 +28,7 @@ public sealed class JsonPathConverter<
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties
                                 | DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
 #endif
-    T> : JsonConverter<T>
+T> : JsonConverter<T>
 {
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -46,7 +46,9 @@ public sealed class JsonPathConverter<
         {
             if (JsonPathSelector.TrySelect(root, GetPath(property), out var element)
                 && element.ValueKind != JsonValueKind.Null)
+            {
                 property.SetValue(target, element.Deserialize(options.GetTypeInfo(property.PropertyType)));
+            }
         }
 
         return (T)target;
@@ -65,7 +67,9 @@ public sealed class JsonPathConverter<
 
             if (propertyValue is null
                 && options.DefaultIgnoreCondition != JsonIgnoreCondition.Never)
+            {
                 continue;
+            }
 
             writer.WritePropertyName(GetPath(property));
             JsonSerializer.Serialize(writer, propertyValue, options.GetTypeInfo(property.PropertyType));
@@ -75,7 +79,7 @@ public sealed class JsonPathConverter<
     }
 
     private static PropertyInfo[] GetProperties() =>
-        typeof(T).GetProperties().Where(static p => p.GetIndexParameters().Length == 0).ToArray();
+        [.. typeof(T).GetProperties().Where(static p => p.GetIndexParameters().Length == 0)];
 
     private static bool IsIgnored(PropertyInfo property) =>
         property.GetCustomAttribute<JsonIgnoreAttribute>(true) is { Condition: JsonIgnoreCondition.Always };

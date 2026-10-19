@@ -129,7 +129,9 @@ public sealed class DownloadItemTests : IDisposable
             {
                 if (!FakeServer.IsRangeChunk(request)
                     || Interlocked.Decrement(ref failures) < 0)
+                {
                     return null;
+                }
 
                 var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
                 response.Headers.RetryAfter = new(TimeSpan.FromSeconds(1));

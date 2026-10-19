@@ -164,9 +164,7 @@ internal static class CachedValueApplier
 
         var compared = ownKey.Count > 0 && ownKey.TrueForAll(p => !p.IsShadowProperty())
             ? ownKey
-            : itemType.GetProperties()
-                .Where(p => !p.IsShadowProperty() && !keyProperties.Contains(p) && !ownership.Properties.Contains(p))
-                .ToList();
+            : [.. itemType.GetProperties().Where(p => !p.IsShadowProperty() && !keyProperties.Contains(p) && !ownership.Properties.Contains(p))];
 
         return (loaded, cachedItem) => compared.TrueForAll(p =>
             StructuralComparisons.StructuralEqualityComparer.Equals(GetClrValue(p, loaded), GetClrValue(p, cachedItem)));
@@ -221,10 +219,14 @@ internal static class CachedValueApplier
                 if (tracked.TryGetValue(key, out var other))
                 {
                     if (node.SourceEntry is null)
+                    {
                         trackedRoot = other;
+                    }
                     else if (node.InboundNavigation is INavigation navigation
                              && ReferenceEquals(navigation, navigation.ForeignKey.DependentToPrincipal))
+                    {
                         ApplyForeignKey(node.SourceEntry, navigation.ForeignKey, entry.Entity);
+                    }
 
                     return;
                 }
@@ -249,7 +251,9 @@ internal static class CachedValueApplier
             foreach (var owned in Items(navigation.ForeignKey.IsUnique
                          ? new[] { entry.Reference(navigation.Name).CurrentValue }
                          : entry.Collection(navigation.Name).CurrentValue))
+            {
                 MarkAdded(entry.Context.Entry(owned));
+            }
         }
     }
 

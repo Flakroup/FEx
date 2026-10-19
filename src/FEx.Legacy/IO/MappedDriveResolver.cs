@@ -73,7 +73,9 @@ public static class MappedDriveResolver
 
                 if (s2.Length >= 2
                     && s2[1][1] == ':')
+                {
                     res.Add(s2[1], s2[2]);
+                }
             }
         }
 
@@ -94,8 +96,10 @@ public static class MappedDriveResolver
             throw new ArgumentNullException(nameof(path), "The path argument was null or whitespace.");
 
         if (!Path.IsPathRooted(path))
+        {
             throw new ArgumentException(
                 $"The path '{path}' was not a rooted path and ResolveToUNC does not support relative paths.");
+        }
 
         // Is the path already in the UNC format?
         if (path.StartsWith(@"\\"))
@@ -201,8 +205,10 @@ public static class MappedDriveResolver
             throw new ArgumentNullException(nameof(path), "The path argument was null or whitespace.");
 
         if (!Path.IsPathRooted(path))
+        {
             throw new ArgumentException(
                 $"The path '{path}' was not a rooted path and GetDriveLetter does not support relative paths.");
+        }
 
         return path.StartsWith(@"\\")
             ? throw new ArgumentException("A UNC path was passed to GetDriveLetter")
@@ -215,8 +221,10 @@ public static class MappedDriveResolver
             throw new ArgumentNullException(nameof(path), "The path argument was null or whitespace.");
 
         if (!Path.IsPathRooted(path))
+        {
             throw new ArgumentException(
                 $"The path '{path}' was not a rooted path and ResolveToRootUNC does not support relative paths.");
+        }
 
         // Get just the drive letter for WMI call
         var driveLetter = GetDriveLetter(path);

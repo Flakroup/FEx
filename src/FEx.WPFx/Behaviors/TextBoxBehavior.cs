@@ -51,7 +51,9 @@ public class TextBoxBehavior
     {
         if (sender is not TextBox textBox
             || !textBox.IsReadOnly && textBox.IsKeyboardFocusWithin)
+        {
             return;
+        }
 
         e.Handled = true;
         textBox.Focus();

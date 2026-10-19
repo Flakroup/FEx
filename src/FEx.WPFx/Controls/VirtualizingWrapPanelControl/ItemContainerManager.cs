@@ -25,7 +25,7 @@ internal class ItemContainerManagerItemsChangedEventArgs
 
 internal interface IItemContainerManager
 {
-    public event EventHandler<ItemContainerManagerItemsChangedEventArgs>? ItemsChanged;
+    event EventHandler<ItemContainerManagerItemsChangedEventArgs>? ItemsChanged;
 
     bool IsRecycling { get; set; }
 

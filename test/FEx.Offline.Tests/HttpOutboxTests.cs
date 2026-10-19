@@ -438,8 +438,8 @@ public sealed class HttpOutboxTests
         var result = await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new(2, 0, 0, null));
-        handler.RequestHeaders.Select(h => h.GetValueOrDefault("X-Client")).ShouldBe(new[] { MarkerValue, MarkerValue });
-        handler.RequestHeaders.Select(h => h.GetValueOrDefault("X-Second")).ShouldBe(new[] { SecondValue, SecondValue });
+        handler.RequestHeaders.Select(h => h.GetValueOrDefault("X-Client")).ShouldBe([MarkerValue, MarkerValue]);
+        handler.RequestHeaders.Select(h => h.GetValueOrDefault("X-Second")).ShouldBe([SecondValue, SecondValue]);
 
         // Registering a header must not displace the one the outbox sends itself.
         handler.IdempotencyKeys.ShouldBe(new()
@@ -1224,7 +1224,7 @@ public sealed class HttpOutboxTests
         using var http = Client(handler);
         await outbox.FlushAsync(http, TestContext.Current.CancellationToken);
 
-        (await outbox.ListDeadAsync()).Select(d => d.Id).ShouldBe(new[] { first.Id, second.Id });
+        (await outbox.ListDeadAsync()).Select(d => d.Id).ShouldBe([first.Id, second.Id]);
 
         (await outbox.RemoveDeadAsync(first.Id)).ShouldBeTrue();
         (await outbox.RemoveDeadAsync(first.Id)).ShouldBeFalse();
@@ -1257,7 +1257,7 @@ public sealed class HttpOutboxTests
         (await outbox.ClearDeadAsync(TestContext.Current.CancellationToken)).ShouldBe(2);
 
         (await outbox.ListDeadAsync()).ShouldBeEmpty();
-        (await outbox.ListAsync()).Select(e => e.Id).ShouldBe(new[] { liveOne.Id, liveTwo.Id });
+        (await outbox.ListAsync()).Select(e => e.Id).ShouldBe([liveOne.Id, liveTwo.Id]);
 
         using ScriptedHandler accepting = new();
         accepting.EnqueueResponse(HttpStatusCode.Created);

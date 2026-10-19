@@ -108,7 +108,7 @@ public sealed class HttpOutboxIdempotencyTests
             };
 
             foreach (var (name, values) in context.Response.Headers)
-                response.Headers.TryAddWithoutValidation(name, values.ToArray());
+                response.Headers.TryAddWithoutValidation(name, [.. values]);
 
             return response;
         }
@@ -135,6 +135,6 @@ public sealed class HttpOutboxIdempotencyTests
         }
 
         public Task<IReadOnlyList<string>> GetKeysAsync(string prefix) =>
-            Task.FromResult<IReadOnlyList<string>>(_values.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal)).ToList());
+            Task.FromResult<IReadOnlyList<string>>([.. _values.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal))]);
     }
 }

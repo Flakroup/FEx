@@ -54,7 +54,9 @@ public class Link : ILink
     {
         if (_childLinks is null
             || _childLinks.IsEmpty)
+        {
             return;
+        }
 
         foreach (var key in _childLinks.Keys.ToList())
         {

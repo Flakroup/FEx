@@ -33,7 +33,9 @@ public sealed class AlphanumComparatorFast : IComparer<string>, IEqualityCompare
     {
         if (s1 is null
             || s2 is null)
+        {
             return 0; // or consider throwing an ArgumentNullException
+        }
 
         int marker1 = 0, marker2 = 0;
 
@@ -74,7 +76,9 @@ public sealed class AlphanumComparatorFast : IComparer<string>, IEqualityCompare
 
         while (marker < str.Length
                && char.IsDigit(str[marker]) == isDigit)
+        {
             marker++;
+        }
 
         return str.Substring(originalMarker, marker - originalMarker);
     }

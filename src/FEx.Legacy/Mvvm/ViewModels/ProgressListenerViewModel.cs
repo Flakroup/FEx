@@ -48,6 +48,7 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
         Watch = new();
 
         if (useMainProgressContainer)
+        {
             Progress.Link(p => p.StatusInfo,
                 statusInfo =>
                 {
@@ -56,6 +57,7 @@ public class ProgressListenerViewModel<T> : ThreadingAwareViewModel, IProgressLi
 
                     _logger.Information(statusInfo);
                 });
+        }
     }
 
     public bool SubscribeToProgress<TCon>(IProgressReceiver<TCon> progressReceiver,

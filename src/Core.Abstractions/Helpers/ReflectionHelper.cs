@@ -30,10 +30,14 @@ public static class ReflectionHelper
             var propInfo = GetPropertyInfo(objType, propertyName);
 
             if (propInfo is not null)
+            {
                 propInfo.SetValue(obj, val, null);
+            }
             else
+            {
                 throw new ArgumentOutOfRangeException(nameof(propertyName),
                     $"Couldn't find property {propertyName} in type {objType.FullName}");
+            }
         }
         else
         {
@@ -86,8 +90,10 @@ public static class ReflectionHelper
             using var stream = assembly.GetManifestResourceStream(resourceName);
 
             if (stream is not null)
+            {
                 using (var reader = new StreamReader(stream))
                     return reader.ReadToEnd();
+            }
         }
 
         return null;
@@ -118,46 +124,41 @@ public static class ReflectionHelper
                                                                | BindingFlags.Instance) =>
         source.GetType()
             .GetProperties(bindingAttr)
-            // Cast required: on down-level TFMs GetValue returns oblivious 'object', which would
+            // Explicit type arguments: on down-level TFMs GetValue returns oblivious 'object', which would
             // infer Dictionary<string, object> and break the IDictionary<string, object?> contract.
-            // ReSharper disable once RedundantCast
-            .ToDictionary(propInfo => propInfo.Name, propInfo => (object?)propInfo.GetValue(source, null));
+            .ToDictionary<PropertyInfo, string, object?>(propInfo => propInfo.Name, propInfo => propInfo.GetValue(source, null));
 
     private static PropertyInfo? GetPropertyInfo(Type type, string propertyName)
     {
-        PropertyInfo? propInfo;
-        // 'var' would infer non-null Type and break the 'currentType = currentType.BaseType' (Type?) reassignment.
-        // ReSharper disable once SuggestVarOrType_SimpleTypes
-        Type? currentType = type;
-
-        do
+        // The cast keeps the inferred type nullable for the 'currentType.BaseType' (Type?) step.
+        for (var currentType = (Type?)type; currentType is not null; currentType = currentType.BaseType)
         {
-            propInfo = currentType.GetProperty(propertyName,
+            var propInfo = currentType.GetProperty(propertyName,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
-            currentType = currentType.BaseType;
-        } while (propInfo is null
-                 && currentType is not null);
+            if (propInfo is not null)
+            {
+                return propInfo;
+            }
+        }
 
-        return propInfo;
+        return null;
     }
 
     private static FieldInfo? GetFieldInfo(Type type, string fieldName)
     {
-        FieldInfo? fieldInfo;
-        // 'var' would infer non-null Type and break the 'currentType = currentType.BaseType' (Type?) reassignment.
-        // ReSharper disable once SuggestVarOrType_SimpleTypes
-        Type? currentType = type;
-
-        do
+        // The cast keeps the inferred type nullable for the 'currentType.BaseType' (Type?) step.
+        for (var currentType = (Type?)type; currentType is not null; currentType = currentType.BaseType)
         {
-            fieldInfo = currentType.GetField(fieldName,
+            var fieldInfo = currentType.GetField(fieldName,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
-            currentType = currentType.BaseType;
-        } while (fieldInfo is null
-                 && currentType is not null);
+            if (fieldInfo is not null)
+            {
+                return fieldInfo;
+            }
+        }
 
-        return fieldInfo;
+        return null;
     }
 }

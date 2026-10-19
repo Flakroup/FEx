@@ -35,7 +35,9 @@ public abstract class StaticsBase : FExInitializable
             if (fallback is not null
                 && localFactory is null
                 && ServiceProvider is null)
+            {
                 return fallback().Guard(paramName);
+            }
 
             return localFactory is not null
                 ? localFactory().Guard(paramName)

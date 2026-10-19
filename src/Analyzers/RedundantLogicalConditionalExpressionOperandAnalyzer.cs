@@ -1,10 +1,10 @@
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -41,7 +41,9 @@ public sealed class RedundantLogicalConditionalExpressionOperandAnalyzer : Diagn
         // Only plain bool operands, which use the built-in operator: a user-defined '&', '|', 'true' or 'false' and a 'dynamic' operand run code of their own.
         if (model.GetTypeInfo(binary.Left, context.CancellationToken).Type?.SpecialType != SpecialType.System_Boolean
             || model.GetTypeInfo(binary.Right, context.CancellationToken).Type?.SpecialType != SpecialType.System_Boolean)
+        {
             return;
+        }
 
         // The value that changes nothing: true for 'and', false for 'or'.
         var neutral = binary.IsKind(SyntaxKind.LogicalAndExpression);

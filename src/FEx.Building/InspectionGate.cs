@@ -35,8 +35,10 @@ public static class InspectionGate
         using var document = JsonDocument.Parse(sarif.TrimStart('\uFEFF'));
 
         if (!document.RootElement.TryGetProperty("runs", out var runs) || runs.GetArrayLength() == 0)
+        {
             throw new InvalidOperationException(
                 "The inspection report carries no run at all, so it says nothing about this commit.");
+        }
 
         // Loops rather than LINQ throughout: JsonElement's enumerators are disposable, and foreach is what
         // disposes them.
@@ -70,8 +72,10 @@ public static class InspectionGate
     private static void AssertTheInspectionRan(JsonElement run)
     {
         if (!run.TryGetProperty("invocations", out var invocations) || invocations.GetArrayLength() == 0)
+        {
             throw new InvalidOperationException(
                 "The inspection report carries no invocation, so it cannot say the inspection finished.");
+        }
 
         foreach (var invocation in invocations.EnumerateArray())
         {
@@ -79,8 +83,10 @@ public static class InspectionGate
             // does not vouch for its own run.
             if (!invocation.TryGetProperty("executionSuccessful", out var successful)
                 || successful.ValueKind != JsonValueKind.True)
+            {
                 throw new InvalidOperationException(
                     "The inspection did not report a successful run, so an empty result list proves nothing.");
+            }
         }
     }
 
@@ -91,6 +97,7 @@ public static class InspectionGate
         var physical = default(JsonElement);
 
         if (result.TryGetProperty("locations", out var locations))
+        {
             foreach (var location in locations.EnumerateArray())
             {
                 // The first location is the one a person is sent to; a finding with several is still one
@@ -100,6 +107,7 @@ public static class InspectionGate
 
                 break;
             }
+        }
 
         return new InspectionFinding(
             ruleId,

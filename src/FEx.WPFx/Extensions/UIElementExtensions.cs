@@ -11,7 +11,9 @@ public static class UIElementExtensions
     {
         if (element is null
             || action is null)
+        {
             return;
+        }
 
         if (!inUIContext)
             action();

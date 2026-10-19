@@ -80,7 +80,9 @@ public static class AsyncStatics
 
         if (argumentType == typeof(Task)
             || argumentType.IsGenericType && argumentType.GetGenericTypeDefinition() == typeof(Task<>))
+        {
             throw new ArgumentException("Invalid generic type. It cannot be Task or Task<T>.");
+        }
 
         if (options.HasFlagFast(AsyncOptions.ImmediateStart))
             return await ExecuteTaskOnThreadPoolAsync(() => Task.Run(func, cancellationToken), AsyncOptions.None);
@@ -180,8 +182,8 @@ public static class AsyncStatics
     /// <paramref name="delay" /> represents a negative time interval other than
     /// <see langword="TimeSpan.FromMilliseconds(-1)" />.
     /// -or-
-    /// The <paramref name="delay" /> argument's <see cref="P:System.TimeSpan.TotalMilliseconds" /> property is greater
-    /// than 4294967294 on .NET 6 and later versions, or <see cref="F:System.Int32.MaxValue">Int32.MaxValue</see> on all
+    /// The <paramref name="delay" /> argument's <see cref="System.TimeSpan.TotalMilliseconds" /> property is greater
+    /// than 4294967294 on .NET 6 and later versions, or <see cref="System.Int32.MaxValue">Int32.MaxValue</see> on all
     /// previous versions.
     /// </exception>
     /// <exception cref="TaskCanceledException">The task has been canceled.</exception>
@@ -210,7 +212,9 @@ public static class AsyncStatics
     {
         if (predicate is null
             || !predicate())
+        {
             return;
+        }
 
         await ExecuteTaskOnThreadPoolAsync(() =>
             DelayUntilCoreAsync(predicate, action, GetDelayTimeSpan(milliseconds), cancellationToken));
@@ -242,7 +246,9 @@ public static class AsyncStatics
     {
         if (predicate is null
             || !predicate())
+        {
             return;
+        }
 
         await ExecuteTaskOnThreadPoolAsync(() =>
             DelayUntilCoreAsync(predicate, action, GetDelayTimeSpan(timeSpan), cancellationToken));
@@ -344,7 +350,9 @@ public static class AsyncStatics
     {
         if (!delayTimeSpan.HasValue
             || delayTimeSpan.Value <= TimeSpan.Zero)
+        {
             delayTimeSpan = DefaultDelay;
+        }
 
         return delayTimeSpan.Value;
     }

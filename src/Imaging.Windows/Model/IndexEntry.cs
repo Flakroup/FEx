@@ -165,7 +165,9 @@ public class IndexEntry : IndexEntryBase, IDisposable
     {
         if (FilesCacheRootDirPath.IsNullOrEmptyString()
             || FilePath?.StartsWith(FilesCacheRootDirPath) == false)
+        {
             FilesCacheRootDirPath = Path.GetDirectoryName(FilePath);
+        }
 
         if (FilePath is not null)
             ResetCacheFile(FilePath);

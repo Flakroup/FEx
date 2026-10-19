@@ -2,8 +2,8 @@ using FEx.EFCore.Configuration;
 using Newtonsoft.Json;
 using Shouldly;
 using System.Reflection;
-using StjSerializer = System.Text.Json.JsonSerializer;
 using Xunit;
+using StjSerializer = System.Text.Json.JsonSerializer;
 
 namespace FEx.EFCore.Tests;
 

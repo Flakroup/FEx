@@ -1,10 +1,10 @@
-using System;
-using System.Reflection;
 using FEx.DependencyInjection.Abstractions;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 

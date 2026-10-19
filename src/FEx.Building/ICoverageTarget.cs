@@ -83,9 +83,11 @@ public interface ICoverageTarget : ITestTarget
                 // One solution-wide MTP run emits one cobertura file per test assembly.
                 var reports = TestResultsDirectory.GlobFiles("*.cobertura.xml");
                 if (reports.Count == 0)
+                {
                     throw new InvalidOperationException(
                         $"No cobertura reports under {TestResultsDirectory}. The test run produced no coverage "
                         + "data, so the gate cannot vouch for anything.");
+                }
 
                 var report = CoverageGate.AnalyzeFiles(
                     reports.Select(static path => path.ToString()),
@@ -101,10 +103,12 @@ public interface ICoverageTarget : ITestTarget
                 Report(report, reports.Count);
 
                 if (report.Failed)
+                {
                     throw new InvalidOperationException(
                         $"Coverage gate failed: {report.IncompleteFiles.Count} file(s) below 100%, "
                         + $"{report.MissingModules.Count} module(s) missing from the reports, "
                         + $"{report.StaleExclusions.Count} marker(s) exempting nothing.");
+                }
             });
 
     /// <summary>
@@ -117,15 +121,14 @@ public interface ICoverageTarget : ITestTarget
     /// that exists but was never added to the solution, which would otherwise never be built or tested.
     /// </remarks>
     private IReadOnlyList<string> ExpectedCoverageModules() =>
-        CoverageOwnedProjectPrefixes
+        [.. CoverageOwnedProjectPrefixes
             .Select(prefix => RootDirectory / prefix.Replace('\\', '/').TrimEnd('/'))
             .Where(static directory => Directory.Exists(directory))
             .SelectMany(static directory => Directory.EnumerateFiles(directory, "*.csproj", SearchOption.AllDirectories))
             .Select(static path => Path.GetFileNameWithoutExtension(path))
             .Where(name => !ModulesWithoutExecutableCode.Contains(name, StringComparer.OrdinalIgnoreCase))
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(static name => name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+            .OrderBy(static name => name, StringComparer.OrdinalIgnoreCase)];
 
     private static void Report(CoverageReport report, int reportCount)
     {

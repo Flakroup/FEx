@@ -251,7 +251,9 @@ public class ObservableHashSet<T> : BaseConcurrentList<T>, ISet<T>, IReadOnlyCol
 
         if (removed.Count == 0
             && added.Count == 0)
+        {
             return;
+        }
 
         _set = copy;
 

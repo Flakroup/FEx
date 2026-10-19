@@ -111,7 +111,7 @@ public sealed class JsonExtensionsTests
     [Fact]
     public void FromJson_InvalidJson_Throws()
     {
-        Should.Throw<JsonException>(() => "{not json".FromJson<Sample>());
+        Should.Throw<JsonException>("{not json".FromJson<Sample>);
     }
 
     [Fact]

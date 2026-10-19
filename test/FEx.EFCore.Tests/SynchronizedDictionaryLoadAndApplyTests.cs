@@ -254,7 +254,7 @@ public sealed class SynchronizedDictionaryLoadAndApplyTests : IAsyncDisposable, 
         conflicts.ShouldHaveSingleItem().CachedValue.ShouldBeSameAs(doc);
         using var reader = CreateContext();
         var saved = await reader.Docs.SingleAsync(d => d.Id == 1, TestContext.Current.CancellationToken);
-        saved.Blob.ShouldBe(new byte[] { 2 });
+        saved.Blob.ShouldBe([2]);
         saved.Keywords.ShouldBe(["from B"]);
         saved.Version.ShouldBe(2);
     }

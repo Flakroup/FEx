@@ -260,7 +260,9 @@ public class OutlinedTextBlock : FrameworkElement
     {
         if (_formattedText is not null
             || Text is null)
+        {
             return;
+        }
 
         _formattedText = new(Text ?? string.Empty,
             CultureInfo.CurrentUICulture,

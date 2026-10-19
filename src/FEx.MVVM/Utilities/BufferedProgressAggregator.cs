@@ -46,23 +46,29 @@ public class BufferedProgressAggregator : ProgressAggregator
         if (!Timer.IsRunning
             && (maximum.HasValue || value.HasValue)
             && mode != ProgressChangeMode.End)
+        {
             Timer.Start();
+        }
 
         if (maximum.HasValue)
+        {
             _progressChangeSubject.OnNext(new ProgressChange<double>
             {
                 PropertyName = nameof(IProgressStatus.Maximum),
                 Value = maximum.Value,
                 ChangeMode = mode
             });
+        }
 
         if (value.HasValue)
+        {
             _progressChangeSubject.OnNext(new ProgressChange<double>
             {
                 PropertyName = nameof(IProgressStatus.Value),
                 Value = value.Value,
                 ChangeMode = mode
             });
+        }
     }
 
     protected virtual void ProcessChange(IProgressChange progressChange)

@@ -1,13 +1,13 @@
+using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Avaloniax;
 using FEx.Avaloniax.Abstractions.Interfaces;
 using FEx.DependencyInjection;
 using FEx.DependencyInjection.Abstractions.Interfaces;
-using FEx.Agnostics.Abstractions.Interfaces;
 using FEx.Flurlx;
 using FEx.Flurlx.Abstractions.Interfaces;
 using FEx.Sample.Avalonia.Configuration;
-using FEx.Samples.Shared;
 using FEx.Sample.Avalonia.Services;
+using FEx.Samples.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using StrongInject;
 

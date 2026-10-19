@@ -128,17 +128,17 @@ public sealed class ResolutionFixTests : IDisposable
 
     private sealed class ProviderScope : IDisposable
     {
-        private static readonly FieldInfo _field =
+        private static readonly FieldInfo Field =
             typeof(StaticsBase).GetField("_serviceProvider", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
 
         private readonly object? _previous;
 
         public ProviderScope(IFExServiceProvider? provider)
         {
-            _previous = _field.GetValue(null);
-            _field.SetValue(null, provider);
+            _previous = Field.GetValue(null);
+            Field.SetValue(null, provider);
         }
 
-        public void Dispose() => _field.SetValue(null, _previous);
+        public void Dispose() => Field.SetValue(null, _previous);
     }
 }

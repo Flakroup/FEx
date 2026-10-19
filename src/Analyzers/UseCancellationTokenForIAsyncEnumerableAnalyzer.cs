@@ -1,10 +1,10 @@
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -36,7 +36,9 @@ public sealed class UseCancellationTokenForIAsyncEnumerableAnalyzer : Diagnostic
         {
             if (start.Compilation.GetTypeByMetadataName(CancellationScope.TokenMetadataName) is { } token
                 && start.Compilation.GetTypeByMetadataName(AsyncEnumerableMetadataName) is { } asyncEnumerable)
+            {
                 start.RegisterOperationAction(operation => Analyze(operation, token, asyncEnumerable), OperationKind.Loop);
+            }
         });
     }
 
@@ -51,7 +53,9 @@ public sealed class UseCancellationTokenForIAsyncEnumerableAnalyzer : Diagnostic
             || source is IInvocationOperation call && PassesToken(call, token)
             || IsLocalFromCall(source, context.CancellationToken)
             || !CancellationScope.HasTokenInScope(loop, context.ContainingSymbol, token))
+        {
             return;
+        }
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, loop.Collection.Syntax.GetLocation()));
     }

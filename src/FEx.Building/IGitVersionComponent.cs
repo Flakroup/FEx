@@ -98,7 +98,7 @@ public interface IGitVersionComponent : INukeBuild
     /// empty string here, not as an error.
     /// </summary>
     /// <exception cref="InvalidOperationException">GitVersion produced no output.</exception>
-    public static GitVersionInfo Parse(string json)
+    static GitVersionInfo Parse(string json)
     {
         var options = new JsonSerializerOptions();
         options.Converters.Add(new LenientStringConverter());
@@ -115,11 +115,13 @@ public interface IGitVersionComponent : INukeBuild
     /// follows it, so the whole alpha line disappears behind it. The build stops here instead.
     /// </summary>
     /// <exception cref="InvalidOperationException">A stable version was resolved off a release branch.</exception>
-    public static void AssertStableOnlyFromReleaseBranch(GitVersionInfo info)
+    static void AssertStableOnlyFromReleaseBranch(GitVersionInfo info)
     {
         if (!string.IsNullOrEmpty(info.PreReleaseTag)
             || IsStableReleaseBranch(info.BranchName))
+        {
             return;
+        }
 
         throw new InvalidOperationException(
             $"Version {info.SemVer} carries no pre-release label, but it was resolved on branch "
@@ -129,7 +131,7 @@ public interface IGitVersionComponent : INukeBuild
     }
 
     /// <summary>Branches a stable, label-less version may be released from.</summary>
-    public static bool IsStableReleaseBranch(string? branch) => branch is "main" or "master";
+    static bool IsStableReleaseBranch(string? branch) => branch is "main" or "master";
 
     /// <summary>
     /// A version tag names exactly one commit. On HEAD it means this commit is already released, which the
@@ -138,7 +140,7 @@ public interface IGitVersionComponent : INukeBuild
     /// would ship releases nobody planned, so the build stops for a human instead.
     /// </summary>
     /// <exception cref="InvalidOperationException">The version's tag is taken by a different commit.</exception>
-    public static void AssertVersionAvailable(GitVersionInfo info,
+    static void AssertVersionAvailable(GitVersionInfo info,
                                               string tagPrefix,
                                               ISet<string> allTags,
                                               ISet<string> tagsOnHead)

@@ -24,9 +24,13 @@ internal abstract class VirtualizingPanelModelBase
     {
         if (offset < 0
             || ViewportSize.Height >= Extent.Height)
+        {
             offset = 0;
+        }
         else if (offset + ViewportSize.Height >= Extent.Height)
+        {
             offset = Extent.Height - ViewportSize.Height;
+        }
 
         if (offset != ScrollOffset.Y)
         {
@@ -40,9 +44,13 @@ internal abstract class VirtualizingPanelModelBase
     {
         if (offset < 0
             || ViewportSize.Width >= Extent.Width)
+        {
             offset = 0;
+        }
         else if (offset + ViewportSize.Width >= Extent.Width)
+        {
             offset = Extent.Width - ViewportSize.Width;
+        }
 
         if (offset != ScrollOffset.X)
         {
@@ -75,21 +83,29 @@ internal abstract class VirtualizingPanelModelBase
     public void MouseWheelUp()
     {
         if (MouseWheelScrollDirection == ScrollDirection.Vertical)
+        {
             ScrollVertical(ScrollUnit == ScrollUnit.Pixel
                 ? -MouseWheelDelta
                 : GetMouseWheelUpScrollAmount());
+        }
         else
+        {
             MouseWheelLeft();
+        }
     }
 
     public void MouseWheelDown()
     {
         if (MouseWheelScrollDirection == ScrollDirection.Vertical)
+        {
             ScrollVertical(ScrollUnit == ScrollUnit.Pixel
                 ? MouseWheelDelta
                 : GetMouseWheelDownScrollAmount());
+        }
         else
+        {
             MouseWheelRight();
+        }
     }
 
     public void MouseWheelLeft() =>

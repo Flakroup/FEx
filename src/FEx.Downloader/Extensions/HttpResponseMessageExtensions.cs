@@ -63,7 +63,9 @@ public static class HttpResponseMessageExtensions
 
             if (expected is { } length
                 && received != length)
+            {
                 throw new IOException($"Download was truncated: received {received} of {length} bytes.");
+            }
 
             if (File.Exists(filePath))
                 File.Replace(tempPath, filePath, null);

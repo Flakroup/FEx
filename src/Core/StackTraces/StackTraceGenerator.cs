@@ -65,6 +65,7 @@ public class StackTraceGenerator : IStackTraceProvider
             var declaringType = method?.DeclaringType;
 
             if (declaringType is not null)
+            {
                 stackTraceFrames.Add(new()
                 {
                     Column = stackFrame.GetFileColumnNumber(),
@@ -74,6 +75,7 @@ public class StackTraceGenerator : IStackTraceProvider
                     Type = declaringType.FullName,
                     Namespace = declaringType.Namespace ?? ""
                 });
+            }
         }
 
         return new()

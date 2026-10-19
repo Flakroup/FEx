@@ -34,7 +34,9 @@ public class ExceptionHandler : ExceptionHandlerBase
 
         if (options.InformUser
             && exception is not TaskCanceledException)
+        {
             base.Handle(exception, options);
+        }
     }
 
     protected override void HandleException(Exception exception, IExceptionHandlerOptions? options)

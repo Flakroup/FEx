@@ -24,9 +24,9 @@ public class FileSystemUtilities
 {
     public static int PrgValue;
     public static int PrgMax;
-    private static readonly SemaphoreSlim _progressSemaphore = new(1, 1);
+    private static readonly SemaphoreSlim ProgressSemaphore = new(1, 1);
 
-    private static readonly bool _isReportingCapable = !Console.IsOutputRedirected;
+    private static readonly bool IsReportingCapable = !Console.IsOutputRedirected;
     private static bool _isReporting;
     private static ILogger? _logger;
 
@@ -41,7 +41,9 @@ public class FileSystemUtilities
 
             if (source.EndsWith("\\")
                 || source.EndsWith("/"))
+            {
                 source = source.TrimEnd('\\', '/');
+            }
 
             return new DirectoryInfo(source);
         }
@@ -204,10 +206,14 @@ public class FileSystemUtilities
                         files = GetSourceFiles(sourceDirectories);
 
                         if (!files.Any())
+                        {
                             sourceInfo.Delete(true);
+                        }
                         else
+                        {
                             return new Error($"ERROR: There are files left in source directory: {sourceInfo.FullName}")
                                 .ToAggregatedError();
+                        }
                     }
                 }
 
@@ -264,12 +270,16 @@ public class FileSystemUtilities
                     if (!dirs.Any(x => x.FullName.Contains(dir.FullName)))
                     {
                         if (!sourceDirectories.ContainsKey(dir.Root.FullName))
+                        {
                             sourceDirectories.Add(dir.Root.FullName,
                             [
                                 dir
                             ]);
+                        }
                         else
+                        {
                             sourceDirectories[dir.Root.FullName].Add(dir);
+                        }
                     }
                 }
 
@@ -280,7 +290,9 @@ public class FileSystemUtilities
                     while (!sourceDirectories[root]
                                .All(x => x.FullName.Contains(sourceInfo?.FullName
                                                              ?? throw new InvalidOperationException())))
+                    {
                         sourceInfo = sourceInfo?.Parent;
+                    }
 
                     CreateMissingDestinationDirectories(dest, sourceInfo.Guard(nameof(sourceInfo)), sourceDirectories[root]);
                 }
@@ -331,8 +343,10 @@ public class FileSystemUtilities
                         ~(FileAttributes.Archive | FileAttributes.ReadOnly | FileAttributes.Hidden);
 
                     if (copyOnlyIfDifferent)
+                    {
                         toCopy = destFileInfo.Length != sourceFile.Length
                                  || destFileInfo.LastWriteTime != sourceFile.LastWriteTime;
+                    }
                 }
 
                 if (toCopy)
@@ -596,9 +610,9 @@ public class FileSystemUtilities
 
     private static void FinishProgress(bool printLog = true)
     {
-        if (_isReportingCapable)
+        if (IsReportingCapable)
         {
-            _progressSemaphore.Wait();
+            ProgressSemaphore.Wait();
             _isReporting = true;
             Log("\r" + new string(' ', Console.WindowWidth - 1) + "\r", printLog);
 
@@ -610,7 +624,7 @@ public class FileSystemUtilities
             PrgValue = 0;
             PrgMax = 0;
             _isReporting = false;
-            _progressSemaphore.Release();
+            ProgressSemaphore.Release();
         }
     }
 
@@ -680,7 +694,9 @@ public class FileSystemUtilities
     {
         while (path2.StartsWith("/")
                || path2.StartsWith("\\"))
+        {
             path2 = path2.TrimStart('/', '\\');
+        }
 
         return Path.Combine(path1, path2);
     }
@@ -701,6 +717,7 @@ public class FileSystemUtilities
             try
             {
                 if (destDir.Exists)
+                {
                     temp = fileOperation switch
                     {
                         FileOperation.Copy => CopyFileAndSetAttributes(destDir, file, printPaths),
@@ -709,6 +726,7 @@ public class FileSystemUtilities
                         FileOperation.SyncSrcToDest => CopyFileAndSetAttributes(destDir, file, printPaths, true),
                         _ => temp
                     };
+                }
             }
             catch (Exception e)
             {
@@ -835,9 +853,9 @@ public class FileSystemUtilities
 
     private static async Task ReportProgressAsync(string msg, Func<string>? msgPrefix = null, bool printLog = true)
     {
-        if (_isReportingCapable && !_isReporting)
+        if (IsReportingCapable && !_isReporting)
         {
-            await _progressSemaphore.WaitAsync();
+            await ProgressSemaphore.WaitAsync();
             _isReporting = true;
 
             Log("\r"
@@ -854,7 +872,7 @@ public class FileSystemUtilities
                     : Console.CursorTop);
 
             _isReporting = false;
-            _progressSemaphore.Release();
+            ProgressSemaphore.Release();
         }
     }
 

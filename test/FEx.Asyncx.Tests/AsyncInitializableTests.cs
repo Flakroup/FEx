@@ -65,7 +65,7 @@ public sealed class AsyncInitializableTests
         using var sut = new GatedInitializable();
         using var callerContext = new QueueSynchronizationContext();
 
-        var initialization = callerContext.Start(sut.InitializeAsync);
+        var initialization = callerContext.StartAsync(sut.InitializeAsync);
 #pragma warning disable VSTHRD003 // TaskCompletionSource-based await is intentional
         await sut.HookEntered.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
 #pragma warning restore VSTHRD003
@@ -164,7 +164,7 @@ public sealed class AsyncInitializableTests
 
         public override void Post(SendOrPostCallback d, object? state) => _queue.Add((d, state));
 
-        public Task Start(Func<Task> action)
+        public Task StartAsync(Func<Task> action)
         {
             var previous = Current;
             SetSynchronizationContext(this);

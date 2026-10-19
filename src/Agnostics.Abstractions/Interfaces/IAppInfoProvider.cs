@@ -28,7 +28,7 @@ public interface IAppInfoProvider
     /// <summary>Gets the application name and its version on separate lines.</summary>
     string NameLineVersion { get; }
     /// <summary>Gets the application name and its version on separate lines, with a version prefix.</summary>
-    public string NameLineVersionWithPrefix { get; }
+    string NameLineVersionWithPrefix { get; }
     /// <summary>Gets the application name followed by its version.</summary>
     string NameAndVersion { get; }
     /// <summary>Gets the per-user data directory of the application.</summary>

@@ -1,7 +1,7 @@
+using Shouldly;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Shouldly;
 using Xunit;
 
 namespace FEx.Analyzers.Tests;

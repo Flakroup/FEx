@@ -114,11 +114,13 @@ public sealed class TfsService : ThreadingAwareViewModel
         get
         {
             if (_instance == null)
+            {
                 lock (SyncRoot)
                 {
                     if (_instance == null)
                         _instance = new();
                 }
+            }
 
             return _instance;
         }
@@ -135,7 +137,9 @@ public sealed class TfsService : ThreadingAwareViewModel
     {
         if (SelectedEnvironment == null
             || TfsEnvironments.All(x => x.ServerUri != SelectedEnvironment.ServerUri))
+        {
             SelectedEnvironment = TfsEnvironments.FindInEnumerable();
+        }
     }
     #endregion
 }

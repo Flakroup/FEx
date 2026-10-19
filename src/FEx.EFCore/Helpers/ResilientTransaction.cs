@@ -178,7 +178,7 @@ public class ResilientTransaction
                                                                   int? delayOnTimeout = null,
                                                                   CancellationToken cancellationToken = default)
     {
-        for (var attempt = 1;; attempt++)
+        for (var attempt = 1; ; attempt++)
         {
             try
             {
@@ -198,7 +198,7 @@ public class ResilientTransaction
                                                  IsolationLevel isolationLevel = IsolationLevel.Unspecified,
                                                  int? delayOnTimeout = null)
     {
-        for (var attempt = 1;; attempt++)
+        for (var attempt = 1; ; attempt++)
         {
             try
             {

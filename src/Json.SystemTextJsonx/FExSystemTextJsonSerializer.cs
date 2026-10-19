@@ -28,9 +28,11 @@ public sealed class FExSystemTextJsonSerializer : IFExJsonSerializer
 
         // Without a resolver every call would fail; fail here, where the misconfiguration is.
         if (options.TypeInfoResolver is null)
+        {
             throw new ArgumentException(
                 "The options have no TypeInfoResolver: use FExSystemTextJsonOptions.CreateDefault, or a source-generated JsonSerializerContext.",
                 nameof(options));
+        }
 
         _options = options;
     }

@@ -544,7 +544,6 @@ internal static class CoverageDebt
         "src/Imaging.Windows/Model/IndexEntry.cs", // debt: #137 - 121/126 lines
         "src/Imaging.Windows/WindowsImagingServicesModule.cs", // debt: #137 - 0/14 lines
         "src/Logging.Abstractions/Extensions/LoggerExtensions.cs", // debt: #137 - 17/23 lines
-        "src/Logging.Abstractions/FExLoggingStatics.cs", // debt: #137 - 8/12 lines
         "src/Logging/DefaultPlatformLogger.cs", // debt: #137 - 0/7 lines
         "src/Logging/FExLoggingConfigurator.cs", // debt: #137 - 14/39 lines
         "src/Logging/FExLoggingModule.cs", // debt: #137 - 8/63 lines

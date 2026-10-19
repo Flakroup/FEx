@@ -119,6 +119,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         set
         {
             if (TargetIsNotCreated)
+            {
                 SetProperty(ref _filePath,
                     value,
                     fP =>
@@ -131,6 +132,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                             Semaphore = LockSrv.EnsureLock(fP);
 #pragma warning restore IDISP003
                     });
+            }
         }
     }
 
@@ -140,6 +142,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         set
         {
             if (TargetIsNotCreated)
+            {
                 SetProperty(ref _fileNameWithoutExtension,
                     value,
                     fN =>
@@ -147,8 +150,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                         if (fN != Path.GetFileNameWithoutExtension(File?.Name)
                             && DirPath is not null
                             && fN is not null)
+                        {
                             File = new(Path.Combine(DirPath, fN + Path.GetExtension(FilePath ?? string.Empty)));
+                        }
                     });
+            }
         }
     }
 
@@ -158,6 +164,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         set
         {
             if (TargetIsNotCreated)
+            {
                 SetProperty(ref _fileName,
                     value,
                     fN =>
@@ -165,8 +172,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                         if (fN != File?.Name
                             && DirPath is not null
                             && fN is not null)
+                        {
                             File = new(Path.Combine(DirPath, fN));
+                        }
                     });
+            }
         }
     }
 
@@ -176,6 +186,7 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         protected set
         {
             if (TargetIsNotCreated)
+            {
                 SetProperty(ref _dirPath,
                     value,
                     dP =>
@@ -183,8 +194,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                         if (dP != File?.DirectoryName
                             && FileName is not null
                             && dP is not null)
+                        {
                             File = new(Path.Combine(dP, FileName));
+                        }
                     });
+            }
         }
     }
 
@@ -356,7 +370,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
         if (File is { Exists: true }
             && MD5Checksum is not null)
+        {
             IsDownloaded = CompareChecksum(false);
+        }
 
         if (!IsDownloaded)
         {
@@ -476,7 +492,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         if (downloadItem.FilePath is null
             && downloadItem.DirPath is not null
             && downloadItem is DownloadStub ds)
+        {
             await ds.LoadTargetFileNameAsync(null, null, cancellationToken);
+        }
 
         return await CreateAsync(downloadItem.Url.Guard(nameof(downloadItem.Url)),
             downloadItem.FilePath,
@@ -617,9 +635,11 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                 if (DState != DownloadState.Finished
                     && DState != DownloadState.Failed
                     && DState != DownloadState.Cancelled)
+                {
                     TotalPrg += IsSpeededUp
                         ? addedValue / 2D
                         : addedValue;
+                }
 
                 TotalSemaphore.Release();
             }
@@ -767,7 +787,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
             || retrievedContentRange.From.Value != 0
             || retrievedContentRange.To.Value != BufferLength
             || response.Content.Headers.ContentLength != BufferLength + 1)
+        {
             return false;
+        }
 
         using var streamResponse = await response.ReadContentStreamAsync(CancellationToken);
 
@@ -780,10 +802,12 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
     {
         if (TempDirectory is null
             && FilePath is not null)
+        {
             TempDirectory = new(Path.Combine(Path.GetPathRoot(Path.GetTempPath()) == Path.GetPathRoot(FilePath)
                     ? Path.GetTempPath()
                     : Path.GetPathRoot(FilePath) ?? Path.GetTempPath(),
                 "TempFlakWebCache"));
+        }
 
         var dirName = (OmitQuery && Url.Query.IsNotNullOrEmptyString()
             ? Url.AbsoluteUri.Replace(Url.Query, string.Empty)
@@ -827,18 +851,21 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
         {
             if (ParallelRanges > 1
                 && unfinishedRanges.Length > 1)
+            {
                 await unfinishedRanges.WithWhenAllTasksAsync(x => Ranges[x].DoDownloadAsync());
+            }
             else
+            {
                 foreach (var x in unfinishedRanges)
                     await Ranges[x].DoDownloadAsync();
+            }
 
             CancellationToken.ThrowIfCancellationRequested();
             await HandleRangeErrorsAsync();
 
-            unfinishedRanges = Ranges.Where(x => x.Value?.DState != DownloadState.Finished)
+            unfinishedRanges = [.. Ranges.Where(x => x.Value?.DState != DownloadState.Finished)
                 .Select(x => x.Key)
-                .OrderBy(x => x)
-                .ToArray();
+                .OrderBy(x => x)];
         }
 
         TotalPrg = Maximum / 2;
@@ -870,12 +897,16 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
                 }
             }
         }
-#if !NETSTANDARD2_0
-        await
+#if NETSTANDARD2_0
+        using (var fileStream =
+               new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+#else
+        await using (var fileStream =
+                     new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
 #endif
-            using (var fileStream =
-                   new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+        {
             fileStream.SetLength(DataLength);
+        }
 
         DState = DownloadState.Cleanup;
         IsIndeterminate = true;
@@ -902,7 +933,9 @@ public class DownloadItem : ProgressAggregator, IDownloadItem
 
         if (!RetryPolicy.IsTransient(error.ResponseStatusCode)
             || _retryAttempts++ >= MaxRetries)
+        {
             ExceptionDispatchInfo.Capture(error).Throw();
+        }
 
         await Task.Delay(RetryPolicy.GetDelay(error, _retryAttempts, RetryBaseDelay), CancellationToken);
     }

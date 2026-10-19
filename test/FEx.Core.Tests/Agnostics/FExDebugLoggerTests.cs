@@ -20,9 +20,15 @@ public sealed class FExDebugLoggerTests
         {
             switch (level)
             {
-                case "Warning": logger.Warning("the-message"); break;
-                case "Error": logger.Error("the-message"); break;
-                default: logger.Critical("the-message"); break;
+                case "Warning":
+                    logger.Warning("the-message");
+                    break;
+                case "Error":
+                    logger.Error("the-message");
+                    break;
+                default:
+                    logger.Critical("the-message");
+                    break;
             }
         });
 

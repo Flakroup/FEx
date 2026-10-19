@@ -1,11 +1,11 @@
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -52,7 +52,9 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
         if (arguments.IsDefaultOrEmpty
             || ParametersOf(model.GetSymbolInfo(node, context.CancellationToken).Symbol) is not { } parameters
             || IsInExpressionTree(node, model, context.CancellationToken))
+        {
             return;
+        }
 
         var redundant = RedundantArguments(arguments, parameters, model, context.CancellationToken);
         if (redundant.Count == 0)
@@ -88,15 +90,11 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
         BaseObjectCreationExpressionSyntax { ArgumentList: { } list } => FromList(list),
         ElementAccessExpressionSyntax access => FromList(access.ArgumentList),
         ConstructorInitializerSyntax initializer => FromList(initializer.ArgumentList),
-        AttributeSyntax { ArgumentList: { } list } => list.Arguments
-            .Select(static a => new Argument(a, a.Expression, a.NameColon is null && a.NameEquals is null))
-            .ToImmutableArray(),
+        AttributeSyntax { ArgumentList: { } list } => [.. list.Arguments.Select(static a => new Argument(a, a.Expression, a.NameColon is null && a.NameEquals is null))],
         _ => default,
     };
 
-    private static ImmutableArray<Argument> FromList(BaseArgumentListSyntax list) => list.Arguments
-        .Select(static a => new Argument(a, a.Expression, a.NameColon is null))
-        .ToImmutableArray();
+    private static ImmutableArray<Argument> FromList(BaseArgumentListSyntax list) => [.. list.Arguments.Select(static a => new Argument(a, a.Expression, a.NameColon is null))];
 
     private static ImmutableArray<IParameterSymbol>? ParametersOf(ISymbol? symbol) => symbol switch
     {
@@ -136,7 +134,9 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
     {
         if (!parameter.HasExplicitDefaultValue
             || parameter.GetAttributes().Any(static a => a.AttributeClass?.Name is "CallerMemberNameAttribute" or "CallerFilePathAttribute" or "CallerLineNumberAttribute" or "CallerArgumentExpressionAttribute"))
+        {
             return false;
+        }
 
         var constant = model.GetConstantValue(expression, cancellationToken);
         var defaultValue = parameter.ExplicitDefaultValue;

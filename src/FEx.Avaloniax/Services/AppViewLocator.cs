@@ -19,8 +19,10 @@ public class AppViewLocator : IViewLocator
             throw new ArgumentNullException(nameof(viewModel));
 
         if (viewModel is not FExAvaloniaViewModelBase)
+        {
             throw new ArgumentOutOfRangeException(nameof(viewModel),
                 $"{viewModel.GetType().Name} does not inherit from {nameof(FExAvaloniaViewModelBase)}");
+        }
 
         return CreateView(viewModel.GetType(), viewModel);
     }
@@ -33,7 +35,9 @@ public class AppViewLocator : IViewLocator
 
         if (view is StyledElement styledElement
             && viewModel is not null)
+        {
             styledElement.DataContext = viewModel;
+        }
 
         return view;
     }

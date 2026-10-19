@@ -29,7 +29,9 @@ internal static class HttpClientProvider
     {
         if (pars is null
             || !NeedsOwnHandler(pars))
+        {
             return Shared.Value;
+        }
 
         var key = new ClientKey(GetCredentialsKey(pars.Credentials),
             pars.Cookies,

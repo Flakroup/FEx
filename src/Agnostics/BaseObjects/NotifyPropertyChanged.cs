@@ -20,7 +20,9 @@ public abstract class NotifyPropertyChanged : PropertyChangeAware, IFExNotifyPro
 
         if (propertyName is null
             || PropertyChanged is null)
+        {
             return;
+        }
 
         EventDelegate();
 
@@ -34,7 +36,9 @@ public abstract class NotifyPropertyChanged : PropertyChangeAware, IFExNotifyPro
     {
         if (propertyName is null
             || PropertyChanged is null)
+        {
             return;
+        }
 
         PropertyChanged.HandlePropertyChanged(this, propertyName);
     }

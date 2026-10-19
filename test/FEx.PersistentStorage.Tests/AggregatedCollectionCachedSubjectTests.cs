@@ -33,7 +33,7 @@ public sealed class AggregatedCollectionCachedSubjectTests
         using var sut = new AggregatedSubject(_cache);
         IReadOnlyList<string>? stored = null;
         _cache.When(c => c.Add(Arg.Any<IEnumerable<CachedItem>>()))
-            .Do(ci => stored = ci.Arg<IEnumerable<CachedItem>>().Select(static i => i.Name).ToList());
+            .Do(ci => stored = [.. ci.Arg<IEnumerable<CachedItem>>().Select(static i => i.Name)]);
 
         sut.OnNext([Models.Create("x"), Models.Create("y")]);
 

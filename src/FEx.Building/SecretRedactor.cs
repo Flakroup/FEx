@@ -85,10 +85,12 @@ public sealed class SecretRedactor
             return text;
 
         if (_secretOptions is not null)
+        {
             text = _secretOptions.Replace(text,
                 static m => m.Groups["separator"].Success
                     ? $"{m.Groups["option"].Value}{m.Groups["separator"].Value}{Mask}"
                     : $"{m.Groups["option"].Value} {Mask}");
+        }
 
         foreach (var value in _secretValues)
             text = text.Replace(value, Mask);

@@ -20,7 +20,7 @@ public class EFCoreDatabaseBackedServiceTests
     {
         using var sut = CreateFailingService();
 
-        var ex = await Should.ThrowAsync<Exception>(sut.Ensure);
+        var ex = await Should.ThrowAsync<Exception>(sut.EnsureAsync);
         ex.ToString().ShouldContain("boom");
     }
 
@@ -29,9 +29,9 @@ public class EFCoreDatabaseBackedServiceTests
     {
         using var sut = CreateFailingService();
 
-        await Should.ThrowAsync<Exception>(sut.Ensure);
+        await Should.ThrowAsync<Exception>(sut.EnsureAsync);
 
-        var ex = await Should.ThrowAsync<Exception>(sut.Ensure);
+        var ex = await Should.ThrowAsync<Exception>(sut.EnsureAsync);
         ex.ToString().ShouldContain("boom");
     }
 
@@ -43,7 +43,7 @@ public class EFCoreDatabaseBackedServiceTests
         sut.BeginInitialization();
         await WaitUntilFinishedAsync(sut);
 
-        var ex = await Should.ThrowAsync<Exception>(sut.Ensure);
+        var ex = await Should.ThrowAsync<Exception>(sut.EnsureAsync);
         ex.ToString().ShouldContain("boom");
     }
 
@@ -60,9 +60,9 @@ public class EFCoreDatabaseBackedServiceTests
         dbHelper.SQLInstance.Returns("instance");
         using var sut = CreateService(dbHelper);
 
-        (await Should.ThrowAsync<Exception>(sut.Ensure)).ToString().ShouldContain("boom");
+        (await Should.ThrowAsync<Exception>(sut.EnsureAsync)).ToString().ShouldContain("boom");
 
-        await sut.Ensure();
+        await sut.EnsureAsync();
 
         sut.IsInitialized.ShouldBeTrue();
         sut.HookRuns.ShouldBe(1);
@@ -106,7 +106,7 @@ public class EFCoreDatabaseBackedServiceTests
             });
         using var sut = CreateService(dbHelper, dbConfig, [dependency]);
 
-        await sut.Ensure();
+        await sut.EnsureAsync();
 
         seenByDependency.ShouldBe("instance");
         dbConfig.SqlInstance.ShouldBe("instance");
@@ -142,7 +142,7 @@ public class EFCoreDatabaseBackedServiceTests
 
         public int HookRuns { get; private set; }
 
-        public Task Ensure() => EnsureIsInitializedAsync();
+        public Task EnsureAsync() => EnsureIsInitializedAsync();
 
         // Skips the SQL server probe and migrations of PooledDbService; only the pre-dependency step is under test.
         protected override Task OnInitializeAsync()

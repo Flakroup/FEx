@@ -1,9 +1,9 @@
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -40,7 +40,9 @@ public sealed class PartialMethodWithSinglePartAnalyzer : DiagnosticAnalyzer
         // The unfinished accessor of a partial property, typed in an editor, is a partial definition too.
         if (method.DeclaringSyntaxReferences[0].GetSyntax(context.CancellationToken) is not MethodDeclarationSyntax syntax
             || AnalyzerHelpers.IsNamedInDisabledCode(context.Compilation, method.Name, context.CancellationToken))
+        {
             return;
+        }
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, syntax.Modifiers.First(modifier => modifier.IsKind(SyntaxKind.PartialKeyword)).GetLocation(), method.Name));
     }

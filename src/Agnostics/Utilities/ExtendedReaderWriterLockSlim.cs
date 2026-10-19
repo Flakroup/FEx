@@ -99,8 +99,10 @@ public class ExtendedReaderWriterLockSlim : ReaderWriterLockSlim
                 $"Couldn't acquire {type} lock for {_ownerType.FullName} in {timeout.GetTime()}. Retrying {retry}/{maxRetries}...");
 
             if (retry >= maxRetries)
+            {
                 throw new TimeoutException(
                     $"Failed to acquire {type} lock for {_ownerType.FullName} after {maxRetries} retries ({maxRetries * 30}s total).");
+            }
         }
     }
 

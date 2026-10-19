@@ -1,11 +1,11 @@
 using FEx.Agnostics.Abstractions.Models;
 using FEx.Core.Abstractions.Extensions;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Xunit;
 

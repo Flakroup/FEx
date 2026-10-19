@@ -115,7 +115,9 @@ public class FExTimer : NotifyPropertyChanged, IFExTimer
     {
         if (!IsRunning
             || cancellationToken.IsCancellationRequested)
+        {
             return;
+        }
 
         await callback();
     }

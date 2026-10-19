@@ -32,10 +32,14 @@ public static class NetworkUtilities
                     .ToList();
 
                 if (!dictionary.ContainsKey(item.NetworkInterfaceType))
+                {
                     dictionary.Add(item.NetworkInterfaceType, [.. ipAddresses]);
+                }
                 else
+                {
                     foreach (var ip in ipAddresses)
                         dictionary[item.NetworkInterfaceType].Add(ip);
+                }
             }
         }
 

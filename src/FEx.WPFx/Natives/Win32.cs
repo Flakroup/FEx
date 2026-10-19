@@ -19,7 +19,7 @@ public static class Win32
                                      uint uFlags) =>
         SHGetFileInfo(pszPath, dwFileAttributes, ref psfi, cbSizeFileInfo, uFlags);
 
-    public static void DestroySHIcon(SHFileInfo shinfo) => DestroyIcon(shinfo.hIcon);
+    public static void DestroySHIcon(SHFileInfo shinfo) => _ = DestroyIcon(shinfo.hIcon);
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     private static extern IntPtr SHGetFileInfo(string pszPath,

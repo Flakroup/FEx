@@ -34,12 +34,16 @@ public static class FileUtils
         if (!fromPath.EndsWith(Path.DirectorySeparatorChar.ToString())
             && !fromPath.EndsWith(Path.AltDirectorySeparatorChar.ToString())
             && fromIs == PathIs.Folder)
+        {
             fromPath += Path.DirectorySeparatorChar;
+        }
 
         if (!toPath.EndsWith(Path.DirectorySeparatorChar.ToString())
             && !toPath.EndsWith(Path.AltDirectorySeparatorChar.ToString())
             && toIs == PathIs.Folder)
+        {
             toPath += Path.DirectorySeparatorChar;
+        }
 
         var fromUri = new Uri(fromPath);
         var toUri = new Uri(toPath);

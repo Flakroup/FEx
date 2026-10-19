@@ -172,7 +172,7 @@ public sealed class FExPollyPolicyBuilderRedactionTests
     }
 
     private List<string> CapturedLogLines() =>
-        _logger.ReceivedCalls()
+        [.. _logger.ReceivedCalls()
             .SelectMany(static c => c.GetArguments())
             .Select(static a => a switch
             {
@@ -180,8 +180,7 @@ public sealed class FExPollyPolicyBuilderRedactionTests
                 Exception e => e.ToString(),
                 _ => null
             })
-            .OfType<string>()
-            .ToList();
+            .OfType<string>()];
 
     private static void AssertNoSecrets(List<string> logs)
     {

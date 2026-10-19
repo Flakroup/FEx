@@ -4,6 +4,10 @@
         <!-- Opt in to the DevConfigs NuGet package defaults (XML docs, embedded sources, symbol packages, SourceLink,
              license metadata). Must be set before the DevConfigs props import below. -->
         <DevConfigsPackageDefaults>true</DevConfigsPackageDefaults>
+        <!-- Copies DevConfigs/.editorconfig to the repository root (gitignored) on every restore and build: an
+             .editorconfig only governs the files beneath it, and the compiler and dotnet format read none other.
+             Must be set before the DevConfigs props import below. -->
+        <DevConfigsMirrorEditorConfig>true</DevConfigsMirrorEditorConfig>
     </PropertyGroup>
 
     <Import Project="$(MSBuildThisFileDirectory)\DevConfigs\Directory.Build.props"/>

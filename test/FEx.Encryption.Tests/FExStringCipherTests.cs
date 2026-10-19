@@ -17,7 +17,7 @@ public sealed class FExStringCipherTests
     private const int FastIterations = FExStringCipher.MinIterations;
     private const string PassPhrase = "correct horse battery staple";
 
-    private static readonly FExStringCipher _cipher = new(PassPhrase, FastIterations);
+    private static readonly FExStringCipher TestCipher = new(PassPhrase, FastIterations);
 
     public static TheoryData<string> Plaintexts =>
         new()
@@ -34,7 +34,7 @@ public sealed class FExStringCipherTests
     [Theory]
     [MemberData(nameof(Plaintexts))]
     public void RoundTrip_ReturnsTheOriginal(string plainText) =>
-        _cipher.Decrypt(_cipher.Encrypt(plainText)).ShouldBe(plainText);
+        TestCipher.Decrypt(TestCipher.Encrypt(plainText)).ShouldBe(plainText);
 
     [Theory]
     [InlineData("short")]
@@ -49,20 +49,20 @@ public sealed class FExStringCipherTests
 
     [Fact]
     public void Encrypt_ProducesADifferentEnvelopeEveryTime() =>
-        _cipher.Encrypt("same").ShouldNotBe(_cipher.Encrypt("same"));
+        TestCipher.Encrypt("same").ShouldNotBe(TestCipher.Encrypt("same"));
 
     [Fact]
     public void Encrypt_RejectsNull() =>
-        Should.Throw<ArgumentNullException>(() => _cipher.Encrypt(null!));
+        Should.Throw<ArgumentNullException>(() => TestCipher.Encrypt(null!));
 
     [Fact]
     public void Decrypt_RejectsNull() =>
-        Should.Throw<ArgumentNullException>(() => _cipher.Decrypt(null!));
+        Should.Throw<ArgumentNullException>(() => TestCipher.Decrypt(null!));
 
     [Fact]
     public void Decrypt_WithAnotherPassPhrase_ThrowsInsteadOfReturningGarbage()
     {
-        var envelope = _cipher.Encrypt("secret");
+        var envelope = TestCipher.Encrypt("secret");
         var other = new FExStringCipher("an entirely different passphrase", FastIterations);
 
         Should.Throw<FExDecryptionException>(() => other.Decrypt(envelope));
@@ -76,9 +76,9 @@ public sealed class FExStringCipherTests
     [InlineData(72, "ciphertext")]
     public void Decrypt_DetectsAFlippedByteAnywhereInTheEnvelope(int offset, string field)
     {
-        var tampered = Tamper(_cipher.Encrypt("secret"), offset);
+        var tampered = Tamper(TestCipher.Encrypt("secret"), offset);
 
-        Should.Throw<FExDecryptionException>(() => _cipher.Decrypt(tampered),
+        Should.Throw<FExDecryptionException>(() => TestCipher.Decrypt(tampered),
             $"a flipped byte in the {field} must not pass");
     }
 
@@ -92,37 +92,37 @@ public sealed class FExStringCipherTests
     {
         // Reaching key derivation with int.MaxValue here would spin billions of HMAC rounds inside what is,
         // in real use, a property getter. The bound has to be checked before the salt is ever used.
-        var envelope = Convert.FromBase64String(_cipher.Encrypt("secret"));
+        var envelope = Convert.FromBase64String(TestCipher.Encrypt("secret"));
         envelope[1] = (byte)(iterations >> 24);
         envelope[2] = (byte)(iterations >> 16);
         envelope[3] = (byte)(iterations >> 8);
         envelope[4] = (byte)iterations;
 
-        Should.Throw<FExDecryptionException>(() => _cipher.Decrypt(Convert.ToBase64String(envelope)));
+        Should.Throw<FExDecryptionException>(() => TestCipher.Decrypt(Convert.ToBase64String(envelope)));
     }
 
     [Fact]
     public void Decrypt_RejectsAnUnknownEnvelopeVersion()
     {
-        var envelope = Convert.FromBase64String(_cipher.Encrypt("secret"));
+        var envelope = Convert.FromBase64String(TestCipher.Encrypt("secret"));
         envelope[0] = 0x02;
 
-        Should.Throw<FExDecryptionException>(() => _cipher.Decrypt(Convert.ToBase64String(envelope)));
+        Should.Throw<FExDecryptionException>(() => TestCipher.Decrypt(Convert.ToBase64String(envelope)));
     }
 
     [Fact]
     public void Decrypt_RejectsAValueTooShortToBeAnEnvelope()
     {
-        var envelope = Convert.FromBase64String(_cipher.Encrypt("secret"));
+        var envelope = Convert.FromBase64String(TestCipher.Encrypt("secret"));
         var truncated = new byte[50];
         Buffer.BlockCopy(envelope, 0, truncated, 0, truncated.Length);
 
-        Should.Throw<FExDecryptionException>(() => _cipher.Decrypt(Convert.ToBase64String(truncated)));
+        Should.Throw<FExDecryptionException>(() => TestCipher.Decrypt(Convert.ToBase64String(truncated)));
     }
 
     [Fact]
     public void Decrypt_RejectsSomethingThatIsNotBase64() =>
-        Should.Throw<FExDecryptionException>(() => _cipher.Decrypt("this is not base64 !!!"));
+        Should.Throw<FExDecryptionException>(() => TestCipher.Decrypt("this is not base64 !!!"));
 
     [Fact]
     public void Decrypt_ReadsValuesWrittenUnderADifferentSaltBySameSecret()
@@ -200,7 +200,7 @@ public sealed class FExStringCipherTests
         const string expected =
             "AQAAJxAAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHwOwlfbA+BguftrmrsBZzch/IwyRwYdErxLEgiqx/H4ClGxYlODfuCcUKZkgRcf8cgUSnox2uuLvXTg7RnZKJAw=";
 
-        var envelope = _cipher.EncryptCore("golden plaintext ✓", Bytes(16, 0x00), FExStringCipher.MinIterations,
+        var envelope = TestCipher.EncryptCore("golden plaintext ✓", Bytes(16, 0x00), FExStringCipher.MinIterations,
             Bytes(16, 0x10));
 
         envelope.ShouldBe(expected);
@@ -260,7 +260,7 @@ public sealed class FExStringCipherTests
     }
 
     private static byte[] Bytes(int length, byte start) =>
-        Enumerable.Range(0, length).Select(i => (byte)(start + i)).ToArray();
+        [.. Enumerable.Range(0, length).Select(i => (byte)(start + i))];
 
     private static string Tamper(string envelope, int offset)
     {

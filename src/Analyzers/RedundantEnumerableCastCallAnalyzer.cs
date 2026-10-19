@@ -1,10 +1,10 @@
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -46,7 +46,9 @@ public sealed class RedundantEnumerableCastCallAnalyzer : DiagnosticAnalyzer
         if (call.Expression is not MemberAccessExpressionSyntax access
             || model.GetSymbolInfo(call, context.CancellationToken).Symbol is not IMethodSymbol { Name: "Cast" } method
             || !SymbolEqualityComparer.Default.Equals(method.ContainingType, model.Compilation.GetTypeByMetadataName("System.Linq.Enumerable")))
+        {
             return;
+        }
 
         var source = method.ReducedFrom is null
             ? call.ArgumentList.Arguments[0].Expression

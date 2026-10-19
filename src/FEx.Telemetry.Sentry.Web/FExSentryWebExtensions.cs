@@ -1,8 +1,8 @@
 using FEx.Agnostics.Abstractions.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Sentry;
 using Sentry.AspNetCore;
 using Sentry.Extensibility;
@@ -141,7 +141,9 @@ public static class FExSentryWebExtensions
         foreach (var name in request.Headers.Keys
                      .Where(static name => !SafeRequestHeaders.Contains(name, StringComparer.OrdinalIgnoreCase))
                      .ToList())
+        {
             request.Headers.Remove(name);
+        }
 
         request.QueryString = null;
         request.Data = null;

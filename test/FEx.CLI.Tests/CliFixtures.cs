@@ -75,7 +75,6 @@ internal static class CliFixtures
         public string? Y { get; set; }
     }
 
-
     public sealed class Throwing
     {
         [Option("boom")]

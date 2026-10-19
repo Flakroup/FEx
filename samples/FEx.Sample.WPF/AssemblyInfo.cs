@@ -1,9 +1,6 @@
 using System.Windows;
 
-[assembly: ThemeInfo(ResourceDictionaryLocation.None, //where theme specific resource dictionaries are located
-    //(used if a resource is not found in the page,
-    // or application resource dictionaries)
-    ResourceDictionaryLocation.SourceAssembly //where the generic resource dictionary is located
-    //(used if a resource is not found in the page,
-    // app, or any theme specific resource dictionaries)
-)]
+// ResourceDictionaryLocation.None: theme specific resource dictionaries are not used.
+// ResourceDictionaryLocation.SourceAssembly: the generic resource dictionary lives in the source assembly,
+// consulted when a resource is not found in the page, the app or any theme specific dictionary.
+[assembly: ThemeInfo(ResourceDictionaryLocation.None, ResourceDictionaryLocation.SourceAssembly)]

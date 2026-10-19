@@ -1,12 +1,12 @@
-using System.Collections.Concurrent;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using System.Collections.Concurrent;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -52,14 +52,18 @@ public sealed class ConvertToConstantLocalAnalyzer : DiagnosticAnalyzer
                 || declarator.Symbol is not { IsConst: false } local
                 || !AnalyzerHelpers.IsConstantType(local.Type)
                 || !IsConstantInitializer(declarator.Initializer!.Value, initializer.Value))
+            {
                 continue;
+            }
 
             var uses = references[local].ToList();
             if (uses.Count > 0
                 && !uses.Any(IsWriteOrAddress)
                 && !uses.Any(use => ChangesBinding(use, initializer.Value, local.Type, context.CancellationToken))
                 && !AnalyzerHelpers.IsGenerated(syntax.SyntaxTree, context.OwningSymbol, context.Options, context.CancellationToken))
+            {
                 context.ReportDiagnostic(Diagnostic.Create(Rule, syntax.Identifier.GetLocation(), local.Name));
+            }
         }
     }
 

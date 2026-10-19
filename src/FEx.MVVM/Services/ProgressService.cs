@@ -16,11 +16,11 @@ namespace FEx.MVVM.Services;
 
 public sealed class ProgressService : SubscriberBase, IProgressService
 {
-    private static readonly Lazy<ProgressService> _lazy = new(() => new());
+    private static readonly Lazy<ProgressService> LazyInstance = new(() => new());
 
     public static string? MainContainerId { get; private set; }
 
-    public static ProgressService Instance => _lazy.Value;
+    public static ProgressService Instance => LazyInstance.Value;
 
     public ConcurrentDictionary<string, IProgressAggregator> Containers { get; }
     public ConcurrentDictionary<string, ISet<ReceiverDefinition>> Listeners { get; }

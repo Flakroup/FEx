@@ -1,7 +1,7 @@
-using System;
 using FEx.DependencyInjection.Abstractions;
 using FEx.Samples.Shared;
 using FEx.WPFx.Abstractions;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 

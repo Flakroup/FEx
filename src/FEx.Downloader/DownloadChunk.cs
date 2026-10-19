@@ -88,7 +88,9 @@ public sealed class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisp
 
         if (!CheckIfChunkFileIsFinished()
             && File.Exists)
+        {
             FixChunkFileSize();
+        }
     }
 
     public DownloadChunk(string rangeHeader, DirectoryInfo directory, IProgress<double>? progress)
@@ -100,7 +102,9 @@ public sealed class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisp
     {
         if (!File.Exists
             || File.Length != ExpectedSize)
+        {
             return false;
+        }
 
         Size = File.Length;
 
@@ -131,8 +135,10 @@ public sealed class DownloadChunk : NotifyPropertyChanged, IDownloadChunk, IDisp
         File.Refresh();
 
         if (File.Exists)
+        {
             using (var fileStream = File.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 fileStream.SetLength(Size);
+        }
     }
 
     private void CloseFileStream()

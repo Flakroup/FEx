@@ -68,7 +68,9 @@ internal static class JsonPathRedaction
         if (contract.Converter is not null
             || serializer.Converters.Any(converter => converter.CanConvert(contract.UnderlyingType))
             || contract.InternalConverter is not null)
+        {
             return Redacted(builder);
+        }
 
         var child = AppendSegment(builder, segment, contract, serializer.ContractResolver);
 
@@ -146,7 +148,9 @@ internal static class JsonPathRedaction
                     NumberStyles.None,
                     CultureInfo.InvariantCulture,
                     out var index))
+            {
                 return false;
+            }
 
             position = end + 1;
             segment = new(path.Substring(start, position - start), null, index, false);

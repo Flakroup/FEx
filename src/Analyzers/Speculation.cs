@@ -1,8 +1,8 @@
-using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -23,8 +23,10 @@ internal static class Speculation
     {
         // 'o?.M(x)' has no standalone form to bind; ask about 'o.M(x)' instead.
         if (owner is InvocationExpressionSyntax { Expression: MemberBindingExpressionSyntax binding } && owner.Parent is ConditionalAccessExpressionSyntax access)
+        {
             edited = ((InvocationExpressionSyntax)edited).WithExpression(
                 SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, access.Expression, binding.Name));
+        }
 
         // A '.x' or '[x]' whose '?' is outside the rewrite has nothing to bind against, and the binder throws on it.
         if (HasDanglingBinding(edited))

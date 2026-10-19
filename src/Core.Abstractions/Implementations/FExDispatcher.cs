@@ -69,9 +69,13 @@ public abstract class FExDispatcher : IFExDispatcher
 
         if (CheckAccess(sender)
             || context is null)
+        {
             action();
+        }
         else
+        {
             context.SendInContext(sender, action);
+        }
     }
 
     public virtual T InvokeOnMainThread<T>(Func<T> action, object? sender = null)

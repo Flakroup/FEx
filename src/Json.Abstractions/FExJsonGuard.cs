@@ -20,15 +20,19 @@ public static class FExJsonGuard
             // Newtonsoft writes null for any type while System.Text.Json rejects it for a value type: reject it in both.
             if (inputType.IsValueType
                 && Nullable.GetUnderlyingType(inputType) is null)
+            {
                 throw new ArgumentException($"A null value is not an instance of {inputType.FullName}.", nameof(value));
+            }
 
             return;
         }
 
         if (!inputType.IsInstanceOfType(value))
+        {
             throw new ArgumentException(
                 $"The value of type {value.GetType().FullName} is not an instance of {inputType.FullName}.",
                 nameof(value));
+        }
     }
 
     /// <summary>

@@ -172,7 +172,9 @@ public abstract class AppBootstrapper<TContainer> : Application
                     MessageIcon.Exclamation,
                     FExMessageButton.YesNo)
                 == MessageResult.No)
+            {
                 ExitApp(0);
+            }
 
             foreach (var pid in otherInstances)
             {

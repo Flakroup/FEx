@@ -59,7 +59,9 @@ public class ProgressState
     {
         if (!Sw.IsRunning
             && progress.BytesTransferred == 0)
+        {
             Sw.Restart();
+        }
 
         if (progress.BytesTransferred > 0
             && LoggedProgress != progress.BytesTransferred)

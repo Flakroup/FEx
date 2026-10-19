@@ -1,8 +1,8 @@
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -44,7 +44,9 @@ public sealed class MethodHasAsyncOverloadWithCancellationAnalyzer : DiagnosticA
             || FindAsyncOverload(context, sync, token) is not { } overload
             || SymbolEqualityComparer.Default.Equals(context.ContainingSymbol, overload)
             || !CancellationScope.HasTokenInScope(invocation, context.ContainingSymbol, token))
+        {
             return;
+        }
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, invocation.Syntax.GetLocation(), sync.Name, overload.Name));
     }

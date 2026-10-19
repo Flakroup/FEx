@@ -170,9 +170,13 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
         {
             if (res.Count == 0
                 || res[res.Count - 1][1] != t - 1)
+            {
                 res.Add([t, t]);
+            }
             else
+            {
                 res[res.Count - 1][1] = t;
+            }
         }
 
         return [.. res.Select(x => (start: x[0], end: x[1]))];
@@ -195,9 +199,11 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
 
         if (DState != DownloadState.Failed
             && DState != DownloadState.Cancelled)
+        {
             DState = isFinished
                 ? DownloadState.Finished
                 : DownloadState.InProgress;
+        }
     }
 
     private async Task ProcessDownloadAsync(int startChunkKey, int endChunkKey)
@@ -219,10 +225,12 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
                 || retrievedContentRange.From.Value != From
                 || retrievedContentRange.To.Value != To
                 || response.Content.Headers.ContentLength != To - From + 1)
+            {
                 // Retrying a server that ignores the range would only repeat the same answer.
                 throw new HttpStatusException(response.StatusCode,
                     Url,
                     "The server did not honour the requested range");
+            }
 
             using var streamResponse = await response.ReadContentStreamAsync(CancellationToken);
 
@@ -287,7 +295,9 @@ public sealed class DownloadRange : NotifyPropertyChanged, IDownloadRange, IDisp
         {
             if (DState != DownloadState.Failed
                 && DState != DownloadState.Cancelled)
+            {
                 HandleChunks();
+            }
         }
     }
 

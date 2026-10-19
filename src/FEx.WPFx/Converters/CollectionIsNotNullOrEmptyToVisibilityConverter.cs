@@ -30,9 +30,11 @@ public class CollectionIsNotNullOrEmptyToVisibilityConverter : IValueConverter
     public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is IEnumerable<object> res)
+        {
             return res.IsNotNullOrEmptyEnumerable()
                 ? Visibility.Visible
                 : Visibility.Collapsed;
+        }
 
         return false;
     }

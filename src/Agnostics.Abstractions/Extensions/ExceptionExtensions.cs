@@ -12,7 +12,7 @@ public static class ExceptionExtensions
     // Private runtime field; its name is not guaranteed on every runtime. When it is missing the stack trace
     // cannot be replaced, so SetStackTrace degrades to leaving the exception untouched instead of throwing from
     // the type initializer (which would break every member of this class).
-    private static readonly FieldInfo? _stackTraceStringField =
+    private static readonly FieldInfo? StackTraceStringField =
         typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
 
     /// <summary>
@@ -26,7 +26,7 @@ public static class ExceptionExtensions
         stack.Guard(nameof(stack));
 
         // The public ToString() is the "normal" trace plus a trailing newline, which Exception.StackTrace does not have.
-        _stackTraceStringField?.SetValue(target, stack.ToString().TrimEnd('\r', '\n'));
+        StackTraceStringField?.SetValue(target, stack.ToString().TrimEnd('\r', '\n'));
 
         return target;
     }

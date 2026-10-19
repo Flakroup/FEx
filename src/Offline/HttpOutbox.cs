@@ -182,12 +182,16 @@ public sealed class HttpOutbox
         ArgumentNullException.ThrowIfNull(replayHeaders);
 
         if (maxServerFailures < 1)
+        {
             throw new ArgumentOutOfRangeException(nameof(maxServerFailures), maxServerFailures,
                 "An entry needs at least one server failure to be dead-lettered.");
+        }
 
         if (maxUnavailableAnswers < 1)
+        {
             throw new ArgumentOutOfRangeException(nameof(maxUnavailableAnswers), maxUnavailableAnswers,
                 "An entry needs at least one unavailable answer to be dead-lettered.");
+        }
 
         _store = store;
         _time = time;
@@ -206,9 +210,11 @@ public sealed class HttpOutbox
         foreach (var (name, value) in _replayHeaders)
         {
             if (string.Equals(name, IdempotencyHeader, StringComparison.OrdinalIgnoreCase))
+            {
                 throw new ArgumentException(
                     $"'{IdempotencyHeader}' is sent by the outbox itself, from each entry's id.",
                     nameof(replayHeaders));
+            }
 
             if (string.IsNullOrWhiteSpace(value))
                 throw new ArgumentException($"Replay header '{name}' has no value.", nameof(replayHeaders));
@@ -516,8 +522,10 @@ public sealed class HttpOutbox
         foreach (var key in keys.OrderBy(k => k, StringComparer.Ordinal))
         {
             if (await _store.GetAsync(key) is { } stored)
+            {
                 entries.Add(deserialize(stored)
                             ?? throw new InvalidOperationException($"Outbox entry '{key}' stored as JSON null."));
+            }
         }
 
         return entries;

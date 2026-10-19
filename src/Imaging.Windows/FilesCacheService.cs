@@ -143,7 +143,9 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
         if (entry.FilePath is not null
             && File.Exists(entry.FilePath)
             && !force)
+        {
             return false;
+        }
 
         var file = FilesCacheDir.GetDescendantFile(fileName);
         defaultImage.Save(file.FullName, format);
@@ -305,12 +307,14 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
                                                    Func<Uri, Uri>? urlModifier = null)
     {
         if (EntryCacheShouldBePrepared(entry, refresh))
+        {
             _ = await entry.CachedImage!.PrepareCacheAsync(pars,
                 refresh,
                 UseHttpClientService,
                 response,
                 checksum,
                 urlModifier);
+        }
 
         return entry.DoesCacheExists();
     }
@@ -318,6 +322,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
     protected override async Task OnInitializeAsync()
     {
         if (await InitializationSemaphore.WaitAsync(TimeSpan.Zero))
+        {
             try
             {
                 if (!IsInitialized)
@@ -347,6 +352,7 @@ public class FilesCacheService : AsyncInitializable, IFilesCacheService
             {
                 InitializationSemaphore.Release();
             }
+        }
     }
 
     private async Task RemoveIndexEntriesAsync(params IndexEntry[] entries)

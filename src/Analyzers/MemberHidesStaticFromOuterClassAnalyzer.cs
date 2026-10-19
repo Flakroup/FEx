@@ -1,7 +1,7 @@
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -69,7 +69,7 @@ public sealed class MemberHidesStaticFromOuterClassAnalyzer : DiagnosticAnalyzer
         if (nested.TypeParameters.Length != outer.TypeParameters.Length || nested.Parameters.Length != outer.Parameters.Length)
             return false;
 
-        var comparable = outer.IsGenericMethod ? outer.Construct(nested.TypeParameters.Cast<ITypeSymbol>().ToArray()) : outer;
+        var comparable = outer.IsGenericMethod ? outer.Construct([.. nested.TypeParameters.Cast<ITypeSymbol>()]) : outer;
         return !nested.Parameters
             .Where((parameter, index) => parameter.RefKind != comparable.Parameters[index].RefKind
                                          || !SymbolEqualityComparer.Default.Equals(parameter.Type, comparable.Parameters[index].Type))

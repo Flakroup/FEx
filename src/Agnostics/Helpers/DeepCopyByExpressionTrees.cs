@@ -71,7 +71,9 @@ public static class DeepCopyByExpressionTrees
 
         if (!forceDeepCopy
             && !IsTypeToDeepCopy(type))
+        {
             return original;
+        }
 
         if (copiedReferencesDict.TryGetValue(original, out var alreadyCopiedObject))
             return alreadyCopiedObject;
@@ -92,6 +94,7 @@ public static class DeepCopyByExpressionTrees
         // we replace it with a new instance everytime.
 
         if (!_compiledCopyFunctionsDictionary.TryGetValue(type, out var compiledCopyFunction))
+        {
             lock (CompiledCopyFunctionsDictionaryLocker)
             {
                 if (!_compiledCopyFunctionsDictionary.TryGetValue(type, out compiledCopyFunction))
@@ -108,6 +111,7 @@ public static class DeepCopyByExpressionTrees
                     _compiledCopyFunctionsDictionary = dictionaryCopy;
                 }
             }
+        }
 
         return compiledCopyFunction;
     }
@@ -147,12 +151,14 @@ public static class DeepCopyByExpressionTrees
 
         if (IsArray(type)
             && IsTypeToDeepCopy(type.GetElementType()!))
+        {
             CreateArrayCopyLoopExpression(type,
                 inputParameter,
                 inputDictionary,
                 outputVariable,
                 variables,
                 expressions);
+        }
 
         ///// COMBINE ALL EXPRESSIONS INTO LAMBDA FUNCTION
 
@@ -622,6 +628,7 @@ public static class DeepCopyByExpressionTrees
         // we replace it with a new instance everytime.
 
         if (!_isStructTypeToDeepCopyDictionary.TryGetValue(type, out var isStructTypeToDeepCopy))
+        {
             lock (IsStructTypeToDeepCopyDictionaryLocker)
             {
                 if (!_isStructTypeToDeepCopyDictionary.TryGetValue(type, out isStructTypeToDeepCopy))
@@ -636,6 +643,7 @@ public static class DeepCopyByExpressionTrees
                     _isStructTypeToDeepCopyDictionary = newDictionary;
                 }
             }
+        }
 
         return isStructTypeToDeepCopy;
     }

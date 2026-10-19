@@ -40,6 +40,7 @@ public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposabl
             Log(txt, level, exception);
 
             if (informUser && !AppIsClosing)
+            {
                 return await ShowMessageBoxOnceAndCacheAsync(txt,
                     caption,
                     wait,
@@ -47,10 +48,12 @@ public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposabl
                     (MessageBoxButton)button,
                     ownerWindow as Window,
                     sw);
+            }
         }
         catch (Exception ex)
         {
             if (!AppIsClosing)
+            {
                 return await ShowMessageBoxOnceAndCacheAsync(ex.ToString(),
                     caption,
                     wait,
@@ -58,6 +61,7 @@ public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposabl
                     (MessageBoxButton)button,
                     ownerWindow as Window,
                     sw);
+            }
         }
 
         return MessageResult.None;
@@ -96,15 +100,19 @@ public sealed class WpfMessagePopupService : MessagePopupServiceBase, IDisposabl
     {
         if (Application.Current is null
             || !MessagesCache.Add(message))
+        {
             return MessageResult.None;
+        }
 
         await MessagesCacheSemaphore.WaitAsync();
 
         try
         {
             if (wait)
+            {
                 return (MessageResult)await FExCoreStatics.Dispatcher.InvokeOnMainThreadAsync(() =>
                     InternalShowMessageBox(message, caption, messageBoxImage, buttons, owner, sw));
+            }
 
             FExCoreStatics.Dispatcher.BeginInvokeOnMainThread(() =>
                 InternalShowMessageBox(message, caption, messageBoxImage, buttons, owner, sw));

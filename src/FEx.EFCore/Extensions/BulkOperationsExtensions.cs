@@ -1,4 +1,4 @@
-﻿using EFCore.BulkExtensions;
+using EFCore.BulkExtensions;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.EFCore.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -148,7 +148,7 @@ public static class BulkOperationsExtensions
                             hasCompleted = p == 1;
                             service.ProgressAction(p, id, type, tableName);
                         }
-                        : null,
+            : null,
                     null,
                     cancellationToken),
                 errorMessage,

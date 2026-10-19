@@ -1,8 +1,8 @@
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
 
 namespace FEx.Analyzers;
 
@@ -38,7 +38,9 @@ public sealed class RedundantDelegateCreationAnalyzer : DiagnosticAnalyzer
 
         if (creation.ArgumentList is not { Arguments: [var argument] }
             || model.GetTypeInfo(creation, context.CancellationToken) is not { Type.TypeKind: TypeKind.Delegate, ConvertedType.TypeKind: TypeKind.Delegate } info)
+        {
             return;
+        }
 
         SyntaxNode node = creation;
         while (node.Parent is ParenthesizedExpressionSyntax)
@@ -52,7 +54,9 @@ public sealed class RedundantDelegateCreationAnalyzer : DiagnosticAnalyzer
             || node.Parent is InitializerExpressionSyntax { Parent: ImplicitArrayCreationExpressionSyntax }
             || node.Parent is BinaryExpressionSyntax binary && !binary.IsKind(SyntaxKind.CoalesceExpression)
             || node.Parent is EqualsValueClauseSyntax { Parent: VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax { Type.IsVar: true } } })
+        {
             return;
+        }
 
         if (!model.ClassifyConversion(argument.Expression, info.ConvertedType).IsImplicit)
             return;
@@ -61,7 +65,9 @@ public sealed class RedundantDelegateCreationAnalyzer : DiagnosticAnalyzer
         if (node.Parent is ArgumentSyntax passed
             && (Speculation.OwnerOf(passed) is not { } owner
                 || !Speculation.BindsToSame(model, owner, owner.ReplaceNode(creation, argument.Expression.WithTriviaFrom(creation)), context.CancellationToken)))
+        {
             return;
+        }
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, creation.GetLocation()));
     }

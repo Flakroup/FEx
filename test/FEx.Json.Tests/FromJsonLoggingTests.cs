@@ -35,7 +35,7 @@ public sealed class FromJsonLoggingTests : IDisposable
     [Fact]
     public void FromJson_ValueOfTheWrongType_LogsTypePathAndExceptionTypeButNotTheSecret()
     {
-        Should.Throw<JsonReaderException>(() => LeakMarkerJson.FromJson<Dictionary<string, int>>());
+        Should.Throw<JsonReaderException>(LeakMarkerJson.FromJson<Dictionary<string, int>>);
 
         AssertNoLoggedSecret();
         LoggedText().ShouldContain(typeof(Dictionary<string, int>).FullName!);
@@ -91,8 +91,8 @@ public sealed class FromJsonLoggingTests : IDisposable
     [Fact]
     public void FromJson_ArrayIndexAndNestedProperty_AreLoggedWhileTheKeyBelowThemIsNot()
     {
-        Should.Throw<JsonReaderException>(() =>
-            "{\"Children\":[{},{\"DailyLimits\":{\"password123\":\"x\"}}]}".FromJson<JsonPathRedactionTests.Account>());
+        Should.Throw<JsonReaderException>(
+            "{\"Children\":[{},{\"DailyLimits\":{\"password123\":\"x\"}}]}".FromJson<JsonPathRedactionTests.Account>);
 
         LoggedText().ShouldContain("at path 'Children[1].DailyLimits[*]'");
         LoggedArguments().ShouldAllBe(text => !text.Contains("password123"));
@@ -101,8 +101,8 @@ public sealed class FromJsonLoggingTests : IDisposable
     [Fact]
     public void FromJson_JTokenMember_LogsTheMemberAndRedactsTheRest()
     {
-        Should.Throw<JsonReaderException>(() =>
-            "{\"Extra\":{\"password123\":{\"pin\":}}}".FromJson<JsonPathRedactionTests.Account>());
+        Should.Throw<JsonReaderException>(
+            "{\"Extra\":{\"password123\":{\"pin\":}}}".FromJson<JsonPathRedactionTests.Account>);
 
         LoggedText().ShouldContain("at path 'Extra[*][*]'");
         LoggedArguments().ShouldAllBe(text => !text.Contains("password123"));
@@ -137,8 +137,8 @@ public sealed class FromJsonLoggingTests : IDisposable
     [Fact]
     public void FromJson_DataTableColumnName_IsNotLogged()
     {
-        Should.Throw<JsonReaderException>(() =>
-            "{\"Table\":[{\"password123\":}]}".FromJson<JsonPathRedactionTests.Report>());
+        Should.Throw<JsonReaderException>(
+            "{\"Table\":[{\"password123\":}]}".FromJson<JsonPathRedactionTests.Report>);
 
         LoggedText().ShouldContain("at path 'Table[*][*]'");
         LoggedArguments().ShouldAllBe(text => !text.Contains("password123"));
@@ -147,8 +147,8 @@ public sealed class FromJsonLoggingTests : IDisposable
     [Fact]
     public void FromJson_DataSetTableAndColumnNames_AreNotLogged()
     {
-        Should.Throw<JsonReaderException>(() =>
-            "{\"Data\":{\"secrets\":[{\"password123\":}]}}".FromJson<JsonPathRedactionTests.Report>());
+        Should.Throw<JsonReaderException>(
+            "{\"Data\":{\"secrets\":[{\"password123\":}]}}".FromJson<JsonPathRedactionTests.Report>);
 
         LoggedText().ShouldContain("at path 'Data[*][*][*]'");
         LoggedArguments().ShouldAllBe(text => !text.Contains("secrets") && !text.Contains("password123"));
@@ -176,8 +176,8 @@ public sealed class FromJsonLoggingTests : IDisposable
 
         try
         {
-            Should.Throw<JsonReaderException>(() =>
-                "{\"Thing\":{\"Name\":}}".FromJson<JsonPathRedactionTests.Account>());
+            Should.Throw<JsonReaderException>(
+                "{\"Thing\":{\"Name\":}}".FromJson<JsonPathRedactionTests.Account>);
         }
         finally
         {

@@ -1,6 +1,6 @@
+using Shouldly;
 using System;
 using System.IO;
-using Shouldly;
 using Xunit;
 
 namespace FEx.Analyzers.Tests;

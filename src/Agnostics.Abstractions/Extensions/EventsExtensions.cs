@@ -17,7 +17,9 @@ public static class EventsExtensions
     {
         if (propertyName is null
             || handler is null)
+        {
             return;
+        }
 
         var e = new PropertyChangedEventArgs(propertyName);
         handler.HandlePropertyChanged(sender, e);
@@ -56,13 +58,18 @@ public static class EventsExtensions
     {
         if (eventArgs is null
             || handler is null)
+        {
             return;
+        }
 
         foreach (var invocation in handler.GetInvocationList())
         {
             if (invocation.Target is ISynchronizeInvoke { InvokeRequired: true } synchronizeInvoke)
+            {
                 synchronizeInvoke.Invoke(invocation, [sender, eventArgs]);
+            }
             else
+            {
                 switch (invocation)
                 {
                     case THandler collectionChangedEventHandler:
@@ -76,6 +83,7 @@ public static class EventsExtensions
                     default:
                         throw new($"{invocation.GetType().FullName} delegate type is not handled");
                 }
+            }
         }
     }
 }

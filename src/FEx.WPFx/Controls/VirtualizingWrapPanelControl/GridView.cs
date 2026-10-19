@@ -159,6 +159,7 @@ public class GridView : ListView
         int targetIndex;
 
         if (Orientation == Orientation.Vertical)
+        {
             switch (e.Key)
             {
                 case Key.Left:
@@ -172,7 +173,9 @@ public class GridView : ListView
                 default:
                     return;
             }
+        }
         else
+        {
             switch (e.Key)
             {
                 case Key.Up:
@@ -186,10 +189,13 @@ public class GridView : ListView
                 default:
                     return;
             }
+        }
 
         if (targetIndex >= 0
             && targetIndex < gridView.Items.Count)
+        {
             ((UIElement)gridView.ItemContainerGenerator.ContainerFromIndex(targetIndex)).Focus();
+        }
 
         e.Handled = true;
     }

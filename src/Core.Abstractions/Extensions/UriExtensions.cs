@@ -57,6 +57,7 @@ public static class UriExtensions
             try
             {
                 if (url.Scheme is HttpScheme or HttpsScheme)
+                {
                     return await url.DoHttpResponseFuncAsync(response =>
                         {
                             var result = response.StatusCode is HttpStatusCode.OK
@@ -67,6 +68,7 @@ public static class UriExtensions
                         },
                         pars,
                         sw);
+                }
 
                 using (var response = await url.GetUriResponseAsync(pars))
                 {
@@ -169,6 +171,7 @@ public static class UriExtensions
     public static async Task<bool> CheckIfLinkIsExpiredAsync(this Uri link, WebRequestParams? pars = null)
     {
         if (link is not null)
+        {
             try
             {
                 pars = Copy(pars);
@@ -180,6 +183,7 @@ public static class UriExtensions
             {
                 return true;
             }
+        }
 
         return true;
     }

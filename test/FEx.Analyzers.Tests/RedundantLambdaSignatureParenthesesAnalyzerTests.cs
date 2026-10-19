@@ -1,6 +1,6 @@
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Testing;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace FEx.Analyzers.Tests;

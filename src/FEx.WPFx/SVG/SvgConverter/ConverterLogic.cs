@@ -579,8 +579,10 @@ public static class ConverterLogic
     private static void AddNameSpaceDef(XElement root, ResKeyInfo resKeyInfo)
     {
         if (resKeyInfo.UseComponentResKeys)
+        {
             root.Add(new XAttribute(XNamespace.Xmlns + resKeyInfo.NameSpaceName.Guard(nameof(resKeyInfo.NameSpaceName)),
                 "clr-namespace:" + resKeyInfo.NameSpace));
+        }
     }
 
     private static IEnumerable<XAttribute> CollectBrushAttributesWithColor(XElement drawingElement) =>

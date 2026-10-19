@@ -23,14 +23,18 @@ public sealed class OneDriveOptions
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(ClientId))
+        {
             throw new ArgumentException("OneDriveOptions.ClientId must be set to the Azure AD application (client) ID.",
                 nameof(ClientId));
+        }
 
         if (string.IsNullOrWhiteSpace(TenantId))
             throw new ArgumentException("OneDriveOptions.TenantId must not be empty.", nameof(TenantId));
 
         if (Scopes is null || Scopes.Count == 0 || Scopes.Any(string.IsNullOrWhiteSpace))
+        {
             throw new ArgumentException("OneDriveOptions.Scopes must contain at least one non-empty scope.",
                 nameof(Scopes));
+        }
     }
 }

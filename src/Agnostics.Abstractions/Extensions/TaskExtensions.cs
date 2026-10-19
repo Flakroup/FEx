@@ -98,9 +98,11 @@ public static class TaskExtensions
                                                                      CancellationToken cancellationToken = default)
     {
         if (options.HasFlagFast(AsyncOptions.ImmediateStart))
+        {
             return await values
                 .Select<T, Func<Task<TResult>>>(v => () => Task.Run(() => asyncAction(v), cancellationToken))
                 .WhenAllTasksAsync(mode);
+        }
 
         return await values.Select<T, Func<TResult>>(v => () => asyncAction(v))
             .WhenAllAsync(mode, options, cancellationToken);
@@ -160,9 +162,11 @@ public static class TaskExtensions
                                                                      CancellationToken cancellationToken = default)
     {
         if (options.HasFlagFast(AsyncOptions.ImmediateStart))
+        {
             return await values
                 .Select<T, Func<Task<TResult>>>(v => () => Task.Run(() => asyncAction(v), cancellationToken))
                 .WhenAllTasksAsync(mode);
+        }
 
         return await values.Select<T, Func<Task<TResult>>>(v => () =>
         {

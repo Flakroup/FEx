@@ -21,7 +21,9 @@ public abstract class
         if (value is not null
             && Value.Count == 0
             && value.Count == 0)
+        {
             return;
+        }
 
         if (value is null || value.IsNullOrEmpty())
         {

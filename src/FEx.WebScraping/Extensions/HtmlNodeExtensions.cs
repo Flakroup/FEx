@@ -65,13 +65,13 @@ public static class HtmlNodeExtensions
         value.SelectSingleNode(xpath(new()));
 
     /// <summary>
-    /// Selects a list of nodes matching the <see cref="P:HtmlAgilityPack.HtmlNode.XPath" /> expression.
+    /// Selects a list of nodes matching the <see cref="HtmlAgilityPack.HtmlNode.XPath" /> expression.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <param name="xpath">The XPath expression.</param>
     /// <returns>
     /// An <see cref="HtmlNodeCollection" /> containing a collection of nodes matching the
-    /// <see cref="P:HtmlAgilityPack.HtmlNode.XPath" /> query, or <c>null</c> if no node matched the XPath expression.
+    /// <see cref="HtmlAgilityPack.HtmlNode.XPath" /> query, or <c>null</c> if no node matched the XPath expression.
     /// </returns>
     public static HtmlNodeCollection SelectNodes(this HtmlNode value, Func<XPathBuilderEx, XPathBuilderEx> xpath) =>
         value.SelectNodes(xpath(new()));

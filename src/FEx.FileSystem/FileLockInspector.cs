@@ -74,7 +74,7 @@ public static class FileLockInspector
         }
         finally
         {
-            RmEndSession(handle);
+            _ = RmEndSession(handle);
         }
     }
 
@@ -99,7 +99,7 @@ public static class FileLockInspector
         var processInfo = new RM_PROCESS_INFO[needed];
         processInfoCount = needed;
 
-        var list = RmGetList(handle, out needed, ref processInfoCount, processInfo, ref rebootReasons);
+        var list = RmGetList(handle, out _, ref processInfoCount, processInfo, ref rebootReasons);
 
         if (list != ERROR_SUCCESS)
         {
@@ -139,7 +139,7 @@ public static class FileLockInspector
     private static extern int RmGetList(uint dwSessionHandle,
                                         out uint pnProcInfoNeeded,
                                         ref uint pnProcInfo,
-                                        [In] [Out] RM_PROCESS_INFO[]? rgAffectedApps,
+                                        [In][Out] RM_PROCESS_INFO[]? rgAffectedApps,
                                         ref uint lpdwRebootReasons);
 
     // ReSharper disable InconsistentNaming

@@ -169,10 +169,9 @@ public class MSProject
         ProjectDir = PropertiesDictionary.TryGetKeyValue<string, string>("ProjectDir")
                      ?? PropertiesDictionary.TryGetKeyValue<string, string>("MSBuildProjectDirectory");
 
-        MSBuildAllProjects = PropertiesDictionary["MSBuildAllProjects"]
+        MSBuildAllProjects = [.. PropertiesDictionary["MSBuildAllProjects"]
             .Split(';')
-            .Select(x => x.Trim().Replace(ProjectDir, string.Empty))
-            .ToArray();
+            .Select(x => x.Trim().Replace(ProjectDir, string.Empty))];
 
         TargetFramework = PropertiesDictionary.TryGetKeyValue<string, string>("TargetFramework")
                           ?? PropertiesDictionary["TargetFrameworkVersion"];
@@ -207,10 +206,9 @@ public class MSProject
             item => IncludedFiles.Add(new(item, this)));
 
         //Dictionary<string, List<MSProjectItem>> typedProjectFiles = IncludedFiles.GroupBy(x => x.ItemType).ToDictionary(x => x.Key, x => x.ToList());
-        NuGetPackages.AddRangeToCollection(AllEvaluatedItems
+        NuGetPackages.AddRangeToCollection([.. AllEvaluatedItems
             .Where(x => x.ItemType == PackageRefStr && x.DirectMetadata.Any(y => y.Name == "Version"))
-            .Select(GetPackageIdentity)
-            .ToArray());
+            .Select(GetPackageIdentity)]);
 
         IsAspNetCore = NuGetPackages.Any(x => x.Id == "Microsoft.AspNetCore.App");
 
@@ -222,7 +220,7 @@ public class MSProject
         {
             var pkgsConf = new FileInfo(Path.Combine(ProjectDir, PkgsConfStr));
 
-            NuGetPackages.AddRangeToCollection(PackagesConfigFile.Read(pkgsConf).ToArray());
+            NuGetPackages.AddRangeToCollection([.. PackagesConfigFile.Read(pkgsConf)]);
         }
 
         // Defensive removal of any null entries left by the parallel population above.
@@ -245,10 +243,12 @@ public class MSProject
             : PropertiesDictionary.TryGetKeyValue<string, string>("RuntimeIdentifier");
 
         if (PublishDirName is not null)
+        {
             PublishDirs = Configurations.ToDictionary(x => x,
                 x => RuntimeIdentifier is not null
                     ? Path.Combine(BinDir, x, RuntimeIdentifier, PublishDirName)
                     : Path.Combine(BinDir, x, PublishDirName));
+        }
 
         IgnoredDirectories = new List<string>();
 

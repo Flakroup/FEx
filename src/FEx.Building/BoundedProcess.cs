@@ -55,9 +55,11 @@ public static class BoundedProcess
             return null;
 
         if (timeout <= TimeSpan.Zero || timeout.Value.TotalMilliseconds > int.MaxValue)
+        {
             throw new ArgumentOutOfRangeException(name,
                 timeout,
                 $"{name} must be positive and at most {int.MaxValue} ms, or null / Timeout.InfiniteTimeSpan for no timeout.");
+        }
 
         return timeout;
     }
@@ -82,7 +84,8 @@ public static class BoundedProcess
         {
             process.WaitForExit();
             exited.Set();
-        }) { IsBackground = true, Name = "BoundedProcess.WaitForExit" }.Start();
+        })
+        { IsBackground = true, Name = "BoundedProcess.WaitForExit" }.Start();
 
         if (timeout is { } limit && !exited.Wait(limit) && TryKill(process))
         {

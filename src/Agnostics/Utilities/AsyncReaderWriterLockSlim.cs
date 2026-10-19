@@ -490,9 +490,11 @@ public class AsyncReaderWriterLockSlim : IDisposable
 
             if (existingLockState.StateIsReleased
                 && existingLockState.WaitingReadLocksCount == 0)
+            {
 #pragma warning disable IDISP007
                 // Postface only runs after the preface created the semaphore.
                 existingLockState.WaitingReadLocksSemaphore!.Dispose();
+            }
 #pragma warning restore IDISP007
 
             if (waitResult)
@@ -652,7 +654,9 @@ public class AsyncReaderWriterLockSlim : IDisposable
             if (_currentWriteLockState!.WaitForReadLocks
                 && waitFailure
                 && _readLockReleaseSemaphore.CurrentCount > 0)
+            {
                 _readLockReleaseSemaphore.Wait();
+            }
 
             ReleaseWriteLockState();
         }
@@ -730,12 +734,16 @@ public class AsyncReaderWriterLockSlim : IDisposable
             lock (_syncRoot)
             {
                 if (_currentWriteLockState is not null)
+                {
                     throw new InvalidOperationException("A write lock was still active while trying to "
                                                         + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
+                }
 
                 if ((Volatile.Read(ref _currentReadLockCount) & 0x7FFFFFFF) > 0)
+                {
                     throw new InvalidOperationException("At least one read lock was still active while trying to "
                                                         + $"dispose the {nameof(AsyncReaderWriterLockSlim)}.");
+                }
             }
 
             _writeLockSemaphore.Dispose();

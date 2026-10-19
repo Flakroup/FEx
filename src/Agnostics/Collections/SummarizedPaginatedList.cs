@@ -10,7 +10,7 @@ public class SummarizedPaginatedList<T, TSum> : PaginatedList<T>
 {
     // Empty sentinel: default(TSum) is the intended empty summary (may be null for reference TSum).
     /// <summary>Gets a new page with no items and a default summary.</summary>
-    public new static SummarizedPaginatedList<T, TSum> Empty => new(new List<T>(), 0, 0, 0, static _ => default!);
+    public static new SummarizedPaginatedList<T, TSum> Empty => new(new List<T>(), 0, 0, 0, static _ => default!);
 
     /// <summary>Gets the summary computed from the items on this page.</summary>
     public TSum Summary { get; }

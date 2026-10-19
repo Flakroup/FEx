@@ -22,7 +22,7 @@ internal sealed class FakeProxyServer : IDisposable
     public FakeProxyServer()
     {
         _listener.Start();
-        _ = Task.Run(AcceptLoop);
+        _ = Task.Run(AcceptLoopAsync);
     }
 
     public int Port => ((IPEndPoint)_listener.LocalEndpoint).Port;
@@ -37,14 +37,14 @@ internal sealed class FakeProxyServer : IDisposable
         _cts.Dispose();
     }
 
-    private async Task AcceptLoop()
+    private async Task AcceptLoopAsync()
     {
         try
         {
             while (!_cts.IsCancellationRequested)
             {
                 var client = await _listener.AcceptTcpClientAsync();
-                _ = Task.Run(() => Serve(client));
+                _ = Task.Run(() => ServeAsync(client));
             }
         }
         catch (Exception ex) when (ex is ObjectDisposedException or SocketException or InvalidOperationException)
@@ -53,7 +53,7 @@ internal sealed class FakeProxyServer : IDisposable
         }
     }
 
-    private async Task Serve(TcpClient client)
+    private async Task ServeAsync(TcpClient client)
     {
         try
         {

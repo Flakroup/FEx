@@ -36,7 +36,9 @@ public static class PropertiesExtensions
 
         if (target != null
             && !member.DeclaringType.IsInstanceOfType(target))
+        {
             throw new ArgumentException(WrongExpressionMessage, nameof(expression));
+        }
 
         var setMethod = member.GetSetMethod(true).Guard("setMethod", WrongExpressionMessage);
 
@@ -47,7 +49,9 @@ public static class PropertiesExtensions
 
         if (getMethod.Invoke(target, null) is not T oldValue
             || EqualityComparer<T>.Default.Equals(oldValue, value))
+        {
             return false;
+        }
 
         setMethod.Invoke(target, [value]);
         onSet?.Invoke(member.Name);

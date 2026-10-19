@@ -16,7 +16,9 @@ public class ViewField : NotifyPropertyChanged
         {
             if (SetProperty(ref _isVisible, value)
                 && IsVisiblePersistence != null)
+            {
                 IsVisiblePersistence(_isVisible);
+            }
         }
     }
 

@@ -19,7 +19,7 @@ public sealed class FtpClientFactoryTests : IDisposable
 
     public void Dispose() => _server.Dispose();
 
-    private async Task<FtpClientFactory> Factory(int maxParallel) =>
+    private async Task<FtpClientFactory> FactoryAsync(int maxParallel) =>
         await FtpClientFactory.GetInstanceAsync(_server.Uri.AbsoluteUri, maxParallel);
 
     private const string ProxyHost = "127.0.0.1";
@@ -29,7 +29,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     ///     The proxy profile is not readable from the client, so it is observed on the wire: the client must reach the proxy
     ///     host on the proxy port, ask it for the FTP host and port, and send the proxy credentials.
     /// </summary>
-    private async Task AssertConnectsThrough(AsyncFtpClient client, FakeProxyServer proxy)
+    private async Task AssertConnectsThroughAsync(AsyncFtpClient client, FakeProxyServer proxy)
     {
         await Should.ThrowAsync<Exception>(() => client.Connect(TestContext.Current.CancellationToken));
 
@@ -42,15 +42,15 @@ public sealed class FtpClientFactoryTests : IDisposable
     private Uri UriWithPortAndPath() => new UriBuilder(_server.Uri) { Port = _server.Port, Path = "/some/path" }.Uri;
 
 #pragma warning disable VSTHRD003 // the task is started by the caller on purpose, to observe whether it completes
-    private static async Task<bool> Completes(Task task, TimeSpan within) =>
+    private static async Task<bool> CompletesAsync(Task task, TimeSpan within) =>
         await Task.WhenAny(task, Task.Delay(within, TestContext.Current.CancellationToken)) == task;
 #pragma warning restore VSTHRD003
 
     [Fact]
     public async Task GetInstanceAsync_SameHost_ReturnsTheSameFactory()
     {
-        var first = await Factory(2);
-        var second = await Factory(9);
+        var first = await FactoryAsync(2);
+        var second = await FactoryAsync(9);
 
         second.ShouldBeSameAs(first);
         first.HostUri.ShouldBe(_server.Uri);
@@ -61,7 +61,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     {
         using var other = new FakeFtpServer();
 
-        var first = await Factory(2);
+        var first = await FactoryAsync(2);
         var second = await FtpClientFactory.GetInstanceAsync(other.Uri.AbsoluteUri, 2);
 
         second.ShouldNotBeSameAs(first);
@@ -70,7 +70,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task CreateAsync_UserAndPassword_ConfiguresHostCredentialsAndPort()
     {
-        var factory = await Factory(2);
+        var factory = await FactoryAsync(2);
 
         var client = await factory.CreateAsync("alice", "secret", false, 2121);
 
@@ -146,21 +146,21 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task ReleaseAsync_ClientNoFactoryCreated_IsDisposedWithoutTouchingAnyPool()
     {
-        var factory = await Factory(1);
+        var factory = await FactoryAsync(1);
         var held = await factory.CreateAsync(null, null, false);
         var foreign = new AsyncFtpClient(factory.HostUri.DnsSafeHost);
 
         await FtpCommon.ReleaseAsync(foreign);
 
         foreign.IsDisposed.ShouldBeTrue();
-        (await Completes(factory.CreateAsync(null, null, false), Short)).ShouldBeFalse("a foreign release must not free the slot of an unrelated client");
+        (await CompletesAsync(factory.CreateAsync(null, null, false), Short)).ShouldBeFalse("a foreign release must not free the slot of an unrelated client");
         await factory.ReleaseClientAsync(held);
     }
 
     [Fact]
     public async Task CreateAsync_NoCredentialsAndNoPort_LeavesTheClientDefaults()
     {
-        var factory = await Factory(2);
+        var factory = await FactoryAsync(2);
 
         var client = await factory.CreateAsync(null, null, false);
 
@@ -171,7 +171,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task CreateAsync_OnlyAPassword_StillCreatesCredentials()
     {
-        var factory = await Factory(2);
+        var factory = await FactoryAsync(2);
 
         var client = await factory.CreateAsync(null, "pw", false);
 
@@ -182,7 +182,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task CreateAsync_NetworkCredential_AreAppliedToTheClient()
     {
-        var factory = await Factory(2);
+        var factory = await FactoryAsync(2);
 
         var client = await factory.CreateAsync(new NetworkCredential("bob", "pw"), false);
 
@@ -195,7 +195,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     public async Task CreateAsync_UseProxyWithProxyHost_ConnectsThroughTheFactoryProxySettings()
     {
         using var proxy = new FakeProxyServer();
-        var factory = await Factory(2);
+        var factory = await FactoryAsync(2);
         factory.ProxyHost = ProxyHost;
         factory.ProxyPort = proxy.Port;
         factory.ProxyCredentials = ProxyCredentials;
@@ -203,7 +203,7 @@ public sealed class FtpClientFactoryTests : IDisposable
         var client = await factory.CreateAsync(new NetworkCredential("bob", "pw"), true, _server.Port);
 
         client.ShouldBeOfType<AsyncFtpClientHttp11Proxy>();
-        await AssertConnectsThrough(client, proxy);
+        await AssertConnectsThroughAsync(client, proxy);
         await factory.ReleaseClientAsync(client);
     }
 
@@ -211,14 +211,14 @@ public sealed class FtpClientFactoryTests : IDisposable
     public async Task CreateAsync_ProxyProfile_ConnectsThroughTheProfile()
     {
         using var proxy = new FakeProxyServer();
-        var factory = await Factory(2);
+        var factory = await FactoryAsync(2);
         var profile = new FtpProxyProfile { ProxyHost = ProxyHost, ProxyPort = proxy.Port, ProxyCredentials = ProxyCredentials };
 
         var client = await factory.CreateAsync("bob", "pw", profile, _server.Port);
 
         client.ShouldBeOfType<AsyncFtpClientHttp11Proxy>();
         client.Credentials.UserName.ShouldBe("bob");
-        await AssertConnectsThrough(client, proxy);
+        await AssertConnectsThroughAsync(client, proxy);
         await factory.ReleaseClientAsync(client);
     }
 
@@ -226,23 +226,23 @@ public sealed class FtpClientFactoryTests : IDisposable
     public async Task CreateAsync_NetworkCredentialAndProxyProfile_ConnectsThroughTheProfile()
     {
         using var proxy = new FakeProxyServer();
-        var factory = await Factory(2);
+        var factory = await FactoryAsync(2);
         var profile = new FtpProxyProfile { ProxyHost = ProxyHost, ProxyPort = proxy.Port, ProxyCredentials = ProxyCredentials };
 
         var client = await factory.CreateAsync(new NetworkCredential("bob", "pw"), profile, _server.Port);
 
         client.ShouldBeOfType<AsyncFtpClientHttp11Proxy>();
-        await AssertConnectsThrough(client, proxy);
+        await AssertConnectsThroughAsync(client, proxy);
         await factory.ReleaseClientAsync(client);
     }
 
     [Fact]
-    public async Task GetProxy_WithoutProxy_IsNull() => (await Factory(2)).GetProxy(false).ShouldBeNull();
+    public async Task GetProxy_WithoutProxy_IsNull() => (await FactoryAsync(2)).GetProxy(false).ShouldBeNull();
 
     [Fact]
     public async Task GetProxy_WithProxy_CopiesHostPortAndCredentialsToTheProfile()
     {
-        var factory = await Factory(2);
+        var factory = await FactoryAsync(2);
         var creds = new NetworkCredential("p", "q");
         factory.ProxyHost = "proxy.local";
         factory.ProxyPort = 3128;
@@ -259,17 +259,17 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task CreateAsync_AtMaxParallel_WaitsForARelease()
     {
-        var factory = await Factory(2);
+        var factory = await FactoryAsync(2);
         var first = await factory.CreateAsync(null, null, false);
         var second = await factory.CreateAsync(null, null, false);
 
         var third = factory.CreateAsync(null, null, false);
 
-        (await Completes(third, Short)).ShouldBeFalse("the third client must wait while two are out");
+        (await CompletesAsync(third, Short)).ShouldBeFalse("the third client must wait while two are out");
 
         await factory.ReleaseClientAsync(first);
 
-        (await Completes(third, Long)).ShouldBeTrue("a release must let the waiting create through");
+        (await CompletesAsync(third, Long)).ShouldBeTrue("a release must let the waiting create through");
         await factory.ReleaseClientAsync(second);
         await factory.ReleaseClientAsync(await third);
     }
@@ -277,12 +277,12 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task ReleaseClientAsync_FreesTheSlot_SoItIsReusedBySequentialCreates()
     {
-        var factory = await Factory(1);
+        var factory = await FactoryAsync(1);
 
         for (var i = 0; i < 3; i++)
         {
             var next = factory.CreateAsync(null, null, false);
-            (await Completes(next, Long)).ShouldBeTrue($"create #{i} must reuse the released slot");
+            (await CompletesAsync(next, Long)).ShouldBeTrue($"create #{i} must reuse the released slot");
             await factory.ReleaseClientAsync(await next);
         }
     }
@@ -290,7 +290,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task ReleaseClientAsync_DisposesTheClient()
     {
-        var factory = await Factory(1);
+        var factory = await FactoryAsync(1);
         var client = await factory.CreateAsync(null, null, false);
 
         await factory.ReleaseClientAsync(client);
@@ -301,7 +301,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task ReleaseClientAsync_ConnectedClient_SaysQuitAndDisposes()
     {
-        var factory = await Factory(1);
+        var factory = await FactoryAsync(1);
         var client = await factory.CreateAsync("u", "p", false, _server.Port);
         await client.Connect(TestContext.Current.CancellationToken);
         client.IsConnected.ShouldBeTrue();
@@ -315,7 +315,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task ReleaseClientAsync_AlreadyDisposedClient_StillFreesTheSlot()
     {
-        var factory = await Factory(1);
+        var factory = await FactoryAsync(1);
         var client = await factory.CreateAsync(null, null, false);
 #pragma warning disable IDISP016 // releasing an already disposed client is the case under test
         await client.DisposeAsync();
@@ -323,14 +323,14 @@ public sealed class FtpClientFactoryTests : IDisposable
 #pragma warning restore IDISP016
 
         var next = factory.CreateAsync(null, null, false);
-        (await Completes(next, Long)).ShouldBeTrue();
+        (await CompletesAsync(next, Long)).ShouldBeTrue();
         await factory.ReleaseClientAsync(await next);
     }
 
     [Fact]
     public async Task ConnectedClients_NeverExceedMaxParallelAgainstTheServer()
     {
-        var factory = await Factory(2);
+        var factory = await FactoryAsync(2);
 
         await Task.WhenAll(Enumerable.Range(0, 6).Select(async _ =>
         {
@@ -347,7 +347,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task CreateAsync_WithoutTheOption_DefaultsToPasvexOnEveryOverload()
     {
-        var factory = await Factory(4);
+        var factory = await FactoryAsync(4);
         NetworkCredential credentials = new("u", "p");
 
         var clients = new[]
@@ -371,7 +371,7 @@ public sealed class FtpClientFactoryTests : IDisposable
         // Nothing listens on this address; AutoPassive would connect there (only 10/8, 172.16/12, 192.168/16, 127.0.0.1 and 0.0.0.0 are filtered).
         _server.PasvAddress = IPAddress.Parse("127.0.0.2");
         _server.Files["/pub/a.txt"] = [1, 2, 3];
-        var factory = await Factory(1);
+        var factory = await FactoryAsync(1);
         var client = await factory.CreateAsync("u", "p", false, _server.Port);
 
         try
@@ -392,7 +392,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task CreateAsync_WithTheOption_PassesItToTheClientOnEveryOverload()
     {
-        var factory = await Factory(4);
+        var factory = await FactoryAsync(4);
         NetworkCredential credentials = new("u", "p");
         const FtpDataConnectionType chosen = FtpDataConnectionType.AutoPassive;
 
@@ -414,7 +414,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     [Fact]
     public async Task CreateAsync_WithTheOption_ProxyClientGetsItToo()
     {
-        var factory = await Factory(1);
+        var factory = await FactoryAsync(1);
         FtpProxyProfile proxy = new() { ProxyHost = ProxyHost, ProxyPort = 1, ProxyCredentials = ProxyCredentials };
 
         var client = await factory.CreateAsync("u", "p", proxy, 0, FtpDataConnectionType.EPSV);
@@ -433,7 +433,7 @@ public sealed class FtpClientFactoryTests : IDisposable
     {
         // The opt-in is real: the same server that the default survives breaks AutoPassive, which follows the reply to 127.0.0.2.
         _server.PasvAddress = IPAddress.Parse("127.0.0.2");
-        var factory = await Factory(1);
+        var factory = await FactoryAsync(1);
         var client = await factory.CreateAsync("u", "p", false, _server.Port, FtpDataConnectionType.AutoPassive);
 
         try

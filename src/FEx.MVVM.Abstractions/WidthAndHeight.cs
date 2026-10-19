@@ -19,7 +19,9 @@ public class WidthAndHeight : IComparable<WidthAndHeight>, IEquatable<WidthAndHe
     {
         if (Width > other?.Width
             || Height > other?.Height)
+        {
             return -1;
+        }
 
         return Width == other?.Width && Height == other.Height
             ? 0

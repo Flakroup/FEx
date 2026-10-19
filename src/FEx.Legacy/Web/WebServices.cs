@@ -1,4 +1,4 @@
-﻿using FEx.Agnostics.Abstractions.Enums;
+using FEx.Agnostics.Abstractions.Enums;
 using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Agnostics.Abstractions.Extensions.Web;
 using FEx.Agnostics.Abstractions.Models;
@@ -168,7 +168,7 @@ public static class WebServices
                                                ICredentials? credentials,
                                                bool resultAsJson,
                                                IEnumerable<Cookie>? cookies = null)
-        // ReSharper restore UnusedParameter.Global
+    // ReSharper restore UnusedParameter.Global
     {
         var pars = new WebRequestParams(cookies)
         {

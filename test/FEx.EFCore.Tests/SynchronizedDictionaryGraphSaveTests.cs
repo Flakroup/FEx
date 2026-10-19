@@ -178,7 +178,6 @@ public sealed class SynchronizedDictionaryGraphSaveTests : IAsyncDisposable, IDi
         public List<GraphDoc> Docs { get; set; } = [];
     }
 
-
     public sealed class Tag
     {
         public int Id { get; set; }

@@ -121,7 +121,7 @@ public interface ICompileTarget : INukeBuild
     /// does not fail on missing input, so a run combining <c>PublishApp</c> with <c>Test</c> reported a green
     /// build over a failing test. Static and pure so this decision is testable without running a build.
     /// </remarks>
-    public static IEnumerable<(AbsolutePath Project, bool WithRuntime)> Scope(
+    static IEnumerable<(AbsolutePath Project, bool WithRuntime)> Scope(
         AbsolutePath solution,
         bool runtimeSpecific,
         IEnumerable<AppPublishEntry> entries) =>
@@ -210,7 +210,7 @@ public interface ICompileTarget : INukeBuild
     /// The file name, extension included, keeps the solution and a same-named project apart; publish
     /// project names are unique, since <see cref="ResolvePublishProject" /> refuses an ambiguous one.
     /// </remarks>
-    public static AbsolutePath BinaryLogPath(AbsolutePath directory, AbsolutePath project, string? runtime) =>
+    static AbsolutePath BinaryLogPath(AbsolutePath directory, AbsolutePath project, string? runtime) =>
         directory / (string.IsNullOrEmpty(runtime)
             ? $"{project.Name}.binlog"
             : $"{project.Name}.{runtime}.binlog");

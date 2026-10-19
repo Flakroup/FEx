@@ -99,9 +99,11 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
             : GetWidth(_childSize) * _itemsPerRowCount;
 
         if (ItemsOwner is IHierarchicalVirtualizationAndScrollInfo)
+        {
             extentWidth = Orientation == Orientation.Vertical
                 ? Math.Max(extentWidth - (Margin.Left + Margin.Right), 0)
                 : Math.Max(extentWidth - (Margin.Top + Margin.Bottom), 0);
+        }
 
         var extentHeight = GetHeight(_childSize) * _rowCount;
 
@@ -249,8 +251,10 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
     {
         if (index < 0
             || index >= Items.Count)
+        {
             throw new ArgumentOutOfRangeException(nameof(index),
                 $"The argument {nameof(index)} must be >= 0 and < the number of items.");
+        }
 
         if (_itemsPerRowCount == 0)
             throw new InvalidOperationException();
@@ -412,11 +416,15 @@ public class VirtualizingWrapPanelV1 : VirtualizingPanelBaseV1
         }
 
         if (ItemSize != Size.Empty)
+        {
             _childSize = ItemSize;
+        }
         else
+        {
             _childSize = InternalChildren.Count != 0
                 ? InternalChildren[0].DesiredSize
                 : CalculateChildSize();
+        }
 
         _itemsPerRowCount = double.IsInfinity(GetWidth(availableSize))
             ? Items.Count

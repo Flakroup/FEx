@@ -49,10 +49,14 @@ public class RegistryService : IRegistryService
                 if (name.Length != 0)
                 {
                     if (install!.Length != 0) //no install info, must be later.
+                    {
                         versions.Add(new(name));
+                    }
                     else if (sp!.Length != 0
                              && install == "1")
+                    {
                         versions.Add(new(name));
+                    }
                     // versions.Add($"{versionKeyName}  {name}  SP{sp}");
                 }
                 else
@@ -66,17 +70,25 @@ public class RegistryService : IRegistryService
                             name = (string)(subKey?.GetValue("Version", "") ?? "");
 
                             if (name.Length != 0)
+                            {
                                 sp = subKey?.GetValue("SP", "")?.ToString() ?? "";
+                            }
 
                             install = subKey?.GetValue("Install", "")?.ToString() ?? "";
 
                             if (install.Length == 0) //no install info, must be later.
+                            {
                                 versions.Add(new(name)); //}  {name}");
+                            }
                             else if (sp!.Length != 0
                                      && install == "1")
+                            {
                                 versions.Add(new(name)); // }  {name}  SP{sp}");
+                            }
                             else if (install == "1")
+                            {
                                 versions.Add(new(name)); //}  {name}");
+                            }
                         }
                     }
                 }
@@ -152,8 +164,10 @@ public class RegistryService : IRegistryService
 
                 //Cut off optional parameters
                 if (browserPath?.EndsWith("exe") == false)
+                {
                     browserPath =
                         browserPath.Substring(0, browserPath.LastIndexOf(".exe", StringComparison.Ordinal) + 4);
+                }
 
                 //Close registry key
                 browserKey.Close();
@@ -196,7 +210,9 @@ public class RegistryService : IRegistryService
 
         if (PlatformInfoProvider.IsWindows
             && !reg.GetValueNames().Contains(keyName))
+        {
             reg.SetValue(keyName, getNewValue(), RegistryValueKind.String);
+        }
 
         // The value was set above if missing, so it is present on read; Guard throws if it unexpectedly is not.
         return reg.GetKeyValue<string>(keyName).Guard(nameof(keyName));

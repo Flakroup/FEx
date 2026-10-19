@@ -169,11 +169,13 @@ public sealed class IdempotencyMiddleware
                 return;
 
             if (bytes is null)
+            {
                 _logger.LogInformation(
                     "Idempotency response for {IdempotencyKey} (user {UserId}) exceeded {MaxStoredResponseBytes} bytes; sent in full, but only its completion is stored - a retry gets 409 instead of a replay",
                     key,
                     userId,
                     _maxStoredResponseBytes);
+            }
 
             await store.SetAsync(storeKey,
                 new IdempotentResponse

@@ -1,9 +1,9 @@
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -40,7 +40,9 @@ public sealed class RedundantCheckBeforeAssignmentAnalyzer : DiagnosticAnalyzer
             || statement.Condition is not BinaryExpressionSyntax { RawKind: (int)SyntaxKind.NotEqualsExpression } condition
             || SingleAssignment(statement.Statement) is not { } assignment
             || !MatchesEitherWay(condition, assignment))
+        {
             return;
+        }
 
         // A property or an indexer setter may do more than store (raise an event, throw, count calls), so skipping it is a behaviour change;
         // so is calling the value's expression once instead of twice, or reading it through an operator that is not plain equality.
@@ -49,7 +51,9 @@ public sealed class RedundantCheckBeforeAssignmentAnalyzer : DiagnosticAnalyzer
         if (!PlainStorage.IsPlainStorage(assignment.Left, model, cancellationToken)
             || HasEffects(assignment.Right)
             || model.GetSymbolInfo(condition, cancellationToken).Symbol is IMethodSymbol { MethodKind: MethodKind.UserDefinedOperator, ContainingType.SpecialType: SpecialType.None })
+        {
             return;
+        }
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, statement.GetLocation()));
     }

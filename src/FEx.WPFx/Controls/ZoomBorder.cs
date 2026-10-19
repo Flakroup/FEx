@@ -131,7 +131,9 @@ public class ZoomBorder : Border, INotifyPropertyChanged
 
             if (!zoom.Equals(0)
                 && Scale != _st.ScaleX + zoom)
+            {
                 ApplyTransform(zoom, position, animate);
+            }
         }
     }
 
@@ -175,7 +177,9 @@ public class ZoomBorder : Border, INotifyPropertyChanged
     {
         if (propertyName is null
             || PropertyChanged is null)
+        {
             return;
+        }
 
         PropertyChanged.HandlePropertyChanged(this, propertyName);
     }
@@ -385,7 +389,9 @@ public class ZoomBorder : Border, INotifyPropertyChanged
 
         if (!e.PreviousSize.Height.Equals(0)
             && Math.Abs(e.PreviousSize.Height - e.NewSize.Height) >= tolerance)
+        {
             OnAutoFitChanged(IsAutoFitEnabled);
+        }
     }
 
     private void Zoom(double zoom, MouseEventArgs e, bool animate) =>

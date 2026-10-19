@@ -16,7 +16,7 @@ public static class CommandLineParserHelper
 
         Parser.Default.ParseArguments<T>(args)
             .WithParsed(opts => config = opts)
-            .WithNotParsed(errs => errors = errs.ToArray());
+            .WithNotParsed(errs => errors = [.. errs]);
 
         return errors is not null && errors.IsNotNullOrEmptyList()
             ? throw new(string.Join(", ", errors.Select(GetErrorInfo)))

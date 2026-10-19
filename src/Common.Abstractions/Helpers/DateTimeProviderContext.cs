@@ -7,18 +7,18 @@ namespace FEx.Common.Abstractions.Helpers;
 public sealed class DateTimeProviderContext : IDisposable
 {
     internal DateTime ContextDateTime;
-    private static readonly ThreadLocal<Stack<DateTimeProviderContext>> _threadScopeStack = new(static () => new());
+    private static readonly ThreadLocal<Stack<DateTimeProviderContext>> ThreadScopeStack = new(static () => new());
     private bool _isDisposed;
 
     public static DateTimeProviderContext? Current =>
-        _threadScopeStack.Value?.Count == 0
+        ThreadScopeStack.Value?.Count == 0
             ? null
-            : _threadScopeStack.Value?.Peek();
+            : ThreadScopeStack.Value?.Peek();
 
     public DateTimeProviderContext(DateTime contextDateTime)
     {
         ContextDateTime = contextDateTime;
-        _threadScopeStack.Value?.Push(this);
+        ThreadScopeStack.Value?.Push(this);
     }
 
     #region IDisposable
@@ -30,7 +30,7 @@ public sealed class DateTimeProviderContext : IDisposable
             return;
 
         if (disposing)
-            _threadScopeStack.Value?.Pop();
+            ThreadScopeStack.Value?.Pop();
 
         _isDisposed = true;
     }

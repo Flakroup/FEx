@@ -194,7 +194,9 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
 
         if (expandedItemChildIndex != -1
             && childIndex > expandedItemChildIndex)
+        {
             return new(childIndex - 1, 0);
+        }
 
         return new(childIndex, 0);
     }
@@ -238,7 +240,9 @@ public class VirtualizingWrapPanelWithItemExpansion : VirtualizingWrapPanelV1
 
         if (_expandedItemChild != null
             && index > _itemIndexFollwingExpansion)
+        {
             offset += GetHeight(_expandedItemChild.DesiredSize);
+        }
 
         if (Orientation == Orientation.Horizontal)
             SetHorizontalOffset(offset);

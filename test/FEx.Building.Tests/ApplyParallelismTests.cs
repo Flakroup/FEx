@@ -70,7 +70,7 @@ public sealed class ApplyParallelismTests : IDisposable
     private static long AffinityOf(Process process)
     {
         if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
-            return (long)process.ProcessorAffinity;
+            return process.ProcessorAffinity;
 
         throw new PlatformNotSupportedException();
     }

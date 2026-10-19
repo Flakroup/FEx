@@ -103,7 +103,9 @@ internal sealed class FtpTransport : IFtpTransport
     {
         if (!string.IsNullOrWhiteSpace(username)
             && !string.IsNullOrWhiteSpace(password))
+        {
             return new(username, password);
+        }
 
         if (serverUri.UserInfo.Length == 0)
             return null;

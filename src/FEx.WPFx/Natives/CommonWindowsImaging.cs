@@ -72,6 +72,7 @@ public static class CommonWindowsImaging
         file?.Refresh();
 
         if (file is not null)
+        {
             try
             {
                 if (lockOnFile)
@@ -101,6 +102,7 @@ public static class CommonWindowsImaging
                 if (lockOnFile)
                     LockSrv.Release(file.FullName);
             }
+        }
 
         return res;
     }

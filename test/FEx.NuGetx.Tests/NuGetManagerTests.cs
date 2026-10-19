@@ -312,7 +312,7 @@ public sealed class NuGetManagerTests
             get
             {
                 lock (_requests)
-                    return _requests.ToArray();
+                    return [.. _requests];
             }
         }
 

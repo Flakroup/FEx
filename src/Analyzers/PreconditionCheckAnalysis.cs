@@ -1,11 +1,11 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -60,11 +60,10 @@ internal static class PreconditionCheckAnalysis
 
         // Both are needed only once a body opens with a check.
         var generated = new Lazy<bool>(() => AnalyzerHelpers.IsGenerated(context.OperationBlocks[0].Syntax.SyntaxTree, method, context.Options, context.CancellationToken));
-        var references = new Lazy<List<IParameterReferenceOperation>>(() => context.OperationBlocks
+        var references = new Lazy<List<IParameterReferenceOperation>>(() => [.. context.OperationBlocks
             .SelectMany(static block => block.DescendantsAndSelf())
             .OfType<IParameterReferenceOperation>()
-            .Where(static reference => !AnalyzerHelpers.IsInsideNameOf(reference))
-            .ToList());
+            .Where(static reference => !AnalyzerHelpers.IsInsideNameOf(reference))]);
 
         // Finding the checks is cheap and most bodies have none; deciding whether the member is covered walks the interfaces of its type.
         if (method.MethodKind is MethodKind.Ordinary or MethodKind.Constructor or MethodKind.UserDefinedOperator or MethodKind.Conversion
@@ -72,8 +71,10 @@ internal static class PreconditionCheckAnalysis
             && FindChecks(body, method.MethodKind == MethodKind.Constructor) is { } roots
             && Covers(method, local)
             && !generated.Value)
+        {
             foreach (var parameter in OnlyChecked(method.Parameters, roots, references.Value))
                 candidates.Add((method, Diagnostic.Create(rule, parameter.Locations[0], parameter.Name)));
+        }
 
         // Nothing outside the member can call a lambda or a local function.
         if (!local)
@@ -82,11 +83,15 @@ internal static class PreconditionCheckAnalysis
         foreach (var function in context.OperationBlocks.SelectMany(static block => block.DescendantsAndSelf()))
         {
             if (function is IAnonymousFunctionOperation lambda && FindChecks(lambda.Body, true) is { } lambdaRoots && !generated.Value)
+            {
                 foreach (var parameter in OnlyChecked(lambda.Symbol.Parameters, lambdaRoots, references.Value))
                     context.ReportDiagnostic(Diagnostic.Create(rule, parameter.Locations[0], parameter.Name));
+            }
             else if (function is ILocalFunctionOperation { Body: { } localBody } localFunction && FindChecks(localBody, false) is { } localRoots && !generated.Value)
+            {
                 foreach (var parameter in OnlyChecked(localFunction.Symbol.Parameters, localRoots, references.Value))
                     candidates.Add((localFunction.Symbol, Diagnostic.Create(rule, parameter.Locations[0], parameter.Name)));
+            }
         }
     }
 
@@ -139,7 +144,7 @@ internal static class PreconditionCheckAnalysis
                 read = [guard.Condition];
                 return true;
             case IExpressionStatementOperation { Operation: IInvocationOperation { TargetMethod: var method } call } when IsPreconditionCall(method):
-                read = call.Arguments.Select(static argument => argument.Value).ToList();
+                read = [.. call.Arguments.Select(static argument => argument.Value)];
                 return true;
             default:
                 return false;

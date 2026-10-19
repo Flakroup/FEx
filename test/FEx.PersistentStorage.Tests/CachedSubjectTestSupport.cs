@@ -98,11 +98,10 @@ internal sealed class EnhancedSubject(ICacheService cache)
 internal static class CacheServiceFake
 {
     public static IReadOnlyList<CachedItem> Replaced(this ICacheService cache) =>
-        cache.ReceivedCalls()
+        [.. cache.ReceivedCalls()
             .Where(static c => c.GetMethodInfo().Name == nameof(ICacheService.ReplaceWith))
             .Select(static c => c.GetArguments()[0])
-            .SelectMany(static a => a is CachedItem single ? [single] : ((IEnumerable<CachedItem>)a!).ToList())
-            .ToList();
+            .SelectMany(static a => a is CachedItem single ? [single] : ((IEnumerable<CachedItem>)a!).ToList())];
 
     public static void DidNotDelete(this ICacheService cache) =>
         cache.DidNotReceive().Delete((Expression<Func<CachedItem, bool>>?)null);

@@ -44,9 +44,11 @@ public class DownloadStub : NotifyPropertyChanged, IDownloadStub
                 dP =>
                 {
                     if (FilePath is not null)
+                    {
                         FilePath = dP is not null
                             ? Path.Combine(dP, Path.GetFileName(FilePath))
                             : null;
+                    }
                 });
     }
 

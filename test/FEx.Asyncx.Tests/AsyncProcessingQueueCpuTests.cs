@@ -11,7 +11,7 @@ namespace FEx.Asyncx.Tests;
 [Collection(NonParallelCollection.Name)]
 public sealed class AsyncProcessingQueueCpuTests
 {
-    private static readonly TimeSpan _window = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan Window = TimeSpan.FromSeconds(1);
 
     /// <summary>
     /// A processing loop that busy-waits without ever reaching an await burns a core, and no iteration count can see
@@ -42,7 +42,7 @@ public sealed class AsyncProcessingQueueCpuTests
         using var process = Process.GetCurrentProcess();
         var before = process.TotalProcessorTime;
 
-        await Task.Delay(_window, ct);
+        await Task.Delay(Window, ct);
 
         process.Refresh();
 

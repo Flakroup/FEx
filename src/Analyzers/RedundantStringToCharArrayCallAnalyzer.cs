@@ -1,8 +1,8 @@
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
 
 namespace FEx.Analyzers;
 
@@ -40,7 +40,9 @@ public sealed class RedundantStringToCharArrayCallAnalyzer : DiagnosticAnalyzer
             || loop.Expression is not InvocationExpressionSyntax { ArgumentList.Arguments.Count: 0 } call
             || context.SemanticModel.GetTypeInfo(loop.Type, context.CancellationToken).Type?.SpecialType != SpecialType.System_Char
             || context.SemanticModel.GetSymbolInfo(call, context.CancellationToken).Symbol is not IMethodSymbol { Name: "ToCharArray", ContainingType.SpecialType: SpecialType.System_String })
+        {
             return;
+        }
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, call.GetLocation()));
     }

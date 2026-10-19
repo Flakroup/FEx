@@ -91,8 +91,10 @@ public static class ControlsHandler
         dataGrid.InvokeOnDispatcherContext(() =>
         {
             if (dataGrid is not null)
+            {
                 foreach (var c in dataGrid.Columns)
                     c.SortDirection = null;
+            }
         });
 
     public static void SetColumnVisibility(this DataGrid dataGrid, string columnName, bool visible)

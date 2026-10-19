@@ -87,9 +87,11 @@ public sealed class FExStringCipher
 
         if (iterations < MinIterations
             || iterations > MaxIterations)
+        {
             throw new ArgumentOutOfRangeException(nameof(iterations),
                 iterations,
                 $"The iteration count must be between {MinIterations} and {MaxIterations}.");
+        }
 
         _passPhrase = passPhrase;
         _iterations = iterations;
@@ -166,8 +168,10 @@ public sealed class FExStringCipher
 
         if (iterations < MinIterations
             || iterations > MaxIterations)
+        {
             throw new FExDecryptionException(
                 $"The envelope asks for {iterations} PBKDF2 iterations, outside the accepted {MinIterations}..{MaxIterations}.");
+        }
 
         var salt = Slice(envelope, SaltOffset, SaltSize);
         var iv = Slice(envelope, IvOffset, IvSize);
@@ -176,8 +180,10 @@ public sealed class FExStringCipher
         var key = GetKey(salt, iterations);
 
         if (!CryptoCompat.FixedTimeEquals(ComputeTag(key.Mac, envelope, payload), tag))
+        {
             throw new FExDecryptionException(
                 "The value failed its integrity check - it was written with a different passphrase, or it has been altered.");
+        }
 
         using var aes = Aes.Create();
         aes.Key = key.Cipher;
@@ -218,7 +224,9 @@ public sealed class FExStringCipher
         if (envelope.Length < PayloadOffset + MinCipherBlock
             || envelope[0] != EnvelopeVersion
             || (envelope.Length - PayloadOffset) % MinCipherBlock != 0)
+        {
             return false;
+        }
 
         var iterations = ReadInt32BigEndian(envelope, IterationsOffset);
 

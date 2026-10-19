@@ -25,7 +25,7 @@ public sealed class FtpDownloaderTests : IDisposable
 
     private string NewPath() => Path.Combine(_dir, Guid.NewGuid() + ".bin");
 
-    private static Task<bool> Download(FakeTransport t,
+    private static Task<bool> DownloadAsync(FakeTransport t,
                                        string path,
                                        int maxAttempts = 5,
                                        CancellationToken? ct = null) =>
@@ -36,7 +36,7 @@ public sealed class FtpDownloaderTests : IDisposable
     {
         var transport = new FakeTransport { OpenThrows = new InvalidOperationException("530 login") };
 
-        var ex = await Should.ThrowAsync<IOException>(() => Download(transport, NewPath(), 3));
+        var ex = await Should.ThrowAsync<IOException>(() => DownloadAsync(transport, NewPath(), 3));
 
         ex.InnerException.ShouldBeSameAs(transport.OpenThrows);
         transport.OpenCalls.ShouldBe(3);
@@ -62,7 +62,7 @@ public sealed class FtpDownloaderTests : IDisposable
     {
         var transport = new FakeTransport();
 
-        await Should.ThrowAsync<ArgumentOutOfRangeException>(() => Download(transport, NewPath(), maxAttempts));
+        await Should.ThrowAsync<ArgumentOutOfRangeException>(() => DownloadAsync(transport, NewPath(), maxAttempts));
 
         transport.OpenCalls.ShouldBe(0);
     }
@@ -78,7 +78,7 @@ public sealed class FtpDownloaderTests : IDisposable
 
         var path = NewPath();
 
-        (await Download(transport, path, 2)).ShouldBeTrue();
+        (await DownloadAsync(transport, path, 2)).ShouldBeTrue();
 
         new FileInfo(path).Length.ShouldBe(5);
         transport.OpenCalls.ShouldBe(5);
@@ -92,7 +92,7 @@ public sealed class FtpDownloaderTests : IDisposable
         var stream = new ScriptedStream([1]) { OnRead = cts.Cancel };
         transport.Responses.Enqueue(new FakeResponse(stream));
 
-        await Should.ThrowAsync<OperationCanceledException>(() => Download(transport, NewPath(), 5, cts.Token));
+        await Should.ThrowAsync<OperationCanceledException>(() => DownloadAsync(transport, NewPath(), 5, cts.Token));
 
         stream.Reads.ShouldBe(1);
         transport.Created.ShouldAllBe(r => r.Disposed);
@@ -105,7 +105,7 @@ public sealed class FtpDownloaderTests : IDisposable
         using var cts = new CancellationTokenSource();
         transport.OnOpen = cts.Cancel;
 
-        await Should.ThrowAsync<OperationCanceledException>(() => Download(transport, NewPath(), 1000, cts.Token));
+        await Should.ThrowAsync<OperationCanceledException>(() => DownloadAsync(transport, NewPath(), 1000, cts.Token));
 
         transport.OpenCalls.ShouldBe(1);
     }
@@ -117,9 +117,9 @@ public sealed class FtpDownloaderTests : IDisposable
         transport.Responses.Enqueue(new FakeResponse(new ScriptedStream([1, 2, 3, 4])));
         var path = NewPath();
 
-        (await Download(transport, path)).ShouldBeTrue();
+        (await DownloadAsync(transport, path)).ShouldBeTrue();
 
-        (await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)).ShouldBe(new byte[] { 1, 2, 3, 4 });
+        (await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)).ShouldBe([1, 2, 3, 4]);
         transport.Created.ShouldAllBe(r => r.Disposed);
     }
 

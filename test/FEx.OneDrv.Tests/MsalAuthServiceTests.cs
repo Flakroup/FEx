@@ -27,10 +27,10 @@ public sealed class MsalAuthServiceTests
     [Fact]
     public void Constructor_EmptyScopes_Throws() =>
         Should.Throw<ArgumentException>(() => new MsalAuthService(new()
-            {
-                ClientId = "x",
-                Scopes = []
-            },
+        {
+            ClientId = "x",
+            Scopes = []
+        },
             Substitute.For<IFExLogger>()));
 
     [Fact]

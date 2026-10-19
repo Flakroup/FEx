@@ -1,7 +1,7 @@
-using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -36,7 +36,9 @@ internal static class MemberHiding
                 if (member is IFieldSymbol or IPropertySymbol
                     && (member.IsStatic || !staticContext)
                     && compilation.IsSymbolAccessibleWithin(member, type))
+                {
                     return true;
+                }
             }
         }
 

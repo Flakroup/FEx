@@ -38,9 +38,8 @@ public static class GitTags
 
         process.AssertZeroExitCode();
 
-        return process.Output
+        return [.. process.Output
             .Select(static line => line.Text.Trim())
-            .Where(static text => text.Length > 0)
-            .ToArray();
+            .Where(static text => text.Length > 0)];
     }
 }

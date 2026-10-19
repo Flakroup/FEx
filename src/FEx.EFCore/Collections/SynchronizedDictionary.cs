@@ -133,7 +133,9 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         if (keys is null || keys.Count == 0
             || Index.UnorderedSequenceEqual(keys))
+        {
             HasCachedAll = true;
+        }
 
         sw.Stop();
 
@@ -306,8 +308,10 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
             Cache.Connect().AutoRefreshOnObservable(x => x.WhenAnyPropertyChanged(_observedProperties));
 
         if (_observables?.Any() == true)
+        {
             cacheObservable =
                 _observables.Aggregate(cacheObservable, (current, o) => current.AutoRefreshOnObservable(o));
+        }
 
         if (ReplacedSubscription is { } keep)
             keep(_cacheSubscription);
@@ -522,8 +526,10 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
 
         if (!HasCachedAll
             && (!UseIndex || Index.Contains(key)))
+        {
             value = await _dbSrv.RunTaskInDbContextAsync(ctx => FindExistingAsync(ctx, key),
                 $"Failed to find entry matching key {key}");
+        }
 
         var hasRetrievedFromDb = value is not null;
 
@@ -758,7 +764,9 @@ public abstract class SynchronizedDictionary<TKey, TValue, TDbCtx> : AsyncInitia
                          null,
                          false,
                          false))
+            {
                 rows[KeyRetriver(row)] = row;
+            }
         }
         catch (Exception ex)
         {

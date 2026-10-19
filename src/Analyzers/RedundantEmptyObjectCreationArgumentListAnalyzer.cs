@@ -1,8 +1,8 @@
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
 
 namespace FEx.Analyzers;
 
@@ -39,6 +39,8 @@ public sealed class RedundantEmptyObjectCreationArgumentListAnalyzer : Diagnosti
         if (creation is { Initializer: not null, ArgumentList: { Arguments.Count: 0 } list }
             && !EmptyInitializers.HasComment(list.OpenParenToken.TrailingTrivia)
             && !EmptyInitializers.HasComment(list.CloseParenToken.LeadingTrivia))
+        {
             context.ReportDiagnostic(Diagnostic.Create(Rule, list.GetLocation()));
+        }
     }
 }

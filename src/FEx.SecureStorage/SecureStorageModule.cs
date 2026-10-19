@@ -93,8 +93,10 @@ public class SecureStorageModule : InitializeModule<ISecureStorageContainer, ISe
             : "This build of FEx.SecureStorage targets a framework below net5.0 and carries no OS keystore support (use a net5.0+ target to get DPAPI, Keychain or libsecret)";
 
         if (!AllowObfuscatedFallback)
+        {
             throw new PlatformNotSupportedException(
                 $"{reason} and {nameof(SecureStorageModule)}.{nameof(AllowObfuscatedFallback)} is false.");
+        }
 
         var cipher = FallbackCipher;
 
@@ -128,6 +130,7 @@ public class SecureStorageModule : InitializeModule<ISecureStorageContainer, ISe
             return new MacOsKeychainSecureStorageService();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
             try
             {
                 return new LinuxLibsecretSecureStorageService();
@@ -136,6 +139,7 @@ public class SecureStorageModule : InitializeModule<ISecureStorageContainer, ISe
             {
                 // libsecret-1.so.0 not installed - fall through to file fallback.
             }
+        }
 #endif
         return null;
     }

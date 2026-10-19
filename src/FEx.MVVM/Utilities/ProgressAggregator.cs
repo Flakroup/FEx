@@ -174,9 +174,13 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         {
             if (value.Value >= 0D
                 && value.Value <= Maximum)
+            {
                 Value = value.Value;
+            }
             else
+            {
                 LogError($"ProcessSetPrg: value {value.Value} out of range [0, {Maximum}]");
+            }
         }
     }
 
@@ -189,9 +193,13 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         {
             if (value.Value > 0D
                 && value.Value + Value <= Maximum)
+            {
                 Value += value.Value;
+            }
             else
+            {
                 LogError($"ProcessAddPrg: adding {value.Value} to {Value} exceeds maximum {Maximum}");
+            }
         }
     }
 
@@ -242,37 +250,37 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         switch (Mode)
         {
             case ProgressOperationMode.Standard:
-                {
-                    var avg = est.IsNotNullOrEmptyString()
-                        ? $"AVG: {avgMs.GetTime()}"
-                        : string.Empty;
+            {
+                var avg = est.IsNotNullOrEmptyString()
+                    ? $"AVG: {avgMs.GetTime()}"
+                    : string.Empty;
 
-                    Info =
-                        $"{percentage}% {value}/{maximum}{(Unit.IsNotNullOrEmptyString() ? $"{Unit}" : string.Empty)} {est} {avg}";
+                Info =
+                    $"{percentage}% {value}/{maximum}{(Unit.IsNotNullOrEmptyString() ? $"{Unit}" : string.Empty)} {est} {avg}";
 
-                    break;
-                }
+                break;
+            }
             case ProgressOperationMode.Stream:
-                {
-                    var curBt = FileLengthConverter.ConvertFileLengthToString(value,
-                        LengthType.Bytes,
-                        LengthType.AutoDetect);
+            {
+                var curBt = FileLengthConverter.ConvertFileLengthToString(value,
+                    LengthType.Bytes,
+                    LengthType.AutoDetect);
 
-                    var curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
-                        LengthType.Bytes,
-                        LengthType.AutoDetect);
+                var curTb = FileLengthConverter.ConvertFileLengthToString(maximum,
+                    LengthType.Bytes,
+                    LengthType.AutoDetect);
 
-                    var curr = elapsed.TotalSeconds;
+                var curr = elapsed.TotalSeconds;
 
-                    var kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
-                        LengthType.Bytes,
-                        LengthType.AutoDetect,
-                        1);
+                var kbPerSec = FileLengthConverter.ConvertFileLengthToString(value / curr,
+                    LengthType.Bytes,
+                    LengthType.AutoDetect,
+                    1);
 
-                    Info = $"{percentage}% {curBt}/{curTb} {kbPerSec}/sec {est}";
+                Info = $"{percentage}% {curBt}/{curTb} {kbPerSec}/sec {est}";
 
-                    break;
-                }
+                break;
+            }
             default:
                 throw new ArgumentOutOfRangeException(nameof(Mode), $"{Mode} is not handled");
         }
@@ -365,7 +373,9 @@ public class ProgressAggregator : ProgressStatus, IProgressAggregator
         if (!Timer.IsRunning
             && (maximum.HasValue || value.HasValue)
             && mode != ProgressChangeMode.End)
+        {
             Timer.Start();
+        }
 
         switch (mode)
         {

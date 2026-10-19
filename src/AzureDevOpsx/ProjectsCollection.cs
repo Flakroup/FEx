@@ -184,7 +184,9 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
 
         if (raw.IsNotNullOrEmptyString()
             && (JObject.Parse(raw)["count"]?.Value<int>() ?? 0) > 0)
+        {
             await Task.WhenAll(RefreshTfsCollectionProjectsAsync(), Task.Run(() => GetWorkspace()));
+        }
 
         IsEnabled = Projects.IsNotNullOrEmptyList();
         IsIdle = true;
@@ -248,7 +250,7 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
                     .ContinueWith(_ => viewModel?.PrgAdd(), TaskScheduler.Default);
             });
 
-        await Task.WhenAll(changesSeq.ToArray());
+        await Task.WhenAll([.. changesSeq]);
         viewModel?.IfNotNull(v => v.SetUnit(string.Empty));
     }
 
@@ -359,10 +361,12 @@ public sealed class ProjectsCollection : NotifyPropertyChanged, IDisposable
     {
         // One params instance per credentials keeps the underlying HttpClient (and its connections) long-lived.
         if (_downloadPars?.Credentials != credentials)
+        {
             _downloadPars = new()
             {
                 Credentials = credentials
             };
+        }
 
         var localPath = serverPath.Replace("$/", $"{rootDirectory}/").Replace("/", "\\");
         var dirPath = Path.GetDirectoryName(localPath);

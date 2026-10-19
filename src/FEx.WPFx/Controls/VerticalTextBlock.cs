@@ -8,7 +8,7 @@ namespace FEx.WPFx.Controls;
 
 public class VerticalTextBlock : TextBlock
 {
-    public new static readonly DependencyProperty TextProperty = DependencyProperty.Register(nameof(Text),
+    public static new readonly DependencyProperty TextProperty = DependencyProperty.Register(nameof(Text),
         typeof(string),
         typeof(VerticalTextBlock),
         new(string.Empty, TextChangeHandler));

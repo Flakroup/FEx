@@ -37,9 +37,13 @@ public class FExServiceContainer : IFExServiceContainer
         Initialize();
 
         if (services is not null)
+        {
             foreach (var configurator in TryResolveServices<IMicrosoftDIConfigurator>()
                          .OrderBy(static configurator => configurator.Priority))
+            {
                 configurator.RegisterServicesUsingContainer(services, container);
+            }
+        }
     }
 
     public T ResolveService<T>()

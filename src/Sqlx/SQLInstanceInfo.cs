@@ -140,10 +140,11 @@ public class SQLInstanceInfo : ISqlInstanceInfo
             await conn.OpenAsync();
             var result = await conn.RunSqlAsync(SqlConnectionExtensions.PropsSQL);
 
-            props = result.ToDictionary(
+            // Explicit type arguments: on down-level TFMs Convert.ToString returns oblivious 'string', which would
+            // infer Dictionary<ServerProp, string> instead of the declared string? values.
+            props = result.ToDictionary<IDictionary<string, object>, ServerProp, string?>(
                 x => (ServerProp)Enum.Parse(typeof(ServerProp), Convert.ToString(x["propertyname"]).Guard("propertyname")),
-                // ReSharper disable once RedundantCast - required on down-level TFMs where Convert.ToString returns oblivious 'string'
-                x => (string?)Convert.ToString(x["propertyvalue"]));
+                x => Convert.ToString(x["propertyvalue"]));
         }
         catch
         {
@@ -176,10 +177,11 @@ public class SQLInstanceInfo : ISqlInstanceInfo
             conn.Open();
             var result = conn.RunSql(SqlConnectionExtensions.PropsSQL);
 
-            props = result.ToDictionary(
+            // Explicit type arguments: on down-level TFMs Convert.ToString returns oblivious 'string', which would
+            // infer Dictionary<ServerProp, string> instead of the declared string? values.
+            props = result.ToDictionary<IDictionary<string, object>, ServerProp, string?>(
                 x => (ServerProp)Enum.Parse(typeof(ServerProp), Convert.ToString(x["propertyname"]).Guard("propertyname")),
-                // ReSharper disable once RedundantCast - required on down-level TFMs where Convert.ToString returns oblivious 'string'
-                x => (string?)Convert.ToString(x["propertyvalue"]));
+                x => Convert.ToString(x["propertyvalue"]));
         }
         catch
         {
@@ -208,6 +210,7 @@ public class SQLInstanceInfo : ISqlInstanceInfo
         T result = default!;
 
         if (serverValueGet is not null)
+        {
             try
             {
                 result = serverValueGet();
@@ -218,10 +221,12 @@ public class SQLInstanceInfo : ISqlInstanceInfo
                 failed = true;
                 //ignored
             }
+        }
 
         if (serverValueGet is null
             || failed
             || result is null)
+        {
             try
             {
                 propSet(valueGet());
@@ -230,6 +235,7 @@ public class SQLInstanceInfo : ISqlInstanceInfo
             {
                 //ignored
             }
+        }
     }
 
     private static string? GetServerEngineEdition(int? value) =>

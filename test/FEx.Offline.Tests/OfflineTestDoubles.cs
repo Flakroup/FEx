@@ -38,8 +38,7 @@ internal sealed class InMemoryKeyValueStore : IKeyValueStore
     }
 
     public Task<IReadOnlyList<string>> GetKeysAsync(string prefix) =>
-        Task.FromResult<IReadOnlyList<string>>(_values.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal))
-            .ToList());
+        Task.FromResult<IReadOnlyList<string>>([.. _values.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal))]);
 }
 
 /// <summary>An IKeyValueStore whose first removal of a live outbox entry fails, as an app kill or a storage error would.</summary>

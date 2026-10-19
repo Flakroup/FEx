@@ -1,9 +1,9 @@
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -76,7 +76,9 @@ public sealed class VariableHidesOuterVariableAnalyzer : DiagnosticAnalyzer
     {
         if (symbol is not IParameterSymbol { ContainingSymbol: IMethodSymbol { MethodKind: MethodKind.Constructor } constructor }
             || symbol.DeclaringSyntaxReferences[0].GetSyntax().Parent?.Parent is not TypeDeclarationSyntax)
+        {
             return true;
+        }
 
         var user = function.Ancestors().OfType<BaseTypeDeclarationSyntax>().FirstOrDefault();
 

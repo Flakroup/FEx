@@ -65,8 +65,8 @@ public static class StringExtensions
     /// </summary>
     public const string SqlWildCardOneCharacterEscaped = "[_]";
 
-    private static readonly Regex _phoneNumberRegex = new("[^.0-9]", RegexOptions.Compiled);
-    private static readonly int[] _doubledValues = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9];
+    private static readonly Regex PhoneNumberRegex = new("[^.0-9]", RegexOptions.Compiled);
+    private static readonly int[] DoubledValues = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9];
 
     /// <summary>Matches a run of word characters and apostrophes delimited by word boundaries.</summary>
     public static Regex WordRegex { get; } = new(@"\b[\w']+\b", RegexOptions.Compiled);
@@ -102,9 +102,11 @@ public static class StringExtensions
     public static string? ToFormattedPhoneNumber(this string phoneNumber)
     {
         if (!string.IsNullOrWhiteSpace(phoneNumber))
+        {
             return phoneNumber[0] == '+'
-                ? _phoneNumberRegex.Replace(phoneNumber.Substring(2), string.Empty).Trim()
-                : _phoneNumberRegex.Replace(phoneNumber, string.Empty).Trim();
+                ? PhoneNumberRegex.Replace(phoneNumber.Substring(2), string.Empty).Trim()
+                : PhoneNumberRegex.Replace(phoneNumber, string.Empty).Trim();
+        }
 
         return null;
     }
@@ -153,7 +155,9 @@ public static class StringExtensions
     {
         if (value is null
             || toCheck.IsNullOrEmpty())
+        {
             return false;
+        }
 
 #if NETSTANDARD2_0
         return toCheck.Any(x => value.IndexOf(x, comparisonType) >= 0);
@@ -195,10 +199,14 @@ public static class StringExtensions
 
         if (value.Contains(dot)
             && dot != numberDecimalSeparator)
+        {
             value = value.Replace(dot, numberDecimalSeparator);
+        }
         else if (value.Contains(comma)
                  && comma != numberDecimalSeparator)
+        {
             value = value.Replace(comma, numberDecimalSeparator);
+        }
 
         return decimal.TryParse(value, out var result)
             ? result
@@ -254,7 +262,9 @@ public static class StringExtensions
         if (string.IsNullOrEmpty(value)
             || value.Length < 2
             || value.Any(static element => !char.IsDigit(element)))
+        {
             return false;
+        }
 
         var sum = 0;
         var shouldApplyDouble = true;
@@ -267,7 +277,7 @@ public static class StringExtensions
                 return false;
 
             sum += shouldApplyDouble
-                ? _doubledValues[currentDigit]
+                ? DoubledValues[currentDigit]
                 : currentDigit;
 
             shouldApplyDouble = !shouldApplyDouble;
@@ -961,13 +971,15 @@ public static class StringExtensions
         var sb = new StringBuilder();
 
         foreach (var ch in formD.Select(ch => new
-                     {
-                         ch,
-                         uc = CharUnicodeInfo.GetUnicodeCategory(ch)
-                     })
+        {
+            ch,
+            uc = CharUnicodeInfo.GetUnicodeCategory(ch)
+        })
                      .Where(t => t.uc != UnicodeCategory.NonSpacingMark)
                      .Select(t => t.ch))
+        {
             sb.Append(ch);
+        }
 
         return sb.ToString().Normalize(NormalizationForm.FormC);
     }

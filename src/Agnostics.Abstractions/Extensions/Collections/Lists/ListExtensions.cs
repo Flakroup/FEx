@@ -261,6 +261,7 @@ public static class ListExtensions
         var hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !equalityComparator(x, y)));
 
         if (syncAction is not null)
+        {
             for (var i = 0; i < sourceList.Count; i++)
             {
                 var f = sourceList[i];
@@ -279,6 +280,7 @@ public static class ListExtensions
                         $"{nameof(equalityComparator)} function doesn't provide unique objects.");
                 }
             }
+        }
 
         var c = sourceList.Count;
         sourceList.AddRangeToList(syncedList.Where(x => sourceList.All(y => !equalityComparator(x, y))));
@@ -312,6 +314,7 @@ public static class ListExtensions
         var hasChanged = sourceList.RemoveFromListWhere(x => syncedList.All(y => !x.Equals(y)));
 
         if (syncAction is not null)
+        {
             for (var i = 0; i < sourceList.Count; i++)
             {
                 var f = sourceList[i];
@@ -329,6 +332,7 @@ public static class ListExtensions
                     throw new InvalidOperationException($"{nameof(Equals)} function doesn't provide unique objects.");
                 }
             }
+        }
 
         var c = sourceList.Count;
 

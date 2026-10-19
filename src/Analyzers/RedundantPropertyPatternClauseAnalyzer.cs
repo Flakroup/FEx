@@ -1,9 +1,9 @@
-using System.Collections.Immutable;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -39,12 +39,16 @@ public sealed class RedundantPropertyPatternClauseAnalyzer : DiagnosticAnalyzer
         // A bare '{ }' is the null check; it only goes redundant behind a type or a positional clause.
         if (pattern.PropertyPatternClause is not { Subpatterns.Count: 0 } clause
             || pattern.Type is null && pattern.PositionalPatternClause is null)
+        {
             return;
+        }
 
         // 'int { }' becomes the type pattern 'int', which means more than the clause did in two places.
         if (pattern is { Type: not null, PositionalPatternClause: null, Designation: null }
             && (!IsTypePatternAvailable(pattern) || IsAlwaysTrueTypeTest(pattern, context.SemanticModel, context.CancellationToken)))
+        {
             return;
+        }
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, clause.GetLocation()));
     }

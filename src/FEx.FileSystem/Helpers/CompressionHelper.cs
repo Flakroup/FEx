@@ -68,7 +68,9 @@ public static class CompressionHelper
             // The target itself ("." / "./") resolves without the trailing separator.
             if (!destination.StartsWith(root, comparison)
                 && !(destination + Path.DirectorySeparatorChar).Equals(root, comparison))
+            {
                 throw new InvalidDataException($"Zip entry resolves outside the target directory: {entry.FullName}");
+            }
         }
 
         var destinations = entries
@@ -77,6 +79,7 @@ public static class CompressionHelper
             .ToArray();
 
         if (overwrite)
+        {
             //todo check if directories entries are also important
             foreach (var entry in destinations.Where(File.Exists))
             {
@@ -85,6 +88,7 @@ public static class CompressionHelper
                 while (!isSuccess)
                     isSuccess = FileSystemUtilities.SafeDeleteFile(entry).IsSuccess;
             }
+        }
 
         ZipFile.ExtractToDirectory(fileToDecompress, targetDirectory);
     }

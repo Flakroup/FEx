@@ -6,7 +6,7 @@ namespace FEx.Logging.Abstractions;
 
 public class FExLoggingStatics : StaticsBase
 {
-    private static readonly ILoggerFactory? _defaultLoggerFactoryInstance;
+    private static readonly ILoggerFactory? DefaultLoggerFactoryInstance;
 
     private static Func<ILoggerFactory>? _loggerFactoryFactory;
 
@@ -16,13 +16,13 @@ public class FExLoggingStatics : StaticsBase
     /// <b>⚠️ This is discouraged</b> and should only be used where Dependency Injection is unavailable.
     /// </summary>
     public static ILoggerFactory LoggerFactory =>
-        // _defaultLoggerFactoryInstance is null unless Initialize/Configure was called; Get<T>'s Guard() enforces
+        // DefaultLoggerFactoryInstance is null unless Initialize/Configure was called; Get<T>'s Guard() enforces
         // non-null at runtime and throws otherwise, so the null-forgiving operator here is safe.
-        Get(_loggerFactoryFactory, static () => _defaultLoggerFactoryInstance!);
+        Get(_loggerFactoryFactory, static () => DefaultLoggerFactoryInstance!);
 
     static FExLoggingStatics()
     {
-        _defaultLoggerFactoryInstance = null;
+        DefaultLoggerFactoryInstance = null;
     }
 
     public static void SetDefaults()

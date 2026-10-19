@@ -1,13 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -152,7 +152,9 @@ internal static class AnalyzerHelpers
         if (GeneratedSuffixes.Any(suffix => path.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
             || Path.GetFileName(path).StartsWith("TemporaryGeneratedFile_", StringComparison.OrdinalIgnoreCase)
             || tree.GetRoot(cancellationToken).GetFirstToken(true).LeadingTrivia.Any(IsGeneratedBanner))
+        {
             return true;
+        }
 
         for (var type = symbol as INamedTypeSymbol ?? symbol.ContainingType; type is not null; type = type.ContainingType)
         {

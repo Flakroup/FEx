@@ -1,10 +1,10 @@
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -55,7 +55,9 @@ public sealed class RedundantOverriddenMemberAnalyzer : DiagnosticAnalyzer
             || ParametersOf(overridden).Concat(ParametersOf(symbol)).Any(parameter => !parameter.GetAttributes().IsEmpty)
             || HasWrittenCounterpart(symbol, context.CancellationToken)
             || ReimplementsInterface(symbol))
+        {
             return;
+        }
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, IdentifierOf(member).GetLocation(), symbol.Name));
     }

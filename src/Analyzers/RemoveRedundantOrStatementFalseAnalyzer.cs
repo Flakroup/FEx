@@ -1,8 +1,8 @@
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
 
 namespace FEx.Analyzers;
 
@@ -39,6 +39,8 @@ public sealed class RemoveRedundantOrStatementFalseAnalyzer : DiagnosticAnalyzer
         if (statement.Expression is AssignmentExpressionSyntax { RawKind: (int)SyntaxKind.OrAssignmentExpression, Right: LiteralExpressionSyntax { RawKind: (int)SyntaxKind.FalseLiteralExpression } } assignment
             && context.SemanticModel.GetTypeInfo(assignment.Left, context.CancellationToken).Type?.SpecialType == SpecialType.System_Boolean
             && PlainStorage.IsPlainStorage(assignment.Left, context.SemanticModel, context.CancellationToken))
+        {
             context.ReportDiagnostic(Diagnostic.Create(Rule, statement.GetLocation()));
+        }
     }
 }

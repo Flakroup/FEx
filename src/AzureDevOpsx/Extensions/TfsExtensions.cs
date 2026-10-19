@@ -47,10 +47,9 @@ public static class TfsExtensions
 
     public static List<Workspace> GetProjectWorkspaces(this Project project)
     {
-        return project.Collection.Workspaces.SelectMany(v => v.Folders, (v, folder) => new { v, folder })
+        return [.. project.Collection.Workspaces.SelectMany(v => v.Folders, (v, folder) => new { v, folder })
             .Where(t => (t.folder.ServerItem == $"$/{project.Name}" || t.folder.ServerItem == "$/") && !t.folder.IsCloaked && Directory.Exists(t.folder.LocalItem))
-            .Select(t => t.v)
-            .ToList();
+            .Select(t => t.v)];
     }
 
     public static TfsTeamProjectCollection GetTeamProjectCollection(this CatalogNode collectionNode, TfsConfigurationServer server)
@@ -122,7 +121,9 @@ public static class TfsExtensions
 
                     if (filePath.IsNullOrEmptyString()
                         || !Directory.Exists(filePath))
+                    {
                         return false;
+                    }
 
                     filePath = Path.Combine(filePath, Path.GetFileName($"$\\{project.Name}\\{serverItem}".Replace("\\\\", "\\")));
 

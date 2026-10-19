@@ -62,7 +62,9 @@ public class PropertyRenameAndIgnoreSerializerContractResolver : DefaultContract
             || jsonPropertyName is null
             || !_renames.TryGetValue(type, out var renames)
             || !renames.TryGetValue(jsonPropertyName, out newJsonPropertyName))
+        {
             return false;
+        }
 
         return true;
     }

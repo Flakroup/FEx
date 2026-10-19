@@ -20,8 +20,10 @@ public class ConfigurationService : IConfigurationService
             var builder = new ConfigurationBuilder().Add(new LegacyConfigurationProvider());
 
             if (sources is not null)
+            {
                 foreach (var source in sources)
                     builder.Add(source);
+            }
 
             Configuration = builder.Build();
 

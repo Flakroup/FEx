@@ -95,7 +95,9 @@ public static class UriExtensions
 
         if (exts is { Count: > 0 }
             && (ext.TrimStart('.').IsNullOrEmptyString() || !exts.Contains(ext.TrimStart('.')) && !exts.Contains(".*")))
+        {
             fName = $"{fName}.{exts.FirstOrDefault()}";
+        }
 
         return fName;
     }

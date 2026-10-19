@@ -151,13 +151,17 @@ public abstract class TreeViewBuilderBase<TItem> : ITreeViewBuilder<TItem> where
             if (node == null)
             {
                 if (locationIndex == nodeStub.NodePath.Count - 1)
+                {
                     node = await GetTreeViewItemAsync(nodeStub);
+                }
                 else
+                {
                     node = await GetTreeViewItemAsync(new([.. nodeStub.NodePath.Take(locationIndex + 1)],
                         null,
                         setDirectoriesIcons
                             ? FExTreeViewNode.DefaultDirectoryPathForIcon
                             : null));
+                }
 
                 headers.Add(header);
 

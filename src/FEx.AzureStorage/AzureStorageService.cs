@@ -131,8 +131,10 @@ public class AzureStorageService : IAzureStorageService
             PrepareBlobDownloadAsync(containerName, x.fileName, x.localFile, noDownload));
 
         if (!noDownload)
+        {
             await preparedBlobs.WithWhenAllTasksAsync(x =>
                 RunBlobDownloadAsync(x.localFile, x.sourceBlob, x.shouldBeDownloaded));
+        }
 
         IDictionary<string, string?> resDictionary = new Dictionary<string, string?>();
         IDictionary<string, string> invalidDownloads = new Dictionary<string, string>();
@@ -315,10 +317,12 @@ public class AzureStorageService : IAzureStorageService
         var container = GetCloudBlobContainer(containerName);
 
         if (!oneByOne)
+        {
             return (await files.WithWhenAllTasksAsync(file =>
                 UploadFileAsync(path, overwrite, file, containerName, container, CancellationToken.None))).ToDictionary(
                 x => x.file,
                 x => x.blob);
+        }
 
         var result = new Dictionary<FileInfo, CloudBlockBlobInfo>();
 
@@ -466,7 +470,9 @@ public class AzureStorageService : IAzureStorageService
 
                 if (!localFile.Exists
                     || !await CheckMD5Async(localFile, sourceBlob))
+                {
                     shouldBeDownloaded = true;
+                }
 
                 state.Stop();
             }

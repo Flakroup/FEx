@@ -16,11 +16,15 @@ public sealed class ParseStringToLongConverter : JsonConverter<long>
     {
         if (reader.TokenType == JsonTokenType.Number
             && reader.TryGetInt64(out var number))
+        {
             return number;
+        }
 
         if (reader.TokenType == JsonTokenType.String
             && long.TryParse(reader.GetString(), out var parsed))
+        {
             return parsed;
+        }
 
         throw new JsonException("Cannot unmarshal type long");
     }

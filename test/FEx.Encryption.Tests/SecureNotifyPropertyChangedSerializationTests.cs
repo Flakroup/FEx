@@ -18,8 +18,8 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
 {
     private const string Plaintext = "hunter2";
 
-    private static readonly FExStringCipher _cipher = new("the owning passphrase", FExStringCipher.MinIterations);
-    private static readonly FExStringCipher _stranger = new("an unrelated passphrase", FExStringCipher.MinIterations);
+    private static readonly FExStringCipher TestCipher = new("the owning passphrase", FExStringCipher.MinIterations);
+    private static readonly FExStringCipher Stranger = new("an unrelated passphrase", FExStringCipher.MinIterations);
 
     [Fact]
     public void PlainProperty_IsSerializedAsItsCiphertext()
@@ -66,7 +66,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
     [Fact]
     public void ForeignCiphertext_IsKeptAsIs_NotEncryptedASecondTime()
     {
-        var foreign = _stranger.Encrypt("written elsewhere");
+        var foreign = Stranger.Encrypt("written elsewhere");
 
         var read = JsonConvert.DeserializeObject<PlainSettings>($"{{\"Secret\":\"{foreign}\"}}")!;
 
@@ -166,7 +166,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
     [Fact]
     public void HandledSerializerError_OnRead_SkipsOnlyTheFailingMember()
     {
-        var ciphertext = _cipher.Encrypt(Plaintext);
+        var ciphertext = TestCipher.Encrypt(Plaintext);
         var json = $"{{\"Fragile\":\"x\",\"Secret\":\"{ciphertext}\",\"Visible\":\"kept\"}}";
         JsonSerializerSettings tolerant = new() { Error = (_, e) => e.ErrorContext.Handled = true };
 
@@ -246,7 +246,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
 
         internal string? RawSecret => _secret;
 
-        protected override FExStringCipher Cipher => _cipher;
+        protected override FExStringCipher Cipher => TestCipher;
     }
 
     public sealed class JsonSettings : SecureNotifyPropertyChanged
@@ -259,7 +259,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
             set => EncryptJsonSource(ref _payload, value);
         }
 
-        protected override FExStringCipher Cipher => _cipher;
+        protected override FExStringCipher Cipher => TestCipher;
     }
 
     /// <summary>A member whose getter throws, declared before the secret, as in the reviewed leak.</summary>
@@ -279,7 +279,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
             set => EncryptSource(ref _secret, value);
         }
 
-        protected override FExStringCipher Cipher => _cipher;
+        protected override FExStringCipher Cipher => TestCipher;
     }
 
     /// <summary>Its first member blocks the first reader until another serialization has finished.</summary>
@@ -316,7 +316,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
             set => EncryptSource(ref _secret, value);
         }
 
-        protected override FExStringCipher Cipher => _cipher;
+        protected override FExStringCipher Cipher => TestCipher;
     }
 
     public sealed class ThrowingCallbackSettings : SecureNotifyPropertyChanged
@@ -332,7 +332,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
             set => EncryptSource(ref _secret, value);
         }
 
-        protected override FExStringCipher Cipher => _cipher;
+        protected override FExStringCipher Cipher => TestCipher;
 
         [OnSerializing]
         private void OnSerializing(StreamingContext context)
@@ -345,7 +345,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
     /// <summary>Getter and setter go through helpers; the field is assigned in the constructor.</summary>
     public sealed class HelperSettings : SecureNotifyPropertyChanged
     {
-        private string? _secret = _cipher.Encrypt(Plaintext);
+        private string? _secret = TestCipher.Encrypt(Plaintext);
 
         public string? Secret
         {
@@ -355,7 +355,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
 
         internal string? RawSecret => _secret;
 
-        protected override FExStringCipher Cipher => _cipher;
+        protected override FExStringCipher Cipher => TestCipher;
 
         private string? Read(string? source) => DecryptFromSource(source);
 
@@ -364,14 +364,14 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
 
     public sealed class TwoSecretsSettings : SecureNotifyPropertyChanged
     {
-        private readonly string _first = _cipher.Encrypt(Plaintext);
-        private readonly string _second = _cipher.Encrypt("other");
+        private readonly string _first = TestCipher.Encrypt(Plaintext);
+        private readonly string _second = TestCipher.Encrypt("other");
 
         public string Visible => "kept";
 
         public string Combined => DecryptFromSource(_first) + DecryptFromSource(_second);
 
-        protected override FExStringCipher Cipher => _cipher;
+        protected override FExStringCipher Cipher => TestCipher;
     }
 
     /// <summary>Its first member's setter throws on read.</summary>
@@ -393,7 +393,7 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
 
         public string? Visible { get; set; }
 
-        protected override FExStringCipher Cipher => _cipher;
+        protected override FExStringCipher Cipher => TestCipher;
     }
 
     public sealed class FieldPatternSettings : SecureNotifyPropertyChanged
@@ -408,6 +408,6 @@ public sealed class SecureNotifyPropertyChangedSerializationTests
             set => EncryptJsonSource(ref _payload, value);
         }
 
-        protected override FExStringCipher Cipher => _cipher;
+        protected override FExStringCipher Cipher => TestCipher;
     }
 }

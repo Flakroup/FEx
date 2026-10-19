@@ -43,7 +43,9 @@ public static class GitWorktreeExtensions
 
         if (string.IsNullOrEmpty(firstLine)
             || !firstLine.StartsWith(GitDirPrefix, StringComparison.Ordinal))
+        {
             return GitWorktreeKind.None;
+        }
 
         var target = firstLine.Substring(GitDirPrefix.Length).Trim().Replace('\\', '/');
 
@@ -55,7 +57,9 @@ public static class GitWorktreeExtensions
 
         if (worktreesIdx < 0
             && modulesIdx < 0)
+        {
             return GitWorktreeKind.None;
+        }
 
         return modulesIdx > worktreesIdx
             ? GitWorktreeKind.Submodule

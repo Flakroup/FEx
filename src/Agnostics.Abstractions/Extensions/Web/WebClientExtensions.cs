@@ -32,8 +32,10 @@ public static class WebClientExtensions
             client.DefaultRequestHeaders.Add("User-Agent", pars.UserAgent);
 
         if (pars?.Headers is not null)
+        {
             foreach (var header in pars.Headers)
                 client.DefaultRequestHeaders.Add(header.Key, header.Value);
+        }
 
         if (pars?.KeepAlive.HasValue == true)
             client.DefaultRequestHeaders.ConnectionClose = !pars.KeepAlive.Value;

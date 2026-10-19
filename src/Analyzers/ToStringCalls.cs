@@ -1,9 +1,9 @@
-using System;
-using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
+using System.Linq;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -25,7 +25,9 @@ internal static class ToStringCalls
             || type.IsReferenceType == valueTypeReceiver
             || type.IsRefLikeType
             || ConvertsToStringByUserCode(model.Compilation, type))
+        {
             return false;
+        }
 
         // string.ToString() returns the instance itself, wherever it stands.
         if (type.SpecialType == SpecialType.System_String)
@@ -87,7 +89,9 @@ internal static class ToStringCalls
     {
         if (model.GetTypeInfo(other, cancellationToken).Type?.SpecialType != SpecialType.System_String
             || IsToStringOfNonString(other, model, cancellationToken))
+        {
             return false;
+        }
 
         // A user-defined 'operator +(string, T)' would take over, and so would a bound that is no longer a string concatenation.
         return Speculation.BoundAfter(model, binary, binary.ReplaceNode(target, stripped), cancellationToken)
@@ -125,7 +129,9 @@ internal static class ToStringCalls
     {
         if (model.GetSymbolInfo(outer, cancellationToken).Symbol is not IMethodSymbol { ContainingType: { } owner, Parameters: [{ Type.SpecialType: SpecialType.System_String }, ..] } method
             || ParameterOf(outer, argument, method) is not { } parameter)
+        {
             return false;
+        }
 
         var edited = outer.ReplaceNode(target, stripped);
         // An array would be taken as the params array itself.

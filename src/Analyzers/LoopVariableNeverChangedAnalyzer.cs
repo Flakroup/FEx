@@ -1,10 +1,10 @@
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -45,7 +45,7 @@ public sealed class LoopVariableNeverChangedAnalyzer : DiagnosticAnalyzer
                 break;
             case IForLoopOperation forLoop:
                 condition = forLoop.Condition;
-                parts = forLoop.AtLoopBottom.Prepend(forLoop.Body).ToList();
+                parts = [.. forLoop.AtLoopBottom.Prepend(forLoop.Body)];
                 break;
             default:
                 return;

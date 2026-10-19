@@ -57,7 +57,7 @@ public class VersionUpdateRule
                 case "+" when inPart.Length == 0:
                     throw new ArgumentException("Can't increment missing value");
                 case "+":
-                    int.TryParse(inPart, out var inNumber);
+                    _ = int.TryParse(inPart, out var inNumber);
                     inNumber++;
                     outParts.Add(inNumber.ToString());
 

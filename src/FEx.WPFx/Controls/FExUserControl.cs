@@ -46,7 +46,9 @@ public class FExUserControl : UserControl, IFExNotifyPropertyChanged
     {
         if (PropertyChanged is null
             || propertyName is null)
+        {
             return;
+        }
 
         FExCoreStatics.Dispatcher.InvokeOnMainThread(EventDelegate, this);
 
@@ -130,7 +132,9 @@ public class FExUserControl : UserControl, IFExNotifyPropertyChanged
     {
         if (propertyName is null
             || PropertyChanged is null)
+        {
             return;
+        }
 
         PropertyChanged.HandlePropertyChanged(this, propertyName);
     }

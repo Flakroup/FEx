@@ -40,7 +40,9 @@ public class FlurlConfigurator : FExInitializable, IFlurlConfigurator
         builder.Settings.Timeout = _apiConfiguration.PollyConfig.RequestTimeout;
 
         if (_apiConfiguration.IgnoreSSLErrors)
+        {
             builder.ConfigureInnerHandler(handler =>
                 handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true);
+        }
     }
 }

@@ -234,8 +234,10 @@ public class SecureNotifyPropertyChanged : NotifyPropertyChanged
         }
 
         if (observer.Count > 1)
+        {
             throw new InvalidOperationException(
                 $"'{propertyName}' on {GetType().Name} decrypts {observer.Count} values; it cannot be persisted as one ciphertext. Mark it [JsonIgnore] and persist the backing fields instead.");
+        }
 
         if (observer.Count == 1)
             return observer.Source;

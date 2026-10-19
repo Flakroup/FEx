@@ -99,7 +99,9 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
 
         if (!refresh
             && res.CachedImage is not null)
+        {
             return res.CachedImage;
+        }
 
         var runningTask = CachingTask;
 
@@ -110,10 +112,14 @@ public class CachedImage : ReactiveNotifyPropertyChanged, IDisposable
             CancellationToken);
 
         if (await CachingTask)
+        {
             await CachedImages.Values.WithWhenAllTasksAsync(v =>
                 v.ReloadImageFromCacheFileAsync(true, forceLoad, forceMemoryStream));
+        }
         else if (res.CachedImage is null)
+        {
             await res.ReloadImageFromCacheFileAsync(true, forceLoad, forceMemoryStream);
+        }
 
         return res.CachedImage;
     }

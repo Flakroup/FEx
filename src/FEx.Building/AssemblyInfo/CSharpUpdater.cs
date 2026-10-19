@@ -62,6 +62,7 @@ public class CSharpUpdater
         try
         {
             if (fileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+            {
                 foreach (var line in File.ReadAllLines(fileName))
                 {
                     var g = isVersionString
@@ -71,6 +72,7 @@ public class CSharpUpdater
                     if (g is not null)
                         return g.Value;
                 }
+            }
         }
         catch (Exception e)
         {
@@ -92,7 +94,7 @@ public class CSharpUpdater
                 var g = GetVersionString(line, rule.AttributeName);
 
                 if (g is not null)
-                    VersionString.TryParse(g.Value, out v);
+                    _ = VersionString.TryParse(g.Value, out v);
 
                 if (v is not null)
                 {
@@ -158,7 +160,7 @@ public class CSharpUpdater
     {
         var lines = File.ReadAllLines(fileName);
 
-        File.WriteAllLines(fileName, lines.Select(UpdateLine).ToArray());
+        File.WriteAllLines(fileName, [.. lines.Select(UpdateLine)]);
     }
 
     private string UpdateLine(string line)

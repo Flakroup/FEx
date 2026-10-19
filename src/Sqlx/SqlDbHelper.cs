@@ -3,16 +3,17 @@ using FEx.Agnostics.Abstractions.Extensions;
 using FEx.Asyncx.Abstractions;
 using FEx.Core.Abstractions.Extensions;
 using FEx.Sqlx.Abstractions;
-using Microsoft.Data.Sql;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 #if NETFRAMEWORK
 using FEx.Agnostics.Abstractions.Utilities;
 using Microsoft.SqlServer.Management.Smo;
 using Microsoft.SqlServer.Management.Smo.Wmi;
+#else
+using Microsoft.Data.Sql;
+using System.Data;
 #endif
 #if NET
 using System.Management;
@@ -92,9 +93,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
     private static bool HasValidLoginMode(SQLInstanceInfo sqlInstanceInfo) =>
         sqlInstanceInfo?.LoginMode is SqlLoginMode.Integrated or SqlLoginMode.Mixed;
 
-    // Used by GetSqlInstancesAsync in the non-NETFRAMEWORK build (#else branch). R# analyzes the net48
-    // TFM, where that single call site is preprocessed out, so it incorrectly reports this as unused.
-    // ReSharper disable once UnusedMember.Local
+#if !NETFRAMEWORK
     private static async Task<IList<SQLInstanceInfo>> GetLocalSqlInstancesAsync()
     {
         try
@@ -128,6 +127,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
         using var dataSources = SqlDataSourceEnumerator.Instance.GetDataSources();
         return [.. dataSources.Rows.OfType<DataRow>().Select(GetSqlInstanceName)];
     }
+#endif
 
 #if NET
     // Faithful net10 replacement for SMO ManagedComputer (whose WMI assemblies are absent from the
@@ -240,6 +240,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
     }
 #endif
 
+#if !NETFRAMEWORK
     private static string GetSqlInstanceName(DataRow row)
     {
         // ServerName is a non-nullable column of the SqlDataSourceEnumerator schema; Guard throws if absent.
@@ -250,6 +251,7 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
             ? $"{serverName}\\{instanceName}"
             : serverName;
     }
+#endif
 
     private async Task<SQLInstanceInfo?> GetLatestSqlInstanceAsync()
     {
@@ -257,10 +259,12 @@ public class SqlDbHelper : AsyncInitializable, ISqlDbHelper
         SQLInstanceInfo? sqlInstance = null;
 
         if (sqlInstances?.Count > 0)
+        {
             sqlInstance =
                 sqlInstances.OrderByDescending(x => x.ProductVersion)
                     .FirstOrDefault(x => !x.IsLocalDB && HasValidLoginMode(x))
                 ?? sqlInstances.OrderByDescending(x => x.ProductVersion).FirstOrDefault(HasValidLoginMode);
+        }
 
         return sqlInstance;
     }

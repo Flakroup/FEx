@@ -17,7 +17,9 @@ public static class ConfigurationManagerExtensions
             foreach (var setting in appConfig.AppSettings.Settings.AllKeys
                          .Where(x => ConfigurationManager.AppSettings.AllKeys.All(y => x != y))
                          .ToDictionary(x => x, x => appConfig.AppSettings.Settings[x].Value))
+            {
                 ConfigurationManager.AppSettings.Set(setting.Key, setting.Value);
+            }
         }
         catch
         {
@@ -44,7 +46,9 @@ public static class ConfigurationManagerExtensions
             foreach (var connStr in appConfig.ConnectionStrings.ConnectionStrings.OfType<ConnectionStringSettings>()
                          .Where(connStr => connStrs.All(x => x.Name != connStr.Name))
                          .ToArray())
+            {
                 baseAddMethod?.Invoke(ConfigurationManager.ConnectionStrings, [connStr]);
+            }
 
             readonlyField?.SetValue(ConfigurationManager.ConnectionStrings, true);
         }

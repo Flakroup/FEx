@@ -31,7 +31,7 @@ internal sealed class FakeFtpServer : IDisposable
     {
         _listener = new(_address, 0);
         _listener.Start();
-        _ = Task.Run(AcceptLoop);
+        _ = Task.Run(AcceptLoopAsync);
     }
 
     public int Port => ((IPEndPoint)_listener.LocalEndpoint).Port;
@@ -90,14 +90,14 @@ internal sealed class FakeFtpServer : IDisposable
         _cts.Dispose();
     }
 
-    private async Task AcceptLoop()
+    private async Task AcceptLoopAsync()
     {
         try
         {
             while (!_cts.IsCancellationRequested)
             {
                 var client = await _listener.AcceptTcpClientAsync();
-                _ = Task.Run(() => Serve(client));
+                _ = Task.Run(() => ServeAsync(client));
             }
         }
         catch (Exception ex) when (ex is ObjectDisposedException or SocketException or InvalidOperationException)
@@ -106,7 +106,7 @@ internal sealed class FakeFtpServer : IDisposable
         }
     }
 
-    private async Task Serve(TcpClient client)
+    private async Task ServeAsync(TcpClient client)
     {
         var now = Interlocked.Increment(ref _open);
         int seen;
@@ -183,7 +183,7 @@ internal sealed class FakeFtpServer : IDisposable
                         await writer.WriteLineAsync($"227 Entering Passive Mode ({(PasvAddress ?? _address).ToString().Replace('.', ',')},{p / 256},{p % 256})");
                         break;
                     case "LIST" or "NLST":
-                        await Transfer(writer, data, async d => await d.WriteAsync(Listing(arg)));
+                        await TransferAsync(writer, data, async d => await d.WriteAsync(Listing(arg)));
                         break;
                     case "RETR":
                         if (Files.TryGetValue(Resolve(arg), out var content))
@@ -193,7 +193,7 @@ internal sealed class FakeFtpServer : IDisposable
 
                             var aborted = abortAfter is not null;
                             var sent = aborted ? rest[..Math.Min(abortAfter!.Value, rest.Length)] : rest;
-                            await Transfer(writer, data, async d => await d.WriteAsync(sent), false, aborted ? AbortReply : "226 transfer complete");
+                            await TransferAsync(writer, data, async d => await d.WriteAsync(sent), false, aborted ? AbortReply : "226 transfer complete");
                         }
                         else
                         {
@@ -202,7 +202,7 @@ internal sealed class FakeFtpServer : IDisposable
 
                         break;
                     case "STOR":
-                        await Transfer(writer, data, async d =>
+                        await TransferAsync(writer, data, async d =>
                         {
                             using var ms = new MemoryStream();
                             await d.CopyToAsync(ms);
@@ -231,7 +231,7 @@ internal sealed class FakeFtpServer : IDisposable
         }
     }
 
-    private static async Task Transfer(StreamWriter control, TcpListener? data, Func<Stream, Task> body, bool upload = false, string done = "226 transfer complete")
+    private static async Task TransferAsync(StreamWriter control, TcpListener? data, Func<Stream, Task> body, bool upload = false, string done = "226 transfer complete")
     {
         if (data == null)
         {

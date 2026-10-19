@@ -113,11 +113,13 @@ public class SizedImageCache : NotifyPropertyChanged, IDisposable
 
                 if ((refresh || CachedImage is null)
                     && cacheFile.Exists)
+                {
                     CachedImage =
                         await CommonWindowsImaging.GetBitmapImageFromFileAsync(cacheFile,
                             ImageSize,
                             forceLoad,
                             forceMemoryStream);
+                }
             }
         }
         catch
@@ -142,9 +144,11 @@ public class SizedImageCache : NotifyPropertyChanged, IDisposable
         if (CachedImage is not null
             && ImageUpdateAction is not null
             && propertyName.IsIn(nameof(CachedImage), nameof(ImageUpdateAction)))
+        {
             ImageUpdateActionTask = AsyncStatics.ExecuteOnThreadPoolAsync(() => ImageUpdateAction(CachedImage),
                 AsyncOptions.ImmediateStart,
                 CancellationToken);
+        }
     }
 
     #region IDisposable

@@ -21,18 +21,18 @@ public class FExServiceProvider : IFExServiceProvider
     /// <summary>
     /// Lock object for thread-safe initialization.
     /// </summary>
-    private static readonly FExSemaphoreSlim _initializationLock = new();
+    private static readonly FExSemaphoreSlim InitializationLock = new();
 
     /// <summary>
     /// Tracks the container instance for idempotent initialization.
     /// </summary>
     private static IDisposable? _containerInstance;
 
-    private static readonly MethodInfo _resolveServiceMethod =
+    private static readonly MethodInfo ResolveServiceMethod =
         typeof(IFExServiceContainer).GetMethod(nameof(IFExServiceContainer.ResolveService),
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
 
-    private static readonly MethodInfo _resolveOrDefaultMethod =
+    private static readonly MethodInfo ResolveOrDefaultMethod =
         typeof(IFExServiceContainer).GetMethod(nameof(IFExServiceContainer.ResolveOrDefault),
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
 
@@ -103,8 +103,8 @@ public class FExServiceProvider : IFExServiceProvider
         try
         {
             return required
-                ? _resolveServiceMethod.MakeGenericMethod(serviceType).Invoke(RequiredServiceContainer, null)
-                : _resolveOrDefaultMethod.MakeGenericMethod(serviceType).Invoke(RequiredServiceContainer, [null]);
+                ? ResolveServiceMethod.MakeGenericMethod(serviceType).Invoke(RequiredServiceContainer, null)
+                : ResolveOrDefaultMethod.MakeGenericMethod(serviceType).Invoke(RequiredServiceContainer, [null]);
         }
         catch (TargetInvocationException ex) when (ex.InnerException is not null)
         {
@@ -154,8 +154,10 @@ public class FExServiceProvider : IFExServiceProvider
     public static T Get<T>()
     {
         if (ServiceContainer == null)
+        {
             throw new InvalidOperationException(
                 $"FExServiceProvider not initialized. Call {nameof(InitializeAsync)}<TContainer>() first.");
+        }
 
         return ServiceContainer.ResolveService<T>();
     }
@@ -169,8 +171,10 @@ public class FExServiceProvider : IFExServiceProvider
     public static async Task<T> GetAsync<T>()
     {
         if (ServiceContainer == null)
+        {
             throw new InvalidOperationException(
                 $"FExServiceProvider not initialized. Call {nameof(InitializeAsync)}<TContainer>() first.");
+        }
 
         return await ServiceContainer.ResolveServiceAsync<T>();
     }
@@ -184,8 +188,10 @@ public class FExServiceProvider : IFExServiceProvider
     public static IEnumerable<T> GetAll<T>()
     {
         if (ServiceContainer == null)
+        {
             throw new InvalidOperationException(
                 $"FExServiceProvider not initialized. Call {nameof(InitializeAsync)}<TContainer>() first.");
+        }
 
         return ServiceContainer.ResolveServices<T>();
     }
@@ -199,8 +205,10 @@ public class FExServiceProvider : IFExServiceProvider
     public static IEnumerable<T> TryGetAll<T>()
     {
         if (ServiceContainer == null)
+        {
             throw new InvalidOperationException(
                 $"FExServiceProvider not initialized. Call {nameof(InitializeAsync)}<TContainer>() first.");
+        }
 
         return ServiceContainer.TryResolveServices<T>();
     }
@@ -214,8 +222,10 @@ public class FExServiceProvider : IFExServiceProvider
     public static async Task<IEnumerable<T>> GetAllAsync<T>()
     {
         if (ServiceContainer == null)
+        {
             throw new InvalidOperationException(
                 $"FExServiceProvider not initialized. Call {nameof(InitializeAsync)}<TContainer>() first.");
+        }
 
         return await ServiceContainer.ResolveServicesAsync<T>();
     }
@@ -264,7 +274,7 @@ public class FExServiceProvider : IFExServiceProvider
             return existingContainer;
 
         // Thread-safety: prevent concurrent initialization
-        await _initializationLock.WaitAsync();
+        await InitializationLock.WaitAsync();
 
         try
         {
@@ -315,7 +325,7 @@ public class FExServiceProvider : IFExServiceProvider
         }
         finally
         {
-            _initializationLock.Release();
+            InitializationLock.Release();
         }
     }
 
@@ -340,9 +350,11 @@ public class FExServiceProvider : IFExServiceProvider
             }
 
             if (provider is not null)
+            {
                 throw new InvalidOperationException(
                     $"Default container {provider.GetType().FullName ?? "null"} does not implement interface or type {typeof(TModule).FullName}",
                     ex);
+            }
 
             if (ServiceProvider is null)
                 throw new InvalidOperationException("Service provider wasn't initialized");

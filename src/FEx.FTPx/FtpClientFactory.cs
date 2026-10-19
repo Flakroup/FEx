@@ -140,12 +140,14 @@ public class FtpClientFactory
     internal FtpProxyProfile? GetProxy(bool useProxy)
     {
         if (useProxy)
+        {
             return new()
             {
                 ProxyCredentials = (NetworkCredential)ProxyCredentials,
                 ProxyHost = ProxyHost,
                 ProxyPort = ProxyPort
             };
+        }
 
         return null;
     }

@@ -132,18 +132,22 @@ public sealed class AsyncProcessingQueue : IDisposable
         ThrowIfDisposed();
 
         var gate = new AsyncTaskCompletionSource<bool>();
-#if !NETSTANDARD2_0
-        await
+#if NETSTANDARD2_0
+        using var registration = cancellationToken.Register(() => gate.TrySetCanceled(cancellationToken));
+#else
+        await using var registration = cancellationToken.Register(() => gate.TrySetCanceled(cancellationToken));
 #endif
-            using var registration = cancellationToken.Register(() => gate.TrySetCanceled(cancellationToken));
 
         _taskQueue.Enqueue(gate);
 
         // Dispose may have drained the queue between the check above and the enqueue; fail that gate too
         // instead of leaving it pending forever.
         if (_disposed)
+        {
             FailPendingGates();
+        }
         else
+        {
             try
             {
                 _queuedSignal.Release();
@@ -152,6 +156,7 @@ public sealed class AsyncProcessingQueue : IDisposable
             {
                 FailPendingGates();
             }
+        }
 
         await gate.Task;
     }

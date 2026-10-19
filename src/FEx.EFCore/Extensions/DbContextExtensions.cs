@@ -160,7 +160,9 @@ public static class DbContextExtensions
     {
         if (deletedElsewhere.Count == 0
             || !ex.Entries.All(e => deletedElsewhere.Exists(d => ReferenceEquals(d.Entity, e.Entity))))
+        {
             return false;
+        }
 
         foreach (var entry in deletedElsewhere)
             entry.State = EntityState.Detached;
@@ -239,7 +241,9 @@ public static class DbContextExtensions
                 foreach (var message in allFailedValidations
                              .Select(res => GetValidationResultInfo(res, Debugger.IsAttached))
                              .Distinct())
+                {
                     sb.Append(message);
+                }
 
                 var ex = new InvalidDataException(sb.ToString());
 

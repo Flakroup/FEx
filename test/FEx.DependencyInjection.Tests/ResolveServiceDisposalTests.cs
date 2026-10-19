@@ -1,7 +1,7 @@
-using System;
 using FEx.DependencyInjection.Abstractions.Interfaces;
 using Shouldly;
 using StrongInject;
+using System;
 using Xunit;
 
 namespace FEx.DependencyInjection.Tests;

@@ -21,7 +21,9 @@ public static class ResourceIdHelper
             || !sourceUri.IsAbsoluteUri
             || baseUri.Scheme != sourceUri.Scheme
             || baseUri.Host != sourceUri.Host)
+        {
             return str;
+        }
 
         var components1 = baseUri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
         var components2 = sourceUri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);

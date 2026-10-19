@@ -1,8 +1,8 @@
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
 
 namespace FEx.Analyzers;
 
@@ -37,7 +37,9 @@ public sealed class RedundantStringFormatCallAnalyzer : DiagnosticAnalyzer
         if (call.ArgumentList.Arguments is not { Count: 1 } arguments
             || arguments[0].Expression is not LiteralExpressionSyntax { RawKind: (int)SyntaxKind.StringLiteralExpression } literal
             || context.SemanticModel.GetSymbolInfo(call, context.CancellationToken).Symbol is not IMethodSymbol { Name: "Format", ContainingType.SpecialType: SpecialType.System_String })
+        {
             return;
+        }
 
         // A doubled brace is the escape for a single one; any other brace is a placeholder or a format error.
         if (literal.Token.ValueText.Replace("{{", "").Replace("}}", "").IndexOfAny(['{', '}']) < 0)

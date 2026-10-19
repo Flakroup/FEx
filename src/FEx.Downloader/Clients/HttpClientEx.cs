@@ -424,13 +424,14 @@ public class HttpClientEx : HttpClient, INotifyPropertyChanged, IDownloadBase
         return true;
     }
 
-
     [NotifyPropertyChangedInvocator]
     private void NotifyChanged([CallerMemberName] string? propertyName = null)
     {
         if (propertyName is null
             || PropertyChanged is null)
+        {
             return;
+        }
 
         PropertyChanged.HandlePropertyChanged(this, propertyName);
     }

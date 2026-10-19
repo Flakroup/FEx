@@ -26,7 +26,9 @@ public static class DataGridBehavior
     {
         if (target is not DataGrid dataGrid
             || !(bool)e.NewValue)
+        {
             return;
+        }
 
         EventHandler<DataGridRowEventArgs>? loadedRowHandler = null;
 

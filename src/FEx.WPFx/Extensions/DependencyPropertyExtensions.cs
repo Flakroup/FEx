@@ -6,7 +6,6 @@ using System.Windows;
 
 namespace FEx.WPFx.Extensions;
 
-
 public static class DependencyPropertyExtensions
 {
     public static DependencyProperty CreateTwoWayDependencyProperty<TView, TProperty>(
@@ -131,8 +130,8 @@ public static class DependencyPropertyExtensions
             FrameworkPropertyMetadataOptions flags,
             Action<(TView view, TProperty oldValue, TProperty newValue)>? propertyChanged,
             Func<(TView view, TProperty currentValue), TProperty>? coerceValue
-        //, bool isAnimationProhibited,
-        //UpdateSourceTrigger defaultUpdateSourceTrigger
+    //, bool isAnimationProhibited,
+    //UpdateSourceTrigger defaultUpdateSourceTrigger
     ) where TView : DependencyObject =>
         new(defaultValue,
             flags,

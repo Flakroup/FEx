@@ -31,10 +31,12 @@ public sealed class GraphResiliencePipelineTests
                 await Task.CompletedTask;
 
                 if (attemptCount < 3)
+                {
                     throw new ODataError
                     {
                         ResponseStatusCode = 429
                     };
+                }
             },
             CancellationToken.None);
 
@@ -54,10 +56,12 @@ public sealed class GraphResiliencePipelineTests
                 await Task.CompletedTask;
 
                 if (attemptCount < 2)
+                {
                     throw new ODataError
                     {
                         ResponseStatusCode = 503
                     };
+                }
             },
             CancellationToken.None);
 
@@ -142,10 +146,12 @@ public sealed class GraphResiliencePipelineTests
                 await Task.CompletedTask;
 
                 if (attemptCount < 3)
+                {
                     throw new ODataError
                     {
                         ResponseStatusCode = 429
                     };
+                }
             },
             CancellationToken.None);
 

@@ -31,9 +31,11 @@ public static class DoubleExtensions
     public static bool PreciseEquals(this double left, double right, int floatDigits = 7)
     {
         if (floatDigits is < 1 or > 7)
+        {
             throw new ArgumentOutOfRangeException(nameof(floatDigits),
                 floatDigits,
                 "Only values between 1 and 7 are supported");
+        }
 
         var floatComparison = GetFloatComparison(floatDigits);
 
@@ -55,7 +57,9 @@ public static class DoubleExtensions
             value.Contains('.')
 #endif
             && "." != numberDecimalSeparator)
+        {
             value = value.Replace(".", numberDecimalSeparator);
+        }
         else if (
 #if NETSTANDARD
             value.Contains(",")
@@ -63,7 +67,9 @@ public static class DoubleExtensions
             value.Contains(',')
 #endif
             && "," != numberDecimalSeparator)
+        {
             value = value.Replace(",", numberDecimalSeparator);
+        }
 
         // The invariant fallback reads what ToRoundTripString writes ("Infinity", "NaN") under cultures with other symbols (pl-PL spells infinity with the infinity sign).
         if (!double.TryParse(value, out var l) && !double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out l))

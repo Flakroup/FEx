@@ -24,5 +24,5 @@ public abstract class TestBase
     /// <param name="args">The arguments to serialize and insert into <paramref name="format"/>.</param>
     /// <returns>The formatted message.</returns>
     protected string FormatMessage(string format, params object[] args) =>
-        string.Format(format, args.Select(e => JsonConvert.SerializeObject(e, _serializerSettings)).ToArray<object>());
+        string.Format(format, [.. args.Select(e => JsonConvert.SerializeObject(e, _serializerSettings))]);
 }

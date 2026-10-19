@@ -59,10 +59,12 @@ internal static class InstalledApplicationReader
             using var root = openRoot(source);
 
             if (root is not null)
+            {
                 applications.AddRange(ReadAll(root.GetEntryNames(),
                     root.OpenEntry,
                     RegistryHive.LocalMachine,
                     source.View));
+            }
         }
 
         return applications;

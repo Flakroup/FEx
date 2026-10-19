@@ -50,7 +50,7 @@ public sealed class CoverageDebtTests
     [Fact]
     public void Debt_IsSorted()
     {
-        CoverageDebt.Files.ShouldBe(CoverageDebt.Files.OrderBy(static entry => entry, StringComparer.Ordinal).ToList());
+        CoverageDebt.Files.ShouldBe([.. CoverageDebt.Files.OrderBy(static entry => entry, StringComparer.Ordinal)]);
     }
 
     [Fact]

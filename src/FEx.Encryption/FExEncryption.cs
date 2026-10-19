@@ -56,12 +56,16 @@ public class FExEncryption : InitializeOnlyModule, IFExPriorityInitialize
         var passPhrase = settings?.PassPhrase;
 
         if (string.IsNullOrWhiteSpace(passPhrase))
+        {
             throw new FExEncryptionNotConfiguredException(
                 "FEx.Encryption has no passphrase. Set IFExEncryptionSettings.PassPhrase - there is no default, because a key derived from public machine or user names would protect nothing.");
+        }
 
         if (passPhrase!.Length < MinimumPassPhraseLength)
+        {
             throw new FExEncryptionNotConfiguredException(
                 $"The configured passphrase is {passPhrase.Length} characters; at least {MinimumPassPhraseLength} are required.");
+        }
 
         return new FExStringCipher(passPhrase);
     }

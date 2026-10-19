@@ -1,6 +1,6 @@
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Operations;
+using System.Linq;
 
 namespace FEx.Analyzers;
 

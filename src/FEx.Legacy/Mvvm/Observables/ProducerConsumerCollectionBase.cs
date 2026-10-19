@@ -2,8 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-// ReSharper disable once RedundantUsingDirective - used on net10 (redundant only on down-level TFMs)
+#if !NETSTANDARD
 using System.Diagnostics.CodeAnalysis;
+#endif
 
 namespace FEx.Legacy.Mvvm.Observables;
 

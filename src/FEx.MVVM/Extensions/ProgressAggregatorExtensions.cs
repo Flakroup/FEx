@@ -48,7 +48,7 @@ public static class ProgressAggregatorExtensions
                                                double? bytesReceived,
                                                double? totalBytesToReceive,
                                                object? userState)
-        // ReSharper restore UnusedParameter.Global
+    // ReSharper restore UnusedParameter.Global
     {
         viewModel.SetIsFileOperation(true);
         viewModel.PrgSet(bytesReceived, totalBytesToReceive);

@@ -1,6 +1,6 @@
+using FEx.MSBuildx.Extensions;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
-using FEx.MSBuildx.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;

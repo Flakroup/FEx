@@ -107,7 +107,9 @@ public static class FtpDownloader
                         username,
                         password,
                         cancellationToken))
+                {
                     return true;
+                }
 
                 lastError = null;
             }
@@ -340,9 +342,13 @@ public static class FtpDownloader
         {
             if (serverUri.Scheme == Uri.UriSchemeHttp
                 || serverUri.Scheme == Uri.UriSchemeHttps)
+            {
                 bytesTotal = Math.Max(await serverUri.GetHttpFileSizeAsync(client: client, cancellationToken: cancellationToken), 0);
+            }
             else if (serverUri.Scheme == Uri.UriSchemeFtp)
+            {
                 bytesTotal = await FtpTransport.Instance.GetSizeAsync(serverUri, username, password, cancellationToken);
+            }
         }
         catch (Exception ex)
         {

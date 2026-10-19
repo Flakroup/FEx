@@ -99,7 +99,9 @@ public static class DirectoryWalker
                 {
                     if (!hasSkip
                         || !skipDirectoryPredicate!(subDir))
+                    {
                         stack.Push(subDir);
+                    }
                 }
             }
             catch

@@ -1,10 +1,10 @@
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
 
 namespace FEx.Analyzers;
 
@@ -42,7 +42,9 @@ public sealed class RedundantExplicitNullableCreationAnalyzer : DiagnosticAnalyz
         if (creation.ArgumentList is not { Arguments: [{ NameColon: null, Expression: var value }] }
             || Unparenthesize(value).IsKind(SyntaxKind.DefaultLiteralExpression)
             || model.GetTypeInfo(creation, cancellationToken).Type?.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T)
+        {
             return;
+        }
 
         // Only where the target is fixed by the context: the value's own type must not leak into inference, overload choice or a conditional's type.
         if (!IsTargetTyped(creation, model, cancellationToken, out var owner))

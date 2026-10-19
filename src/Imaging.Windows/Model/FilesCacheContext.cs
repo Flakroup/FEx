@@ -16,8 +16,10 @@ public class FilesCacheContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
+        {
             optionsBuilder.UseSqlite(
                 $"data source={Path.Combine(@"C:\ProgramData\Flakroup\ImageCache", "IndexEF.db")}");
+        }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

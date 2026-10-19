@@ -88,7 +88,7 @@ public static class FileUtil
         }
         finally
         {
-            RmEndSession(handle);
+            _ = RmEndSession(handle);
         }
 
         return processes;
@@ -113,12 +113,12 @@ public static class FileUtil
     private static extern int RmGetList(uint dwSessionHandle,
                                         out uint pnProcInfoNeeded,
                                         ref uint pnProcInfo,
-                                        [In] [Out] RM_PROCESS_INFO[]? rgAffectedApps,
+                                        [In][Out] RM_PROCESS_INFO[]? rgAffectedApps,
                                         ref uint lpdwRebootReasons);
 
     // ReSharper disable InconsistentNaming
     internal enum RM_APP_TYPE
-        // ReSharper restore InconsistentNaming
+    // ReSharper restore InconsistentNaming
     {
         RmUnknownApp = 0,
         RmMainWindow = 1,
@@ -132,7 +132,7 @@ public static class FileUtil
     [StructLayout(LayoutKind.Sequential)]
     // ReSharper disable InconsistentNaming
     private struct RM_UNIQUE_PROCESS
-        // ReSharper restore InconsistentNaming
+    // ReSharper restore InconsistentNaming
     {
         public readonly int dwProcessId;
         public readonly FILETIME ProcessStartTime;
@@ -141,7 +141,7 @@ public static class FileUtil
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     // ReSharper disable InconsistentNaming
     private struct RM_PROCESS_INFO
-        // ReSharper restore InconsistentNaming
+    // ReSharper restore InconsistentNaming
     {
         public readonly RM_UNIQUE_PROCESS Process;
 

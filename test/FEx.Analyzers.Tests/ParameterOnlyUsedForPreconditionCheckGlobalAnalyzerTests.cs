@@ -1,6 +1,6 @@
-using System.Threading.Tasks;
 using FEx.Analyzers.Tests.Fakes;
 using Microsoft.CodeAnalysis;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace FEx.Analyzers.Tests;

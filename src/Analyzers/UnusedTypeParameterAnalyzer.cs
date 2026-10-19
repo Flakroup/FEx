@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -63,7 +63,9 @@ public sealed class UnusedTypeParameterAnalyzer : DiagnosticAnalyzer
             || method.Modifiers.Any(SyntaxKind.VirtualKeyword)
             || method.Modifiers.Any(SyntaxKind.OverrideKeyword)
             || method.Parent is InterfaceDeclarationSyntax)
+        {
             return true;
+        }
 
         var symbol = context.SemanticModel.GetDeclaredSymbol(method, context.CancellationToken)!;
 

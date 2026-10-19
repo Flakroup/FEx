@@ -15,8 +15,10 @@ public static class WebRequestExtensions
             req.Credentials = pars.Credentials;
 
         if (pars.Headers is not null)
+        {
             foreach (var header in pars.Headers)
                 req.Headers.Add(header.Key, header.Value);
+        }
 
         if (pars.Method is not null)
             req.Method = pars.Method;

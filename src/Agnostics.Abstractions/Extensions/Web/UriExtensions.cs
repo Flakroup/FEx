@@ -177,8 +177,10 @@ public static class UriExtensions
             request.Headers.TryAddWithoutValidation("User-Agent", pars.UserAgent);
 
         if (pars?.Headers is not null)
+        {
             foreach (var header in pars.Headers)
                 request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
 
         if (pars?.KeepAlive is { } keepAlive)
             request.Headers.ConnectionClose = !keepAlive;

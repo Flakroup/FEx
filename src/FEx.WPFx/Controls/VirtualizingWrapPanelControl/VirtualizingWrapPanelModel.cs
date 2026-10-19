@@ -9,7 +9,7 @@ namespace FEx.WPFx.Controls.VirtualizingWrapPanelControl;
 
 internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 {
-    private static readonly Size _fallbackSize = new(48, 48);
+    private static readonly Size FallbackSize = new(48, 48);
 
     private readonly IItemContainerManager _itemContainerManager;
     private readonly IChildrenCollection _childrenCollection;
@@ -46,7 +46,7 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         _itemContainerManager = itemContainerManager;
         _childrenCollection = childrenCollection;
         itemContainerManager.ItemsChanged += ItemContainerManager_ItemsChanged;
-        _items = [..itemContainerManager.Items];
+        _items = [.. itemContainerManager.Items];
     }
 
     public Size OnMeasure(Size availableSize) => OnMeasure(availableSize, availableSize, ScrollOffset);
@@ -123,21 +123,25 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
             return FixedItemSize;
 
         if (!AllowDifferentSizedItems)
-            return _sizeOfFirstItem ?? _fallbackSize;
+            return _sizeOfFirstItem ?? FallbackSize;
 
         if (_averageItemSizeCache is null
             && _itemSizesCache.Values.Any())
+        {
             _averageItemSizeCache = CalculateAverageSize(_itemSizesCache.Values);
+        }
 
-        return _averageItemSizeCache ?? _fallbackSize;
+        return _averageItemSizeCache ?? FallbackSize;
     }
 
     public void BringIndexIntoView(int itemIndex)
     {
         if (itemIndex < 0
             || itemIndex >= _items.Count)
+        {
             throw new ArgumentOutOfRangeException(nameof(itemIndex),
                 $"The argument {nameof(itemIndex)} must be >= 0 and < the count of items.");
+        }
 
         var itemOffset = FindItemOffset(itemIndex);
 
@@ -167,8 +171,10 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
                 _itemSizesCache.Remove(item);
 
             if (!_itemContainerManager.IsRecycling)
+            {
                 foreach (var container in e.RemovedContainers)
                     _childrenCollection.RemoveChild(container);
+            }
         }
         else if (e.Action == NotifyCollectionChangedAction.Reset)
         {
@@ -300,7 +306,9 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         {
             if (!AllowDifferentSizedItems
                 && itemIndex == 0)
+            {
                 _sizeOfFirstItem = null;
+            }
 
             var item = _items[itemIndex];
 
@@ -321,7 +329,9 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
             if (!AllowDifferentSizedItems
                 && _sizeOfFirstItem == null)
+            {
                 _sizeOfFirstItem = containerSize;
+            }
 
             if (x + GetWidth(containerSize) > GetWidth(ViewportSize)
                 && x != 0)
@@ -341,13 +351,19 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
                     && itemIndex + 1 < _items.Count
                     && x + _sizeOfFirstItem!.Value.Width > GetWidth(ViewportSize)
                     && y + rowHeight >= endOffsetY)
+                {
                     newEndItemIndex = itemIndex;
+                }
                 else if (y >= endOffsetY)
+                {
                     newEndItemIndex = itemIndex;
+                }
 
                 if (newEndItemIndex != _items.Count - 1
                     && CacheLengthUnit == VirtualizationCacheLengthUnit.Item)
+                {
                     newEndItemIndex = Math.Min(newEndItemIndex + (int)CacheLength.CacheAfterViewport, _items.Count - 1);
+                }
             }
 
             if (itemIndex >= newEndItemIndex)
@@ -414,13 +430,13 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
         {
             extent = FixedItemSize != Size.Empty
                 ? CalculateExtentForSameSizeItems(FixedItemSize)
-                : CalculateExtentForSameSizeItems(_sizeOfFirstItem ?? _fallbackSize);
+                : CalculateExtentForSameSizeItems(_sizeOfFirstItem ?? FallbackSize);
         }
         else
         {
             if (_itemsInKnownExtend == 0)
             {
-                extent = CalculateExtentForSameSizeItems(_fallbackSize);
+                extent = CalculateExtentForSameSizeItems(FallbackSize);
             }
             else
             {
@@ -481,7 +497,9 @@ internal class VirtualizingWrapPanelModel : VirtualizingPanelModelBase
 
         if (!AllowDifferentSizedItems
             && _sizeOfFirstItem != null)
+        {
             return _sizeOfFirstItem;
+        }
 
         if (ItemSizeProvider != null)
         {

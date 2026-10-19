@@ -67,7 +67,9 @@ internal sealed class SecureNotifyPropertyChangedConverter : JsonConverter
                     && propertyType != typeof(string)
                     && propertyType != typeof(object)
                     && property.Converter is not EnvelopeReadingConverter)
+                {
                     property.Converter = new EnvelopeReadingConverter(property.Converter);
+                }
             }
 
             // Only now, with every member wrapped, does the default object path become reachable for this type.

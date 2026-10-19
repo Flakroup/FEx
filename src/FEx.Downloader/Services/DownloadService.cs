@@ -51,7 +51,9 @@ public class DownloadService : ProgressAggregator
 
         if (Downloads.TryGetValue(idx, out var value)
             && !cancelAndReplaceOldOne)
+        {
             return value;
+        }
 
         var di = stub as IDownloadItem ?? await DownloadItem.CreateAsync(stub, true);
 
@@ -132,6 +134,7 @@ public class DownloadService : ProgressAggregator
     private void OnDownloadPropertyChanged()
     {
         if (CalculateTotalProgress)
+        {
             try
             {
                 UpdatePrg();
@@ -140,6 +143,7 @@ public class DownloadService : ProgressAggregator
             {
                 ex.HandleException();
             }
+        }
     }
 
     private void UpdatePrg()
@@ -180,6 +184,6 @@ public class DownloadService : ProgressAggregator
     // enqueues them); collecting and returning them is intentional task tracking, not a foreign-task await.
 #pragma warning disable VSTHRD003
     private Task[] GetUnfinishedDownloadsTasks() =>
-        [.. Downloads.Select(x => x.Value.DownloadFileTask).OfType<Task>().Where(x => x.IsFinished() == false)];
+        [.. Downloads.Select(x => x.Value.DownloadFileTask).OfType<Task>().Where(x => !x.IsFinished())];
 #pragma warning restore VSTHRD003
 }

@@ -36,11 +36,10 @@ internal static class PackagesConfigFile
 
         // PackagesConfigReader rejects repeated ids (even with allowDuplicatePackageIds when id and version both
         // repeat), which NuGet.Core accepted, so the entries are read directly.
-        return XDocument.Load(xmlReader)
+        return [.. XDocument.Load(xmlReader)
             .Descendants("package")
             .Select(x => new PackageIdentity(
                 (string?)x.Attribute("id") ?? throw new XmlException("A package entry has no id attribute."),
-                NuGetVersion.Parse((string?)x.Attribute("version") ?? throw new XmlException("A package entry has no version attribute."))))
-            .ToList();
+                NuGetVersion.Parse((string?)x.Attribute("version") ?? throw new XmlException("A package entry has no version attribute."))))];
     }
 }

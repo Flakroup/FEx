@@ -9,17 +9,17 @@ namespace FEx.Building.Helpers;
 /// </summary>
 public static class JoinableTaskHelper
 {
-    private static readonly JoinableTaskContext _context = new();
-    private static readonly JoinableTaskFactory _factory = _context.Factory;
+    private static readonly JoinableTaskContext Context = new();
+    private static readonly JoinableTaskFactory Factory = Context.Factory;
 
-    public static void Run(Func<Task> asyncMethod) => _factory.Run(asyncMethod);
+    public static void Run(Func<Task> asyncMethod) => Factory.Run(asyncMethod);
 
-    public static T Run<T>(Func<Task<T>> asyncMethod) => _factory.Run(asyncMethod);
+    public static T Run<T>(Func<Task<T>> asyncMethod) => Factory.Run(asyncMethod);
 
     /// <summary>
     /// Starts the work without waiting for it, so a target can kick it off and a later one collect it with
     /// <see cref="JoinableTask{T}.Join(System.Threading.CancellationToken)" /> - on the same context, which
     /// is what keeps that later join deadlock-free.
     /// </summary>
-    public static JoinableTask<T> RunAsync<T>(Func<Task<T>> asyncMethod) => _factory.RunAsync(asyncMethod);
+    public static JoinableTask<T> RunAsync<T>(Func<Task<T>> asyncMethod) => Factory.RunAsync(asyncMethod);
 }

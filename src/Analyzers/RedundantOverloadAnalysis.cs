@@ -1,11 +1,11 @@
-using System.Collections.Concurrent;
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using System.Collections.Concurrent;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -28,7 +28,9 @@ internal static class RedundantOverloadAnalysis
                 if (FindRedundant(node) is { } method
                     && AnalyzerHelpers.IsEffectivelyPrivate(method) == local
                     && !AnalyzerHelpers.IsGenerated(node.Node.SyntaxTree, method, node.Options, node.CancellationToken))
+                {
                     candidates[method] = Diagnostic.Create(rule, method.Locations[0], method.Name == ".ctor" ? method.ContainingType.Name : method.Name);
+                }
             },
             SyntaxKind.MethodDeclaration,
             SyntaxKind.ConstructorDeclaration);
@@ -79,7 +81,9 @@ internal static class RedundantOverloadAnalysis
             // 'new T()' and every serializer look a parameterless constructor up by its shape, not by what it can be called with.
             || method is { MethodKind: MethodKind.Constructor, Parameters.Length: 0 }
             || context.SemanticModel.GetOperation(call, context.CancellationToken) is not IInvocationOperation invocation)
+        {
             return null;
+        }
 
         var target = invocation.TargetMethod;
         if (!IsSibling(method, target) || !ForwardsWithDefaults(method, invocation) || AnalyzerHelpers.ImplementsInterfaceMember(method))
@@ -132,7 +136,9 @@ internal static class RedundantOverloadAnalysis
                 // By reference or dynamic, the sibling is no stand-in a caller could not tell from the forwarder.
                 || own[i].RefKind != RefKind.None || forwarded[i].RefKind != RefKind.None
                 || own[i].Type.TypeKind == TypeKind.Dynamic || forwarded[i].Type.TypeKind == TypeKind.Dynamic)
+            {
                 return false;
+            }
         }
 
         // A caller-info parameter the forwarder fills with a constant would be filled with the call site's own once it is gone.

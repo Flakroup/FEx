@@ -103,6 +103,6 @@ public sealed class ProgressAggregatorTests
         sut.PrgSet(0, 100, ProgressChangeMode.Set);
         sut.Stopwatch.Start();
 
-        Should.NotThrow(() => sut.InvokeUpdateProgressInfo());
+        Should.NotThrow(sut.InvokeUpdateProgressInfo);
     }
 }

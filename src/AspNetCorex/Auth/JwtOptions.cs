@@ -28,14 +28,18 @@ public sealed class JwtOptions
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Key))
+        {
             throw new InvalidOperationException(
                 $"{SectionName}:Key is missing. Configure it via user-secrets or the environment ({SectionName}__Key).");
+        }
 
         var keyBytes = Encoding.UTF8.GetByteCount(Key);
 
         if (keyBytes < 32)
+        {
             throw new InvalidOperationException(
                 $"{SectionName}:Key must be at least 32 bytes (256 bits) for HS256; it is {keyBytes} bytes.");
+        }
 
         if (string.IsNullOrWhiteSpace(Issuer))
             throw new InvalidOperationException($"{SectionName}:Issuer is required.");

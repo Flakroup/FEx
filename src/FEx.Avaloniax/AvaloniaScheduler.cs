@@ -33,13 +33,16 @@ public sealed class AvaloniaScheduler : LocalScheduler
         composite.Add(cancellation);
 
         if (dueTime == TimeSpan.Zero)
+        {
             // Execute immediately on UI thread
             Dispatcher.UIThread.Post(() =>
             {
                 if (!cancellation.Token.IsCancellationRequested)
                     composite.Add(action(this, state));
             });
+        }
         else
+        {
             // Execute after delay on UI thread
 #pragma warning disable IDISP004 // Avalonia manages DispatcherTimer lifecycle
             DispatcherTimer.RunOnce(() =>
@@ -48,6 +51,7 @@ public sealed class AvaloniaScheduler : LocalScheduler
                         composite.Add(action(this, state));
                 },
                 dueTime);
+        }
 #pragma warning restore IDISP004
 
         return composite;

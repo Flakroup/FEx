@@ -1,5 +1,5 @@
-using FEx.PersistentStorage.Abstractions.Enums;
 using FEx.PersistentStorage.Abstractions;
+using FEx.PersistentStorage.Abstractions.Enums;
 using NSubstitute;
 using Shouldly;
 using System;

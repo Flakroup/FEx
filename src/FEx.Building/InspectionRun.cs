@@ -106,9 +106,11 @@ public sealed class InspectionRun
                 ProcessTasks.DefaultLogger(line.Type, line.Text);
 
             if (_pending is not null)
+            {
                 Log.Information("Inspection ran {Ran:F0}s alongside the build, {Waited:F0}s of it after Inspect was reached",
                     _running.Elapsed.TotalSeconds,
                     waited.Elapsed.TotalSeconds);
+            }
         }
     }
 

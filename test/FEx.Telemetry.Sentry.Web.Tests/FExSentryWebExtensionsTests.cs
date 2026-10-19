@@ -88,7 +88,8 @@ public sealed class FExSentryWebExtensionsTests
         var builder = WebApplication.CreateBuilder();
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["Sentry:Dsn"] = Dsn, ["Sentry:TracesSampleRate"] = "0.1",
+            ["Sentry:Dsn"] = Dsn,
+            ["Sentry:TracesSampleRate"] = "0.1",
         });
         builder.WebHost.UseUrls("http://127.0.0.1:0");
         builder.AddFExSentry("FEX_TESTS_NO_SUCH_VARIABLE");
@@ -251,7 +252,8 @@ public sealed class FExSentryWebExtensionsTests
         var builder = WebApplication.CreateBuilder();
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["Sentry:Dsn"] = Dsn, ["Sentry:TracesSampleRate"] = rawSampleRate,
+            ["Sentry:Dsn"] = Dsn,
+            ["Sentry:TracesSampleRate"] = rawSampleRate,
         });
         builder.AddFExSentry("FEX_TESTS_NO_SUCH_VARIABLE");
 
@@ -282,7 +284,8 @@ public sealed class FExSentryWebExtensionsTests
     {
         SentryRequest request = new()
         {
-            Url = $"https://example.com/api/journal?text={SearchTerm}", QueryString = $"text={SearchTerm}",
+            Url = $"https://example.com/api/journal?text={SearchTerm}",
+            QueryString = $"text={SearchTerm}",
         };
         request.Headers["cf-connecting-ip"] = Address;
         request.Headers["X-Api-Key"] = Secret;
@@ -379,7 +382,10 @@ public sealed class FExSentryWebExtensionsTests
 
         SentryRequest request = new()
         {
-            Url = "https://example.com/api/journal", QueryString = $"text={SearchTerm}", Data = Body, Cookies = Cookie,
+            Url = "https://example.com/api/journal",
+            QueryString = $"text={SearchTerm}",
+            Data = Body,
+            Cookies = Cookie,
         };
         request.Headers["Cf-Connecting-Ip"] = Address;
         request.Headers["X-Forwarded-For"] = Address;
@@ -399,7 +405,7 @@ public sealed class FExSentryWebExtensionsTests
     {
         private readonly ConcurrentQueue<string> _payloads = new();
 
-        public IReadOnlyList<string> Payloads => _payloads.ToList();
+        public IReadOnlyList<string> Payloads => [.. _payloads];
 
         public async Task SendEnvelopeAsync(Envelope envelope, CancellationToken cancellationToken = default)
         {

@@ -217,7 +217,9 @@ public static class AsyncReaderWriterLockSlimExtension
             || myReadLock.LockOrigin != lockInstance
             || !myReadLock.IsWriteLock
             || myReadLock.IsDisposed)
+        {
             throw new ArgumentException(null, nameof(readLock));
+        }
 
         // Downgrade the lock.
         lockInstance.DowngradeWriteLockToReadLock();

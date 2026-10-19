@@ -289,7 +289,9 @@ public static class ObjectExtensions
     {
         if (propertyName is null
             || EqualityComparer<TRet>.Default.Equals(backingField, newValue))
+        {
             return false;
+        }
 
         backingField = newValue;
         onPropertyChanged?.Invoke(propertyName, newValue);

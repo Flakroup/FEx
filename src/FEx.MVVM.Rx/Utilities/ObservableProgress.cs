@@ -176,9 +176,6 @@ public sealed class ObservableProgress<T> : IObservable<T>, IDisposableProgress<
         _subject?.OnCompleted();
         var disposableSubject = _subject as IDisposable;
         disposableSubject?.Dispose();
-        // ReSharper disable RedundantAssignment
-        disposableSubject = null;
-        // ReSharper restore RedundantAssignment
     }
     #endregion
 

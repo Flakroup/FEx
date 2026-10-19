@@ -4,5 +4,5 @@ namespace FEx.DependencyInjection.Abstractions.Interfaces;
 
 public interface IScopeProvider
 {
-    public IServiceScope CreateScope();
+    IServiceScope CreateScope();
 }

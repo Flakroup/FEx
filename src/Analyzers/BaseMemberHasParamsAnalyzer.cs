@@ -1,9 +1,9 @@
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -62,6 +62,8 @@ public sealed class BaseMemberHasParamsAnalyzer : DiagnosticAnalyzer
         if (baseParameters[last].IsParams
             && parameter.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(context.CancellationToken) is ParameterSyntax syntax
             && !syntax.Modifiers.Any(SyntaxKind.ParamsKeyword))
+        {
             context.ReportDiagnostic(Diagnostic.Create(Rule, parameter.Locations[0], member.ToDisplayString(OverrideFormat), baseMember));
+        }
     }
 }

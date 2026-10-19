@@ -99,8 +99,10 @@ public static class CollectionExtensions
     public static void AddRangeToCollection<T>(this ICollection<T> source, IList<T> items)
     {
         if (items.IsNotNullOrEmptyList())
+        {
             foreach (var item in items)
                 source.Add(item);
+        }
     }
 
     /// <summary>Removes every element that matches a predicate.</summary>

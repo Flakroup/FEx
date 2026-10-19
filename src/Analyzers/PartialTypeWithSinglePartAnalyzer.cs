@@ -1,9 +1,9 @@
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace FEx.Analyzers;
 
@@ -43,7 +43,9 @@ public sealed class PartialTypeWithSinglePartAnalyzer : DiagnosticAnalyzer
         // the same, because the keyword cannot come off it.
         if (syntax.Members.Any(member => member.Modifiers.Any(SyntaxKind.PartialKeyword))
             || AnalyzerHelpers.IsNamedInDisabledCode(context.Compilation, type.Name, context.CancellationToken))
+        {
             return;
+        }
 
         foreach (var modifier in syntax.Modifiers.Where(modifier => modifier.IsKind(SyntaxKind.PartialKeyword)))
             context.ReportDiagnostic(Diagnostic.Create(Rule, modifier.GetLocation(), type.Name));

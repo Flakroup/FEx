@@ -15,7 +15,7 @@ internal static class RuleDocumentation
     /// <summary>The readme section of a rule, spelled the way GitHub anchors a heading that holds only the id.</summary>
     public static string HelpLink(string diagnosticId) => $"{ReadmeUrl}#{diagnosticId.ToLowerInvariant()}";
 
-    private static string ReadmeAt(string? informationalVersion)
+    internal static string ReadmeAt(string? informationalVersion)
     {
         var plus = informationalVersion?.IndexOf('+') ?? -1;
         var commit = plus < 0 ? "develop" : informationalVersion!.Substring(plus + 1);

@@ -19,7 +19,8 @@ public sealed class RedundantQueryOrderByAscendingKeywordAnalyzer : DiagnosticAn
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "An orderby ordering sorts ascending unless it says descending. Replaces the ReSharper inspection RedundantQueryOrderByAscendingKeyword.");
+        "An orderby ordering sorts ascending unless it says descending. Replaces the ReSharper inspection RedundantQueryOrderByAscendingKeyword.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

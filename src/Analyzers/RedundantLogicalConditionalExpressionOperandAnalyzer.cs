@@ -21,7 +21,8 @@ public sealed class RedundantLogicalConditionalExpressionOperandAnalyzer : Diagn
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "'a && true' and 'a || false' are 'a'. Replaces the ReSharper inspection RedundantLogicalConditionalExpressionOperand.");
+        "'a && true' and 'a || false' are 'a'. Replaces the ReSharper inspection RedundantLogicalConditionalExpressionOperand.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

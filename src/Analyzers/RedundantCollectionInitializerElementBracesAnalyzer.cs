@@ -19,7 +19,8 @@ public sealed class RedundantCollectionInitializerElementBracesAnalyzer : Diagno
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "An element written as '{ x }' calls Add(x) exactly as 'x' does. Braces around an assignment (plain or compound) or a collection expression are kept, since without them the element would mean something else or not compile. Replaces the ReSharper inspection RedundantCollectionInitializerElementBraces.");
+        "An element written as '{ x }' calls Add(x) exactly as 'x' does. Braces around an assignment (plain or compound) or a collection expression are kept, since without them the element would mean something else or not compile. Replaces the ReSharper inspection RedundantCollectionInitializerElementBraces.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

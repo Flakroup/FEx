@@ -20,7 +20,8 @@ public sealed class RedundantCheckBeforeAssignmentAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "'if (x != y) x = y;' leaves x equal to y whether or not the check runs. Replaces the ReSharper inspection RedundantCheckBeforeAssignment.");
+        "'if (x != y) x = y;' leaves x equal to y whether or not the check runs. Replaces the ReSharper inspection RedundantCheckBeforeAssignment.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

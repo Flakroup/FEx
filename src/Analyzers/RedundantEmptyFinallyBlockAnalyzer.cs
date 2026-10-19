@@ -19,7 +19,8 @@ public sealed class RedundantEmptyFinallyBlockAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A finally block that runs no statement does nothing. Replaces the ReSharper inspection RedundantEmptyFinallyBlock.");
+        "A finally block that runs no statement does nothing. Replaces the ReSharper inspection RedundantEmptyFinallyBlock.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

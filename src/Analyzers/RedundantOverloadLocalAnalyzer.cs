@@ -18,7 +18,7 @@ public sealed class RedundantOverloadLocalAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         true,
         "Callers of the sibling get the same call without the extra overload, which only adds a second candidate to overload resolution. Replaces the ReSharper inspection RedundantOverload.Local.",
-        null,
+        RuleDocumentation.HelpLink(DiagnosticId),
         WellKnownDiagnosticTags.CompilationEnd);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);

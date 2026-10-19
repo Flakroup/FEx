@@ -18,10 +18,9 @@
 		<ProjectReference Include="..\..\src\Analyzers\FEx.Analyzers.csproj" />
 	</ItemGroup>
 
-	<!-- The ReSharper golden corpus (DevConfigs analyzers-corpus, ReSharper 2026.2.3.1), read as data and never compiled into this assembly. -->
+	<!-- The ReSharper golden corpus (DevConfigs analyzers-corpus, ReSharper 2026.2.3.1), read from the submodule as data and never compiled into this assembly. Each file is named, so a submodule that is not initialized fails the build instead of embedding nothing. -->
 	<ItemGroup>
-		<Compile Remove="CorpusData\**" />
-		<EmbeddedResource Include="CorpusData\*" />
+		<EmbeddedResource Include="..\..\DevConfigs\analyzers-corpus\StyleA.cs;..\..\DevConfigs\analyzers-corpus\StyleB.cs;..\..\DevConfigs\analyzers-corpus\Stubs.cs;..\..\DevConfigs\analyzers-corpus\EmptyNs.cs;..\..\DevConfigs\analyzers-corpus\expected.json" LogicalName="FEx.Analyzers.Tests.CorpusData.%(Filename)%(Extension)" />
 	</ItemGroup>
 
 </Project>

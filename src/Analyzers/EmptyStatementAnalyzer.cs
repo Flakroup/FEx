@@ -19,7 +19,8 @@ public sealed class EmptyStatementAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A semicolon that is a statement of its own does nothing. An empty body such as 'if (b);' is the compiler's warning (CS0642) and is left to it. Replaces the ReSharper inspection EmptyStatement.");
+        "A semicolon that is a statement of its own does nothing. An empty body such as 'if (b);' is the compiler's warning (CS0642) and is left to it. Replaces the ReSharper inspection EmptyStatement.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

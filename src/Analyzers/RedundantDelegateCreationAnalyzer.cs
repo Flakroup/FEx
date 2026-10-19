@@ -19,7 +19,8 @@ public sealed class RedundantDelegateCreationAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "A method group, lambda or compatible delegate converts to a delegate type without 'new'. Replaces the ReSharper inspection RedundantDelegateCreation.");
+        "A method group, lambda or compatible delegate converts to a delegate type without 'new'. Replaces the ReSharper inspection RedundantDelegateCreation.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

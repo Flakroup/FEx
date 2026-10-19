@@ -21,7 +21,8 @@ public sealed class RedundantCaseLabelAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "In a section that also has default, a case label only repeats what default already matches, unless it carries a 'when' filter, declares a variable with 'var', or is the target of a 'goto case'. Like ReSharper, it is also reported where the label sits ahead of a later section that overlaps it, so removing it can change which section runs: check that before deleting it. Replaces the ReSharper inspection RedundantCaseLabel.");
+        "In a section that also has default, a case label only repeats what default already matches, unless it carries a 'when' filter, declares a variable with 'var', or is the target of a 'goto case'. Like ReSharper, it is also reported where the label sits ahead of a later section that overlaps it, so removing it can change which section runs: check that before deleting it. Replaces the ReSharper inspection RedundantCaseLabel.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

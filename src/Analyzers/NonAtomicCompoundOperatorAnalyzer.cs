@@ -18,7 +18,8 @@ public sealed class NonAtomicCompoundOperatorAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "volatile orders accesses but does not make a compound assignment, ??= or ++/-- atomic; another thread can write between the read and the write. Use Interlocked or a lock. Replaces the ReSharper inspection NonAtomicCompoundOperator.");
+        "volatile orders accesses but does not make a compound assignment, ??= or ++/-- atomic; another thread can write between the read and the write. Use Interlocked or a lock. Replaces the ReSharper inspection NonAtomicCompoundOperator.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

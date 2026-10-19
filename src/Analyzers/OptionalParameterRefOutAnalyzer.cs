@@ -21,7 +21,8 @@ public sealed class OptionalParameterRefOutAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "C# callers must still pass a variable, so the attribute promises an optional argument the language never honors. Replaces the ReSharper inspection OptionalParameterRefOut.");
+        "C# callers must still pass a variable, so the attribute promises an optional argument the language never honors. Replaces the ReSharper inspection OptionalParameterRefOut.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

@@ -21,7 +21,8 @@ public sealed class LoopVariableNeverChangedAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A condition made only of locals, parameters and constants, none of which the loop writes (directly, by ref, or through a closure), cannot change, so the loop runs zero times or forever. Fields, properties and calls in the condition are not examined. Replaces the ReSharper inspection LoopVariableIsNeverChangedInsideLoop.");
+        "A condition made only of locals, parameters and constants, none of which the loop writes (directly, by ref, or through a closure), cannot change, so the loop runs zero times or forever. Fields, properties and calls in the condition are not examined. Replaces the ReSharper inspection LoopVariableIsNeverChangedInsideLoop.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

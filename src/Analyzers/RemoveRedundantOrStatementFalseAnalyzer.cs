@@ -19,7 +19,8 @@ public sealed class RemoveRedundantOrStatementFalseAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "'flag |= false;' assigns the value flag already has. Replaces the ReSharper inspection RemoveRedundantOrStatement.False.");
+        "'flag |= false;' assigns the value flag already has. Replaces the ReSharper inspection RemoveRedundantOrStatement.False.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

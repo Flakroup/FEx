@@ -19,7 +19,8 @@ public sealed class RedundantStringToCharArrayCallAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "A foreach over a string visits its characters, so copying them into an array first only allocates. Replaces the ReSharper inspection RedundantStringToCharArrayCall.");
+        "A foreach over a string visits its characters, so copying them into an array first only allocates. Replaces the ReSharper inspection RedundantStringToCharArrayCall.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

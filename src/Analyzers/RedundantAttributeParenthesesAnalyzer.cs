@@ -19,7 +19,8 @@ public sealed class RedundantAttributeParenthesesAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "An attribute with no arguments does not need empty parentheses. Replaces the ReSharper inspection RedundantAttributeParentheses.");
+        "An attribute with no arguments does not need empty parentheses. Replaces the ReSharper inspection RedundantAttributeParentheses.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

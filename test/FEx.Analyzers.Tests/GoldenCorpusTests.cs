@@ -215,10 +215,11 @@ public class GoldenCorpusTests
     private static bool IsCorpusReference(string assemblyName) =>
         assemblyName.StartsWith("System.", StringComparison.Ordinal) || CorpusLibraries.Contains(assemblyName);
 
-    private static string ReadResource(string name)
+    internal static string ReadResource(string name)
     {
         var assembly = typeof(GoldenCorpusTests).Assembly;
-        using var stream = assembly.GetManifestResourceStream($"FEx.Analyzers.Tests.CorpusData.{name}")!;
+        using var stream = assembly.GetManifestResourceStream($"FEx.Analyzers.Tests.CorpusData.{name}")
+            ?? throw new InvalidOperationException($"{name} is not embedded: add it to the EmbeddedResource list in FEx.Analyzers.Tests.csproj (a listed file missing from DevConfigs/analyzers-corpus fails the build instead).");
         using var reader = new StreamReader(stream);
 
         return reader.ReadToEnd();

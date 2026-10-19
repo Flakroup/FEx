@@ -20,7 +20,8 @@ public sealed class PartialMethodWithSinglePartAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "Without an implementation the declaration and its calls compile to nothing. Replaces the ReSharper inspection PartialMethodWithSinglePart.");
+        "Without an implementation the declaration and its calls compile to nothing. Replaces the ReSharper inspection PartialMethodWithSinglePart.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

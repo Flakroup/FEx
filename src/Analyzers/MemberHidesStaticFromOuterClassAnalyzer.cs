@@ -18,7 +18,8 @@ public sealed class MemberHidesStaticFromOuterClassAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "Inside the nested type a bare name binds to the nested member, so code written for the outer static member silently binds to the wrong one. Replaces the ReSharper inspection MemberHidesStaticFromOuterClass.");
+        "Inside the nested type a bare name binds to the nested member, so code written for the outer static member silently binds to the wrong one. Replaces the ReSharper inspection MemberHidesStaticFromOuterClass.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

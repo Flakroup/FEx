@@ -21,7 +21,8 @@ public sealed class InvokeAsExtensionMemberAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "Calling an extension method through its class reads as a utility call and hides the chain it belongs to; 'list.Count()' says the same. Replaces the ReSharper inspection InvokeAsExtensionMember.");
+        "Calling an extension method through its class reads as a utility call and hides the chain it belongs to; 'list.Count()' says the same. Replaces the ReSharper inspection InvokeAsExtensionMember.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

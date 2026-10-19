@@ -19,7 +19,8 @@ public sealed class EmptyNamespaceAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A namespace with no member, whatever usings or comments it holds, declares nothing. Replaces the ReSharper inspection EmptyNamespace.");
+        "A namespace with no member, whatever usings or comments it holds, declares nothing. Replaces the ReSharper inspection EmptyNamespace.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

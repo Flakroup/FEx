@@ -21,7 +21,8 @@ public sealed class UnusedTypeParameterAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "Callers have to spell out or infer an argument that changes nothing. A type parameter an interface, a base class or a documentation comment mentions counts as used. Replaces the ReSharper inspection UnusedTypeParameter.");
+        "Callers have to spell out or infer an argument that changes nothing. A type parameter an interface, a base class or a documentation comment mentions counts as used. Replaces the ReSharper inspection UnusedTypeParameter.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

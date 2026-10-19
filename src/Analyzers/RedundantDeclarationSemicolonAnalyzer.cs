@@ -20,7 +20,8 @@ public sealed class RedundantDeclarationSemicolonAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A type or namespace body is complete at its closing brace. An empty type body is left alone, as ReSharper does. Replaces the ReSharper inspection RedundantDeclarationSemicolon.");
+        "A type or namespace body is complete at its closing brace. An empty type body is left alone, as ReSharper does. Replaces the ReSharper inspection RedundantDeclarationSemicolon.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

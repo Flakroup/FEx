@@ -23,6 +23,7 @@
 		<AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
 		<AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
 		<None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<InternalsVisibleTo Include="FEx.Analyzers.Tests" />
 	</ItemGroup>
 
 </Project>

@@ -20,7 +20,8 @@ public sealed class RedundantJumpStatementAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "A return or yield break at the end of a function, a continue at the end of a loop body, a goto to the label that follows it, or a jump that the same jump follows changes nothing. A yield break that is the only yield of the function is kept, since it is what makes the function an iterator. Replaces the ReSharper inspection RedundantJumpStatement.");
+        "A return or yield break at the end of a function, a continue at the end of a loop body, a goto to the label that follows it, or a jump that the same jump follows changes nothing. A yield break that is the only yield of the function is kept, since it is what makes the function an iterator. Replaces the ReSharper inspection RedundantJumpStatement.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

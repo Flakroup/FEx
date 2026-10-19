@@ -23,7 +23,8 @@ public sealed class RedundantArgumentDefaultValueAnalyzer : DiagnosticAnalyzer
         "Redundancy",
         DiagnosticSeverity.Warning,
         true,
-        "A trailing optional argument that repeats the parameter's default can be left out. Replaces the ReSharper inspection RedundantArgumentDefaultValue.");
+        "A trailing optional argument that repeats the parameter's default can be left out. Replaces the ReSharper inspection RedundantArgumentDefaultValue.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

@@ -18,7 +18,8 @@ public sealed class MethodOverloadWithOptionalParameterAnalyzer : DiagnosticAnal
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "Overload resolution prefers the candidate that needs no default argument, so the optional parameter is never used by a call that leaves it out. Replaces the ReSharper inspection MethodOverloadWithOptionalParameter.");
+        "Overload resolution prefers the candidate that needs no default argument, so the optional parameter is never used by a call that leaves it out. Replaces the ReSharper inspection MethodOverloadWithOptionalParameter.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

@@ -19,7 +19,8 @@ public sealed class LocalVariableHidesMemberAnalyzer : DiagnosticAnalyzer
         "Correctness",
         DiagnosticSeverity.Warning,
         true,
-        "Inside the scope the plain name means the local, so a read or write meant for the member silently goes to the local. Replaces the ReSharper inspection LocalVariableHidesMember.");
+        "Inside the scope the plain name means the local, so a read or write meant for the member silently goes to the local. Replaces the ReSharper inspection LocalVariableHidesMember.",
+        helpLinkUri: RuleDocumentation.HelpLink(DiagnosticId));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

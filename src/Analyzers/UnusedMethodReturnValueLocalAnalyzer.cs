@@ -24,7 +24,7 @@ public sealed class UnusedMethodReturnValueLocalAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         true,
         "Only calls in the declaring type can exist, so nobody could ever read the result. Replaces the ReSharper inspection UnusedMethodReturnValue.Local.",
-        null,
+        RuleDocumentation.HelpLink(DiagnosticId),
         WellKnownDiagnosticTags.CompilationEnd);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);

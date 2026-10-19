@@ -33,6 +33,13 @@ public partial class RuleDocumentationTests
     public void The_links_pin_the_commit_the_package_was_built_from() =>
         BuildCommit.ShouldMatch("^[0-9a-f]{40}$", "a link to a moving branch breaks in an installed package once that branch drops the rule");
 
+    [Theory]
+    [InlineData("1.0.0+0123abc", "0123abc")]
+    [InlineData("1.0.0", "develop")]
+    [InlineData(null, "develop")]
+    public void The_readme_ref_is_the_build_commit_or_develop(string? informationalVersion, string expectedRef) =>
+        RuleDocumentation.ReadmeAt(informationalVersion).ShouldBe($"https://github.com/Flakroup/FEx/blob/{expectedRef}/src/Analyzers/README.md");
+
     [Fact]
     public void Every_FEX_rule_is_exported() =>
         Descriptors.Count.ShouldBe(58);

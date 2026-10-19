@@ -91,11 +91,12 @@ public sealed class CoverageDebtTests
     }
 
     [Fact]
-    public void ManualPublish_RunsTheSuiteWithoutInspect()
+    public void ManualPublish_RunsTheCoverageGateWithoutInspect()
     {
         var publish = File.ReadAllText(Path.Combine(RepositoryRoot, ".github", "workflows", "publish.yml"));
 
-        publish.ShouldContain("build.ps1 Test Pack --configuration Release");
+        publish.ShouldContain("build.ps1 Coverage Pack --configuration Release");
+        publish.ShouldNotContain("build.ps1 Test");
         publish.ShouldNotContain("Inspect");
         publish.ShouldNotContain("dotnet tool restore");
     }

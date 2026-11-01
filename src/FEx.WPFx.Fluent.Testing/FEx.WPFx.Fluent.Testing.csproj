@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>$(WindowsTargetFrameworkId)</TargetFramework>
+		<Description>Test helpers for FEx.WPFx.Fluent views: an STA runner and a message-only presentation host, so WPF tests never show a window</Description>
+		<UseWPF>true</UseWPF>
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="xunit.v3.assert" Version="3.2.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\FEx.WPFx.Fluent\FEx.WPFx.Fluent.csproj" />
+	</ItemGroup>
+
+</Project>

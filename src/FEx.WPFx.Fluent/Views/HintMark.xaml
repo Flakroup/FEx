@@ -1,0 +1,13 @@
+<UserControl x:Class="FEx.WPFx.Fluent.Views.HintMark"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Focusable="True" IsTabStop="True" Visibility="Collapsed" Cursor="Help"
+             ToolTipService.ShowOnDisabled="True" ToolTipService.InitialShowDelay="150">
+    <!-- A "?" in a ring beside the control it explains. The sentence lives in the tooltip (hover, or keyboard focus)
+         and in the automation name, so a screen reader loses nothing a coloured line used to say. -->
+    <Grid Width="18" Height="18" Background="Transparent">
+        <Ellipse x:Name="ring" Stroke="{DynamicResource Muted}" StrokeThickness="1.5" />
+        <TextBlock x:Name="mark" Text="?" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Muted}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+    </Grid>
+</UserControl>

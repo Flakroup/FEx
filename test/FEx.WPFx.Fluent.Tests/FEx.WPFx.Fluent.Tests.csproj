@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- net10.0-windows only, like the library it tests. -->
+	<PropertyGroup>
+		<TargetFramework>$(WindowsTargetFrameworkId)</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+		<!-- Application.ThemeMode is experimental; the theme tests read it. -->
+		<NoWarn>$(NoWarn);WPF0001</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\FEx.WPFx.Fluent\FEx.WPFx.Fluent.csproj" />
+		<ProjectReference Include="..\..\src\FEx.WPFx.Fluent.Testing\FEx.WPFx.Fluent.Testing.csproj" />
+	</ItemGroup>
+
+</Project>

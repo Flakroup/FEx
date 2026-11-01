@@ -1,0 +1,11 @@
+<UserControl x:Class="FEx.WPFx.Fluent.Views.LoadIndicator"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The toolbar end of the load pattern: when the data was read and the button that reads it again. -->
+    <StackPanel Orientation="Horizontal">
+        <TextBlock x:Name="lblFresh" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource Muted}" />
+        <Button x:Name="btnRefresh" Width="36" Height="32" Padding="0" VerticalAlignment="Center"
+                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Content="&#xE72C;"
+                Click="BtnRefresh_Click" />
+    </StackPanel>
+</UserControl>

@@ -68,18 +68,12 @@ public partial class LoadOverlay : UserControl
         pnlLoading.Visibility = skeleton ? Visibility.Visible : Visibility.Collapsed;
         pnlMessage.Visibility = skeleton || state is LoadState.Loaded ? Visibility.Collapsed : Visibility.Visible;
 
-        switch (state)
-        {
-            case LoadState.Empty:
-                Message(emptyTitle, emptyHint, danger: false, retry: false, settings: false);
-                break;
-            case LoadState.Failed:
-                Message(LoadText.ErrorTitle(ConnectionTarget), LoadText.ErrorHint, danger: true, retry: true, settings: true);
-                break;
-            case LoadState.Missing:
-                Message(LoadText.MissingTitle, LoadText.MissingHint, danger: false, retry: false, settings: true);
-                break;
-        }
+        if (state is LoadState.Empty)
+            Message(emptyTitle, emptyHint, danger: false, retry: false, settings: false);
+        else if (state is LoadState.Failed)
+            Message(LoadText.ErrorTitle(ConnectionTarget), LoadText.ErrorHint, danger: true, retry: true, settings: true);
+        else if (state is LoadState.Missing)
+            Message(LoadText.MissingTitle, LoadText.MissingHint, danger: false, retry: false, settings: true);
     }
 
     /// <summary>The "nothing configured" state with a tab's own sentences and the button to Ustawienia.</summary>

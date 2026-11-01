@@ -68,10 +68,10 @@ public sealed class ViewLoad<T>
     }
 
     // The entry point of every UI trigger. Nothing awaits it, so whatever goes wrong while showing the result
-    // goes to the load's failure sink here - out of an async void it would end the process.
-#pragma warning disable VSTHRD100
-    private async void Reload()
-#pragma warning restore VSTHRD100
+    // goes to the load's failure sink inside the task.
+    private void Reload() => _ = ReloadGuardedAsync();
+
+    private async Task ReloadGuardedAsync()
     {
         try
         {

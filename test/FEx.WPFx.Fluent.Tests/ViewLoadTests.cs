@@ -407,15 +407,10 @@ public sealed class ViewLoadTests
 
     private static void Collect(DependencyObject node, List<string> text)
     {
-        switch (node)
-        {
-            case TextBlock block:
-                text.Add(block.Text);
-                break;
-            case ContentControl { Content: string content }:
-                text.Add(content);
-                break;
-        }
+        if (node is TextBlock block)
+            text.Add(block.Text);
+        else if (node is ContentControl { Content: string content })
+            text.Add(content);
 
         foreach (var child in LogicalTreeHelper.GetChildren(node).OfType<DependencyObject>())
             Collect(child, text);

@@ -54,6 +54,8 @@ public sealed class ViewLoad<T>
                 Reload();
         };
         Render();
+        if (view.IsVisible && load.WantsLoad)
+            Reload();
     }
 
     public DataLoad<T> Load { get; }
@@ -90,12 +92,31 @@ public sealed class ViewLoad<T>
     private void Render()
     {
         var state = Load.State;
-        if (state is LoadState.Loaded && Load.Data is { } data)
-            _show(data);
-        else
-            _clear();
+        var emptyTitle = string.Empty;
+        try
+        {
+            if (state is LoadState.Loaded && Load.Data is { } data)
+                _show(data);
+            else
+                _clear();
 
-        _overlay.Show(state, state is LoadState.Empty ? _emptyTitle() : string.Empty, _emptyHint);
+            if (state is LoadState.Empty)
+                emptyTitle = _emptyTitle();
+        }
+        catch (Exception ex)
+        {
+            Load.ReportFailure(ex);
+            if (state is LoadState.Loaded or LoadState.Empty)
+            {
+                // The read worked, so the database is not the problem: never send the operator to the connection.
+                _overlay.ShowDisplayFailed();
+                _indicator.Show(null);
+                ShellLink.RaiseDatabaseReachability(_view, reachable: true);
+                return;
+            }
+        }
+
+        _overlay.Show(state, emptyTitle, _emptyHint);
         _indicator.Show(Load.LoadedAt);
 
         if (state is LoadState.Failed)

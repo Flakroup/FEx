@@ -56,14 +56,22 @@ public static class AppTheme
     {
         ArgumentNullException.ThrowIfNull(application);
 
+        Follow(application, preference, handler => SystemEvents.UserPreferenceChanged += handler,
+            handler => SystemEvents.UserPreferenceChanged -= handler);
+    }
+
+    /// <summary><see cref="Follow(Application, ThemePreference)"/> with the system event's add and remove injected, so a test can see them called.</summary>
+    internal static void Follow(Application application, ThemePreference preference,
+        Action<UserPreferenceChangedEventHandler> subscribe, Action<UserPreferenceChangedEventHandler> unsubscribe)
+    {
         Select(application, preference);
 
         var onChanged = PreferenceHandler(application);
-        SystemEvents.UserPreferenceChanged += onChanged;
-        application.Exit += (_, _) => SystemEvents.UserPreferenceChanged -= onChanged;
+        subscribe(onChanged);
+        application.Exit += (_, _) => unsubscribe(onChanged);
     }
 
-    /// <summary>What <see cref="Follow"/> subscribes, apart so a test can raise it without changing a Windows setting.</summary>
+    /// <summary>What <see cref="Follow(Application, ThemePreference)"/> subscribes, apart so a test can raise it without changing a Windows setting.</summary>
     internal static UserPreferenceChangedEventHandler PreferenceHandler(Application application) =>
         (_, e) => OnWindowsPreferenceChanged(application, e.Category);
 

@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Xunit;
 
 namespace FEx.WPFx.Fluent.Tests;
@@ -62,6 +63,35 @@ public sealed class HintMarkTests
 
             mark.RaiseEvent(new KeyboardFocusChangedEventArgs(Keyboard.PrimaryDevice, 0, mark, null) { RoutedEvent = Keyboard.LostKeyboardFocusEvent });
             tip.IsOpen.ShouldBeFalse();
+        });
+
+    [Fact]
+    public void ANullTextSetPastTheClrSetter_HidesTheMark_InsteadOfThrowing() =>
+        Sta.Run(() =>
+        {
+            var mark = new HintMark { Text = Sentence };
+
+            Should.NotThrow(() => mark.SetValue(HintMark.TextProperty, null));
+
+            mark.Visibility.ShouldBe(Visibility.Collapsed);
+            AutomationProperties.GetName(mark).ShouldBeEmpty();
+        });
+
+    [Fact]
+    public void TheFocusRing_TurnsAccentOnKeyboardFocus_AndMutedAgain() =>
+        Sta.Run(() =>
+        {
+            var accent = new SolidColorBrush(Colors.Red);
+            var muted = new SolidColorBrush(Colors.Gray);
+            var mark = new HintMark { Text = Sentence };
+            mark.Resources["Accent"] = accent;
+            mark.Resources["Muted"] = muted;
+
+            mark.RaiseEvent(new KeyboardFocusChangedEventArgs(Keyboard.PrimaryDevice, 0, null, mark) { RoutedEvent = Keyboard.GotKeyboardFocusEvent });
+            mark.ring.Stroke.ShouldBeSameAs(accent);
+
+            mark.RaiseEvent(new KeyboardFocusChangedEventArgs(Keyboard.PrimaryDevice, 0, mark, null) { RoutedEvent = Keyboard.LostKeyboardFocusEvent });
+            mark.ring.Stroke.ShouldBeSameAs(muted);
         });
 
     [Fact]

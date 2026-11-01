@@ -72,9 +72,17 @@ public sealed class ThemeChoiceTests
         ThemeChoice.DictionaryPath(variant).ShouldBe(expected);
 
     [Fact]
-    public void AllDictionaryPaths_CoversEveryVariantExactlyOnce() =>
+    public void AllDictionaryPaths_CoversEveryVariantExactlyOnce()
+    {
+        ThemeChoice.AllDictionaryPaths.Distinct().Count().ShouldBe(ThemeChoice.AllDictionaryPaths.Count(), "two variants share a file");
         ThemeChoice.AllDictionaryPaths.ShouldBe(
-            [.. Enum.GetValues<ThemeVariant>().Select(ThemeChoice.DictionaryPath)], ignoreOrder: true);
+            [
+                "/FEx.WPFx.Fluent;component/Themes/Tokens.xaml",
+                "/FEx.WPFx.Fluent;component/Themes/Tokens.Dark.xaml",
+                "/FEx.WPFx.Fluent;component/Themes/Tokens.HighContrast.xaml",
+            ], ignoreOrder: true);
+        ThemeChoice.AllDictionaryPaths.Count().ShouldBe(Enum.GetValues<ThemeVariant>().Length);
+    }
 
     [Fact]
     public void ReadLightThemeSetting_FindsTheValueOnWindowsThatHasIt()
@@ -113,6 +121,11 @@ public sealed class ThemeChoiceTests
         finally
         {
             Registry.CurrentUser.DeleteSubKeyTree(subKey);
+            using var parent = Registry.CurrentUser.OpenSubKey(@"Software\FEx.WPFx.Fluent.Tests");
+            var empty = parent is { SubKeyCount: 0 };
+            parent?.Dispose();
+            if (empty)
+                Registry.CurrentUser.DeleteSubKey(@"Software\FEx.WPFx.Fluent.Tests", throwOnMissingSubKey: false);
         }
     }
 

@@ -88,26 +88,51 @@ public sealed class DataLoad<T>
             return;
         }
 
-        Move(LoadState.Loading);
+        T data;
         try
         {
-            var data = await Run(plan());
-            if (mine != _generation)
-                return;
-
-            Data = data;
-            LoadedAt = _now();
-            Move(IsEmpty(data) ? LoadState.Empty : LoadState.Loaded);
+            // Inside the try: a handler that throws on entering Loading must not leave the load stuck there.
+            Move(LoadState.Loading);
+            data = await Run(plan());
         }
         catch (Exception ex)
         {
             if (mine != _generation)
                 return;
 
+            if (_loadedFor != _connection())
+            {
+                // The failure was about the database the app no longer points at.
+                await ReloadAsync(plan);
+                return;
+            }
+
             Error = ex;
-            _onFailure(ex);
-            Move(LoadState.Failed);
+            try
+            {
+                _onFailure(ex);
+            }
+            finally
+            {
+                Move(LoadState.Failed);
+            }
+
+            return;
         }
+
+        if (mine != _generation)
+            return;
+
+        if (_loadedFor != _connection())
+        {
+            // Never publish rows read from the previous database.
+            await ReloadAsync(plan);
+            return;
+        }
+
+        Data = data;
+        LoadedAt = _now();
+        Move(IsEmpty(data) ? LoadState.Empty : LoadState.Loaded);
     }
 
     /// <summary>Hands an exception that surfaced outside the read (while showing its result) to the injected failure sink.</summary>

@@ -2,6 +2,7 @@ using FEx.WPFx.Fluent.Views;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -233,5 +234,123 @@ public sealed class DataLoadTests
         seen.ShouldBe(LoadState.Loading);
         dataWhileLoading.ShouldBeNull();
         timeWhileLoading.ShouldBeNull("the freshness text is empty while loading");
+    }
+
+    [Fact]
+    public async Task AConnectionChangedWhileLoading_DropsTheOldRows_AndReadsAgainOnTheNewOne()
+    {
+        var connection = "Server=a";
+        var gate = new TaskCompletionSource<int[]>();
+        var calls = 0;
+        var load = new DataLoad<int[]>(() => true, data => data.Length == 0, _ => { }, () => Noon, () => connection)
+        {
+            Run = read => ++calls == 1 ? gate.Task : Task.FromResult(read()),
+        };
+
+        var running = load.ReloadAsync(Plan(2));
+        connection = "Server=b";
+        gate.SetResult([1]);
+        await running;
+
+        calls.ShouldBe(2);
+        load.State.ShouldBe(LoadState.Loaded);
+        load.Data.ShouldBe([2], "the rows of database a never land");
+        load.WantsLoad.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AConnectionChangedWhileLoading_ReadsAgain_EvenWhenTheOldReadFailed()
+    {
+        var connection = "Server=a";
+        var gate = new TaskCompletionSource<int[]>();
+        var failures = new List<Exception>();
+        var calls = 0;
+        var load = new DataLoad<int[]>(() => true, data => data.Length == 0, failures.Add, () => Noon, () => connection)
+        {
+            Run = read => ++calls == 1 ? gate.Task : Task.FromResult(read()),
+        };
+
+        var running = load.ReloadAsync(Plan(2));
+        connection = "Server=b";
+        gate.SetException(new InvalidOperationException("old database down"));
+        await running;
+
+        failures.ShouldBeEmpty("the failure was about the old database");
+        load.State.ShouldBe(LoadState.Loaded);
+        load.Data.ShouldBe([2]);
+    }
+
+    [Fact]
+    public async Task AThrowingFailureSink_StillLeavesTheLoadFailed()
+    {
+        var load = new DataLoad<int[]>(() => true, data => data.Length == 0, _ => throw new InvalidOperationException("sink"))
+        {
+            Run = read => Task.FromResult(read()),
+        };
+
+        await Should.ThrowAsync<InvalidOperationException>(() => load.ReloadAsync(() => () => throw new InvalidOperationException()));
+
+        load.State.ShouldBe(LoadState.Failed);
+        load.Error.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task AHandlerThatThrowsOnEnteringLoading_StillReadsOnce_AndEndsFailed()
+    {
+        var failures = new List<Exception>();
+        var load = NewLoad(failures: failures);
+        var reads = 0;
+        load.Changed += () =>
+        {
+            if (load.State is LoadState.Loading)
+                throw new InvalidOperationException("clear broke");
+        };
+
+        await load.ReloadAsync(() => () => { reads++; return [1]; });
+
+        failures.Select(f => f.Message).ShouldBe(["clear broke"]);
+        load.State.ShouldBe(LoadState.Failed);
+        reads.ShouldBe(0, "the handler failed before the read started; the load is not stuck in Loading");
+    }
+
+    [Fact]
+    public async Task AHandlerThatThrowsAfterASuccessfulRead_PropagatesInsteadOfBecomingAConnectionFailure()
+    {
+        var failures = new List<Exception>();
+        var load = NewLoad(failures: failures);
+        load.Changed += () =>
+        {
+            if (load.State is LoadState.Loaded)
+                throw new InvalidOperationException("show broke");
+        };
+
+        await Should.ThrowAsync<InvalidOperationException>(() => load.ReloadAsync(Plan(1)));
+
+        failures.ShouldBeEmpty();
+        load.State.ShouldBe(LoadState.Loaded);
+        load.Data.ShouldBe([1]);
+    }
+
+    [Fact]
+    public async Task TheDefaultRun_ReadsOffTheCallingThread()
+    {
+        var load = new DataLoad<int>(() => true, _ => false, _ => { });
+        var caller = Environment.CurrentManagedThreadId;
+        var reader = 0;
+
+        await load.ReloadAsync(() => () => reader = Environment.CurrentManagedThreadId);
+
+        reader.ShouldNotBe(caller);
+    }
+
+    [Fact]
+    public async Task TheDefaultClock_IsLocalTime()
+    {
+        var load = new DataLoad<int>(() => true, _ => false, _ => { });
+
+        await load.ReloadAsync(() => () => 1);
+
+        load.LoadedAt.ShouldNotBeNull().Kind.ShouldNotBe(DateTimeKind.Utc);
+        (DateTime.Now - load.LoadedAt.Value).Duration().ShouldBeLessThan(TimeSpan.FromSeconds(10));
     }
 }

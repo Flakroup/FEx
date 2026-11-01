@@ -43,6 +43,18 @@ public sealed class ActionGateTests
     }
 
     [Fact]
+    public void Apply_WithoutAHintMark_StillGatesTheButton() =>
+        Sta.Run(() =>
+        {
+            var button = new Button();
+
+            Should.NotThrow(() => ActionGate.Apply(button, null, "Zaznacz osobę."));
+
+            button.IsEnabled.ShouldBeFalse();
+            button.ToolTip.ShouldBe("Zaznacz osobę.");
+        });
+
+    [Fact]
     public void Apply_EnablesTheButton_AndClearsTheReason_WhenNothingIsMissing()
     {
         Sta.Run(() =>

@@ -77,7 +77,13 @@ public sealed class MenuLayoutState
     public MenuLayoutState(double width, string? storedOverride)
     {
         _automatic = MenuLayout.ForWidth(width);
-        _manual = Enum.TryParse<MenuMode>(storedOverride, out var stored) && stored is MenuMode.Full or MenuMode.Rail ? stored : null;
+        // Exact names only: Enum.TryParse would also read "1" or "Full,Rail".
+        _manual = storedOverride switch
+        {
+            nameof(MenuMode.Full) => MenuMode.Full,
+            nameof(MenuMode.Rail) => MenuMode.Rail,
+            _ => null,
+        };
     }
 
     public MenuMode Mode => _automatic == MenuMode.Flyout ? MenuMode.Flyout : _manual ?? _automatic;

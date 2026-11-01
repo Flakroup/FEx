@@ -45,9 +45,10 @@ public partial class HintMark : UserControl
 
     private void Refresh()
     {
-        var shown = !string.IsNullOrWhiteSpace(Text);
-        _tip.Content = Text;
-        AutomationProperties.SetName(this, Text);
+        var text = (string?)GetValue(TextProperty) ?? string.Empty; // a binding may hand over null past the CLR setter
+        var shown = !string.IsNullOrWhiteSpace(text);
+        _tip.Content = text;
+        AutomationProperties.SetName(this, text);
         Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
         if (!shown)
             _tip.IsOpen = false;

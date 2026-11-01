@@ -115,9 +115,19 @@ public sealed class ThemeTokensTests
         });
 
     [Fact]
-    public void Light_And_Dark_AreNotTheSamePalette() =>
+    public void Light_And_Dark_AreNotTheSamePalette()
+    {
         // A dark file copied from the light one would pass every key check and still be a light UI.
-        DesignTable.Count(row => row.Light != row.Dark).ShouldBeGreaterThan(DesignTable.Length - 4);
+        var (light, dark) = (Load(ThemeVariant.Light), Load(ThemeVariant.Dark));
+
+        DesignTable.Count(row => light[row.Key] != dark[row.Key]).ShouldBeGreaterThan(DesignTable.Length - 4);
+    }
+
+    [Theory]
+    [InlineData(ThemeVariant.Light)]
+    [InlineData(ThemeVariant.Dark)]
+    public void OverlayScrim_IsTheDesignedTranslucentInk(ThemeVariant variant) =>
+        Load(variant)["OverlayScrim"].ShouldBe(Parse("#D90A0E14"));
 
     [Theory]
     [InlineData(ThemeVariant.Light)]

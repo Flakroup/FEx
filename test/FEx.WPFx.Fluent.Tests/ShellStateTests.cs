@@ -44,6 +44,48 @@ public sealed class ShellStateTests
         }
     }
 
+    [Theory]
+    [InlineData("{}", "", "")]
+    [InlineData("{\"LastModule\":\"send\"}", "send", "")]
+    [InlineData("{\"MenuOverride\":\"Rail\"}", "", "Rail")]
+    [InlineData("{\"LastModule\":null,\"MenuOverride\":null}", "", "")]
+    [InlineData("null", "", "")]
+    public void AFileThatOmitsOrNullsAProperty_LoadsThemAsEmptyStrings(string json, string module, string menu)
+    {
+        var path = TempPath();
+        File.WriteAllText(path, json);
+        try
+        {
+            var state = ShellState.Load(path);
+
+            state.LastModule.ShouldBe(module);
+            state.MenuOverride.ShouldBe(menu);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void SaveToAReadOnlyFile_DoesNotThrow_AndLeavesItAlone()
+    {
+        var path = TempPath();
+        File.WriteAllText(path, "kept");
+        File.SetAttributes(path, FileAttributes.ReadOnly);
+        try
+        {
+            Should.NotThrow(() => new ShellState("send", "Rail").Save(path));
+
+            File.ReadAllText(path).ShouldBe("kept");
+        }
+        finally
+        {
+            File.SetAttributes(path, FileAttributes.Normal);
+            File.Delete(path);
+        }
+    }
+
     [Fact]
     public void SaveToAnUnwritableLocation_DoesNotThrow() =>
         Should.NotThrow(() => new ShellState("send", string.Empty)

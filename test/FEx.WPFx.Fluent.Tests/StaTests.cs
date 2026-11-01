@@ -1,6 +1,8 @@
 using FEx.WPFx.Fluent.Testing;
 using Shouldly;
 using System;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -55,7 +57,33 @@ public sealed class StaTests
             root.IsVisible.ShouldBeTrue();
             root.ActualWidth.ShouldBe(300);
             root.ActualHeight.ShouldBe(200);
+            ClassNameOf(GetAncestor(host.Handle, ParentAncestor)).ShouldBe("Message", "the host hangs off the message-only parent, so no window reaches the desktop");
         });
+
+    [Fact]
+    public void Run_LetsASkipThrough_AsASkip_NotAsAFailure()
+    {
+        var thrown = Should.Throw<Exception>(() => Sta.Run(() => Assert.Skip("no desktop")));
+
+        thrown.ShouldNotBeOfType<InvalidOperationException>();
+        thrown.GetType().Name.ShouldBe("SkipException");
+        thrown.Message.ShouldContain("no desktop");
+    }
+
+    private const uint ParentAncestor = 1;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetClassName(IntPtr hwnd, StringBuilder text, int max);
+
+    private static string ClassNameOf(IntPtr hwnd)
+    {
+        var text = new StringBuilder(64);
+        _ = GetClassName(hwnd, text, text.Capacity);
+        return text.ToString();
+    }
 
     [Fact]
     public void RequireInteractiveDesktop_SkipsOnlyWithoutOne()

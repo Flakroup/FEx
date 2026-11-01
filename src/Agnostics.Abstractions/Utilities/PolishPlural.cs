@@ -11,7 +11,7 @@ public static class PolishPlural
         if (count == 1)
             return one;
 
-        var lastTwo = Math.Abs(count) % 100;
+        var lastTwo = Math.Abs((long)count) % 100;
         var last = lastTwo % 10;
         return last is >= 2 and <= 4 && lastTwo is < 12 or > 14 ? few : many;
     }

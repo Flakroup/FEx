@@ -18,8 +18,8 @@ public sealed record ShellState(string LastModule, string MenuOverride)
     {
         try
         {
-            return File.Exists(path)
-                ? JsonSerializer.Deserialize<ShellState>(File.ReadAllText(path)) ?? Empty
+            return File.Exists(path) && JsonSerializer.Deserialize<ShellState>(File.ReadAllText(path)) is { } state
+                ? new ShellState(state.LastModule ?? string.Empty, state.MenuOverride ?? string.Empty) // a file may omit or null either
                 : Empty;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)

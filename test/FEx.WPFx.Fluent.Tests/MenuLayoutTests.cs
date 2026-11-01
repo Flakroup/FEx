@@ -103,6 +103,11 @@ public sealed class MenuLayoutTests
     [InlineData("", MenuMode.Full)]
     [InlineData("Flyout", MenuMode.Full)] // the flyout is never a stored state
     [InlineData("nonsense", MenuMode.Full)]
-    public void StoredOverride_IsRestoredAtStart_AndAnythingElseIsIgnored(string stored, MenuMode expected) =>
+    [InlineData("1", MenuMode.Full)] // Enum.TryParse would read a number as a mode
+    [InlineData("0", MenuMode.Full)]
+    [InlineData("Full,Rail", MenuMode.Full)]
+    [InlineData("rail", MenuMode.Full)]
+    [InlineData(null, MenuMode.Full)]
+    public void StoredOverride_IsRestoredAtStart_AndAnythingElseIsIgnored(string? stored, MenuMode expected) =>
         new MenuLayoutState(1920, stored).Mode.ShouldBe(expected);
 }

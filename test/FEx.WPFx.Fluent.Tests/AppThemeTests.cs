@@ -17,6 +17,12 @@ namespace FEx.WPFx.Fluent.Tests;
 [Collection(WpfGlobal.Collection)]
 public sealed class AppThemeTests
 {
+    /// <summary>An Application whose Exit can be raised without running a message loop.</summary>
+    private sealed class ExitableApplication : Application
+    {
+        public void RaiseExit() => OnExit(null!); // the base only forwards the event; the argument is unused by the handlers
+    }
+
     private static Color Bg(ResourceDictionary resources) => ((SolidColorBrush)resources["Bg"]).Color;
 
     private static int TokenDictionaries(ResourceDictionary resources) =>
@@ -95,7 +101,7 @@ public sealed class AppThemeTests
         Sta.Run(() =>
         {
             // The one Application of the test process: Application.Current is per AppDomain, so no other test may create one.
-            var application = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+            var application = new ExitableApplication { ShutdownMode = ShutdownMode.OnExplicitShutdown };
             try
             {
                 AppTheme.Follow(application, ThemePreference.System);
@@ -159,6 +165,14 @@ public sealed class AppThemeTests
 #pragma warning restore VSTHRD001
                 Bg(application.Resources).ShouldBe(pinnedBg);
                 application.ThemeMode.ShouldBe(pinnedMode);
+
+                // Follow must hook the system event (and unhook it when the application ends).
+                UserPreferenceChangedEventHandler? subscribed = null, unsubscribed = null;
+                AppTheme.Follow(application, ThemePreference.System, handler => subscribed = handler, handler => unsubscribed = handler);
+                subscribed.ShouldNotBeNull();
+                unsubscribed.ShouldBeNull();
+                application.RaiseExit();
+                unsubscribed.ShouldBeSameAs(subscribed);
             }
             finally
             {

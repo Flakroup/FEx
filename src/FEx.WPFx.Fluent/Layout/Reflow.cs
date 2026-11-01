@@ -64,7 +64,7 @@ public static class Reflow
     public static void SetFooter(DependencyObject d, bool value) => d.SetValue(FooterProperty, value);
 
     private static readonly DependencyProperty SavedProperty =
-        DependencyProperty.RegisterAttached("Saved", typeof(SavedColumns), typeof(Reflow));
+        DependencyProperty.RegisterAttached("Saved", typeof(SavedLayout), typeof(Reflow));
 
     private static void OnTrackChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -94,9 +94,20 @@ public static class Reflow
 
     private static void OnTwoPaneChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is ScrollViewer area && (bool)e.NewValue)
-            area.SizeChanged += (_, _) => FitStackedHeight(area);
+        if (d is not ScrollViewer area)
+            return;
+
+        // Removed first, so switching it on twice never subscribes twice.
+        area.SizeChanged -= AreaSizeChanged;
+        if (!(bool)e.NewValue)
+            return;
+
+        area.SizeChanged += AreaSizeChanged;
+        if (GetIsNarrow(area))
+            ApplyTwoPane(area, true);
     }
+
+    private static void AreaSizeChanged(object sender, SizeChangedEventArgs e) => FitStackedHeight((ScrollViewer)sender);
 
     private static void OnFooterChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -104,12 +115,22 @@ public static class Reflow
             ApplyFooter(footer, true);
     }
 
-    /// <summary>The columns as the XAML authored them, kept so that leaving the narrow state restores them.</summary>
-    private sealed record SavedColumns(GridLength[] Widths, double[] MinWidths);
+    /// <summary>What the narrow state overwrites, as the XAML authored it, kept so that leaving the narrow state restores it.</summary>
+    private sealed record SavedLayout(
+        double[] MinWidths,
+        GridLength[] RowHeights,
+        double[] RowMinHeights,
+        double SplitterWidth,
+        double SplitterHeight,
+        HorizontalAlignment SplitterHorizontal,
+        VerticalAlignment SplitterVertical,
+        ScrollBarVisibility ScrollBar,
+        double GridHeight);
 
     private static void ApplyTwoPane(ScrollViewer area, bool narrow)
     {
-        if (area.Content is not Grid { Children.Count: 3 } grid || grid.Children[1] is not GridSplitter splitter)
+        // A shape that is not the documented one (pane, splitter, pane over three rows) is left alone.
+        if (area.Content is not Grid { Children.Count: 3, RowDefinitions.Count: >= 3 } grid || grid.Children[1] is not GridSplitter splitter)
             return;
 
         UIElement first = grid.Children[0], second = grid.Children[2];
@@ -118,10 +139,17 @@ public static class Reflow
 
         if (narrow)
         {
-            // Snapshot on every entry, not once: a splitter dragged in the wide state must survive the next round trip.
-            grid.SetValue(SavedProperty, new SavedColumns(
-                [.. Array.ConvertAll([.. columns], c => c.Width)],
-                [.. Array.ConvertAll([.. columns], c => c.MinWidth)]));
+            // Kept while a copy exists (TwoPane switched off and on again while narrow); the wide state clears it,
+            // so every entry from the wide state snapshots anew - a splitter dragged meanwhile survives the round trip.
+            if (grid.GetValue(SavedProperty) is null)
+            {
+                grid.SetValue(SavedProperty, new SavedLayout(
+                    [.. Array.ConvertAll([.. columns], c => c.MinWidth)],
+                    [.. Array.ConvertAll([.. rows], r => r.Height)],
+                    [.. Array.ConvertAll([.. rows], r => r.MinHeight)],
+                    splitter.Width, splitter.Height, splitter.HorizontalAlignment, splitter.VerticalAlignment,
+                    area.VerticalScrollBarVisibility, grid.Height));
+            }
 
             foreach (var column in columns)
                 column.MinWidth = 0;
@@ -138,36 +166,33 @@ public static class Reflow
             splitter.ResizeDirection = GridResizeDirection.Rows;
             splitter.Width = double.NaN;
             splitter.Height = SplitterThickness;
+            splitter.HorizontalAlignment = HorizontalAlignment.Stretch;
             splitter.VerticalAlignment = VerticalAlignment.Center;
             area.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
             FitStackedHeight(area);
         }
-        else
+        else if (grid.GetValue(SavedProperty) is SavedLayout saved)
         {
-            if (grid.GetValue(SavedProperty) is SavedColumns saved)
-            {
-                for (var i = 0; i < columns.Count; i++)
-                {
-                    columns[i].Width = saved.Widths[i];
-                    columns[i].MinWidth = saved.MinWidths[i];
-                }
-            }
+            for (var i = 0; i < columns.Count; i++)
+                columns[i].MinWidth = saved.MinWidths[i];
 
-            rows[0].Height = new GridLength(1, GridUnitType.Star);
-            rows[0].MinHeight = 0;
-            rows[1].Height = new GridLength(0);
-            rows[2].Height = new GridLength(0);
-            rows[2].MinHeight = 0;
+            for (var i = 0; i < rows.Count; i++)
+            {
+                rows[i].Height = saved.RowHeights[i];
+                rows[i].MinHeight = saved.RowMinHeights[i];
+            }
 
             Place(first, 0, 0, 1);
             Place(splitter, 0, 1, 1);
             Place(second, 0, 2, 1);
             splitter.ResizeDirection = GridResizeDirection.Columns;
-            splitter.Width = SplitterThickness;
-            splitter.Height = double.NaN;
-            splitter.VerticalAlignment = VerticalAlignment.Stretch;
-            area.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-            grid.Height = double.NaN;
+            splitter.Width = saved.SplitterWidth;
+            splitter.Height = saved.SplitterHeight;
+            splitter.HorizontalAlignment = saved.SplitterHorizontal;
+            splitter.VerticalAlignment = saved.SplitterVertical;
+            area.VerticalScrollBarVisibility = saved.ScrollBar;
+            grid.Height = saved.GridHeight;
+            grid.ClearValue(SavedProperty);
         }
     }
 
@@ -179,7 +204,7 @@ public static class Reflow
 
     private static void ApplyFooter(Grid footer, bool narrow)
     {
-        if (footer.Children.Count != 2)
+        if (footer.Children.Count != 2 || footer.RowDefinitions.Count < 2)
             return;
 
         UIElement lead = footer.Children[0], actions = footer.Children[1];

@@ -22,6 +22,8 @@ public sealed class PolishPluralTests
     [InlineData(122, "pliki")]
     [InlineData(-1, "plików")] // only +1 is singular
     [InlineData(-3, "pliki")]
+    [InlineData(int.MinValue, "plików")] // no int absolute value; ends in 48
+    [InlineData(int.MaxValue, "plików")]
     public void Pick_FollowsThePolishRuleForACount(int count, string expected) =>
         PolishPlural.Pick(count, "plik", "pliki", "plików").ShouldBe(expected);
 }

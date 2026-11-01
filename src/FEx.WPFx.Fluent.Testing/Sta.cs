@@ -1,5 +1,6 @@
 using FEx.WPFx.Fluent.Views;
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,6 +15,9 @@ public static class Sta
 {
     /// <summary>The message-only window class parent: a host with it has no window on screen at all.</summary>
     private static readonly IntPtr MessageOnlyParent = new(-3);
+
+    /// <summary>The marker xUnit v3 puts at the start of the message of the exception <c>Assert.Skip</c> throws.</summary>
+    private const string DynamicSkipToken = "$XunitDynamicSkip$";
 
     /// <summary>
     /// Warms up pack:// loading once, before any test body runs. Loading a ResourceDictionary by component URI on a
@@ -83,6 +87,9 @@ public static class Sta
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
         thread.Join();
+
+        if (caught is not null && caught.Message.StartsWith(DynamicSkipToken, StringComparison.Ordinal))
+            ExceptionDispatchInfo.Capture(caught).Throw(); // a skip stays a skip: wrapped, the runner would report a failure
 
         if (caught is not null)
             throw new InvalidOperationException($"{caught.GetType().Name}: {caught.Message}", caught);

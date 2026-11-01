@@ -22,6 +22,7 @@ public partial class LoadOverlay : UserControl
             new PropertyMetadata(string.Empty, (d, _) => ((LoadOverlay)d).ApplySource()));
 
     private LoadState _state = LoadState.Idle;
+    private bool _displayFailed;
 
     public LoadOverlay()
     {
@@ -48,7 +49,7 @@ public partial class LoadOverlay : UserControl
     private void ApplySource()
     {
         lblLoading.Text = LoadText.Loading(Source);
-        if (_state is LoadState.Failed)
+        if (_state is LoadState.Failed && !_displayFailed)
             lblTitle.Text = LoadText.ErrorTitle(ConnectionTarget);
     }
 
@@ -64,6 +65,7 @@ public partial class LoadOverlay : UserControl
     public void Show(LoadState state, string emptyTitle, string? emptyHint)
     {
         _state = state;
+        _displayFailed = false;
         Visibility = state is LoadState.Loaded ? Visibility.Collapsed : Visibility.Visible;
         var skeleton = state is LoadState.Idle or LoadState.Loading;
         pnlLoading.Visibility = skeleton ? Visibility.Visible : Visibility.Collapsed;
@@ -77,10 +79,22 @@ public partial class LoadOverlay : UserControl
             Message(LoadText.MissingTitle, LoadText.MissingHint, danger: false, retry: false, settings: true);
     }
 
+    /// <summary>The data was read but the tab could not show it: an error of its own, not a dead database.</summary>
+    public void ShowDisplayFailed()
+    {
+        _state = LoadState.Failed;
+        _displayFailed = true; // its title is not the connection sentence, so a renamed target must leave it be
+        Visibility = Visibility.Visible;
+        pnlLoading.Visibility = Visibility.Collapsed;
+        pnlMessage.Visibility = Visibility.Visible;
+        Message(LoadText.DisplayFailedTitle, LoadText.DisplayFailedHint, danger: true, retry: true, settings: false);
+    }
+
     /// <summary>The "nothing configured" state with a tab's own sentences and the button to Ustawienia.</summary>
     public void ShowMissing(string title, string? hint)
     {
         _state = LoadState.Missing;
+        _displayFailed = false;
         Visibility = Visibility.Visible;
         pnlLoading.Visibility = Visibility.Collapsed;
         pnlMessage.Visibility = Visibility.Visible;

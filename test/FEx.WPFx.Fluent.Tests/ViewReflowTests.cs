@@ -110,7 +110,7 @@ public sealed class ViewReflowTests
         });
 
     [Fact]
-    public void GrowingBackToWide_RestoresTheColumnsAsAuthored_IncludingASplitterDraggedMeanwhile() =>
+    public void GrowingBackToWide_RestoresTheColumnMinimumsAndTheLayoutAsAuthored() =>
         Sta.Run(() =>
         {
             var view = (FrameworkElement)XamlReader.Parse(ViewXaml);
@@ -124,7 +124,6 @@ public sealed class ViewReflowTests
 
             Reflow.GetIsNarrow(view).ShouldBeFalse();
             var columns = Named<Grid>(view, "panes").ColumnDefinitions;
-            columns[0].Width.ShouldBe(new GridLength(3, GridUnitType.Star));
             columns[0].MinWidth.ShouldBe(200);
             columns[2].MinWidth.ShouldBe(150);
             Grid.GetColumn(Named<Border>(view, "second")).ShouldBe(2);
@@ -212,5 +211,164 @@ public sealed class ViewReflowTests
 
             // A TwoPane switched on a non-ScrollViewer does nothing.
             Should.NotThrow(() => Reflow.SetTwoPane(new Border(), true));
+        });
+
+    [Fact]
+    public void ASplitterDraggedInTheWideState_SurvivesTheNextRoundTripThroughTheNarrowState() =>
+        Sta.Run(() =>
+        {
+            var view = (FrameworkElement)XamlReader.Parse(ViewXaml);
+            var box = new Border { Width = 1200, Height = 700, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top, Child = view };
+            using var host = Sta.Host(box, 2500, 1500);
+            Settle(box);
+            var columns = Named<Grid>(view, "panes").ColumnDefinitions;
+
+            box.Width = 704;
+            Settle(box);
+            box.Width = 1200;
+            Settle(box);
+            columns[0].Width = new GridLength(500);
+            columns[0].MinWidth = 120;
+            box.Width = 704;
+            Settle(box);
+            box.Width = 1200;
+            Settle(box);
+
+            columns[0].Width.ShouldBe(new GridLength(500));
+            columns[0].MinWidth.ShouldBe(120, "a minimum set in the wide state is the authored one the next time");
+        });
+
+    private static (ScrollViewer Area, Grid Panes, GridSplitter Splitter, Border Second) BuildPanes(int rows)
+    {
+        var splitter = new GridSplitter { Width = 4, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top, Height = 30 };
+        var second = new Border();
+        var panes = new Grid { Height = 900 };
+        panes.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star), MinWidth = 100 });
+        panes.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        panes.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star), MinWidth = 50 });
+        for (var i = 0; i < rows; i++)
+            panes.RowDefinitions.Add(new RowDefinition { Height = i == 0 ? new GridLength(1, GridUnitType.Star) : new GridLength(0), MinHeight = i });
+        Grid.SetColumn(splitter, 1);
+        Grid.SetColumn(second, 2);
+        panes.Children.Add(new Border());
+        panes.Children.Add(splitter);
+        panes.Children.Add(second);
+        return (new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Hidden, Content = panes }, panes, splitter, second);
+    }
+
+    [Fact]
+    public void AThreeChildGridWithoutThreeRows_IsLeftAlone_NarrowAndWide() =>
+        Sta.Run(() =>
+        {
+            var (area, panes, _, second) = BuildPanes(rows: 2);
+            Reflow.SetTwoPane(area, true);
+
+            Should.NotThrow(() => Reflow.SetIsNarrow(area, true));
+            Grid.GetRow(second).ShouldBe(0);
+            Grid.GetColumn(second).ShouldBe(2);
+            panes.Height.ShouldBe(900);
+            area.VerticalScrollBarVisibility.ShouldBe(ScrollBarVisibility.Hidden);
+
+            Should.NotThrow(() => Reflow.SetIsNarrow(area, false));
+            Grid.GetColumn(second).ShouldBe(2);
+        });
+
+    [Fact]
+    public void AFooterWithoutTwoRows_IsLeftAlone() =>
+        Sta.Run(() =>
+        {
+            var footer = new Grid();
+            footer.ColumnDefinitions.Add(new ColumnDefinition());
+            footer.ColumnDefinitions.Add(new ColumnDefinition());
+            var actions = new Button();
+            footer.Children.Add(new TextBlock());
+            footer.Children.Add(actions);
+            Grid.SetColumn(actions, 1);
+            Reflow.SetFooter(footer, true);
+
+            Reflow.SetIsNarrow(footer, true);
+
+            Grid.GetRow(actions).ShouldBe(0);
+            Grid.GetColumn(actions).ShouldBe(1);
+            Grid.GetColumnSpan(actions).ShouldBe(1);
+
+        });
+
+    [Fact]
+    public void ThePanes_StackWithAStretchingSplitter_AndTheAuthoredValuesComeBackExactly() =>
+        Sta.Run(() =>
+        {
+            var (area, panes, splitter, _) = BuildPanes(rows: 3);
+            Reflow.SetTwoPane(area, true);
+
+            Reflow.SetIsNarrow(area, true);
+            splitter.HorizontalAlignment.ShouldBe(HorizontalAlignment.Stretch, "an authored Right or Center splitter would collapse to zero width");
+            panes.RowDefinitions[1].Height.ShouldBe(new GridLength(Reflow.SplitterThickness));
+
+            Reflow.SetIsNarrow(area, false);
+            splitter.HorizontalAlignment.ShouldBe(HorizontalAlignment.Center);
+            splitter.VerticalAlignment.ShouldBe(VerticalAlignment.Top);
+            splitter.Width.ShouldBe(4);
+            splitter.Height.ShouldBe(30);
+            area.VerticalScrollBarVisibility.ShouldBe(ScrollBarVisibility.Hidden);
+            panes.Height.ShouldBe(900);
+            panes.RowDefinitions[0].Height.ShouldBe(new GridLength(1, GridUnitType.Star));
+            panes.RowDefinitions[1].Height.ShouldBe(new GridLength(0));
+            panes.RowDefinitions[1].MinHeight.ShouldBe(1);
+            panes.RowDefinitions[2].MinHeight.ShouldBe(2);
+            panes.ColumnDefinitions[0].MinWidth.ShouldBe(100);
+            panes.ColumnDefinitions[2].MinWidth.ShouldBe(50);
+        });
+
+    [Fact]
+    public void TwoPaneSwitchedOnWhileAlreadyNarrow_StacksAtOnce() =>
+        Sta.Run(() =>
+        {
+            var (area, _, _, second) = BuildPanes(rows: 3);
+            Reflow.SetIsNarrow(area, true);
+
+            Reflow.SetTwoPane(area, true);
+
+            Grid.GetRow(second).ShouldBe(2);
+            Grid.GetColumn(second).ShouldBe(0);
+        });
+
+    [Fact]
+    public void TwoPaneSwitchedOffAndOnWhileNarrow_KeepsTheFirstSnapshot() =>
+        Sta.Run(() =>
+        {
+            var (area, panes, _, _) = BuildPanes(rows: 3);
+            Reflow.SetIsNarrow(area, true);
+            Reflow.SetTwoPane(area, true);
+
+            Reflow.SetTwoPane(area, false);
+            Reflow.SetTwoPane(area, true);
+            Reflow.SetIsNarrow(area, false);
+
+            panes.Height.ShouldBe(900, "the second narrow application must not snapshot the narrow values as authored");
+            panes.ColumnDefinitions[0].MinWidth.ShouldBe(100);
+        });
+
+    [Fact]
+    public void TwoPaneSwitchedOff_StopsRefittingTheStackedHeight() =>
+        Sta.Run(() =>
+        {
+            var view = (FrameworkElement)XamlReader.Parse(ViewXaml);
+            var box = new Border { Width = 704, Height = 509, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top, Child = view };
+            using var host = Sta.Host(box, 2500, 1500);
+            Settle(box);
+            var area = Named<ScrollViewer>(view, "area");
+            var panes = Named<Grid>(view, "panes");
+
+            box.Height = 1000;
+            Settle(box);
+            panes.Height.ShouldBe(Reflow.StackedHeight(area.ActualHeight), "still following the height while on");
+
+            Reflow.SetTwoPane(area, false);
+            panes.Height = 5;
+            box.Height = 600;
+            Settle(box);
+
+            panes.Height.ShouldBe(5);
         });
 }

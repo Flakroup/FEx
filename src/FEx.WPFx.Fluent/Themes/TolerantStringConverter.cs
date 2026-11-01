@@ -12,12 +12,15 @@ namespace FEx.WPFx.Fluent.Themes;
 /// </summary>
 public sealed class TolerantStringConverter : JsonConverter<string>
 {
+    /// <summary>System.Text.Json skips the converter for a null token unless told otherwise; it then reads as an empty string.</summary>
+    public override bool HandleNull => true;
+
     public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.String)
             return reader.GetString() ?? string.Empty;
 
-        reader.Skip();
+        _ = reader.TrySkip(); // Skip() throws on a non-final block of a stream; TrySkip waits for the rest
         return string.Empty;
     }
 

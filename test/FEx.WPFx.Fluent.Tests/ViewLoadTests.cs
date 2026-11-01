@@ -29,7 +29,7 @@ public sealed class ViewLoadTests
         public Harness(bool configured = true, Action<int[]>? show = null, Action? clear = null, string source = "Płatnika")
         {
             Tab = new Border();
-            Overlay = new LoadOverlay { Source = source };
+            Overlay = new LoadOverlay { Source = source, ConnectionTarget = $"bazą {source}" };
             Indicator = new LoadIndicator { Source = source };
             Load = new DataLoad<int[]>(() => configured, rows => rows.Length == 0, Failures.Add, () => Noon)
             {
@@ -154,12 +154,22 @@ public sealed class ViewLoadTests
             overlay.lblLoading.Text.ShouldBe("Wczytywanie danych z Kapera...");
             indicator.btnRefresh.ToolTip.ShouldBe("Odśwież dane z Kapera");
 
+            overlay.ConnectionTarget.ShouldBeEmpty();
+            overlay.ConnectionTarget = "bazą Kapera";
             overlay.Show(LoadState.Failed, string.Empty, null);
-            overlay.lblTitle.Text.ShouldBe("Nie udało się połączyć z Kapera");
-            overlay.Source = "Asseco";
-            overlay.lblTitle.Text.ShouldBe("Nie udało się połączyć z Asseco", "an open error line follows a renamed source");
+            overlay.lblTitle.Text.ShouldBe("Nie udało się połączyć z bazą Kapera");
+            overlay.lblLoading.Text.ShouldBe("Wczytywanie danych z Kapera...", "the two sentences decline the name differently");
+            overlay.ConnectionTarget = "bazą Asseco";
+            overlay.lblTitle.Text.ShouldBe("Nie udało się połączyć z bazą Asseco", "an open error line follows a renamed target");
+
+            overlay.ShowMissing("Brak biura", null);
+            overlay.ConnectionTarget = "bazą Kapera";
+            overlay.lblTitle.Text.ShouldBe("Brak biura", "a renamed target must not overwrite another state's line");
+
             overlay.Source = null!;
             overlay.Source.ShouldBeEmpty();
+            overlay.ConnectionTarget = null!;
+            overlay.ConnectionTarget.ShouldBeEmpty();
             indicator.Source = null!;
             indicator.Source.ShouldBeEmpty();
         });
@@ -215,7 +225,7 @@ public sealed class ViewLoadTests
 
             harness.Load.State.ShouldBe(LoadState.Failed);
             harness.Failures.Count.ShouldBe(1);
-            harness.Overlay.lblTitle.Text.ShouldBe("Nie udało się połączyć z Płatnika");
+            harness.Overlay.lblTitle.Text.ShouldBe("Nie udało się połączyć z bazą Płatnika");
             harness.Overlay.lblHint.Text.ShouldBe("Sprawdź połączenie w Ustawieniach i odśwież.");
             harness.Overlay.btnRetry.Visibility.ShouldBe(Visibility.Visible);
             harness.Overlay.btnRetry.Content.ShouldBe("Odśwież");

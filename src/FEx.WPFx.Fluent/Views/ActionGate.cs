@@ -29,9 +29,7 @@ public static class ActionGate
     {
         Gate(button, reason, busy);
         if (hint is not null)
-        {
             hint.Text = HintText(reason, busy);
-        }
     }
 
     private static string HintText(string? reason, bool busy) => busy ? string.Empty : reason ?? string.Empty;

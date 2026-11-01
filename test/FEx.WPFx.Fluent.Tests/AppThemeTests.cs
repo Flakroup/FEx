@@ -146,7 +146,7 @@ public sealed class AppThemeTests
                     ? (ThemePreference.Light, LightBg, ThemeMode.Light)
                     : (ThemePreference.Dark, DarkBg, ThemeMode.Dark);
                 AppTheme.Select(application, pinned);
-                AppTheme.OnWindowsPreferenceChanged(application, UserPreferenceCategory.General);
+                AppTheme.PreferenceHandler(application)(application, new UserPreferenceChangedEventArgs(UserPreferenceCategory.General));
 #pragma warning disable VSTHRD001 // a test thread has no JoinableTaskFactory; draining the queued swap is the point
                 application.Dispatcher.Invoke(() => { }, DispatcherPriority.Background); // lets the queued swap run first
 #pragma warning restore VSTHRD001

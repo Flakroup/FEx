@@ -16,6 +16,11 @@ public partial class LoadOverlay : UserControl
         DependencyProperty.Register(nameof(Source), typeof(string), typeof(LoadOverlay),
             new PropertyMetadata(string.Empty, (d, _) => ((LoadOverlay)d).ApplySource()));
 
+    /// <summary>What the app connects to, in the form that follows "połączyć z" ("bazą Płatnika"); apart from <see cref="Source"/> because Polish declines the two differently.</summary>
+    public static readonly DependencyProperty ConnectionTargetProperty =
+        DependencyProperty.Register(nameof(ConnectionTarget), typeof(string), typeof(LoadOverlay),
+            new PropertyMetadata(string.Empty, (d, _) => ((LoadOverlay)d).ApplySource()));
+
     private LoadState _state = LoadState.Idle;
 
     public LoadOverlay()
@@ -33,11 +38,18 @@ public partial class LoadOverlay : UserControl
         set => SetValue(SourceProperty, value ?? string.Empty);
     }
 
+    /// <summary>The name of what the app connects to, in the form that fits "połączyć z {ConnectionTarget}".</summary>
+    public string ConnectionTarget
+    {
+        get => (string)GetValue(ConnectionTargetProperty);
+        set => SetValue(ConnectionTargetProperty, value ?? string.Empty);
+    }
+
     private void ApplySource()
     {
         lblLoading.Text = LoadText.Loading(Source);
         if (_state is LoadState.Failed)
-            lblTitle.Text = LoadText.ErrorTitle(Source);
+            lblTitle.Text = LoadText.ErrorTitle(ConnectionTarget);
     }
 
     /// <summary>The operator asked to read the data again.</summary>
@@ -62,7 +74,7 @@ public partial class LoadOverlay : UserControl
                 Message(emptyTitle, emptyHint, danger: false, retry: false, settings: false);
                 break;
             case LoadState.Failed:
-                Message(LoadText.ErrorTitle(Source), LoadText.ErrorHint, danger: true, retry: true, settings: true);
+                Message(LoadText.ErrorTitle(ConnectionTarget), LoadText.ErrorHint, danger: true, retry: true, settings: true);
                 break;
             case LoadState.Missing:
                 Message(LoadText.MissingTitle, LoadText.MissingHint, danger: false, retry: false, settings: true);
@@ -73,6 +85,7 @@ public partial class LoadOverlay : UserControl
     /// <summary>The "nothing configured" state with a tab's own sentences and the button to Ustawienia.</summary>
     public void ShowMissing(string title, string? hint)
     {
+        _state = LoadState.Missing;
         Visibility = Visibility.Visible;
         pnlLoading.Visibility = Visibility.Collapsed;
         pnlMessage.Visibility = Visibility.Visible;

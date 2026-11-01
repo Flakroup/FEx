@@ -5,7 +5,7 @@ using System.Windows.Controls;
 namespace FEx.WPFx.Fluent.Layout;
 
 /// <summary>
-/// How a module view reflows inside the content area . Two states, decided by the width of the view
+/// How a module view reflows inside the content area. Two states, decided by the width of the view
 /// alone: wide (two grids side by side, action footer in one row) and narrow (grids stacked, footer in two rows).
 /// The menu shell has its own thresholds (<c>MenuLayout</c>); this one is about what the view does with the space
 /// the shell leaves it.

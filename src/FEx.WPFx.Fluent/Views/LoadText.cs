@@ -24,8 +24,8 @@ public static class LoadText
     /// <summary>The tooltip of the refresh button; <paramref name="source"/> as in <see cref="Loading"/>.</summary>
     public static string Refresh(string source) => $"Odśwież dane z {source}";
 
-    /// <summary>The bold line of the unreachable state; <paramref name="source"/> in the form that follows "połączyć z".</summary>
-    public static string ErrorTitle(string source) => $"Nie udało się połączyć z {source}";
+    /// <summary>The bold line of the unreachable state; <paramref name="connectionTarget"/> in the form that follows "połączyć z" ("bazą Płatnika").</summary>
+    public static string ErrorTitle(string connectionTarget) => $"Nie udało się połączyć z {connectionTarget}";
 
     public static string Fresh(DateTime at) => $"Wczytano o {at:HH:mm}";
 }

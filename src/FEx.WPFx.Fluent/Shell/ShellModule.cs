@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-
 namespace FEx.WPFx.Fluent.Shell;
 
 /// <summary>One entry of the side menu: a module the operator can open, or one still in preparation.</summary>
@@ -21,4 +18,3 @@ public sealed record ShellModule(string Key, string GroupLabel, string Label, st
     /// <summary>What the hover tip says: the label (it is the only text on the icon rail) or why the entry is dead.</summary>
     public string Tooltip => InPreparation ? $"{Label} - moduł w przygotowaniu" : Label;
 }
-

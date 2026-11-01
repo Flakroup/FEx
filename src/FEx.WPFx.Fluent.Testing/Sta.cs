@@ -1,6 +1,5 @@
 using FEx.WPFx.Fluent.Views;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,33 +21,7 @@ public static class Sta
     /// they were the first to touch it). Building a XAML control first goes through Application.LoadComponent, which
     /// is what registers the scheme. The static constructor runs once and every <see cref="Run"/> waits for it.
     /// </summary>
-    // ponytail: the failure branch needs a WPF runtime that cannot load, which no test can arrange; the success path runs on every use.
-    [ExcludeFromCodeCoverage]
-    static Sta()
-    {
-        Exception? caught = null;
-        var warmUp = new Thread(() =>
-        {
-            try
-            {
-                _ = new LoadIndicator();
-            }
-            catch (Exception ex)
-            {
-                caught = ex;
-            }
-            finally
-            {
-                Dispatcher.CurrentDispatcher.InvokeShutdown();
-            }
-        });
-        warmUp.SetApartmentState(ApartmentState.STA);
-        warmUp.Start();
-        warmUp.Join();
-
-        if (caught is not null)
-            throw new InvalidOperationException("Could not warm up WPF component loading.", caught);
-    }
+    static Sta() => RunLocked(static () => _ = new LoadIndicator());
 
     /// <summary>
     /// Skips a test that needs a window to really count as visible. A CI runner installed as a service lives in a

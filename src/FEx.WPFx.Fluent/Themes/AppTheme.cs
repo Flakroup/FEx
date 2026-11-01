@@ -1,6 +1,5 @@
 using Microsoft.Win32;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Windows;
 
@@ -59,14 +58,14 @@ public static class AppTheme
 
         Select(application, preference);
 
-        // ponytail: raised only by a real Windows setting change, which a test must not trigger on the desktop; the handler it calls is covered.
-        [ExcludeFromCodeCoverage]
-        void OnUserPreferenceChanged(object? sender, UserPreferenceChangedEventArgs e) =>
-            OnWindowsPreferenceChanged(application, e.Category);
-
-        SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
-        application.Exit += (_, _) => SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
+        var onChanged = PreferenceHandler(application);
+        SystemEvents.UserPreferenceChanged += onChanged;
+        application.Exit += (_, _) => SystemEvents.UserPreferenceChanged -= onChanged;
     }
+
+    /// <summary>What <see cref="Follow"/> subscribes, apart so a test can raise it without changing a Windows setting.</summary>
+    internal static UserPreferenceChangedEventHandler PreferenceHandler(Application application) =>
+        (_, e) => OnWindowsPreferenceChanged(application, e.Category);
 
     /// <summary>
     /// Re-resolves the remembered preference when Windows reports a change that can alter the variant. SystemEvents

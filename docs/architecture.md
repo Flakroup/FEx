@@ -101,7 +101,7 @@ Roles are taken from each project's package description.
 | Area | Projects |
 |---|---|
 | Core layers | `FEx.Agnostics(.Abstractions)`, `FEx.DependencyInjection(.Abstractions)`, `FEx.Logging(.Abstractions)`, `FEx.Core(.Abstractions)`, `FEx.Common(.Abstractions)` |
-| UI | `FEx.WPFx` (WPF integration, bootstrapper, splash screen), `FEx.Avaloniax` (Avalonia integration), `FEx.Blazorx` (MudBlazor integration), `FEx.MVVM`, `FEx.MVVM.Rx`, `FEx.MVVM.Abstractions` |
+| UI | `FEx.WPFx` (WPF integration, bootstrapper, splash screen), `FEx.WPFx.Fluent` (Fluent theme tokens, load states, shell logic), `FEx.Avaloniax` (Avalonia integration), `FEx.Blazorx` (MudBlazor integration), `FEx.MVVM`, `FEx.MVVM.Rx`, `FEx.MVVM.Abstractions` |
 | ASP.NET Core | `FEx.AspNetCorex(.Abstractions)` (idempotent-POST replay middleware, JWT bearer auth, health probe), `FEx.Logging.Web`, `FEx.Telemetry.Sentry.Web` |
 | Serialization | `FEx.Json` (Newtonsoft.Json extensions and converters), `FEx.Json.Abstractions` (`IFExJsonSerializer`), `FEx.Json.SystemTextJsonx` (System.Text.Json implementation) |
 | Data and storage | `FEx.EFCore`, `FEx.Sqlx(.Abstractions)`, `FEx.PersistentStorage(.Abstractions)` and `FEx.PersistentStorage.Rx` (LiteDB-backed storage and caching), `FEx.SecureStorage(.Abstractions)`, `FEx.Encryption`, `FEx.AppSettings`, `FEx.Imaging.Windows` |

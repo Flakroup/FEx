@@ -10,7 +10,7 @@ public enum PillSeverity
 /// <summary>What a status pill in the context bar shows: its text and, through a severity, its colours.</summary>
 public sealed record PillState(PillSeverity Severity, string Text)
 {
-    /// <summary>Theme token keys - the shell paints from these, never from a literal (NoLiteralColoursTests).</summary>
+    /// <summary>Theme token keys - the shell paints from these, never from a literal.</summary>
     public string BackgroundKey => Severity switch
     {
         PillSeverity.Ok => "OkSoft",

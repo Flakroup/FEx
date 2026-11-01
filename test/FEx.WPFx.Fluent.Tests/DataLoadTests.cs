@@ -3,6 +3,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -332,15 +333,23 @@ public sealed class DataLoadTests
     }
 
     [Fact]
-    public async Task TheDefaultRun_ReadsOffTheCallingThread()
+    public async Task TheDefaultRun_ReadsOnAPoolThread()
     {
+        // Started from a dedicated thread: the test's own thread belongs to the pool, so it proves nothing.
         var load = new DataLoad<int>(() => true, _ => false, _ => { });
-        var caller = Environment.CurrentManagedThreadId;
-        var reader = 0;
+        var readOnPool = false;
+        Task? running = null;
 
-        await load.ReloadAsync(() => () => reader = Environment.CurrentManagedThreadId);
+        var caller = new Thread(() => running = load.ReloadAsync(() => () =>
+        {
+            readOnPool = Thread.CurrentThread.IsThreadPoolThread;
+            return 1;
+        }));
+        caller.Start();
+        caller.Join();
+        await running!;
 
-        reader.ShouldNotBe(caller);
+        readOnPool.ShouldBeTrue();
     }
 
     [Fact]

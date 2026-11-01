@@ -7,6 +7,8 @@ public static class ShellBreadcrumb
 {
     /// <summary>The segments to draw, separators excluded; an entry without a group (Ustawienia) skips that segment.</summary>
     /// <param name="appName">The application's display name, the first segment of the full breadcrumb.</param>
+    /// <param name="module">The entry the operator is on, the last segment.</param>
+    /// <param name="compact">True when there is room for the module alone.</param>
     public static IReadOnlyList<string> Segments(string appName, ShellModule module, bool compact)
     {
         if (compact)

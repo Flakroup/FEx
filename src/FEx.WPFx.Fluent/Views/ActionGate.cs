@@ -42,6 +42,7 @@ public static class ActionGate
     }
 
     /// <summary>The visible answer to a click that the guard refused.</summary>
+    /// <param name="reason">Why the action is refused, as the guard worded it.</param>
     /// <param name="caption">The message box title - the application's name.</param>
     [ExcludeFromCodeCoverage] // ponytail: a modal MessageBox cannot run headless; a Notice seam is the upgrade if more call sites appear
     public static void Refuse(string reason, string caption) =>

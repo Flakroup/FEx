@@ -22,6 +22,10 @@ public sealed class ViewLoad<T>
     private readonly Func<string> _emptyTitle;
     private readonly string? _emptyHint;
 
+    /// <param name="view">The tab: its first show starts the read, and the shell's routed events bubble from it.</param>
+    /// <param name="overlay">The overlay that shows the skeleton, the empty list and the errors.</param>
+    /// <param name="indicator">The freshness text and the refresh button.</param>
+    /// <param name="load">The load this tab drives.</param>
     /// <param name="plan">Called on the UI thread, only when there is a data source: captures the parameters, resolves the repository and returns the read that runs off it.</param>
     /// <param name="show">Puts a non-empty result on screen.</param>
     /// <param name="clear">Takes the rows off screen - before a load and when the result is empty or failed.</param>

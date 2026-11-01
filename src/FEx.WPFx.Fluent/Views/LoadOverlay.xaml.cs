@@ -58,6 +58,7 @@ public partial class LoadOverlay : UserControl
     /// <summary>The operator asked for the settings, where the connection is fixed.</summary>
     public event EventHandler? OpenSettingsRequested;
 
+    /// <param name="state">The load state to draw.</param>
     /// <param name="emptyTitle">The bold line of the empty list - each tab's own sentence.</param>
     /// <param name="emptyHint">The muted line under it; null where the tab has no year or period to change.</param>
     public void Show(LoadState state, string emptyTitle, string? emptyHint)

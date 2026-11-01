@@ -349,10 +349,10 @@
   <Project Path="src/FEx.Webx/FEx.Webx.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
-  <Project Path="src/FEx.WPFx.Fluent.Testing/FEx.WPFx.Fluent.Testing.csproj">
+  <Project Path="src/WPFx.Fluent.Testing/FEx.WPFx.Fluent.Testing.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
-  <Project Path="src/FEx.WPFx.Fluent/FEx.WPFx.Fluent.csproj">
+  <Project Path="src/WPFx.Fluent/FEx.WPFx.Fluent.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.WPFx/FEx.WPFx.csproj">

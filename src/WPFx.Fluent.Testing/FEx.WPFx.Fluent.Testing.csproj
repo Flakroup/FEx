@@ -12,7 +12,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FEx.WPFx.Fluent\FEx.WPFx.Fluent.csproj" />
+		<ProjectReference Include="..\WPFx.Fluent\FEx.WPFx.Fluent.csproj" />
 	</ItemGroup>
 
 </Project>

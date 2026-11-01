@@ -302,7 +302,7 @@ FEx/
 │   ├── Common/                   # Top-level orchestration
 │   ├── FEx.MVVM/                 # MVVM patterns
 │   ├── FEx.WPFx/                 # WPF utilities
-│   ├── FEx.WPFx.Fluent/          # Fluent theme, load states and shell logic for WPF
+│   ├── WPFx.Fluent/              # Fluent theme, load states and shell logic for WPF
 │   ├── FEx.Json/                 # JSON utilities
 │   ├── FEx.EFCore/               # Entity Framework Core
 │   └── ... (28 more feature projects)

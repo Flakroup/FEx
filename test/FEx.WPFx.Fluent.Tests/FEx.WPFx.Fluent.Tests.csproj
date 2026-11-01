@@ -10,8 +10,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\FEx.WPFx.Fluent\FEx.WPFx.Fluent.csproj" />
-		<ProjectReference Include="..\..\src\FEx.WPFx.Fluent.Testing\FEx.WPFx.Fluent.Testing.csproj" />
+		<ProjectReference Include="..\..\src\WPFx.Fluent\FEx.WPFx.Fluent.csproj" />
+		<ProjectReference Include="..\..\src\WPFx.Fluent.Testing\FEx.WPFx.Fluent.Testing.csproj" />
 	</ItemGroup>
 
 </Project>

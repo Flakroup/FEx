@@ -97,6 +97,8 @@ public sealed class CoverageDebtTests
 
         ci.ShouldContain("id-token: write");
         ci.ShouldMatch(@"id: nuget-login\r?\n\s+uses: NuGet/login@[0-9a-f]{40}");
+        // The trust policy is matched by the nuget.org user who CREATED it (GioAbq), not by the package owner (Flakroup).
+        ci.ShouldMatch(@"with:\r?\n\s+user: GioAbq\s");
         ci.ShouldContain("NuGetApiKey: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}");
         ci.ShouldNotContain("NuGetApiKey: ${{ secrets.");
     }

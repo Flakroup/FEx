@@ -109,6 +109,7 @@ jobs:
       cancel-in-progress: false
     permissions:
       contents: write   # allow the NUKE Tag target to push the version tag
+      id-token: write   # lets NuGet/login exchange the GitHub OIDC token for a short-lived nuget.org key
     steps:
       - uses: actions/checkout@v5
         with:
@@ -123,10 +124,17 @@ jobs:
         with:
           name: packages
           path: artifacts/packages
+      # Trusted Publishing: nuget.org trusts this repo + workflow (policy on the Flakroup account) and returns a
+      # key valid for 1 hour, so it is requested right before the push. No long-lived key secret is stored.
+      - name: NuGet login (OIDC)
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: Flakroup   # nuget.org profile name (public), not an email
       # Everything up to Pack already ran in `build`; skip it so this job only pushes and tags.
       - name: Publish to nuget.org
         env:
-          NuGetApiKey: ${{ secrets.NUGET_API_KEY }}
+          NuGetApiKey: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}   # for the Tag target to push the git version tag
         run: |
           $version = (Get-Content artifacts/packages/release-version.txt -Raw).Trim()

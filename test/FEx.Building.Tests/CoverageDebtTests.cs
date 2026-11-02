@@ -91,6 +91,17 @@ public sealed class CoverageDebtTests
     }
 
     [Fact]
+    public void Ci_PublishesToNuGetOrgThroughTrustedPublishing_NotAStoredKey()
+    {
+        var ci = File.ReadAllText(Path.Combine(RepositoryRoot, ".github", "workflows", "ci.yml"));
+
+        ci.ShouldContain("id-token: write");
+        ci.ShouldMatch(@"id: nuget-login\r?\n\s+uses: NuGet/login@[0-9a-f]{40}");
+        ci.ShouldContain("NuGetApiKey: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}");
+        ci.ShouldNotContain("NuGetApiKey: ${{ secrets.");
+    }
+
+    [Fact]
     public void ManualPublish_RunsTheCoverageGateWithoutInspect()
     {
         var publish = File.ReadAllText(Path.Combine(RepositoryRoot, ".github", "workflows", "publish.yml"));

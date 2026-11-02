@@ -125,10 +125,12 @@ jobs:
           name: packages
           path: artifacts/packages
       # Trusted Publishing: nuget.org trusts this repo + workflow (policy on the Flakroup account) and returns a
-      # key valid for 1 hour, so it is requested right before the push. No long-lived key secret is stored.
+      # key valid for 1 hour, so it is requested right before the push. This workflow no longer reads NUGET_API_KEY;
+      # the manual publish.yml still does, so the secret stays until that workflow is migrated or retired.
+      # Pinned to a commit (v1.2.0): this job also holds a contents: write token and the Azure Artifacts PAT.
       - name: NuGet login (OIDC)
         id: nuget-login
-        uses: NuGet/login@v1
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841   # v1.2.0
         with:
           user: Flakroup   # nuget.org profile name (public), not an email
       # Everything up to Pack already ran in `build`; skip it so this job only pushes and tags.

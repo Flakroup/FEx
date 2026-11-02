@@ -78,6 +78,7 @@ dotnet add package FEx.Common
 # Optional feature packages
 dotnet add package FEx.MVVM          # MVVM patterns
 dotnet add package FEx.WPFx          # WPF utilities
+dotnet add package FEx.WPFx.Fluent   # Fluent theme, load states and shell logic for WPF
 dotnet add package FEx.Logging       # Logging infrastructure
 dotnet add package FEx.Json          # JSON utilities
 dotnet add package FEx.EFCore        # Entity Framework Core extensions
@@ -301,6 +302,7 @@ FEx/
 │   ├── Common/                   # Top-level orchestration
 │   ├── FEx.MVVM/                 # MVVM patterns
 │   ├── FEx.WPFx/                 # WPF utilities
+│   ├── WPFx.Fluent/              # Fluent theme, load states and shell logic for WPF
 │   ├── FEx.Json/                 # JSON utilities
 │   ├── FEx.EFCore/               # Entity Framework Core
 │   └── ... (28 more feature projects)

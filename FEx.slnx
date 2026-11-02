@@ -88,6 +88,9 @@
   <Folder Name="/test/">
     <File Path="test/Directory.Build.props" />
     <File Path="test/Directory.Build.targets" />
+    <Project Path="test/FEx.Agnostics.Abstractions.Tests/FEx.Agnostics.Abstractions.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
     <Project Path="test/FEx.Analyzers.Tests/FEx.Analyzers.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
@@ -200,6 +203,9 @@
       <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="test/FEx.Platforms.Windows.Tests/FEx.Platforms.Windows.Tests.csproj">
+      <Build Solution="Build|*" Project="false" />
+    </Project>
+    <Project Path="test/FEx.WPFx.Fluent.Tests/FEx.WPFx.Fluent.Tests.csproj">
       <Build Solution="Build|*" Project="false" />
     </Project>
     <Project Path="test/FEx.WPFx.Tests/FEx.WPFx.Tests.csproj">
@@ -341,6 +347,12 @@
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.Webx/FEx.Webx.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/WPFx.Fluent.Testing/FEx.WPFx.Fluent.Testing.csproj">
+    <Build Solution="Build|*" Project="false" />
+  </Project>
+  <Project Path="src/WPFx.Fluent/FEx.WPFx.Fluent.csproj">
     <Build Solution="Build|*" Project="false" />
   </Project>
   <Project Path="src/FEx.WPFx/FEx.WPFx.csproj">

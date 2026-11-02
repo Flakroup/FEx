@@ -1,0 +1,36 @@
+<!-- Windows high contrast: every colour token falls back to a system colour, so the user's own palette wins.
+     Same keys as Tokens.xaml. Statics are fine here: AppTheme reloads this dictionary whenever the setting changes. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <FontFamily x:Key="ContentControlThemeFontFamily">Segoe UI</FontFamily>
+    <SolidColorBrush x:Key="Bg" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="Surface" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="Ink" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Muted" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Faint" Color="{x:Static SystemColors.GrayTextColor}" />
+    <SolidColorBrush x:Key="Line" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Line2" Color="{x:Static SystemColors.WindowFrameColor}" />
+    <SolidColorBrush x:Key="CtrlLine" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="InputLine" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Accent" Color="{x:Static SystemColors.HotTrackColor}" />
+    <SolidColorBrush x:Key="OnAccent" Color="{x:Static SystemColors.HighlightTextColor}" />
+    <SolidColorBrush x:Key="AccentSoft" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="AccentInk" Color="{x:Static SystemColors.HighlightTextColor}" />
+    <SolidColorBrush x:Key="DangerButton" Color="{x:Static SystemColors.ControlColor}" />
+    <SolidColorBrush x:Key="OnDanger" Color="{x:Static SystemColors.ControlTextColor}" />
+    <SolidColorBrush x:Key="Danger" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="DangerSoft" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="WarnSoft" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="WarnInk" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="WarnBar" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="Ok" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="OkSoft" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="DisabledBg" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="DisabledInk" Color="{x:Static SystemColors.GrayTextColor}" />
+    <SolidColorBrush x:Key="HeadBg" Color="{x:Static SystemColors.ControlColor}" />
+    <SolidColorBrush x:Key="HeadInk" Color="{x:Static SystemColors.ControlTextColor}" />
+    <SolidColorBrush x:Key="RowLine" Color="{x:Static SystemColors.WindowFrameColor}" />
+    <SolidColorBrush x:Key="OverlayHead" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="OnOverlayHead" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="OverlayScrim" Color="{x:Static SystemColors.WindowColor}" />
+</ResourceDictionary>
